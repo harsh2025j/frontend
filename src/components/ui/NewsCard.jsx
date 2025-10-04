@@ -2,12 +2,12 @@
 import Image from "next/image";
 import logo from '../../../public/logo.svg'
 
-export default function NewsCard({ src = logo, title, height = "h-[120px]" }) {
+export default function NewsCard({ src = logo, title, height = "h-[103px]" }) {
   return (
-    <div className={`flex bg-pink-200 rounded-lg ${height} sm:h-[150px] overflow-hidden`}>
+    <div className={`flex  ${height} w-[403px] overflow-hidden bg-[#D9D9D9]` }>
       
    
-      <div className="relative w-1/3 sm:w-1/4 h-full">
+      <div className="relative bg-pink-200 rounded-lg w-[170px] h-[103px]">
         <Image
           src={logo}
           alt={title}
