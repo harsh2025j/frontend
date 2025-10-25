@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import logo from "../../../public/logo.svg";
+import logo from "../../assets/logo.png";
 import apple from "../../../public/apple-button.svg";
 import google from "../../../public/playbutton.svg";
 import {
@@ -17,19 +17,31 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#2F2F2F] text-white py-8">
+    <footer className="bg-primary text-white py-8">
       <div className="container mx-auto px-6 ">
-        <div className="mb-8 md:mb-0 border-b border-b-amber-50">
-          <Image
-            src={logo}
-            alt="MediaTech Logo"
-            className="h-24 w-auto mx-auto md:mx-0"
-          />
-        </div>
+
         <div className="flex flex-col md:flex-row md:justify-between md:items-start border-b border-gray-700 pb-10">
-          <div className="mb-8 md:mb-0 text-center md:text-left">
-            <h3 className="font-semibold mb-3">Socials</h3>
+          <div className="mb-8 flex justify-between flex-col md:mb-0 text-center md:text-left">
+            <div className="mb-8 md:mb-0 ">
+              <Image
+                src={logo}
+                alt="MediaTech Logo"
+                className="h-12 w-auto mx-auto md:mx-0"
+              />
+            </div>
             <div className="flex justify-center md:justify-start gap-4">
+              <Image src={google} alt="Google Play" className="h-20 w-36" />
+              <Image src={apple} alt="App Store" className="h-20 w-36" />
+            </div>
+
+            <p className="text-sm leading-relaxed font-merriweather font-bold text-white mb-4">
+              Address: XXXXXXXX, Uttarakhand, India <br />
+              Support: +91-123456789 <br />
+              Email: info@yournewswebsite.com
+            </p>
+
+            <div className="flex justify-center items-center md:justify-start gap-4">
+              <h4 className="" >Folllow us.</h4>
               <FaFacebookF className="h-5 w-5 hover:text-blue-500 cursor-pointer" />
               <FaInstagram className="h-5 w-5 hover:text-pink-500 cursor-pointer" />
               <FaWhatsapp className="h-5 w-5 hover:text-green-500 cursor-pointer" />
@@ -38,12 +50,8 @@ export default function Footer() {
               <FaLinkedinIn className="h-5 w-5 hover:text-blue-600 cursor-pointer" />
               <FaYoutube className="h-5 w-5 hover:text-red-600 cursor-pointer" />
             </div>
-            <div className="flex justify-center md:justify-start gap-4 mt-4">
-              <Image src={google}alt="Google Play" className="h-24 w-36" />
-              <Image src={apple} alt="App Store" className="h-24 w-36" />
-            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center md:text-left">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 text-center md:text-left">
             <div>
               <h3 className="font-semibold mb-3">Products</h3>
               <ul className="space-y-2 text-sm">
@@ -128,6 +136,29 @@ export default function Footer() {
               </ul>
             </div>
 
+            <div>
+              <h3 className="font-semibold mb-3">Resources</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link href="#">Who We Are</Link>
+                </li>
+                <li>
+                  <Link href="#">Contact Us</Link>
+                </li>
+                <li>
+                  <Link href="#">Advertise With Us</Link>
+                </li>
+                <li>
+                  <Link href="#">Careers</Link>
+                </li>
+                <li>
+                  <Link href="#">Privacy Policy</Link>
+                </li>
+                <li>
+                  <Link href="#">Terms & Conditions</Link>
+                </li>
+              </ul>
+            </div>
             <div>
               <h3 className="font-semibold mb-3">Resources</h3>
               <ul className="space-y-2 text-sm">

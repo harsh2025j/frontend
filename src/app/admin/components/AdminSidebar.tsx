@@ -1,18 +1,20 @@
 "use client";
 
-import { Home, FolderOpen, Users, FileText, Settings } from "lucide-react";
+import { Home, FolderOpen, Users, FileText, Settings, Brain, Crown, BarChart3 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import logo from "../../../assets/logo.png";
 
 const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
   const navItems = [
-    { name: "Dashboard", icon: <Home size={18} />, href: "/dashboard" },
-    { name: "Cases", icon: <FolderOpen size={18} />, href: "/dashboard/cases" },
-    { name: "Clients", icon: <Users size={18} />, href: "/dashboard/clients" },
-    { name: "Documents", icon: <FileText size={18} />, href: "/dashboard/docs" },
-    { name: "Settings", icon: <Settings size={18} />, href: "/dashboard/settings" },
+    { name: "Dashboard", icon: <Home size={18} />, href: "/admin" },
+    { name: "News Management", icon: <FolderOpen size={18} />, href: "/admin/news" },
+    { name: "AI Summaries", icon: <Brain size={18} />, href: "/admin/ai-summaries" },
+    { name: "Team Management", icon: <Users size={18} />, href: "/admin/teams" },
+    { name: "Premium", icon: <Crown size={18} />, href: "/admin/plans" },
+    { name: "Analytics", icon: <BarChart3 size={18} />, href: "/admin/analytics" },
+    { name: "Settings", icon: <Settings size={18} />, href: "/admin/settings" },
   ];
+
 
   return (
     <aside
@@ -27,9 +29,7 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
     >
       {/* Sidebar main content */}
       <div className="p-6">
-        <div className="mb-8">
-          <Image alt="logo" src={logo} className="w-32 h-auto mx-auto" />
-        </div>
+      
 
         <nav className="space-y-2">
           {navItems.map((item) => (

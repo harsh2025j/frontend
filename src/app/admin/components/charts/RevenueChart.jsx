@@ -23,8 +23,8 @@ export default function RevenueChart() {
           <PieChart>
             <Pie
               data={data}
-              innerRadius={70}
-              outerRadius={90}
+              innerRadius={90}
+              outerRadius={100}
               paddingAngle={3}
               dataKey="value"
               startAngle={90}
@@ -37,14 +37,12 @@ export default function RevenueChart() {
           </PieChart>
         </ResponsiveContainer>
 
-        {/* Center Label */}
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-2xl font-bold text-gray-900">10,50,256</span>
         </div>
       </div>
 
-      {/* Legend - left aligned */}
-      <div className="flex gap-6 mt-4 text-sm justify-start">
+     <div className="flex gap-6 mt-4 text-sm justify-start">
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-[#1A73E8]" />
           <span className="text-gray-700">Settled</span>

@@ -11,10 +11,12 @@ import {
   CircleDollarSign,
 } from "lucide-react";
 import ContentTable from "./components/ContentTable";
-import UrgentTable from "./components/UrgentTable";
 import StatCard from "./components/StatCard";
 import DummyChart from "./components/charts/LineChart";
 import RevenueChart from "./components/charts/RevenueChart";
+import ContentApprovalPanel from "./components/UrgentTable";
+import { Router } from "next/router";
+import Link from "next/link";
 
 const data = [
   { label: "Total News Articles", value: "12,450", icon: <TrendingUp className="w-8 h-8 text-blue-500" /> },
@@ -30,13 +32,17 @@ const data = [
 export default function Page() {
   return (
     <>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-semibold text-gray-800">Overview</h1>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#C9A227] text-white rounded-md hover:bg-orange-600 transition">
-          <PlusCircle className="w-5 h-5" />
-          Create New Content
-        </button>
-      </div>
+    <div className="flex items-center justify-between mb-8">
+      <h1 className="text-2xl font-semibold text-gray-800">Overview</h1>
+
+      <Link
+        href="/admin/create-content"
+        className="flex items-center gap-2 px-4 py-2 bg-[#C9A227] text-white rounded-md hover:bg-orange-600 transition"
+      >
+        <PlusCircle className="w-5 h-5" />
+       Create New Update
+      </Link>
+    </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {data.map((item, i) => (
@@ -57,7 +63,7 @@ export default function Page() {
       {/* Tables */}
       <div className="mt-8 space-y-6">
         <ContentTable />
-        <UrgentTable />
+        <ContentApprovalPanel />
       </div>
     </>
   );

@@ -1,43 +1,51 @@
-import { AlertTriangle, Clock } from "lucide-react";
+import React from "react";
 
-const UrgentTable = () => {
-  const urgentCases = [
-    { id: 1, title: "Hearing: Meera vs XYZ Corp", time: "Tomorrow, 10:00 AM", priority: "High" },
-    { id: 2, title: "File Submission: Ravi vs Delhi Police", time: "Today, 3:00 PM", priority: "Medium" },
-    { id: 3, title: "Client Meeting: Arjun vs RTO", time: "Oct 25, 2:00 PM", priority: "Low" },
-  ];
+const data = [
+  {
+    title: "Bombay HC on Insolency",
+    category: "Criminal Law",
+    status: "Pending",
+  },
+  {
+    title: "Global Markets Weekly",
+    category: "Finance",
+    status: "Pending",
+  },
+  {
+    title: "Sport Law doping case",
+    category: "Legal Article",
+    status: "Pending",
+  },
+];
 
-  const priorityColor = {
-    High: "bg-red-100 text-red-600",
-    Medium: "bg-yellow-100 text-yellow-600",
-    Low: "bg-green-100 text-green-600",
-  };
-
+export default function ContentApprovalPanel() {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border p-4 mt-6">
-      <h3 className="font-semibold mb-3 text-gray-800 flex items-center gap-2">
-        <AlertTriangle size={18} className="text-red-500" /> Urgent Cases
-      </h3>
-
+    <div className="bg-white rounded-2xl  border border-gray-100 p-6 mt-6">
+      <h2 className="font-semibold mb-4 text-gray-900">Content Approval Panel</h2>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-gray-500 border-b text-left">
-            <th className="py-2">Case</th>
-            <th className="py-2">Time</th>
-            <th className="py-2">Priority</th>
+          <tr className="border-b border-gray-700">
+            <th className="text-left pb-2 font-normal">Article/Content Title</th>
+            <th className="text-left pb-2 font-normal">Category</th>
+            <th className="text-left pb-2 font-normal">Current Status</th>
+            <th className="text-left pb-2 font-normal">Current Status</th>
+            <th className="text-left pb-2 font-normal">Action</th>
           </tr>
         </thead>
         <tbody>
-          {urgentCases.map((item) => (
-            <tr key={item.id} className="border-b last:border-none hover:bg-gray-50 transition">
-              <td className="py-2">{item.title}</td>
-              <td className="py-2 flex items-center gap-2 text-gray-700">
-                <Clock size={14} /> {item.time}
-              </td>
-              <td className="py-2">
-                <span className={`text-xs px-2 py-1 rounded-md `}>
-                  {item.priority}
-                </span>
+          {data.map(({ title, category, status }, idx) => (
+            <tr key={idx} className="border-b border-gray-300">
+              <td className="py-3">{title}</td>
+              <td className="py-3">{category}</td>
+              <td className="py-3">{status}</td>
+              <td className="py-3">{status}</td>
+              <td className="py-3">
+                <button className="bg-yellow-700 text-white rounded-full px-4 py-1 mr-2 font-medium hover:bg-yellow-800 transition">
+                  Approve
+                </button>
+                <button className="bg-yellow-700 text-white rounded-full px-4 py-1 font-medium hover:bg-yellow-800 transition">
+                  View
+                </button>
               </td>
             </tr>
           ))}
@@ -45,6 +53,4 @@ const UrgentTable = () => {
       </table>
     </div>
   );
-};
-
-export default UrgentTable;
+}
