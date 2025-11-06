@@ -35,7 +35,7 @@ export default function Footer() {
             </div>
 
             <p className="text-sm leading-relaxed font-merriweather font-bold text-white mb-4">
-              Address: XXXXXXXX, Uttarakhand, India <br />
+              Address: XXXXXXXX, Lucknow, India <br />
               Support: +91-123456789 <br />
               Email: info@yournewswebsite.com
             </p>
@@ -185,7 +185,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-6 text-center text-xs text-gray-400">
-          2025 © All Rights Reserved @MediaTech
+          2025 © All Rights Reserved @DIFMO Pvt. Ltd.
         </div>
       </div>
     </footer>

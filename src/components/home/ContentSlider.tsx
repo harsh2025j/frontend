@@ -32,8 +32,9 @@ export default function ContentSlider() {
   }, []);
 
   return (
-    <div className="p-6 bg-gray-100 flex items-center justify-center relative">
-      <div className="w-full max-w-7xl bg-white rounded-xl shadow-lg p-3 flex gap-4 relative">
+    <div className="p-6 bg-[#f6f6f7] flex items-center justify-center relative">
+      
+      <div className="w-full container  bg-white rounded-xl shadow-lg p-3 flex gap-4 relative">
         <div className="bg-[#1b3550] rounded-lg w-40 flex items-center justify-center px-4">
           <span
             className="text-white text-2xl rotate-180 font-medium"
@@ -50,7 +51,7 @@ export default function ContentSlider() {
           {articles.map((item, i) => (
             <div
               key={i}
-              className="min-w-[260px] max-w-[260px] bg-white rounded-lg shadow-md overflow-hidden"
+              className="min-w-[260px] max-w-[260px] bg-white rounded-lg shadow-md overflow-hidden "
             >
               <Image
                 src={item.img}

@@ -1,14 +1,37 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
-
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
+import img1 from '../../assets/slider/image.svg'
+import img2 from '../../assets/slider/mask.svg'
+import img3 from '../../assets/slider/maskgroup.svg'
 
 export default function NewsSlider() {
-  const slides = useSelector((state: RootState) => state.slides.slides);
+  const slides = [
+    {
+      image: img1,
+      title: "Breaking News: AI Revolutionizing Industries",
+      description:
+        "Artificial Intelligence is transforming how businesses operate across healthcare, finance, and education.",
+      link: "#",
+    },
+    {
+      image:img2,
+      title: "Tech Giants Invest in Clean Energy",
+      description:
+        "Major technology companies are committing billions toward sustainable energy solutions.",
+      link: "#",
+    },
+    {
+      image: img3,
+      title: "Startups Driving Innovation in 2025",
+      description:
+        "New startups are redefining traditional industries with cutting-edge solutions and AI-powered tools.",
+      link: "#",
+    },
+  ];
+
   const [current, setCurrent] = useState(0);
 
   const nextSlide = () => {
@@ -18,6 +41,7 @@ export default function NewsSlider() {
   const prevSlide = () => {
     setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
   };
+
   useEffect(() => {
     const timer = setInterval(nextSlide, 6000);
     return () => clearInterval(timer);

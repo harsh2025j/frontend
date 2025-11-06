@@ -1,14 +1,45 @@
 "use client";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/redux/store";
-import { setSelectedTab } from "@/app/features/courtUpdates/courtSlice";
+
+import { useState } from "react";
 import { MapPin, FileText, Calendar, Gavel } from "lucide-react";
 
 const tabs = ["Supreme Court", "High Courts", "District Courts"];
 
 export default function LiveCourtUpdates() {
-  const dispatch = useDispatch();
-  const { selectedTab, cases } = useSelector((state: RootState) => state.court);
+  const [selectedTab, setSelectedTab] = useState("Supreme Court");
+
+  const cases = [
+    {
+      title: "Land Acquisition Dispute - State vs. Sharma Group",
+      court: "Supreme Court of India",
+      status: "Hearing Scheduled",
+      date: "28 Oct 2025",
+      description:
+        "A landmark case involving compensation disputes under the new land acquisition act.",
+      caseNo: "SC/2025/1987",
+      nextDate: "15 Nov 2025",
+    },
+    {
+      title: "Public Interest Litigation on Air Pollution",
+      court: "Delhi High Court",
+      status: "Under Review",
+      date: "27 Oct 2025",
+      description:
+        "Court reviews the city's action plan to reduce hazardous air quality levels.",
+      caseNo: "HC/DEL/2025/1432",
+      nextDate: "10 Nov 2025",
+    },
+    {
+      title: "Corporate Fraud Investigation - XYZ Corp.",
+      court: "Mumbai District Court",
+      status: "Reserved",
+      date: "25 Oct 2025",
+      description:
+        "Final hearing concluded; judgment reserved regarding alleged accounting fraud.",
+      caseNo: "DC/MUM/2025/889",
+      nextDate: "Awaiting Judgment",
+    },
+  ];
 
   const getBadgeColor = (status: string) => {
     switch (status) {
@@ -24,7 +55,7 @@ export default function LiveCourtUpdates() {
   };
 
   return (
-    <section className="w-full py-12 bg-gray-50">
+    <section className="w-full py-12 bg-[#f6f6f7]">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -37,11 +68,11 @@ export default function LiveCourtUpdates() {
         </div>
 
         {/* Tabs */}
-        <div className="flex justify-center mt-6 bg-gray-100 rounded-full overflow-hidden">
+        <div className="flex justify-center mt-6 bg-[#f6f6f7] rounded-full overflow-hidden">
           {tabs.map((tab) => (
             <button
               key={tab}
-              onClick={() => dispatch(setSelectedTab(tab))}
+              onClick={() => setSelectedTab(tab)}
               className={`w-full md:w-auto px-6 py-2 text-sm font-medium transition ${
                 selectedTab === tab
                   ? "bg-white text-gray-900 shadow-sm"
@@ -54,7 +85,6 @@ export default function LiveCourtUpdates() {
         </div>
 
         {/* Cards */}
-        
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
           {cases.map((item, idx) => (
             <div

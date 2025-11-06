@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { useAppSelector, useAppDispatch } from "../../redux/hooks";
-import { selectItem } from "../../../src/app/features/dropdownSlice";
+
 interface ScrollerItem {
   id: number;
   title: string;
@@ -14,11 +13,10 @@ interface Props {
 }
 
 const NewsScroller: React.FC<Props> = ({ items }) => {
-  const selectedId = useAppSelector((state) => state.dropdown.selectedId);
-  const dispatch = useAppDispatch();
+
 
   return (
-    <div className="w-full  p-4 bg-white ">
+    <div className="w-full   p-4 bg-white ">
       {/* Scoped scrollbar styles */}
       <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar {
@@ -46,22 +44,20 @@ const NewsScroller: React.FC<Props> = ({ items }) => {
         }
       `}</style>
 
-      <div className="max-h-72 overflow-y-auto custom-scrollbar scroll-smooth rounded-xl pr-2">
+      <div className="max-h-72 overflow-y-auto  custom-scrollbar scroll-smooth rounded-xl pr-2">
         {items.map((item) => (
           <div
             key={item.id}
-            onClick={() => dispatch(selectItem(item.id))}
-            className={`cursor-pointer text-black border-b py-3 px-2 transition-all duration-200 ${
-              selectedId === item.id
-            }`}
+            className={`cursor-pointer text-black border-b py-3 px-2 transition-all duration-200`}
           >
-            <h3 className="font-black text-[32px]">
-              #{item.id} <span className="font-normal text-md" >{item.title}</span>
+            <h3 className="font-black  flex items-stretch">
+             <span className="font-merriweather flex items-center rounded-l-md text-md text-5xl font-bold">#{item.id}</span>  <span className="font-merriweather text-md px-7 py-2 flex-1 rounded-r-md font-normal "  >{item.description}</span>
+             
             </h3>
             
-            <p className="text-md text-gray-500 line-clamp-2">
+            {/* <p className="text-md text-gray-500 line-clamp-2">
               {item.description}
-            </p>
+            </p> */}
           </div>
         ))}
       </div>

@@ -8,8 +8,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#1d4ed8",   // blue
-        secondary: "#f59e0b", // amber
+        primary: "#1d4ed8",  
+        secondary: "#f59e0b", 
         gold: "#caa438",
         lightgray: "#d4d4d4",
       },

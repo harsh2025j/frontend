@@ -14,9 +14,10 @@ export default function Home() {
       <div className=" ">
         <NewsSlider/>
       <Stores />
-      <CategorySection />
-      <LiveCourtUpdates />
-      <ContentSlider/>
+      {/* <CategorySection /> */}
+      {/* <LiveCourtUpdates /> */}
+      
+      
       </div>
     </>
   );

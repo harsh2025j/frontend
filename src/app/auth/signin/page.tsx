@@ -2,32 +2,34 @@
 
 import Image from "next/image";
 import logo from "../../../../public/logo.svg";
-import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-// import { login } from "../../features/auth/authAPI";
+import { useLoginActions } from "@/data/features/auth/useAuthActions";
+import { useEffect } from "react";
+import toast from "react-hot-toast";
+import Link from "next/link";
+import CustomInput from "@/components/ui/CustomInput";
 
-export default function Page() {
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const dispatch = useAppDispatch();
-  const { loading, error, token } = useAppSelector((state) => state.auth);
+export default function LoginPage() {
+  const {
+    formData,
+    handleChange,
+    handleLogin,
+    loading,
+    error,
+    message,
+  } = useLoginActions();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // dispatch(login(formData));
-  };
-
+useEffect(() => {
+    if (error) toast.error(error);
+    if (message) toast.success(message);
+  }, [error, message]);
+  
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
       <div className="w-full max-w-md bg-white border border-gray-200 rounded-lg shadow-md p-6 sm:p-8">
         <div className="flex justify-center mb-6">
-          <Image src={logo} alt="Logo" width={80} height={80} />
+          <Image src={logo} alt="Logo" width={220} height={220} />
         </div>
 
         <h2 className="text-2xl font-bold text-center mb-2">Welcome Back!</h2>
@@ -35,7 +37,13 @@ export default function Page() {
           Login to get your daily dose of hot premium legal updates
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleLogin();
+          }}
+          className="space-y-4"
+        >
           <div>
             <label className="block text-sm font-medium mb-1">Email</label>
             <input
@@ -51,7 +59,7 @@ export default function Page() {
 
           <div>
             <label className="block text-sm font-medium mb-1">Password</label>
-            <input
+            <CustomInput
               type="password"
               name="password"
               placeholder="Enter your password"
@@ -71,7 +79,8 @@ export default function Page() {
               type="button"
               className="text-gray-800 hover:underline"
             >
-              Forgot Password?
+              
+              <a href="/auth/forgotPassword" className="text-gray-800 hover:underline">Forgot Password?</a>
             </button>
           </div>
 
@@ -84,14 +93,8 @@ export default function Page() {
           </button>
         </form>
 
-        {error && (
-          <p className="text-red-500 text-sm mt-3 text-center">{error}</p>
-        )}
-        {token && (
-          <p className="text-green-600 text-sm mt-3 text-center">
-            Login successful!
-          </p>
-        )}
+        {/* {error && <p className="text-red-500 text-sm mt-3 text-center">{error}</p>}
+        {message && <p className="text-green-600 text-sm mt-3 text-center">{message}</p>} */}
 
         <div className="mt-6 space-y-3">
           <button
@@ -102,28 +105,23 @@ export default function Page() {
             <span>Continue with Google</span>
           </button>
 
-          <button
+          {/* <button
             type="button"
             className="w-full border border-gray-300 rounded-md py-3 flex items-center justify-center space-x-3 hover:bg-gray-50 transition"
           >
             <FaFacebook size={22} className="text-blue-600" />
             <span>Continue with Facebook</span>
-          </button>
+          </button> */}
         </div>
 
-        <div className="text-center text-sm text-gray-600 mt-8">
-          <p>
-            Don’t have an account?{" "}
-            <a href="#" className="text-blue-600 hover:underline">
-              Register
-            </a>
-          </p>
-          <p className="mt-2">
-            <a href="#" className="text-gray-700 hover:underline">
-              Login as Guest
-            </a>
-          </p>
-        </div>
+          <div className="text-center text-sm text-gray-600 mt-8">
+            <p>
+              Don’t have an account?{" "}
+              <Link href="/auth/signup" className="text-blue-600 hover:underline">
+                Register
+              </Link>
+            </p>
+          </div>
       </div>
     </div>
   );

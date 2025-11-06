@@ -23,7 +23,7 @@ interface InputProps {
   required?: boolean;
   disabled?: boolean;
 }
-const Input: React.FC<InputProps> = ({
+const CustomInput: React.FC<InputProps> = ({
   label,
   name,
   type = "text",
@@ -83,4 +83,4 @@ const Input: React.FC<InputProps> = ({
   );
 };
 
-export default Input;
+export default CustomInput;
