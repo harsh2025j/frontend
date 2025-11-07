@@ -24,6 +24,22 @@ export interface VerifyOtpRequest {
 //   otp: string;
 // }
 
+export interface ResetPasswordRequest{
+  email:string;
+  otp:string;
+  newPassword:string;
+  conformPassword:string;
+}
+export interface ResetPasswordNewRequest{
+  email:string;
+  // otp:string;
+  newPassword:string;
+  
+}
+
+
+
+
 export interface AuthUser {
   id: string;
   name: string;
@@ -46,14 +62,18 @@ export interface RegisterResponse {
 }
 
 export interface ForgotPasswordResponse{
-  //may change while api test
-  email:"string";
+ success:boolean;
+ message:string;
 }
 
 export interface VerifyOtpResponse {
   token: string;
   user?: AuthUser;
   message?: string;
+}
+export interface ResetPasswordResponse{
+  success:boolean;
+  message:string;
 }
 
 export interface AuthState {

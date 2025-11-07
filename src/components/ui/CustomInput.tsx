@@ -68,6 +68,7 @@ const CustomInput: React.FC<InputProps> = ({
         </select>
       ) : (
         <input
+
           id={name}
           name={name}
           type={type}

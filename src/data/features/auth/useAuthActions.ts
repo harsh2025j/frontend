@@ -3,13 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
-import { LoginRequest, RegisterRequest, VerifyOtpRequest } from "./auth.types";
-import { forgotPassword, loginUser, registerUser, verifyOtp } from "./authThunks";
+import { LoginRequest, RegisterRequest, ResetPasswordRequest, VerifyOtpRequest } from "./auth.types";
+import { forgotPassword, loginUser, registerUser, resetPassword, verifyOtp } from "./authThunks";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 import { resetAuthState,logoutUser } from "./authSlice";
 
 
 import { RootState } from "@/data/redux/store";
+import { useDispatch } from "react-redux";
+import toast from "react-hot-toast";
+import { log } from "node:console";
 
 
  const selectAuthLoading = (state: RootState) => state.auth.loading;
@@ -56,7 +59,7 @@ export const useRegisterActions = () => {
 
   const handleRegister = () => {
     if (!formData.name || !formData.email || !formData.password) {
-      alert("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -109,7 +112,7 @@ export const useLoginActions = () => {
 
   const handleLogin = () => {
     if (!formData.email || !formData.password) {
-      alert("Please enter both email and password");
+      toast.error("Please enter both email and password");
       return;
     }
 
@@ -159,7 +162,7 @@ export const useVerifyActions = () => {
 
   const handleVerify = () => {
     if (!formData.email || !formData.otp) {
-      alert("Please enter both email and OTP");
+      toast.error("Please enter both email and OTP");
       return;
     }
     dispatch(verifyOtp(formData));
@@ -206,7 +209,7 @@ export const useVerifyForgotActions = (initialEmail = "") => {
 
   const handleVerify = async () => {
     if (!formData.otp) {
-      alert("Please enter OTP");
+      toast.error("Please enter OTP");
       return;
     }
 
@@ -215,8 +218,11 @@ export const useVerifyForgotActions = (initialEmail = "") => {
 
   useEffect(() => {
     if (message === MESSAGES.VERIFY_SUCCESS) {
-      alert("Verification successful");
-      router.push("/auth/signin");
+      // alert("Verification successful");
+      localStorage.setItem("otpVerified", "true");
+      sessionStorage.setItem("resetEmail", formData.email);
+      sessionStorage.setItem("resetOtp", formData.otp);
+      router.push(`/auth/resetPassword`);
       dispatch(resetAuthState());
     }
   }, [message]);
@@ -245,7 +251,7 @@ export const useForgotPasswordAction = () => {
 
   const handleForgotPassword = async () => {
     if (!email) {
-      alert("Please enter email");
+      toast.error("Please enter email");
       return;
     }
 
@@ -269,3 +275,54 @@ export const useForgotPasswordAction = () => {
     message,
   };
 };
+
+export const useResetPasswordAction=()=>{
+  const dispatch=useAppDispatch();
+  const router = useRouter();
+  const { loading, error, message } = useAppSelector((state) => state.auth);
+  const [formData,setFormData]=useState<ResetPasswordRequest>({
+    email: sessionStorage.getItem("resetEmail") || "",
+    otp: sessionStorage.getItem("resetOtp") || "",
+    newPassword:"",
+    conformPassword:""
+  })
+  
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+
+  const handleResetPassword = async () => {
+    console.log(formData.email)
+    console.log(formData.newPassword)
+
+    if(formData.newPassword !== formData.conformPassword){
+      
+      toast.error("Conform password must be same as New Password")
+    }
+    dispatch(resetPassword(formData));
+    
+  }
+
+  useEffect(() => {
+    if (message === MESSAGES.RESET_SUCCESS) {
+      sessionStorage.removeItem("resetEmail");
+      sessionStorage.removeItem("resetOtp");
+      router.push("/auth/signin");
+      dispatch(resetAuthState());
+    }
+  }, [message]);
+  return{
+    formData,
+    handleChange,
+    handleResetPassword,
+    loading,
+    error,
+    message,
+  }
+
+}

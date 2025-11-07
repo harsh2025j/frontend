@@ -3,19 +3,17 @@
 import Image from "next/image";
 import logo from "../../../../public/logo.svg";
 import CustomInput from "@/components/ui/CustomInput";
-import { useForgotPasswordAction, useVerifyForgotActions } from "@/data/features/auth/useAuthActions";
+import { useForgotPasswordAction, useResetPasswordAction, useVerifyForgotActions } from "@/data/features/auth/useAuthActions";
 import { FormEvent, useEffect } from "react";
 import toast from "react-hot-toast";
 
 export default function ForgotPasswordPage() {
   const { email, otpSent, handleChange, handleForgotPassword ,loading, error,message,} = useForgotPasswordAction();
   const { formData, handleChange: handleOtpChange, handleVerify} = useVerifyForgotActions(email);
-
   useEffect(() => {
       if (error) toast.error(error);
       if (message) toast.success(message);
-    }, [error, message]);
-    
+  }, [error, message]);
 
   // const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
   //   e.preventDefault();
@@ -38,17 +36,17 @@ export default function ForgotPasswordPage() {
 
         {!otpSent ? (
           <>
-            <label className="block text-sm mb-2">Email</label>
+            <label className="block text-sm mb-2 font-medium ">Email </label>
             <input
               type="email"
               name="email"
               value={email}
               onChange={handleChange}
-              className="w-full border p-2 rounded-md mb-4"
+              className="w-full  mb-4 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
               placeholder="Enter your email"
               required
-              
             />
+            
             <button
               onClick={handleForgotPassword}
               disabled={loading}
@@ -60,25 +58,25 @@ export default function ForgotPasswordPage() {
         ) : (
           <>
           
-           <label className="block text-sm mb-2">Email</label>
+           <label className="block text-sm mb-2 font-medium ">Email</label>
             <input
               type="email"
               name="email"
               value={formData.email}
               readOnly
               required
-              className="w-full border p-2 rounded-md mb-4"
+              className="w-full  mb-4 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
 
 
-            <label className="block text-sm mb-2">OTP</label>
+            <label className="block text-sm mb-2 font-medium ">OTP</label>
             <input
               type="text"
               name="otp"
               required
               value={formData.otp}
               onChange={handleOtpChange}
-              className="w-full border p-2 rounded-md mb-4"
+              className="w-full  mb-4 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
               placeholder="Enter OTP"
             />
 

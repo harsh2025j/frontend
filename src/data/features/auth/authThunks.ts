@@ -3,6 +3,8 @@ import {  forgotPasswordRequest, ForgotPasswordResponse, LoginRequest,
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
   VerifyOtpRequest,
   VerifyOtpResponse, } from "./auth.types";
 import { authApi } from "@/data/services/auth-service/auth-service";
@@ -74,4 +76,18 @@ export const forgotPassword = createAsyncThunk<ForgotPasswordResponse,forgotPass
   }
 )
 
+export const resetPassword = createAsyncThunk<ResetPasswordResponse,ResetPasswordRequest>(
+  "auth/resetPassword",
+  async(formData,thunkAPI)=>{
+    try{
+      const {conformPassword , ...newData}=formData
+      const res = await authApi.resetPassword(newData);
+      // const res = await authApi.resetPassword(formData);
+      return res.data;
+    }catch (err: any) {
+      return thunkAPI.rejectWithValue(err.response?.data?.message || MESSAGES.RESET_FAIL);
+    }
+
+  }
+)
 
