@@ -19,8 +19,6 @@ const [isVerified, setIsVerified] = useState(false);
     if (typeof window !== "undefined") {
       const verified = sessionStorage.getItem("otpVerified");
 
-      console.log("verified val:",verified);
-
       if (verified === "verified_2138") {
         setIsVerified(true);
       
@@ -47,11 +45,9 @@ useEffect(() => {
     handleResetPassword();
   };
 
-console.log("isVerified ", isVerified);
+
 if (!isVerified) return null;
 
-
-  
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-white px-4 sm:px-6 lg:px-8 py-10">

@@ -251,6 +251,8 @@ export const useVerifyForgotActions = (initialEmail = "") => {
 
 
 export const useForgotPasswordAction = () => {
+  const router = useRouter();
+
   const dispatch = useAppDispatch();
   const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
