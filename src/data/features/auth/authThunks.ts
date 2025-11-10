@@ -9,6 +9,7 @@ import {  forgotPasswordRequest, ForgotPasswordResponse, LoginRequest,
   VerifyOtpResponse, } from "./auth.types";
 import { authApi } from "@/data/services/auth-service/auth-service";
 import { MESSAGES } from "@/lib/constants/messageConstants";
+import { ApiError } from "@/lib/utils/errorHandler";
 
 
 export const loginUser = createAsyncThunk<LoginResponse, LoginRequest>(
@@ -19,10 +20,10 @@ export const loginUser = createAsyncThunk<LoginResponse, LoginRequest>(
       const res = await authApi.login(formData);
       console.log(res.data);
       return res.data;
-    } catch (err: any) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || MESSAGES.LOGIN_FAIL
-      );
+    } catch (err: unknown) {
+      // Error is already handled by centralized error handler
+      const apiError = err as ApiError;
+      return thunkAPI.rejectWithValue(apiError.message || MESSAGES.LOGIN_FAIL);
     }
   }
 );
@@ -36,10 +37,10 @@ export const registerUser = createAsyncThunk<RegisterResponse, RegisterRequest>(
       console.log("slfjsdkjflsdfj");
       console.log(res);
       return res.data;
-    } catch (err: any) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || MESSAGES.REGISTER_FAIL
-      );
+    } catch (err: unknown) {
+      // Error is already handled by centralized error handler
+      const apiError = err as ApiError;
+      return thunkAPI.rejectWithValue(apiError.message || MESSAGES.REGISTER_FAIL);
     }
   }
 );
@@ -53,10 +54,10 @@ export const verifyOtp = createAsyncThunk<VerifyOtpResponse, VerifyOtpRequest>(
       const res = await authApi.verifyOtp(formData);
       console.log("sldfjsdjkfk")
       return res.data;
-    } catch (err: any) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || MESSAGES.VERIFY_FAIL
-      );
+    } catch (err: unknown) {
+      // Error is already handled by centralized error handler
+      const apiError = err as ApiError;
+      return thunkAPI.rejectWithValue(apiError.message || MESSAGES.VERIFY_FAIL);
     }
   }
 );
@@ -69,8 +70,10 @@ export const forgotPassword = createAsyncThunk<ForgotPasswordResponse,forgotPass
       console.log(data)
       const res = await authApi.forgotPassword(data);
       return res.data;
-    }catch (err: any) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || MESSAGES.FORGOT_FAIL);
+    }catch (err: unknown) {
+      // Error is already handled by centralized error handler
+      const apiError = err as ApiError;
+      return thunkAPI.rejectWithValue(apiError.message || MESSAGES.FORGOT_FAIL);
     }
 
   }
@@ -82,8 +85,10 @@ export const resetPassword = createAsyncThunk<ResetPasswordResponse,ResetPasswor
     try{
       const res = await authApi.resetPassword(formData);
       return res.data;
-    }catch (err: any) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || MESSAGES.RESET_FAIL);
+    }catch (err: unknown) {
+      // Error is already handled by centralized error handler
+      const apiError = err as ApiError;
+      return thunkAPI.rejectWithValue(apiError.message || MESSAGES.RESET_FAIL);
     }
 
   }
