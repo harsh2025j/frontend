@@ -73,5 +73,6 @@ export interface AuthState {
   refreshToken: string | null;
   user: AuthUser | null;
   message: string | null;
+  debugOtp?: string | null;
 }
 

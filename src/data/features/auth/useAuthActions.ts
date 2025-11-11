@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
  const selectIsAuthenticated = (state: RootState) => !!state.auth.token;
  const selectIsToken = (state: RootState) => state.auth.token;
  const selectAuthMessage = (state: RootState) => state.auth.message;
+ const selectDebugOtp = (state: RootState) => state.auth.debugOtp;
 
 
 const useAuth = () => {
@@ -29,8 +30,9 @@ const useAuth = () => {
   const error = useAppSelector(selectAuthError);
   const message = useAppSelector(selectAuthMessage);
   const token = useAppSelector(selectIsToken);
+  const debugOtp = useAppSelector(selectDebugOtp);
   const logout = () => dispatch(logoutUser());
-  return { user, isAuthenticated, loading, error, logout, message, token };
+  return { user, isAuthenticated, loading, error, logout, message, token, debugOtp };
 };
 
 
@@ -38,7 +40,7 @@ const useAuth = () => {
 export const useRegisterActions = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { loading, error, message } = useAuth();
+  const { loading, error, message, debugOtp } = useAuth();
 
   const [formData, setFormData] = useState<RegisterRequest>({
   name: "",
@@ -72,11 +74,14 @@ export const useRegisterActions = () => {
 
   useEffect(() => {
     if (message === MESSAGES.REGISTER_SUCCESS) {
+      if (debugOtp) {
+        toast.success(`${MESSAGES.REGISTER_SUCCESS} (OTP: ${debugOtp})`);
+      }
       sessionStorage.setItem("registeredEmail", formData.email);
       router.push("/auth/verify");
       dispatch(resetAuthState());
     }
-  }, [message]);
+  }, [message, debugOtp]);
 
   return {
     formData,
@@ -86,6 +91,7 @@ export const useRegisterActions = () => {
     loading,
     error,
     message,
+    debugOtp,
   };
 };
 
@@ -119,7 +125,7 @@ export const useLoginActions = () => {
 
   useEffect(() => {
     if (token) {
-      router.push("/dashboard");
+      router.push("/");
       dispatch(resetAuthState());
     }
   }, [token]);
@@ -182,7 +188,7 @@ export const useVerifyActions = () => {
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("resetEmail");
       }
-      router.push("/dashboard");
+      router.push("/");
       dispatch(resetAuthState());
     }
   }, [message]);
@@ -257,7 +263,7 @@ export const useForgotPasswordAction = () => {
   const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
 
-  const { loading, error, message } = useAppSelector((state) => state.auth);
+  const { loading, error, message, debugOtp } = useAppSelector((state) => state.auth);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -287,6 +293,7 @@ export const useForgotPasswordAction = () => {
     loading,
     error,
     message,
+    debugOtp,
   };
 };
 

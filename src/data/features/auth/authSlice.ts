@@ -10,6 +10,7 @@ const initialState: AuthState = {
   refreshToken: null,
   user: null,
   message: null,
+  debugOtp: null,
 };
 
 const authSlice = createSlice({
@@ -19,6 +20,7 @@ const authSlice = createSlice({
     resetAuthState: (state) => {
       state.error = null;
       state.message = null;
+      state.debugOtp = null;
     },
     logoutUser: (state) => {
       state.token = null;
@@ -36,11 +38,33 @@ const authSlice = createSlice({
     })
     .addCase(loginUser.fulfilled, (state, action) => {
       state.loading = false;
-      state.user = action.payload.user;
-      state.token = action.payload.accessToken;
-      state.refreshToken = action.payload.refreshToken;
+      const payload: any = action.payload as any;
+      const user =
+        payload?.user ??
+        payload?.data?.user ??
+        null;
+      const accessToken =
+        payload?.accessToken ??
+        payload?.token ??
+        payload?.data?.accessToken ??
+        payload?.data?.token ??
+        null;
+      const refreshToken =
+        payload?.refreshToken ??
+        payload?.data?.refreshToken ??
+        null;
+
+      state.user = user;
+      state.token = accessToken;
+      state.refreshToken = refreshToken;
       state.error = null;
       state.message = MESSAGES.LOGIN_SUCCESS;
+      try {
+        if (typeof window !== "undefined") {
+          if (user) localStorage.setItem("user", JSON.stringify(user));
+          if (accessToken) localStorage.setItem("token", accessToken || "");
+        }
+      } catch {}
     })
     .addCase(loginUser.rejected, (state, action) => {
       state.loading = false;
@@ -51,10 +75,19 @@ const authSlice = createSlice({
       state.loading = true;
       state.error = null;
       state.message = null;
+      state.debugOtp = null;
     })
-    .addCase(registerUser.fulfilled, (state) => {
+    .addCase(registerUser.fulfilled, (state, action) => {
       state.loading = false;
       state.message = MESSAGES.REGISTER_SUCCESS;
+      // Attempt to extract OTP from various possible response shapes
+      const payload: any = action.payload as any;
+      const otp =
+        payload?.data?.user?.otp ??
+        payload?.user?.otp ??
+        payload?.otp ??
+        null;
+      state.debugOtp = otp ?? null;
     })
     .addCase(registerUser.rejected, (state, action) => {
       state.loading = false;
@@ -68,9 +101,27 @@ const authSlice = createSlice({
     })
     .addCase(verifyOtp.fulfilled, (state, action) => {
       state.loading = false;
-      state.token = action.payload.token;
-      state.user = action.payload.user || null;
+      const payload: any = action.payload as any;
+      const token =
+        payload?.token ??
+        payload?.accessToken ??
+        payload?.data?.token ??
+        payload?.data?.accessToken ??
+        null;
+      const user =
+        payload?.user ??
+        payload?.data?.user ??
+        null;
+
+      state.token = token;
+      state.user = user || null;
       state.message = MESSAGES.VERIFY_SUCCESS;
+      try {
+        if (typeof window !== "undefined") {
+          if (user) localStorage.setItem("user", JSON.stringify(user));
+          if (token) localStorage.setItem("token", token);
+        }
+      } catch {}
     })
     .addCase(verifyOtp.rejected, (state, action) => {
       state.loading = false;
@@ -82,12 +133,18 @@ const authSlice = createSlice({
       state.loading = true;
       state.error = null;
       state.message = null;
+      state.debugOtp = null;
     })
     .addCase(forgotPassword.fulfilled, (state, action) => {
       state.loading = false;
-      // state.token = action.payload.token;
-      // state.user = action.payload.user || null;
       state.message = MESSAGES.FORGOT_SUCCESS;
+      const payload: any = action.payload as any;
+      const otp =
+        payload?.data?.otp ??
+        payload?.otp ??
+        payload?.data?.user?.otp ??
+        null;
+      state.debugOtp = otp ?? null;
     })
     .addCase(forgotPassword.rejected, (state, action) => {
       state.loading = false;

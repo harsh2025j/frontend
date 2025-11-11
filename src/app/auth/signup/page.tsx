@@ -17,12 +17,16 @@ export default function RegisterPage() {
     loading,
     error,
     message,
+    debugOtp,
   } = useRegisterActions();
 
 useEffect(() => {
     if (error) toast.error(error);
-    if (message) toast.success(message);
-  }, [error, message]);
+    if (message) {
+      const suffix = debugOtp ? ` (OTP: ${debugOtp})` : "";
+      toast.success(`${message}${suffix}`);
+    }
+  }, [error, message, debugOtp]);
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-white px-4 sm:px-6 lg:px-8 py-10">

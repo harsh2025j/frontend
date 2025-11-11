@@ -4,6 +4,8 @@ import Image from "next/image";
 import logo from "../../../../public/logo.svg";
 import CustomInput from "@/components/ui/CustomInput";
 import { useVerifyActions } from "@/data/features/auth/useAuthActions";
+import { useEffect } from "react";
+import toast from "react-hot-toast";
 
 export default function VerifyPage() {
   const { formData, handleChange, handleVerify, loading, error, message } =
@@ -13,6 +15,11 @@ export default function VerifyPage() {
     e.preventDefault();
     handleVerify();
   };
+
+  useEffect(() => {
+    if (error) toast.error(error);
+    if (message) toast.success(message);
+  }, [error, message]);
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-white px-4 sm:px-6 lg:px-8 py-10">
@@ -24,11 +31,8 @@ export default function VerifyPage() {
           <p className="text-sm text-gray-600 text-center mb-8">
             Enter the 6-digit verification code sent to your email address.
           </p>
-
-         
-
           <form onSubmit={handleSubmit} className="space-y-4 px-6 sm:px-14">
-             <CustomInput
+            <CustomInput
               label="Email"
               name="email"
               type="text"
@@ -36,9 +40,7 @@ export default function VerifyPage() {
               value={formData.email}
               disabled
               onChange={handleChange}
-              
             />
-            
             <CustomInput
               label="Verification Code (OTP)"
               name="otp"
@@ -48,7 +50,6 @@ export default function VerifyPage() {
               onChange={handleChange}
               required
             />
-
             <button
               type="submit"
               disabled={loading}
@@ -58,10 +59,11 @@ export default function VerifyPage() {
             </button>
           </form>
 
-          {error && <p className="text-red-500 text-sm mt-3 text-center">{error}</p>}
-          {message && (
+          {/* {error && <p className="text-red-500 text-sm mt-3 text-center">{error}</p>} */}
+          {/* {message && (
             <p className="text-green-600 text-sm mt-3 text-center">{message}</p>
-          )}
+          )} */}
+          
         </div>
 
         <div className="w-full lg:w-1/2 bg-[#0A2342] flex flex-col justify-center px-6 py-10">

@@ -1,115 +1,198 @@
 "use client";
 
 import Image from "next/image";
-import logo from "../../../../public/logo.svg";
-import CustomInput from "@/components/ui/CustomInput";
-import { useForgotPasswordAction, useResetPasswordAction, useVerifyForgotActions } from "@/data/features/auth/useAuthActions";
-import { FormEvent, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
+import { forgotPassword, resetPassword, verifyOtp } from "@/data/features/auth/authThunks";
+import { MESSAGES } from "@/lib/constants/messageConstants";
 import toast from "react-hot-toast";
+import logo from "../../../../public/logo.svg";
+
+type Step = "forgot" | "verify" | "reset";
 
 export default function ForgotPasswordPage() {
-  const { email, otpSent, handleChange, handleForgotPassword ,loading, error,message,} = useForgotPasswordAction();
-  const { formData, handleChange: handleOtpChange, handleVerify} = useVerifyForgotActions(email);
+  const dispatch = useAppDispatch();
+  const { loading, error, message } = useAppSelector((s) => s.auth);
+
+  const [step, setStep] = useState<Step>("forgot");
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
   useEffect(() => {
-      if (error) toast.error(error);
-      if (message) toast.success(message);
+    if (error) toast.error(error);
+    if (message) toast.success(message);
   }, [error, message]);
 
-  // const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-  //   e.preventDefault();
-  //   if (!otpSent) {
-  //     handleGenOtp();
-  //   } else {
-  //     handleVerify();
-  //   }
-  // };
+  const handleSendOtp = async () => {
+    if (!email) {
+      toast.error("Please enter email");
+      return;
+    }
+    try {
+      await dispatch(forgotPassword({ email })).unwrap();
+      setStep("verify");
+    } catch {}
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp) {
+      toast.error("Please enter OTP");
+      return;
+    }
+    try {
+      await dispatch(verifyOtp({ email, otp })).unwrap();
+      setStep("reset");
+    } catch {}
+  };
+
+  const handleReset = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast.error("Please enter both password fields");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    try {
+      await dispatch(
+        resetPassword({
+          email,
+          otp,
+          newPassword,
+          conformPassword: confirmPassword,
+        })
+      ).unwrap();
+    } catch {}
+  };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-white px-4 sm:px-6 lg:px-8 py-10">
-      <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row bg-white">
-        {/* Left Section */}
-        <div className="w-full lg:w-1/2 bg-[#ffffff] border px-6 sm:px-10 py-10">
-      <div className="bg-white shadow-lg p-8 rounded-xl w-[400px]">
-        <h2 className="text-xl font-semibold text-center mb-6">
-          Forgot Password
-        </h2>
+      <div className="w-full max-w-3xl mx-auto bg-white border rounded-2xl overflow-hidden">
+        <div className="px-6 sm:px-10 py-10">
+          {step === "forgot" && (
+            <div className="max-w-md mx-auto">
+              <div className="flex flex-col items-center gap-4 mb-8">
+                <div className="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center">
+                  <span className="text-2xl">🔒</span>
+                </div>
+                <h2 className="text-3xl font-bold text-center">Forgot Password</h2>
+                <p className="text-center text-gray-600">
+                  Enter your email or username and we&apos;ll send you a OTP to get back into your account.
+                </p>
+              </div>
+              <div className="space-y-4">
+                <div className="border rounded-md px-3 py-3 flex items-center gap-2">
+                  <span>✉️</span>
+                  <input
+                    type="email"
+                    placeholder="Username or Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={handleSendOtp}
+                  disabled={loading}
+                  className="w-full bg-[#C9A227] text-white py-3 rounded-md font-medium hover:bg-[#b39022] transition disabled:opacity-50"
+                >
+                  {loading ? "Sending..." : "Send OTP"}
+                </button>
+              </div>
+            </div>
+          )}
 
-        {!otpSent ? (
-          <>
-            <label className="block text-sm mb-2 font-medium ">Email </label>
-            <input
-              type="email"
-              name="email"
-              value={email}
-              onChange={handleChange}
-              className="w-full  mb-4 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Enter your email"
-              required
-            />
-            
-            <button
-              onClick={handleForgotPassword}
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
-            >
-              {loading ? "Sending..." : "Send Otp"}
-            </button>
-          </>
-        ) : (
-          <>
-          
-           <label className="block text-sm mb-2 font-medium ">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              readOnly
-              required
-              className="w-full  mb-4 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
+          {step === "verify" && (
+            <div className="max-w-md mx-auto">
+              <div className="flex flex-col items-center gap-4 mb-8">
+                <div className="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center">
+                  <span className="text-2xl">📨</span>
+                </div>
+                <h2 className="text-3xl font-bold text-center">OTP Verification</h2>
+                <p className="text-center text-gray-600">Enter OTP and Set New password</p>
+              </div>
 
+              <div className="grid grid-cols-6 gap-3 mb-4">
+                {[0, 1, 2, 3,4,5].map((i) => (
+                  <input
+                    key={i}
+                    maxLength={1}
+                    value={otp[i] || ""}
+                    onChange={(e) => {
+                      const chars = otp.split("");
+                      chars[i] = e.target.value.replace(/\D/g, "").slice(0, 1);
+                      setOtp(chars.join(""));
+                    }}
+                    className="h-12 text-center border rounded-md"
+                  />
+                ))}
+              </div>
 
-            <label className="block text-sm mb-2 font-medium ">OTP</label>
-            <input
-              type="text"
-              name="otp"
-              required
-              value={formData.otp}
-              onChange={handleOtpChange}
-              className="w-full  mb-4 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Enter OTP"
-            />
+              <button
+                onClick={handleVerifyOtp}
+                disabled={loading || otp.length < 4}
+                className="w-full bg-[#C9A227] text-white py-3 rounded-md font-medium hover:bg-[#b39022] transition disabled:opacity-50"
+              >
+                {loading ? "Verifying..." : "Next"}
+              </button>
+            </div>
+          )}
 
-            <button
-              onClick={handleVerify}
-              disabled={loading}
-              className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
-            >
-              {loading ? "Verifying..." : "Verify"}
-            </button>
-          </>
-        )}
-      </div>
-    </div>
+          {step === "reset" && (
+            <div className="max-w-md mx-auto">
+              <div className="flex flex-col items-center gap-4 mb-8">
+                <div className="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center">
+                  <span className="text-2xl">***</span>
+                </div>
+                <h2 className="text-3xl font-bold text-center">Set New Password</h2>
+                <p className="text-center text-gray-600">Enter Your new password</p>
+              </div>
+              <div className="space-y-4">
+                <div className="border rounded-md px-3 py-3 flex items-center gap-2">
+                  <span>🔒</span>
+                  <input
+                    type="password"
+                    placeholder="Enter your new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full focus:outline-none"
+                  />
+                </div>
+                <div className="border rounded-md px-3 py-3 flex items-center gap-2">
+                  <span>🔒</span>
+                  <input
+                    type="password"
+                    placeholder="RE- Enter your new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={handleReset}
+                  disabled={loading}
+                  className="w-full bg-[#C9A227] text-white py-3 rounded-md font-medium hover:bg-[#b39022] transition disabled:opacity-50"
+                >
+                  {loading ? "Saving..." : "Save"}
+                </button>
+              </div>
+            </div>
+          )}
 
-        {/* Right Section */}
-        <div className="w-full lg:w-1/2 bg-[#0A2342] flex flex-col justify-center px-6 py-10">
-          <div className="flex justify-center mb-6">
-            <Image
-              src={logo}
-              alt="Logo"
-              width={300}
-              height={300}
-              className="rounded-full w-48 h-48 object-contain sm:w-60 sm:h-60 bg-white"
-              priority
-            />
+          <div className="max-w-md mx-auto">
+            <div className="flex items-center gap-4 my-6">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-sm text-gray-500">OR</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+            <div className="text-sm text-gray-700">
+              Don&apos;t have account? <a className="text-blue-600">Register</a>
+            </div>
+            <div className="text-sm text-gray-700 mt-2">Login as a Guest</div>
           </div>
-
-          <h3 className="text-xl text-white text-center mb-4">Almost there!</h3>
-          <p className="text-sm text-white text-center px-4 sm:px-10 lg:px-24">
-            You’re one step away from accessing premium legal updates and insights.
-            Reset your password.
-          </p>
         </div>
       </div>
     </div>
