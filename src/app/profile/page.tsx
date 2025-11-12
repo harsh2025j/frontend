@@ -20,7 +20,7 @@ export default function ProfilePage() {
   
     const resetProfilePassword=()=>{
 
-      router.push(`/auth/forgotPassword?Step="reset"&email=${email}`)
+      router.push(`/auth/forgot-password?Step="reset"&email=${email}`)
       
    }
 
@@ -122,7 +122,7 @@ export default function ProfilePage() {
             <h3 className="text-lg font-semibold mb-4">Quick Action</h3>
             <button className="block w-full text-center border rounded-md py-2 mb-3 hover:bg-gray-50 text-sm" onClick={resetProfilePassword}>Reset Password</button>
             {/* <Link
-              href="/auth/forgotPassword"
+              href="/auth/forgot-password"
               className="block w-full text-center border rounded-md py-2 mb-3 hover:bg-gray-50 text-sm"
             >
               Reset Password
@@ -136,7 +136,7 @@ export default function ProfilePage() {
           <h3 className="text-lg font-semibold mb-2">Current Plan</h3>
           <div className="text-sm text-gray-600">No plan data available.</div>
           <div className="mt-4">
-            <button className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm">Change Plan</button>
+            <button className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm">Choose Plan</button>
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import logo from "../../../../public/logo.svg";
 import CustomInput from "@/components/ui/CustomInput";
-import { useVerifyActions } from "@/data/features/auth/useAuthActions";
+import { useResendOtp, useVerifyActions } from "@/data/features/auth/useAuthActions";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 
@@ -15,6 +15,7 @@ export default function VerifyPage() {
     e.preventDefault();
     handleVerify();
   };
+  const { handleReSendOtp } = useResendOtp();
 
   useEffect(() => {
     if (error) toast.error(error);
@@ -50,6 +51,15 @@ export default function VerifyPage() {
               onChange={handleChange}
               required
             />
+            <div className="text-center mb-4">
+              <button
+                onClick={handleReSendOtp}
+                disabled={loading}
+                className="text-sm text-blue-600 hover:underline disabled:text-gray-400"
+              >
+                Resend OTP
+              </button>
+            </div>
             <button
               type="submit"
               disabled={loading}
@@ -63,7 +73,7 @@ export default function VerifyPage() {
           {/* {message && (
             <p className="text-green-600 text-sm mt-3 text-center">{message}</p>
           )} */}
-          
+
         </div>
 
         <div className="w-full lg:w-1/2 bg-[#0A2342] flex flex-col justify-center px-6 py-10">

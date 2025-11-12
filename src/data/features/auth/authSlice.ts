@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { loginUser, registerUser, verifyOtp, forgotPassword, resetPassword } from "./authThunks";
+import { loginUser, registerUser, verifyOtp, forgotPassword, resetPassword, ResendOtp } from "./authThunks";
 import { AuthState } from "./auth.types";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 
@@ -163,7 +163,22 @@ const authSlice = createSlice({
     .addCase(resetPassword.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload as string;
-    });
+    })
+
+
+    .addCase(ResendOtp.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+      state.message = null;
+    })
+    .addCase(ResendOtp.fulfilled, (state, action) => {
+      state.loading = false;
+      state.message = MESSAGES.RESENDOTP_SUCCESS;
+    })
+    .addCase(ResendOtp.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    })
     ;
 
 

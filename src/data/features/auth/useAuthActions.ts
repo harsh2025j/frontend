@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
-import { LoginRequest, RegisterRequest, ResetPasswordRequest, VerifyOtpRequest } from "./auth.types";
-import { forgotPassword, loginUser, registerUser, resetPassword, verifyOtp } from "./authThunks";
+import { LoginRequest, RegisterRequest, ResendOtpRequest, ResetPasswordRequest, VerifyOtpRequest } from "./auth.types";
+import { forgotPassword, loginUser, registerUser, ResendOtp, resetPassword, verifyOtp } from "./authThunks";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 import { resetAuthState,logoutUser } from "./authSlice";
 
@@ -77,7 +77,7 @@ export const useRegisterActions = () => {
       if (debugOtp) {
         toast.success(`${MESSAGES.REGISTER_SUCCESS} (OTP: ${debugOtp})`);
       }
-      localStorage.setItem("registeredEmail", formData.email);
+      localStorage.setItem("email",formData.email)
       router.push("/auth/verify");
       dispatch(resetAuthState());
     }
@@ -128,6 +128,7 @@ export const useLoginActions = () => {
       console.log("user logout");
       console.log(token);
       router.push("/");
+      localStorage.setItem("email",formData.email);
       dispatch(resetAuthState());
     }
   }, [token]);
@@ -158,10 +159,8 @@ export const useVerifyActions = () => {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedEmail = localStorage.getItem("registeredEmail") || "";
+      const storedEmail = localStorage.getItem("email") || "";
       console.log(storedEmail);
-      
-
       setFormData((prev) => ({
         ...prev,
         email: storedEmail,
@@ -187,9 +186,6 @@ export const useVerifyActions = () => {
 
   useEffect(() => {
     if (message === MESSAGES.VERIFY_SUCCESS) {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("resetEmail");
-      }
       router.push("/");
       dispatch(resetAuthState());
     }
@@ -363,3 +359,50 @@ export const useVerifyActions = () => {
 //     message,
 //   };
 // };
+
+
+export const useResendOtp = () => {
+  const dispatch = useAppDispatch();
+  const { loading, error, message } = useAppSelector((state) => state.auth);
+
+  const [email, setEmail] = useState<ResendOtpRequest>({
+    email: "",
+  });
+
+  useEffect(() => {
+    const loadEmail = () => {
+      const newEmail = localStorage.getItem("email") || "";
+      setEmail({ email: newEmail });
+    };
+
+    loadEmail();
+
+    window.addEventListener("storage", loadEmail);
+    return () => {
+      window.removeEventListener("storage", loadEmail);
+    };
+  }, []);
+
+  const handleReSendOtp = () => {
+    // ✅ always get the latest email value directly
+    const currentEmail = localStorage.getItem("email") || email.email;
+    if (!currentEmail) {
+      console.warn("Email not found in localStorage");
+      return;
+    }
+    dispatch(ResendOtp({ email: currentEmail }));
+  };
+
+  useEffect(() => {
+    if (message === MESSAGES.RESENDOTP_SUCCESS) {
+      dispatch(resetAuthState());
+    }
+  }, [message, dispatch]);
+
+  return {
+    error,
+    loading,
+    message,
+    handleReSendOtp,
+  };
+};

@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import logo from "../../../../public/logo.svg";
 import { resetAuthState } from "@/data/features/auth/authSlice";
 import { useRouter, useSearchParams } from "next/navigation"; 
+import { useResendOtp} from "@/data/features/auth/useAuthActions";
 type Step = "forgot" | "verify" | "reset";
 
 export default function ForgotPasswordPage() {
@@ -33,6 +34,7 @@ export default function ForgotPasswordPage() {
      const emailParam = searchParams.get("email");
     if (emailParam) {
       setEmail(emailParam);
+      // localStorage.setItem("email",emailParam);
     }
    
   }, [searchParams]);
@@ -49,10 +51,11 @@ export default function ForgotPasswordPage() {
     }
     try {
       await dispatch(forgotPassword({ email })).unwrap();
+      console.log("localtosetinforgot",email);
+      localStorage.setItem("email",email);
       setStep("verify");
     } catch {}
   };
-
   const handleVerifyOtp = async () => {
     if (!otp) {
       toast.error("Please enter OTP");
@@ -83,24 +86,30 @@ export default function ForgotPasswordPage() {
         })
       ).unwrap();
     } catch {}
+
+    // if (message==MESSAGES.RESET_SUCCESS) {
+      // console.log("hiughjj");
+      // const emailParam = searchParams.get("email") || "";
+      // if(emailParam !=="") router.replace("/profile")
+      // else router.replace("/auth/login");
+      //  router.push("/profile")
+     
+
+    //   dispatch(resetAuthState());
+    // }
+   
+  };
+  useEffect(() => {
     if (message === MESSAGES.RESET_SUCCESS) {
       const emailParam = searchParams.get("email") || "";
       if(emailParam !=="") router.push("/profile")
       else router.push("/auth/login");
-
+     
       dispatch(resetAuthState());
     }
-  //   useEffect(() => {
-  //   if (message === MESSAGES.RESET_SUCCESS) {
-  //     if (typeof window !== "undefined") {
-  //       localStorage.removeItem("resetEmail");
-  //       localStorage.removeItem("resetOtp");
-  //     }
-  //     router.push("/auth/login");
-  //     dispatch(resetAuthState());
-  //   }
-  // }, [message, router, dispatch]);
-  };
+  }, [message, router, dispatch]);
+
+  const {handleReSendOtp}=useResendOtp();
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-white px-4 sm:px-6 lg:px-8 py-10">
@@ -140,40 +149,72 @@ export default function ForgotPasswordPage() {
           )}
 
           {step === "verify" && (
-            <div className="max-w-md mx-auto">
-              <div className="flex flex-col items-center gap-4 mb-8">
-                <div className="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center">
-                  <span className="text-2xl">📨</span>
-                </div>
-                <h2 className="text-3xl font-bold text-center">OTP Verification</h2>
-                <p className="text-center text-gray-600">Enter OTP and Set New password</p>
-              </div>
+  <div className="max-w-md mx-auto">
+    <div className="flex flex-col items-center gap-4 mb-8">
+      <div className="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center">
+        <span className="text-2xl">📨</span>
+      </div>
+      <h2 className="text-3xl font-bold text-center">OTP Verification</h2>
+      <p className="text-center text-gray-600">Enter OTP and Set New password</p>
+    </div>
 
-              <div className="grid grid-cols-6 gap-3 mb-4">
-                {[0, 1, 2, 3, 4,5].map((i) => (
-                  <input
-                    key={i}
-                    maxLength={1}
-                    value={otp[i] || ""}
-                    onChange={(e) => {
-                      const chars = otp.split("");
-                      chars[i] = e.target.value.replace(/\D/g, "").slice(0, 1);
-                      setOtp(chars.join(""));
-                    }}
-                    className="h-12 text-center border rounded-md"
-                  />
-                ))}
-              </div>
+    {/* Improved OTP Input Box */}
+    <div className="grid grid-cols-6 gap-3 mb-4">
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <input
+          key={i}
+          type="text"
+          inputMode="numeric"
+          maxLength={1}
+          value={otp[i] || ""}
+          onChange={(e) => {
+            const value = e.target.value.replace(/\D/g, "").slice(0, 1); // only digits
+            const chars = otp.split("");
+            chars[i] = value;
+            const newOtp = chars.join("");
+            setOtp(newOtp);
 
-              <button
-                onClick={handleVerifyOtp}
-                disabled={loading || otp.length < 6}
-                className="w-full bg-[#C9A227] text-white py-3 rounded-md font-medium hover:bg-[#b39022] transition disabled:opacity-50"
-              >
-                {loading ? "Verifying..." : "Next"}
-              </button>
-            </div>
-          )}
+            // move to next input automatically
+            if (value && i < 5) {
+              const nextInput = document.querySelector<HTMLInputElement>(
+                `input[data-index="${i + 1}"]`
+              );
+              nextInput?.focus();
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Backspace" && !otp[i] && i > 0) {
+              const prevInput = document.querySelector<HTMLInputElement>(
+                `input[data-index="${i - 1}"]`
+              );
+              prevInput?.focus();
+            }
+          }}
+          data-index={i}
+          className="h-12 w-12 text-center border rounded-md text-lg font-medium focus:outline-none focus:ring-2 focus:ring-yellow-500"
+        />
+      ))}
+    </div>
+    <div className="text-center mb-4">
+      <button
+        onClick={handleReSendOtp}
+        disabled={loading}
+        className="text-sm text-blue-600 hover:underline disabled:text-gray-400"
+      >
+        Resend OTP
+      </button>
+    </div>
+
+    <button
+      onClick={handleVerifyOtp}
+      disabled={loading || otp.length < 6}
+      className="w-full bg-[#C9A227] text-white py-3 rounded-md font-medium hover:bg-[#b39022] transition disabled:opacity-50"
+    >
+      {loading ? "Verifying..." : "Next"}
+    </button>
+  </div>
+)}
+
 
           {step === "reset" && (
             <div className="max-w-md mx-auto">

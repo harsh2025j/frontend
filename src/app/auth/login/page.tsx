@@ -80,7 +80,7 @@ useEffect(() => {
               className="text-gray-800 hover:underline"
             >
               
-              <a href="/auth/forgotPassword" className="text-gray-800 hover:underline">Forgot Password?</a>
+              <a href="/auth/forgot-password" className="text-gray-800 hover:underline">Forgot Password?</a>
             </button>
           </div>
 

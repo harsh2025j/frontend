@@ -18,11 +18,15 @@ export interface VerifyOtpRequest {
   email: string;
   otp: string;
 }
+
+export interface ResendOtpRequest{
+  email:string;
+}
 // export interface ForgotPassword {
 //   email: string;
 //   otp: string;
 // }
-
+ 
 export interface ResetPasswordRequest{
   email:string;
   otp:string;
@@ -65,6 +69,10 @@ export interface ResetPasswordResponse{
   success:string;
   message:string;
 }
+export interface ResendOtpResponse{
+  success:string;
+  message:string;
+}
 
 export interface AuthState {
   loading: boolean;
@@ -75,4 +83,3 @@ export interface AuthState {
   message: string | null;
   debugOtp?: string | null;
 }
-

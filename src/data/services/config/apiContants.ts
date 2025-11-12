@@ -9,5 +9,6 @@ export const API_ENDPOINTS = {
     VERIFY_OTP: "/auth/verify",
     LOGIN: "/auth/login",
     PROFILE: "/auth/profile",
+    RESEND_OTP:"/auth/forgot-password"
   },
 };

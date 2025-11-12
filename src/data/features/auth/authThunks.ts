@@ -3,6 +3,8 @@ import {  forgotPasswordRequest, ForgotPasswordResponse, LoginRequest,
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  ResendOtpRequest,
+  ResendOtpResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
   VerifyOtpRequest,
@@ -89,6 +91,21 @@ export const resetPassword = createAsyncThunk<ResetPasswordResponse,ResetPasswor
       // Error is already handled by centralized error handler
       const apiError = err as ApiError;
       return thunkAPI.rejectWithValue(apiError.message || MESSAGES.RESET_FAIL);
+    }
+
+  }
+)
+
+export const ResendOtp = createAsyncThunk<ResendOtpResponse,ResendOtpRequest>(
+  "auth/resendOtp",
+  async(formData,thunkAPI)=>{
+    try{
+      const res = await authApi.resendOtp(formData);
+      return res.data;
+    }catch (err: unknown) {
+      // Error is already handled by centralized error handler
+      const apiError = err as ApiError;
+      return thunkAPI.rejectWithValue(apiError.message || MESSAGES.RESENDOTP_FAIL);
     }
 
   }

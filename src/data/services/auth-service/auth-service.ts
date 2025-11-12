@@ -6,6 +6,8 @@ import {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  ResendOtpRequest,
+  ResendOtpResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
   VerifyOtpRequest,
@@ -36,6 +38,15 @@ export const authApi = {
     console.log(response)
     return response;
   },
+
+  resendOtp: async(data:ResendOtpRequest)=>{
+    console.log("Send data to server:" , data);
+    const response= await apiClient.post<ResendOtpResponse>(API_ENDPOINTS.AUTH.RESEND_OTP, data);
+    console.log(response)
+    return response;
+  },
+
+
 
   forgotPassword: async (data: forgotPasswordRequest) => {
     console.log("Gen OTP API hit:", data);
