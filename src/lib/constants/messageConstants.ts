@@ -6,13 +6,16 @@ export const MESSAGES = {
   RESET_SUCCESS:"Password reset successful!",
   RESENDOTP_SUCCESS:"Otp send successful!",
 
-  
   REGISTER_FAIL: "Registration failed",
   LOGIN_FAIL: "Login failed",
   VERIFY_FAIL: "Verification failed",
   FORGOT_FAIL:"OTP generation failed",
   RESET_FAIL:"Password reset failed",
   RESENDOTP_FAIL:"Otp send failed",
+
+  ARTICLE_CREATE_SUCCESS: "Content created and submitted for review successfully!",
+  ARTICLE_CREATE_FAIL: "Failed to create content",
+  ARTICLE_FETCH_FAIL: "Failed to fetch articles",
 
   // Error messages
   SERVER_CONNECTION_ERROR: "Unable to connect to the server. Please check if the server is running.",

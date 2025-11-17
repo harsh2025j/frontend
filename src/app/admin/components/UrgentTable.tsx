@@ -1,22 +1,22 @@
 import React from "react";
-
-const data = [
-  {
-    title: "Bombay HC on Insolency",
-    category: "Criminal Law",
-    status: "Pending",
-  },
-  {
-    title: "Global Markets Weekly",
-    category: "Finance",
-    status: "Pending",
-  },
-  {
-    title: "Sport Law doping case",
-    category: "Legal Article",
-    status: "Pending",
-  },
-];
+import { contentData } from "@/lib/dummy";
+// const data = [
+//   {
+//     title: "Bombay HC on Insolency",
+//     category: "Criminal Law",
+//     status: "Pending",
+//   },
+//   {
+//     title: "Global Markets Weekly",
+//     category: "Finance",
+//     status: "Pending",
+//   },
+//   {
+//     title: "Sport Law doping case",
+//     category: "Legal Article",
+//     status: "Pending",
+//   },
+// ];
 
 export default function ContentApprovalPanel() {
   return (
@@ -33,11 +33,10 @@ export default function ContentApprovalPanel() {
           </tr>
         </thead>
         <tbody>
-          {data.map(({ title, category, status }, idx) => (
+          {contentData.map(({ title, category, status }, idx) => (
             <tr key={idx} className="border-b border-gray-300">
               <td className="py-3">{title}</td>
               <td className="py-3">{category}</td>
-              <td className="py-3">{status}</td>
               <td className="py-3">{status}</td>
               <td className="py-3">
                 <button className="bg-yellow-700 text-white rounded-full px-4 py-1 mr-2 font-medium hover:bg-yellow-800 transition">

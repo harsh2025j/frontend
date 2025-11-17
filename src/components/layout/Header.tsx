@@ -3,14 +3,15 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
-import logo from "../../../public/logo.svg";
+import logo from "../../../public/logo.png";
 import { routerServerGlobal } from "next/dist/server/lib/router-utils/router-server-context";
 import { useRouter } from "next/navigation";
 export default function Header() {
   
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  // logout
+  // const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   useEffect(() => {
     try {
       if (typeof window === "undefined") return;
@@ -32,12 +33,9 @@ export default function Header() {
       // noop
     }
   }, []);
-  const router  = useRouter();
-
-  
+  const router  = useRouter(); 
   
   const handleLogout = () => {
-    //  const router  = useRouter();
     localStorage.clear();
     setUser(null);
     router.push('/auth/login')
@@ -90,12 +88,13 @@ export default function Header() {
                   {user?.name || "Profile"}
                 </span>
               </Link>
-              <button
+              {/* logout */}
+              {/* <button
                 onClick={() => setShowLogoutConfirm(true)}
                 className="rounded-full border border-black px-5 py-2 text-sm font-medium hover:bg-black hover:text-white"
               >
                 Logout
-              </button>
+              </button> */}
             </>
           ) : (
             <>
@@ -114,14 +113,14 @@ export default function Header() {
         </div>
 
         {/* Mobile Menu */}
-        <div className="md:hidden">
+        <div className="hidden">
           <button onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
             {menuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
       </div>
       {/* Logout Confirm Modal */}
-      {showLogoutConfirm && (
+      {/* {showLogoutConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <div
             className="absolute inset-0 bg-black/40 opacity-0 animate-[fadeIn_150ms_ease-out_forwards]"
@@ -168,7 +167,7 @@ export default function Header() {
             }
           `}</style>
         </div>
-      )}
+      )} */}
     </header>
   );
 }

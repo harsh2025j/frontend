@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, FolderOpen, Users, FileText, Settings, Brain, Crown, BarChart3 } from "lucide-react";
+import { Home, FolderOpen, Users, FileText, Settings,Pen,Brain, Crown, BarChart3 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -13,6 +13,7 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
     { name: "Premium", icon: <Crown size={18} />, href: "/admin/plans" },
     { name: "Analytics", icon: <BarChart3 size={18} />, href: "/admin/analytics" },
     { name: "Settings", icon: <Settings size={18} />, href: "/admin/settings" },
+    { name: "Roles & Permissions", icon: <Pen size={18} />, href: "/admin/roles-and-permissions" },
   ];
 
 

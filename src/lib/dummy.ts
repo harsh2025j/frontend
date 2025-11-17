@@ -47,3 +47,37 @@
   
 ];
 
+export const contentData = [
+  {
+    title: "Bombay HC on Insolvency",
+    writer: "Ujjwal Singh",
+    category: "Supreme Court",
+    status: "Draft",
+    language: "English",
+    date: "Oct 22",
+  },
+  {
+    title: "Global Markets Weekly",
+    writer: "Satyam Singh",
+    category: "Business",
+    status: "Pending",
+    language: "Hindi",
+    date: "Oct 22",
+  },
+  {
+    title: "Sport Law Doping Case",
+    writer: "Ravi Sharma",
+    category: "Criminal Law",
+    status: "Published",
+    language: "English",
+    date: "Oct 22",
+  },
+  {
+    title: "Consumer Law Update",
+    writer: "Ankit Rana",
+    category: "Consumer Law",
+    status: "Pending",
+    language: "Hindi",
+    date: "Oct 22",
+  },
+];

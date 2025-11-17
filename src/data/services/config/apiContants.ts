@@ -11,4 +11,10 @@ export const API_ENDPOINTS = {
     PROFILE: "/auth/profile",
     RESEND_OTP:"/auth/forgot-password"
   },
+
+  ARTICLE: {
+    CREATE: "/articles",
+    FETCH_ALL: "/articles",
+  },
 };
+

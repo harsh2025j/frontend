@@ -9,6 +9,9 @@ import AiPoweredFeatures from "../ui/AiPoweredFeatures";
 import ContentSlider from "@/components/home/ContentSlider";
 import LatestNews from "../ui/LatestNews";
 import Judgement from "../ui/judgement";
+import UniversalSelect from "../ui/universalSelector";
+import TopAdvocate from "../ui/TopAdvocate"
+import LiveCourt from "../ui/LiveCourt"
 import HindiNews from "../ui/HindiNews";
 import CustomInput from "../ui/CustomInput"
 import StateJudgement from "../ui/stateJudgement";
@@ -21,11 +24,11 @@ import img1 from '../../assets/img1.png';
 import newsImage1 from '../../assets/newsImage1.png';
 import { useLoginActions } from "@/data/features/auth/useAuthActions";
 
-interface City{
-  City:string,
+interface City {
+  City: string,
 }
-interface Court{
-  Court:string,
+interface Court {
+  Court: string,
 }
 
 
@@ -35,29 +38,20 @@ interface Court{
 //   leftWidth?: string;
 //   rightWidth?: string;
 // }
-export default function Stores(){
-  const [CityData, setCityData] = useState<City>({
-    City:"",
-});
-const [CourtData, setCourtData] = useState<Court>({
-    Court:"",
-});
+export default function Stores() {
+  const [SearchData, setSearchData] = useState({ Search: "" });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setCityData((prev) => ({ ...prev, [name]: value }));
+  const handleSearchChange = (e: any) => {
+    setSearchData({ ...SearchData, [e.target.name]: e.target.value });
   };
-  const handleChange1 = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setCourtData((prev) => ({ ...prev, [name]: value }));
-  };
+
 
 
   return (
     <div className="bg-[#f6f6f7]">
       <div className="w-full">
 
-        <div className="border-2 border-dotted border-[#000000] h-14 my-10 flex ">
+        <div className="border-2 border-dotted border-[#000000] h-14 my-5 flex ">
           <div className=" w-40 h-full flex justify-center items-center   bg-[#0A2342]  text-white text-xl">
             Live News
           </div>
@@ -68,40 +62,143 @@ const [CourtData, setCourtData] = useState<Court>({
             </p>
           </div>
         </div>
+        <div className="container justify-center  mx-auto flex mb-5 ">
+          <div className=" justify-center gap-2 flex">
+            <UniversalSelect
+              name="Case Status"
+              options={[]}
+            />
+            <UniversalSelect
+              name="Case List"
+              options={[]} />
+            <UniversalSelect
+              name="Reports"
+              options={[]} />
+
+            <UniversalSelect
+              name="Judgment"
+              options={[]} />
+
+            <UniversalSelect
+              name="Display Boards"
+              options={[]} />
+
+            <UniversalSelect
+              name="Judges"
+              options={[]} />
+
+          </div>
+        </div>
+
+
+        <div className="bg-white w-full py-10 flex justify-center mb-10">
+          <div className="mx-30 my-10">
+
+            {/* Search Bar Centered */}
+            <div className="w-full flex justify-center items-center px-4">
+              <div className="relative w-full max-w-[700px]">
+
+                <CustomInput
+                  name="Search"
+                  value={SearchData.Search}
+                  onChange={handleSearchChange}
+                  placeholder="Search any Legal question or track a case..."
+                  className="bg-[#f6f6f7] w-full pl-12 pr-5 py-3 rounded-xl text-base sm:text-lg"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => console.log("Search clicked")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2"
+                >
+                  <svg
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </button>
+
+              </div>
+            </div>
+
+
+
+            {/* State Items */}
+            <div className="flex gap-10 mt-10 ">
+              <StateJudgement img={img1} state="Lucknow" />
+              <StateJudgement img={img1} state="Lucknow" />
+              <StateJudgement img={img1} state="Lucknow" />
+              <StateJudgement img={img1} state="Lucknow" />
+              <StateJudgement img={img1} state="Lucknow" />
+              <StateJudgement img={img1} state="Lucknow" />
+              <StateJudgement img={img1} state="Lucknow" />
+              <StateJudgement img={img1} state="Lucknow" />
+            </div>
+
+          </div>
+        </div>
+
 
         {/* ########################## */}
-        <div className="flex justify-center  ">
+        <div className="flex justify-center h-auto">
 
           <div className="container gap-4  justify-center flex sm:flex-row flex-col  ">
 
-            <div className="flex flex-col gap-4 w-full">
+            <div className="flex flex-col gap-4 ">
               <div className="flex justify-between items-center">
                 <h1 className="text-xl md:text-2xl font-extrabold font-merriweather">
-                  Today's Top 10 Updates
+                  Live Court
                 </h1>
               </div>
-              <NewsScroller items={items} />
+              {/* <NewsScroller items={items} /> */}
+              <LiveCourt />
+
+
             </div>
 
-            <div className="flex flex-col gap-4  ">
+            <div className="flex flex-col gap-4 w-full max-w-[600px]">
               <div >
                 <h1 className="text-xl md:text-2xl  font-extrabold font-merriweather">
-                  LLS Finance Quick Updates
+                  Top Advocate
                 </h1>
               </div>
 
-              <div className={`flex flex-col p-4 bg-white  transition-all duration-300 `}>
-                <table className="w-full border-collapse">
-                  <thead>
+              <div className={`flex flex-col p-5 bg-white justify-evenly transition-all duration-300 rounded-sm h-full`}>
+                <TopAdvocate
+                  img={icon1}
+                  title="Mr. Gopal Sankaranarayanan,"
+                  description="Senior Advocate (For Petitioners)"
+                />
+                <TopAdvocate
+                  img={icon1}
+                  title="Mr. Gopal Sankaranarayanan,"
+                  description="Senior Advocate (For Petitioners)"
+                />
+                <TopAdvocate
+                  img={icon1}
+                  title="Mr. Gopal Sankaranarayanan,"
+                  description="Senior Advocate (For Petitioners)"
+                />
+
+                {/* <table className="w-full border-collapse"> */}
+                {/* <thead>
                     <tr className=" border-b border-gray-400">
                       <th className="px-4 py-2 text-left font-semibold border-r border-gray-300">Name</th>
                       <th className="px-4 py-2 text-left font-semibold border-r border-gray-300">Price</th>
                       <th className="px-4 py-2 text-left font-semibold border-r border-gray-300">Changes</th>
                       <th className="px-4 py-2 text-left font-semibold">High</th>
                     </tr>
-                  </thead>
+                  </thead> */}
 
-                  <tbody>
+                {/* <tbody>
                     {LLS.map((data) => (
                       <tr key={data.id} className="hover:bg-gray-50">
                         <td className="px-4 py-2 border-r border-gray-300">{data.name}</td>
@@ -115,8 +212,8 @@ const [CourtData, setCourtData] = useState<Court>({
                         <td className="px-4 py-2">{data.high}</td>
                       </tr>
                     ))}
-                  </tbody>
-                </table>
+                  </tbody> */}
+                {/* </table> */}
               </div>
             </div>
 
@@ -217,7 +314,7 @@ const [CourtData, setCourtData] = useState<Court>({
           <Button lable="View More" className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 py-1 mt-5" />
         </div>
         {/* ################Latest Judgments In your State####### */}
-        <div className=" w-full ">
+        {/* <div className=" w-full ">
           <div className="flex items-center justify-center mt-10 my-10">
             <div className="flex-1 h-px bg-gray-400"></div>
             <h2 className="px-4 text-xl font-merriweather font-semibold text-black">
@@ -249,8 +346,9 @@ const [CourtData, setCourtData] = useState<Court>({
             </div>
 
           </div>
+          </div> */}
 
-        </div>
+
         <div>
           <div className="flex items-center justify-center mt-10 mb-5">
             <div className="flex-1 h-px bg-gray-400"></div>

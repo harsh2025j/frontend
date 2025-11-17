@@ -7,6 +7,8 @@
   --font-merriweather: Merriweather, sans-serif;
 }
 
+
+
 /* Hide scrollbar */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;

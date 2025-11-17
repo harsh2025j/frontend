@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { forgotPassword, resetPassword, verifyOtp } from "@/data/features/auth/authThunks";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 import toast from "react-hot-toast";
-import logo from "../../../../public/logo.svg";
+import logo from "../../../../public/logo.png";
 import { resetAuthState } from "@/data/features/auth/authSlice";
 import { useRouter, useSearchParams } from "next/navigation"; 
 import { useResendOtp} from "@/data/features/auth/useAuthActions";

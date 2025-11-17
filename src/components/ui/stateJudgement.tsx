@@ -13,7 +13,7 @@ const StateJudgement:React.FC<State>=({
     state,
 })=>{
     return(
-        <div>
+        <div className="md:w-auto">
             <Image src={img} alt="Image" className="rounded-[50%]"/>
             <h1 className="text-md text-center">{state}</h1>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import logo from "../../../../public/logo.svg";
+import logo from "../../../../public/logo.png";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import CustomInput from "@/components/ui/CustomInput";

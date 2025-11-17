@@ -1,5 +1,5 @@
 import Image, { StaticImageData } from "next/image";
-import logo from "../../../public/logo.svg";
+import logo from "../../../public/logo.png";
 interface NewsCardProps {
   src?: StaticImageData;
   title: string;
