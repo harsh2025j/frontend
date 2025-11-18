@@ -28,8 +28,8 @@ useEffect(() => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
       <div className="w-full max-w-md bg-white border border-gray-200 rounded-lg shadow-md p-6 sm:p-8">
-        <div className="flex justify-center mb-6">
-          <Image src={logo} alt="Logo" width={220} height={220} />
+        <div className="flex justify-center mb-6 ">
+          <Image  src={logo} alt="Logo" width={220} height={220} className="invert"/>
         </div>
 
         <h2 className="text-2xl font-bold text-center mb-2">Welcome Back!</h2>

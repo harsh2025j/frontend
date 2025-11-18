@@ -8,13 +8,13 @@ import { MESSAGES } from "@/lib/constants/messageConstants";
 import toast from "react-hot-toast";
 import logo from "../../../../public/LightGray.png";
 import { resetAuthState } from "@/data/features/auth/authSlice";
-import { useRouter, useSearchParams } from "next/navigation"; 
+import { useRouter} from "next/navigation"; 
 import { useResendOtp} from "@/data/features/auth/useAuthActions";
 type Step = "forgot" | "verify" | "reset";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
-  const searchParams=useSearchParams();
+  // const searchParams=useSearchParams();
 
   const dispatch = useAppDispatch();
   const { loading, error, message } = useAppSelector((s) => s.auth);
@@ -27,17 +27,19 @@ export default function ForgotPasswordPage() {
   const [conformPassword, setConformPassword] = useState("");
 
   useEffect(() => {
-    const stepParam = searchParams.get("Step");
+const params = new URLSearchParams(window.location.search);
+const stepParam = params.get("Step");
+const emailParam = params.get("email");
+
     if (stepParam) {
       setStep("reset")
     }
-     const emailParam = searchParams.get("email");
     if (emailParam) {
       setEmail(emailParam);
       // localStorage.setItem("email",emailParam);
     }
    
-  }, [searchParams]);
+  },[]);
 
   useEffect(() => {
     if (error) toast.error(error);
@@ -101,7 +103,8 @@ export default function ForgotPasswordPage() {
   };
   useEffect(() => {
     if (message === MESSAGES.RESET_SUCCESS) {
-      const emailParam = searchParams.get("email") || "";
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get("email") || "";
       if(emailParam !=="") router.push("/profile")
       else router.push("/auth/login");
      

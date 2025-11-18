@@ -89,7 +89,7 @@ export default function ProfilePage() {
   // Reset / Save
   const resetProfilePassword = () => {
     // email must be present to pre-fill the reset flow in your app
-    router.push(`/auth/forgot-password?Step=reset&email=${encodeURIComponent(email)}`);
+    router.push(`/auth/forgot-password?Step=reset&email=${email}`);
   };
 
   const handleLogout = () => {
