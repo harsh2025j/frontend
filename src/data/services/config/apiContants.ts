@@ -1,5 +1,5 @@
 export const API_BASE_URL =
-  "https://supersphenoidal-enrico-consolitorily.ngrok-free.dev";
+  "https://shellproof-ka-noncorrelative.ngrok-free.dev/";
 
 export const API_ENDPOINTS = {
   AUTH: {
