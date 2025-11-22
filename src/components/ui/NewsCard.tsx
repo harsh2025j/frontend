@@ -25,7 +25,11 @@ export default function NewsCard({
         <Image
           width={300}
           height={200}
-          src={src}
+          src={
+            (typeof src === 'string' && (src.startsWith('http') || src.startsWith('/')))
+              ? src
+              : (typeof src === 'object' ? src : logo)
+          }
           alt={title}
           className="object-cover"
           sizes="(max-width: 640px) 100vw, 180px"
