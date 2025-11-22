@@ -5,7 +5,7 @@ import { handleApiError } from "@/lib/utils/errorHandler";
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    "Content-Type": "multipart/form-data",
+    // "Content-Type": "application/json",
   },
   timeout: 30000, // 30 seconds timeout
 });

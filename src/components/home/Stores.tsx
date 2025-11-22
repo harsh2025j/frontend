@@ -269,6 +269,7 @@ export default function Stores() {
                   key={data.id}
                   img={data.thumbnail}
                   title={data.title}
+                  slug={data.slug}
                   button1Text="Read Full Case"
                   button2Text="AI Summary"
                 />

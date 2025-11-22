@@ -7,7 +7,8 @@ const nextConfig = {
       "encrypted-tbn0.gstatic.com",
       "www.kexp.org",
       "drownedinsound.com",
-      "st.depositphotos.com" 
+      "st.depositphotos.com",
+      "sajjad-thumbnails.s3.eu-north-1.amazonaws.com"
     ],
   },
 };

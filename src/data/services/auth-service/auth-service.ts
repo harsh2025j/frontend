@@ -32,16 +32,16 @@ export const authApi = {
     return response;
   },
 
-  resetPassword: async(data:ResetPasswordRequest)=>{
-    console.log("Send data to server:" , data);
-    const response= await apiClient.post<ResetPasswordResponse>(API_ENDPOINTS.AUTH.RESET_PASSWORD, data);
+  resetPassword: async (data: ResetPasswordRequest) => {
+    console.log("Send data to server:", data);
+    const response = await apiClient.post<ResetPasswordResponse>(API_ENDPOINTS.AUTH.RESET_PASSWORD, data);
     console.log(response)
     return response;
   },
 
-  resendOtp: async(data:ResendOtpRequest)=>{
-    console.log("Send data to server:" , data);
-    const response= await apiClient.post<ResendOtpResponse>(API_ENDPOINTS.AUTH.RESEND_OTP, data);
+  resendOtp: async (data: ResendOtpRequest) => {
+    console.log("Send data to server:", data);
+    const response = await apiClient.post<ResendOtpResponse>(API_ENDPOINTS.AUTH.RESEND_OTP, data);
     console.log(response)
     return response;
   },
