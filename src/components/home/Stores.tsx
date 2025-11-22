@@ -42,8 +42,8 @@ export default function Stores() {
 
   //for latest news
   const filteredLatestNews = articles
-  .filter((item:any) => item.category?.name === "LatestNews") // filter by category
-  .sort((a:any, b:any) =>new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .filter((item: any) => item.category?.name === "LatestNews") // filter by category
+    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
 
 
@@ -264,7 +264,7 @@ export default function Stores() {
 
           <div className="flex justify-center ">
             <div className="container sm:flex-row flex-col flex gap-6" >
-              {filteredLatestNews.slice(0, 3).map((data:any) => (
+              {filteredLatestNews.slice(0, 3).map((data: any) => (
                 <LatestNews
                   key={data.id}
                   img={data.thumbnail}

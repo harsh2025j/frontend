@@ -12,12 +12,12 @@ export default function Home() {
   return (
     <>
       <div className=" ">
-        <NewsSlider/>
-      <Stores />
-      {/* <CategorySection /> */}
-      {/* <LiveCourtUpdates /> */}
-      
-      
+        <NewsSlider />
+        <Stores />
+        {/* <CategorySection /> */}
+        {/* <LiveCourtUpdates /> */}
+
+
       </div>
     </>
   );
