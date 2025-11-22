@@ -20,11 +20,11 @@ export default function subscription() {
   // also we can use dynamic price
   const premiumMonthly = 499;
   const premiumYearly = premiumMonthly * 12;
-  const premiumDiscountYearly = Math.round(premiumYearly * 0.8); 
+  const premiumDiscountYearly = Math.round(premiumYearly * 0.8);
 
   const proMonthly = 199;
   const proYearly = proMonthly * 12;
-  const proDiscountYearly = Math.round(proYearly * 0.85); 
+  const proDiscountYearly = Math.round(proYearly * 0.85);
 
   const handlePlan = () => {
 
@@ -41,15 +41,15 @@ export default function subscription() {
         Choose a plan that’s right for you
       </p>
 
-    
+
       <div className="relative bg-[#e9edf3] rounded-full flex w-40 justify-between mb-14 p-1">
-        
+
         <div
           className={`absolute top-1 bottom-1 w-[50%] rounded-full bg-[#122340] transition-transform duration-400 ease-out ${billing === "MONTHLY" ? "translate-x-0" : "translate-x-full"
             }`}
         ></div>
 
-        
+
         <button
           onClick={() => setBilling("MONTHLY")}
           className={`w-1/2 py-2 text-sm font-semibold text-center relative z-10 transition-colors duration-400 ${billing === "MONTHLY" ? "text-white" : "text-[#122340]"
@@ -113,7 +113,7 @@ export default function subscription() {
 
             <h3 className="text-lg font-semibold mb-1">Jurist Premium</h3>
 
-            
+
             {billing === "MONTHLY" ? (
               <p className="text-sm mb-4 text-white/90">
                 ₹{premiumMonthly}
