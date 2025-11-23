@@ -9,16 +9,22 @@ export const API_ENDPOINTS = {
     VERIFY_OTP: "/auth/verify",
     LOGIN: "/auth/login",
     PROFILE: "/auth/profile",
-    RESEND_OTP:"/auth/forgot-password"
+    RESEND_OTP: "/auth/forgot-password"
   },
 
   ARTICLE: {
     CREATE: "/articles",
     FETCH_ALL: "/articles",
   },
-  CATEGORIE:{
-    CREATE:"/categories",
-    FETCH_ALL_CATEGORY:"/categories",  //get request
+  CATEGORIE: {
+    CREATE: "/categories",
+    FETCH_ALL_CATEGORY: "/categories",  //get request
+  },
+  ROLES: {
+    BASE: "/roles",
+  },
+  PERMISSIONS: {
+    BASE: "/permissions",
   }
 };
 
