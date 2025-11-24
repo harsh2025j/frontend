@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import { Article } from "@/data/features/article/article.types";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 const ITEMS_PER_PAGE = 15;
 

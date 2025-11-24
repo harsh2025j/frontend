@@ -1,4 +1,4 @@
-import { AddPlanRequest, AddPlanResponse } from "@/data/features/subscription/subscription.types";
+import { AddPlanRequest, AddPlanResponse, PlanGetResponse } from "@/data/features/subscription/subscription.types";
 import apiClient from "../config/apiClient";
 import { API_ENDPOINTS } from "../config/apiContants";
 
@@ -9,6 +9,22 @@ export const subscriptionApi = {
     console.log("response :", response);
     return response;
   },
+
+  fetchPlans: async () => {
+  console.log("Fetch Plans Request URL:",` ${API_ENDPOINTS.SUBSCRIPTION.GET_ALL_PLAN}`);
+  const response = await apiClient.get<PlanGetResponse>(
+
+    API_ENDPOINTS.SUBSCRIPTION.GET_ALL_PLAN,
+    {
+      headers: {
+        "ngrok-skip-browser-warning": "true",
+      },
+    }
+    
+  );
+        console.log("Fetch Articles API Response:", response.data);
+        return response;
+},
 
 
 }
