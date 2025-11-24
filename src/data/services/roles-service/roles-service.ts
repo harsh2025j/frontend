@@ -14,9 +14,9 @@ export const rolesApi = {
         return await apiClient.post(API_ENDPOINTS.ROLES.BASE, data);
     },
     updateRole: async (data: UpdateRoleRequest) => {
-        return await apiClient.put(`${API_ENDPOINTS.ROLES.BASE}/${data.id}`, data);
+        return await apiClient.post(`${API_ENDPOINTS.ROLES.BASE}/${data.id}`, data);
     },
     deleteRole: async (id: string) => {
-        return await apiClient.delete(`${API_ENDPOINTS.ROLES.BASE}/${id}`);
+        return await apiClient.post(`${API_ENDPOINTS.ROLES.BASE}/${id}`);
     },
 };

@@ -14,9 +14,9 @@ export const permissionsApi = {
         return await apiClient.post(API_ENDPOINTS.PERMISSIONS.BASE, data);
     },
     updatePermission: async (data: UpdatePermissionRequest) => {
-        return await apiClient.put(`${API_ENDPOINTS.PERMISSIONS.BASE}/${data.id}`, data);
+        return await apiClient.post(`${API_ENDPOINTS.PERMISSIONS.BASE}/${data.id}`, data);
     },
     deletePermission: async (id: string) => {
-        return await apiClient.delete(`${API_ENDPOINTS.PERMISSIONS.BASE}/${id}`);
+        return await apiClient.post(`${API_ENDPOINTS.PERMISSIONS.BASE}/${id}`);
     },
 };

@@ -17,7 +17,6 @@ export default function subscription() {
     "Multi-User Access",
   ];
 
-  // also we can use dynamic price
   const premiumMonthly = 499;
   const premiumYearly = premiumMonthly * 12;
   const premiumDiscountYearly = Math.round(premiumYearly * 0.8);

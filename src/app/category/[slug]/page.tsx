@@ -15,26 +15,44 @@ export default function CategoryPage() {
 
     useEffect(() => {
         if (articles.length > 0 && slug) {
-            // Filter articles by category slug
-            // Note: Assuming article.category has a slug field based on types
             const filtered = articles.filter(
-                (article: Article) => article.category?.slug === slug || article.category?.name.toLowerCase() === slug.toLowerCase()
-                // (article: Article) => 4 == 4
+                (article: Article) =>
+                    article.category?.slug === slug ||
+                    article.category?.name.toLowerCase() === slug.toLowerCase()
             );
             setCategoryArticles(filtered);
         }
     }, [articles, slug]);
 
     if (loading) {
-        return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+        return (
+            <div className="flex justify-center items-center min-h-screen text-lg font-medium text-gray-600">
+                Loading...
+            </div>
+        );
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8 capitalize">{slug.replace(/-/g, " ")} News</h1>
+        <div className="container mx-auto px-4 py-10">
 
+            {/* Header */}
+            <div className="text-left mb-10 space-y-2">
+                <h1 className="text-4xl text-[#0A2342] sm:text-5xl font-bold capitalize">
+                    {slug.replace(/-/g, " ")}
+                </h1>
+                <p className="text-gray-600 max-w-2xl  text-sm sm:text-base">
+                    Explore the latest insights, updates, and reports in the{" "}
+                    <span className="font-medium text-gray-800 capitalize">{slug.replace(/-/g, " ")}</span>{" "}
+                    category.
+                </p>
+                <div className="w-24 h-1 bg-black/80  rounded-full mt-3"></div>
+            </div>
+
+            {/* Article list */}
             {categoryArticles.length === 0 ? (
-                <div className="text-center text-gray-600">No articles found in this category.</div>
+                <div className="text-center text-gray-500 text-lg font-medium py-20">
+                    No articles found in this category.
+                </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {categoryArticles.map((article) => (
@@ -43,9 +61,8 @@ export default function CategoryPage() {
                                 title={article.title}
                                 src={article.thumbnail || undefined}
                                 court={article.location || undefined}
-                            // time={new Date(article.createdAt).getTime()} // NewsCard expects number? Let's check
-                            // NewsCard time is number, maybe minutes ago? 
-                            // Let's just pass undefined for now or calculate diff
+                                views={String(article.views || 0)}
+                                likes={String(article.likes || 0)}
                             />
                         </Link>
                     ))}

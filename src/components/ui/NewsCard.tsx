@@ -1,71 +1,86 @@
 import Image, { StaticImageData } from "next/image";
+import { Eye, Heart, Clock } from "lucide-react"; // 👈 Lucide icons
 import logo from "../../../public/logo.png";
+
 interface NewsCardProps {
   src?: StaticImageData | string;
   title: string;
   court?: string;
   time?: number;
-  veiws?: string;
+  views?: string;
   likes?: string;
-  height?: string;
 }
+
 export default function NewsCard({
   src = logo,
   title,
   court,
   time,
-  veiws,
+  views,
   likes,
 }: NewsCardProps) {
+  const validSrc =
+    typeof src === "string" &&
+      (src.startsWith("http") || src.startsWith("/"))
+      ? src
+      : typeof src === "object"
+        ? src
+        : logo;
+
   return (
-    <div
-      className={`flex border-1  border-gray-500 flex-col sm:flex-row w-full max-w-[600px]  nsm:max-w-full overflow-hidden bg-[#ffffff] rounded-xl transition-shadow duration-300`}
-    >
-      <div className="relative w-full sm:w-[180px] h-[200px] sm:h-auto rounded-t-xl sm:rounded-l-xl sm:rounded-tr-none overflow-hidden">
+    <div className="w-full max-w-[600px] rounded-xl shadow-md bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition">
+      {/* Image */}
+      <div className="relative h-[200px] w-full">
         <Image
-          width={300}
+          src={validSrc}
+          width={600}
           height={200}
-          src={
-            (typeof src === 'string' && (src.startsWith('http') || src.startsWith('/')))
-              ? src
-              : (typeof src === 'object' ? src : logo)
-          }
           alt={title}
-          className="object-cover"
-          sizes="(max-width: 640px) 100vw, 180px"
+          className="object-cover w-full h-full"
         />
       </div>
-      <div className=" pt-3">
-        <div className="flex flex-wrap items-center gap-3 sm:gap-6 justify-start">
-          {court && (
-            <span className="text-xs sm:text-sm text-gray-900 bg-gray-300 px-3 py-1 rounded-full font-medium">
+
+      {/* Content */}
+      <div className="p-4 flex flex-col gap-3">
+
+        {/* Court + Time */}
+        <div className="flex flex-wrap gap-3 items-center text-xs">
+
+          {court ? (
+            <span className="bg-gray-200 text-gray-900 px-3 py-1 rounded-full font-medium">
               {court}
             </span>
+          ) : (
+            <span className="text-gray-400 italic">Court not available</span>
           )}
-          {time && (
-            <span className="text-xs sm:text-sm text-gray-600">
-              {time} mins ago
-            </span>
-          )}
+
+          <div className="flex items-center gap-1 text-gray-600">
+            <Clock size={14} />
+            {time !== undefined ? (
+              <span>{time} mins ago</span>
+            ) : (
+              <span className="text-gray-400 italic">No time</span>
+            )}
+          </div>
         </div>
 
-        <div className="px-3 sm:px-4  py-3">
-          <p className=" sm:text-sm  font-semibold text-gray-900 leading-snug text-center sm:text-left">
-            {title}
-          </p>
-        </div>
-        <div className=" ">
-          {veiws && (
-            <span className="text-xs sm:text-sm text-gray-900 px-3 py- rounded-full font-medium">
-              {veiws}
-            </span>
-          )}
-          {likes && (
-            <span className="text-xs sm:text-sm text-gray-600">
-              {likes}
-              Likes
-            </span>
-          )}
+        {/* Title */}
+        <p className="text-sm font-semibold text-gray-900 leading-snug">
+          {title}
+        </p>
+
+        {/* Views + Likes */}
+        <div className="flex items-center gap-6 text-xs text-gray-700">
+
+          <div className="flex items-center gap-1">
+            <Eye size={14} />
+            {views ? <span>{views}</span> : <span className="text-gray-400 italic">0</span>}
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Heart size={14} />
+            {likes ? <span>{likes}</span> : <span className="text-gray-400 italic">0</span>}
+          </div>
         </div>
       </div>
     </div>

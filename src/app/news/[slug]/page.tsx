@@ -140,7 +140,7 @@ export default function ArticleDetailPage() {
                         </div>
 
                         {/* Article Content */}
-                        <div className="prose prose-lg max-w-none mb-12">
+                        <div className="article-content mb-12">
                             <div dangerouslySetInnerHTML={{ __html: article.content }} />
                         </div>
 
