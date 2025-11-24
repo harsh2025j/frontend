@@ -51,19 +51,59 @@ export default function Stores() {
 
 
 
+  // Typewriter Logic
+  const [currentText, setCurrentText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loopNum, setLoopNum] = useState(0);
+  const [typingSpeed, setTypingSpeed] = useState(100);
+
+  const newsHeadlines = articles.length > 0
+    ? articles.map((a: any) => a.title)
+    : [
+      "JP Morgan's Jamie Dimon said he was 'far more worried than others' about the potential for a stock market correction.",
+      "Breaking: AI Revolutionizing Legal Tech Industry in 2025",
+      "Supreme Court issues new guidelines for digital evidence submission"
+    ];
+
+  React.useEffect(() => {
+    const handleType = () => {
+      const i = loopNum % newsHeadlines.length;
+      const fullText = newsHeadlines[i];
+
+      setCurrentText(isDeleting
+        ? fullText.substring(0, currentText.length - 1)
+        : fullText.substring(0, currentText.length + 1)
+      );
+
+      if (!isDeleting && currentText === fullText) {
+        setTypingSpeed(2000); // Pause at end
+        setIsDeleting(true);
+      } else if (isDeleting && currentText === "") {
+        setIsDeleting(false);
+        setLoopNum(loopNum + 1);
+        setTypingSpeed(500); // Pause before start
+      } else {
+        setTypingSpeed(isDeleting ? 30 : 50); // Typing speeds
+      }
+    };
+
+    const timer = setTimeout(handleType, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [currentText, isDeleting, loopNum, newsHeadlines, typingSpeed]);
+
   return (
     <div className="bg-[#f6f6f7]">
       <div className="w-full">
 
         {/* Live News Banner */}
-        <div className="border-2 border-dotted border-[#000000] min-h-14 my-3 md:my-5 flex flex-col sm:flex-row">
-          <div className="w-full sm:w-40 h-full flex justify-center items-center bg-[#0A2342] text-white text-sm md:text-md py-2 sm:py-0">
+        <div className="border-2 border-dotted border-[#000000] min-h-14 my-3 md:my-5 flex flex-col sm:flex-row bg-white">
+          <div className="w-full sm:w-40 h-full min-h-14 flex justify-center items-center bg-[#0A2342] text-white text-sm md:text-md py-2 sm:py-0 shrink-0">
             Live News
           </div>
-          <div className="flex justify-center items-center px-3 sm:px-5 py-2 sm:py-0">
-            <p className="line-clamp-2 sm:line-clamp-1 text-xs sm:text-sm md:text-base text-center sm:text-left">
-              JP Morgan's Jamie Dimon said he was "far more worried than others"
-              about the potential for a stock market correction.
+          <div className="flex items-center px-3 sm:px-5 py-2 sm:py-0 w-full overflow-hidden">
+            <p className="text-xs sm:text-sm md:text-base text-center sm:text-left font-medium text-gray-800 whitespace-nowrap">
+              {currentText}
+              <span className="animate-pulse">|</span>
             </p>
           </div>
         </div>
