@@ -61,8 +61,8 @@ export default function CategoryPage() {
                                 title={article.title}
                                 src={article.thumbnail || undefined}
                                 court={article.location || undefined}
-                                views={String(article.views || 0)}
-                                likes={String(article.likes || 0)}
+                                views={String(0)}
+                                likes={String(0)}
                             />
                         </Link>
                     ))}
