@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { fetchArticles } from "@/data/features/article/articleThunks";
 import { RootState } from "@/data/redux/store";
 import Link from "next/link";
+import Loader from "../ui/Loader";
 import img1 from '../../assets/slider/image.svg';
 import img2 from '../../assets/slider/mask.svg';
 import img3 from '../../assets/slider/maskgroup.svg';
@@ -21,6 +22,7 @@ export default function NewsSlider() {
     dispatch(fetchArticles({ limit: 6 }));
   }, [dispatch]);
 
+  // Prepare slides from articles or fallback
   const latestArticles = articles.slice(0, 6);
   const slides = latestArticles.length > 0
     ? latestArticles.map((article) => ({
@@ -68,8 +70,8 @@ export default function NewsSlider() {
 
   if (loading && slides.length === 0) {
     return (
-      <div className="w-full h-[500px] bg-[#0A2342] flex items-center justify-center text-white">
-        Loading News...
+      <div className="w-full h-[500px] bg-[#0A2342] flex items-center justify-center">
+        <Loader size="lg" text="Loading Latest News..." />
       </div>
     );
   }

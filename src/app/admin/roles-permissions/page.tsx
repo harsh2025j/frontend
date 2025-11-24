@@ -17,6 +17,8 @@ import {
 import { Plus, Edit, Trash2, X, Shield, Key, AlertTriangle, RefreshCw } from "lucide-react";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 
+import Loader from "@/components/ui/Loader";
+
 export default function RolesPermissionsPage() {
     const dispatch = useAppDispatch();
     const { roles, loading: rolesLoading, error: rolesError } = useAppSelector(
@@ -162,7 +164,11 @@ export default function RolesPermissionsPage() {
                         </button>
                     </div>
 
-                    {rolesLoading && <p className="text-gray-500">Loading roles...</p>}
+                    {rolesLoading && (
+                        <div className="flex justify-center py-12">
+                            <Loader size="lg" text="Loading roles..." />
+                        </div>
+                    )}
                     {rolesError && <p className="text-red-500">{rolesError}</p>}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -228,7 +234,11 @@ export default function RolesPermissionsPage() {
                         </button>
                     </div>
 
-                    {permsLoading && <p className="text-gray-500">Loading permissions...</p>}
+                    {permsLoading && (
+                        <div className="flex justify-center py-12">
+                            <Loader size="lg" text="Loading permissions..." />
+                        </div>
+                    )}
                     {permsError && <p className="text-red-500">{permsError}</p>}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
