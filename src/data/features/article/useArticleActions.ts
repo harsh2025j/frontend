@@ -52,6 +52,31 @@ const handleFileUpload = async(e: React.ChangeEvent<HTMLInputElement>) => {
       thumbnail: e.target.files![0],
     }));
   }
+
+  // if (e.target.files && e.target.files[0]) {
+  //   const file = e.target.files[0];
+
+  //   const imgData = new FormData();
+  //   imgData.append("file", file);
+  //   imgData.append("upload_preset", "mynewsapp123"); // your upload preset change mynewsapp123
+  //   imgData.append("cloud_name", "keshavcloud");      // your cloud name (optional) change keshavcloud
+
+  //   const res = await fetch(
+  //     "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload", //eg: "https://api.cloudinary.com/v1_1/keshavcloud/image/upload",
+  //     {
+  //       method: "POST",
+  //       body: imgData,
+  //     }
+  //   );
+
+  //   const data = await res.json();
+    
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //   thumbnailUrl:data.secure_url,
+  //   }));
+  // }
+
 };
 
 const updateTags = (newTags: string[]) => {
@@ -141,4 +166,32 @@ export const useArticleListActions = () => {
     error,
   };
 };
+
+
+
+
+// export const useCategoryListAction = () => {
+//   const dispatch = useAppDispatch();
+//   const articles = useAppSelector(selectArticles);
+//   const loading = useAppSelector(selectArticleLoading);
+//   const error = useAppSelector(selectArticleError);
+
+//   useEffect(() => {
+//     console.log("data fetching ");
+//     dispatch(fetchCategories());
+    
+//   },[dispatch]);
+
+//   useEffect(() => {
+//     // MODIFIED: Log the articles array unconditionally to console
+//     console.log("Fetched Articles (useArticleListActions hook):", articles);
+//   }, [articles]);
+
+//   return {
+//     articles,
+//     loading,
+//     error,
+//   };
+// };
+
 
