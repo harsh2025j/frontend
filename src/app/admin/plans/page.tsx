@@ -6,7 +6,6 @@ import { useSubscriptionListActions } from "@/data/features/subscription/useSubs
 import { Plans } from "@/data/features/subscription/subscription.types";
 import apiClient from "@/data/services/config/apiClient";
 import toast from "react-hot-toast";
-import { useGlobalStore } from "@/data/redux/store";
 
 
 
@@ -40,11 +39,9 @@ export default function PlanTable() {
   console.log("hii", plans)
   const [AllPlan, setAllPlans] = useState<Plans[]>([]);
   
-  const setPlanData = useGlobalStore((state) => state.setPlanData);
 
   useEffect(()=>{
     setAllPlans(plans);
-    setPlanData(plans);
     console.log("object");
 
   },[])

@@ -6,7 +6,7 @@ interface NewsCardProps {
   src?: StaticImageData | string;
   title: string;
   court?: string;
-  time?: number;
+  time?: string;
   views?: string;
   likes?: string;
 }
@@ -57,7 +57,7 @@ export default function NewsCard({
           <div className="flex items-center gap-1 text-gray-600">
             <Clock size={14} />
             {time !== undefined ? (
-              <span>{time} mins ago</span>
+              <span>{time}</span>
             ) : (
               <span className="text-gray-400 italic">No time</span>
             )}
@@ -65,7 +65,7 @@ export default function NewsCard({
         </div>
 
         {/* Title */}
-        <p className="text-sm font-semibold text-gray-900 leading-snug">
+        <p className="text-sm font-semibold text-gray-900 leading-snug truncate">
           {title}
         </p>
 

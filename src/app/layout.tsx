@@ -4,6 +4,7 @@ import "./globals.css";
 import ClientLayout from "@/components/layout/ClientWrapper";
 import ReduxProvider from "@/data/redux/providers/ReduxProvider";
 import { Toaster } from "react-hot-toast";
+import GlobalLoader from "@/components/ui/GlobalLoader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +31,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ReduxProvider>
           <ClientLayout>{children}</ClientLayout>
+          <GlobalLoader />
           <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
         </ReduxProvider>
       </body>

@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NewsCard from "../ui/NewsCard";
 import Image from "next/image";
@@ -24,7 +24,34 @@ import icon4 from '../../assets/icon4.png';
 import img1 from '../../assets/img1.png';
 import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import { highCourts } from "@/data/highCourts";
+import { Article } from "@/data/features/article/article.types";
 
+// --- NEW IMPORT FOR SKELETON LOADING ---
+import ArticleSkeleton from "../ui/ArticleSkeleton"; // You need to create this file!
+
+
+// Filter article function
+export function getArticlesBySlugs(articles:Article[], slugs:string[]) {
+  const matchSlugs = slugs.map(s => s.toLowerCase());
+
+  return articles.filter(article => {
+    const collectSlugs = (cat: any): string[] => {
+      if (!cat) return [];
+      const arr = [];
+      if (cat.slug) arr.push(cat.slug.toLowerCase());
+      if (cat.parent) arr.push(...collectSlugs(cat.parent));
+      if (Array.isArray(cat.children)) {
+        cat.children.forEach((child: any) => {
+          arr.push(...collectSlugs(child));
+        });
+      }
+      return arr;
+    };
+
+    const allSlugs = collectSlugs(article.category);
+    return allSlugs.some(s => matchSlugs.includes(s));
+  });
+}
 
 
 
@@ -41,16 +68,27 @@ export default function Stores() {
     router.push('/ai-assistant');
   };
 
+//===============================================================================================//
   //fetching data from backend
-  const { articles } = useArticleListActions();
+  const { articles,loading,error } = useArticleListActions();
 
-  //for latest news
-  const filteredLatestNews = articles
-    .filter((item: any) => item.category?.name === "LatestNews") // filter by category
-    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const LatestNewsData = getArticlesBySlugs(articles, ["latest-news"])
+  const JudgementNewsData = getArticlesBySlugs(articles, ["judgments-content"])
+  const HindiNewsData=getArticlesBySlugs(articles,["hindi-news"])
+  const FinanceArticleData=getArticlesBySlugs(articles,["finance-articles"])
+  const LegalArticleData=getArticlesBySlugs(articles,["legal-articles"])
 
+  // console.log("Latestnews Data",LatestNewsData)
+  // console.log("Hindi News",HindiNewsData);
 
+  //sortByTime
+  // .sort(
+  //    (a: any, b: any) =>
+  //      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  //  );
 
+  
+// ==================================================================================
   // Typewriter Logic
   const [currentText, setCurrentText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -93,7 +131,6 @@ export default function Stores() {
 
   return (
     <div className="bg-[#f6f6f7]">
-      <div className="w-full ">
       <div className="w-full">
 
         {/* Live News Banner */}
@@ -134,7 +171,6 @@ export default function Stores() {
                   value={SearchData.Search}
                   onChange={handleSearchChange}
                   placeholder="Search any Legal question or track a case..."
-                  className="bg-[#f6f6f7] w-full pl-12  py-2 sm:py-3 text-sm sm:text-base md:text-lg  rounded-xl"/>
                   className="
                     bg-[#f6f6f7] 
                     w-full 
@@ -167,7 +203,7 @@ export default function Stores() {
               </div>
             </div>
 
-            {/* High Courts Grid */}
+            {/* High Courts Grid (No skeleton needed here as highCourts is static data) */}
             <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4 md:gap-6">
               {highCourts.slice(0, 8).map((court) => (
                 <StateJudgement key={court.id} img={court.image} state={court.name} />
@@ -191,7 +227,7 @@ export default function Stores() {
         <HighCourtsModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
 
-        {/* Live Court & Top Advocate Section */}
+        {/* Live Court & Top Advocate Section (Loading states can be added to LiveCourt/TopAdvocate components internally) */}
         <div className="flex justify-center px-4 mb-6 md:mb-10">
           <div className="container flex flex-col lg:flex-row gap-4 md:gap-6">
 
@@ -216,18 +252,18 @@ export default function Stores() {
               <div className="flex flex-col p-4 sm:p-5 bg-white justify-evenly transition-all duration-300 rounded-sm h-full gap-3">
                 <TopAdvocate
                   img={icon1}
-                  title="Mr. Gopal Sankaranarayanan,"
-                  description="Senior Advocate (For Petitioners)"
+                  title="Mr. Sunil Prajapati,"
+                  description="Senior Advocate "
                 />
                 <TopAdvocate
                   img={icon1}
-                  title="Mr. Gopal Sankaranarayanan,"
-                  description="Senior Advocate (For Petitioners)"
+                  title="Mr. Niranjan Roy,"
+                  description="Senior Advocate "
                 />
                 <TopAdvocate
                   img={icon1}
-                  title="Mr. Gopal Sankaranarayanan,"
-                  description="Senior Advocate (For Petitioners)"
+                  title="Mr. Nishant Singh,"
+                  description="Senior Advocate "
                 />
               </div>
             </div>
@@ -235,7 +271,7 @@ export default function Stores() {
           </div>
         </div>
 
-        {/* AI Powered Features */}
+        {/* AI Powered Features (No skeleton needed here as content is static) */}
         <div className="w-full">
           <div className="flex items-center justify-center my-6 md:my-10 px-4">
             <div className="flex-1 h-px bg-gray-400"></div>
@@ -267,16 +303,24 @@ export default function Stores() {
 
           <div className="flex justify-center">
             <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {filteredLatestNews.slice(0, 3).map((data: any) => (
-                <LatestNews
-                  key={data.id}
-                  img={data.thumbnail}
-                  title={data.title}
-                  slug={data.slug}
-                  button1Text="Read Full Case"
-                  button2Text="AI Summary"
-                />
-              ))}
+              {loading ? (
+                // --- SKELETON LOADING FOR LATEST NEWS ---
+                <ArticleSkeleton count={3} />
+              ) : (
+                // --- ACTUAL CONTENT FOR LATEST NEWS ---
+                LatestNewsData.slice(0, 3).map((data: any) => (
+                  <LatestNews
+                    key={data.id}
+                    img={data.thumbnail}
+                    title={data.title}
+                    slug={data.slug}
+                    author={data.authors}
+                    date={new Date(data.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    button1Text="Read Full Case"
+                    button2Text="AI Summary"
+                  />
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -284,9 +328,23 @@ export default function Stores() {
         {/* Judgments Grid */}
         <div className="flex justify-center px-4 my-6 md:my-12">
           <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <Judgement img={img1} description="In a development with significant ramifications in Kerala and Tamil Nadu (TN), the Supreme Court on Monday issued notice to the Central government....." />
-            <Judgement img={img1} description="In a development with significant ramifications in Kerala and Tamil Nadu (TN), the Supreme Court on Monday issued notice to the Central government....." />
-            <Judgement img={img1} description="In a development with significant ramifications in Kerala and Tamil Nadu (TN), the Supreme Court on Monday issued notice to the Central government....." />
+            {loading ? (
+              // --- SKELETON LOADING FOR JUDGMENTS ---
+              <ArticleSkeleton count={3} />
+            ) : (
+              // --- ACTUAL CONTENT FOR JUDGMENTS ---
+              JudgementNewsData.slice(0, 3).map((data: any) => (
+                <Judgement
+                  key={data.id}
+                  img={data.thumbnail}
+                  description={data.content}
+                  date={new Date(data.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  author={data.authors}
+                  slug={data.slug}
+                />
+              ))
+            )}
+            
           </div>
         </div>
 
@@ -306,10 +364,21 @@ export default function Stores() {
 
           <div className="flex justify-center">
             <div className="container flex flex-col gap-4 sm:gap-6">
-              <HindiNews img={img1} title="सुप्रीम कोर्ट ने सोनम वांगचुक की रिहाई के लिए उनकी पत्नी की याचिका पर केंद्र सरकार से जवाब मांगा" description="अदालत के आदेश में कहा गया है, हमारा मानना ​​है कि इस मामले की जाँच के लिए सर्वोच्च निष्ठावान अधिकारियों की एक विशेष टीम की आवश्यकता है। केरल पुलिस में कानून एवं व्यवस्था के अतिरिक्त पुलिस महानिदेशक (एडीजीपी) श्री एच वेंकटेश आईपीएस को मामले के सभी पहलुओं की जाँच के लिए विशेष जाँच दल का प्रमुख नियुक्त किया जा सकता हैअदालत ने यह आदेश तब पारित किया जब यह पता चला कि जिस व्यक्ति को सोने की परत चढ़ाने का काम सौंपा गया था, उसने त्रावणकोर देवस्वोम बोर्ड (टीडीबी) के अध्यक्ष को एक ईमेल भेजकर पूछा था कि क्या वह काम के बाद बचे हुए सोने का इस्तेमाल किसी शादी में कर सकते हैं। " />
-              <HindiNews img={img1} title="सुप्रीम कोर्ट ने सोनम वांगचुक की रिहाई के लिए उनकी पत्नी की याचिका पर केंद्र सरकार से जवाब मांगा" description="अदालत के आदेश में कहा गया है,हमारा मानना ​​है कि इस मामले की जाँच के लिए सर्वोच्च निष्ठावान अधिकारियों की एक विशेष टीम की आवश्यकता है। केरल पुलिस में कानून एवं व्यवस्था के अतिरिक्त पुलिस महानिदेशक (एडीजीपी) श्री एच वेंकटेश आईपीएस को मामले के सभी पहलुओं की जाँच के लिए विशेष जाँच दल का प्रमुख नियुक्त किया जा सकता हैअदालत ने यह आदेश तब पारित किया जब यह पता चला कि जिस व्यक्ति को सोने की परत चढ़ाने का काम सौंपा गया था, उसने त्रावणकोर देवस्वोम बोर्ड (टीडीबी) के अध्यक्ष को एक ईमेल भेजकर पूछा था कि क्या वह काम के बाद बचे हुए सोने का इस्तेमाल किसी शादी में कर सकते हैं। " />
-              <HindiNews img={img1} title="सुप्रीम कोर्ट ने सोनम वांगचुक की रिहाई के लिए उनकी पत्नी की याचिका पर केंद्र सरकार से जवाब मांगा" description="अदालत के आदेश में कहा गया है,हमारा मानना ​​है कि इस मामले की जाँच के लिए सर्वोच्च निष्ठावान अधिकारियों की एक विशेष टीम की आवश्यकता है। केरल पुलिस में कानून एवं व्यवस्था के अतिरिक्त पुलिस महानिदेशक (एडीजीपी) श्री एच वेंकटेश आईपीएस को मामले के सभी पहलुओं की जाँच के लिए विशेष जाँच दल का प्रमुख नियुक्त किया जा सकता हैअदालत ने यह आदेश तब पारित किया जब यह पता चला कि जिस व्यक्ति को सोने की परत चढ़ाने का काम सौंपा गया था, उसने त्रावणकोर देवस्वोम बोर्ड (टीडीबी) के अध्यक्ष को एक ईमेल भेजकर पूछा था कि क्या वह काम के बाद बचे हुए सोने का इस्तेमाल किसी शादी में कर सकते हैं। " />
-              <HindiNews img={img1} title="सुप्रीम कोर्ट ने सोनम वांगचुक की रिहाई के लिए उनकी पत्नी की याचिका पर केंद्र सरकार से जवाब मांगा" description="अदालत के आदेश में कहा गया है,हमारा मानना ​​है कि इस मामले की जाँच के लिए सर्वोच्च निष्ठावान अधिकारियों की एक विशेष टीम की आवश्यकता है। केरल पुलिस में कानून एवं व्यवस्था के अतिरिक्त पुलिस महानिदेशक (एडीजीपी) श्री एच वेंकटेश आईपीएस को मामले के सभी पहलुओं की जाँच के लिए विशेष जाँच दल का प्रमुख नियुक्त किया जा सकता हैअदालत ने यह आदेश तब पारित किया जब यह पता चला कि जिस व्यक्ति को सोने की परत चढ़ाने का काम सौंपा गया था, उसने त्रावणकोर देवस्वोम बोर्ड (टीडीबी) के अध्यक्ष को एक ईमेल भेजकर पूछा था कि क्या वह काम के बाद बचे हुए सोने का इस्तेमाल किसी शादी में कर सकते हैं। " />
+              {loading ? (
+                // --- SKELETON LOADING FOR HINDI NEWS (Using the default ArticleSkeleton as a placeholder) ---
+                <ArticleSkeleton count={3} /> 
+              ) : (
+                // --- ACTUAL CONTENT FOR HINDI NEWS ---
+                HindiNewsData.slice(0, 3).map((data: any) => (
+                  <HindiNews
+                    key={data.id}
+                    img={data.thumbnail}
+                    title={data.title}
+                    description={data.content}
+                    slug={data.slug}
+                  />
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -327,13 +396,40 @@ export default function Stores() {
             </h2>
             <div className="flex-1 h-px bg-gray-400"></div>
           </div>
-          <ContentSlider />
-          <ContentSlider />
+
+          {/* Finance Articles ContentSlider */}
+          {loading ? (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-3">Finance Articles</h3>
+              <ArticleSkeleton count={4} isWide={true} />
+            </div>
+          ) : (
+            <ContentSlider name="Finamnce Articles" FilteredData={FinanceArticleData.map((article) => ({
+              ...article,
+              img: article.thumbnail || "", // Assuming `thumbnail` is the image source
+            }))} /> 
+          )}
+          
+          {/* Legal Articles ContentSlider */}
+          {loading ? (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-3">Legal Articles</h3>
+              <ArticleSkeleton count={4} isWide={true} />
+            </div>
+          ) : (
+            <ContentSlider
+              name="Legal Articles"
+              FilteredData={LegalArticleData.map((article) => ({
+                ...article,
+                img: article.thumbnail || "", // Assuming `thumbnail` is the image source
+              }))}
+            />
+          )}
         </div>
 
-        <div className="flex justify-center mb-10 md:mb-20">
+        {/* <div className="flex justify-center mb-10 md:mb-20">
           <Button lable="View More" className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 sm:px-6 py-1 sm:py-2 text-sm sm:text-base mt-4 md:mt-5" />
-        </div>
+        </div> */}
 
       </div>
     </div>

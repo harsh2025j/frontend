@@ -128,7 +128,7 @@ export const useArticleListActions = () => {
     console.log("data fetching ");
     dispatch(fetchArticles({}));
     
-  },[dispatch]);
+  },[]);
 
   useEffect(() => {
     // MODIFIED: Log the articles array unconditionally to console

@@ -39,7 +39,7 @@ export default function Page() {
         className="flex items-center gap-2 px-4 py-2 bg-[#C9A227] text-white rounded-md hover:bg-orange-600 transition"
       >
         <PlusCircle className="w-5 h-5" />
-       Create New Update
+       Create New Article
       </Link>
     </div>
 

@@ -2,11 +2,35 @@
 import React, { useEffect, useState } from "react";
 import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import { Article } from "@/data/features/article/article.types";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const ITEMS_PER_PAGE = 15;
 
+// ✅ YouTube Style Table Skeleton
+const TableSkeleton = () => {
+  return (
+    <div className="animate-pulse">
+      {[...Array(10)].map((_, index) => (
+        <div
+          key={index}
+          className="flex items-center border-b py-4 px-4 gap-4"
+        >
+          <div className="w-6 h-4 bg-gray-300 rounded"></div>
+          <div className="flex-1">
+            <div className="w-48 h-4 bg-gray-300 rounded mb-2"></div>
+            <div className="w-32 h-4 bg-gray-200 rounded"></div>
+          </div>
+          <div className="w-32 h-4 bg-gray-300 rounded"></div>
+          <div className="w-20 h-4 bg-gray-300 rounded"></div>
+          <div className="w-32 h-8 bg-gray-300 rounded"></div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const ContentApprovalPanel = () => {
+
   const { articles, loading, error } = useArticleListActions();
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,13 +54,13 @@ const ContentApprovalPanel = () => {
       setCurrentPage(page);
     }
   };
+
   return (
     <div className="min-h-screen bg-[#F8F9FC] px-6 py-10">
       <h1 className="text-xl font-semibold text-[#0B2149] mb-5">
         Content Approval Panel
       </h1>
 
-      {/* CARD WRAPPER */}
       <div className="bg-white rounded-2xl shadow-md p-8 max-w-6xl mx-auto">
 
         {/* TOP BAR */}
@@ -68,41 +92,49 @@ const ContentApprovalPanel = () => {
             </thead>
 
             <tbody>
-              {paginatedArticles.map((item: Article,idx:any) => (
-                <tr
-                  key={item.id}
-                  className="border-b hover:bg-gray-50 text-sm transition"
-                >
-                  <td className="py-3 px-4  text-sm">{startIndex + idx + 1}</td>
-                  <td className="px-4 py-3 truncate">{item.title}</td>
-                  <td className="px-4 py-3">{item.subcategory?.name || "No Category"}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium
-                        ${
-                          item.status === "published"
-                            ? "bg-green-200 text-green-900"
-                            : item.status === "pending"
-                            ? "bg-yellow-200 text-yellow-800"
-                            : item.status === "rejected"
-                            ? "bg-red-200 text-red-800"
-                            : "bg-gray-200 text-gray-700"
-                        }
-                      `}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 flex gap-3">
-                    <button className="bg-green-500 text-white px-4 py-1 rounded-md text-sm hover:bg-green-600">
-                      Approve
-                    </button>
-                    <button className="bg-yellow-500 text-white px-4 py-1 rounded-md text-sm hover:bg-yellow-600">
-                      Review
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={5}>
+                    <TableSkeleton />
                   </td>
                 </tr>
-              ))}
+              ) : (
+                paginatedArticles.map((item: Article, idx: any) => (
+                  <tr
+                    key={item.id}
+                    className="border-b hover:bg-gray-50 text-sm transition"
+                  >
+                    <td className="py-3 px-4 text-sm">{startIndex + idx + 1}</td>
+                    <td className="px-4 py-3">{item.title}</td>
+                    <td className="px-4 py-3">{item.category?.name || "No Category"}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium
+                          ${
+                            item.status === "published"
+                              ? "bg-green-200 text-green-900"
+                              : item.status === "pending"
+                              ? "bg-yellow-200 text-yellow-800"
+                              : item.status === "rejected"
+                              ? "bg-red-200 text-red-800"
+                              : "bg-gray-200 text-gray-700"
+                          }
+                        `}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 flex gap-3">
+                      <button className="bg-green-500 text-white px-4 py-1 rounded-md text-sm hover:bg-green-600">
+                        Approve
+                      </button>
+                      <button className="bg-yellow-500 text-white px-4 py-1 rounded-md text-sm hover:bg-yellow-600">
+                        Review
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
 
           </table>
@@ -111,7 +143,6 @@ const ContentApprovalPanel = () => {
         {/* PAGINATION */}
         <div className="flex justify-center items-center mt-5 text-gray-600 text-sm gap-2">
 
-          {/* Previous */}
           <button
             onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
@@ -122,7 +153,6 @@ const ContentApprovalPanel = () => {
             &lt;
           </button>
 
-          {/* Page numbers */}
           {[...Array(totalPages)].map((_, index) => {
             const page = index + 1;
             return (
@@ -140,7 +170,6 @@ const ContentApprovalPanel = () => {
             );
           })}
 
-          {/* Next */}
           <button
             onClick={() => goToPage(currentPage + 1)}
             disabled={currentPage === totalPages}
