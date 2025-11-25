@@ -76,7 +76,7 @@ export const authApi = {
 
   getProfile: async () => {
     const response = await apiClient.get(
-      API_ENDPOINTS.AUTH.PROFILE
+      API_ENDPOINTS.PROFILE.FETCH
     );
     console.log("Profile Response:", response.data);
     return response;

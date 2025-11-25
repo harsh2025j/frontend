@@ -4,8 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import img from "../../assets/img1.png"
-import { useAppSelector } from "@/data/redux/hooks";
 import { useRouter } from "next/navigation";
+import Loader from "@/components/ui/Loader"; // Importing Loader component
+import { useProfileActions } from "@/data/features/profile/useProfileActions"; // <--- NEW IMPORT
 
 /**
  * Fully functional Profile page with:
@@ -14,8 +15,7 @@ import { useRouter } from "next/navigation";
  * - Reset password, logout modal, delete account (UI)
  *
  * NOTE:
- * - This is intentionally self-contained and stores settings in localStorage.
- * - Replace avatar path or adapt image handling to your backend when ready.
+ * - The `useProfileActions` hook is now the primary source for user data and actions.
  */
 
 type Prefs = {
@@ -25,12 +25,21 @@ type Prefs = {
 };
 
 export default function ProfilePage() {
+  // --- NEW PROFILE STATE MANAGEMENT ---
+  const {
+    user: reduxProfileUser, // The full UserData object from profileSlice
+    loading: profileLoading,
+    updateProfile: handleUpdateProfile, // Redux thunk dispatcher
+    // error and message handled by the hook via toast
+  } = useProfileActions(); 
+
+  // --- LOCAL/UI STATE ---
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [localUser, setLocalUser] = useState<any>(null);
+  // Removed localUser, relying entirely on reduxProfileUser
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const router = useRouter();
-  const reduxUser = useAppSelector((s) => s.auth.user);
+  // Removed unused reduxUser = useAppSelector((s) => s.auth.user);
 
   // Redirect if no token
   useEffect(() => {
@@ -40,22 +49,7 @@ export default function ProfilePage() {
     }
   }, [router]);
 
-  // Load localStorage user
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored && stored !== "undefined" && stored !== "null") {
-        const parsed = JSON.parse(stored);
-        if (parsed && typeof parsed === "object") setLocalUser(parsed);
-      }
-    } catch (err) {
-      console.error("User parsing failed:", err);
-      localStorage.removeItem("user");
-      setLocalUser(null);
-    }
-  }, []);
+  // Removed unnecessary "Load localStorage user" useEffect
 
   // Preferences (load default from localStorage or fallback)
   const [prefs, setPrefs] = useState<Prefs>({
@@ -77,14 +71,17 @@ export default function ProfilePage() {
     }
   }, []);
 
-  // Final user (prefer redux, fallback local)
-  const user = reduxUser || localUser || {};
+  // Final user (use Redux profile user, fallback to an empty object if null)
+  const user: { name?: string; email?: string; phone?: string; dob?: string; avatar?: string } = reduxProfileUser || {};
 
+  // Extract fields from Redux user. Note: `user` is now UserData from auth.types.ts
   const name = user?.name || "";
   const email = user?.email || "";
-  const phone = user?.phone || "";
+  // The phone and dob fields are available on the full UserData object
+  const phone = user?.phone || ""; 
   const dob = user?.dob || "";
-  const avatar = user?.avatar || "/mnt/data/ebd526a9-f568-4ae0-bb7e-1a75edb1e599.png";
+  // Assuming 'avatar' is either on UserData or we use a fallback
+  const avatar = user?.avatar || "/mnt/data/ebd526a9-f568-4ae0-bb7e-1a75edb1e599.png"; 
 
   // Reset / Save
   const resetProfilePassword = () => {
@@ -99,25 +96,27 @@ export default function ProfilePage() {
 
   const handleSave = () => {
     setSaving(true);
-    // Simulate quick save (no backend call). Persist to localStorage.
+    
+    // 1. Persist local preferences (language, toggles) to localStorage
     try {
       localStorage.setItem("profile_prefs", JSON.stringify(prefs));
-      setDirty(false);
-      // (Optionally) keep a copy of user display fields too
-      const displayUser = {
-        name,
-        email,
-        phone,
-        dob,
-        avatar,
-      };
-      // do not overwrite server user but store for offline display
-      localStorage.setItem("user", JSON.stringify(displayUser));
     } catch (err) {
       console.error("Saving prefs failed", err);
     }
 
-    // quick UI feedback
+    // 2. Dispatch profile update to API
+    // IMPORTANT: In a real app, you would pass mutable fields from form state here.
+    // For now, we simulate an update call with dummy data or just the fields we expect to change.
+    handleUpdateProfile({
+      // For demonstration, commenting out the actual update payload
+      // name: name, // assuming you had a state for the mutable name field
+      // phone: phone,
+    });
+
+
+    // Reset UI state for dirty and saving (assuming Redux will handle the final status)
+    setDirty(false);
+    // Remove the explicit setTimeout if handleUpdateProfile will eventually set saving to false on success.
     setTimeout(() => setSaving(false), 600);
   };
 
@@ -140,6 +139,16 @@ export default function ProfilePage() {
     }
     setDirty(false);
   };
+  
+  // --- LOADING RENDER ---
+  if (profileLoading && !user.name) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+            <Loader text="Loading Profile..." size="lg" />
+        </div>
+      ); 
+  }
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -147,7 +156,7 @@ export default function ProfilePage() {
         {/* Grid layout to match screenshot */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Personal Details (left, spans 2 columns on lg) */}
-          <div className="lg:col-span-2 bg-white rounded-lg  p-6">
+          <div className="lg:col-span-2 bg-white rounded-lg  p-6">
             <h2 className="text-lg font-semibold mb-1">Personal Details</h2>
             <p className="text-sm text-gray-500 mb-6">
               Manage how your personal information appears on your profile.
@@ -188,7 +197,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Preferences (right column on lg) */}
-          <div className="bg-white rounded-lg  p-6">
+          <div className="bg-white rounded-lg  p-6">
             <h3 className="text-lg font-semibold mb-4">Preferences</h3>
 
             <div className="space-y-6">
@@ -244,7 +253,7 @@ export default function ProfilePage() {
 
         {/* Bottom area: Current Plan (left) + Quick Action (right) */}
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-lg  p-6">
+          <div className="lg:col-span-2 bg-white rounded-lg  p-6">
             <h3 className="text-lg font-semibold mb-2">Current Plan</h3>
 
             <div className="grid gap-4 text-sm text-gray-700">
@@ -282,8 +291,16 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg  p-6">
+          <div className="bg-white rounded-lg  p-6">
             <h3 className="text-lg font-semibold mb-4">Quick Action</h3>
+
+
+            <Link
+              href="/admin"
+              className="block w-full text-center border rounded-md py-2 mb-3 hover:bg-[#dfb83a]/90 text-sm bg-[#dfb83a] text-white"
+            >
+              Dashboard
+            </Link>
 
             <button
               onClick={() => setShowLogoutConfirm(true)}

@@ -36,7 +36,6 @@ const useAuth = () => {
 };
 
 
-
 export const useRegisterActions = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();

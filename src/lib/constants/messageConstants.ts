@@ -17,6 +17,15 @@ export const MESSAGES = {
   ARTICLE_CREATE_FAIL: "Failed to create content",
   ARTICLE_FETCH_FAIL: "Failed to fetch articles",
 
+
+  SUBSCRIPTION_ADDING_SUCCESS:"successfully Created",
+  SUBSCRIPTION_ADDING_FAIL:"Failed to Create New Plan",
+
+  SUBSCRIPTION_FETCH_SUCCESS:"Successfully get",
+  SUBSCRIPTION_FETCH_FAIL:"Failed to get Plans",
+
+
+
   // Error messages
   SERVER_CONNECTION_ERROR: "Unable to connect to the server. Please check if the server is running.",
   NETWORK_ERROR: "Network error. Please check your internet connection.",

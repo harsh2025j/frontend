@@ -1,4 +1,3 @@
-
 export interface forgotPasswordRequest{
   email:string;
 }
@@ -82,4 +81,48 @@ export interface AuthState {
   user: AuthUser | null;
   message: string | null;
   debugOtp?: string | null;
+}
+
+// ----------------------------------------------------
+// DETAILED USER/PROFILE/RBAC TYPES (Source of Truth)
+// ----------------------------------------------------
+
+export interface Role {
+  _id: string;
+  name: string;
+  slug: string;
+  isDeleted: boolean;
+  description: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Permission {
+  _id: string;
+  name: string;
+  description: string;
+  isDeleted: boolean;
+}
+
+export interface UserData {
+  _id: string;
+  name: string;
+  email: string;
+  role: Role;
+  isActive: boolean;
+  isVerified: boolean;
+  preferredLanguage: string;
+  permissions: Permission[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  phone?: string; // Added optional fields common in profile
+  dob?: string;
+}
+
+export interface UserResponse {
+  success: boolean;
+  message: string;
+  data: UserData;
 }

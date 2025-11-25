@@ -1,19 +1,19 @@
 "use client";
-import Image from "next/image";
+
+import Image, { StaticImageData } from "next/image";
 import { useRef, useEffect, useState } from "react";
-import img from "../../assets/stories.jpeg";
 
-const articles = [
-  { img: img, title: "US visa bulletin for November released: Check for latest updates" },
-  { img: img, title: "HDFC Life profit rises 3% to ₹447 crore" },
-  { img: img, title: "RBL’s USP: No promoter overhang" },
-  { img: img, title: "Govt reverses tax-free import policy for mis parts amid tax e" },
-  { img: img, title: "Govt reverses tax-free import policy for mis parts amid tax e" },
-  { img: img, title: "Govt reverses tax-free import policy for mis parts amid tax e" },
-  { img: img, title: "Govt reverses tax-free import policy for mis parts amid tax e" },
-];
+interface Article {
+  img: StaticImageData | string;
+  title: string;
+}
 
-export default function ContentSlider() {
+interface ContentSliderProps {
+  name: string;
+  FilteredData: Article[];
+}
+
+export default function ContentSlider({ name, FilteredData }: ContentSliderProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
 
@@ -33,33 +33,37 @@ export default function ContentSlider() {
 
   return (
     <div className="p-6 bg-[#f6f6f7] flex items-center justify-center relative">
-      
-      <div className="w-full container  bg-white rounded-xl shadow-lg p-3 flex gap-4 relative">
+      <div className="w-full container bg-white rounded-xl shadow-lg p-3 flex gap-4 relative">
+
+        {/* Left Label */}
         <div className="bg-[#1b3550] rounded-lg w-40 flex items-center justify-center px-4">
           <span
             className="text-white text-2xl rotate-180 font-medium"
             style={{ writingMode: "vertical-rl" }}
           >
-            Finance articles
+            {name}
           </span>
         </div>
 
+        {/* Scrollable Articles */}
         <div
           ref={scrollRef}
           className="flex gap-4 overflow-x-auto scroll-smooth custom-scroll py-3 pr-2"
         >
-          {articles.map((item, i) => (
+          {FilteredData.map((item, i) => (
             <div
               key={i}
-              className="min-w-[260px] max-w-[260px] bg-white rounded-lg shadow-md overflow-hidden "
+              className="min-w-[260px] max-w-[260px] bg-white rounded-lg shadow-md overflow-hidden"
             >
-              <Image
-                src={item.img}
-                width={260}
-                height={160}
-                alt={item.title}
-                className="h-40 w-full object-cover"
-              />
+              <div className="relative w-[260px] h-[160px] overflow-hidden rounded-lg">
+                <Image
+                  src={item.img}
+                  alt={item.title || "Image not found"}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+
               <p className="text-center text-gray-800 font-medium px-2 py-4">
                 {item.title}
               </p>
@@ -67,6 +71,13 @@ export default function ContentSlider() {
           ))}
         </div>
 
+        {/* Optional Scroll Progress Indicator */}
+        {/* <div className="absolute bottom-1 left-0 h-1 bg-gray-200 w-full rounded">
+          <div
+            className="h-full bg-blue-500 rounded"
+            style={{ width: `${scrollProgress}%` }}
+          ></div>
+        </div> */}
       </div>
     </div>
   );

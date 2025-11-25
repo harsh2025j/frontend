@@ -13,16 +13,46 @@ export default function CategoryPage() {
     const { articles, loading } = useArticleListActions();
     const [categoryArticles, setCategoryArticles] = useState<Article[]>([]);
 
+    // useEffect(() => {
+    //     if (articles.length > 0 && slug) {
+    //         const filtered = articles.filter(
+    //             (article: Article) =>
+    //                 article.category?.slug === slug ||
+    //                 article.category?.name.toLowerCase() === slug.toLowerCase()||
+    //                 article.category?.id === article.subcategory?.parentId
+    //         );
+    //         setCategoryArticles(filtered);
+    //     }
+    // }, [articles, slug]);
+
     useEffect(() => {
-        if (articles.length > 0 && slug) {
-            const filtered = articles.filter(
-                (article: Article) =>
-                    article.category?.slug === slug ||
-                    article.category?.name.toLowerCase() === slug.toLowerCase()
-            );
-            setCategoryArticles(filtered);
-        }
-    }, [articles, slug]);
+  if (articles.length > 0 && slug) {
+    const filtered = articles.filter((article: Article) => {
+      const category = article.category;
+      if (!category) return false;
+
+      const currentSlug = slug.toLowerCase();
+
+      const categorySlug = category.slug?.toLowerCase();
+      const categoryName = category.name?.toLowerCase();
+      const parentSlug = category.parent?.slug?.toLowerCase();
+      const parentName = category.parent?.name?.toLowerCase();
+
+      return (
+        // match current category
+        categorySlug === currentSlug ||
+        categoryName === currentSlug ||
+
+        // match parent → show children
+        parentSlug === currentSlug ||
+        parentName === currentSlug
+      );
+    });
+
+    setCategoryArticles(filtered);
+  }
+}, [articles, slug]);
+
 
     if (loading) {
         return (
@@ -61,6 +91,7 @@ export default function CategoryPage() {
                                 title={article.title}
                                 src={article.thumbnail || undefined}
                                 court={article.location || undefined}
+                                time={new Date(article.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                 views={String(0)}
                                 likes={String(0)}
                             />

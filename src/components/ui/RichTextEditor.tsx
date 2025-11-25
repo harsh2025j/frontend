@@ -14,18 +14,19 @@ const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeholder }) => {
     const modules = useMemo(() => ({
         toolbar: [
-            [{ 'header': [1, 2, 3, false] }],
+            [{ header: [1, 2, 3, false] }],
             ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-            [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ indent: '-1' }, { indent: '+1' }],
             ['link', 'image'],
-            ['clean']
+            ['clean'],
         ],
     }), []);
 
     const formats = [
         'header',
         'bold', 'italic', 'underline', 'strike', 'blockquote',
-        'list', 'bullet', 'indent',
+        'list', 'indent',
         'link', 'image'
     ];
 
