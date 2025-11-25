@@ -4,6 +4,7 @@ import articleReducer from "../features/article/articleSlice";
 import categoryReducer from "../features/category/categorySlice";
 import rolesReducer from "../features/roles/rolesSlice";
 import permissionsReducer from "../features/permissions/permissionsSlice";
+import uiReducer from "../features/ui/uiSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     category: categoryReducer,
     roles: rolesReducer,
     permissions: permissionsReducer,
+    ui: uiReducer,
   },
 });
 
