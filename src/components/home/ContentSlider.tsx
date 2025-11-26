@@ -1,9 +1,11 @@
 "use client";
 
 import Image, { StaticImageData } from "next/image";
+import Link from "next/link";
 import { useRef, useEffect, useState } from "react";
 
 interface Article {
+  slug: string;
   img: StaticImageData | string;
   title: string;
 }
@@ -56,17 +58,20 @@ export default function ContentSlider({ name, FilteredData }: ContentSliderProps
               className="min-w-[260px] max-w-[260px] bg-white rounded-lg shadow-md overflow-hidden"
             >
               <div className="relative w-[260px] h-[160px] overflow-hidden rounded-lg">
+                 <Link href={`/news/${item.slug}`}>
                 <Image
                   src={item.img}
                   alt={item.title || "Image not found"}
                   fill
                   className="object-cover"
                 />
+                </Link>
               </div>
-
+              <Link href={`/news/${item.slug}`}>
               <p className="text-center text-gray-800 font-medium px-2 py-4">
                 {item.title}
               </p>
+              </Link>
             </div>
           ))}
         </div>
