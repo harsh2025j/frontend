@@ -8,12 +8,12 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
   const navItems = [
     { name: "Dashboard", icon: <Home size={18} />, href: "/admin" },
     { name: "Content Management", icon: <FolderOpen size={18} />, href: "/admin/content-management" },
-    { name: "Roles & Permissions", icon: <UserCog size={18} />, href: "/admin/roles-permissions" },
+    { name: "Create Roles & Permissions", icon: <UserCog size={18} />, href: "/admin/roles-permissions" },
     { name: "Content Approval", icon: <GitPullRequestArrow size={18} />, href: "/admin/content-approval" },
-    { name: "AI Summaries", icon: <Brain size={18} />, href: "/admin/ai-summaries" },
+    // { name: "AI Summaries", icon: <Brain size={18} />, href: "/admin/ai-summaries" },
     { name: "Team Management", icon: <Users size={18} />, href: "/admin/teams" },
     { name: "Premium", icon: <Crown size={18} />, href: "/admin/plans" },
-    { name: "Analytics", icon: <BarChart3 size={18} />, href: "/admin/analytics" },
+    // { name: "Analytics", icon: <BarChart3 size={18} />, href: "/admin/analytics" },
     { name: "Settings", icon: <Settings size={18} />, href: "/admin/settings" },];
 
 

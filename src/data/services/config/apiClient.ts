@@ -2,6 +2,13 @@ import axios, { AxiosError } from "axios";
 import { API_BASE_URL } from "./apiContants";
 import { handleApiError } from "@/lib/utils/errorHandler";
 import toast from "react-hot-toast";
+import { startLoading, stopLoading } from "@/data/features/ui/uiSlice";
+
+let store: any;
+
+export const injectStore = (_store: any) => {
+  store = _store;
+};
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -13,11 +20,17 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
+    if (store) {
+      store.dispatch(startLoading());
+    }
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => {
+    if (store) {
+      store.dispatch(stopLoading());
+    }
     return Promise.reject(error);
   }
 );
@@ -25,10 +38,16 @@ apiClient.interceptors.request.use(
 // Response interceptor - Handle errors centrally
 apiClient.interceptors.response.use(
   (response) => {
+    if (store) {
+      store.dispatch(stopLoading());
+    }
     // Return successful responses as-is
     return response;
   },
   (error: AxiosError) => {
+    if (store) {
+      store.dispatch(stopLoading());
+    }
     // Handle all errors centrally
     const apiError = handleApiError(error);
 

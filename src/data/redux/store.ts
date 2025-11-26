@@ -39,6 +39,7 @@ import articleReducer from "../features/article/articleSlice";
 import categoryReducer from "../features/category/categorySlice";
 import rolesReducer from "../features/roles/rolesSlice";
 import permissionsReducer from "../features/permissions/permissionsSlice";
+import uiReducer from "../features/ui/uiSlice";
 import subscriptionReducer from "../features/subscription/subscriptionSlice"
 import profileReducer from "../features/profile/profileSlice"
 
@@ -50,10 +51,12 @@ export const store = configureStore({
     category: categoryReducer,
     roles: rolesReducer,
     permissions: permissionsReducer,
+    ui: uiReducer,
     subscription:subscriptionReducer,
+  },
 
   }, 
-});
+);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

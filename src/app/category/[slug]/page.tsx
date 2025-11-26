@@ -24,34 +24,34 @@ export default function CategoryPage() {
     //         setCategoryArticles(filtered);
     //     }
     // }, [articles, slug]);
-
+// sdfg
     useEffect(() => {
-  if (articles.length > 0 && slug) {
-    const filtered = articles.filter((article: Article) => {
-      const category = article.category;
-      if (!category) return false;
+        if (articles.length > 0 && slug) {
+            const filtered = articles.filter((article: Article) => {
+                const category = article.category;
+                if (!category) return false;
 
-      const currentSlug = slug.toLowerCase();
+                const currentSlug = slug.toLowerCase();
 
-      const categorySlug = category.slug?.toLowerCase();
-      const categoryName = category.name?.toLowerCase();
-      const parentSlug = category.parent?.slug?.toLowerCase();
-      const parentName = category.parent?.name?.toLowerCase();
+                const categorySlug = category.slug?.toLowerCase();
+                const categoryName = category.name?.toLowerCase();
+                const parentSlug = category.parent?.slug?.toLowerCase();
+                const parentName = category.parent?.name?.toLowerCase();
 
-      return (
-        // match current category
-        categorySlug === currentSlug ||
-        categoryName === currentSlug ||
+                return (
+                    // match current category
+                    categorySlug === currentSlug ||
+                    categoryName === currentSlug ||
 
-        // match parent → show children
-        parentSlug === currentSlug ||
-        parentName === currentSlug
-      );
-    });
+                    // match parent → show children
+                    parentSlug === currentSlug ||
+                    parentName === currentSlug
+                );
+            });
 
-    setCategoryArticles(filtered);
-  }
-}, [articles, slug]);
+            setCategoryArticles(filtered);
+        }
+    }, [articles, slug]);
 
 
     if (loading) {
