@@ -53,13 +53,13 @@ export default function DashboardLayout({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // if (loading || !isAuthorized) {
-  //   return (
-  //     <div className="flex items-center justify-center min-h-screen bg-gray-50">
-  //       <Loader size="lg" text="Checking Permissions..." />
-  //     </div>
-  //   );
-  // }
+  if (!isAuthorized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <Loader size="lg" text="Checking Permissions..." />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
