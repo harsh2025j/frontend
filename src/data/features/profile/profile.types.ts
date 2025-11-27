@@ -1,12 +1,41 @@
-import { UserData } from "@/data/features/auth/auth.types"; // <--- IMPORTS UserData
+export interface Role {
+  _id: string;
+  name: string;
+  slug: string;
+  isDeleted: boolean;
+  description: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Permission {
+  _id: string;
+  name: string;
+  description: string;
+  isDeleted: boolean;
+}
+
+export interface UserData {
+  _id: string;
+  name: string;
+  email: string;
+  avatar:string;
+  role: Role;
+  isActive: boolean;
+  isVerified: boolean;
+  preferredLanguage: string;
+  permissions: Permission[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  phone?: string; 
+  dob?: string;
+}
+
 
 // --- Interfaces for Redux State ---
-export interface ProfileState {
-  loading: boolean;
-  error: string | null;
-  user: UserData | null; // References the imported core user type
-  message: string | null;
-}
+
 
 // --- Interfaces for API Requests ---
 // Fields we expect the user to update on the profile page
@@ -14,18 +43,26 @@ export interface UpdateProfileRequest {
   name?: string;
   phone?: string;
   dob?: string;
+  avatar?:File | null;
 }
 
-// --- Interfaces for API Responses ---
 export interface ProfileResponse {
   success: boolean;
   message: string;
-  data: UserData; // References the imported core user type
+  data: UserData; 
 }
 
-// --- Interfaces for User Preferences/Settings (local state/localStorage only) ---
+
 export interface UserPreferences {
   language: string;
   doNotDisturb: boolean;
   caseStatusAlerts: boolean;
+}
+
+
+export interface ProfileState {
+  loading: boolean;
+  error: string | null;
+  user: UserData | null; // References the imported core user type
+  message: string | null;
 }

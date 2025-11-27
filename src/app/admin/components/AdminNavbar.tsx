@@ -3,12 +3,19 @@
 import Image from "next/image";
 import { Bell, Search, UserCircle, Menu } from "lucide-react";
 import logo from "../../../assets/logo.png";
+import Link from "next/link";
+import { UserData } from "@/data/features/profile/profile.types";
+import { useProfileActions } from "@/data/features/profile/useProfileActions";
 
 interface NavbarProps {
   onToggleSidebar: () => void;
 }
 
 const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
+  const { user: reduxProfileUser } = useProfileActions();
+
+  const user = reduxProfileUser  as UserData;
+
   return (
     <header className="w-full h-16 bg-[#0A2342] text-white flex items-center justify-between px-6 fixed top-0 left-0 z-40 shadow-md">
       {/* Left section: Logo + Menu + Search */}
@@ -24,12 +31,14 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
 
         {/* Logo */}
         <div className="flex items-center">
-          <Image
-            src={logo}
-            alt="Logo"
-            className="w-58 h-auto object-contain"
-            priority
-          />
+          <Link href="/">
+            <Image
+              src={logo}
+              alt="Logo"
+              className="w-58 h-auto object-contain"
+              priority
+            />
+          </Link>
         </div>
 
         {/* Search bar */}
@@ -49,10 +58,18 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
           className="text-white cursor-pointer hover:text-orange-400 transition"
           size={20}
         />
-        <div className="flex items-center gap-2">
-          <UserCircle className="text-white" size={24} />
-          <span className="text-sm font-medium">Riya Sharma</span>
-        </div>
+        <Link href="/profile" className="flex items-center gap-2 group">
+          <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700 overflow-hidden">
+            {(user?.name?.[0] || "U").toUpperCase()}
+
+          </div>
+          <span className="text-sm mr-6 font-medium text-white group-hover:underline">{user?.name || "Profile"}</span>
+
+        </Link>
+
+
+
+
       </div>
     </header>
   );

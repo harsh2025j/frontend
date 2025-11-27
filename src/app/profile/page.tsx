@@ -5,18 +5,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import img from "../../assets/img1.png"
 import { useRouter } from "next/navigation";
-import Loader from "@/components/ui/Loader"; // Importing Loader component
-import { useProfileActions } from "@/data/features/profile/useProfileActions"; // <--- NEW IMPORT
+import Loader from "@/components/ui/Loader";
+import { useProfileActions } from "@/data/features/profile/useProfileActions";
 
-/**
- * Fully functional Profile page with:
- * - Preferences (language + toggles)
- * - Save / Cancel that persist to localStorage
- * - Reset password, logout modal, delete account (UI)
- *
- * NOTE:
- * - The `useProfileActions` hook is now the primary source for user data and actions.
- */
+import { rolesApi } from "@/data/services/roles-service/roles-service";
+import { UserData } from "@/data/features/profile/profile.types";
+
 
 type Prefs = {
   language: string;
@@ -27,11 +21,11 @@ type Prefs = {
 export default function ProfilePage() {
   // --- NEW PROFILE STATE MANAGEMENT ---
   const {
-    user: reduxProfileUser, // The full UserData object from profileSlice
+    user: reduxProfileUser,
     loading: profileLoading,
     updateProfile: handleUpdateProfile, // Redux thunk dispatcher
     // error and message handled by the hook via toast
-  } = useProfileActions(); 
+  } = useProfileActions();
 
   // --- LOCAL/UI STATE ---
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -41,13 +35,7 @@ export default function ProfilePage() {
   const router = useRouter();
   // Removed unused reduxUser = useAppSelector((s) => s.auth.user);
 
-  // Redirect if no token
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-      if (!token) router.replace("/auth/login");
-    }
-  }, [router]);
+
 
   // Removed unnecessary "Load localStorage user" useEffect
 
@@ -72,22 +60,37 @@ export default function ProfilePage() {
   }, []);
 
   // Final user (use Redux profile user, fallback to an empty object if null)
-  const user: { name?: string; email?: string; phone?: string; dob?: string; avatar?: string } = reduxProfileUser || {};
+  const user: UserData = reduxProfileUser || ({} as UserData);
 
   // Extract fields from Redux user. Note: `user` is now UserData from auth.types.ts
   const name = user?.name || "";
   const email = user?.email || "";
   // The phone and dob fields are available on the full UserData object
-  const phone = user?.phone || ""; 
+  const phone = user?.phone || "";
   const dob = user?.dob || "";
   // Assuming 'avatar' is either on UserData or we use a fallback
-  const avatar = user?.avatar || "/mnt/data/ebd526a9-f568-4ae0-bb7e-1a75edb1e599.png"; 
-
+  const avatar = user?.avatar || "/mnt/data/ebd526a9-f568-4ae0-bb7e-1a75edb1e599.png";
+  //  const role?: { name: string; slug: string };
   // Reset / Save
   const resetProfilePassword = () => {
     // email must be present to pre-fill the reset flow in your app
     router.push(`/auth/forgot-password?Step=reset&email=${email}`);
   };
+
+  useEffect(() => {
+     if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token"); 
+      if (!token) {
+        router.replace("/auth/login");
+        return;
+      }
+      else if(!user){
+        router.replace("/auth/login")
+        return;
+      }
+     
+    }
+  }, [user,router]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -96,7 +99,7 @@ export default function ProfilePage() {
 
   const handleSave = () => {
     setSaving(true);
-    
+
     // 1. Persist local preferences (language, toggles) to localStorage
     try {
       localStorage.setItem("profile_prefs", JSON.stringify(prefs));
@@ -139,14 +142,14 @@ export default function ProfilePage() {
     }
     setDirty(false);
   };
-  
+
   // --- LOADING RENDER ---
   if (profileLoading && !user.name) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-            <Loader text="Loading Profile..." size="lg" />
-        </div>
-      ); 
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader text="Loading Profile..." size="lg" />
+      </div>
+    );
   }
 
 
@@ -293,15 +296,14 @@ export default function ProfilePage() {
 
           <div className="bg-white rounded-lg  p-6">
             <h3 className="text-lg font-semibold mb-4">Quick Action</h3>
-
-
-            <Link
-              href="/admin"
-              className="block w-full text-center border rounded-md py-2 mb-3 hover:bg-[#dfb83a]/90 text-sm bg-[#dfb83a] text-white"
-            >
-              Dashboard
-            </Link>
-
+            {user.role?.name !== "user" && (
+              <Link
+                href="/admin"
+                className="block w-full text-center border rounded-md py-2 mb-3 hover:bg-[#dfb83a]/90 text-sm bg-[#dfb83a] text-white"
+              >
+                Dashboard
+              </Link>
+            )}
             <button
               onClick={() => setShowLogoutConfirm(true)}
               className="block w-full text-center border rounded-md py-2 mb-3 hover:bg-gray-700 text-sm bg-primary text-white"

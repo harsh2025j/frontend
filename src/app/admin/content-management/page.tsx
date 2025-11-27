@@ -6,6 +6,9 @@ import { Article } from "@/data/features/article/article.types";
 import Image from "next/image";
 import logo from "../../../../public/logo.png";
 import imgs from "../../../assets/img1.png"
+import { useRouter } from "next/navigation";
+import { useProfileActions } from "@/data/features/profile/useProfileActions";
+import { UserData } from "@/data/features/profile/profile.types";
 
 const ITEM_PER_PAGE = 15;
 
@@ -45,6 +48,29 @@ const TableSkeleton = () => {
 const contentManagementPage: React.FC = () => {
   const { articles, loading, error } = useArticleListActions();
   const [currentPage, setCurrentPage] = useState(1);
+
+  const router = useRouter();
+const { user: reduxUser} = useProfileActions();
+  const user = reduxUser as UserData;
+  useEffect(() => {
+    // if (loading) return;
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+    // 1. No Token? -> Go to Login
+    if (!token) {
+      router.replace("/auth/login");
+      return;
+    }
+
+    // 2. Role Check
+    if (user?.role) {
+      const currentRole = user.role.name;
+      if (!currentRole || currentRole === "user") {
+        router.replace("/auth/login"); 
+      }
+    }
+  }, [user, router]);
 
   useEffect(() => {
     if (error) toast.error(error);
@@ -134,17 +160,16 @@ const contentManagementPage: React.FC = () => {
                         <td className="py-3 px-4">{item.authors}</td>
 
                         <td className="py-3 px-4">
-                          <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                            item.status === 'published'
+                          <span className={`text-xs px-3 py-1 rounded-full font-medium ${item.status === 'published'
                               ? 'bg-green-100 text-green-700'
                               : item.status === 'draft'
-                              ? 'bg-white text-yellow-300'
-                              : item.status === 'rejected'
-                              ? 'bg-amber-100 text-red-600'
-                              : item.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-700'
-                              : 'bg-gray-100 text-gray-700'
-                          }`}>
+                                ? 'bg-white text-yellow-300'
+                                : item.status === 'rejected'
+                                  ? 'bg-amber-100 text-red-600'
+                                  : item.status === 'pending'
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : 'bg-gray-100 text-gray-700'
+                            }`}>
                             {item.status}
                           </span>
                         </td>
@@ -170,9 +195,8 @@ const contentManagementPage: React.FC = () => {
                 <button
                   onClick={() => goToPage(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded ${
-                    currentPage === 1 ? "text-gray-400" : "hover:text-[#0B2149]"
-                  }`}
+                  className={`px-3 py-1 rounded ${currentPage === 1 ? "text-gray-400" : "hover:text-[#0B2149]"
+                    }`}
                 >
                   &lt;
                 </button>
@@ -183,11 +207,10 @@ const contentManagementPage: React.FC = () => {
                     <button
                       key={page}
                       onClick={() => goToPage(page)}
-                      className={`px-3 py-1 border rounded-md ${
-                        currentPage === page
+                      className={`px-3 py-1 border rounded-md ${currentPage === page
                           ? "bg-[#0B2149] text-white"
                           : "bg-gray-100 hover:bg-gray-200"
-                      }`}
+                        }`}
                     >
                       {page}
                     </button>
@@ -197,9 +220,8 @@ const contentManagementPage: React.FC = () => {
                 <button
                   onClick={() => goToPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`px-3 py-1 rounded ${
-                    currentPage === totalPages ? "text-gray-400" : "hover:text-[#0B2149]"
-                  }`}
+                  className={`px-3 py-1 rounded ${currentPage === totalPages ? "text-gray-400" : "hover:text-[#0B2149]"
+                    }`}
                 >
                   &gt;
                 </button>

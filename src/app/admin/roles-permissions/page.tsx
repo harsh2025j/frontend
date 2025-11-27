@@ -18,8 +18,35 @@ import { Plus, Edit, Trash2, X, Shield, Key, AlertTriangle, RefreshCw } from "lu
 import { MESSAGES } from "@/lib/constants/messageConstants";
 
 import Loader from "@/components/ui/Loader";
+import { useRouter } from "next/navigation";
+import { UserData } from "@/data/features/profile/profile.types";
+import { useProfileActions } from "@/data/features/profile/useProfileActions";
 
 export default function RolesPermissionsPage() {
+ const router = useRouter();
+ const { user: reduxUser} = useProfileActions();
+   const user = reduxUser as UserData;
+   useEffect(() => {
+     // if (loading) return;
+ 
+     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+ 
+     // 1. No Token? -> Go to Login
+     if (!token) {
+       router.replace("/auth/login");
+       return;
+     }
+ 
+     // 2. Role Check
+     if (user?.role) {
+       const currentRole = user.role.name;
+       const allowedRoles = ["admin", "super_admin"];
+       if (!allowedRoles.includes(currentRole)) {
+         router.replace("/auth/login"); 
+       }
+     }
+   }, [user, router]);
+ 
     const dispatch = useAppDispatch();
     const { roles, loading: rolesLoading, error: rolesError } = useAppSelector(
         (state) => state.roles

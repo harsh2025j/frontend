@@ -7,9 +7,37 @@ import { toast } from "react-hot-toast";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { fetchCategories, deleteCategory } from "@/data/features/category/categoryThunks";
 import { Category } from "@/data/features/category/category.types";
+import { UserData } from "@/data/features/profile/profile.types";
+import { useRouter } from "next/navigation";
+import { useProfileActions } from "@/data/features/profile/useProfileActions";
 
 export default function Settings() {
-    // POPUP CONTROLS
+
+const router = useRouter();
+const { user: reduxUser} = useProfileActions();
+  const user = reduxUser as UserData;
+  useEffect(() => {
+    // if (loading) return;
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+    // 1. No Token? -> Go to Login
+    if (!token) {
+      router.replace("/auth/login");
+      return;
+    }
+
+    // 2. Role Check
+    if (user?.role) {
+      const currentRole = user.role.name;
+      const allowedRoles = ["admin", "super_admin"];
+      if (!allowedRoles.includes(currentRole)) {
+        router.replace("/auth/login"); 
+      }
+    }
+  }, [user, router]);
+
+
     const [openCategoryPopup, setOpenCategoryPopup] = useState(false);
     const [openTeamPopup, setOpenTeamPopup] = useState(false);
     const [selectedParentId, setSelectedParentId] = useState<string | null>(null);

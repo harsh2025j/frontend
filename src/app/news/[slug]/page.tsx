@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import { Article } from "@/data/features/article/article.types";
@@ -9,6 +9,28 @@ import Link from "next/link";
 import { Clock, Share2, Sparkles, X, MessageCircle, Eye, Facebook, Twitter, Linkedin, Link2 } from "lucide-react";
 import logo from "../../../../public/logo.png";
 
+
+// Helper function to get related articles
+export function getRelatedArticles(currentSlug: string, allArticles: Article[], limit: number = 20) {
+  const currentArticle = allArticles.find(a => a.slug === currentSlug);
+  if (!currentArticle || !currentArticle.category) {
+    return [];
+  }
+
+  const currentCategorySlug = currentArticle.category.slug;
+
+  const filteredArticles = allArticles.filter((article) => {
+    const isSameCategory = article.category?.slug === currentCategorySlug;
+    const isNotCurrentArticle = article.slug !== currentSlug;
+
+    return isSameCategory && isNotCurrentArticle;
+  });
+
+  const shuffled = [...filteredArticles].sort(() => 0.5 - Math.random());
+
+  return shuffled.slice(0, limit);
+}
+
 export default function ArticleDetailPage() {
     const params = useParams();
     const slug = params.slug as string;
@@ -16,18 +38,22 @@ export default function ArticleDetailPage() {
     const [article, setArticle] = useState<Article | null>(null);
     const [showAISummary, setShowAISummary] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
-
+// console.log(slug)
+ const recommendedArticles = useMemo(() => {
+    return getRelatedArticles(slug, articles, 10);
+  }, [slug, articles]);
     // Dummy data
     const viewCount = 1247;
     const commentCount = 23;
 
     // Dummy recommended articles
-    const recommendedArticles = [
-        { id: 1, title: "SC Refuses To Entertain PIL Against Appointment Of Special Prosecutors", slug: "sc-refuses-pil", thumbnail: logo },
-        { id: 2, title: "Understanding Property Laws in India", slug: "property-laws-india", thumbnail: logo },
-        { id: 3, title: "Consumer Rights: A Complete Guide", slug: "consumer-rights-guide", thumbnail: logo },
-        { id: 4, title: "How to File a Legal Complaint", slug: "file-legal-complaint", thumbnail: logo },
-    ];
+    // const recommendedArticles = [
+    //     { id: 1, title: "SC Refuses To Entertain PIL Against Appointment Of Special Prosecutors", slug: "sc-refuses-pil", thumbnail: logo },
+    //     { id: 2, title: "Understanding Property Laws in India", slug: "property-laws-india", thumbnail: logo },
+    //     { id: 3, title: "Consumer Rights: A Complete Guide", slug: "consumer-rights-guide", thumbnail: logo },
+    //     { id: 4, title: "How to File a Legal Complaint", slug: "file-legal-complaint", thumbnail: logo },
+    // ];
+
 
     useEffect(() => {
         if (articles.length > 0 && slug) {
@@ -175,7 +201,7 @@ export default function ArticleDetailPage() {
                                         <div className="flex gap-4">
                                             <div className="relative w-24 h-24 flex-shrink-0 rounded overflow-hidden bg-gray-100">
                                                 <Image
-                                                    src={rec.thumbnail}
+                                                    src={(rec.thumbnail && (rec.thumbnail.startsWith('http') || rec.thumbnail.startsWith('/'))) ? rec.thumbnail : logo}
                                                     alt={rec.title}
                                                     fill
                                                     className="object-cover"

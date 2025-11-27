@@ -6,6 +6,8 @@ import Image from "next/image";
 import logo from "../../../public/logo.png";
 import { useRouter } from "next/navigation";
 import { navigationData, NavItem } from "@/data/navigation";
+import { useProfileActions } from "@/data/features/profile/useProfileActions";
+import { UserData } from "@/data/features/profile/profile.types";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -14,24 +16,18 @@ export default function Header() {
   const [mobileExpanded, setMobileExpanded] = useState<Record<string, boolean>>({});
 
   const router = useRouter();
+   const {
+      user: reduxProfileUser, 
+      loading: profileLoading,
+    } = useProfileActions(); 
+const checkuser = reduxProfileUser as UserData;
+  
 
   useEffect(() => {
-    try {
-      if (typeof window === "undefined") return;
-      const storedUser = localStorage.getItem("user");
-      if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
-        try {
-          const parsed = JSON.parse(storedUser);
-          if (parsed && typeof parsed === "object") setUser(parsed);
-        } catch {
-          localStorage.removeItem("user");
-          setUser(null);
-        }
-      }
-    } catch {
-      // noop
+    if (reduxProfileUser && Object.keys(checkuser).length > 0) {
+      setUser(checkuser);
     }
-  }, []);
+  }, [reduxProfileUser]); 
 
   const toggleMobileExpand = (label: string) => {
     setMobileExpanded((prev) => ({ ...prev, [label]: !prev[label] }));

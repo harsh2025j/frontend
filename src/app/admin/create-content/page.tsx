@@ -6,6 +6,9 @@ import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { fetchCategories } from "@/data/features/category/categoryThunks";
 import { Category } from "@/data/features/category/category.types";
 import RichTextEditor from "@/components/ui/RichTextEditor";
+import { useRouter } from "next/navigation";
+import { useProfileActions } from "@/data/features/profile/useProfileActions";
+import { UserData } from "@/data/features/profile/profile.types";
 
 const CreateUpdatePage: React.FC = () => {
   const {
@@ -18,6 +21,30 @@ const CreateUpdatePage: React.FC = () => {
     error,
     message,
   } = useCreateArticleActions();
+  
+  const router = useRouter();
+const { user: reduxUser} = useProfileActions();
+  const user = reduxUser as UserData;
+  useEffect(() => {
+    // if (loading) return;
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+    // 1. No Token? -> Go to Login
+    if (!token) {
+      router.replace("/auth/login");
+      return;
+    }
+
+    // 2. Role Check
+    if (user?.role) {
+      const currentRole = user.role.name;
+      if (!currentRole || currentRole === "user") {
+        router.replace("/auth/login"); 
+      }
+    }
+  }, [user, router]);
+
 
   const dispatch = useAppDispatch();
   const { categories } = useAppSelector((state) => state.category);

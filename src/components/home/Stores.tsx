@@ -28,6 +28,7 @@ import { Article } from "@/data/features/article/article.types";
 
 // --- NEW IMPORT FOR SKELETON LOADING ---
 import ArticleSkeleton from "../ui/ArticleSkeleton"; // You need to create this file!
+import Link from "next/link";
 
 
 // Filter article function
@@ -349,7 +350,8 @@ export default function Stores() {
         </div>
 
         <div className="flex justify-center mb-6 md:mb-10">
-          <Button lable="View More" className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 sm:px-6 py-1 sm:py-2 text-sm sm:text-base" />
+          <button className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 sm:px-6 py-1 sm:py-2 text-sm sm:text-base" >View More
+          </button>
         </div>
 
         {/* Hindi News */}
@@ -384,7 +386,9 @@ export default function Stores() {
         </div>
 
         <div className="flex justify-center mb-6 md:mb-10">
+          <Link href={`/category/${"hindi-news"}`}>
           <Button lable="View More" className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 sm:px-6 py-1 sm:py-2 text-sm sm:text-base mt-4 md:mt-5" />
+          </Link>
         </div>
 
         {/* Articles */}
@@ -404,7 +408,7 @@ export default function Stores() {
               <ArticleSkeleton count={4} isWide={true} />
             </div>
           ) : (
-            <ContentSlider name="Finamnce Articles" FilteredData={FinanceArticleData.map((article) => ({
+            <ContentSlider name="Finance Articles" slug={"finance-articles"} FilteredData={FinanceArticleData.map((article) => ({
               ...article,
               img: article.thumbnail || "", // Assuming `thumbnail` is the image source
             }))} /> 
@@ -419,6 +423,7 @@ export default function Stores() {
           ) : (
             <ContentSlider
               name="Legal Articles"
+              slug={"legal-articles"}
               FilteredData={LegalArticleData.map((article) => ({
                 ...article,
                 img: article.thumbnail || "", // Assuming `thumbnail` is the image source

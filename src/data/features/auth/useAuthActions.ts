@@ -127,7 +127,6 @@ export const useLoginActions = () => {
 
   useEffect(() => {
     if (localStorage.getItem("token")) {
-      console.log("user logout");
       console.log(token);
       router.push("/");
       localStorage.setItem("email", formData.email);

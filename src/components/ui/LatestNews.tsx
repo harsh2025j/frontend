@@ -27,26 +27,31 @@ const LatestNews: React.FC<LatestNewsProps> = ({
     <div className="bg-white  rounded-md shadow-lg overflow-hidden hover:border-blue-300 transition-all duration-300 flex flex-col justify-between border border-gray-200 p-6">
 
       <div className="relative w-full h-60 mb-4">
+        <Link href={`/news/${slug}`}>
         <Image
           src={img}
           alt={title}
           fill
           className="object-cover rounded-md"
         />
+        </Link>
       </div>
-      <div className="flex flex-col  gap-6">
+      
+      <div className="flex flex-col ">
+        <Link href={`/news/${slug}`}>
         <h2 className="text-gray-900  font-merriweather font-semibold md:text-base text-[13px] mb-4 leading-snug">
           {title}
         </h2>
+        </Link> 
 
-        <div className="text-gray-500 text-xs sm:text-sm mt-2 flex items-center gap-2">
+        <div className="text-gray-500 text-xs sm:text-sm mt-2 flex items-center gap-2 mb-5">
           {author && <span>Author: {author}</span>}
           {author && date && <span>•</span>}
           <Clock size={14} />
           {date && <span>{date}</span>}
         </div>
 
-        <div className="flex justify-evenly ">
+        <div className="flex gap-3">
           {slug ? (
             <Link href={`/news/${slug}`}>
               <button className="bg-[#d4af37] text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-[#b8962f] transition-all duration-200">

@@ -16,6 +16,10 @@ import RevenueChart from "./components/charts/RevenueChart";
 import ContentApprovalPanel from "./components/UrgentTable";
 import { Router } from "next/router";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useProfileActions } from "@/data/features/profile/useProfileActions";
+import { UserData } from "@/data/features/profile/profile.types";
 
 const data = [
   { label: "Total Articles", value: "12,450", icon: <TrendingUp className="w-8 h-8 text-blue-500" /> },
@@ -29,6 +33,23 @@ const data = [
 ]
 
 export default function Page() {
+//   const router = useRouter();
+//   const {
+//     user: reduxProfileUser,
+//   } = useProfileActions();
+//   const user: UserData = reduxProfileUser || ({} as UserData);
+// const role = user.role?.name;
+// console.log(role);
+//   useEffect(() => {
+   
+//   if (!user) return; 
+
+//   if (!role || role === "user") {
+//     router.replace("/auth/login");
+//   }
+// }, [user, router]);
+
+
   return (
     <>
     <div className="flex items-center justify-between mb-8">

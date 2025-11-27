@@ -3,6 +3,9 @@ import React, { useEffect, useState } from "react";
 import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import { Article } from "@/data/features/article/article.types";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { useProfileActions } from "@/data/features/profile/useProfileActions";
+import { UserData } from "@/data/features/profile/profile.types";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -30,6 +33,32 @@ const TableSkeleton = () => {
 };
 
 const ContentApprovalPanel = () => {
+
+  const router = useRouter();
+const { user: reduxUser} = useProfileActions();
+  const user = reduxUser as UserData;
+  useEffect(() => {
+    // if (loading) return;
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+    // 1. No Token? -> Go to Login
+    if (!token) {
+      router.replace("/auth/login");
+      return;
+    }
+
+    // 2. Role Check
+    if (user?.role) {
+      const currentRole = user.role.name;
+      const allowedRoles = ["admin", "super_admin"];
+      if (!allowedRoles.includes(currentRole)) {
+        router.replace("/auth/login"); 
+      }
+    }
+  }, [user, router]);
+
+
 
   const { articles, loading, error } = useArticleListActions();
 
