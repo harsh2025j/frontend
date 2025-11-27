@@ -2,7 +2,8 @@
 import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import addNewMemberPage from "./add-new-member/page";
 
 interface TeamMember {
   id: number;
@@ -13,21 +14,19 @@ interface TeamMember {
 }
 
 const TeamManagementPage: React.FC = () => {
+  
   const router = useRouter();
   const { user: reduxUser} = useProfileActions();
     const user = reduxUser as UserData;
     useEffect(() => {
-      // if (loading) return;
   
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   
-      // 1. No Token? -> Go to Login
       if (!token) {
         router.replace("/auth/login");
         return;
       }
-  
-      // 2. Role Check
+
       if (user?.role) {
         const currentRole = user.role.name;
         const allowedRoles = ["admin", "super_admin"];
@@ -37,7 +36,9 @@ const TeamManagementPage: React.FC = () => {
       }
     }, [user, router]);
   
-
+   const addNewMember=()=>{
+    router.push("/admin/teams/add-new-member")
+  }
   const teamList: TeamMember[] = [
     { id: 1, name: "Sameer Raoe", email: "Example@example.com", role: "Editor", status: "Working" },
     { id: 2, name: "Sameer Raoe", email: "Example@example.com", role: "Admin", status: "Working" },
@@ -65,10 +66,11 @@ const TeamManagementPage: React.FC = () => {
             <div className="text-sm md:text-base">
               <strong>Total Team:</strong> 8
             </div>
-            <button className="bg-yellow-400 text-white px-5 py-2 rounded-md font-medium hover:bg-yellow-500">
-              + Invite new User
+            <button className="bg-yellow-400 text-white px-5 py-2 rounded-md font-medium hover:bg-yellow-500" onClick={addNewMember}>
+              + Invite new Member
             </button>
           </div>
+          
 
           {/* Filters */}
           <div className="flex bg-gray rounded-xl px-6 py-3 flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -83,7 +85,7 @@ const TeamManagementPage: React.FC = () => {
                 <option>Manager</option>
               </select>
             </div>
-            <div className="relative w-full md:w-80">
+            <div className=" w-full md:w-80">
               <input
                 type="text"
                 placeholder="Search name or roles..."
@@ -91,7 +93,7 @@ const TeamManagementPage: React.FC = () => {
               />
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                className="absolute left-1 top-2.5 h-5 w-5 text-gray-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -100,7 +102,7 @@ const TeamManagementPage: React.FC = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1116.65 16.65z"
+                  d="M20 21l-4.35-4.35m0 0A5.5 7.4 0 1120.65 16.63z"
                 />
               </svg>
             </div>
