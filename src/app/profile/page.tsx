@@ -68,7 +68,7 @@ export default function ProfilePage() {
   // The phone and dob fields are available on the full UserData object
   const phone = user?.phone || "";
   const dob = user?.dob || "";
-  // Assuming 'avatar' is either on UserData or we use a fallback
+  // Assuming 'avatar' is either on UserData or we use a fallbackk
   const avatar = user?.avatar || "/mnt/data/ebd526a9-f568-4ae0-bb7e-1a75edb1e599.png";
   //  const role?: { name: string; slug: string };
   // Reset / Save
@@ -107,9 +107,7 @@ export default function ProfilePage() {
       console.error("Saving prefs failed", err);
     }
 
-    // 2. Dispatch profile update to API
-    // IMPORTANT: In a real app, you would pass mutable fields from form state here.
-    // For now, we simulate an update call with dummy data or just the fields we expect to change.
+   
     handleUpdateProfile({
       // For demonstration, commenting out the actual update payload
       // name: name, // assuming you had a state for the mutable name field
@@ -119,7 +117,7 @@ export default function ProfilePage() {
 
     // Reset UI state for dirty and saving (assuming Redux will handle the final status)
     setDirty(false);
-    // Remove the explicit setTimeout if handleUpdateProfile will eventually set saving to false on success.
+    
     setTimeout(() => setSaving(false), 600);
   };
 
@@ -159,7 +157,7 @@ export default function ProfilePage() {
         {/* Grid layout to match screenshot */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Personal Details (left, spans 2 columns on lg) */}
-          <div className="lg:col-span-2 bg-white rounded-lg  p-6">
+          <div className="lg:col-span-2 bg-white rounded-lg p-6">
             <h2 className="text-lg font-semibold mb-1">Personal Details</h2>
             <p className="text-sm text-gray-500 mb-6">
               Manage how your personal information appears on your profile.
@@ -168,8 +166,7 @@ export default function ProfilePage() {
             <div className="flex items-start gap-6">
               <div className="w-28 h-28 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
                 {avatar ? (
-                  // Next.js Image expects either remote domain config or local static import.
-                  // Many projects accept a direct path — adjust if necessary.
+                
                   <Image
                     // src={avatar}
                     src={img}
@@ -200,7 +197,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Preferences (right column on lg) */}
-          <div className="bg-white rounded-lg  p-6">
+          <div className="bg-white rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Preferences</h3>
 
             <div className="space-y-6">
@@ -256,7 +253,7 @@ export default function ProfilePage() {
 
         {/* Bottom area: Current Plan (left) + Quick Action (right) */}
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-lg  p-6">
+          <div className="lg:col-span-2 bg-white rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-2">Current Plan</h3>
 
             <div className="grid gap-4 text-sm text-gray-700">
@@ -294,7 +291,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg  p-6">
+          <div className="bg-white rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Quick Action</h3>
             {user.role?.name !== "user" && (
               <Link
