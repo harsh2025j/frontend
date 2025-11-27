@@ -73,7 +73,7 @@ export default function ProfilePage() {
   //  const role?: { name: string; slug: string };
   // Reset / Save
   const resetProfilePassword = () => {
-    // email must be present to pre-fill the reset flow in your app
+    // email must be present to pre-fill the reset flow in your App
     router.push(`/auth/forgot-password?Step=reset&email=${email}`);
   };
 
