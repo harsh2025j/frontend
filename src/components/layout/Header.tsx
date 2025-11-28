@@ -16,18 +16,19 @@ export default function Header() {
   const [mobileExpanded, setMobileExpanded] = useState<Record<string, boolean>>({});
 
   const router = useRouter();
-   const {
-      user: reduxProfileUser, 
-      loading: profileLoading,
-    } = useProfileActions(); 
-const checkuser = reduxProfileUser as UserData;
-  
+  const {
+    user: reduxProfileUser,
+    loading: profileLoading,
+  } = useProfileActions();
+  const checkuser = reduxProfileUser as UserData;
+
+  const avatar = checkuser?.profilePicture || null;
 
   useEffect(() => {
     if (reduxProfileUser && Object.keys(checkuser).length > 0) {
       setUser(checkuser);
     }
-  }, [reduxProfileUser]); 
+  }, [reduxProfileUser]);
 
   const toggleMobileExpand = (label: string) => {
     setMobileExpanded((prev) => ({ ...prev, [label]: !prev[label] }));
@@ -145,10 +146,25 @@ const checkuser = reduxProfileUser as UserData;
         <div className="hidden lg:flex items-center gap-4">
           {user ? (
             <Link href="/profile" className="flex items-center gap-2 group">
-              <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700 overflow-hidden">
-                {(user?.name?.[0] || "U").toUpperCase()}
+              
+              <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center 
+                  text-sm font-semibold text-gray-700 overflow-hidden border-2 border-primary">
+                {avatar ? (
+                  <Image
+                    src={avatar}
+                    alt="Avatar"
+                    width={40}
+                    height={40}
+                    className="object-cover w-full h-full"
+                  />
+                ) : (
+                  (user?.name?.[0] || "U").toUpperCase()
+                )}
               </div>
-              <span className="text-sm font-medium text-gray-800 group-hover:underline">{user?.name || "Profile"}</span>
+
+              <span className="text-sm font-medium text-gray-800 group-hover:underline mr-1">
+                {user?.name || "Profile"}
+              </span>
             </Link>
           ) : (
             <>

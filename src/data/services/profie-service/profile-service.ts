@@ -14,7 +14,18 @@ export const profileApi = {
   },
 
   updateProfile: async (data: UpdateProfileRequest) => {
-    // FIX: Changed from apiClient.put to apiClient.post, a common fix for profile update API issues.
-    return await apiClient.post<ProfileResponse>(API_ENDPOINTS.PROFILE.UPDATE, data);
+    const formData = new FormData();
+     if (data.name) formData.append("name", data.name);
+     if (data.phone) formData.append("phone", data.phone);
+     if (data.dob) formData.append("dob", data.dob);
+     if (data.avatar) formData.append("file", data.avatar);
+
+
+    return await apiClient.post<ProfileResponse>(API_ENDPOINTS.PROFILE.UPDATE, formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
   },    
 };

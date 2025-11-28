@@ -31,7 +31,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ReduxProvider>
           <ClientLayout>{children}</ClientLayout>
-          <GlobalLoader />
+          {/* <GlobalLoader /> */}
           <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
         </ReduxProvider>
       </body>

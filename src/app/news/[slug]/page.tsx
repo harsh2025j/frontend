@@ -8,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Clock, Share2, Sparkles, X, MessageCircle, Eye, Facebook, Twitter, Linkedin, Link2 } from "lucide-react";
 import logo from "../../../../public/logo.png";
+import Loader from "@/components/ui/Loader";
 
 
 // Helper function to get related articles
@@ -89,7 +90,9 @@ export default function ArticleDetailPage() {
     };
 
     if (loading) {
-        return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+        return <div className="flex justify-center items-center min-h-screen">
+          <Loader text="Loading Profile..." size="lg" />
+        </div>;
     }
 
     if (!article) {

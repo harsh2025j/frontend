@@ -15,6 +15,7 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
   const { user: reduxProfileUser } = useProfileActions();
 
   const user = reduxProfileUser  as UserData;
+  const avatar = user?.profilePicture || null;
 
   return (
     <header className="w-full h-16 bg-[#0A2342] text-white flex items-center justify-between px-6 fixed top-0 left-0 z-40 shadow-md">
@@ -59,13 +60,25 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
           size={20}
         />
         <Link href="/profile" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700 overflow-hidden">
-            {(user?.name?.[0] || "U").toUpperCase()}
+              <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center 
+                  text-sm font-semibold text-gray-700 overflow-hidden border-2 border-white ">
+                {avatar ? (
+                  <Image
+                    src={avatar}
+                    alt="Avatar"
+                    width={40}
+                    height={40}
+                    className="object-cover w-full h-full"
+                  />
+                ) : (
+                  (user?.name?.[0] || "U").toUpperCase()
+                )}
+              </div>
 
-          </div>
-          <span className="text-sm mr-6 font-medium text-white group-hover:underline">{user?.name || "Profile"}</span>
-
-        </Link>
+              <span className="text-sm font-medium text-white group-hover:underline mr-3">
+                {user?.name || "Profile"}
+              </span>
+            </Link>
 
 
 

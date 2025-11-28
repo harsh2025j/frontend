@@ -4,6 +4,7 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import addNewMemberPage from "./add-new-member/page";
+import Loader from "@/components/ui/Loader";
 
 interface TeamMember {
   id: number;
@@ -18,6 +19,8 @@ const TeamManagementPage: React.FC = () => {
   const router = useRouter();
   const { user: reduxUser} = useProfileActions();
     const user = reduxUser as UserData;
+    const [isAuthorized, setIsAuthorized] = useState(false);
+
     useEffect(() => {
   
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -33,8 +36,19 @@ const TeamManagementPage: React.FC = () => {
         if (!allowedRoles.includes(currentRole)) {
           router.replace("/auth/login"); 
         }
+        else{
+          setIsAuthorized(true)
+        }
       }
     }, [user, router]);
+
+   if (!isAuthorized) {
+       return (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
+           <Loader size="lg" text="Checking Permissions..." />
+         </div>
+       );
+     }
   
    const addNewMember=()=>{
     router.push("/admin/teams/add-new-member")

@@ -1,4 +1,5 @@
 "use client";
+import Loader from "@/components/ui/Loader";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { useCreatePlanActions } from "@/data/features/subscription/useSubscriptionActions";
@@ -22,6 +23,7 @@ export default function AddNewPlan() {
   const router = useRouter();
   const { user: reduxUser} = useProfileActions();
     const user = reduxUser as UserData;
+     const [isAuthorized, setIsAuthorized] = useState(false);
     useEffect(() => {
       
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -37,8 +39,12 @@ export default function AddNewPlan() {
         if (!allowedRoles.includes(currentRole)) {
           router.replace("/auth/login"); 
         }
+        else{
+          setIsAuthorized(true)
+        }
       }
     }, [user, router]);
+  
 
   const {
     formData,
@@ -59,6 +65,13 @@ const handleSubmit = (e: React.FormEvent) => {
   e.preventDefault();
   handleAddPlan();
 };
+ if (!isAuthorized) {
+       return (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
+           <Loader size="lg" text="Checking Permissions..." />
+         </div>
+       );
+     }
   return (
     <div className="max-w-lg mx-auto bg-white p-6 rounded-xl shadow-md mt-6">
       <h2 className="text-xl font-semibold mb-4 ml-auto">Add New Plan</h2>

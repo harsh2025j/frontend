@@ -26,6 +26,7 @@ export default function RolesPermissionsPage() {
  const router = useRouter();
  const { user: reduxUser} = useProfileActions();
    const user = reduxUser as UserData;
+    const [isAuthorized, setIsAuthorized] = useState(false);
    useEffect(() => {
      // if (loading) return;
  
@@ -44,8 +45,12 @@ export default function RolesPermissionsPage() {
        if (!allowedRoles.includes(currentRole)) {
          router.replace("/auth/login"); 
        }
+       else{
+         setIsAuthorized(true)
+       }
      }
    }, [user, router]);
+  
  
     const dispatch = useAppDispatch();
     const { roles, loading: rolesLoading, error: rolesError } = useAppSelector(
@@ -146,6 +151,14 @@ export default function RolesPermissionsPage() {
         setEditingPermission(null);
     };
 
+ if (!isAuthorized) {
+       return (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
+           <Loader size="lg" text="Checking Permissions..." />
+         </div>
+       );
+     }
+     
     return (
         <div className="p-6 min-h-screen bg-gray-50">
             <div className="mb-8">
