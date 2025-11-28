@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import img from "../../assets/img1.png"
 import { useRouter } from "next/navigation";
 import Loader from "@/components/ui/Loader";
@@ -10,7 +10,7 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 
 import { rolesApi } from "@/data/services/roles-service/roles-service";
 import { UserData } from "@/data/features/profile/profile.types";
-
+import { X, Upload, Camera } from "lucide-react";
 
 type Prefs = {
   language: string;
@@ -20,26 +20,29 @@ type Prefs = {
 
 export default function ProfilePage() {
   // --- NEW PROFILE STATE MANAGEMENT ---
-  const {
+ const {
     user: reduxProfileUser,
     loading: profileLoading,
-    updateProfile: handleUpdateProfile, // Redux thunk dispatcher
-    // error and message handled by the hook via toast
+    updateProfile: handleUpdateProfile,
   } = useProfileActions();
+const user: UserData = reduxProfileUser || ({} as UserData);
+const router = useRouter();
+
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // --- LOCAL/UI STATE ---
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  // Removed localUser, relying entirely on reduxProfileUser
+  
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
-  const router = useRouter();
-  // Removed unused reduxUser = useAppSelector((s) => s.auth.user);
+  
+  
 
-
-
-  // Removed unnecessary "Load localStorage user" useEffect
-
-  // Preferences (load default from localStorage or fallback)
   const [prefs, setPrefs] = useState<Prefs>({
     language: "english-ind",
     doNotDisturb: false,
@@ -59,21 +62,16 @@ export default function ProfilePage() {
     }
   }, []);
 
-  // Final user (use Redux profile user, fallback to an empty object if null)
-  const user: UserData = reduxProfileUser || ({} as UserData);
+  
 
-  // Extract fields from Redux user. Note: `user` is now UserData from auth.types.ts
+  
   const name = user?.name || "";
   const email = user?.email || "";
-  // The phone and dob fields are available on the full UserData object
   const phone = user?.phone || "";
   const dob = user?.dob || "";
-  // Assuming 'avatar' is either on UserData or we use a fallbackk
-  const avatar = user?.avatar || "/mnt/data/ebd526a9-f568-4ae0-bb7e-1a75edb1e599.png";
-  //  const role?: { name: string; slug: string };
-  // Reset / Save
+  const avatar = user?.profilePicture || null;
+
   const resetProfilePassword = () => {
-    // email must be present to pre-fill the reset flow in your App
     router.push(`/auth/forgot-password?Step=reset&email=${email}`);
   };
 
@@ -106,32 +104,18 @@ export default function ProfilePage() {
     } catch (err) {
       console.error("Saving prefs failed", err);
     }
-
-   
-    handleUpdateProfile({
-      // For demonstration, commenting out the actual update payload
-      // name: name, // assuming you had a state for the mutable name field
-      // phone: phone,
-    });
-
-
-    // Reset UI state for dirty and saving (assuming Redux will handle the final status)
     setDirty(false);
     
     setTimeout(() => setSaving(false), 600);
   };
 
-  const handleCancel = () => {
-    // restore from storage
+  const handleCancelPreferences = () => {
     const raw = localStorage.getItem("profile_prefs");
     if (raw) {
       try {
         setPrefs(JSON.parse(raw));
-      } catch {
-        // ignore
-      }
+      } catch {}
     } else {
-      // fallback defaults
       setPrefs({
         language: "english-ind",
         doNotDisturb: false,
@@ -140,9 +124,44 @@ export default function ProfilePage() {
     }
     setDirty(false);
   };
+const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
 
+  const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setIsImageModalOpen(true);
+    }
+  };
+
+  const handleConfirmImageUpload = async () => {
+    if (selectedFile) {
+      await handleUpdateProfile({ avatar: selectedFile });
+      handleCloseImageModal();
+    }
+  };
+
+  const handleCloseImageModal = () => {
+    setIsImageModalOpen(false);
+    setPreviewUrl(null);
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // --- EDIT PROFILE LOGIC ---
+  const handleOpenEditProfile = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveProfileData = async (data: { name: string; phone: string; dob: string }) => {
+    await handleUpdateProfile(data);
+    setIsEditModalOpen(false);
+  };
   // --- LOADING RENDER ---
-  if (profileLoading && !user.name) {
+  if (!user.email ) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader text="Loading Profile..." size="lg" />
@@ -154,7 +173,14 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Grid layout to match screenshot */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          accept="image/*"
+          onChange={onFileSelect}
+        />
+       
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Personal Details (left, spans 2 columns on lg) */}
           <div className="lg:col-span-2 bg-white rounded-lg p-6">
@@ -164,19 +190,19 @@ export default function ProfilePage() {
             </p>
 
             <div className="flex items-start gap-6">
-              <div className="w-28 h-28 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+              <div className="w-28 h-28 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center border-3 border-primary">
                 {avatar ? (
-                
                   <Image
-                    // src={avatar}
-                    src={img}
+                    src={avatar}
                     alt="Avatar"
                     width={112}
                     height={112}
                     className="object-cover w-full h-full"
                   />
                 ) : (
-                  <span className="text-2xl text-gray-400">{name ? name[0] : "U"}</span>
+                  <span className="text-2xl text-gray-400">
+                    {name ? name[0].toUpperCase() : "U"}
+                  </span>
                 )}
               </div>
 
@@ -189,10 +215,10 @@ export default function ProfilePage() {
             </div>
 
             <div className="mt-6 flex gap-3">
-              <button className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm">
+              <button className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm mr-4"onClick={triggerFileUpload} >
                 Upload New
               </button>
-              <button className="px-4 py-2 rounded-md border text-sm">Edit</button>
+              <button className="px-4 py-2 rounded-md border  text-sm border-primary" onClick={handleOpenEditProfile} >Edit</button>
             </div>
           </div>
 
@@ -325,7 +351,7 @@ export default function ProfilePage() {
         </div>
         <div className="flex items-center justify-end gap-3 mt-4 ">
           <button
-            onClick={handleCancel}
+            onClick={handleCancelPreferences}
             className="px-4 py-2 rounded-md border text-sm bg-white hover:bg-gray-50"
             disabled={!dirty}
           >
@@ -352,6 +378,55 @@ export default function ProfilePage() {
           }}
         />
       )}
+      {isImageModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden animate-fadeIn">
+            <div className="flex justify-between items-center px-5 py-4 border-b">
+              <h3 className="text-lg font-semibold text-gray-800">Preview Image</h3>
+              <button onClick={handleCloseImageModal} className="text-gray-500 hover:text-red-500 transition">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 flex flex-col items-center">
+              <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-gray-100 shadow-inner mb-6 relative">
+                {previewUrl && (
+                  <Image 
+                    src={previewUrl} 
+                    alt="Preview" 
+                    fill 
+                    className="object-cover" 
+                  />
+                )}
+              </div>
+              
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={triggerFileUpload}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition text-sm"
+                >
+                  Choose Another
+                </button>
+                <button
+                  onClick={handleConfirmImageUpload}
+                  className="flex-1 px-4 py-2.5 bg-[#C9A227] text-white rounded-lg font-medium hover:bg-[#b08d21] transition shadow-md text-sm"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {isEditModalOpen && (
+        <EditProfileModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          currentUser={{ name, phone, dob }}
+          onSave={handleSaveProfileData}
+        />
+      )}
+
     </div>
   );
 }
@@ -377,7 +452,83 @@ function EditableField({
     </div>
   );
 }
+interface EditProfileModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentUser: { name: string; phone: string; dob: string };
+  onSave: (data: { name: string; phone: string; dob: string }) => void;
+}
 
+function EditProfileModal({ isOpen, onClose, currentUser, onSave }: EditProfileModalProps) {
+  const [formData, setFormData] = useState(currentUser);
+
+  if (!isOpen) return null;
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full animate-fadeIn">
+        <div className="flex justify-between items-center px-6 py-4 border-b">
+          <h3 className="text-lg font-semibold text-gray-800">Edit Profile</h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <input
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#C9A227]/20 focus:border-[#C9A227] outline-none transition text-sm"
+              placeholder="Enter your name"
+            />
+          </div>
+          {/* <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <input
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#C9A227]/20 focus:border-[#C9A227] outline-none transition text-sm"
+              placeholder="+91 XXXXX XXXXX"
+            />
+          </div> 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+            <input
+              type="date"
+              name="dob"
+              value={formData.dob}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#C9A227]/20 focus:border-[#C9A227] outline-none transition text-sm"
+            />
+          </div> */}
+        </div>
+
+        <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-xl">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-white transition text-sm"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onSave(formData)}
+            className="px-4 py-2 rounded-lg bg-[#0A2342] text-white font-medium hover:bg-[#153a66] transition shadow-md text-sm"
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button

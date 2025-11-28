@@ -6,6 +6,7 @@ import { useArticleListActions } from "@/data/features/article/useArticleActions
 import NewsCard from "@/components/ui/NewsCard";
 import Link from "next/link";
 import { Article } from "@/data/features/article/article.types";
+import Loader from "@/components/ui/Loader";
 
 export default function CategoryPage() {
     const params = useParams();
@@ -57,7 +58,7 @@ export default function CategoryPage() {
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen text-lg font-medium text-gray-600">
-                Loading...
+                <Loader text="Loading Profile..." size="lg" />
             </div>
         );
     }

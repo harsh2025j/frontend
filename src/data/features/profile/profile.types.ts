@@ -20,7 +20,7 @@ export interface UserData {
   _id: string;
   name: string;
   email: string;
-  avatar:string;
+  profilePicture: string;
   role: Role;
   isActive: boolean;
   isVerified: boolean;
@@ -33,17 +33,12 @@ export interface UserData {
   dob?: string;
 }
 
-
-// --- Interfaces for Redux State ---
-
-
 // --- Interfaces for API Requests ---
-// Fields we expect the user to update on the profile page
 export interface UpdateProfileRequest {
   name?: string;
   phone?: string;
   dob?: string;
-  avatar?:File | null;
+  avatar?: File | null;
 }
 
 export interface ProfileResponse {
@@ -52,17 +47,15 @@ export interface ProfileResponse {
   data: UserData; 
 }
 
-
 export interface UserPreferences {
   language: string;
   doNotDisturb: boolean;
   caseStatusAlerts: boolean;
 }
 
-
 export interface ProfileState {
   loading: boolean;
   error: string | null;
-  user: UserData | null; // References the imported core user type
+  user: UserData | null;
   message: string | null;
 }

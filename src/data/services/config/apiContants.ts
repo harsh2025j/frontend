@@ -10,9 +10,9 @@ export const API_ENDPOINTS = {
     LOGIN: "/auth/login",
     RESEND_OTP: "/auth/forgot-password"
   },
-  PROFILE: { // <--- NEW ENDPOINTS
+  PROFILE: { 
     FETCH: "/profile",
-    UPDATE: "/auth/profile",
+    UPDATE: "/profile",
   },
 
   ARTICLE: {

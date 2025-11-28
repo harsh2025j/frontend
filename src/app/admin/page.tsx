@@ -20,6 +20,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
+import Loader from "@/components/ui/Loader";
 
 const data = [
   { label: "Total Articles", value: "12,450", icon: <TrendingUp className="w-8 h-8 text-blue-500" /> },
@@ -48,6 +49,14 @@ export default function Page() {
 //     router.replace("/auth/login");
 //   }
 // }, [user, router]);
+
+// if (!user.role ) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center">
+//         <Loader text="Loading Profile..." size="lg" />
+//       </div>
+//     );
+//   }
 
 
   return (

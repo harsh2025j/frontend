@@ -12,24 +12,23 @@ export const useProfileActions = () => {
   const dispatch = useAppDispatch();
   const { user, loading, error, message } = useAppSelector(selectProfileState);
 
-  // Fetch profile on component mount
+  // Fetch profile on component mount if token exists
   useEffect(() => {
-    // Only attempt to fetch if authenticated (token exists)
     if (typeof window !== 'undefined' && localStorage.getItem('token')) {
-      dispatch(fetchProfile());
+     
+      if (!user) {
+        dispatch(fetchProfile());
+      }
     }
   }, [dispatch]);
 
-  // Display toast messages for success/error
   useEffect(() => {
     if (error) {
       toast.error(error);
-      // In a real app, you might dispatch an action to clear the error state here
     }
-    if (message) {
+    // if (message) {
     //   toast.success(message);
-      // In a real app, you might dispatch an action to clear the message state here
-    }
+    // }
   }, [error, message]);
 
   const handleUpdateProfile = (formData: UpdateProfileRequest) => {

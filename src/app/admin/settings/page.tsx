@@ -10,12 +10,14 @@ import { Category } from "@/data/features/category/category.types";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
+import Loader from "@/components/ui/Loader";
 
 export default function Settings() {
 
 const router = useRouter();
 const { user: reduxUser} = useProfileActions();
   const user = reduxUser as UserData;
+   const [isAuthorized, setIsAuthorized] = useState(false);
   useEffect(() => {
     // if (loading) return;
 
@@ -34,8 +36,12 @@ const { user: reduxUser} = useProfileActions();
       if (!allowedRoles.includes(currentRole)) {
         router.replace("/auth/login"); 
       }
+      else{
+         setIsAuthorized(true)
+      }
     }
   }, [user, router]);
+  
 
 
     const [openCategoryPopup, setOpenCategoryPopup] = useState(false);
@@ -70,7 +76,13 @@ const { user: reduxUser} = useProfileActions();
             }
         }
     };
-
+ if (!isAuthorized) {
+       return (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
+           <Loader size="lg" text="Checking Permissions..." />
+         </div>
+       );
+     }
     // Recursive function to render categories
     const renderCategoryRow = (category: Category, level: number = 0) => {
         return (

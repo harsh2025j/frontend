@@ -9,6 +9,7 @@ import imgs from "../../../assets/img1.png"
 import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
+import Loader from "@/components/ui/Loader";
 
 const ITEM_PER_PAGE = 15;
 
@@ -52,6 +53,7 @@ const contentManagementPage: React.FC = () => {
   const router = useRouter();
 const { user: reduxUser} = useProfileActions();
   const user = reduxUser as UserData;
+   const [isAuthorized, setIsAuthorized] = useState(false);
   useEffect(() => {
     // if (loading) return;
 
@@ -69,8 +71,13 @@ const { user: reduxUser} = useProfileActions();
       if (!currentRole || currentRole === "user") {
         router.replace("/auth/login"); 
       }
+      else{
+        setIsAuthorized(true)
+      }
     }
   }, [user, router]);
+
+ 
 
   useEffect(() => {
     if (error) toast.error(error);
@@ -89,6 +96,15 @@ const { user: reduxUser} = useProfileActions();
 
   const totalNewsPost = articles.length;
   const pendingNewsRequest = articles.filter((a: Article) => a.status === 'pending').length;
+
+  // if (!isAuthorized) {
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
+  //       <Loader size="lg" text="Checking Permissions..." />
+  //     </div>
+  //   );
+  // }
+  
 
   return (
     <div>
