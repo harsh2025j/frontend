@@ -18,9 +18,10 @@ export default function RegisterPage() {
     error,
     message,
     debugOtp,
+    handleGoogleLogin,
   } = useRegisterActions();
 
-useEffect(() => {
+  useEffect(() => {
     if (error) toast.error(error);
     if (message) {
       const suffix = debugOtp ? ` (OTP: ${debugOtp})` : "";
@@ -48,7 +49,7 @@ useEffect(() => {
               value={formData.phone}
               onChange={handleChange}
               required
-              
+
             />
             <CustomInput
               label="Email"
@@ -87,7 +88,7 @@ useEffect(() => {
           {message && <p className="text-green-600 text-sm mt-3 text-center">{message}</p>} */}
 
 
-                 <div className="mt-6 space-y-3 px-6 sm:px-14">
+          <div className="mt-6 space-y-3 px-6 sm:px-14">
             <div className="flex justify-center items-center">
               <span className="inline-block w-48 border border-gray-400"></span>
               <span className="mx-1 text-xl">OR</span>
@@ -96,6 +97,7 @@ useEffect(() => {
 
             <button
               type="button"
+              onClick={handleGoogleLogin}
               className="w-full border border-gray-300 rounded-md py-3 flex items-center justify-center space-x-3 hover:bg-gray-50 transition"
             >
               <FcGoogle size={22} />

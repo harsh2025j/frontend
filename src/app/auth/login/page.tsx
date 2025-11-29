@@ -15,21 +15,22 @@ export default function LoginPage() {
     formData,
     handleChange,
     handleLogin,
+    handleGoogleLogin,
     loading,
     error,
     message,
   } = useLoginActions();
 
-useEffect(() => {
+  useEffect(() => {
     if (error) toast.error(error);
     if (message) toast.success(message);
   }, [error, message]);
-  
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
       <div className="w-full max-w-md bg-white border border-gray-200 rounded-lg shadow-md p-6 sm:p-8">
         <div className="flex justify-center mb-6 ">
-          <Image  src={logo} alt="Logo" width={220} height={220} className="invert"/>
+          <Image src={logo} alt="Logo" width={220} height={220} className="invert" />
         </div>
 
         <h2 className="text-2xl font-bold text-center mb-2">Welcome Back!</h2>
@@ -79,7 +80,7 @@ useEffect(() => {
               type="button"
               className="text-gray-800 hover:underline"
             >
-              
+
               <a href="/auth/forgot-password" className="text-gray-800 hover:underline">Forgot Password?</a>
             </button>
           </div>
@@ -99,6 +100,7 @@ useEffect(() => {
         <div className="mt-6 space-y-3">
           <button
             type="button"
+            onClick={handleGoogleLogin}
             className="w-full border border-gray-300 rounded-md py-3 flex items-center justify-center space-x-3 hover:bg-gray-50 transition"
           >
             <FcGoogle size={22} />
@@ -114,14 +116,14 @@ useEffect(() => {
           </button> */}
         </div>
 
-          <div className="text-center text-sm text-gray-600 mt-8">
-            <p>
-              Don’t have an account?{" "}
-              <Link href="/auth/signup" className="text-blue-600 hover:underline">
-                Register
-              </Link>
-            </p>
-          </div>
+        <div className="text-center text-sm text-gray-600 mt-8">
+          <p>
+            Don’t have an account?{" "}
+            <Link href="/auth/signup" className="text-blue-600 hover:underline">
+              Register
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

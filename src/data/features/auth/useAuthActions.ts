@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { LoginRequest, RegisterRequest, ResendOtpRequest, ResetPasswordRequest, VerifyOtpRequest } from "./auth.types";
-import { forgotPassword, loginUser, registerUser, ResendOtp, resetPassword, verifyOtp } from "./authThunks";
+import { forgotPassword, loginUser, registerUser, ResendOtp, resetPassword, verifyOtp, loginWithGoogle } from "./authThunks";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 import { resetAuthState, logoutUser } from "./authSlice";
 
@@ -39,7 +39,7 @@ const useAuth = () => {
 export const useRegisterActions = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { loading, error, message, debugOtp } = useAuth();
+  const { loading, error, message, debugOtp, token } = useAuth();
 
   const [formData, setFormData] = useState<RegisterRequest>({
     name: "",
@@ -71,6 +71,10 @@ export const useRegisterActions = () => {
     dispatch(registerUser(payload));
   };
 
+  const handleGoogleLogin = () => {
+    dispatch(loginWithGoogle());
+  };
+
   useEffect(() => {
     if (message === MESSAGES.REGISTER_SUCCESS) {
       if (debugOtp) {
@@ -82,6 +86,14 @@ export const useRegisterActions = () => {
     }
   }, [message, debugOtp]);
 
+  // Redirect if token exists (e.g. from Google Login)
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      router.push("/");
+      dispatch(resetAuthState());
+    }
+  }, [token]);
+
   return {
     formData,
     setFormData,
@@ -91,6 +103,7 @@ export const useRegisterActions = () => {
     error,
     message,
     debugOtp,
+    handleGoogleLogin,
   };
 };
 
@@ -123,6 +136,10 @@ export const useLoginActions = () => {
     }));
   };
 
+  const handleGoogleLogin = () => {
+    dispatch(loginWithGoogle());
+  };
+
 
 
   useEffect(() => {
@@ -138,6 +155,7 @@ export const useLoginActions = () => {
     formData,
     handleChange,
     handleLogin,
+    handleGoogleLogin,
 
     loading,
     error,

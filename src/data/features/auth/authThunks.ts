@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import {  forgotPasswordRequest, ForgotPasswordResponse, LoginRequest,
+import {
+  forgotPasswordRequest, ForgotPasswordResponse, LoginRequest,
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
@@ -8,7 +9,8 @@ import {  forgotPasswordRequest, ForgotPasswordResponse, LoginRequest,
   ResetPasswordRequest,
   ResetPasswordResponse,
   VerifyOtpRequest,
-  VerifyOtpResponse, } from "./auth.types";
+  VerifyOtpResponse,
+} from "./auth.types";
 import { authApi } from "@/data/services/auth-service/auth-service";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 import { ApiError } from "@/lib/utils/errorHandler";
@@ -51,7 +53,7 @@ export const verifyOtp = createAsyncThunk<VerifyOtpResponse, VerifyOtpRequest>(
   "auth/verifyOtp",
   async (formData, thunkAPI) => {
     try {
-      console.log("verify otp"); 
+      console.log("verify otp");
       console.log(formData)
       const res = await authApi.verifyOtp(formData);
       console.log("sldfjsdjkfk")
@@ -64,15 +66,15 @@ export const verifyOtp = createAsyncThunk<VerifyOtpResponse, VerifyOtpRequest>(
   }
 );
 
-export const forgotPassword = createAsyncThunk<ForgotPasswordResponse,forgotPasswordRequest>(
+export const forgotPassword = createAsyncThunk<ForgotPasswordResponse, forgotPasswordRequest>(
   "auth/forgotPassword",
-  async(data,thunkAPI)=>{
-    try{
+  async (data, thunkAPI) => {
+    try {
       console.log("otp generating")
       console.log(data)
       const res = await authApi.forgotPassword(data);
       return res.data;
-    }catch (err: unknown) {
+    } catch (err: unknown) {
       // Error is already handled by centralized error handler
       const apiError = err as ApiError;
       return thunkAPI.rejectWithValue(apiError.message || MESSAGES.FORGOT_FAIL);
@@ -81,13 +83,13 @@ export const forgotPassword = createAsyncThunk<ForgotPasswordResponse,forgotPass
   }
 )
 
-export const resetPassword = createAsyncThunk<ResetPasswordResponse,ResetPasswordRequest>(
+export const resetPassword = createAsyncThunk<ResetPasswordResponse, ResetPasswordRequest>(
   "auth/resetPassword",
-  async(formData,thunkAPI)=>{
-    try{
+  async (formData, thunkAPI) => {
+    try {
       const res = await authApi.resetPassword(formData);
       return res.data;
-    }catch (err: unknown) {
+    } catch (err: unknown) {
       // Error is already handled by centralized error handler
       const apiError = err as ApiError;
       return thunkAPI.rejectWithValue(apiError.message || MESSAGES.RESET_FAIL);
@@ -96,13 +98,13 @@ export const resetPassword = createAsyncThunk<ResetPasswordResponse,ResetPasswor
   }
 )
 
-export const ResendOtp = createAsyncThunk<ResendOtpResponse,ResendOtpRequest>(
+export const ResendOtp = createAsyncThunk<ResendOtpResponse, ResendOtpRequest>(
   "auth/resendOtp",
-  async(formData,thunkAPI)=>{
-    try{
+  async (formData, thunkAPI) => {
+    try {
       const res = await authApi.resendOtp(formData);
       return res.data;
-    }catch (err: unknown) {
+    } catch (err: unknown) {
       // Error is already handled by centralized error handler
       const apiError = err as ApiError;
       return thunkAPI.rejectWithValue(apiError.message || MESSAGES.RESENDOTP_FAIL);
@@ -111,3 +113,30 @@ export const ResendOtp = createAsyncThunk<ResendOtpResponse,ResendOtpRequest>(
   }
 )
 
+import { firebaseAuth } from "@/data/services/auth-service/auth-service";
+import { AuthUser } from "./auth.types";
+
+export const loginWithGoogle = createAsyncThunk<LoginResponse, void>(
+  "auth/loginWithGoogle",
+  async (_, thunkAPI) => {
+    try {
+      const firebaseUser = await firebaseAuth.loginWithGoogle();
+      const token = await firebaseUser.getIdToken();
+
+      const user: AuthUser = {
+        id: firebaseUser.uid,
+        name: firebaseUser.displayName || "",
+        email: firebaseUser.email || "",
+        avatar: firebaseUser.photoURL || "",
+      };
+
+      return {
+        accessToken: token,
+        refreshToken: "",
+        user: user
+      };
+    } catch (err: unknown) {
+      return thunkAPI.rejectWithValue("Google Login Failed");
+    }
+  }
+);

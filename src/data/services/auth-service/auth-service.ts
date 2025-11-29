@@ -82,3 +82,29 @@ export const authApi = {
     return response;
   },
 };
+
+import { auth, googleProvider } from "@/config/firebase";
+import { signInWithPopup, signOut } from "firebase/auth";
+
+export const firebaseAuth = {
+  loginWithGoogle: async () => {
+    if (!auth) {
+      throw new Error("Firebase not initialized. Please check your environment variables.");
+    }
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      return result.user;
+    } catch (error) {
+      console.error("Firebase Google Login Error:", error);
+      throw error;
+    }
+  },
+  logout: async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Firebase Logout Error:", error);
+      throw error;
+    }
+  },
+};
