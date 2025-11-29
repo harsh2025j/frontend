@@ -28,7 +28,6 @@ const profileSlice = createSlice({
       })
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.loading = false;
-        // The data field in ProfileResponse is the UserData object
         state.user = action.payload.data;
         state.message = action.payload.message || "Profile fetched successfully";
       })
@@ -44,7 +43,7 @@ const profileSlice = createSlice({
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading = false;
-        // The data field contains the updated user object
+        // Update local user state with the new data from backend response
         state.user = action.payload.data; 
         state.message = action.payload.message || "Profile updated successfully";
       })

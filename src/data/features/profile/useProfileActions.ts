@@ -36,6 +36,7 @@ export const useProfileActions = () => {
         toast.error("Cannot update profile: User data missing.");
         return;
     }
+    
     dispatch(updateProfile(formData));
   };
 

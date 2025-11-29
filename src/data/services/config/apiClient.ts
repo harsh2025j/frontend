@@ -51,7 +51,6 @@ apiClient.interceptors.response.use(
     // Handle all errors centrally
     const apiError = handleApiError(error);
 
-    // Handle Server Errors (5xx)
     if (apiError.statusCode && apiError.statusCode >= 500) {
       toast.error("Server Error: Something went wrong on our end. Please try again later.");
     }

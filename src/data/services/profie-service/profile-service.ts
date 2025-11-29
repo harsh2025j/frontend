@@ -20,7 +20,6 @@ export const profileApi = {
      if (data.dob) formData.append("dob", data.dob);
      if (data.avatar) formData.append("file", data.avatar);
 
-
     return await apiClient.post<ProfileResponse>(API_ENDPOINTS.PROFILE.UPDATE, formData,
       {
         headers: {

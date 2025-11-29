@@ -56,6 +56,7 @@ export default function RolesPermissionsPage() {
     const { roles, loading: rolesLoading, error: rolesError } = useAppSelector(
         (state) => state.roles
     );
+    
     const {
         permissions,
         loading: permsLoading,
@@ -164,7 +165,9 @@ export default function RolesPermissionsPage() {
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-[#0A2342] mb-2">Create Roles & Permissions</h1>
                 <p className="text-gray-600">Manage user roles and their access levels.</p>
+               
             </div>
+            
 
             {/* Tabs */}
             <div className="flex space-x-4 mb-6 border-b border-gray-200">
@@ -231,6 +234,7 @@ export default function RolesPermissionsPage() {
                                             className="text-gray-400 hover:text-red-600 transition"
                                         >
                                             <Trash2 size={16} />
+                                            
                                         </button>
                                     </div>
                                 </div>

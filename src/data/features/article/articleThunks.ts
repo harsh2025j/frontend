@@ -25,7 +25,7 @@ export const fetchArticles = createAsyncThunk<ArticleListResponse, any | void>(
   async (params, thunkAPI) => {
     try {
       const res = await articleApi.fetchArticles(params);
-      console.log("Article Thunk Success - Raw Data received:", res.data);
+      // console.log("Article Thunk Success - Raw Data received:", res.data);
       return res.data;
     } catch (err: unknown) {
       const apiError = err as ApiError;

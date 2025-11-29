@@ -125,15 +125,15 @@ export const useArticleListActions = () => {
   const error = useAppSelector(selectArticleError);
 
   useEffect(() => {
-    console.log("data fetching ");
+    // console.log("data fetching ");
     dispatch(fetchArticles({}));
     
   },[]);
 
-  useEffect(() => {
-    // MODIFIED: Log the articles array unconditionally to console
-    console.log("Fetched Articles (useArticleListActions hook):", articles);
-  }, [articles]);
+  // useEffect(() => {
+  //   // MODIFIED: Log the articles array unconditionally to console
+  //   console.log("Fetched Articles (useArticleListActions hook):", articles);
+  // }, [articles]);
 
   return {
     articles,
