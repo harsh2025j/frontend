@@ -33,9 +33,9 @@ export default function DashboardLayout({
     }
 
     // 2. Role Check
-    if (user?.role) {
-      const currentRole = user.role.name;
-      if (!currentRole || currentRole === "user") {
+    if (user?.roles?.length) {
+      const hasAdminAccess = user.roles.some((r) => r.name !== "user");
+      if (!hasAdminAccess) {
         router.replace("/auth/login");
       } else {
         setIsAuthorized(true);

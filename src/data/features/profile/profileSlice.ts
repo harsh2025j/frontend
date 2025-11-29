@@ -32,7 +32,6 @@ const profileSlice = createSlice({
       })
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.loading = false;
-        // The data field in ProfileResponse is the UserData object
         state.user = action.payload.data;
         state.message = action.payload.message || "Profile fetched successfully";
       })
@@ -48,7 +47,6 @@ const profileSlice = createSlice({
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading = false;
-        // The data field contains the updated user object
         state.user = action.payload.data;
         state.message = action.payload.message || "Profile updated successfully";
       })
@@ -56,7 +54,6 @@ const profileSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // --- Google Login Sync ---
       .addCase(loginWithGoogle.fulfilled, (state, action) => {
         const googleUser = action.payload.user;
         if (googleUser) {

@@ -14,34 +14,34 @@ import Loader from "@/components/ui/Loader";
 
 export default function Settings() {
 
-const router = useRouter();
-const { user: reduxUser} = useProfileActions();
-  const user = reduxUser as UserData;
-   const [isAuthorized, setIsAuthorized] = useState(false);
-  useEffect(() => {
-    // if (loading) return;
+    const router = useRouter();
+    const { user: reduxUser } = useProfileActions();
+    const user = reduxUser as UserData;
+    const [isAuthorized, setIsAuthorized] = useState(false);
+    useEffect(() => {
+        // if (loading) return;
 
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-    // 1. No Token? -> Go to Login
-    if (!token) {
-      router.replace("/auth/login");
-      return;
-    }
+        // 1. No Token? -> Go to Login
+        if (!token) {
+            router.replace("/auth/login");
+            return;
+        }
 
-    // 2. Role Check
-    if (user?.role) {
-      const currentRole = user.role.name;
-      const allowedRoles = ["admin", "super_admin"];
-      if (!allowedRoles.includes(currentRole)) {
-        router.replace("/auth/login"); 
-      }
-      else{
-         setIsAuthorized(true)
-      }
-    }
-  }, [user, router]);
-  
+        // 2. Role Check
+        if (user?.roles?.length) {
+            const allowedRoles = ["admin", "super_admin"];
+            const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
+            if (!hasAccess) {
+                router.replace("/auth/login");
+            }
+            else {
+                setIsAuthorized(true)
+            }
+        }
+    }, [user, router]);
+
 
 
     const [openCategoryPopup, setOpenCategoryPopup] = useState(false);
@@ -76,13 +76,13 @@ const { user: reduxUser} = useProfileActions();
             }
         }
     };
- if (!isAuthorized) {
-       return (
-         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
-           <Loader size="lg" text="Checking Permissions..." />
-         </div>
-       );
-     }
+    if (!isAuthorized) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
+                <Loader size="lg" text="Checking Permissions..." />
+            </div>
+        );
+    }
     // Recursive function to render categories
     const renderCategoryRow = (category: Category, level: number = 0) => {
         return (

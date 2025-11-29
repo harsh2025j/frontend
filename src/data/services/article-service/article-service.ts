@@ -30,13 +30,13 @@ export const articleApi = {
         },
       }
     );
-    console.log("Create Article API Response:", response.data);
+    // console.log("Create Article API Response:", response.data);
     return response;
   },
 
 
   fetchArticles: async (params?: any) => {
-    console.log("Fetch Articles Request URL:", ` ${API_ENDPOINTS.ARTICLE.FETCH_ALL}`);
+    // console.log("Fetch Articles Request URL:", ` ${API_ENDPOINTS.ARTICLE.FETCH_ALL}`);
     const response = await apiClient.get<ArticleListResponse>(
 
       API_ENDPOINTS.ARTICLE.FETCH_ALL,
@@ -48,7 +48,7 @@ export const articleApi = {
       }
 
     );
-    console.log("Fetch Articles API Response:", response.data);
+    // console.log("Fetch Articles API Response:", response.data);
     return response;
   },
 

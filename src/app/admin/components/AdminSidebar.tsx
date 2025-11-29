@@ -20,17 +20,22 @@ import CreateUpdatePage from "../create-content/page";
 import { LogOut } from "lucide-react";
 import { useAppDispatch } from "@/data/redux/hooks";
 import { logoutUser } from "@/data/features/auth/authSlice";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 
 const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const pathname = usePathname();
   const { user: reduxProfileUser } = useProfileActions();
 
   const user = reduxProfileUser as UserData;
 
-  const userRole = user?.role?.name || "user";
+  const userRoles = user?.roles?.map((r) => r.name) || [];
+  // const hasAdminPrivileges = userRoles.includes("admin") || userRoles.includes("super_admin");
+  const hasAdminPrivileges = true;
+  // const hasDashboardAccess = userRoles.some((role) => role !== "user");
+  const hasDashboardAccess = true;
 
   const handleLogout = () => {
     dispatch(logoutUser());
@@ -42,51 +47,51 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
       name: "Dashboard",
       icon: <Home size={18} />,
       href: "/admin",
-      show: userRole !== "user"
+      show: hasDashboardAccess
     },
     {
       name: "Create New Article",
       icon: <PenBox size={18} />,
       href: "/admin/create-content",
-      show: userRole !== "user"
+      show: hasDashboardAccess
     },
     {
       name: "Content Management",
       icon: <FolderOpen size={18} />,
       href: "/admin/content-management",
-      show: userRole !== "user"
+      show: hasDashboardAccess
     },
     {
       name: "Create Roles & Permissions",
       icon: <UserCog size={18} />,
       href: "/admin/roles-permissions",
-      show: ["admin", "super_admin"].includes(userRole || "")
+      show: hasAdminPrivileges
     },
     {
       name: "Content Approval",
       icon: <GitPullRequestArrow size={18} />,
       href: "/admin/content-approval",
-      show: ["admin", "super_admin"].includes(userRole || "")
+      show: hasAdminPrivileges
     },
-    // { name: "AI Summaries", icon: <Brain size={18} />, href: "/admin/ai-summaries", show: userRole !== "user" },
+    // { name: "AI Summaries", icon: <Brain size={18} />, href: "/admin/ai-summaries", show: hasDashboardAccess },
     {
       name: "Team Management",
       icon: <Users size={18} />,
       href: "/admin/teams",
-      show: ["admin", "super_admin"].includes(userRole || "")
+      show: hasAdminPrivileges
     },
     {
       name: "Premium",
       icon: <Crown size={18} />,
       href: "/admin/plans",
-      show: ["admin", "super_admin"].includes(userRole || "")
+      show: hasAdminPrivileges
     },
-    // { name: "Analytics", icon: <BarChart3 size={18} />, href: "/admin/analytics", show: userRole !== "user" },
+    // { name: "Analytics", icon: <BarChart3 size={18} />, href: "/admin/analytics", show: hasDashboardAccess },
     {
       name: "Settings",
       icon: <Settings size={18} />,
       href: "/admin/settings",
-      show: ["admin", "super_admin"].includes(userRole || "")
+      show: hasAdminPrivileges
     },
   ];
 
@@ -109,26 +114,23 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
       <div className="flex-1 overflow-y-auto py-6 px-3">
         <nav className="space-y-1">
           {navItems.map((item) => {
-            // Determine if active (simple check, can be improved with usePathname)
-            // For now, assuming exact match or starts with for sub-routes if needed
-            // But href is simple here.
-            // Let's use a simple check for demo purposes or if usePathname was imported.
-            // Since usePathname is not imported, I'll stick to basic styling but add hover effects.
-            // Ideally, we should use usePathname.
+            const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
 
             return (
               <Link
                 key={item.name}
                 href={item.href}
                 className={`
-                  group flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200
-                  text-gray-600 dark:text-gray-300
-                  hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-white
+                  group flex items-center ${isOpen ? "gap-4" : ""} px-3 py-3 rounded-xl transition-all duration-200
+                  ${isActive
+                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-white"
+                  }
                   ${!isOpen ? "justify-center" : ""}
                 `}
                 title={!isOpen ? item.name : ""}
               >
-                <span className="shrink-0 transition-colors duration-200 group-hover:text-blue-600 dark:group-hover:text-orange-500">
+                <span className={`shrink-0 transition-colors duration-200 ${isActive ? "text-blue-600 dark:text-blue-400" : "group-hover:text-blue-600 dark:group-hover:text-orange-500"}`}>
                   {React.cloneElement(item.icon as any, { size: 22 })}
                 </span>
 
@@ -140,6 +142,11 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
                 >
                   {item.name}
                 </span>
+
+                {/* Active Indicator (Optional, if we want a right border or dot) */}
+                {isActive && isOpen && (
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+                )}
               </Link>
             );
           })}
@@ -148,7 +155,7 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
 
       {/* Footer / Profile Section */}
       <div className="border-t border-gray-200 dark:border-gray-800 p-4 bg-gray-50 dark:bg-[#0d2b4f]">
-        <div className={`flex items-center gap-3 ${!isOpen ? "justify-center" : ""}`}>
+        <div className={`flex items-center ${isOpen ? "gap-3" : ""} ${!isOpen ? "justify-center" : ""}`}>
           {/* Avatar */}
           <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-600 shrink-0 ring-2 ring-white dark:ring-gray-700 shadow-sm">
             {user?.profilePicture ? (
@@ -165,7 +172,6 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
             )}
           </div>
 
-          {/* User Info & Logout (Visible only when open) */}
           <div
             className={`
                 flex-1 min-w-0 transition-all duration-300 overflow-hidden

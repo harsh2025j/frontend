@@ -177,8 +177,8 @@ export default function AIAssistantPage() {
                                     >
                                         <div
                                             className={`max-w-[80%] rounded-2xl px-4 py-3 ${message.isUser
-                                                    ? 'bg-[#2b3a67] text-white'
-                                                    : 'bg-white text-gray-900 border border-gray-200'
+                                                ? 'bg-[#2b3a67] text-white'
+                                                : 'bg-white text-gray-900 border border-gray-200'
                                                 }`}
                                         >
                                             <p className="text-sm leading-relaxed whitespace-pre-wrap">

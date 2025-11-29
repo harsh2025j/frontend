@@ -51,13 +51,16 @@ apiClient.interceptors.response.use(
     // Handle all errors centrally
     const apiError = handleApiError(error);
 
-    // Handle Server Errors (5xx)
     if (apiError.statusCode && apiError.statusCode >= 500) {
-      toast.error("Server Error: Something went wrong on our end. Please try again later.");
+      toast.error("Server Error: Something went wrong on our end. Please try again later.", {
+        id: "server_error",
+      });
     }
     // Handle Network Errors (no status code usually means network error)
     else if (!apiError.statusCode && error.message === "Network Error") {
-      toast.error("Network Error: Unable to connect to the server. Please check your internet connection.");
+      toast.error("Network Error: Unable to connect to the server. Please check your internet connection.", {
+        id: "network_error",
+      });
     }
 
     // For 401 errors, optionally clear token and redirect

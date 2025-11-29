@@ -23,39 +23,43 @@ import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 
 export default function RolesPermissionsPage() {
- const router = useRouter();
- const { user: reduxUser} = useProfileActions();
-   const user = reduxUser as UserData;
+    const router = useRouter();
+    const { user: reduxUser } = useProfileActions();
+    const user = reduxUser as UserData;
     const [isAuthorized, setIsAuthorized] = useState(false);
-   useEffect(() => {
-     // if (loading) return;
- 
-     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
- 
-     // 1. No Token? -> Go to Login
-     if (!token) {
-       router.replace("/auth/login");
-       return;
-     }
- 
-     // 2. Role Check
-     if (user?.role) {
-       const currentRole = user.role.name;
-       const allowedRoles = ["admin", "super_admin"];
-       if (!allowedRoles.includes(currentRole)) {
-         router.replace("/auth/login"); 
-       }
-       else{
-         setIsAuthorized(true)
-       }
-     }
-   }, [user, router]);
-  
- 
+    useEffect(() => {
+        // if (loading) return;
+
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+        // 1. No Token? -> Go to Login
+        if (!token) {
+            router.replace("/auth/login");
+            return;
+        }
+
+        // 2. Role Check
+        if (user?.roles && user.roles.length > 0) {
+            const userRoles = user.roles.map((r) => r.name);
+            const allowedRoles = ["admin", "super_admin"];
+            const hasAccess = userRoles.some((role) => allowedRoles.includes(role));
+
+            if (!hasAccess) {
+                router.replace("/auth/login");
+            }
+            else {
+                setIsAuthorized(true)
+            }
+        }
+
+    }, [user, router]);
+
+
     const dispatch = useAppDispatch();
     const { roles, loading: rolesLoading, error: rolesError } = useAppSelector(
         (state) => state.roles
     );
+
     const {
         permissions,
         loading: permsLoading,
@@ -96,7 +100,7 @@ export default function RolesPermissionsPage() {
     const handleRoleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (editingRole) {
-            await dispatch(updateRole({ id: editingRole.id, ...roleFormData }));
+            await dispatch(updateRole({ id: editingRole._id, ...roleFormData }));
         } else {
             await dispatch(createRole(roleFormData));
         }
@@ -151,20 +155,22 @@ export default function RolesPermissionsPage() {
         setEditingPermission(null);
     };
 
- if (!isAuthorized) {
-       return (
-         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
-           <Loader size="lg" text="Checking Permissions..." />
-         </div>
-       );
-     }
-     
+    if (!isAuthorized) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
+                <Loader size="lg" text="Checking Permissions..." />
+            </div>
+        );
+    }
+
     return (
         <div className="p-6 min-h-screen bg-gray-50">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-[#0A2342] mb-2">Create Roles & Permissions</h1>
                 <p className="text-gray-600">Manage user roles and their access levels.</p>
+
             </div>
+
 
             {/* Tabs */}
             <div className="flex space-x-4 mb-6 border-b border-gray-200">
@@ -214,7 +220,7 @@ export default function RolesPermissionsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {roles.map((role) => (
                             <div
-                                key={role.id}
+                                key={role._id}
                                 className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition"
                             >
                                 <div className="flex justify-between items-start mb-3">
@@ -227,10 +233,11 @@ export default function RolesPermissionsPage() {
                                             <Edit size={16} />
                                         </button>
                                         <button
-                                            onClick={() => handleRoleDelete(role.id)}
+                                            onClick={() => handleRoleDelete(role._id)}
                                             className="text-gray-400 hover:text-red-600 transition"
                                         >
                                             <Trash2 size={16} />
+
                                         </button>
                                     </div>
                                 </div>
@@ -250,8 +257,8 @@ export default function RolesPermissionsPage() {
                                             <span className="font-medium text-gray-700">
                                                 {role.createdAt
                                                     ? new Date(role.createdAt).toLocaleDateString()
-                                                    : role.id
-                                                        ? new Date(parseInt(role.id.substring(0, 8), 16) * 1000).toLocaleDateString()
+                                                    : role._id
+                                                        ? new Date(parseInt(role._id.substring(0, 8), 16) * 1000).toLocaleDateString()
                                                         : "N/A"}
                                             </span>
                                         </div>

@@ -28,7 +28,6 @@ export const updateProfile = createAsyncThunk<
   "profile/updateProfile",
   async (formData, thunkAPI) => {
     try {
-      // Note: Assuming your backend can handle PATCH/PUT/POST update on the profile endpoint
       const res = await profileApi.updateProfile(formData);
       return res.data;
     } catch (err: unknown) {

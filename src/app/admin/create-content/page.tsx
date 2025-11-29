@@ -21,9 +21,9 @@ const CreateUpdatePage: React.FC = () => {
     error,
     message,
   } = useCreateArticleActions();
-  
+
   const router = useRouter();
-const { user: reduxUser} = useProfileActions();
+  const { user: reduxUser } = useProfileActions();
   const user = reduxUser as UserData;
   useEffect(() => {
     // if (loading) return;
@@ -37,10 +37,10 @@ const { user: reduxUser} = useProfileActions();
     }
 
     // 2. Role Check
-    if (user?.role) {
-      const currentRole = user.role.name;
-      if (!currentRole || currentRole === "user") {
-        router.replace("/auth/login"); 
+    if (user?.roles?.length) {
+      const hasAccess = user.roles.some((r) => r.name !== "user");
+      if (!hasAccess) {
+        router.replace("/auth/login");
       }
     }
   }, [user, router]);

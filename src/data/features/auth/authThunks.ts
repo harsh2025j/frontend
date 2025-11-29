@@ -20,9 +20,9 @@ export const loginUser = createAsyncThunk<LoginResponse, LoginRequest>(
   "auth/loginUser",
   async (formData, thunkAPI) => {
     try {
-      console.log("login....")
+      // console.log("login....")
       const res = await authApi.login(formData);
-      console.log(res.data);
+      // console.log(res.data);
       return res.data;
     } catch (err: unknown) {
       // Error is already handled by centralized error handler
@@ -124,10 +124,17 @@ export const loginWithGoogle = createAsyncThunk<LoginResponse, void>(
       const token = await firebaseUser.getIdToken();
 
       const user: AuthUser = {
-        id: firebaseUser.uid,
+        _id: firebaseUser.uid,
         name: firebaseUser.displayName || "",
         email: firebaseUser.email || "",
-        avatar: firebaseUser.photoURL || "",
+        profilePicture: firebaseUser.photoURL || "",
+        roles: [],
+        permissions: [],
+        isActive: true,
+        isVerified: firebaseUser.emailVerified,
+        preferredLanguage: "en",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       return {

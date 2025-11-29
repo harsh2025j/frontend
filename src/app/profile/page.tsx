@@ -20,13 +20,13 @@ type Prefs = {
 
 export default function ProfilePage() {
   // --- NEW PROFILE STATE MANAGEMENT ---
- const {
+  const {
     user: reduxProfileUser,
     loading: profileLoading,
     updateProfile: handleUpdateProfile,
   } = useProfileActions();
-const user: UserData = reduxProfileUser || ({} as UserData);
-const router = useRouter();
+  const user: UserData = reduxProfileUser || ({} as UserData);
+  const router = useRouter();
 
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -37,11 +37,11 @@ const router = useRouter();
 
   // --- LOCAL/UI STATE ---
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  
+
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
-  
-  
+
+
 
   const [prefs, setPrefs] = useState<Prefs>({
     language: "english-ind",
@@ -62,9 +62,9 @@ const router = useRouter();
     }
   }, []);
 
-  
 
-  
+
+
   const name = user?.name || "";
   const email = user?.email || "";
   const phone = user?.phone || "";
@@ -76,19 +76,19 @@ const router = useRouter();
   };
 
   useEffect(() => {
-     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token"); 
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
       if (!token) {
         router.replace("/auth/login");
         return;
       }
-      else if(!user){
+      else if (!user) {
         router.replace("/auth/login")
         return;
       }
-     
+
     }
-  }, [user,router]);
+  }, [user, router]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -105,7 +105,7 @@ const router = useRouter();
       console.error("Saving prefs failed", err);
     }
     setDirty(false);
-    
+
     setTimeout(() => setSaving(false), 600);
   };
 
@@ -114,7 +114,7 @@ const router = useRouter();
     if (raw) {
       try {
         setPrefs(JSON.parse(raw));
-      } catch {}
+      } catch { }
     } else {
       setPrefs({
         language: "english-ind",
@@ -124,7 +124,7 @@ const router = useRouter();
     }
     setDirty(false);
   };
-const triggerFileUpload = () => {
+  const triggerFileUpload = () => {
     fileInputRef.current?.click();
   };
 
@@ -161,7 +161,7 @@ const triggerFileUpload = () => {
     setIsEditModalOpen(false);
   };
   // --- LOADING RENDER ---
-  if (!user.email ) {
+  if (!user.email) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader text="Loading Profile..." size="lg" />
@@ -180,7 +180,7 @@ const triggerFileUpload = () => {
           accept="image/*"
           onChange={onFileSelect}
         />
-       
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Personal Details (left, spans 2 columns on lg) */}
           <div className="lg:col-span-2 bg-white rounded-lg p-6">
@@ -215,7 +215,7 @@ const triggerFileUpload = () => {
             </div>
 
             <div className="mt-6 flex gap-3">
-              <button className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm mr-4"onClick={triggerFileUpload} >
+              <button className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm mr-4" onClick={triggerFileUpload} >
                 Upload New
               </button>
               <button className="px-4 py-2 rounded-md border  text-sm border-primary" onClick={handleOpenEditProfile} >Edit</button>
@@ -319,7 +319,7 @@ const triggerFileUpload = () => {
 
           <div className="bg-white rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Quick Action</h3>
-            {user.role?.name !== "user" && (
+            {user.roles?.some((role) => role.name !== "user") && (
               <Link
                 href="/admin"
                 className="block w-full text-center border rounded-md py-2 mb-3 hover:bg-[#dfb83a]/90 text-sm bg-[#dfb83a] text-white"
@@ -387,19 +387,19 @@ const triggerFileUpload = () => {
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="p-6 flex flex-col items-center">
               <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-gray-100 shadow-inner mb-6 relative">
                 {previewUrl && (
-                  <Image 
-                    src={previewUrl} 
-                    alt="Preview" 
-                    fill 
-                    className="object-cover" 
+                  <Image
+                    src={previewUrl}
+                    alt="Preview"
+                    fill
+                    className="object-cover"
                   />
                 )}
               </div>
-              
+
               <div className="flex gap-3 w-full">
                 <button
                   onClick={triggerFileUpload}

@@ -13,23 +13,23 @@ import Loader from "@/components/ui/Loader";
 
 // Helper function to get related articles
 export function getRelatedArticles(currentSlug: string, allArticles: Article[], limit: number = 20) {
-  const currentArticle = allArticles.find(a => a.slug === currentSlug);
-  if (!currentArticle || !currentArticle.category) {
-    return [];
-  }
+    const currentArticle = allArticles.find(a => a.slug === currentSlug);
+    if (!currentArticle || !currentArticle.category) {
+        return [];
+    }
 
-  const currentCategorySlug = currentArticle.category.slug;
+    const currentCategorySlug = currentArticle.category.slug;
 
-  const filteredArticles = allArticles.filter((article) => {
-    const isSameCategory = article.category?.slug === currentCategorySlug;
-    const isNotCurrentArticle = article.slug !== currentSlug;
+    const filteredArticles = allArticles.filter((article) => {
+        const isSameCategory = article.category?.slug === currentCategorySlug;
+        const isNotCurrentArticle = article.slug !== currentSlug;
 
-    return isSameCategory && isNotCurrentArticle;
-  });
+        return isSameCategory && isNotCurrentArticle;
+    });
 
-  const shuffled = [...filteredArticles].sort(() => 0.5 - Math.random());
+    const shuffled = [...filteredArticles].sort(() => 0.5 - Math.random());
 
-  return shuffled.slice(0, limit);
+    return shuffled.slice(0, limit);
 }
 
 export default function ArticleDetailPage() {
@@ -39,10 +39,10 @@ export default function ArticleDetailPage() {
     const [article, setArticle] = useState<Article | null>(null);
     const [showAISummary, setShowAISummary] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
-// console.log(slug)
- const recommendedArticles = useMemo(() => {
-    return getRelatedArticles(slug, articles, 10);
-  }, [slug, articles]);
+    // console.log(slug)
+    const recommendedArticles = useMemo(() => {
+        return getRelatedArticles(slug, articles, 10);
+    }, [slug, articles]);
     // Dummy data
     const viewCount = 1247;
     const commentCount = 23;
@@ -91,7 +91,7 @@ export default function ArticleDetailPage() {
 
     if (loading) {
         return <div className="flex justify-center items-center min-h-screen">
-          <Loader text="Loading Profile..." size="lg" />
+            <Loader text="Loading Profile..." size="lg" />
         </div>;
     }
 
@@ -133,7 +133,7 @@ export default function ArticleDetailPage() {
                                 </span>
                             </div>
 
-                            <h1 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
+                            <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-6 leading-tight">
                                 {article.title}
                             </h1>
                         </div>

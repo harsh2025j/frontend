@@ -37,7 +37,7 @@ export const useProfileActions = () => {
                 name: storedUser.name,
                 email: storedUser.email,
                 profilePicture: storedUser.avatar || "",
-                role: {
+                roles: [{
                   _id: "google-role",
                   name: "user",
                   slug: "user",
@@ -46,7 +46,7 @@ export const useProfileActions = () => {
                   isActive: true,
                   createdAt: new Date().toISOString(),
                   updatedAt: new Date().toISOString(),
-                },
+                }],
                 isActive: true,
                 isVerified: true,
                 preferredLanguage: "english-ind",
@@ -88,6 +88,7 @@ export const useProfileActions = () => {
       toast.error("Cannot update profile: User data missing.");
       return;
     }
+
     dispatch(updateProfile(formData));
   };
 

@@ -49,9 +49,9 @@ export const authApi = {
 
 
   forgotPassword: async (data: forgotPasswordRequest) => {
-    console.log("Gen OTP API hit:", data);
+    // console.log("Gen OTP API hit:", data);
     const response = await apiClient.post<ForgotPasswordResponse>(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, data);
-    console.log("response :", response);
+    // console.log("response :", response);
     return response;
   },
 
@@ -61,7 +61,7 @@ export const authApi = {
       API_ENDPOINTS.AUTH.VERIFY_OTP,
       data
     );
-    console.log("Verify OTP Response:", response.data);
+    // console.log("Verify OTP Response:", response.data);
     return response;
   },
 
@@ -70,7 +70,7 @@ export const authApi = {
       API_ENDPOINTS.AUTH.LOGIN,
       data
     );
-    console.log("Login API Response:", response.data);
+    // console.log("Login API Response:", response.data);
     return response;
   },
 
@@ -78,7 +78,7 @@ export const authApi = {
     const response = await apiClient.get(
       API_ENDPOINTS.PROFILE.FETCH
     );
-    console.log("Profile Response:", response.data);
+    // console.log("Profile Response:", response.data);
     return response;
   },
 };

@@ -51,9 +51,9 @@ const contentManagementPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const router = useRouter();
-const { user: reduxUser} = useProfileActions();
+  const { user: reduxUser } = useProfileActions();
   const user = reduxUser as UserData;
-   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   useEffect(() => {
     // if (loading) return;
 
@@ -66,18 +66,18 @@ const { user: reduxUser} = useProfileActions();
     }
 
     // 2. Role Check
-    if (user?.role) {
-      const currentRole = user.role.name;
-      if (!currentRole || currentRole === "user") {
-        router.replace("/auth/login"); 
+    if (user?.roles?.length) {
+      const hasAccess = user.roles.some((r) => r.name !== "user");
+      if (!hasAccess) {
+        router.replace("/auth/login");
       }
-      else{
+      else {
         setIsAuthorized(true)
       }
     }
   }, [user, router]);
 
- 
+
 
   useEffect(() => {
     if (error) toast.error(error);
@@ -104,7 +104,7 @@ const { user: reduxUser} = useProfileActions();
   //     </div>
   //   );
   // }
-  
+
 
   return (
     <div>
@@ -177,14 +177,14 @@ const { user: reduxUser} = useProfileActions();
 
                         <td className="py-3 px-4">
                           <span className={`text-xs px-3 py-1 rounded-full font-medium ${item.status === 'published'
-                              ? 'bg-green-100 text-green-700'
-                              : item.status === 'draft'
-                                ? 'bg-white text-yellow-300'
-                                : item.status === 'rejected'
-                                  ? 'bg-amber-100 text-red-600'
-                                  : item.status === 'pending'
-                                    ? 'bg-yellow-100 text-yellow-700'
-                                    : 'bg-gray-100 text-gray-700'
+                            ? 'bg-green-100 text-green-700'
+                            : item.status === 'draft'
+                              ? 'bg-white text-yellow-300'
+                              : item.status === 'rejected'
+                                ? 'bg-amber-100 text-red-600'
+                                : item.status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-700'
+                                  : 'bg-gray-100 text-gray-700'
                             }`}>
                             {item.status}
                           </span>
@@ -224,8 +224,8 @@ const { user: reduxUser} = useProfileActions();
                       key={page}
                       onClick={() => goToPage(page)}
                       className={`px-3 py-1 border rounded-md ${currentPage === page
-                          ? "bg-[#0B2149] text-white"
-                          : "bg-gray-100 hover:bg-gray-200"
+                        ? "bg-[#0B2149] text-white"
+                        : "bg-gray-100 hover:bg-gray-200"
                         }`}
                     >
                       {page}
