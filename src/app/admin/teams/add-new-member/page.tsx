@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { X, ChevronLeft, Plus } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 // Components & Hooks
 import Loader from "@/components/ui/Loader";
@@ -14,6 +14,7 @@ import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 // Thunks & Types
 import { fetchRoles } from "@/data/features/roles/rolesThunks";
 import { fetchPermissions } from "@/data/features/permissions/permissionsThunks";
+import { registerUser } from "@/data/features/auth/authThunks";
 import { UserData } from "@/data/features/profile/profile.types";
 import { Role } from "@/data/features/roles/roles.types";
 import { Permission } from "@/data/features/permissions/permissions.types";
@@ -30,14 +31,15 @@ export default function AddNewMemberPage() {
   // --- Redux Data ---
   const { roles, loading: rolesLoading } = useAppSelector((state) => state.roles);
   const { permissions, loading: permsLoading } = useAppSelector((state) => state.permissions);
+  const { loading: authLoading } = useAppSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     password: "",
-    role: "",
-    permissions: [] as string[],
+    roleIds: [] as string[],
+    permissionIds: [] as string[],
   });
 
   // --- Authorization Check ---
@@ -75,40 +77,63 @@ export default function AddNewMemberPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handlePermissionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedPermId = e.target.value;
-    if (!selectedPermId) return;
-
-    if (!formData.permissions.includes(selectedPermId)) {
-      setFormData((prev) => ({
-        ...prev,
-        permissions: [...prev.permissions, selectedPermId],
-      }));
-    }
-    // Reset select to default
-    e.target.value = "";
+  const handleRoleToggle = (roleId: string) => {
+    setFormData((prev) => {
+      const isSelected = prev.roleIds.includes(roleId);
+      if (isSelected) {
+        return { ...prev, roleIds: prev.roleIds.filter((id) => id !== roleId) };
+      } else {
+        return { ...prev, roleIds: [...prev.roleIds, roleId] };
+      }
+    });
   };
 
-  const removePermission = (permId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      permissions: prev.permissions.filter((id) => id !== permId),
-    }));
+  const handlePermissionToggle = (permId: string) => {
+    setFormData((prev) => {
+      const isSelected = prev.permissionIds.includes(permId);
+      if (isSelected) {
+        return { ...prev, permissionIds: prev.permissionIds.filter((id) => id !== permId) };
+      } else {
+        return { ...prev, permissionIds: [...prev.permissionIds, permId] };
+      }
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("Form Data:", formData);
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.password || !formData.role) {
-      toast.error("Please fill in all required fields");
+    if (!formData.name || !formData.email || !formData.password) {
+      toast.error("Please fill in all required fields (Name, Email, Password)");
       return;
     }
 
-    // TODO: Dispatch action to create member here
-    console.log("Submitting Form Data:", formData);
-    toast.success("Member added successfully (Demo)");
+    if (formData.roleIds.length === 0) {
+      toast.error("Please select at least one role");
+      return;
+    }
 
-    // Redirect back after success
-    // router.push("/admin/teams");
+    const payload = {
+      ...formData,
+      createdBy: user?._id, // Pass the current user's ID
+    };
+
+    try {
+      const resultAction = await dispatch(registerUser(payload));
+      if (registerUser.fulfilled.match(resultAction)) {
+        toast.success("Member invited successfully!");
+        router.push("/admin/teams");
+      } else {
+        // Error is handled by thunk/toast usually, but we can show generic error
+        if (resultAction.payload) {
+          toast.error(resultAction.payload as string);
+        } else {
+          toast.error("Failed to invite member");
+        }
+      }
+    } catch (error) {
+      console.error("Invite error:", error);
+      toast.error("An unexpected error occurred");
+    }
   };
 
   if (!isAuthorized) {
@@ -119,14 +144,9 @@ export default function AddNewMemberPage() {
     );
   }
 
-  // Helper to get permission name by ID
-  const getPermissionName = (id: string) => {
-    return permissions.find((p) => p._id === id)?.name || id;
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-6 md:p-10">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
 
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
@@ -137,140 +157,146 @@ export default function AddNewMemberPage() {
             <ChevronLeft size={24} className="text-gray-700" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-[#0A2342]">Add New Team Member</h1>
-            <p className="text-sm text-gray-500">Create a new account for your staff member.</p>
+            <h1 className="text-2xl font-bold text-[#0A2342]">Invite New Team Member</h1>
+            <p className="text-sm text-gray-500">Create a new account and assign access levels.</p>
           </div>
         </div>
 
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
 
-            {/* Row 1: Name & Email */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <CustomInput
-                label="Full Name"
-                name="name"
-                placeholder="Member Name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-              <CustomInput
-                label="Email Address"
-                name="email"
-                type="email"
-                placeholder="ex:member@example.com"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            {/* Row 2: Phone & Password */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <CustomInput
-                label="Phone Number"
-                name="phone"
-                placeholder="+91 987xx xx210"
-                value={formData.phone}
-                onChange={handleChange}
-              />
-              <CustomInput
-                label="Password"
-                name="password"
-                type="password"
-                placeholder="Set a temporary password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <hr className="border-gray-100" />
-
-
+            {/* Section 1: Basic Info */}
             <div>
-              <label className="block font-medium mb-1 text-gray-700">Assign Role </label>
-              <div className="relative">
-                <select
-                  name="role"
-                  value={formData.role}
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Basic Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <CustomInput
+                  label="Full Name"
+                  name="name"
+                  placeholder="Member Name"
+                  value={formData.name}
                   onChange={handleChange}
-                  className="w-full border rounded-lg px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
                   required
-                >
-                  <option value="" disabled>Select a Role</option>
-                  {rolesLoading ? (
-                    <option disabled>Loading roles...</option>
-                  ) : (
-                    roles.map((role: Role) => (
-                      <option key={role._id} value={role._id}>
-                        {role.name}
-                      </option>
-                    ))
-                  )}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
-                  <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" className="text-gray-400">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </div>
+                />
+                <CustomInput
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  placeholder="ex:member@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+                <CustomInput
+                  label="Phone Number"
+                  name="phone"
+                  placeholder="+91 987xx xx210"
+                  value={formData.phone}
+                  onChange={handleChange}
+                />
+                <CustomInput
+                  label="Password"
+                  name="password"
+                  type="password"
+                  placeholder="Set a temporary password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
               </div>
-              <p className="text-xs text-gray-500 mt-1">This defines the user&apos;s primary access level.</p>
             </div>
 
-
+            {/* Section 2: Roles */}
             <div>
-              <label className="block font-medium mb-2 text-gray-700">Additional Permissions</label>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Assign Roles</h3>
+              <p className="text-sm text-gray-500 mb-4">Select one or more roles for this user.</p>
 
+              {rolesLoading ? (
+                <div className="py-4 text-gray-500">Loading roles...</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {roles.map((role: Role) => {
+                    const roleId = role._id || (role as any).id;
+                    // console.log("Role ID:", roleId);
+                    if (!roleId) return null;
 
-              <div className="relative mb-3">
-                <select
-                  onChange={handlePermissionChange}
-                  className="w-full border rounded-lg px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none"
-                  defaultValue=""
-                >
-                  <option value="" disabled>Select permission to add...</option>
-                  {permsLoading ? (
-                    <option disabled>Loading permissions...</option>
-                  ) : (
-                    permissions
-                      .filter(p => !formData.permissions.includes(p._id))
-                      .map((perm: Permission) => (
-                        <option key={perm._id} value={perm._id}>
-                          {perm.name}
-                        </option>
-                      ))
-                  )}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
-                  <Plus size={18} className="text-gray-400" />
+                    return (
+                      <label
+                        key={roleId}
+                        className={`
+                        flex items-center p-4 border rounded-xl cursor-pointer transition-all
+                        ${formData.roleIds.includes(roleId)
+                            ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500"
+                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"}
+                      `}
+                      >
+                        <input
+                          type="checkbox"
+                          className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 mr-3"
+                          checked={formData.roleIds.includes(roleId)}
+                          onChange={() => { console.log("Role ID:", roleId); handleRoleToggle(roleId) }}
+                        />
+                        <div>
+                          <span className="font-medium text-gray-900 block">{role.name}</span>
+                          {role.description && (
+                            <span className="text-xs text-gray-500">{role.description}</span>
+                          )}
+                        </div>
+                      </label>
+                    )
+                  })}
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Selected Permissions Pills */}
-              <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border border-gray-100 bg-gray-50 rounded-lg">
-                {formData.permissions.length === 0 && (
-                  <span className="text-sm text-gray-400 italic px-2 self-center">No specific permissions added yet.</span>
-                )}
+            {/* Section 3: Permissions */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Additional Permissions</h3>
+              <p className="text-sm text-gray-500 mb-4">Grant specific permissions beyond the assigned roles.</p>
 
-                {formData.permissions.map((permId) => (
-                  <div
-                    key={permId}
-                    className="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium border border-blue-200"
-                  >
-                    <span>{getPermissionName(permId)}</span>
-                    <button
-                      type="button"
-                      onClick={() => removePermission(permId)}
-                      className="hover:bg-blue-200 rounded-full p-0.5 transition"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
+              {permsLoading ? (
+                <div className="py-4 text-gray-500">Loading permissions...</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {permissions.map((perm: Permission) => {
+                    const permId = perm._id || (perm as any).id;
+                    if (!permId) return null;
+
+                    return (
+                      <label
+                        key={permId}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer"
+                      >
+                        <div className="relative flex items-center">
+                          <input
+                            type="checkbox"
+                            className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 transition-all checked:border-blue-600 checked:bg-blue-600"
+                            checked={formData.permissionIds.includes(permId)}
+                            onChange={() => handlePermissionToggle(permId)}
+                          />
+                          <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-white opacity-0 transition-opacity peer-checked:opacity-100">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-3.5 w-3.5"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              stroke="currentColor"
+                              strokeWidth="1"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              ></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <span className="text-sm text-gray-700 font-medium">{perm.name}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -285,10 +311,11 @@ export default function AddNewMemberPage() {
 
               <button
                 type="submit"
-                className="px-8 py-2.5 rounded-lg bg-[#C9A227] text-white font-medium hover:bg-[#b08d21] shadow-md transition disabled:opacity-70"
-                disabled={rolesLoading || permsLoading}
+                className="px-8 py-2.5 rounded-lg bg-[#C9A227] text-white font-medium hover:bg-[#b08d21] shadow-md transition disabled:opacity-70 flex items-center gap-2"
+                disabled={rolesLoading || permsLoading || authLoading}
               >
-                Add Member
+                {authLoading && <Loader size="sm" />}
+                {authLoading ? "Inviting..." : "Invite Member"}
               </button>
             </div>
 

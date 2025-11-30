@@ -1,5 +1,5 @@
-import apiClient from "@/data/services/config/apiClient";
-import { API_ENDPOINTS } from "@/data/services/config/apiContants";
+import apiClient from "@/data/services/apiConfig/apiClient";
+import { API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
 import { CreateRoleRequest, UpdateRoleRequest } from "../../features/roles/roles.types";
 
 export const rolesApi = {

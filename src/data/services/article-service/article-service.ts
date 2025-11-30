@@ -1,5 +1,5 @@
-import apiClient from "../config/apiClient";
-import { API_ENDPOINTS } from "../config/apiContants";
+import apiClient from "../apiConfig/apiClient";
+import { API_ENDPOINTS } from "../apiConfig/apiContants";
 import { CreateArticleRequest, CreateArticleResponse, ArticleListResponse } from "@/data/features/article/article.types";
 
 export const articleApi = {
@@ -43,7 +43,7 @@ export const articleApi = {
       {
         params,
         headers: {
-          "ngrok-skip-browser-warning": "true",
+          // "ngrok-skip-browser-warning": "true",
         },
       }
 

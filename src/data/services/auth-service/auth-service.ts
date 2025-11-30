@@ -13,8 +13,8 @@ import {
   VerifyOtpRequest,
   VerifyOtpResponse,
 } from "@/data/features/auth/auth.types";
-import apiClient from "../config/apiClient";
-import { API_BASE_URL, API_ENDPOINTS } from "../config/apiContants";
+import apiClient from "../apiConfig/apiClient";
+import { API_BASE_URL, API_ENDPOINTS } from "../apiConfig/apiContants";
 
 export const authApi = {
   register: async (data: RegisterRequest) => {

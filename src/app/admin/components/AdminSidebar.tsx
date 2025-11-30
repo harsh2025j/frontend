@@ -81,6 +81,12 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
       show: hasAdminPrivileges
     },
     {
+      name: "User Management",
+      icon: <Users size={18} />,
+      href: "/admin/users",
+      show: hasAdminPrivileges
+    },
+    {
       name: "Premium",
       icon: <Crown size={18} />,
       href: "/admin/plans",

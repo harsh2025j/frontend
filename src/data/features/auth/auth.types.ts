@@ -11,6 +11,9 @@ export interface RegisterRequest {
   email: string;
   password: string;
   phone?: string;
+  roles?: string[];
+  permissions?: string[];
+  createdBy?: string;
 }
 
 export interface VerifyOtpRequest {

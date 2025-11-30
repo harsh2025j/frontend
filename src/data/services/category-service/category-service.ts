@@ -1,5 +1,5 @@
-import apiClient from "@/data/services/config/apiClient";
-import { API_ENDPOINTS } from "@/data/services/config/apiContants";
+import apiClient from "@/data/services/apiConfig/apiClient";
+import { API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
 import { CreateCategoryRequest, UpdateCategoryRequest } from "../../features/category/category.types";
 
 export const categoryApi = {

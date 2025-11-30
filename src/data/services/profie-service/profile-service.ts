@@ -1,7 +1,7 @@
 // src/data/services/profie-service/profile-service.ts
 
-import apiClient from "@/data/services/config/apiClient";
-import { API_ENDPOINTS } from "@/data/services/config/apiContants";
+import apiClient from "@/data/services/apiConfig/apiClient";
+import { API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
 import { UpdateProfileRequest, ProfileResponse } from "@/data/features/profile/profile.types";
 
 export const profileApi = {

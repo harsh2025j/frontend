@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSubscriptionListActions } from "@/data/features/subscription/useSubscriptionActions";
 import { Plans } from "@/data/features/subscription/subscription.types";
-import apiClient from "@/data/services/config/apiClient";
+import apiClient from "@/data/services/apiConfig/apiClient";
 import toast from "react-hot-toast";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
