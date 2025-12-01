@@ -35,10 +35,14 @@ export default function Footer() {
             </div>
 
             <p className="text-sm leading-relaxed font-merriweather font-bold text-white mb-4">
-              Address: XXXXXXXX, Lucknow, India <br />
-              Support: +91-123456789 <br />
-              Email: info@yournewswebsite.com
+              Address: Block-C, High Court, Sajjad Husain, Advocates Chamber.515,<br/> Lucknow - Ayodhya Rd, Gomti Nagar, Lucknow, Faizabad, Uttar Pradesh 226010<br />
+              Phone: 070809 09786 <br />
+              Email: sajjadhusainlawassociates@gmail.com
             </p>
+            
+
+
+
 
             <div className="flex justify-center items-center md:justify-start gap-4">
               <h4 className="" >Folllow us.</h4>
@@ -51,10 +55,10 @@ export default function Footer() {
               <FaYoutube className="h-5 w-5 hover:text-red-600 cursor-pointer" />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 text-center md:text-left">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-18 text-center md:text-left">
             <div>
               <h3 className="font-semibold mb-3">Products</h3>
-              <ul className="space-y-2 text-sm">
+              <ul className="space-y-3 text-sm">
                 <li>
                   <Link href="#">Top Stories</Link>
                 </li>
@@ -102,7 +106,7 @@ export default function Footer() {
 
             <div>
               <h3 className="font-semibold mb-3">Services</h3>
-              <ul className="space-y-2 text-sm">
+              <ul className="space-y-3 text-sm">
                 <li>
                   <Link href="#">Law Schools Corner</Link>
                 </li>
@@ -119,7 +123,7 @@ export default function Footer() {
                   <Link href="#">Law School Articles</Link>
                 </li>
                 <li>
-                  <Link href="#">Scholarships/Fellowships</Link>
+                  <Link href="#">Scholarships</Link>
                 </li>
                 <li>
                   <Link href="#">School Admission</Link>
@@ -138,7 +142,7 @@ export default function Footer() {
 
             <div>
               <h3 className="font-semibold mb-3">Resources</h3>
-              <ul className="space-y-2 text-sm">
+              <ul className="space-y-3 text-sm">
                 <li>
                   <Link href="#">Who We Are</Link>
                 </li>
@@ -160,8 +164,8 @@ export default function Footer() {
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-3">Resources</h3>
-              <ul className="space-y-2 text-sm">
+              {/* <h3 className="font-semibold mb-3">Resources</h3>
+              <ul className="space-y-3 text-sm">
                 <li>
                   <Link href="#">Who We Are</Link>
                 </li>
@@ -180,12 +184,12 @@ export default function Footer() {
                 <li>
                   <Link href="#">Terms & Conditions</Link>
                 </li>
-              </ul>
+              </ul> */}
             </div>
           </div>
         </div>
         <div className="mt-6 text-center text-xs text-gray-400">
-          2025 © All Rights Reserved @DIFMO Pvt. Ltd.
+         2025 © All Rights Reserved @SajjadLaw
         </div>
       </div>
     </footer>
