@@ -1,9 +1,7 @@
 export const API_BASE_URL =
-  "http://13.60.201.69:8000/";
-
+  // "http://13.60.201.69:8000/";
+ "https://shellproof-ka-noncorrelative.ngrok-free.dev/"
 export const API_ENDPOINTS = {
-
-
   AUTH: {
     REGISTER: "/auth/register",
     FORGOT_PASSWORD: "/auth/forgot-password",
@@ -29,10 +27,7 @@ export const API_ENDPOINTS = {
   SUBSCRIPTION: {
     CREATE: "/plans",
     GET_ALL_PLAN: "/plans",
-
-
   },
-
 
   ROLES: {
     BASE: "/roles",
