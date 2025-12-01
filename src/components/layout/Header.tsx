@@ -242,7 +242,7 @@ export default function Header() {
                   </Link>
                   <Link href="/subscription" onClick={() => setMenuOpen(false)} className="flex-1">
                     <button className="w-full rounded-full border border-[#C9A227] text-[#C9A227] px-5 py-2 text-sm font-medium hover:bg-[#C9A227] hover:text-white transition-colors">
-                      GET SUBSCRIPTION
+                      SUBSCRIPTION
                     </button>
                   </Link>
                 </div>
