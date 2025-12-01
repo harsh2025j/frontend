@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import logo from "../../../../public/LightGray.png";
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { forgotPassword, resetPassword, verifyOtp } from "@/data/features/auth/authThunks";
@@ -10,14 +11,24 @@ import { resetAuthState } from "@/data/features/auth/authSlice";
 import { useRouter } from "next/navigation";
 import { useResendOtp } from "@/data/features/auth/useAuthActions";
 import Link from "next/link";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import icons
+import {
+  FaEye,
+  FaEyeSlash,
+  FaFolderOpen,
+  FaDownload,
+  FaMapMarkerAlt,
+  FaFileAlt,
+  FaBell,
+  FaFilePdf,
+  FaSearch
+} from "react-icons/fa";
 
 type Step = "forgot" | "verify" | "reset";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  
+
   // Global loading state (still used for Send OTP and Reset Password steps)
   const { loading, error, message } = useAppSelector((s) => s.auth);
 
@@ -64,7 +75,7 @@ export default function ForgotPasswordPage() {
       await dispatch(forgotPassword({ email })).unwrap();
       localStorage.setItem("email", email);
       setStep("verify");
-    } catch {}
+    } catch { }
   };
 
   const handleVerifyOtp = async () => {
@@ -72,7 +83,7 @@ export default function ForgotPasswordPage() {
       toast.error("Please enter OTP");
       return;
     }
-    
+
     setVerifyLoading(true);
     try {
       await dispatch(verifyOtp({ email, otp })).unwrap();
@@ -102,7 +113,7 @@ export default function ForgotPasswordPage() {
           conformPassword,
         })
       ).unwrap();
-    } catch {}
+    } catch { }
   };
 
   useEffect(() => {
@@ -118,55 +129,68 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-white px-4 sm:px-6 lg:px-8 py-10">
-      <div className="w-full max-w-3xl mx-auto bg-white border rounded-2xl overflow-hidden">
-        <div className="px-6 sm:px-10 py-10">
+      <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row bg-white">
+        {/* Left Panel - Forms */}
+        <div className="w-full lg:w-1/2 bg-[#ffffff] border px-6 sm:px-10 py-10 flex flex-col justify-center">
           {step === "forgot" && (
-            <div className="max-w-md mx-auto">
+            <div className="max-w-md mx-auto w-full">
               <div className="flex flex-col items-center gap-4 mb-8">
                 <div className="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center">
                   <span className="text-2xl">🔒</span>
                 </div>
-                <h2 className="text-3xl font-bold text-center">Forgot Password</h2>
+                <h2 className="text-3xl font-bold text-center">Forgot Password?</h2>
                 <p className="text-center text-gray-600">
-                  Enter your email or username and we&apos;ll send you a OTP to get back into your account.
+                  Please enter your email to receive a password reset link.
                 </p>
               </div>
-              <div className="space-y-4">
-                <div className="border rounded-md px-3 py-3 flex items-center gap-2">
-                  <span>✉️</span>
-                  <input
-                    type="email"
-                    placeholder="Username or Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full focus:outline-none"
-                  />
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Registered Email ID</label>
+                  <div className="border rounded-md px-3 py-3 flex items-center gap-2">
+                    <span>✉️</span>
+                    <input
+                      type="email"
+                      placeholder="name@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full focus:outline-none"
+                    />
+                  </div>
                 </div>
+
                 <button
                   onClick={handleSendOtp}
                   disabled={loading}
-                  className="w-full bg-[#C9A227] text-white py-3 rounded-md font-medium hover:bg-[#b39022] transition disabled:opacity-50"
+                  className="w-full bg-[#C9A227] text-white py-3 rounded-md font-medium hover:bg-[#b39022] transition disabled:opacity-50 uppercase tracking-wide"
                 >
-                  {loading ? "Sending..." : "Send OTP"}
+                  {loading ? "Sending..." : "Request a reset link"}
                 </button>
+
+                <div className="text-center text-sm">
+                  <span className="text-gray-600">Don’t have an account? </span>
+                  <Link href="/auth/signup" className="text-blue-600 hover:underline">
+                   Register
+                  </Link>
+                </div>
               </div>
             </div>
           )}
 
           {step === "verify" && (
-            <div className="max-w-md mx-auto">
+            <div className="max-w-md mx-auto w-full">
               <div className="flex flex-col items-center gap-4 mb-8">
                 <div className="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center">
                   <span className="text-2xl">📨</span>
                 </div>
                 <h2 className="text-3xl font-bold text-center">OTP Verification</h2>
                 <p className="text-center text-gray-600">
-                  Enter OTP and Set New password
+                  Enter the OTP sent to your email to verify your identity.
                 </p>
               </div>
 
               {/* Improved OTP Input Box */}
-              <div className="grid grid-cols-6 gap-3 mb-4">
+              <div className="grid grid-cols-6 gap-3 mb-6">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <input
                     key={i}
@@ -202,7 +226,8 @@ export default function ForgotPasswordPage() {
                   />
                 ))}
               </div>
-              <div className="text-center mb-4">
+
+              <div className="text-center mb-6">
                 <button
                   onClick={handleReSendOtp}
                   disabled={resendLoading || verifyLoading}
@@ -215,7 +240,7 @@ export default function ForgotPasswordPage() {
               <button
                 onClick={handleVerifyOtp}
                 disabled={verifyLoading || resendLoading || otp.length < 6}
-                className="w-full bg-[#C9A227] text-white py-3 rounded-md font-medium hover:bg-[#b39022] transition disabled:opacity-50"
+                className="w-full bg-[#C9A227] text-white py-3 rounded-md font-medium hover:bg-[#b39022] transition disabled:opacity-50 uppercase tracking-wide"
               >
                 {verifyLoading ? "Verifying..." : "Next"}
               </button>
@@ -223,80 +248,106 @@ export default function ForgotPasswordPage() {
           )}
 
           {step === "reset" && (
-            <div className="max-w-md mx-auto">
+            <div className="max-w-md mx-auto w-full">
               <div className="flex flex-col items-center gap-4 mb-8">
                 <div className="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center">
                   <span className="text-2xl">***</span>
                 </div>
                 <h2 className="text-3xl font-bold text-center">Set New Password</h2>
                 <p className="text-center text-gray-600">
-                  Enter Your new password
+                  Please enter your new password below.
                 </p>
               </div>
-              <div className="space-y-4">
-                
+
+              <div className="space-y-6">
                 {/* New Password Field */}
-                <div className="border rounded-md px-3 py-3 flex items-center gap-2">
-                  <span>🔒</span>
-                  <input
-                    type="password"
-                    //  type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Enter your new password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full focus:outline-none"
-                  />
-                  {/* <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    {showNewPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-                  </button> */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">New Password</label>
+                  <div className="border rounded-md px-3 py-3 flex items-center gap-2">
+                    <span>🔒</span>
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      placeholder="Enter new password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      {showNewPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Confirm Password Field */}
-                <div className="border rounded-md px-3 py-3 flex items-center gap-2">
-                  <span>🔒</span>
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="RE- Enter your new password"
-                    value={conformPassword}
-                    onChange={(e) => setConformPassword(e.target.value)}
-                    className="w-full focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    {showConfirmPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-                  </button>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Confirm Password</label>
+                  <div className="border rounded-md px-3 py-3 flex items-center gap-2">
+                    <span>🔒</span>
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm new password"
+                      value={conformPassword}
+                      onChange={(e) => setConformPassword(e.target.value)}
+                      className="w-full focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      {showConfirmPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                    </button>
+                  </div>
                 </div>
 
                 <button
                   onClick={handleReset}
                   disabled={loading}
-                  className="w-full bg-[#C9A227] text-white py-3 rounded-md font-medium hover:bg-[#b39022] transition disabled:opacity-50"
+                  className="w-full bg-[#C9A227] text-white py-3 rounded-md font-medium hover:bg-[#b39022] transition disabled:opacity-50 uppercase tracking-wide"
                 >
-                  {loading ? "Saving..." : "Save"}
+                  {loading ? "Saving..." : "Save New Password"}
                 </button>
               </div>
             </div>
           )}
+        </div>
 
-          <div className="max-w-md mx-auto">
-            <div className="flex items-center gap-4 my-6">
-              <div className="flex-1 h-px bg-gray-200" />
-              <span className="text-sm text-gray-500">OR</span>
-              <div className="flex-1 h-px bg-gray-200" />
-            </div>
-            <Link href="/auth/signup">
-              <div className="text-sm text-gray-700">
-                Don&apos;t have account?{" "}
-                <span className="text-blue-600 hover:underline">Register</span>
+        {/* Right Panel - Branding & Benefits */}
+        <div className="w-full lg:w-1/2 bg-[#0A2342] flex flex-col justify-center px-6 py-10 lg:px-16">
+          <div className="flex justify-center mb-6">
+            <Image
+              src={logo}
+              alt="Logo"
+              width={300}
+              height={300}
+              className="w-full h-48 object-contain sm:w-full sm:h-60"
+              priority
+            />
+          </div>
+
+          <h2 className="text-xl font-semibold text-white text-center mb-8">
+            As a subscriber you get unlimited access to Sajjad Law Associates content
+          </h2>
+
+          <div className="space-y-6">
+            {[
+              { icon: FaFolderOpen, text: "Unlimited access to our archives, orders and judgement copies, etc." },
+              { icon: FaDownload, text: "Free copies of judgments with download facility" },
+              { icon: FaMapMarkerAlt, text: "Access to weekly and monthly digests" },
+              { icon: FaFileAlt, text: "Bonus content on specific branches of law like IBC, Tax etc." },
+              { icon: FaBell, text: "Exclusive notifications on phone and via email. Weekly judgement text/ video roundups" },
+              { icon: FaFilePdf, text: "Compressed PDF copies of Supreme Court judgments with headnote available now" },
+              { icon: FaSearch, text: "Analysis of Judgments and case notes" }
+            ].map((item, index) => (
+              <div key={index} className="flex items-start space-x-4">
+                <item.icon className="text-[#C9A227] mt-1 flex-shrink-0" size={20} />
+                <span className="text-white text-sm leading-relaxed">{item.text}</span>
               </div>
-            </Link>
+            ))}
           </div>
         </div>
       </div>

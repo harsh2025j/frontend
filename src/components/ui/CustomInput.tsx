@@ -1,5 +1,5 @@
 import React from "react";
-type InputTypes = 
+type InputTypes =
   | "text"
   | "email"
   | "password"

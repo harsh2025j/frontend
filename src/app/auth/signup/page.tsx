@@ -1,11 +1,15 @@
 "use client";
 import Image from "next/image";
 import logo from "../../../../public/LightGray.png";
+import award1 from "../../../../public/awards/award1.jpg";
+import award2 from "../../../../public/awards/award2.jpg";
+import award3 from "../../../../public/awards/award3.jpg";
+import award4 from "../../../../public/awards/award4.jpg";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa"; // Added Icons
+import { FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa";
 import CustomInput from "@/components/ui/CustomInput";
 import { useRegisterActions } from "@/data/features/auth/useAuthActions";
-import { useEffect, useState } from "react"; // Added useState
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Link from "next/link";
 
@@ -32,9 +36,10 @@ export default function RegisterPage() {
   }, [error, message, debugOtp]);
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-10">
-      <div className="w-full max-w-md mx-auto bg-white shadow-lg rounded-lg border border-gray-200">
-        <div className="w-full px-6 sm:px-10 py-10">
+    <div className="flex justify-center items-center min-h-screen bg-white px-4 sm:px-6 lg:px-8 py-10">
+      <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row bg-white">
+        {/* Left Panel - Registration Form */}
+        <div className="w-full lg:w-1/2 bg-[#ffffff] border px-6 sm:px-10 py-10">
           <h2 className="text-2xl font-semibold text-center mb-4">Welcome!</h2>
 
           <form
@@ -42,7 +47,7 @@ export default function RegisterPage() {
               e.preventDefault();
               handleRegister();
             }}
-            className="space-y-4"
+            className="space-y-4 px-6 sm:px-14"
           >
             <CustomInput
               label="Full Name"
@@ -103,11 +108,11 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <div className="mt-6 space-y-3">
+          <div className="mt-6 space-y-3 px-6 sm:px-14">
             <div className="flex justify-center items-center">
-              <span className="w-full border-t border-gray-300"></span>
-              <span className="mx-4 text-gray-500 text-sm">OR</span>
-              <span className="w-full border-t border-gray-300"></span>
+              <span className="inline-block w-48 border border-gray-400"></span>
+              <span className="mx-1 text-xl">OR</span>
+              <span className="inline-block w-48 border border-gray-400"></span>
             </div>
 
             <button
@@ -119,14 +124,56 @@ export default function RegisterPage() {
             </button>
           </div>
 
-          <div className="text-center text-xs text-gray-500 mt-6">
+          <div className="text-left text-xs text-gray-500 mt-10 px-6 sm:px-14">
             Already have an account?
-            <Link
-              href="/auth/login"
-              className="hover:underline text-blue-400 ml-1"
-            >
+            <Link href="/auth/login" className="hover:underline text-blue-400 ml-1">
               Login
             </Link>
+          </div>
+        </div>
+
+        {/* Right Panel - Branding */}
+        <div className="w-full lg:w-1/2 bg-[#0A2342] flex flex-col justify-center px-6 py-10">
+          <div className="flex justify-center mb-6">
+            <Image
+              src={logo}
+              alt="Logo"
+              width={300}
+              height={300}
+              className="w-full h-48 object-contain sm:w-full sm:h-60"
+              priority
+            />
+          </div>
+
+          <h3 className="text-xl text-white text-center mb-4">
+            Stay informed. Stay ahead.
+          </h3>
+          <p className="text-sm text-white text-center px-4 sm:px-10 lg:px-24">
+            Welcome to India's most trusted legal news platform — your one-stop
+            destination for the latest court updates, case analyses, and expert
+            legal insights. Whether you're a lawyer, law student, or simply curious
+            about the legal world, our platform delivers authentic, timely, and
+            premium news right at your fingertips.
+          </p>
+
+          {/* Awards Section */}
+          <div className="mt-10">
+            <p className="text-xl text-center text-white mb-2">
+              Awards or Certifications
+            </p>
+            <div className="border-b-2 border-[#D9D9D9] mx-auto w-4/5 sm:w-2/3" />
+            <div className="flex flex-wrap gap-4 justify-center mt-6">
+              {[award1, award2, award3, award4].map((award, i) => (
+                <div key={i} className="h-24 w-24 relative">
+                  <Image
+                    src={award}
+                    alt={`Award ${i + 1}`}
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
