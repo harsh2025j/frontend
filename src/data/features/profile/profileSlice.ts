@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { fetchProfile, updateProfile } from "./profileThunks";
+import { loginWithGoogle } from "../auth/authThunks";
 import { ProfileState } from "./profile.types";
 
 const initialState: ProfileState = {
@@ -16,6 +17,9 @@ const profileSlice = createSlice({
     resetProfileState: (state) => {
       state.error = null;
       state.message = null;
+    },
+    setUser: (state, action) => {
+      state.user = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -43,16 +47,47 @@ const profileSlice = createSlice({
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading = false;
-        // Update local user state with the new data from backend response
-        state.user = action.payload.data; 
+        state.user = action.payload.data;
         state.message = action.payload.message || "Profile updated successfully";
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(loginWithGoogle.fulfilled, (state, action) => {
+        const googleUser = action.payload.user;
+        if (googleUser) {
+          // Map AuthUser to UserData (mocking missing fields)
+          state.user = {
+            _id: googleUser.id,
+            name: googleUser.name,
+            email: googleUser.email,
+            profilePicture: googleUser.avatar || "",
+            role: {
+              _id: "google-role",
+              name: "user",
+              slug: "user",
+              isDeleted: false,
+              description: "Google User",
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+            isActive: true,
+            isVerified: true,
+            preferredLanguage: "english-ind",
+            permissions: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            __v: 0,
+            phone: "",
+            dob: "",
+          };
+          state.message = "Profile synced with Google Login";
+        }
       });
   },
 });
 
-export const { resetProfileState } = profileSlice.actions;
+export const { resetProfileState, setUser } = profileSlice.actions;
 export default profileSlice.reducer;

@@ -144,30 +144,15 @@ apiClient.interceptors.response.use(
 
     // Only show error messages if they haven't been shown recently
     if (apiError.statusCode && apiError.statusCode >= 500) {
-      if (shouldShowError(`server-error-${apiError.statusCode}`)) {
-        toast.error("Server Error: Something went wrong on our end. Please try again later.", {
-          duration: 4000,
-          id: 'server-error-toast'
-        });
-      }
+      toast.error("Server Error: Something went wrong on our end. Please try again later.", {
+        id: "server_error",
+      });
     }
     // Handle Network Errors (no status code usually means network error)
     else if (!apiError.statusCode && error.message === "Network Error") {
-      if (shouldShowError('network-error')) {
-        toast.error("Network Error: Unable to connect to the server. Please check your internet connection.", {
-          duration: 4000,
-          id: 'network-error-toast'
-        });
-      }
-    }
-    // Handle timeout errors
-    else if (error.code === 'ECONNABORTED') {
-      if (shouldShowError('timeout-error')) {
-        toast.error("Request timeout: The server took too long to respond. Please try again.", {
-          duration: 4000,
-          id: 'timeout-error-toast'
-        });
-      }
+      toast.error("Network Error: Unable to connect to the server. Please check your internet connection.", {
+        id: "network_error",
+      });
     }
 
     // For 401 errors, optionally clear token and redirect

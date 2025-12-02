@@ -23,40 +23,43 @@ import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 
 export default function RolesPermissionsPage() {
- const router = useRouter();
- const { user: reduxUser} = useProfileActions();
-   const user = reduxUser as UserData;
+    const router = useRouter();
+    const { user: reduxUser } = useProfileActions();
+    const user = reduxUser as UserData;
     const [isAuthorized, setIsAuthorized] = useState(false);
-   useEffect(() => {
-     // if (loading) return;
- 
-     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
- 
-     // 1. No Token? -> Go to Login
-     if (!token) {
-       router.replace("/auth/login");
-       return;
-     }
- 
-     // 2. Role Check
-     if (user?.role) {
-       const currentRole = user.role.name;
-       const allowedRoles = ["admin", "super_admin"];
-       if (!allowedRoles.includes(currentRole)) {
-         router.replace("/auth/login"); 
-       }
-       else{
-         setIsAuthorized(true)
-       }
-     }
-   }, [user, router]);
-  
- 
+    useEffect(() => {
+        // if (loading) return;
+
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+        // 1. No Token? -> Go to Login
+        if (!token) {
+            router.replace("/auth/login");
+            return;
+        }
+
+        // 2. Role Check
+        if (user?.roles && user.roles.length > 0) {
+            const userRoles = user.roles.map((r) => r.name);
+            const allowedRoles = ["admin", "superadmin"];
+            const hasAccess = userRoles.some((role) => allowedRoles.includes(role));
+
+            if (!hasAccess) {
+                router.replace("/auth/login");
+            }
+            else {
+                setIsAuthorized(true)
+            }
+        }
+
+    }, [user, router]);
+
+
     const dispatch = useAppDispatch();
     const { roles, loading: rolesLoading, error: rolesError } = useAppSelector(
         (state) => state.roles
     );
-    
+
     const {
         permissions,
         loading: permsLoading,
@@ -97,7 +100,7 @@ export default function RolesPermissionsPage() {
     const handleRoleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (editingRole) {
-            await dispatch(updateRole({ id: editingRole.id, ...roleFormData }));
+            await dispatch(updateRole({ id: editingRole._id, ...roleFormData }));
         } else {
             await dispatch(createRole(roleFormData));
         }
@@ -152,22 +155,22 @@ export default function RolesPermissionsPage() {
         setEditingPermission(null);
     };
 
- if (!isAuthorized) {
-       return (
-         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
-           <Loader size="lg" text="Checking Permissions..." />
-         </div>
-       );
-     }
-     
+    if (!isAuthorized) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
+                <Loader size="lg" text="Checking Permissions..." />
+            </div>
+        );
+    }
+
     return (
         <div className="p-6 min-h-screen bg-gray-50">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-[#0A2342] mb-2">Create Roles & Permissions</h1>
                 <p className="text-gray-600">Manage user roles and their access levels.</p>
-               
+
             </div>
-            
+
 
             {/* Tabs */}
             <div className="flex space-x-4 mb-6 border-b border-gray-200">
@@ -214,56 +217,82 @@ export default function RolesPermissionsPage() {
                     )}
                     {rolesError && <p className="text-red-500">{rolesError}</p>}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {roles.map((role) => (
-                            <div
-                                key={role.id}
-                                className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition"
-                            >
-                                <div className="flex justify-between items-start mb-3">
-                                    <h3 className="text-lg font-bold text-gray-800">{role.name}</h3>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleOpenRoleModal(role)}
-                                            className="text-gray-400 hover:text-blue-600 transition"
-                                        >
-                                            <Edit size={16} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleRoleDelete(role.id)}
-                                            className="text-gray-400 hover:text-red-600 transition"
-                                        >
-                                            <Trash2 size={16} />
-                                            
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    {role.description && (
-                                        <p className="text-sm text-gray-600 line-clamp-2">{role.description}</p>
-                                    )}
-                                    <div className="pt-3 mt-3 border-t border-gray-100 flex flex-col gap-1 text-xs text-gray-500">
-                                        <div className="flex justify-between">
-                                            <span>Created by:</span>
-                                            <span className="font-medium text-gray-700">
-                                                {role.createdBy?.name || role.createdBy?.email || "System"}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Created at:</span>
-                                            <span className="font-medium text-gray-700">
-                                                {role.createdAt
-                                                    ? new Date(role.createdAt).toLocaleDateString()
-                                                    : role.id
-                                                        ? new Date(parseInt(role.id.substring(0, 8), 16) * 1000).toLocaleDateString()
-                                                        : "N/A"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                   <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+  <table className="w-full text-left">
+    <thead className="bg-gray-100 border-b">
+      <tr>
+        <th className="px-4 py-3 font-semibold text-gray-700">Role</th>
+        <th className="px-4 py-3 font-semibold text-gray-700">Description</th>
+        <th className="px-4 py-3 font-semibold text-gray-700">Created By</th>
+        <th className="px-4 py-3 font-semibold text-gray-700">Created At</th>
+        <th className="px-4 py-3 font-semibold text-gray-700">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {roles.map((role) => (
+        <tr
+          key={role._id}
+          className="border-b hover:bg-gray-50 transition"
+        >
+          {/* Role Name */}
+          <td className="px-4 py-4 font-bold text-gray-800">
+            {role.name}
+          </td>
+
+          {/* Description */}
+          <td className="px-4 py-4">
+            <p className="text-sm text-gray-600 line-clamp-2">
+              {role.description || "--"}
+            </p>
+          </td>
+
+          {/* Created By */}
+          <td className="px-4 py-4 text-sm text-gray-700 font-medium">
+            {role.createdBy?.name ||
+              role.createdBy?.email ||
+              "System"}
+          </td>
+
+          {/* Created At */}
+          <td className="px-4 py-4 text-sm text-gray-700 font-medium">
+           {role.createdAt
+  ? new Date(role.createdAt).toLocaleString("en-IN")
+  : role._id
+  ? new Date(
+      parseInt(role._id.substring(0, 8), 16) * 1000
+    ).toLocaleString("en-IN")
+  : "N/A"}
+
+               {/* {role.createdAt
+              ? new Date(role.createdAt).toLocaleDateString()
+              : "N/A"} */}
+          </td>
+
+          {/* Actions */}
+          <td className="px-4 py-4">
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleOpenRoleModal(role)}
+                className="text-gray-400 hover:text-blue-600 transition"
+              >
+                <Edit size={18} />
+              </button>
+
+              <button
+                onClick={() => handleRoleDelete(role._id)}
+                className="text-gray-400 hover:text-red-600 transition"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
                 </div>
             )}
 
@@ -285,53 +314,74 @@ export default function RolesPermissionsPage() {
                     )}
                     {permsError && <p className="text-red-500">{permsError}</p>}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {permissions.map((perm) => (
-                            <div
-                                key={perm._id}
-                                className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition"
-                            >
-                                <div className="flex justify-between items-start mb-3">
-                                    <h3 className="text-lg font-bold text-gray-800">{perm.name}</h3>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleOpenPermModal(perm)}
-                                            className="text-gray-400 hover:text-blue-600 transition"
-                                        >
-                                            <Edit size={16} />
-                                        </button>
-                                        <button
-                                            onClick={() => handlePermDelete(perm._id)}
-                                            className="text-gray-400 hover:text-red-600 transition"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    {perm.description && (
-                                        <p className="text-sm text-gray-600 line-clamp-2">{perm.description}</p>
-                                    )}
-                                    <div className="pt-3 mt-3 border-t border-gray-100 flex flex-col gap-1 text-xs text-gray-500">
-                                        <div className="flex justify-between">
-                                            <span>Created by:</span>
-                                            <span className="font-medium text-gray-700">
-                                                {perm.createdBy?.name || perm.createdBy?.email || "System"}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Created at:</span>
-                                            <span className="font-medium text-gray-700">
-                                                {perm.createdAt
-                                                    ? new Date(perm.createdAt).toLocaleDateString()
-                                                    : "N/A"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+  <table className="w-full text-left">
+    <thead className="bg-gray-100 border-b">
+      <tr>
+        <th className="px-4 py-3 font-semibold text-gray-700">Permission</th>
+        <th className="px-4 py-3 font-semibold text-gray-700">Description</th>
+        <th className="px-4 py-3 font-semibold text-gray-700">Created By</th>
+        <th className="px-4 py-3 font-semibold text-gray-700">Created At</th>
+        <th className="px-4 py-3 font-semibold text-gray-700">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {permissions.map((perm) => (
+        <tr
+          key={perm._id}
+          className="border-b hover:bg-gray-50 transition"
+        >
+          {/* Permission Name */}
+          <td className="px-4 py-4 font-bold text-gray-800">
+            {perm.name}
+          </td>
+
+          {/* Description */}
+          <td className="px-4 py-4">
+            <p className="text-sm text-gray-600 line-clamp-2">
+              {perm.description || "--"}
+            </p>
+          </td>
+
+          {/* Created By */}
+          <td className="px-4 py-4 text-sm text-gray-700 font-medium">
+            {perm.createdBy?.name ||
+              perm.createdBy?.email ||
+              "System"}
+          </td>
+
+          {/* Created At */}
+          <td className="px-4 py-4 text-sm text-gray-700 font-medium">
+            {perm.createdAt
+              ? new Date(perm.createdAt).toLocaleDateString()
+              : "N/A"}
+          </td>
+
+          {/* Actions */}
+          <td className="px-4 py-4">
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleOpenPermModal(perm)}
+                className="text-gray-400 hover:text-blue-600 transition"
+              >
+                <Edit size={18} />
+              </button>
+
+              <button
+                onClick={() => handlePermDelete(perm._id)}
+                className="text-gray-400 hover:text-red-600 transition"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
                 </div>
             )}
 

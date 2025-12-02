@@ -42,6 +42,7 @@ import permissionsReducer from "../features/permissions/permissionsSlice";
 import uiReducer from "../features/ui/uiSlice";
 import subscriptionReducer from "../features/subscription/subscriptionSlice"
 import profileReducer from "../features/profile/profileSlice"
+import usersReducer from "../features/users/usersSlice"
 
 export const store = configureStore({
   reducer: {
@@ -52,10 +53,11 @@ export const store = configureStore({
     roles: rolesReducer,
     permissions: permissionsReducer,
     ui: uiReducer,
-    subscription:subscriptionReducer,
+    subscription: subscriptionReducer,
+    users: usersReducer,
   },
 
-  }, 
+},
 );
 
 export type RootState = ReturnType<typeof store.getState>;

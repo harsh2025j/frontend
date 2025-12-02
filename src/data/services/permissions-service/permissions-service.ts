@@ -1,12 +1,12 @@
-import apiClient from "@/data/services/config/apiClient";
-import { API_ENDPOINTS } from "@/data/services/config/apiContants";
+import apiClient from "@/data/services/apiConfig/apiClient";
+import { API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
 import { CreatePermissionRequest, UpdatePermissionRequest } from "../../features/permissions/permissions.types";
 
 export const permissionsApi = {
     fetchPermissions: async () => {
         return await apiClient.get(API_ENDPOINTS.PERMISSIONS.BASE, {
             headers: {
-                "ngrok-skip-browser-warning": "true",
+                // "ngrok-skip-browser-warning": "true",
             },
         });
     },

@@ -13,8 +13,8 @@ import {
   VerifyOtpRequest,
   VerifyOtpResponse,
 } from "@/data/features/auth/auth.types";
-import apiClient from "../config/apiClient";
-import { API_BASE_URL, API_ENDPOINTS } from "../config/apiContants";
+import apiClient from "../apiConfig/apiClient";
+import { API_BASE_URL, API_ENDPOINTS } from "../apiConfig/apiContants";
 
 export const authApi = {
   register: async (data: RegisterRequest) => {
@@ -80,5 +80,31 @@ export const authApi = {
     );
     // console.log("Profile Response:", response.data);
     return response;
+  },
+};
+
+import { auth, googleProvider } from "@/config/firebase";
+import { signInWithPopup, signOut } from "firebase/auth";
+
+export const firebaseAuth = {
+  loginWithGoogle: async () => {
+    if (!auth) {
+      throw new Error("Firebase not initialized. Please check your environment variables.");
+    }
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      return result.user;
+    } catch (error) {
+      console.error("Firebase Google Login Error:", error);
+      throw error;
+    }
+  },
+  logout: async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Firebase Logout Error:", error);
+      throw error;
+    }
   },
 };

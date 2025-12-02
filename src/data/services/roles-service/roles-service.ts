@@ -1,12 +1,12 @@
-import apiClient from "@/data/services/config/apiClient";
-import { API_ENDPOINTS } from "@/data/services/config/apiContants";
+import apiClient from "@/data/services/apiConfig/apiClient";
+import { API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
 import { CreateRoleRequest, UpdateRoleRequest } from "../../features/roles/roles.types";
 
 export const rolesApi = {
     fetchRoles: async () => {
         return await apiClient.get(API_ENDPOINTS.ROLES.BASE, {
             headers: {
-                "ngrok-skip-browser-warning": "true",
+                // "ngrok-skip-browser-warning": "true",
             },
         });
     },

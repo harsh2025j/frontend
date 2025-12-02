@@ -35,7 +35,7 @@ const TableSkeleton = () => {
 const ContentApprovalPanel = () => {
 
   const router = useRouter();
-const { user: reduxUser} = useProfileActions();
+  const { user: reduxUser } = useProfileActions();
   const user = reduxUser as UserData;
   useEffect(() => {
     // if (loading) return;
@@ -49,11 +49,11 @@ const { user: reduxUser} = useProfileActions();
     }
 
     // 2. Role Check
-    if (user?.role) {
-      const currentRole = user.role.name;
-      const allowedRoles = ["admin", "super_admin"];
-      if (!allowedRoles.includes(currentRole)) {
-        router.replace("/auth/login"); 
+    if (user?.roles?.length) {
+      const allowedRoles = ["admin", "superadmin"];
+      const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
+      if (!hasAccess) {
+        router.replace("/auth/login");
       }
     }
   }, [user, router]);
@@ -139,14 +139,13 @@ const { user: reduxUser} = useProfileActions();
                     <td className="px-4 py-3">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium
-                          ${
-                            item.status === "published"
-                              ? "bg-green-200 text-green-900"
-                              : item.status === "pending"
+                          ${item.status === "published"
+                            ? "bg-green-200 text-green-900"
+                            : item.status === "pending"
                               ? "bg-yellow-200 text-yellow-800"
                               : item.status === "rejected"
-                              ? "bg-red-200 text-red-800"
-                              : "bg-gray-200 text-gray-700"
+                                ? "bg-red-200 text-red-800"
+                                : "bg-gray-200 text-gray-700"
                           }
                         `}
                       >
@@ -175,9 +174,8 @@ const { user: reduxUser} = useProfileActions();
           <button
             onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`px-3 py-1 rounded ${
-              currentPage === 1 ? "text-gray-400" : "hover:text-[#0B2149]"
-            }`}
+            className={`px-3 py-1 rounded ${currentPage === 1 ? "text-gray-400" : "hover:text-[#0B2149]"
+              }`}
           >
             &lt;
           </button>
@@ -188,11 +186,10 @@ const { user: reduxUser} = useProfileActions();
               <button
                 key={page}
                 onClick={() => goToPage(page)}
-                className={`px-3 py-1 border rounded-md ${
-                  currentPage === page
-                    ? "bg-[#0B2149] text-white"
-                    : "bg-gray-100 hover:bg-gray-200"
-                }`}
+                className={`px-3 py-1 border rounded-md ${currentPage === page
+                  ? "bg-[#0B2149] text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
+                  }`}
               >
                 {page}
               </button>
@@ -202,9 +199,8 @@ const { user: reduxUser} = useProfileActions();
           <button
             onClick={() => goToPage(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded ${
-              currentPage === totalPages ? "text-gray-400" : "hover:text-[#0B2149]"
-            }`}
+            className={`px-3 py-1 rounded ${currentPage === totalPages ? "text-gray-400" : "hover:text-[#0B2149]"
+              }`}
           >
             &gt;
           </button>

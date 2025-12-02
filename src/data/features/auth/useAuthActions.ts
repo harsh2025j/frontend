@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
-import { LoginRequest, RegisterRequest, ResendOtpRequest, VerifyOtpRequest } from "./auth.types";
-import { loginUser, registerUser, ResendOtp, verifyOtp } from "./authThunks";
+import { LoginRequest, RegisterRequest, ResendOtpRequest, ResetPasswordRequest, VerifyOtpRequest } from "./auth.types";
+import { forgotPassword, loginUser, registerUser, ResendOtp, resetPassword, verifyOtp, loginWithGoogle } from "./authThunks";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 import { resetAuthState, logoutUser } from "./authSlice";
 
@@ -35,7 +35,7 @@ const useAuth = () => {
 export const useRegisterActions = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { loading, error, message, debugOtp } = useAuth();
+  const { loading, error, message, debugOtp, token } = useAuth();
 
   const [formData, setFormData] = useState<RegisterRequest>({
     name: "",
@@ -67,6 +67,10 @@ export const useRegisterActions = () => {
     dispatch(registerUser(payload));
   };
 
+  const handleGoogleLogin = () => {
+    dispatch(loginWithGoogle());
+  };
+
   useEffect(() => {
     if (message === MESSAGES.REGISTER_SUCCESS) {
       if (debugOtp) {
@@ -78,6 +82,14 @@ export const useRegisterActions = () => {
     }
   }, [message, debugOtp]);
 
+  // Redirect if token exists (e.g. from Google Login)
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      router.push("/");
+      dispatch(resetAuthState());
+    }
+  }, [token]);
+
   return {
     formData,
     setFormData,
@@ -87,12 +99,13 @@ export const useRegisterActions = () => {
     error,
     message,
     debugOtp,
+    handleGoogleLogin,
   };
 };
 
 export const useLoginActions = () => {
   const dispatch = useAppDispatch();
-  const { loading, error, token, message } = useAuth();
+  const { loading, error, token, message, user } = useAuth();
 
   const [formData, setFormData] = useState<LoginRequest>({
     email: "",
@@ -117,19 +130,39 @@ export const useLoginActions = () => {
     }));
   };
 
+  const handleGoogleLogin = () => {
+    dispatch(loginWithGoogle());
+  };
+
+
+
   useEffect(() => {
-    if (localStorage.getItem("token")) {
-      // console.log(token);
-      router.push("/");
+    // Check if we have a token and user in the state (successful login)
+    // console.log(localStorage.getItem("token"));
+    if (localStorage.getItem("token") && user) {
+      // console.log("user details",user);
+      // console.log("udersrolw",user?.roles[0].name)
+      const roles = user.roles?.map((r) => r.name) || [];
+      // console.log("wertyuijh",roles)
+      if (roles.includes("admin") || roles.includes("superadmin")) {
+      // if(true){
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
+
       localStorage.setItem("email", formData.email);
       dispatch(resetAuthState());
     }
-  }, [token]);
+    
+  }, [token, user]);
 
   return {
     formData,
     handleChange,
     handleLogin,
+    handleGoogleLogin,
+
     loading,
     error,
     message,
@@ -172,7 +205,7 @@ export const useVerifyActions = () => {
       toast.error("Please enter both email and OTP");
       return;
     }
-    
+
     setLocalLoading(true);
     try {
       // We use .unwrap() to ensure we wait for the thunk to finish
@@ -204,7 +237,7 @@ export const useVerifyActions = () => {
 export const useResendOtp = () => {
   const dispatch = useAppDispatch();
   const { error, message } = useAppSelector((state) => state.auth);
-  
+
   // Use local loading state for independent tracking
   const [localLoading, setLocalLoading] = useState(false);
 

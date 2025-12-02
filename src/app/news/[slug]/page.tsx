@@ -39,11 +39,10 @@ export default function ArticleDetailPage() {
     const [article, setArticle] = useState<Article | null>(null);
     const [showAISummary, setShowAISummary] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
-
+    // console.log(slug)
     const recommendedArticles = useMemo(() => {
         return getRelatedArticles(slug, articles, 10);
     }, [slug, articles]);
-
     // Dummy data
     const viewCount = 1247;
     const commentCount = 23;

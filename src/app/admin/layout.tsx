@@ -15,10 +15,10 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  
+
   const { user: reduxUser, loading } = useProfileActions();
   const user = reduxUser as UserData;
-  
+
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
@@ -33,10 +33,10 @@ export default function DashboardLayout({
     }
 
     // 2. Role Check
-    if (user?.role) {
-      const currentRole = user.role.name;
-      if (!currentRole || currentRole === "user") {
-        router.replace("/auth/login"); 
+    if (user?.roles?.length) {
+      const hasAdminAccess = user.roles.some((r) => r.name !== "user");
+      if (!hasAdminAccess) {
+        router.replace("/auth/login");
       } else {
         setIsAuthorized(true);
       }
@@ -64,7 +64,7 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar isOpen={isSidebarOpen} />
-      <div className={`flex flex-col flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-64" : "ml-0"}`}>
+      <div className={`flex flex-col flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-72" : "ml-20"}`}>
         <AdminNavbar onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)} />
         <main className="flex-1 pt-24 p-8">{children}</main>
       </div>

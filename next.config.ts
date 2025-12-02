@@ -13,7 +13,8 @@ const nextConfig = {
       "etimg.etb2bimg.com",
       "media.gettyimages.com",
       "www.livelaw.in",
-      "bsmedia.business-standard.com"
+      "bsmedia.business-standard.com",
+      "lh3.googleusercontent.com"
     ],
   },
 };

@@ -18,6 +18,7 @@ export default function LoginPage() {
     formData,
     handleChange,
     handleLogin,
+    handleGoogleLogin,
     loading,
     error,
     message,

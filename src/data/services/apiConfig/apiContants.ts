@@ -1,8 +1,7 @@
-// export const API_BASE_URL =
-//   "https://shellproof-ka-noncorrelative.ngrok-free.dev/";
-
-  export const API_BASE_URL =
-  "http://13.60.201.69:8000/";
+export const API_BASE_URL =
+"https://api.sajjadhusainlawassociates.com"
+  // "http://13.60.201.69:8000/";
+//  "https://shellproof-ka-noncorrelative.ngrok-free.dev/"
 export const API_ENDPOINTS = {
   AUTH: {
     REGISTER: "/auth/register",
@@ -12,7 +11,7 @@ export const API_ENDPOINTS = {
     LOGIN: "/auth/login",
     RESEND_OTP: "/auth/forgot-password"
   },
-  PROFILE: { 
+  PROFILE: {
     FETCH: "/profile",
     UPDATE: "/profile",
   },
@@ -21,19 +20,16 @@ export const API_ENDPOINTS = {
     CREATE: "/articles",
     FETCH_ALL: "/articles",
   },
-  CATEGORIE:{
-    CREATE:"/categories",
-    FETCH_ALL_CATEGORY:"/categories",
-  },
-  
-  SUBSCRIPTION:{
-    CREATE:"/plans",
-    GET_ALL_PLAN:"/plans",
-    
-
+  CATEGORIE: {
+    CREATE: "/categories",
+    FETCH_ALL_CATEGORY: "/categories",
   },
 
- 
+  SUBSCRIPTION: {
+    CREATE: "/plans",
+    GET_ALL_PLAN: "/plans",
+  },
+
   ROLES: {
     BASE: "/roles",
   },

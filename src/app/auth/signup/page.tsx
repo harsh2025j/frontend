@@ -22,6 +22,7 @@ export default function RegisterPage() {
     error,
     message,
     debugOtp,
+    handleGoogleLogin,
   } = useRegisterActions();
 
   // State to toggle password visibility
@@ -117,6 +118,7 @@ export default function RegisterPage() {
 
             <button
               type="button"
+              onClick={handleGoogleLogin}
               className="w-full border border-gray-300 rounded-md py-3 flex items-center justify-center space-x-3 hover:bg-gray-50 transition"
             >
               <FcGoogle size={22} />

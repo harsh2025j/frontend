@@ -41,6 +41,8 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
+
+
   const [prefs, setPrefs] = useState<Prefs>({
     language: "english-ind",
     doNotDisturb: false,
@@ -59,6 +61,8 @@ export default function ProfilePage() {
       }
     }
   }, []);
+
+
 
 
   const name = user?.name || "";
@@ -211,19 +215,9 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Buttons responsive stacking */}
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <button 
-                className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm w-full sm:w-auto" 
-                onClick={triggerFileUpload} 
-              >
-                Upload New Picture
-              </button>
-              <button 
-                className="px-4 py-2 rounded-md border text-sm border-primary w-full sm:w-auto" 
-                onClick={handleOpenEditProfile} 
-              >
-                Edit Info
+            <div className="mt-6 flex gap-3">
+              <button className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm mr-4" onClick={triggerFileUpload} >
+                Upload New
               </button>
             </div>
           </div>
@@ -325,7 +319,7 @@ export default function ProfilePage() {
 
           <div className="bg-white rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Quick Action</h3>
-            {user.role?.name !== "user" && (
+            {user.roles?.some((role) => role.name !== "user") && (
               <Link
                 href="/admin"
                 className="block w-full text-center border rounded-md py-2 mb-3 hover:bg-[#dfb83a]/90 text-sm bg-[#dfb83a] text-white"

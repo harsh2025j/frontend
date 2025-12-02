@@ -2,7 +2,7 @@
 
 import { Provider } from "react-redux";
 import { store } from "../store";
-import { injectStore } from "@/data/services/config/apiClient";
+import { injectStore } from "@/data/services/apiConfig/apiClient";
 
 injectStore(store);
 
