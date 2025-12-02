@@ -8,9 +8,9 @@ export const addPlan = createAsyncThunk<AddPlanResponse,AddPlanRequest>(
   "/subscription/create",
   async (formData, thunkAPI) => {
     try {
-      console.log(formData)
+      // console.log(formData)
       const res = await subscriptionApi.addPlan(formData);
-      console.log(res.data);
+      // console.log(res.data);
       return res.data;
     } catch (err: unknown) {
       const apiError = err as ApiError;

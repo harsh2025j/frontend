@@ -36,10 +36,10 @@ export const registerUser = createAsyncThunk<RegisterResponse, RegisterRequest>(
   "auth/registerUser",
   async (formData, thunkAPI) => {
     try {
-      console.log("register")
+      // console.log("register")
       const res = await authApi.register(formData);
-      console.log("slfjsdkjflsdfj");
-      console.log(res);
+      // console.log("slfjsdkjflsdfj");
+      // console.log(res);
       return res.data;
     } catch (err: unknown) {
       // Error is already handled by centralized error handler
@@ -53,10 +53,10 @@ export const verifyOtp = createAsyncThunk<VerifyOtpResponse, VerifyOtpRequest>(
   "auth/verifyOtp",
   async (formData, thunkAPI) => {
     try {
-      console.log("verify otp");
-      console.log(formData)
+      // console.log("verify otp");
+      // console.log(formData)
       const res = await authApi.verifyOtp(formData);
-      console.log("sldfjsdjkfk")
+      // console.log("sldfjsdjkfk")
       return res.data;
     } catch (err: unknown) {
       // Error is already handled by centralized error handler
@@ -70,8 +70,8 @@ export const forgotPassword = createAsyncThunk<ForgotPasswordResponse, forgotPas
   "auth/forgotPassword",
   async (data, thunkAPI) => {
     try {
-      console.log("otp generating")
-      console.log(data)
+      // console.log("otp generating")
+      // console.log(data)
       const res = await authApi.forgotPassword(data);
       return res.data;
     } catch (err: unknown) {

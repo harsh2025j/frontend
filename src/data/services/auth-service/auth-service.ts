@@ -18,31 +18,31 @@ import { API_BASE_URL, API_ENDPOINTS } from "../apiConfig/apiContants";
 
 export const authApi = {
   register: async (data: RegisterRequest) => {
-    console.log("register11")
-    console.log(data)
-    console.log("Register request URL:", `${API_BASE_URL}${API_ENDPOINTS.AUTH.REGISTER}`);
-    console.log("Register request headers:", apiClient.defaults.headers);
-    console.log("Register request payload:", JSON.stringify(data, null, 2));
+    // console.log("register11")
+    // console.log(data)
+    // console.log("Register request URL:", `${API_BASE_URL}${API_ENDPOINTS.AUTH.REGISTER}`);
+    // console.log("Register request headers:", apiClient.defaults.headers);
+    // console.log("Register request payload:", JSON.stringify(data, null, 2));
 
     const response = await apiClient.post<RegisterResponse>(
       API_ENDPOINTS.AUTH.REGISTER,
       data
     );
-    console.log("Register API Response:", response.data);
+    // console.log("Register API Response:", response.data);
     return response;
   },
 
   resetPassword: async (data: ResetPasswordRequest) => {
-    console.log("Send data to server:", data);
+    // console.log("Send data to server:", data);
     const response = await apiClient.post<ResetPasswordResponse>(API_ENDPOINTS.AUTH.RESET_PASSWORD, data);
-    console.log(response)
+    // console.log(response)
     return response;
   },
 
   resendOtp: async (data: ResendOtpRequest) => {
-    console.log("Send data to server:", data);
+    // console.log("Send data to server:", data);
     const response = await apiClient.post<ResendOtpResponse>(API_ENDPOINTS.AUTH.RESEND_OTP, data);
-    console.log(response)
+    // console.log(response)
     return response;
   },
 

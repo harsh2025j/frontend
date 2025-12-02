@@ -9,9 +9,9 @@ export const createArticle = createAsyncThunk<CreateArticleResponse, CreateArtic
   async (formData, thunkAPI) => {
     try {
       let res = await articleApi.createArticle(formData);
-      console.log("at articlthunk", formData);
-      console.log("hiiiiiiiiiiii")
-      console.log("res.data", res.data)
+      // console.log("at articlthunk", formData);
+      // console.log("hiiiiiiiiiiii")
+      // console.log("res.data", res.data)
       return res.data;
     } catch (err: unknown) {
       const apiError = err as ApiError;

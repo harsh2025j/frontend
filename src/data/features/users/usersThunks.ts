@@ -10,7 +10,7 @@ export const fetchUsers = createAsyncThunk<UserResponse, UserFilter | undefined>
             const res = await usersApi.fetchUsers(filters);
             return res; 
         } catch (err: unknown) {
-            console.log("usersApi fetchUsers error", err);
+            // console.log("usersApi fetchUsers error", err);
             const apiError = err as ApiError;
             return thunkAPI.rejectWithValue(apiError.message || "Failed to fetch users");
         }

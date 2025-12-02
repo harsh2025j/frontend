@@ -100,7 +100,7 @@ export default function AddNewMemberPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log("Form Data:", formData);
+    // console.log("Form Data:", formData);
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.password) {
       toast.error("Please fill in all required fields (Name, Email, Password)");
@@ -131,7 +131,7 @@ export default function AddNewMemberPage() {
         }
       }
     } catch (error) {
-      console.error("Invite error:", error);
+      // console.error("Invite error:", error);
       toast.error("An unexpected error occurred");
     }
   };
@@ -234,7 +234,7 @@ export default function AddNewMemberPage() {
                           type="checkbox"
                           className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 mr-3"
                           checked={formData.roleIds.includes(roleId)}
-                          onChange={() => { console.log("Role ID:", roleId); handleRoleToggle(roleId) }}
+                          onChange={() => { handleRoleToggle(roleId) }}
                         />
                         <div>
                           <span className="font-medium text-gray-900 block">{role.name}</span>

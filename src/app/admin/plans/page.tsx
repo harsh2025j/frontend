@@ -57,7 +57,7 @@ export default function PlanTable() {
 
     useEffect(() => {
         setAllPlans(plans);
-        console.log("object");
+        // console.log("object");
 
     }, [])
 

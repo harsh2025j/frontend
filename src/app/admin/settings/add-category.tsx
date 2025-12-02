@@ -49,7 +49,7 @@ export default function AddCategory({
         }
       }
     } catch (error: any) {
-      console.error(error);
+      // console.error(error);
       toast.error(error.message || "Error saving category");
     } finally {
       setLoading(false);

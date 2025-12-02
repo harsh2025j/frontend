@@ -97,7 +97,7 @@ export const useSubscriptionListActions = () => {
   const {plans,loading,error,message} = useSubscription();
   
   useEffect(() => {
-    console.log("data fetching ");
+    // console.log("data fetching ");
     dispatch(fetchPlans());
     
   },[dispatch]);

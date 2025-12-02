@@ -6,12 +6,12 @@ export const subscriptionApi = {
   addPlan: async (data: AddPlanRequest) => {
     // console.log(data);
     const response = await apiClient.post<AddPlanResponse>(API_ENDPOINTS.SUBSCRIPTION.CREATE, data);
-    console.log("response :", response);
+    // console.log("response :", response);
     return response;
   },
 
   fetchPlans: async () => {
-    console.log("Fetch Plans Request URL:", ` ${API_ENDPOINTS.SUBSCRIPTION.GET_ALL_PLAN}`);
+    // console.log("Fetch Plans Request URL:", ` ${API_ENDPOINTS.SUBSCRIPTION.GET_ALL_PLAN}`);
     const response = await apiClient.get<PlanGetResponse>(
 
       API_ENDPOINTS.SUBSCRIPTION.GET_ALL_PLAN,
@@ -22,7 +22,7 @@ export const subscriptionApi = {
       }
 
     );
-    console.log("Fetch Articles API Response:", response.data);
+    // console.log("Fetch Articles API Response:", response.data);
     return response;
   },
 

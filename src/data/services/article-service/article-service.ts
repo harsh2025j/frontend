@@ -6,8 +6,8 @@ export const articleApi = {
   createArticle: async (data: CreateArticleRequest) => {
 
 
-    console.log("Create Article Request URLgjgfghfhgghf:", `${API_ENDPOINTS.ARTICLE.CREATE}`);
-    console.log("During sending to endpoijnt", data);
+    // console.log("Create Article Request URLgjgfghfhgghf:", `${API_ENDPOINTS.ARTICLE.CREATE}`);
+    // console.log("During sending to endpoijnt", data);
     const formData = new FormData();
     formData.append("title", data.title);
     formData.append("slug", data.slug);
