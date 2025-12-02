@@ -28,7 +28,7 @@ export const useCreateArticleActions = () => {
     language: "English/हिन्दी",
     author: "",
     content: "",
-    tags: ["Legal", "Constitution", "Constitution"],
+    tags: [],
     thumbnail: null,
   });
 
@@ -58,7 +58,24 @@ export const useCreateArticleActions = () => {
     }));
   };
 
-  const handleCreateArticle = () => {
+  const handleAddTag = (tag: string) => {
+    const trimmedTag = tag.trim();
+    if (trimmedTag && !formData.tags.includes(trimmedTag)) {
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...prev.tags, trimmedTag],
+      }));
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }));
+  };
+
+  const handleCreateArticle = (status: "draft" | "publish") => {
     if (!formData.title || !formData.content) {
       toast.error("Please fill in the Title and Main Content.");
       return;
@@ -69,7 +86,15 @@ export const useCreateArticleActions = () => {
       return;
     }
 
-    dispatch(createArticle(formData));
+    // Generate unique slug from title
+    const baseSlug = formData.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+    const uniqueSuffix = Date.now().toString().slice(-6);
+    const generatedSlug = `${baseSlug}-${uniqueSuffix}`;
+
+    dispatch(createArticle({ ...formData, slug: generatedSlug, status }));
   };
 
   useEffect(() => {
@@ -84,7 +109,7 @@ export const useCreateArticleActions = () => {
         language: "English/हिन्दी",
         author: "",
         content: "",
-        tags: ["Legal", "Constitution", "Constitution"],
+        tags: [],
         thumbnail: null,
       });
 
@@ -99,9 +124,12 @@ export const useCreateArticleActions = () => {
     handleContentChange,
     handleFileUpload,
     handleCreateArticle,
+    handleAddTag,
+    handleRemoveTag,
     loading,
     error,
     message,
+    setFormData,
   };
 };
 

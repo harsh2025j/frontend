@@ -28,11 +28,12 @@ export interface Article {
   thumbnail: string | null;
   status: "pending" | "published" | "draft" | "rejected";
   rejectionReason: string | null;
+  language: string | null;
   isPaywalled: boolean;
   createdAt: string;
   updatedAt: string;
 
-  category: Category | null ;
+  category: Category | null;
   subcategory: Subcategory | null;
 
   tags: string[];
@@ -76,7 +77,7 @@ export interface Subcategory {
 export interface ArticleListResponse {
   success: boolean;
   message: string;
-  data: Article[]; 
+  data: Article[];
 }
 
 export interface CreateArticleResponse {
@@ -85,19 +86,19 @@ export interface CreateArticleResponse {
   data: Article;
 }
 
-
 export interface CreateArticleRequest {
-  title:string;
-  location:string;
-  subHeadline:string;
+  title: string;
+  location: string;
+  subHeadline: string;
   category: string;
-  slug:string;
+  slug: string;
   tags: string[];
   language: string;
-  author: string;  
+  author: string;
   content: string;
-  advocateName:string;
+  advocateName: string;
   thumbnail: File | null;
+  status?: "draft" | "publish";
 }
 
 export interface ArticleState {

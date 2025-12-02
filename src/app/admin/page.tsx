@@ -34,44 +34,44 @@ const data = [
 ]
 
 export default function Page() {
-//   const router = useRouter();
-//   const {
-//     user: reduxProfileUser,
-//   } = useProfileActions();
-//   const user: UserData = reduxProfileUser || ({} as UserData);
-// const role = user.role?.name;
-// console.log(role);
-//   useEffect(() => {
-   
-//   if (!user) return; 
+  //   const router = useRouter();
+  //   const {
+  //     user: reduxProfileUser,
+  //   } = useProfileActions();
+  //   const user: UserData = reduxProfileUser || ({} as UserData);
+  // const role = user.role?.name;
+  // console.log(role);
+  //   useEffect(() => {
 
-//   if (!role || role === "user") {
-//     router.replace("/auth/login");
-//   }
-// }, [user, router]);
+  //   if (!user) return; 
 
-// if (!user.role ) {
-//     return (
-//       <div className="min-h-screen flex items-center justify-center">
-//         <Loader text="Loading Profile..." size="lg" />
-//       </div>
-//     );
-//   }
+  //   if (!role || role === "user") {
+  //     router.replace("/auth/login");
+  //   }
+  // }, [user, router]);
+
+  // if (!user.role ) {
+  //     return (
+  //       <div className="min-h-screen flex items-center justify-center">
+  //         <Loader text="Loading Profile..." size="lg" />
+  //       </div>
+  //     );
+  //   }
 
 
   return (
     <>
-    <div className="flex items-center justify-between mb-8">
-      <h1 className="text-2xl font-semibold text-gray-800">Overview</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl font-semibold text-gray-800">Overview</h1>
 
-      <Link
-        href="/admin/create-content"
-        className="flex items-center gap-2 px-4 py-2 bg-[#C9A227] text-white rounded-md hover:bg-orange-600 transition"
-      >
-        <PlusCircle className="w-5 h-5" />
-       Create New Article
-      </Link>
-    </div>
+        <Link
+          href="/admin/create-content"
+          className="flex items-center gap-2 px-4 py-2 bg-[#C9A227] text-white rounded-md hover:bg-orange-600 transition"
+        >
+          <PlusCircle className="w-5 h-5" />
+          Create New Article
+        </Link>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {data.map((item, i) => (

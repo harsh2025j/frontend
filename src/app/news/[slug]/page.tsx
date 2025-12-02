@@ -6,7 +6,7 @@ import { useArticleListActions } from "@/data/features/article/useArticleActions
 import { Article } from "@/data/features/article/article.types";
 import Image from "next/image";
 import Link from "next/link";
-import { Clock, Share2, Sparkles, X, MessageCircle, Eye, Facebook, Twitter, Linkedin, Link2 } from "lucide-react";
+import { Clock, X, MessageCircle, Eye, Facebook, Twitter, Linkedin, Link2, Check, Printer, Share2 } from "lucide-react";
 import logo from "../../../../public/logo.png";
 import Loader from "@/components/ui/Loader";
 
@@ -37,8 +37,7 @@ export default function ArticleDetailPage() {
     const slug = params.slug as string;
     const { articles, loading } = useArticleListActions();
     const [article, setArticle] = useState<Article | null>(null);
-    const [showAISummary, setShowAISummary] = useState(false);
-    const [showShareModal, setShowShareModal] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     const recommendedArticles = useMemo(() => {
         return getRelatedArticles(slug, articles, 10);
@@ -64,20 +63,33 @@ export default function ArticleDetailPage() {
     const handleShare = (platform: string) => {
         const url = window.location.href;
         const text = article?.title || '';
-
-        const shareUrls: { [key: string]: string } = {
-            facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-            twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
-            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
-        };
+        const encodedUrl = encodeURIComponent(url);
+        const encodedText = encodeURIComponent(text);
 
         if (platform === 'copy') {
             navigator.clipboard.writeText(url);
-            alert('Link copied to clipboard!');
-            setShowShareModal(false);
-        } else {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+            return;
+        }
+
+        if (platform === 'print') {
+            window.print();
+            return;
+        }
+
+        const shareUrls: { [key: string]: string } = {
+            facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+            twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`,
+            whatsapp: `https://api.whatsapp.com/send?text=${encodedText} ${encodedUrl}`,
+            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+            pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedText}`,
+            tumblr: `https://www.tumblr.com/widgets/share/tool?canonicalUrl=${encodedUrl}&title=${encodedText}`,
+            email: `mailto:?subject=${encodedText}&body=${encodedUrl}`,
+        };
+
+        if (shareUrls[platform]) {
             window.open(shareUrls[platform], '_blank', 'width=600,height=400');
-            setShowShareModal(false);
         }
     };
 
@@ -105,9 +117,20 @@ export default function ArticleDetailPage() {
                     <div className="lg:col-span-8">
                         {/* Header */}
                         <div className="mb-6">
+
+
+                            <h1 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight">
+                                {article.title}
+                            </h1>
                             {/* Metadata */}
                             <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-4">
                                 <span>
+                                   By {article.authors && (
+                                        <>
+                                            <span className="font-medium text-gray-900">{article.authors}</span>
+                                            <span className="mx-2">•</span>
+                                        </>
+                                    )}
                                     {new Date(article.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                                     {' '}
                                     {new Date(article.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
@@ -115,10 +138,6 @@ export default function ArticleDetailPage() {
                                     ({readTime} mins read)
                                 </span>
                             </div>
-
-                            <h1 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight">
-                                {article.title}
-                            </h1>
                         </div>
 
                         {/* Featured Image */}
@@ -133,22 +152,105 @@ export default function ArticleDetailPage() {
                             </div>
                         )}
 
-                        {/* Action Buttons */}
-                        <div className="flex gap-3 mb-8 pb-6 border-b border-gray-200">
-                            <button
-                                onClick={() => setShowAISummary(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                            >
-                                <Sparkles size={16} />
-                                AI Summary
-                            </button>
-                            <button
-                                onClick={() => setShowShareModal(true)}
-                                className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50 transition-colors"
-                            >
-                                <Share2 size={16} />
-                                Share
-                            </button>
+                        {/* Social Share Bar */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8 p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
+                            <div className="flex items-center gap-2 text-gray-700 font-semibold min-w-fit">
+                                <Share2 size={18} className="text-blue-600" />
+                                <span className="text-sm uppercase tracking-wide">Share Article</span>
+                            </div>
+
+                            <div className="hidden sm:block w-px h-8 bg-gray-300 mx-2"></div>
+
+                            <div className="flex flex-wrap gap-3 w-full">
+                                {/* Facebook */}
+                                <button
+                                    onClick={() => handleShare('facebook')}
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[#3b5998] text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    title="Share on Facebook"
+                                >
+                                    <Facebook size={18} />
+                                </button>
+
+                                {/* X (Twitter) */}
+                                <button
+                                    onClick={() => handleShare('twitter')}
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-black text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    title="Share on X"
+                                >
+                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                                </button>
+
+                                {/* WhatsApp */}
+                                <button
+                                    onClick={() => handleShare('whatsapp')}
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[#25D366] text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    title="Share on WhatsApp"
+                                >
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" className="fill-current">
+                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                                    </svg>
+                                </button>
+
+                                {/* LinkedIn */}
+                                <button
+                                    onClick={() => handleShare('linkedin')}
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0077b5] text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    title="Share on LinkedIn"
+                                >
+                                    <Linkedin size={18} />
+                                </button>
+
+                                {/* Pinterest */}
+                                <button
+                                    onClick={() => handleShare('pinterest')}
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[#bd081c] text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    title="Share on Pinterest"
+                                >
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" className="fill-current">
+                                        <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.399.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.951-7.252 4.173 0 7.41 2.967 7.41 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.367 18.62 0 12.017 0z" />
+                                    </svg>
+                                </button>
+
+                                {/* Tumblr */}
+                                <button
+                                    onClick={() => handleShare('tumblr')}
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[#35465c] text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    title="Share on Tumblr"
+                                >
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" className="fill-current">
+                                        <path d="M14.563 24c-5.093 0-7.031-3.756-7.031-6.411V9.747H5.116V6.648c3.63-1.313 4.512-4.596 4.71-6.469C9.84.051 9.941 0 9.999 0h3.517v6.114h4.801v3.633h-4.82v7.47c.016 1.001.375 2.371 2.207 2.371h.09c.631-.02 1.486-.205 1.936-.419l1.156 3.425c-.436.636-2.4 1.374-4.156 1.404h-.178l.011.002z" />
+                                    </svg>
+                                </button>
+
+                                {/* Email */}
+                                <button
+                                    onClick={() => handleShare('email')}
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[#dd4b39] text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    title="Share via Email"
+                                >
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+                                </button>
+
+                                <div className="w-px h-6 bg-gray-300 mx-1 hidden sm:block"></div>
+
+                                {/* Copy Link */}
+                                <button
+                                    onClick={() => handleShare('copy')}
+                                    className={`w-9 h-9 flex items-center justify-center rounded-full ${copied ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-all duration-200 hover:scale-110`}
+                                    title="Copy Link"
+                                >
+                                    {copied ? <Check size={18} /> : <Link2 size={18} />}
+                                </button>
+
+                                {/* Print */}
+                                <button
+                                    onClick={() => handleShare('print')}
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-110 transition-all duration-200"
+                                    title="Print Article"
+                                >
+                                    <Printer size={18} />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Article Content */}
@@ -213,105 +315,6 @@ export default function ArticleDetailPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Share Modal */}
-            {showShareModal && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-                    onClick={() => setShowShareModal(false)}
-                >
-                    <div
-                        className="bg-white rounded-lg max-w-md w-full shadow-xl"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="border-b px-6 py-4 flex items-center justify-between">
-                            <h3 className="text-lg font-bold">Share Article</h3>
-                            <button
-                                onClick={() => setShowShareModal(false)}
-                                className="p-1 hover:bg-gray-100 rounded transition-colors"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <div className="p-6">
-                            <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    onClick={() => handleShare('facebook')}
-                                    className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                                >
-                                    <Facebook size={20} className="text-blue-600" />
-                                    <span className="font-medium text-sm">Facebook</span>
-                                </button>
-                                <button
-                                    onClick={() => handleShare('twitter')}
-                                    className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                                >
-                                    <Twitter size={20} className="text-sky-500" />
-                                    <span className="font-medium text-sm">Twitter</span>
-                                </button>
-                                <button
-                                    onClick={() => handleShare('linkedin')}
-                                    className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                                >
-                                    <Linkedin size={20} className="text-blue-700" />
-                                    <span className="font-medium text-sm">LinkedIn</span>
-                                </button>
-                                <button
-                                    onClick={() => handleShare('copy')}
-                                    className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                                >
-                                    <Link2 size={20} className="text-gray-600" />
-                                    <span className="font-medium text-sm">Copy Link</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* AI Summary Modal */}
-            {showAISummary && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-                    onClick={() => setShowAISummary(false)}
-                >
-                    <div
-                        className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Sparkles className="text-blue-600" size={20} />
-                                <h3 className="text-lg font-bold">AI Summary</h3>
-                            </div>
-                            <button
-                                onClick={() => setShowAISummary(false)}
-                                className="p-1 hover:bg-gray-100 rounded transition-colors"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <div className="p-6">
-                            <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                                <p className="text-gray-800 text-sm leading-relaxed">
-                                    This article discusses {article.title.toLowerCase()}. It provides comprehensive information about the legal aspects, procedures, and important considerations.
-                                </p>
-                            </div>
-                            <div className="space-y-2">
-                                <h4 className="font-semibold text-sm text-gray-900">Key Points:</h4>
-                                <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                                    <li>Detailed explanation of legal procedures</li>
-                                    <li>Important considerations for implementation</li>
-                                    <li>Relevant case laws and precedents</li>
-                                </ul>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-4 text-center">
-                                AI-generated summary. Read full article for details.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+        </div >
     );
 }

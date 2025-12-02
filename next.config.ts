@@ -14,7 +14,8 @@ const nextConfig = {
       "media.gettyimages.com",
       "www.livelaw.in",
       "bsmedia.business-standard.com",
-      "lh3.googleusercontent.com"
+      "lh3.googleusercontent.com",
+      "example.com"
     ],
   },
 };

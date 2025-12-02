@@ -60,9 +60,54 @@ const ContentApprovalPanel = () => {
 
 
 
-  const { articles, loading, error } = useArticleListActions();
+  const { articles, loading, error, refetch } = useArticleListActions();
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [previewArticle, setPreviewArticle] = useState<Article | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const handleApprove = async (articleId: string) => {
+    if (!confirm("Are you sure you want to approve this article?")) return;
+
+    setActionLoading(articleId);
+    try {
+      const { articleApi } = await import("@/data/services/article-service/article-service");
+      await articleApi.approveArticle(articleId);
+      toast.success("Article approved successfully!");
+      setShowPreview(false);
+      setPreviewArticle(null);
+      refetch(); // Refresh the list
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to approve article");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async (articleId: string) => {
+    const reason = prompt("Please provide a reason for rejection (optional):");
+    if (reason === null) return; // User cancelled
+
+    setActionLoading(articleId);
+    try {
+      const { articleApi } = await import("@/data/services/article-service/article-service");
+      await articleApi.rejectArticle(articleId, reason || undefined);
+      toast.success("Article rejected successfully!");
+      setShowPreview(false);
+      setPreviewArticle(null);
+      refetch(); // Refresh the list
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to reject article");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const openPreview = (article: Article) => {
+    setPreviewArticle(article);
+    setShowPreview(true);
+  };
 
   useEffect(() => {
     if (error) toast.error(error);
@@ -152,12 +197,26 @@ const ContentApprovalPanel = () => {
                         {item.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 flex gap-3">
-                      <button className="bg-green-500 text-white px-4 py-1 rounded-md text-sm hover:bg-green-600">
-                        Approve
+                    <td className="px-4 py-3 flex gap-2">
+                      <button
+                        onClick={() => openPreview(item)}
+                        className="bg-blue-500 text-white px-4 py-1 rounded-md text-sm hover:bg-blue-600 transition-colors"
+                      >
+                        Preview
                       </button>
-                      <button className="bg-yellow-500 text-white px-4 py-1 rounded-md text-sm hover:bg-yellow-600">
-                        Review
+                      <button
+                        onClick={() => handleApprove(item.id)}
+                        disabled={actionLoading === item.id}
+                        className="bg-green-500 text-white px-4 py-1 rounded-md text-sm hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {actionLoading === item.id ? "Processing..." : "Approve"}
+                      </button>
+                      <button
+                        onClick={() => handleReject(item.id)}
+                        disabled={actionLoading === item.id}
+                        className="bg-red-500 text-white px-4 py-1 rounded-md text-sm hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {actionLoading === item.id ? "Processing..." : "Decline"}
                       </button>
                     </td>
                   </tr>
@@ -208,6 +267,157 @@ const ContentApprovalPanel = () => {
         </div>
 
       </div>
+
+      {/* Preview Modal */}
+      {showPreview && previewArticle && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-[#0B2149]">Article Preview</h2>
+              <button
+                onClick={() => {
+                  setShowPreview(false);
+                  setPreviewArticle(null);
+                }}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              {/* Article Thumbnail */}
+              {previewArticle.thumbnail && (
+                <div className="w-full h-64 sm:h-80 rounded-lg overflow-hidden">
+                  <img
+                    src={previewArticle.thumbnail}
+                    alt={previewArticle.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Title */}
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                {previewArticle.title}
+              </h1>
+
+              {/* Sub Headline */}
+              {previewArticle.subHeadline && (
+                <p className="text-xl text-gray-600 italic">
+                  {previewArticle.subHeadline}
+                </p>
+              )}
+
+              {/* Meta Information */}
+              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">Category:</span>
+                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                    {previewArticle.category?.name || "No Category"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">Status:</span>
+                  <span
+                    className={`px-3 py-1 rounded-full font-medium
+                      ${previewArticle.status === "published"
+                        ? "bg-green-200 text-green-900"
+                        : previewArticle.status === "pending"
+                          ? "bg-yellow-200 text-yellow-800"
+                          : previewArticle.status === "rejected"
+                            ? "bg-red-200 text-red-800"
+                            : "bg-gray-200 text-gray-700"
+                      }
+                    `}
+                  >
+                    {previewArticle.status}
+                  </span>
+                </div>
+                {previewArticle.location && (
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Location:</span>
+                    <span>{previewArticle.location}</span>
+                  </div>
+                )}
+                {previewArticle.advocateName && (
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Advocate:</span>
+                    <span>{previewArticle.advocateName}</span>
+                  </div>
+                )}
+                {previewArticle.authors && (
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Author:</span>
+                    <span>{previewArticle.authors}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Rejection Reason */}
+              {previewArticle.status === "rejected" && previewArticle.rejectionReason && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+                  <span className="font-semibold block mb-1">Rejection Reason:</span>
+                  <p>{previewArticle.rejectionReason}</p>
+                </div>
+              )}
+
+              {/* Tags */}
+              {previewArticle.tags && previewArticle.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <span className="font-semibold text-sm text-gray-600">Tags:</span>
+                  {previewArticle.tags.map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Article Content */}
+              <div className="border-t pt-6">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800">Content</h3>
+                <div
+                  className="prose prose-lg max-w-none text-gray-700 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: previewArticle.content }}
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer with Actions */}
+            <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4 flex flex-col sm:flex-row justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowPreview(false);
+                  setPreviewArticle(null);
+                }}
+                className="bg-gray-300 text-gray-700 px-6 py-2.5 rounded-lg font-medium hover:bg-gray-400 transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => handleReject(previewArticle.id)}
+                disabled={actionLoading === previewArticle.id}
+                className="bg-red-500 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {actionLoading === previewArticle.id ? "Processing..." : "Decline"}
+              </button>
+              <button
+                onClick={() => handleApprove(previewArticle.id)}
+                disabled={actionLoading === previewArticle.id}
+                className="bg-green-500 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {actionLoading === previewArticle.id ? "Processing..." : "Approve"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

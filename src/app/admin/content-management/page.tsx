@@ -83,18 +83,44 @@ const contentManagementPage: React.FC = () => {
     if (error) toast.error(error);
   }, [error]);
 
-  const totalPages = loading ? 0 : Math.ceil(articles.length / ITEM_PER_PAGE);
+  const handleDelete = async (articleId: string) => {
+    if (!confirm('Are you sure you want to delete this article?')) return;
+    try {
+      const { articleApi } = await import('@/data/services/article-service/article-service');
+      await articleApi.deleteArticle(articleId);
+      toast.success('Article deleted successfully');
+      // Refresh list
+      router.refresh(); // or refetch if using hook
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete article');
+    }
+  };
+
+  const handleEdit = (articleId: string) => {
+    // Navigate to edit page (assuming route exists)
+    router.push(`/admin/create-content/${articleId}`);
+  };
+
+  // Table header addition
+  // Insert after Status column
+  // (Will be placed in JSX below)
+
   const startIndex = (currentPage - 1) * ITEM_PER_PAGE;
 
   const paginatedArticles = loading
     ? []
     : articles.slice(startIndex, startIndex + ITEM_PER_PAGE);
 
+  const totalPages = loading ? 0 : Math.ceil(articles.length / ITEM_PER_PAGE);
+  const totalNewsPost = articles.length;
+
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
 
-  const totalNewsPost = articles.length;
+  // Table header addition: add Rejection Reason column after Status
+  // We'll modify the JSX later where the header rows are defined.
+
   const pendingNewsRequest = articles.filter((a: Article) => a.status === 'pending').length;
 
   // if (!isAuthorized) {
@@ -104,8 +130,9 @@ const contentManagementPage: React.FC = () => {
   //     </div>
   //   );
   // }
-  if(!articles.length){
-      return (
+
+  if (!articles.length) {
+    return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
         <Loader size="lg" text="Loading content" />
       </div>
@@ -150,6 +177,7 @@ const contentManagementPage: React.FC = () => {
                     <th className="py-3 px-4 text-sm font-medium">Category</th>
                     <th className="py-3 px-4 text-sm font-medium">Authors</th>
                     <th className="py-3 px-4 text-sm font-medium">Status</th>
+                    <th className="py-3 px-4 text-sm font-medium">Rejection Reason</th>
                     <th className="py-3 px-4 text-sm font-medium">Action</th>
                   </tr>
                 </thead>
@@ -197,11 +225,21 @@ const contentManagementPage: React.FC = () => {
                           </span>
                         </td>
 
+                        <td className="py-3 px-4 max-w-[150px] truncate">
+                          {item.rejectionReason || "N/A"}
+                        </td>
+
                         <td className="py-3 px-4 flex gap-2">
-                          <button className="bg-yellow-500 text-white px-4 py-1 rounded-md text-sm hover:bg-yellow-600">
+                          <button
+                            onClick={() => handleEdit(item.id)}
+                            className="bg-yellow-500 text-white px-4 py-1 rounded-md text-sm hover:bg-yellow-600"
+                          >
                             Edit
                           </button>
-                          <button className="bg-red-500 text-white px-4 py-1 rounded-md text-sm hover:bg-red-600">
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="bg-red-500 text-white px-4 py-1 rounded-md text-sm hover:bg-red-600"
+                          >
                             Delete
                           </button>
                         </td>
