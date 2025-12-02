@@ -32,7 +32,7 @@ const TeamManagementPage: React.FC = () => {
       const hasAccess = user.roles?.some((r) => allowedRoles.includes(r.name));
 
       if (!hasAccess) router.replace("/auth/login");
-      else setIsAuthorized(true);
+      else setIsAuthorized(true); 
     }
   }, [user, router]);
 

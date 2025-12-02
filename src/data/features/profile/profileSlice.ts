@@ -2,6 +2,8 @@ import { createSlice } from "@reduxjs/toolkit";
 import { fetchProfile, updateProfile } from "./profileThunks";
 import { loginWithGoogle } from "../auth/authThunks";
 import { ProfileState } from "./profile.types";
+// 1. Import the logout action
+import { logoutUser } from "../auth/authSlice"; 
 
 const initialState: ProfileState = {
   loading: false,
@@ -17,6 +19,8 @@ const profileSlice = createSlice({
     resetProfileState: (state) => {
       state.error = null;
       state.message = null;
+      // It is good practice to clear user here too, though usually unnecessary if handled in extraReducers
+      state.user = null; 
     },
     setUser: (state, action) => {
       state.user = action.payload;
@@ -57,17 +61,16 @@ const profileSlice = createSlice({
       .addCase(loginWithGoogle.fulfilled, (state, action) => {
         const googleUser = action.payload.user;
         if (googleUser) {
-          // Map AuthUser to UserData (mocking missing fields)
-          state.user = {
-            _id: googleUser._id, 
+           // ... (your existing mapping logic) ...
+           state.user = {
+            _id: googleUser._id,
             name: googleUser.name,
             email: googleUser.email,
-            profilePicture: googleUser.profilePicture || "", 
-            roles: [{ 
+            profilePicture: googleUser.profilePicture || "",
+            roles: [{
               _id: "google-role",
               name: "user",
               slug: "user",
-              
               description: "Google User",
               isActive: true,
               createdAt: new Date().toISOString(),
@@ -85,6 +88,16 @@ const profileSlice = createSlice({
           };
           state.message = "Profile synced with Google Login";
         }
+      })
+      
+      
+      .addCase(logoutUser, (state) => {
+        localStorage.clear();
+        state.user = null;
+        state.error = null;
+        state.message = null;
+        state.loading = false;
+
       });
   },
 });
