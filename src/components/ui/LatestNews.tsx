@@ -64,9 +64,9 @@ const LatestNews: React.FC<LatestNewsProps> = ({
             </button>
           )}
 
-          <button className="bg-[#1a73e8] text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-[#1558b3] transition-all duration-200">
+          {/* <button className="bg-[#1a73e8] text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-[#1558b3] transition-all duration-200">
             {button2Text}
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

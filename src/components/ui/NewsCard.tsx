@@ -68,20 +68,23 @@ export default function NewsCard({
         <p className="text-sm font-semibold text-gray-900 leading-snug truncate">
           {title}
         </p>
+        <p className="text-sm font-semibold text-gray-900 leading-snug truncate">
+          {title}
+        </p>
 
         {/* Views + Likes */}
-        <div className="flex items-center gap-6 text-xs text-gray-700">
+        {/* <div className="flex items-center gap-6 text-xs text-gray-700"> */}
 
-          <div className="flex items-center gap-1">
+        {/* <div className="flex items-center gap-1">
             <Eye size={14} />
             {views ? <span>{views}</span> : <span className="text-gray-400 italic">0</span>}
-          </div>
+          </div> */}
 
-          <div className="flex items-center gap-1">
+        {/* <div className="flex items-center gap-1">
             <Heart size={14} />
             {likes ? <span>{likes}</span> : <span className="text-gray-400 italic">0</span>}
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
       </div>
     </div>
   );

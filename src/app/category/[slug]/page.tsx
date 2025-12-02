@@ -13,6 +13,7 @@ export default function CategoryPage() {
     const slug = params.slug as string;
     const { articles, loading } = useArticleListActions();
     const [categoryArticles, setCategoryArticles] = useState<Article[]>([]);
+    const [categoryName, setCategoryName] = useState<string>("");
 
     // useEffect(() => {
     //     if (articles.length > 0 && slug) {
@@ -25,7 +26,7 @@ export default function CategoryPage() {
     //         setCategoryArticles(filtered);
     //     }
     // }, [articles, slug]);
-// sdfg
+    // sdfg
     useEffect(() => {
         if (articles.length > 0 && slug) {
             const filtered = articles.filter((article: Article) => {
@@ -51,6 +52,22 @@ export default function CategoryPage() {
             });
 
             setCategoryArticles(filtered);
+
+            // Set the category name from the first matching article
+            if (filtered.length > 0 && filtered[0].category) {
+                const firstArticleCategory = filtered[0].category;
+                // Check if the slug matches the category or its parent
+                if (firstArticleCategory.slug?.toLowerCase() === slug.toLowerCase()) {
+                    setCategoryName(firstArticleCategory.name);
+                } else if (firstArticleCategory.parent?.slug?.toLowerCase() === slug.toLowerCase()) {
+                    setCategoryName(firstArticleCategory.parent.name);
+                } else {
+                    setCategoryName(firstArticleCategory.name);
+                }
+            } else {
+                // Fallback to formatted slug if no articles found
+                setCategoryName(slug.replace(/-/g, " "));
+            }
         }
     }, [articles, slug]);
 
@@ -69,11 +86,11 @@ export default function CategoryPage() {
             {/* Header */}
             <div className="text-left mb-10 space-y-2">
                 <h1 className="text-4xl text-[#0A2342] sm:text-5xl font-bold capitalize">
-                    {slug.replace(/-/g, " ")}
+                    {categoryName}
                 </h1>
                 <p className="text-gray-600 max-w-2xl  text-sm sm:text-base">
                     Explore the latest insights, updates, and reports in the{" "}
-                    <span className="font-medium text-gray-800 capitalize">{slug.replace(/-/g, " ")}</span>{" "}
+                    <span className="font-medium text-gray-800 capitalize">{categoryName}</span>{" "}
                     category.
                 </p>
                 <div className="w-24 h-1 bg-black/80  rounded-full mt-3"></div>

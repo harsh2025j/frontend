@@ -15,20 +15,27 @@ export default function AddCategory({
   parentId?: string | null;
 }) {
   const [category, setCategory] = useState("");
-  const [slug, setSlug] = useState("");
   const [loading, setLoading] = useState(false);
   const dispatch = useAppDispatch();
 
   const handleSave = async () => {
-    if (!category || !slug) {
-      toast.error("Please fill all fields");
+    if (!category) {
+      toast.error("Please enter a category name");
       return;
     }
 
     setLoading(true);
 
     try {
-      const payload: any = { name: category, slug };
+      // Generate unique slug from category name
+      const baseSlug = category
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "");
+      const uniqueSuffix = Date.now().toString().slice(-6);
+      const generatedSlug = `${baseSlug}-${uniqueSuffix}`;
+
+      const payload: any = { name: category, slug: generatedSlug };
       if (parentId) {
         payload.parentId = parentId;
       }
@@ -63,24 +70,13 @@ export default function AddCategory({
       </h2>
 
       <div className="space-y-3">
-        <label className="font-medium">Category</label>
+        <label className="font-medium">{parentId ? "Sub Category" : "Category"}</label>
         <input
           className="border p-2 rounded w-full"
-          placeholder="Enter category"
+          placeholder={parentId ? "Enter sub category" : "Enter category"}
           value={category}
           required
           onChange={(e) => setCategory(e.target.value)}
-        />
-      </div>
-
-      <div className="space-y-3">
-        <label className="font-medium">Slug</label>
-        <input
-          className="border p-2 rounded w-full"
-          placeholder="Add a slug"
-          value={slug}
-          required
-          onChange={(e) => setSlug(e.target.value)}
         />
       </div>
 

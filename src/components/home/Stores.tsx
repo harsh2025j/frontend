@@ -292,7 +292,7 @@ export default function Stores() {
                     slug={data.slug}
                     author={data.authors}
                     date={new Date(data.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    button1Text="Read Full Case"
+                    button1Text="Read More"
                     button2Text="AI Summary"
                   />
                 ))
