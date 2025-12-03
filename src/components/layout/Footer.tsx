@@ -53,8 +53,6 @@ export default function Footer() {
     { icon: FaYoutube, href: "https://www.youtube.com/@SajjadHusainLawAssociates", color: "hover:bg-red-600", label: "YouTube" },
   ];
 
-
-
   const resourceLinks = [
     { name: "About Us", href: "/about" },
     { name: "Contact Us", href: "/contact" },

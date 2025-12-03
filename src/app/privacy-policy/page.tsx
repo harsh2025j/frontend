@@ -125,81 +125,86 @@ export default function PrivacyPolicy() {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="min-h-screen bg-white">
             {/* Hero Section */}
-            <div className="relative bg-gradient-to-r from-[#122340] via-[#1A73E8] to-[#122340] text-white py-12 sm:py-16 md:py-20 lg:py-24 px-4 overflow-hidden">
+            <div className="relative bg-[#0A2342] text-white py-16 sm:py-20 md:py-24 px-4 overflow-hidden">
                 {/* Decorative Elements */}
                 <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-10 left-10 w-32 h-32 sm:w-48 sm:h-48 bg-white rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-10 right-10 w-40 h-40 sm:w-64 sm:h-64 bg-blue-300 rounded-full blur-3xl"></div>
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9A227] rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
                 </div>
 
-                <div className="container mx-auto max-w-6xl relative z-10">
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-6">
-                        <div className="bg-white/10 backdrop-blur-sm p-3 sm:p-4 rounded-2xl">
-                            <Shield className="w-12 h-12 sm:w-16 sm:h-16 animate-pulse" />
-                        </div>
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-center sm:text-left">
-                            Privacy Policy
-                        </h1>
+                <div className="container mx-auto max-w-5xl relative z-10 text-center">
+                    <div className="inline-flex items-center justify-center p-3 bg-white/5 backdrop-blur-sm rounded-2xl mb-6 border border-white/10">
+                        <Shield className="w-10 h-10 text-[#C9A227]" />
                     </div>
-                    <p className="text-base sm:text-lg md:text-xl text-center text-blue-100 mb-3 sm:mb-4 px-4">
-                        Your privacy is our priority. We are committed to protecting your personal information.
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 tracking-tight">
+                        Privacy Policy
+                    </h1>
+                    <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto mb-8 leading-relaxed">
+                        Your privacy is our priority. We are committed to protecting your personal information with the highest standards of security and transparency.
                     </p>
-                    <p className="text-center text-sm sm:text-base text-blue-200">
-                        Last Updated: <span className="font-semibold">{lastUpdated}</span>
-                    </p>
+                    <div className="inline-block px-4 py-2 bg-white/5 rounded-full border border-white/10">
+                        <p className="text-sm text-gray-300">
+                            Last Updated: <span className="font-semibold text-[#C9A227]">{lastUpdated}</span>
+                        </p>
+                    </div>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+            <div className="container mx-auto max-w-5xl px-4 sm:px-6 py-12 sm:py-16">
                 {/* Introduction */}
-                <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8 lg:p-10 mb-6 sm:mb-8 border border-blue-100 hover:shadow-xl transition-shadow duration-300">
-                    <div className="flex flex-col sm:flex-row items-start gap-4">
+                <div className="bg-gray-50 rounded-2xl p-8 sm:p-10 mb-12 border border-gray-100">
+                    <div className="flex flex-col sm:flex-row items-start gap-6">
                         <div className="flex-shrink-0">
-                            <div className="bg-gradient-to-br from-green-400 to-green-600 p-3 rounded-xl">
-                                <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                            <div className="bg-[#0A2342] p-3 rounded-xl">
+                                <CheckCircle className="w-6 h-6 text-[#C9A227]" />
                             </div>
                         </div>
                         <div className="flex-1">
-                            <h2 className="text-2xl sm:text-3xl font-bold text-[#122340] mb-3 sm:mb-4">Introduction</h2>
-                            <p className="text-sm sm:text-base text-gray-700 leading-relaxed mb-3 sm:mb-4">
-                                Welcome to Sajjad Husain Law Associates ("we," "our," or "us"). This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
-                            </p>
-                            <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-                                By accessing or using our services, you agree to the terms outlined in this Privacy Policy. If you do not agree with our policies and practices, please do not use our services.
-                            </p>
+                            <h2 className="text-2xl font-bold text-[#0A2342] mb-4">Introduction</h2>
+                            <div className="space-y-4 text-gray-600 leading-relaxed">
+                                <p>
+                                    Welcome to Sajjad Husain Law Associates ("we," "our," or "us"). This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
+                                </p>
+                                <p>
+                                    By accessing or using our services, you agree to the terms outlined in this Privacy Policy. If you do not agree with our policies and practices, please do not use our services.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Main Sections */}
-                <div className="space-y-6 sm:space-y-8">
+                <div className="grid gap-8">
                     {sections.map((section, index) => {
                         const IconComponent = section.icon;
                         return (
                             <div
                                 key={index}
-                                className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8 lg:p-10 border border-blue-100 hover:border-blue-300 transition-all duration-300 hover:shadow-xl"
+                                className="bg-white rounded-2xl p-8 border border-gray-200 hover:border-[#C9A227]/30 transition-colors duration-300"
                             >
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-                                    <div className="bg-gradient-to-br from-[#1A73E8] to-[#122340] p-3 sm:p-4 rounded-xl flex-shrink-0">
-                                        <IconComponent className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="bg-[#0A2342]/5 p-3 rounded-xl">
+                                        <IconComponent className="w-6 h-6 text-[#0A2342]" />
                                     </div>
-                                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#122340]">{section.title}</h2>
+                                    <h2 className="text-2xl font-bold text-[#0A2342]">{section.title}</h2>
                                 </div>
 
-                                <div className="space-y-4 sm:space-y-6">
+                                <div className="grid sm:grid-cols-1 gap-6">
                                     {section.content.map((item, idx) => (
                                         <div
                                             key={idx}
-                                            className="pl-4 sm:pl-6 border-l-4 border-blue-200 hover:border-blue-400 transition-colors duration-300"
+                                            className="group"
                                         >
-                                            <h3 className="text-lg sm:text-xl font-semibold text-[#1A73E8] mb-2">
+                                            <h3 className="text-lg font-semibold text-[#0A2342] mb-2 flex items-center gap-2">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-[#C9A227]"></span>
                                                 {item.subtitle}
                                             </h3>
-                                            <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{item.text}</p>
+                                            <p className="text-gray-600 leading-relaxed pl-3.5 border-l border-gray-100 group-hover:border-[#C9A227] transition-colors duration-300">
+                                                {item.text}
+                                            </p>
                                         </div>
                                     ))}
                                 </div>
@@ -209,80 +214,79 @@ export default function PrivacyPolicy() {
                 </div>
 
                 {/* Contact Section */}
-                <div className="bg-gradient-to-br from-[#122340] to-[#1A73E8] rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8 lg:p-10 text-white mt-6 sm:mt-8">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-                        <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl flex-shrink-0">
-                            <Mail className="w-8 h-8 sm:w-10 sm:h-10" />
-                        </div>
-                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Contact Us</h2>
-                    </div>
-                    <p className="text-sm sm:text-base text-blue-100 leading-relaxed mb-6">
-                        If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please don't hesitate to contact us:
-                    </p>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6 space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
-                            <div className="flex items-center gap-3 sm:min-w-[120px]">
-                                <Mail className="w-5 h-5 flex-shrink-0" />
-                                <span className="font-semibold text-sm sm:text-base">Email:</span>
+                <div className="mt-16 bg-[#0A2342] rounded-2xl p-8 sm:p-12 text-white overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9A227] rounded-full blur-3xl opacity-10 transform translate-x-1/3 -translate-y-1/3"></div>
+
+                    <div className="relative z-10">
+                        <div className="flex flex-col md:flex-row gap-8 md:items-center justify-between">
+                            <div className="max-w-xl">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="bg-white/10 p-3 rounded-xl">
+                                        <Mail className="w-6 h-6 text-[#C9A227]" />
+                                    </div>
+                                    <h2 className="text-2xl sm:text-3xl font-bold">Contact Us</h2>
+                                </div>
+                                <p className="text-gray-300 mb-8 leading-relaxed">
+                                    If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please don't hesitate to contact us.
+                                </p>
                             </div>
-                            <a
-                                href="mailto:sajjadhusainlawassociates@gmail.com"
-                                className="text-sm sm:text-base underline hover:text-blue-200 transition-colors break-all sm:break-normal"
-                            >
-                                sajjadhusainlawassociates@gmail.com
-                            </a>
-                        </div>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
-                            <div className="flex items-center gap-3 sm:min-w-[120px]">
-                                <MapPin className="w-5 h-5 flex-shrink-0" />
-                                <span className="font-semibold text-sm sm:text-base">Address:</span>
+
+                            <div className="flex flex-col gap-4 min-w-[300px]">
+                                <a
+                                    href="mailto:sajjadhusainlawassociates@gmail.com"
+                                    className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors group"
+                                >
+                                    <Mail className="w-5 h-5 text-[#C9A227]" />
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-gray-400 uppercase tracking-wider">Email Us</span>
+                                        <span className="text-sm font-medium break-all group-hover:text-[#C9A227] transition-colors">
+                                            sajjadhusainlawassociates@gmail.com
+                                        </span>
+                                    </div>
+                                </a>
+                                <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                                    <MapPin className="w-5 h-5 text-[#C9A227]" />
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-gray-400 uppercase tracking-wider">Visit Us</span>
+                                        <span className="text-sm font-medium">Sajjad Husain Law Associates</span>
+                                    </div>
+                                </div>
                             </div>
-                            <span className="text-sm sm:text-base">Sajjad Husain Law Associates</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Changes to Policy */}
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-400 rounded-xl p-4 sm:p-6 mt-6 sm:mt-8 shadow-md">
-                    <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-                        <div className="flex-shrink-0">
-                            <div className="bg-amber-100 p-2 rounded-lg">
-                                <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
+                {/* Changes & Consent Grid */}
+                <div className="grid md:grid-cols-2 gap-6 mt-8">
+                    {/* Changes to Policy */}
+                    <div className="bg-[#FFF9E6] border border-[#C9A227]/20 rounded-2xl p-6 sm:p-8">
+                        <div className="flex items-start gap-4">
+                            <div className="bg-[#C9A227]/10 p-2 rounded-lg flex-shrink-0">
+                                <AlertCircle className="w-5 h-5 text-[#C9A227]" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-[#0A2342] mb-3">Changes to Policy</h3>
+                                <p className="text-sm text-[#0A2342]/70 leading-relaxed">
+                                    We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.
+                                </p>
                             </div>
                         </div>
-                        <div className="flex-1">
-                            <h3 className="text-lg sm:text-xl font-bold text-amber-900 mb-2">Changes to This Privacy Policy</h3>
-                            <p className="text-sm sm:text-base text-amber-800 leading-relaxed">
-                                We may update this Privacy Policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons. We will notify you of any material changes by posting the new Privacy Policy on this page and updating the "Last Updated" date. We encourage you to review this Privacy Policy periodically to stay informed about how we protect your information.
-                            </p>
-                        </div>
                     </div>
-                </div>
 
-                {/* Consent */}
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400 rounded-xl p-4 sm:p-6 mt-6 sm:mt-8 shadow-md">
-                    <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-                        <div className="flex-shrink-0">
-                            <div className="bg-green-100 p-2 rounded-lg">
-                                <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                    {/* Consent */}
+                    <div className="bg-[#F0FDF4] border border-green-200 rounded-2xl p-6 sm:p-8">
+                        <div className="flex items-start gap-4">
+                            <div className="bg-green-100 p-2 rounded-lg flex-shrink-0">
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-[#0A2342] mb-3">Your Consent</h3>
+                                <p className="text-sm text-[#0A2342]/70 leading-relaxed">
+                                    By using our website and services, you consent to our Privacy Policy and agree to its terms. Your continued use of our services implies acceptance of any changes.
+                                </p>
                             </div>
                         </div>
-                        <div className="flex-1">
-                            <h3 className="text-lg sm:text-xl font-bold text-green-900 mb-2">Your Consent</h3>
-                            <p className="text-sm sm:text-base text-green-800 leading-relaxed">
-                                By using our website and services, you consent to our Privacy Policy and agree to its terms. Your continued use of our services following the posting of changes to this policy will be deemed your acceptance of those changes.
-                            </p>
-                        </div>
                     </div>
-                </div>
-            </div>
-
-            {/* Footer Note */}
-            <div className="bg-[#122340] text-white py-6 sm:py-8 mt-8 sm:mt-12">
-                <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
-                    <p className="text-xs sm:text-sm md:text-base text-blue-200">
-                        © {new Date().getFullYear()} Sajjad Husain Law Associates. All rights reserved.
-                    </p>
                 </div>
             </div>
         </div>
