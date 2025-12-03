@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import logo from "../../assets/logo.png";
 import Script from "next/script";
 
@@ -90,8 +91,18 @@ export default function SubscriptionPage() {
     }
   }, []);
 
+  const router = useRouter();
+
   const handleSubscribe = async (plan: any) => {
     if (!plan) return;
+
+    // Check if user is logged in
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) {
+      toast.error("Please login to subscribe");
+      router.push("/auth/login");
+      return;
+    }
 
     // Check if Razorpay is loaded
     if (!window.Razorpay) {
@@ -272,9 +283,11 @@ export default function SubscriptionPage() {
                 For Organisations and Law Schools
               </h3>
             </div>
-            <button className="whitespace-nowrap px-6 py-2.5 border border-[#0A2342] text-[#0A2342] rounded-lg font-medium hover:bg-[#0A2342] hover:text-white transition-colors text-sm">
-              Inquire Now
-            </button>
+            <Link href="/contact">
+              <button className="whitespace-nowrap px-6 py-2.5 border border-[#0A2342] text-[#0A2342] rounded-lg font-medium hover:bg-[#0A2342] hover:text-white transition-colors text-sm">
+                Inquire Now
+              </button>
+            </Link>
           </div>
 
           {/* Assistance Card */}
@@ -287,9 +300,11 @@ export default function SubscriptionPage() {
                 We are here to help you!
               </h3>
             </div>
-            <button className="whitespace-nowrap px-6 py-2.5 border border-[#0A2342] text-[#0A2342] rounded-lg font-medium hover:bg-[#0A2342] hover:text-white transition-colors text-sm">
-              Get In Touch
-            </button>
+            <Link href="/contact">
+              <button className="whitespace-nowrap px-6 py-2.5 border border-[#0A2342] text-[#0A2342] rounded-lg font-medium hover:bg-[#0A2342] hover:text-white transition-colors text-sm">
+                Get In Touch
+              </button>
+            </Link>
           </div>
         </div>
 

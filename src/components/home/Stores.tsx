@@ -38,10 +38,10 @@ export function getArticlesBySlugs(articles: Article[], slugs: string[]) {
     const collectSlugs = (cat: Category | null | undefined): string[] => {
       if (!cat) return [];
       const arr: string[] = [];
-      
+
       // 1. Add current slug
       if (cat.slug) arr.push(cat.slug.toLowerCase());
-      
+
       // 2. Only traverse UP (Parents) to find inheritance. 
       if (cat.parent) {
         arr.push(...collectSlugs(cat.parent));
@@ -58,8 +58,8 @@ export default function Stores() {
   const router = useRouter();
   const [SearchData, setSearchData] = useState({ Search: "" });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  
+
+
   const [isNavigating, setIsNavigating] = useState(false);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -68,21 +68,21 @@ export default function Stores() {
     }
   };
 
-  
+
   const handleSearchClick = () => {
     setIsNavigating(true);
     router.push('/ai-assistant');
   };
 
- 
+
   const handleNavClick = () => {
     setIsNavigating(true);
   };
 
-  
+
   const { articles, loading, error } = useArticleListActions();
 
-  
+
   const LatestNewsData = useMemo(() => getArticlesBySlugs(articles, ["latest-news"]), [articles]);
   const JudgementNewsData = useMemo(() => getArticlesBySlugs(articles, ["judgments-content"]), [articles]);
   const HindiNewsData = useMemo(() => getArticlesBySlugs(articles, ["hindi-news"]), [articles]);
@@ -99,10 +99,10 @@ export default function Stores() {
     return articles.length > 0
       ? articles.map((a: Article) => a.title)
       : [
-          "JP Morgan's Jamie Dimon said he was 'far more worried than others' about the potential for a stock market correction.",
-          "Breaking: AI Revolutionizing Legal Tech Industry in 2025",
-          "Supreme Court issues new guidelines for digital evidence submission"
-        ];
+        "JP Morgan's Jamie Dimon said he was 'far more worried than others' about the potential for a stock market correction.",
+        "Breaking: AI Revolutionizing Legal Tech Industry in 2025",
+        "Supreme Court issues new guidelines for digital evidence submission"
+      ];
   }, [articles]);
 
   React.useEffect(() => {
@@ -116,14 +116,14 @@ export default function Stores() {
       );
 
       if (!isDeleting && currentText === fullText) {
-        setTypingSpeed(2000); 
+        setTypingSpeed(2000);
         setIsDeleting(true);
       } else if (isDeleting && currentText === "") {
         setIsDeleting(false);
         setLoopNum(loopNum + 1);
-        setTypingSpeed(500); 
+        setTypingSpeed(500);
       } else {
-        setTypingSpeed(isDeleting ? 30 : 50); 
+        setTypingSpeed(isDeleting ? 30 : 50);
       }
     };
 
@@ -280,11 +280,11 @@ export default function Stores() {
           </div>
 
           <div className="flex justify-center">
-            <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {loading ? (
                 <ArticleSkeleton count={3} />
               ) : (
-                LatestNewsData.slice(0, 3).map((data: any) => (
+                LatestNewsData.slice(0, 4).map((data: any) => (
                   <LatestNews
                     key={data.id}
                     img={data.thumbnail}
@@ -343,7 +343,7 @@ export default function Stores() {
           <div className="flex justify-center">
             <div className="container flex flex-col gap-4 sm:gap-6">
               {loading ? (
-                <ArticleSkeleton count={3} /> 
+                <ArticleSkeleton count={3} />
               ) : (
                 HindiNewsData.slice(0, 3).map((data: any) => (
                   <HindiNews
@@ -387,9 +387,9 @@ export default function Stores() {
             <ContentSlider name="Finance Articles" slug={"finance-articles"} FilteredData={FinanceArticleData.map((article) => ({
               ...article,
               img: article.thumbnail || "",
-            }))} /> 
+            }))} />
           )}
-          
+
           {/* Legal Articles ContentSlider */}
           {loading ? (
             <div className="mb-8">

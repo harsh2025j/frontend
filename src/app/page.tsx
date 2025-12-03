@@ -58,12 +58,12 @@ export default function Home() {
             {/* Sidebar Column */}
             <div className="space-y-8">
               <div className="sticky top-24">
-                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-6">
+                <div className=" p-4 rounded-md border border-gray-100  mb-6">
                   <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">Sponsored</h3>
                   <AdSidebar />
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                <div className=" p-4 rounded-xl border border-gray-100 ">
                   <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">Trending</h3>
                   <AdSidebar />
                 </div>

@@ -134,7 +134,7 @@ export default function CategoryPage() {
                     No articles found in this category.
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {categoryArticles.map((article) => (
                         <Link href={`/news/${article.slug}`} key={article.id}>
                             <NewsCard

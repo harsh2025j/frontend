@@ -46,11 +46,10 @@ export default function CategorySection({ title, slug, layout, limit = 6 }: Cate
   );
 }
 
-// --- Layout Components ---
 
 const ArticleCard = ({ article, compact = false }: { article: any; compact?: boolean }) => (
   <Link href={`/news/${article.slug}`} className="group block h-full">
-    <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col">
+    <div className="bg-white rounded-md overflow-hidden border border-gray-100  hover:shadow-md transition-all duration-300 h-full flex flex-col">
       <div className={`relative overflow-hidden ${compact ? "h-40" : "h-52"}`}>
         <Image
           src={article.thumbnail || "/placeholder.png"}
@@ -82,7 +81,7 @@ const ArticleCard = ({ article, compact = false }: { article: any; compact?: boo
 );
 
 const GridLayout = ({ articles }: { articles: any[] }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     {articles.map((article) => (
       <ArticleCard key={article.id} article={article} />
     ))}
@@ -92,20 +91,20 @@ const GridLayout = ({ articles }: { articles: any[] }) => (
 const ListLayout = ({ articles }: { articles: any[] }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
     {articles.map((article) => (
-      <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-start bg-white p-3 rounded-xl border border-gray-100 hover:shadow-md transition-all">
-        <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
+      <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-start bg-white  rounded-xl border border-gray-100 hover:shadow-md transition-all">
+        <div className="relative w-27 h-27 flex-shrink-0 rounded-l-lg overflow-hidden">
           <Image
             src={article.thumbnail || "/placeholder.png"}
             alt={article.title}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-cover  transition-transform duration-500 group-hover:scale-105"
           />
         </div>
-        <div className="flex-grow">
-          <h3 className="font-bold text-gray-900 group-hover:text-[#C9A227] transition-colors line-clamp-2 mb-1">
+        <div className="flex-grow py-2">
+          <h2 className="font-bold text-gray-900 group-hover:text-[#C9A227] transition-colors line-clamp-2 mb-1">
             {article.title}
-          </h3>
-          <p className="text-xs text-gray-500 line-clamp-2">
+          </h2>
+          <p className="text-xs text-gray-500 line-clamp-1">
             {article.subHeadline || article.content.replace(/<[^>]*>/g, "").substring(0, 80)}...
           </p>
           <span className="text-xs text-gray-400 mt-2 block">

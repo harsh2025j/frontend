@@ -1,8 +1,9 @@
 "use client";
 
-import { Mail, Phone, MapPin, Clock, Send, User, MessageSquare, Building } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Send, User, MessageSquare, Building, ArrowRight } from "lucide-react";
 import { FaFacebookF, FaInstagram, FaWhatsapp, FaTwitter, FaTelegramPlane, FaLinkedinIn, FaYoutube } from "react-icons/fa";
 import { useState } from "react";
+import Footer from "@/components/layout/Footer";
 
 export default function ContactUs() {
     const [formData, setFormData] = useState({
@@ -29,269 +30,216 @@ export default function ContactUs() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-            {/* Hero Section */}
-            <div className="relative bg-gradient-to-r from-[#122340] via-[#1A73E8] to-[#122340] text-white py-20 lg:py-32 px-4 overflow-hidden">
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-10 left-10 w-48 h-48 bg-white rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-10 right-10 w-64 h-64 bg-blue-300 rounded-full blur-3xl"></div>
+        <div className="min-h-screen bg-white font-sans selection:bg-[#C9A227] selection:text-white">
+            {/* Premium Hero Section */}
+            <div className="relative bg-[#0A2342] text-white py-24 lg:py-32 px-4 overflow-hidden">
+                {/* Abstract Background Elements */}
+                <div className="absolute inset-0">
+                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#C9A227]/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2"></div>
                 </div>
 
-                <div className="container mx-auto max-w-6xl relative z-10">
-                    <div className="flex flex-col items-center justify-center gap-6 mb-6">
-                        <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl animate-pulse">
-                            <MessageSquare className="w-16 h-16" />
-                        </div>
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-center">
-                            Contact Us
-                        </h1>
+                <div className="container mx-auto max-w-6xl relative z-10 text-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-8">
+                        <span className="w-2 h-2 rounded-full bg-[#C9A227]"></span>
+                        <span className="text-xs font-medium tracking-widest uppercase text-gray-300">24/7 Support Available</span>
                     </div>
-                    <p className="text-xl md:text-2xl text-center text-blue-100 max-w-3xl mx-auto">
-                        Get in Touch with Our Legal Experts
+
+                    <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 tracking-tight">
+                        Get in <span className="text-[#C9A227]">Touch</span>
+                    </h1>
+
+                    <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed font-light">
+                        Expert legal guidance is just a message away. Connect with our dedicated team for personalized assistance and professional representation.
                     </p>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16">
-                <div className="grid lg:grid-cols-2 gap-8 mb-12">
-                    {/* Contact Form */}
-                    <div className="bg-white rounded-2xl shadow-xl p-8 lg:p-10 border border-blue-100 hover:shadow-2xl transition-all duration-300">
-                        <h2 className="text-3xl font-bold text-[#122340] mb-6">Send Us a Message</h2>
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div>
-                                <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Full Name *
-                                </label>
-                                <div className="relative">
-                                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        id="name"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A73E8] focus:border-transparent transition-all duration-300"
-                                        placeholder="Enter your full name"
-                                    />
-                                </div>
-                            </div>
+            <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-20 -mt-20 relative z-20">
+                <div className="grid lg:grid-cols-12 gap-8 mb-16">
 
-                            <div>
-                                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Email Address *
-                                </label>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A73E8] focus:border-transparent transition-all duration-300"
-                                        placeholder="your.email@example.com"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Phone Number
-                                </label>
-                                <div className="relative">
-                                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        type="tel"
-                                        id="phone"
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={handleChange}
-                                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A73E8] focus:border-transparent transition-all duration-300"
-                                        placeholder="+91 XXXXX XXXXX"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Subject *
-                                </label>
-                                <div className="relative">
-                                    <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        id="subject"
-                                        name="subject"
-                                        value={formData.subject}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A73E8] focus:border-transparent transition-all duration-300"
-                                        placeholder="How can we help you?"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Message *
-                                </label>
-                                <textarea
-                                    id="message"
-                                    name="message"
-                                    value={formData.message}
-                                    onChange={handleChange}
-                                    required
-                                    rows={5}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A73E8] focus:border-transparent transition-all duration-300 resize-none"
-                                    placeholder="Tell us more about your inquiry..."
-                                ></textarea>
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="w-full bg-gradient-to-r from-[#1A73E8] to-[#122340] text-white py-4 rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2"
-                            >
-                                <Send className="w-5 h-5" />
-                                Send Message
-                            </button>
-                        </form>
-                    </div>
-
-                    {/* Contact Information */}
-                    <div className="space-y-6">
-                        {/* Address Card */}
-                        <div className="bg-white rounded-2xl shadow-xl p-8 border border-blue-100 hover:shadow-2xl transition-all duration-300">
-                            <div className="flex items-start gap-4 mb-6">
-                                <div className="bg-gradient-to-br from-[#1A73E8] to-[#122340] p-3 rounded-xl flex-shrink-0">
-                                    <MapPin className="w-6 h-6 text-white" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-[#122340] mb-2">Our Office</h3>
-                                    <p className="text-gray-700 leading-relaxed">
+                    {/* Contact Info Column (Left - 4 cols) */}
+                    <div className="lg:col-span-4 space-y-6">
+                        {/* Info Cards */}
+                        {[
+                            {
+                                icon: MapPin,
+                                title: "Visit Our Office",
+                                content: (
+                                    <>
                                         Block-C, High Court, Sajjad Husain,<br />
                                         Advocates Chamber.515,<br />
                                         Lucknow - Ayodhya Rd, Gomti Nagar,<br />
-                                        Lucknow, Faizabad,<br />
-                                        Uttar Pradesh 226010
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Phone Card */}
-                        <div className="bg-white rounded-2xl shadow-xl p-8 border border-blue-100 hover:shadow-2xl transition-all duration-300">
-                            <div className="flex items-start gap-4">
-                                <div className="bg-gradient-to-br from-green-500 to-green-600 p-3 rounded-xl flex-shrink-0">
-                                    <Phone className="w-6 h-6 text-white" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-[#122340] mb-2">Phone</h3>
-                                    <a href="tel:07080909786" className="text-gray-700 hover:text-[#1A73E8] transition-colors text-lg">
-                                        070809 09786
+                                        Lucknow, Uttar Pradesh 226010
+                                    </>
+                                )
+                            },
+                            {
+                                icon: Phone,
+                                title: "Call Us Directly",
+                                content: (
+                                    <a href="tel:07080909786" className="hover:text-[#C9A227] transition-colors">
+                                        +91 70809 09786
                                     </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Email Card */}
-                        <div className="bg-white rounded-2xl shadow-xl p-8 border border-blue-100 hover:shadow-2xl transition-all duration-300">
-                            <div className="flex items-start gap-4">
-                                <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-xl flex-shrink-0">
-                                    <Mail className="w-6 h-6 text-white" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-[#122340] mb-2">Email</h3>
-                                    <a href="mailto:sajjadhusainlawassociates@gmail.com" className="text-gray-700 hover:text-[#1A73E8] transition-colors break-all">
+                                )
+                            },
+                            {
+                                icon: Mail,
+                                title: "Email Us",
+                                content: (
+                                    <a href="mailto:sajjadhusainlawassociates@gmail.com" className="hover:text-[#C9A227] transition-colors break-all">
                                         sajjadhusainlawassociates@gmail.com
                                     </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Office Hours Card */}
-                        <div className="bg-gradient-to-br from-[#122340] to-[#1A73E8] rounded-2xl shadow-xl p-8 text-white">
-                            <div className="flex items-start gap-4">
-                                <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl flex-shrink-0">
-                                    <Clock className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold mb-4">Office Hours</h3>
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between">
-                                            <span>Monday - Friday:</span>
-                                            <span className="font-semibold">9:00 AM - 6:00 PM</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Saturday:</span>
-                                            <span className="font-semibold">10:00 AM - 4:00 PM</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Sunday:</span>
-                                            <span className="font-semibold">Closed</span>
-                                        </div>
+                                )
+                            }
+                        ].map((item, idx) => (
+                            <div key={idx} className="group bg-white p-8 border border-gray-100 hover:border-[#C9A227] transition-all duration-500">
+                                <div className="flex items-start gap-5">
+                                    <div className="p-3 bg-[#0A2342]/5 text-[#0A2342] rounded-lg group-hover:bg-[#0A2342] group-hover:text-[#C9A227] transition-all duration-500">
+                                        <item.icon className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-[#0A2342] mb-2">{item.title}</h3>
+                                        <p className="text-gray-600 text-sm leading-relaxed font-medium">
+                                            {item.content}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        ))}
 
                         {/* Social Media */}
-                        <div className="bg-white rounded-2xl shadow-xl p-8 border border-blue-100">
-                            <h3 className="text-xl font-bold text-[#122340] mb-4">Follow Us</h3>
+                        <div className="bg-white p-8 border border-gray-100 hover:border-[#C9A227] transition-all duration-500 group">
+                            <h3 className="text-lg font-bold text-[#0A2342] mb-6">Connect With Us</h3>
                             <div className="flex flex-wrap gap-3">
-                                <a href="#" className="bg-blue-600 hover:bg-blue-700 p-3 rounded-lg transition-all duration-300 hover:scale-110">
-                                    <FaFacebookF className="w-5 h-5 text-white" />
-                                </a>
-                                <a href="#" className="bg-pink-600 hover:bg-pink-700 p-3 rounded-lg transition-all duration-300 hover:scale-110">
-                                    <FaInstagram className="w-5 h-5 text-white" />
-                                </a>
-                                <a href="#" className="bg-green-600 hover:bg-green-700 p-3 rounded-lg transition-all duration-300 hover:scale-110">
-                                    <FaWhatsapp className="w-5 h-5 text-white" />
-                                </a>
-                                <a href="#" className="bg-sky-500 hover:bg-sky-600 p-3 rounded-lg transition-all duration-300 hover:scale-110">
-                                    <FaTwitter className="w-5 h-5 text-white" />
-                                </a>
-                                <a href="#" className="bg-blue-500 hover:bg-blue-600 p-3 rounded-lg transition-all duration-300 hover:scale-110">
-                                    <FaTelegramPlane className="w-5 h-5 text-white" />
-                                </a>
-                                <a href="#" className="bg-blue-700 hover:bg-blue-800 p-3 rounded-lg transition-all duration-300 hover:scale-110">
-                                    <FaLinkedinIn className="w-5 h-5 text-white" />
-                                </a>
-                                <a href="#" className="bg-red-600 hover:bg-red-700 p-3 rounded-lg transition-all duration-300 hover:scale-110">
-                                    <FaYoutube className="w-5 h-5 text-white" />
-                                </a>
+                                {[FaFacebookF, FaInstagram, FaWhatsapp, FaTwitter, FaLinkedinIn, FaYoutube].map((Icon, i) => (
+                                    <a key={i} href="#" className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#0A2342]/5 text-[#0A2342] hover:bg-[#0A2342] hover:text-[#C9A227] transition-all duration-300">
+                                        <Icon className="w-4 h-4" />
+                                    </a>
+                                ))}
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Contact Form (Right - 8 cols) */}
+                    <div className="lg:col-span-8">
+                        <div className="bg-white p-8 lg:p-12 border border-gray-100 h-full">
+                            <div className="mb-10">
+                                <h2 className="text-3xl font-bold text-[#0A2342] mb-4">Send Us a Message</h2>
+                                <p className="text-gray-500">Fill out the form below and our team will get back to you within 24 hours.</p>
+                            </div>
+
+                            <form onSubmit={handleSubmit} className="space-y-8">
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    <div className="group">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-[#C9A227] transition-colors">
+                                            Full Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            required
+                                            className="w-full pb-3 border-b border-gray-200 focus:border-[#C9A227] outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium"
+                                            placeholder="John Doe"
+                                        />
+                                    </div>
+                                    <div className="group">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-[#C9A227] transition-colors">
+                                            Email Address
+                                        </label>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            required
+                                            className="w-full pb-3 border-b border-gray-200 focus:border-[#C9A227] outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium"
+                                            placeholder="john@example.com"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    <div className="group">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-[#C9A227] transition-colors">
+                                            Phone Number
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            className="w-full pb-3 border-b border-gray-200 focus:border-[#C9A227] outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium"
+                                            placeholder="+91 XXXXX XXXXX"
+                                        />
+                                    </div>
+                                    <div className="group">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-[#C9A227] transition-colors">
+                                            Subject
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="subject"
+                                            value={formData.subject}
+                                            onChange={handleChange}
+                                            required
+                                            className="w-full pb-3 border-b border-gray-200 focus:border-[#C9A227] outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium"
+                                            placeholder="Legal Inquiry"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="group">
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-[#C9A227] transition-colors">
+                                        Message
+                                    </label>
+                                    <textarea
+                                        name="message"
+                                        value={formData.message}
+                                        onChange={handleChange}
+                                        required
+                                        rows={4}
+                                        className="w-full pb-3 border-b border-gray-200 focus:border-[#C9A227] outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium resize-none"
+                                        placeholder="Tell us about your case..."
+                                    ></textarea>
+                                </div>
+
+                                <div className="pt-4">
+                                    <button
+                                        type="submit"
+                                        className="group relative px-8 py-4 bg-[#0A2342] text-white font-bold tracking-wide overflow-hidden transition-all hover:bg-[#153a66]"
+                                    >
+                                        <span className="relative z-10 flex items-center gap-3">
+                                            SEND MESSAGE
+                                            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                        </span>
+                                        <div className="absolute inset-0 bg-[#C9A227] transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></div>
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
 
                 {/* Map Section */}
-                <div className="bg-white rounded-2xl shadow-xl p-4 border border-blue-100">
-                    <h2 className="text-3xl font-bold text-[#122340] mb-6 px-4 pt-4">Find Us on Map</h2>
-                    <div className="w-full h-96 rounded-xl overflow-hidden">
-                        <iframe
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3559.3!2d80.9!3d26.85!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjbCsDUxJzAwLjAiTiA4MMKwNTQnMDAuMCJF!5e0!3m2!1sen!2sin!4v1234567890"
-                            width="100%"
-                            height="100%"
-                            style={{ border: 0 }}
-                            allowFullScreen
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                        ></iframe>
-                    </div>
+                <div className="w-full h-[500px] bg-gray-100 grayscale hover:grayscale-0 transition-all duration-700">
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3559.324365667342!2d81.00902347616996!3d26.87126317667185!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x399be2dd108aa913%3A0xb35ae5f92f7d1a2e!2sHigh%20Court%20Lucknow!5e0!3m2!1sen!2sin!4v1701584000000!5m2!1sen!2sin"
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title="Office Location"
+                    ></iframe>
                 </div>
             </div>
 
-            {/* Footer Note */}
-            <div className="bg-[#122340] text-white py-8">
-                <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
-                    <p className="text-sm md:text-base text-blue-200">
-                        © {new Date().getFullYear()} Sajjad Husain Law Associates. All rights reserved.
-                    </p>
-                </div>
-            </div>
+            <Footer />
         </div>
     );
 }

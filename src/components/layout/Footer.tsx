@@ -68,7 +68,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-12 border-b border-white/10">
           {/* Brand Section */}
           <div className="lg:col-span-4 space-y-6">
-            <div className="transform hover:scale-105 transition-transform duration-300">
+            <div className="transform bg-white p-2 rounded-sm hover:scale-105 transition-transform duration-300">
               <Image
                 src={logo}
                 alt="Sajjad Husain Law Associates Logo"

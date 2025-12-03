@@ -125,7 +125,7 @@ export default function ArticleDetailPage() {
                             {/* Metadata */}
                             <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-4">
                                 <span>
-                                   By {article.authors && (
+                                    By {article.authors && (
                                         <>
                                             <span className="font-medium text-gray-900">{article.authors}</span>
                                             <span className="mx-2">•</span>
@@ -153,19 +153,19 @@ export default function ArticleDetailPage() {
                         )}
 
                         {/* Social Share Bar */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8 p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
-                            <div className="flex items-center gap-2 text-gray-700 font-semibold min-w-fit">
-                                <Share2 size={18} className="text-blue-600" />
-                                <span className="text-sm uppercase tracking-wide">Share Article</span>
+                        <div className="flex flex-col sm:flex-row items-center gap-6 mb-10 py-3 px-6 bg-white rounded-full border border-gray-200 w-fit mx-auto sm:mx-0">
+                            <div className="flex items-center gap-3 text-[#0A2342] font-bold min-w-fit">
+                                <Share2 size={20} className="text-[#0A2342]" />
+                                <span className="text-sm tracking-wider">SHARE ARTICLE</span>
                             </div>
 
-                            <div className="hidden sm:block w-px h-8 bg-gray-300 mx-2"></div>
+                            <div className="hidden sm:block w-px h-8 bg-gray-200"></div>
 
-                            <div className="flex flex-wrap gap-3 w-full">
+                            <div className="flex items-center gap-3">
                                 {/* Facebook */}
                                 <button
                                     onClick={() => handleShare('facebook')}
-                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[#3b5998] text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0A2342] text-white hover:text-[#C9A227] transition-all duration-300"
                                     title="Share on Facebook"
                                 >
                                     <Facebook size={18} />
@@ -174,7 +174,7 @@ export default function ArticleDetailPage() {
                                 {/* X (Twitter) */}
                                 <button
                                     onClick={() => handleShare('twitter')}
-                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-black text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0A2342] text-white hover:text-[#C9A227] transition-all duration-300"
                                     title="Share on X"
                                 >
                                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
@@ -183,7 +183,7 @@ export default function ArticleDetailPage() {
                                 {/* WhatsApp */}
                                 <button
                                     onClick={() => handleShare('whatsapp')}
-                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[#25D366] text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0A2342] text-white hover:text-[#C9A227] transition-all duration-300"
                                     title="Share on WhatsApp"
                                 >
                                     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" className="fill-current">
@@ -194,7 +194,7 @@ export default function ArticleDetailPage() {
                                 {/* LinkedIn */}
                                 <button
                                     onClick={() => handleShare('linkedin')}
-                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0077b5] text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0077b5] text-white hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
                                     title="Share on LinkedIn"
                                 >
                                     <Linkedin size={18} />
@@ -203,7 +203,7 @@ export default function ArticleDetailPage() {
                                 {/* Pinterest */}
                                 <button
                                     onClick={() => handleShare('pinterest')}
-                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[#bd081c] text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-[#bd081c] text-white hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
                                     title="Share on Pinterest"
                                 >
                                     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" className="fill-current">
@@ -214,7 +214,7 @@ export default function ArticleDetailPage() {
                                 {/* Tumblr */}
                                 <button
                                     onClick={() => handleShare('tumblr')}
-                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[#35465c] text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-[#35465c] text-white hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
                                     title="Share on Tumblr"
                                 >
                                     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" className="fill-current">
@@ -225,18 +225,20 @@ export default function ArticleDetailPage() {
                                 {/* Email */}
                                 <button
                                     onClick={() => handleShare('email')}
-                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[#dd4b39] text-white hover:scale-110 hover:shadow-lg transition-all duration-200"
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-[#dd4b39] text-white hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
                                     title="Share via Email"
                                 >
                                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
                                 </button>
+                            </div>
 
-                                <div className="w-px h-6 bg-gray-300 mx-1 hidden sm:block"></div>
+                            <div className="hidden sm:block w-px h-8 bg-gray-200"></div>
 
+                            <div className="flex items-center gap-3">
                                 {/* Copy Link */}
                                 <button
                                     onClick={() => handleShare('copy')}
-                                    className={`w-9 h-9 flex items-center justify-center rounded-full ${copied ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-all duration-200 hover:scale-110`}
+                                    className={`w-10 h-10 flex items-center justify-center rounded-full ${copied ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-all duration-300 hover:-translate-y-1`}
                                     title="Copy Link"
                                 >
                                     {copied ? <Check size={18} /> : <Link2 size={18} />}
@@ -245,7 +247,7 @@ export default function ArticleDetailPage() {
                                 {/* Print */}
                                 <button
                                     onClick={() => handleShare('print')}
-                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-110 transition-all duration-200"
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:-translate-y-1 transition-all duration-300"
                                     title="Print Article"
                                 >
                                     <Printer size={18} />

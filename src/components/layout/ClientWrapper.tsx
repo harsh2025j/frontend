@@ -12,7 +12,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     pathname.startsWith("/admin") ||
     pathname.startsWith("/notes") ||
     pathname.startsWith("/subscription") ||
-    pathname.startsWith("/ai-assistant");
+    pathname.startsWith("/ai-assistant") ||
+    pathname.startsWith("/server-error");
 
   if (isHiddenLayout) {
     return <>{children}</>;

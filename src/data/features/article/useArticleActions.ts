@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 import toast from "react-hot-toast";
@@ -133,18 +133,44 @@ export const useCreateArticleActions = () => {
   };
 };
 
+// Global flag to prevent multiple simultaneous fetches
+let isFetching = false;
+let lastFetchTime = 0;
+const FETCH_COOLDOWN = 5000; // 5 seconds cooldown between fetches
+
 export const useArticleListActions = () => {
   const dispatch = useAppDispatch();
 
   const articles = useAppSelector(selectArticles);
   const loading = useAppSelector(selectArticleLoading);
   const error = useAppSelector(selectArticleError);
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    // ✅ FIX: Only fetch if the store is empty.
-    // This prevents re-fetching (and image flickering) when you return to the page.
-    if (articles.length === 0 && !loading) {
-      dispatch(fetchArticles({}));
+    const now = Date.now();
+    const timeSinceLastFetch = now - lastFetchTime;
+
+    // Only fetch if:
+    // 1. We haven't fetched yet in this component instance
+    // 2. Articles array is empty
+    // 3. Not currently loading
+    // 4. Not currently fetching globally
+    // 5. Cooldown period has passed
+    if (
+      !hasFetchedRef.current &&
+      articles.length === 0 &&
+      !loading &&
+      !isFetching &&
+      timeSinceLastFetch > FETCH_COOLDOWN
+    ) {
+      isFetching = true;
+      hasFetchedRef.current = true;
+      lastFetchTime = now;
+
+      dispatch(fetchArticles({}))
+        .finally(() => {
+          isFetching = false;
+        });
     }
   }, [dispatch, articles.length, loading]);
 
@@ -153,6 +179,17 @@ export const useArticleListActions = () => {
     loading,
     error,
     // Expose a method to force refresh manually if needed (e.g. Pull to Refresh)
-    refetch: () => dispatch(fetchArticles({})),
+    refetch: () => {
+      const now = Date.now();
+      if (!isFetching && (now - lastFetchTime) > FETCH_COOLDOWN) {
+        isFetching = true;
+        lastFetchTime = now;
+        return dispatch(fetchArticles({}))
+          .finally(() => {
+            isFetching = false;
+          });
+      }
+      return Promise.resolve();
+    },
   };
 };
