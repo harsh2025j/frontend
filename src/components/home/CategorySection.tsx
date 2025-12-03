@@ -13,8 +13,51 @@ interface CategorySectionProps {
   limit?: number;
 }
 
+import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
+import { useLocale } from "next-intl";
+import { useState, useEffect } from "react";
+
 export default function CategorySection({ title, slug, layout, limit = 6 }: CategorySectionProps) {
   const { articles, loading } = useCategoryArticles(slug, limit);
+  const locale = useLocale();
+
+  // Prepare text for translation: flatten titles and descriptions
+  const [textsToTranslate, setTextsToTranslate] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (articles && articles.length > 0 && locale !== 'en') {
+      const texts: string[] = [];
+      articles.forEach(a => {
+        texts.push(a.title);
+        // Use subHeadline or content snippet
+        const desc = a.subHeadline || a.content.replace(/<[^>]*>/g, "").substring(0, 150) + "...";
+        texts.push(desc);
+      });
+      setTextsToTranslate(texts);
+    }
+  }, [articles, locale]);
+
+  const { translatedText, loading: translating } = useGoogleTranslate(
+    locale !== 'en' && textsToTranslate.length > 0 ? textsToTranslate : null
+  );
+
+  // Reconstruct articles with translated text
+  const displayArticles = articles?.map((article, index) => {
+    if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return article;
+
+    // Each article corresponds to 2 strings in the translated array
+    const titleIdx = index * 2;
+    const descIdx = index * 2 + 1;
+
+    return {
+      ...article,
+      title: translatedText[titleIdx] || article.title,
+      subHeadline: translatedText[descIdx] || article.subHeadline,
+      // We also update content snippet if subHeadline was missing, but for the card display we mainly use subHeadline or content.
+      // To be safe, let's override content too if we want the card to show translated snippet from content
+      content: translatedText[descIdx] || article.content
+    };
+  }) || [];
 
   if (loading) return <div className="py-10 flex justify-center"><Loader /></div>;
   if (!articles || articles.length === 0) return null;
@@ -27,6 +70,7 @@ export default function CategorySection({ title, slug, layout, limit = 6 }: Cate
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 relative pl-4">
             <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#C9A227] rounded-full"></span>
             {title}
+            {translating && <span className="ml-2 text-xs text-[#C9A227] animate-pulse font-normal">Translating...</span>}
           </h2>
           <Link
             href={`/category/${slug}`}
@@ -37,10 +81,10 @@ export default function CategorySection({ title, slug, layout, limit = 6 }: Cate
         </div>
 
         {/* Layouts */}
-        {layout === "grid" && <GridLayout articles={articles} />}
-        {layout === "list" && <ListLayout articles={articles} />}
-        {layout === "featured" && <FeaturedLayout articles={articles} />}
-        {layout === "slider" && <SliderLayout articles={articles} />}
+        {layout === "grid" && <GridLayout articles={displayArticles} />}
+        {layout === "list" && <ListLayout articles={displayArticles} />}
+        {layout === "featured" && <FeaturedLayout articles={displayArticles} />}
+        {layout === "slider" && <SliderLayout articles={displayArticles} />}
       </div>
     </section>
   );

@@ -11,15 +11,27 @@ import img2 from '../../assets/slider/mask.svg';
 import img3 from '../../assets/slider/maskgroup.svg';
 import headerBg from '../../assets/svgimage/header.png';
 
+import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
+import { useLocale } from "next-intl";
+import { StaticImageData } from "next/image";
+
+interface Slide {
+  image: string | StaticImageData;
+  title: string;
+  description: string;
+  link: string;
+}
+
 export default function NewsSlider() {
   // ✅ Use the hook. It won't re-fetch if data exists.
   const { articles, loading } = useArticleListActions();
+  const locale = useLocale();
 
   const [current, setCurrent] = useState(0);
   const [fade, setFade] = useState(true);
 
   // ✅ Memoize slides to prevent re-calculation re-renders
-  const slides = useMemo(() => {
+  const baseSlides: Slide[] = useMemo(() => {
     const latestArticles = articles.slice(0, 6);
     return latestArticles.length > 0
       ? latestArticles.map((article: any) => ({
@@ -49,6 +61,38 @@ export default function NewsSlider() {
         },
       ];
   }, [articles]);
+
+  // Translate slides
+  const [textsToTranslate, setTextsToTranslate] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (baseSlides.length > 0 && locale !== 'en') {
+      const texts: string[] = [];
+      baseSlides.forEach((s: Slide) => {
+        texts.push(s.title);
+        texts.push(s.description);
+      });
+      setTextsToTranslate(texts);
+    }
+  }, [baseSlides, locale]);
+
+  const { translatedText, loading: translating } = useGoogleTranslate(
+    locale !== 'en' && textsToTranslate.length > 0 ? textsToTranslate : null
+  );
+
+  const slides = useMemo(() => {
+    if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return baseSlides;
+
+    return baseSlides.map((slide: Slide, index: number) => {
+      const titleIdx = index * 2;
+      const descIdx = index * 2 + 1;
+      return {
+        ...slide,
+        title: translatedText[titleIdx] || slide.title,
+        description: translatedText[descIdx] || slide.description
+      };
+    });
+  }, [baseSlides, translatedText, locale]);
 
   const changeSlide = (newIndex: number) => {
     setFade(false);
@@ -115,6 +159,7 @@ export default function NewsSlider() {
                 </span>
                 <span className="text-red-500 font-bold tracking-wider text-sm uppercase animate-pulse">
                   Latest News
+                  {translating && <span className="ml-2 text-xs text-white font-normal">Translating...</span>}
                 </span>
               </div>
 

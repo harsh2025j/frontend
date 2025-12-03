@@ -1,0 +1,48 @@
+{
+    "Navigation": {
+        "home": "Home",
+        "about": "About",
+        "contact": "Contact",
+        "news": "News",
+        "login": "Login",
+        "profile": "Profile",
+        "more": "More",
+        "dashboard": "Dashboard",
+        "logout": "Logout",
+        "subscription": "Get Subscription"
+    },
+    "Home": {
+        "welcome": "Welcome to Sajjad Husain Law Associates",
+        "description": "Next-Gen Legal Tech",
+        "supreme_court": "Supreme Court",
+        "high_court": "High Court",
+        "business": "Business",
+        "crime": "Crime",
+        "judgments": "Judgments",
+        "hindi_news": "Hindi News",
+        "more_latest_news": "More Latest News",
+        "sponsored": "Sponsored",
+        "trending": "Trending"
+    },
+    "Newsletter": {
+        "title": "Stay Updated with Legal Insights",
+        "description": "Subscribe to our newsletter to get the latest court judgments, legal news, and expert analysis delivered directly to your inbox.",
+        "privacy": "We respect your privacy. Unsubscribe at any time."
+    },
+    "ArticleDetail": {
+        "notFound": "Article not found",
+        "loading": "Loading News...",
+        "by": "By",
+        "minsRead": "mins read",
+        "shareArticle": "SHARE ARTICLE",
+        "relatedArticles": "Related Articles",
+        "shareOn": "Share on {platform}",
+        "copyLink": "Copy Link",
+        "print": "Print Article"
+    },
+    "Common": {
+        "loading": "Loading...",
+        "error": "Something went wrong",
+        "retry": "Retry"
+    }
+}

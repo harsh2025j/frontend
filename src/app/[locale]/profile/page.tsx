@@ -207,29 +207,29 @@ export default function ProfilePage() {
               <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <EditableField label="Full Name" value={name} readOnly={true} />
                 <EditableField label="Email" value={email} readOnly={true} />
-              <button
-                className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm w-full sm:w-auto"
-                onClick={triggerFileUpload}
-              >
-                Upload New Picture
-              </button>
-              <button
-                className="px-4 py-2 rounded-md border text-sm border-primary w-full sm:w-auto"
-                onClick={handleOpenEditProfile}
-              >
-                Edit Info
-              </button>
-            </div>
-                {/* <EditableField label="Phone Number" value={phone} readOnly={true} />
-                <EditableField label="Date of Birth" value={dob} readOnly={true} /> */}
+                <button
+                  className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm w-full sm:w-auto"
+                  onClick={triggerFileUpload}
+                >
+                  Upload New Picture
+                </button>
+                <button
+                  className="px-4 py-2 rounded-md border text-sm border-primary w-full sm:w-auto"
+                  onClick={handleOpenEditProfile}
+                >
+                  Edit Info
+                </button>
               </div>
+              {/* <EditableField label="Phone Number" value={phone} readOnly={true} />
+                <EditableField label="Date of Birth" value={dob} readOnly={true} /> */}
             </div>
+          </div>
 
-            {/* Buttons responsive stacking */}
-          
+          {/* Buttons responsive stacking */}
+
 
           {/* Preferences (right column on lg) */}
-       
+
           <div className="bg-white rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Quick Action</h3>
             <button
@@ -293,7 +293,7 @@ export default function ProfilePage() {
               </Link>
             </div>
           </div>
-             <div className="bg-white rounded-lg p-6">
+          <div className="bg-white rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Preferences</h3>
 
             <div className="space-y-6">

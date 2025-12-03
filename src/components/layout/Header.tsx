@@ -4,7 +4,10 @@ import Link from "next/link";
 import { Menu, X, ChevronDown, ChevronRight, LogOut, LayoutDashboard, User as UserIcon } from "lucide-react";
 import Image from "next/image";
 import logo from "../../../public/logo.png";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/routing";
+import { useLocale, useTranslations } from "next-intl";
+import { Globe } from "lucide-react";
+import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 
 // Types
 import { NavItem } from "@/data/navigation";
@@ -27,6 +30,11 @@ export default function Header() {
   const [mobileExpanded, setMobileExpanded] = useState<Record<string, boolean>>({});
   const pathname = usePathname();
   const router = useRouter();
+  const locale = useLocale();
+
+  const switchLocale = (newLocale: string) => {
+    router.replace(pathname, { locale: newLocale });
+  };
 
   const { user: reduxProfileUser } = useProfileActions();
   const checkuser = reduxProfileUser as UserData;
@@ -60,21 +68,60 @@ export default function Header() {
     return user.roles.some((r: any) => ["admin", "superadmin"].includes(r.name));
   }, [user]);
 
+  const t = useTranslations('Navigation');
+  const tCommon = useTranslations('Common');
+
   // --- Dynamic Nav Logic ---
+  // 1. Prepare category names for translation (Recursive)
+  const [catNamesToTranslate, setCatNamesToTranslate] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (categories.length > 0 && locale !== 'en') {
+      const collectNames = (cats: Category[]): string[] => {
+        let names: string[] = [];
+        cats.forEach(cat => {
+          names.push(cat.name);
+          if (cat.children && cat.children.length > 0) {
+            names = names.concat(collectNames(cat.children));
+          }
+        });
+        return names;
+      };
+      setCatNamesToTranslate(collectNames(categories));
+    }
+  }, [categories, locale]);
+
+  // 2. Fetch translations
+  const { translatedText: translatedCatNames } = useGoogleTranslate(
+    locale !== 'en' && catNamesToTranslate.length > 0 ? catNamesToTranslate : null
+  );
+
   const navItems = useMemo(() => {
-    const mapToNavItem = (cat: Category): NavItem => ({
-      label: cat.name,
-      href: `/category/${cat.slug}`,
-      children: cat.children?.length ? cat.children.map(mapToNavItem) : undefined,
-    });
+    let nameIndex = 0;
+
+    const mapToNavItem = (cat: Category): NavItem => {
+      // If we have translations, use them. 
+      let label = cat.name;
+      if (locale !== 'en' && Array.isArray(translatedCatNames) && translatedCatNames[nameIndex]) {
+        label = translatedCatNames[nameIndex];
+      }
+      nameIndex++;
+
+      return {
+        label: label,
+        href: `/category/${cat.slug}`,
+        children: cat.children?.length ? cat.children.map(mapToNavItem) : undefined,
+      };
+    };
+
     const dynamicCats = categories.map(mapToNavItem);
     const LIMIT = 6;
     const visible = dynamicCats.slice(0, LIMIT);
     const hidden = dynamicCats.slice(LIMIT);
-    const final: NavItem[] = [{ label: "Home", href: "/" }, ...visible];
-    if (hidden.length > 0) final.push({ label: "More", children: hidden });
+    const final: NavItem[] = [{ label: t('home'), href: "/" }, ...visible];
+    if (hidden.length > 0) final.push({ label: t('more'), children: hidden });
     return final;
-  }, [categories]);
+  }, [categories, t, translatedCatNames, locale]);
 
   // --- Helper Functions ---
   const isLinkActive = (href?: string) => {
@@ -185,6 +232,24 @@ export default function Header() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-4">
+            {/* Language Switcher */}
+            <div className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1.5 border border-gray-200">
+              <Globe size={14} className="text-gray-500" />
+              <button
+                onClick={() => switchLocale("en")}
+                className={`text-xs font-medium transition-colors ${locale === "en" ? "text-[#C9A227] font-bold" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                EN
+              </button>
+              <span className="text-gray-300">|</span>
+              <button
+                onClick={() => switchLocale("hi")}
+                className={`text-xs font-medium transition-colors ${locale === "hi" ? "text-[#C9A227] font-bold" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                HI
+              </button>
+            </div>
+
             {user ? (
               <div
                 className="relative"
@@ -211,7 +276,7 @@ export default function Header() {
                       onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227]"
                     >
-                      <UserIcon size={16} /> Profile
+                      <UserIcon size={16} /> {t('profile')}
                     </Link>
 
                     {hasDashboardAccess && (
@@ -220,7 +285,7 @@ export default function Header() {
                         onClick={() => setIsProfileOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227]"
                       >
-                        <LayoutDashboard size={16} /> Dashboard
+                        <LayoutDashboard size={16} /> {t('dashboard')}
                       </Link>
                     )}
 
@@ -233,15 +298,15 @@ export default function Header() {
                       }}
                       className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                     >
-                      <LogOut size={16} /> Logout
+                      <LogOut size={16} /> {t('logout')}
                     </button>
                   </div>
                 </div>
               </div>
             ) : (
               <>
-                <Link href="/auth/login"><button className="rounded-full bg-[#C9A227] text-white px-5 py-2 hover:bg-[#b39022] text-sm font-medium transition-colors">SIGN IN</button></Link>
-                <Link href="/subscription"><button className="rounded-full border border-[#C9A227] text-[#C9A227] px-5 py-2 hover:bg-[#C9A227] hover:text-white text-sm font-medium transition-colors">GET SUBSCRIPTION</button></Link>
+                <Link href="/auth/login"><button className="rounded-full bg-[#C9A227] text-white px-5 py-2 hover:bg-[#b39022] text-sm font-medium transition-colors">{t('login').toUpperCase()}</button></Link>
+                <Link href="/subscription"><button className="rounded-full border border-[#C9A227] text-[#C9A227] px-5 py-2 hover:bg-[#C9A227] hover:text-white text-sm font-medium transition-colors">{t('subscription').toUpperCase()}</button></Link>
               </>
             )}
           </div>
@@ -283,6 +348,27 @@ export default function Header() {
                   </div>
                 )}
               </div>
+
+              {/* Mobile Language Switcher */}
+              <div className="flex items-center gap-3 mb-4 px-2">
+                <span className="text-sm font-medium text-gray-600">Language:</span>
+                <div className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1.5 border border-gray-200">
+                  <button
+                    onClick={() => { switchLocale("en"); setMenuOpen(false); }}
+                    className={`text-xs font-medium transition-colors ${locale === "en" ? "text-[#C9A227] font-bold" : "text-gray-500"}`}
+                  >
+                    English
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button
+                    onClick={() => { switchLocale("hi"); setMenuOpen(false); }}
+                    className={`text-xs font-medium transition-colors ${locale === "hi" ? "text-[#C9A227] font-bold" : "text-gray-500"}`}
+                  >
+                    हिंदी
+                  </button>
+                </div>
+              </div>
+
               {navItems.map((item, i) => <MobileMenuItem key={i} item={item} />)}
             </nav>
           </div>

@@ -2,10 +2,12 @@
 
 import React, { useState } from 'react';
 import { Mail, CheckCircle, ArrowRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 const NewsletterSubscription = () => {
     const [email, setEmail] = useState('');
     const [subscribed, setSubscribed] = useState(false);
+    const t = useTranslations('Newsletter');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,10 +34,10 @@ const NewsletterSubscription = () => {
                     </div>
 
                     <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                        Stay Updated with Legal Insights
+                        {t('title')}
                     </h2>
                     <p className="text-gray-300 mb-8 text-lg max-w-2xl mx-auto">
-                        Subscribe to our newsletter to get the latest court judgments, legal news, and expert analysis delivered directly to your inbox.
+                        {t('description')}
                     </p>
 
                     {/* {!subscribed ? (
@@ -63,7 +65,7 @@ const NewsletterSubscription = () => {
                     )} */}
 
                     <p className="text-gray-500 text-sm mt-6">
-                        We respect your privacy. Unsubscribe at any time.
+                        {t('privacy')}
                     </p>
                 </div>
             </div>

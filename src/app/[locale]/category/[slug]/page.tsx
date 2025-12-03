@@ -8,26 +8,18 @@ import Link from "next/link";
 import { Article } from "@/data/features/article/article.types";
 import Loader from "@/components/ui/Loader";
 
+import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
+import { useLocale } from "next-intl";
+
 export default function CategoryPage() {
     const params = useParams();
     const slug = params.slug as string;
     const { articles, loading } = useArticleListActions();
     const [categoryArticles, setCategoryArticles] = useState<Article[]>([]);
     const [categoryName, setCategoryName] = useState<string>("");
+    const locale = useLocale();
 
-    // useEffect(() => {
-    //     if (articles.length > 0 && slug) {
-    //         const filtered = articles.filter(
-    //             (article: Article) =>
-    //                 article.category?.slug === slug ||
-    //                 article.category?.name.toLowerCase() === slug.toLowerCase()||
-    //                 article.category?.id === article.subcategory?.parentId
-    //         );
-    //         setCategoryArticles(filtered);
-    //     }
-    // }, [articles, slug]);
-    // sdfg
-    // Helper function to clean category names (remove trailing numbers and extra whitespace)
+    // ... (existing cleanCategoryName function) ...
     const cleanCategoryName = (name: string): string => {
         return name
             .replace(/\s*\d+\s*$/g, '') // Remove trailing numbers
@@ -103,6 +95,54 @@ export default function CategoryPage() {
         }
     }, [articles, slug]);
 
+    // --- Translation Logic ---
+    const [textsToTranslate, setTextsToTranslate] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (locale === 'en' || !categoryName) return;
+
+        const texts: string[] = [];
+        // 1. Category Name
+        texts.push(categoryName);
+
+        // 2. Articles (Title + Content Snippet)
+        categoryArticles.forEach(a => {
+            texts.push(a.title);
+            texts.push(a.content.replace(/<[^>]*>/g, "").substring(0, 150) + "...");
+        });
+
+        setTextsToTranslate(texts);
+    }, [categoryName, categoryArticles, locale]);
+
+    const { translatedText, loading: translating } = useGoogleTranslate(
+        locale !== 'en' && textsToTranslate.length > 0 ? textsToTranslate : null
+    );
+
+    const displayCategoryName = React.useMemo(() => {
+        if (locale === 'en' || !translatedText || !Array.isArray(translatedText) || translatedText.length === 0) {
+            return categoryName;
+        }
+        return translatedText[0];
+    }, [categoryName, translatedText, locale]);
+
+    const displayArticles = React.useMemo(() => {
+        if (locale === 'en' || !translatedText || !Array.isArray(translatedText) || translatedText.length === 0) {
+            return categoryArticles;
+        }
+
+        // First element is category name, so articles start at index 1
+        return categoryArticles.map((article, index) => {
+            const titleIdx = 1 + (index * 2);
+            const contentIdx = 1 + (index * 2) + 1;
+
+            return {
+                ...article,
+                title: translatedText[titleIdx] || article.title,
+                content: translatedText[contentIdx] || article.content
+            };
+        });
+    }, [categoryArticles, translatedText, locale]);
+
 
     if (loading) {
         return (
@@ -117,12 +157,13 @@ export default function CategoryPage() {
 
             {/* Header */}
             <div className="text-left mb-10 space-y-2">
-                <h1 className="text-4xl text-[#0A2342] sm:text-5xl font-bold capitalize">
-                    {categoryName}
+                <h1 className="text-4xl text-[#0A2342] sm:text-5xl font-bold capitalize flex items-center gap-3">
+                    {displayCategoryName}
+                    {translating && <span className="text-sm text-[#C9A227] animate-pulse font-normal">Translating...</span>}
                 </h1>
                 <p className="text-gray-600 max-w-2xl  text-sm sm:text-base">
                     Explore the latest insights, updates, and reports in the{" "}
-                    <span className="font-medium text-gray-800 capitalize">{categoryName}</span>{" "}
+                    <span className="font-medium text-gray-800 capitalize">{displayCategoryName}</span>{" "}
                     category.
                 </p>
                 <div className="w-24 h-1 bg-black/80  rounded-full mt-3"></div>
@@ -135,14 +176,14 @@ export default function CategoryPage() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {categoryArticles.map((article) => (
+                    {displayArticles.map((article) => (
                         <Link href={`/news/${article.slug}`} key={article.id}>
                             <NewsCard
                                 title={article.title}
                                 content={article.content}
                                 src={article.thumbnail || undefined}
                                 court={article.location || undefined}
-                                time={new Date(article.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                time={new Date(article.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
                                 views={String(0)}
                                 likes={String(0)}
                             />

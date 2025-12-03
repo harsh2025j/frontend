@@ -1,4 +1,4 @@
-// app/page.tsx OR pages/index.tsx
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import NewsCard from "@/components/ui/NewsCard";
 import logo from "../../public/logo.png";
@@ -12,6 +12,8 @@ import LegalTimeline from "@/components/home/LegalTimeline";
 // import LiveCourtUpdates from "@/components/home/LiveCourtUpdates";
 
 export default function Home() {
+  const t = useTranslations('Home');
+
   return (
     <>
       <div className="bg-gray-50 min-h-screen pb-0">
@@ -23,14 +25,14 @@ export default function Home() {
         </div>
 
         <CategorySection
-          title="Supreme Court"
+          title={t('supreme_court')}
           slug="supreme-court"
           layout="featured"
           limit={5}
         />
 
         <CategorySection
-          title="High Court"
+          title={t('high_court')}
           slug="high-court"
           layout="list"
           limit={6}
@@ -41,14 +43,14 @@ export default function Home() {
 
             <div className="lg:col-span-2 space-y-12">
               <CategorySection
-                title="Business"
+                title={t('business')}
                 slug="business-article"
                 layout="grid"
                 limit={4}
               />
 
               <CategorySection
-                title="Crime"
+                title={t('crime')}
                 slug="crime-news"
                 layout="list"
                 limit={4}
@@ -59,12 +61,12 @@ export default function Home() {
             <div className="space-y-8">
               <div className="sticky top-24">
                 <div className=" p-4 rounded-md border border-gray-100  mb-6">
-                  <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">Sponsored</h3>
+                  <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('sponsored')}</h3>
                   <AdSidebar />
                 </div>
 
                 <div className=" p-4 rounded-xl border border-gray-100 ">
-                  <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">Trending</h3>
+                  <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('trending')}</h3>
                   <AdSidebar />
                 </div>
               </div>
@@ -78,7 +80,7 @@ export default function Home() {
         </div>
 
         <CategorySection
-          title="Judgments"
+          title={t('judgments')}
           slug="judgments-content"
           layout="grid"
           limit={6}
@@ -87,14 +89,14 @@ export default function Home() {
         {/* <LegalTimeline /> */}
 
         <CategorySection
-          title="Hindi News"
+          title={t('hindi_news')}
           slug="hindi-news"
           layout="slider"
           limit={8}
         />
 
         <CategorySection
-          title="More Latest News"
+          title={t('more_latest_news')}
           slug="latest-news"
           layout="grid"
           limit={9}
