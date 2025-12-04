@@ -28,6 +28,8 @@ import { highCourts } from "@/data/highCourts";
 import { Article, Category } from "@/data/features/article/article.types";
 import ArticleSkeleton from "../ui/ArticleSkeleton";
 import Link from "next/link";
+import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
+import { useLocale } from "next-intl";
 
 
 export function getArticlesBySlugs(articles: Article[], slugs: string[]) {
@@ -38,10 +40,10 @@ export function getArticlesBySlugs(articles: Article[], slugs: string[]) {
     const collectSlugs = (cat: Category | null | undefined): string[] => {
       if (!cat) return [];
       const arr: string[] = [];
-      
+
       // 1. Add current slug
       if (cat.slug) arr.push(cat.slug.toLowerCase());
-      
+
       // 2. Only traverse UP (Parents) to find inheritance. 
       if (cat.parent) {
         arr.push(...collectSlugs(cat.parent));
@@ -58,8 +60,8 @@ export default function Stores() {
   const router = useRouter();
   const [SearchData, setSearchData] = useState({ Search: "" });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  
+
+
   const [isNavigating, setIsNavigating] = useState(false);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -68,26 +70,32 @@ export default function Stores() {
     }
   };
 
-  
+
   const handleSearchClick = () => {
     setIsNavigating(true);
     router.push('/ai-assistant');
   };
 
- 
+
   const handleNavClick = () => {
     setIsNavigating(true);
   };
 
-  
-  const { articles, loading, error } = useArticleListActions();
 
-  
+  const { articles: allArticles, loading, error } = useArticleListActions();
+  const articles = useMemo(() => allArticles.filter((a: { status: string; }) => a.status === 'published'), [allArticles]);
+
+
   const LatestNewsData = useMemo(() => getArticlesBySlugs(articles, ["latest-news"]), [articles]);
   const JudgementNewsData = useMemo(() => getArticlesBySlugs(articles, ["judgments-content"]), [articles]);
   const HindiNewsData = useMemo(() => getArticlesBySlugs(articles, ["hindi-news"]), [articles]);
   const FinanceArticleData = useMemo(() => getArticlesBySlugs(articles, ["finance-articles"]), [articles]);
   const LegalArticleData = useMemo(() => getArticlesBySlugs(articles, ["legal-articles"]), [articles]);
+
+  // ... inside Stores component ...
+  const locale = useLocale();
+
+  // ... (existing memos for filtered data) ...
 
   // Typewriter Logic
   const [currentText, setCurrentText] = useState("");
@@ -99,16 +107,101 @@ export default function Stores() {
     return articles.length > 0
       ? articles.map((a: Article) => a.title)
       : [
-          "JP Morgan's Jamie Dimon said he was 'far more worried than others' about the potential for a stock market correction.",
-          "Breaking: AI Revolutionizing Legal Tech Industry in 2025",
-          "Supreme Court issues new guidelines for digital evidence submission"
-        ];
+        "JP Morgan's Jamie Dimon said he was 'far more worried than others' about the potential for a stock market correction.",
+        "Breaking: AI Revolutionizing Legal Tech Industry in 2025",
+        "Supreme Court issues new guidelines for digital evidence submission"
+      ];
   }, [articles]);
+
+  // --- Translation Logic ---
+  const [textsToTranslate, setTextsToTranslate] = useState<string[]>([]);
+
+  // We need to track the counts to map back correctly
+  const [counts, setCounts] = useState({ headlines: 0, latest: 0, judgments: 0, hindi: 0 });
+
+  useEffect(() => {
+    if (locale === 'en') return;
+
+    const texts: string[] = [];
+
+    // 1. Headlines
+    newsHeadlines.forEach((h: string) => texts.push(h));
+
+    // 2. Latest News (Title) - Slice 4
+    const latest = LatestNewsData.slice(0, 4);
+    latest.forEach(a => texts.push(a.title));
+
+    // 3. Judgments (Content/Description) - Slice 3
+    // Note: Judgement component uses 'content' as description
+    const judgments = JudgementNewsData.slice(0, 3);
+    judgments.forEach(a => texts.push(a.content.replace(/<[^>]*>/g, "").substring(0, 150) + "..."));
+
+    // 4. Hindi News (Title + Content) - Slice 3
+    const hindi = HindiNewsData.slice(0, 3);
+    hindi.forEach(a => {
+      texts.push(a.title);
+      texts.push(a.content.replace(/<[^>]*>/g, "").substring(0, 150) + "...");
+    });
+
+    setCounts({
+      headlines: newsHeadlines.length,
+      latest: latest.length,
+      judgments: judgments.length,
+      hindi: hindi.length
+    });
+    setTextsToTranslate(texts);
+
+  }, [newsHeadlines, LatestNewsData, JudgementNewsData, HindiNewsData, locale]);
+
+  const { translatedText } = useGoogleTranslate(
+    locale !== 'en' && textsToTranslate.length > 0 ? textsToTranslate : null
+  );
+
+  // --- Derived Display Data ---
+  const displayHeadlines = useMemo(() => {
+    if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return newsHeadlines;
+    return translatedText.slice(0, counts.headlines);
+  }, [newsHeadlines, translatedText, counts, locale]);
+
+  const displayLatestNews = useMemo(() => {
+    const base = LatestNewsData.slice(0, 4);
+    if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return base;
+
+    const start = counts.headlines;
+    return base.map((item, i) => ({
+      ...item,
+      title: translatedText[start + i] || item.title
+    }));
+  }, [LatestNewsData, translatedText, counts, locale]);
+
+  const displayJudgments = useMemo(() => {
+    const base = JudgementNewsData.slice(0, 3);
+    if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return base;
+
+    const start = counts.headlines + counts.latest;
+    return base.map((item, i) => ({
+      ...item,
+      content: translatedText[start + i] || item.content
+    }));
+  }, [JudgementNewsData, translatedText, counts, locale]);
+
+  const displayHindiNews = useMemo(() => {
+    const base = HindiNewsData.slice(0, 3);
+    if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return base;
+
+    const start = counts.headlines + counts.latest + counts.judgments;
+    return base.map((item, i) => ({
+      ...item,
+      title: translatedText[start + i * 2] || item.title,
+      content: translatedText[start + i * 2 + 1] || item.content
+    }));
+  }, [HindiNewsData, translatedText, counts, locale]);
+
 
   React.useEffect(() => {
     const handleType = () => {
-      const i = loopNum % newsHeadlines.length;
-      const fullText = newsHeadlines[i];
+      const i = loopNum % displayHeadlines.length;
+      const fullText = displayHeadlines[i];
 
       setCurrentText(isDeleting
         ? fullText.substring(0, currentText.length - 1)
@@ -116,20 +209,20 @@ export default function Stores() {
       );
 
       if (!isDeleting && currentText === fullText) {
-        setTypingSpeed(2000); 
+        setTypingSpeed(2000);
         setIsDeleting(true);
       } else if (isDeleting && currentText === "") {
         setIsDeleting(false);
         setLoopNum(loopNum + 1);
-        setTypingSpeed(500); 
+        setTypingSpeed(500);
       } else {
-        setTypingSpeed(isDeleting ? 30 : 50); 
+        setTypingSpeed(isDeleting ? 30 : 50);
       }
     };
 
     const timer = setTimeout(handleType, typingSpeed);
     return () => clearTimeout(timer);
-  }, [currentText, isDeleting, loopNum, newsHeadlines, typingSpeed]);
+  }, [currentText, isDeleting, loopNum, displayHeadlines, typingSpeed]);
 
   return (
     <div className="bg-[#f6f6f7]">
@@ -221,7 +314,6 @@ export default function Stores() {
         </div>
 
         <HighCourtsModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-
         {/* Live Court & Top Advocate */}
         <div className="flex justify-center px-4 mb-6 md:mb-10">
           <div className="container flex flex-col lg:flex-row gap-4 md:gap-6">
@@ -241,16 +333,17 @@ export default function Stores() {
                 </h1>
               </div>
               <div className="flex flex-col p-4 sm:p-5 bg-white justify-evenly transition-all duration-300 rounded-sm h-full gap-3">
-                <TopAdvocate img={icon1} title="Mr. Sunil Prajapati," description="Senior Advocate " />
-                <TopAdvocate img={icon1} title="Mr. Niranjan Roy," description="Senior Advocate " />
-                <TopAdvocate img={icon1} title="Mr. Nishant Singh," description="Senior Advocate " />
+                <h1>
+                  For now we are collecting Advocate data from showing here
+                </h1>
+                {/* <TopAdvocate img={icon1} title="Mr. Sunil Prajapati," description="Senior Advocate " /> */}
               </div>
             </div>
           </div>
         </div>
 
         {/* AI Powered Features */}
-        <div className="w-full">
+        {/* <div className="w-full">
           <div className="flex items-center justify-center my-6 md:my-10 px-4">
             <div className="flex-1 h-px bg-gray-400"></div>
             <h2 className="px-3 sm:px-4 text-base sm:text-lg md:text-xl font-merriweather font-semibold text-black text-center">
@@ -267,7 +360,7 @@ export default function Stores() {
               <AiPoweredFeatures heading="AI Suggestions" description="Gen related precedents and judgments automatically, trailered to your query." img={icon4} />
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Latest News & Judgments */}
         <div className="w-full px-4">
@@ -280,11 +373,11 @@ export default function Stores() {
           </div>
 
           <div className="flex justify-center">
-            <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {loading ? (
                 <ArticleSkeleton count={3} />
               ) : (
-                LatestNewsData.slice(0, 3).map((data: any) => (
+                displayLatestNews.map((data: any) => (
                   <LatestNews
                     key={data.id}
                     img={data.thumbnail}
@@ -307,7 +400,7 @@ export default function Stores() {
             {loading ? (
               <ArticleSkeleton count={3} />
             ) : (
-              JudgementNewsData.slice(0, 3).map((data: any) => (
+              displayJudgments.map((data: any) => (
                 <Judgement
                   key={data.id}
                   img={data.thumbnail}
@@ -343,9 +436,9 @@ export default function Stores() {
           <div className="flex justify-center">
             <div className="container flex flex-col gap-4 sm:gap-6">
               {loading ? (
-                <ArticleSkeleton count={3} /> 
+                <ArticleSkeleton count={3} />
               ) : (
-                HindiNewsData.slice(0, 3).map((data: any) => (
+                displayHindiNews.map((data: any) => (
                   <HindiNews
                     key={data.id}
                     img={data.thumbnail}
@@ -387,9 +480,9 @@ export default function Stores() {
             <ContentSlider name="Finance Articles" slug={"finance-articles"} FilteredData={FinanceArticleData.map((article) => ({
               ...article,
               img: article.thumbnail || "",
-            }))} /> 
+            }))} />
           )}
-          
+
           {/* Legal Articles ContentSlider */}
           {loading ? (
             <div className="mb-8">

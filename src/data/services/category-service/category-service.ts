@@ -14,8 +14,8 @@ export const categoryApi = {
         return await apiClient.post(API_ENDPOINTS.CATEGORIE.CREATE, data);
     },
     updateCategory: async (data: UpdateCategoryRequest) => {
-
-        return await apiClient.put(`${API_ENDPOINTS.CATEGORIE.CREATE}/${data.id}`, data);
+        const { id, ...body } = data;
+        return await apiClient.post(`${API_ENDPOINTS.CATEGORIE.CREATE}/${id}`, body);
     },
     deleteCategory: async (id: string) => {
         return await apiClient.delete(`${API_ENDPOINTS.CATEGORIE.CREATE}/${id}`);

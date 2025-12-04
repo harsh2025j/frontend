@@ -1,0 +1,48 @@
+{
+    "Navigation": {
+        "home": "首页",
+        "about": "关于",
+        "contact": "联系我们",
+        "news": "新闻",
+        "login": "登录",
+        "profile": "个人资料",
+        "more": "更多",
+        "dashboard": "仪表板",
+        "logout": "登出",
+        "subscription": "获取订阅"
+    },
+    "Home": {
+        "welcome": "欢迎来到 Sajjad Husain Law Associates",
+        "description": "下一代法律科技",
+        "supreme_court": "最高法院",
+        "high_court": "高等法院",
+        "business": "商业",
+        "crime": "犯罪",
+        "judgments": "判决",
+        "hindi_news": "印地语新闻",
+        "more_latest_news": "更多最新新闻",
+        "sponsored": "赞助",
+        "trending": "趋势"
+    },
+    "Newsletter": {
+        "title": "随时了解法律见解",
+        "description": "订阅我们的时事通讯，直接在您的收件箱中获取最新的法院判决、法律新闻和专家分析。",
+        "privacy": "我们尊重您的隐私。随时取消订阅。"
+    },
+    "ArticleDetail": {
+        "notFound": "未找到文章",
+        "loading": "正在加载新闻...",
+        "by": "作者",
+        "minsRead": "分钟阅读",
+        "shareArticle": "分享文章",
+        "relatedArticles": "相关文章",
+        "shareOn": "分享到 {platform}",
+        "copyLink": "复制链接",
+        "print": "打印文章"
+    },
+    "Common": {
+        "loading": "正在加载...",
+        "error": "出了点问题",
+        "retry": "重试"
+    }
+}

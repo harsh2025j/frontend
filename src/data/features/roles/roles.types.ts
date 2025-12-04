@@ -9,7 +9,7 @@ export interface RolePermission {
 }
 
 export interface Role {
-    _id: string;
+    id: string;
     name: string;
     slug: string;
     description?: string;

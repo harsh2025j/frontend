@@ -15,7 +15,7 @@ export const profileApi = {
       }
     );
 
-    console.log("FETCH PROFILE RESPONSE:", response.data);
+    // console.log("FETCH PROFILE RESPONSE:", response.data);
     return response;
   },
 

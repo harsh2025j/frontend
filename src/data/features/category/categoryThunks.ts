@@ -8,7 +8,7 @@ export const fetchCategories = createAsyncThunk<CategoryResponse, void>(
     async (_, thunkAPI) => {
         try {
             const res = await categoryApi.fetchCategories();
-            console.log("fetchCategories", res.data);
+            // console.log("fetchCategories", res.data);
             // console.log(res.data);
             return res.data;
         } catch (err: unknown) {

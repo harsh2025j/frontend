@@ -9,6 +9,7 @@ interface NewsCardProps {
   time?: string;
   views?: string;
   likes?: string;
+  content?: string;
 }
 
 export default function NewsCard({
@@ -18,6 +19,7 @@ export default function NewsCard({
   time,
   views,
   likes,
+  content,
 }: NewsCardProps) {
   const validSrc =
     typeof src === "string" &&
@@ -28,7 +30,7 @@ export default function NewsCard({
         : logo;
 
   return (
-    <div className="w-full max-w-[600px] rounded-xl shadow-md bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition">
+    <div className="w-full max-w-[600px] rounded-[4px] bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition">
       {/* Image */}
       <div className="relative h-[200px] w-full">
         <Image
@@ -69,19 +71,23 @@ export default function NewsCard({
           {title}
         </p>
 
-        {/* Views + Likes */}
-        <div className="flex items-center gap-6 text-xs text-gray-700">
+  
 
-          <div className="flex items-center gap-1">
+
+
+        {/* Views + Likes */}
+        {/* <div className="flex items-center gap-6 text-xs text-gray-700"> */}
+
+        {/* <div className="flex items-center gap-1">
             <Eye size={14} />
             {views ? <span>{views}</span> : <span className="text-gray-400 italic">0</span>}
-          </div>
+          </div> */}
 
-          <div className="flex items-center gap-1">
+        {/* <div className="flex items-center gap-1">
             <Heart size={14} />
             {likes ? <span>{likes}</span> : <span className="text-gray-400 italic">0</span>}
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
       </div>
     </div>
   );

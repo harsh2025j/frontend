@@ -15,35 +15,42 @@ import {
 } from "react-icons/fa";
 import { Mail, Phone, MapPin } from "lucide-react";
 import Image from "next/image";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { AppDispatch, RootState } from "@/data/redux/store";
+import { fetchCategories } from "@/data/features/category/categoryThunks";
+import { Category } from "@/data/features/category/category.types";
 
 export default function Footer() {
+  const dispatch = useDispatch<AppDispatch>();
+  const { categories } = useSelector((state: RootState) => state.category);
+
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
+
+  // Helper to get all descendants (subcategories)
+  const getAllSubCategories = (cats: Category[]): Category[] => {
+    if (!cats) return [];
+    let subs: Category[] = [];
+    cats.forEach((cat) => {
+      if (cat.children && cat.children.length > 0) {
+        subs = [...subs, ...cat.children];
+        subs = [...subs, ...getAllSubCategories(cat.children)];
+      }
+    });
+    return subs;
+  };
+
+  const subCategories = getAllSubCategories(categories);
+
   const socialLinks = [
-    { icon: FaFacebookF, href: "#", color: "hover:bg-blue-600", label: "Facebook" },
-    { icon: FaInstagram, href: "#", color: "hover:bg-pink-600", label: "Instagram" },
+    { icon: FaFacebookF, href: "https://www.facebook.com/advocatesajjadofficial", color: "hover:bg-blue-600", label: "Facebook" },
+    { icon: FaInstagram, href: "https://www.instagram.com/sajjad_husain_law_associates/?hl=en", color: "hover:bg-pink-600", label: "Instagram" },
     { icon: FaWhatsapp, href: "#", color: "hover:bg-green-600", label: "WhatsApp" },
     { icon: FaTwitter, href: "#", color: "hover:bg-sky-500", label: "Twitter" },
-    { icon: FaLinkedinIn, href: "#", color: "hover:bg-blue-700", label: "LinkedIn" },
-    { icon: FaYoutube, href: "#", color: "hover:bg-red-600", label: "YouTube" },
-  ];
-
-  const productLinks = [
-    { name: "Top Stories", href: "/top-stories" },
-    { name: "Supreme Court", href: "/supreme-court" },
-    { name: "High Court", href: "/high-court" },
-    { name: "Tax", href: "/tax" },
-    { name: "Know the Law", href: "/know-the-law" },
-    { name: "International", href: "/international" },
-    { name: "Environment", href: "/environment" },
-  ];
-
-  const serviceLinks = [
-    { name: "Law Schools Corner", href: "/law-schools" },
-    { name: "Call For Papers", href: "/call-for-papers" },
-    { name: "Competitions", href: "/competitions" },
-    { name: "Internships", href: "/internships" },
-    { name: "Law School Articles", href: "/articles" },
-    { name: "Scholarships", href: "/scholarships" },
-    { name: "School Admission", href: "/admissions" },
+    { icon: FaLinkedinIn, href: "https://www.linkedin.com/in/sajjad-husain/", color: "hover:bg-blue-700", label: "LinkedIn" },
+    { icon: FaYoutube, href: "https://www.youtube.com/@SajjadHusainLawAssociates", color: "hover:bg-red-600", label: "YouTube" },
   ];
 
   const resourceLinks = [
@@ -68,7 +75,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-12 border-b border-white/10">
           {/* Brand Section */}
           <div className="lg:col-span-4 space-y-6">
-            <div className="transform hover:scale-105 transition-transform duration-300">
+            <div className="transform bg-white p-2 rounded-sm hover:scale-105 transition-transform duration-300">
               <Image
                 src={logo}
                 alt="Sajjad Husain Law Associates Logo"
@@ -147,40 +154,40 @@ export default function Footer() {
 
           {/* Links Sections */}
           <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-8">
-            {/* Products */}
+            {/* Categories (Roots) */}
             <div>
               <h3 className="font-bold text-lg mb-4 text-white relative inline-block">
-                Products
+                Categories
                 <span className="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-blue-400 to-transparent"></span>
               </h3>
               <ul className="space-y-2.5">
-                {productLinks.map((link, index) => (
-                  <li key={index}>
+                {categories.map((category: Category) => (
+                  <li key={category.id}>
                     <Link
-                      href={link.href}
+                      href={`/category/${category.slug}`}
                       className="text-blue-100 hover:text-white hover:translate-x-1 inline-block transition-all duration-300 text-sm group"
                     >
-                      <span className="group-hover:underline underline-offset-4">{link.name}</span>
+                      <span className="group-hover:underline underline-offset-4">{category.name}</span>
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Services */}
+            {/* Sub Categories */}
             <div>
               <h3 className="font-bold text-lg mb-4 text-white relative inline-block">
-                Services
+                Sub Categories
                 <span className="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-blue-400 to-transparent"></span>
               </h3>
               <ul className="space-y-2.5">
-                {serviceLinks.map((link, index) => (
-                  <li key={index}>
+                {subCategories.map((category: Category) => (
+                  <li key={category.id}>
                     <Link
-                      href={link.href}
+                      href={`/category/${category.slug}`}
                       className="text-blue-100 hover:text-white hover:translate-x-1 inline-block transition-all duration-300 text-sm group"
                     >
-                      <span className="group-hover:underline underline-offset-4">{link.name}</span>
+                      <span className="group-hover:underline underline-offset-4">{category.name}</span>
                     </Link>
                   </li>
                 ))}

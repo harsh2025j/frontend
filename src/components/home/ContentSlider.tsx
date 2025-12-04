@@ -13,21 +13,19 @@ interface Article {
 
 interface ContentSliderProps {
   name: string;
-  slug:string;
+  slug: string;
   FilteredData: Article[];
 }
 
-export default function ContentSlider({ name, FilteredData ,slug}: ContentSliderProps) {
+export default function ContentSlider({ name, FilteredData, slug }: ContentSliderProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeftBtn, setShowLeftBtn] = useState(false);
   const [showRightBtn, setShowRightBtn] = useState(true);
 
-  // --- Scroll Handler ---
   const scroll = (direction: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
 
-    // Scroll by the width of a card (260px) + gap (16px) approx
     const scrollAmount = 300;
     const targetScroll = el.scrollLeft + (direction === "left" ? -scrollAmount : scrollAmount);
 
@@ -37,16 +35,12 @@ export default function ContentSlider({ name, FilteredData ,slug}: ContentSlider
     });
   };
 
-  // --- Check Scroll Position for Buttons ---
   const checkScrollButtons = () => {
     const el = scrollRef.current;
     if (!el) return;
 
-    // Show Left if scrolled more than 0
     setShowLeftBtn(el.scrollLeft > 0);
 
-    // Show Right if not at the very end (with small tolerance)
-    // scrollWidth = total content width, clientWidth = visible width
     setShowRightBtn(
       Math.ceil(el.scrollLeft + el.clientWidth) < el.scrollWidth
     );
@@ -56,13 +50,8 @@ export default function ContentSlider({ name, FilteredData ,slug}: ContentSlider
     const el = scrollRef.current;
     if (!el) return;
 
-    // Attach listener
     el.addEventListener("scroll", checkScrollButtons);
-    
-    // Initial check (in case data is empty or fits screen)
     checkScrollButtons();
-
-    // Check on resize too
     window.addEventListener("resize", checkScrollButtons);
 
     return () => {
@@ -73,11 +62,11 @@ export default function ContentSlider({ name, FilteredData ,slug}: ContentSlider
 
   return (
     <div className="p-4 md:p-6 bg-[#f6f6f7] flex items-center justify-center relative">
-      <div className="w-full container bg-white rounded-xl shadow-lg p-3 flex gap-4 relative group">
+      <div className="w-full container bg-white rounded-md  p-3 flex gap-4 relative group">
 
         {/* Left Label (Category Name) */}
-         <Link href={`/category/${slug}`}className="bg-[#1b3550] rounded-lg w-12 sm:w-24 md:w-40 flex items-center justify-center flex-shrink-0 transition-all duration-300">
-        
+        <Link href={`/category/${slug}`} className="bg-[#1b3550] rounded-lg w-12 sm:w-24 md:w-40 flex items-center justify-center flex-shrink-0 transition-all duration-300">
+
           <span
             className="text-white text-lg sm:text-xl md:text-2xl font-medium tracking-wider whitespace-nowrap"
             style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}

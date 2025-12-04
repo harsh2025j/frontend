@@ -28,10 +28,10 @@ export const usersApi = {
                
             );
 
-            console.log("usersApi fetchUsers responsdfdsfse:", response);
+            // console.log("usersApi fetchUsers responsdfdsfse:", response);
             return response.data;
         } catch (error: any) {
-            console.error("usersApi fetchUsers ERsdfsdfROR:", error);
+            console.error("usersApi fetchUsers ERROR:", error);
             throw error;
         }
     },
