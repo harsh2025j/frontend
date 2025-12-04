@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import logo from "../../../../public/LightGray.png";
+import logo from "../../../../../public/LightGray.png";
 import award1 from "../../../../public/awards/award1.jpg";
 import award2 from "../../../../public/awards/award2.jpg";
 import award3 from "../../../../public/awards/award3.jpg";
