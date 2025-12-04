@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import logo from "../../../../public/LightGray.png";
+import logo from "../../../../../public/LightGray.png";
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { forgotPassword, resetPassword, verifyOtp } from "@/data/features/auth/authThunks";

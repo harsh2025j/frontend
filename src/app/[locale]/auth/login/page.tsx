@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import logo from "../../../../../public/LightGray.png";
-import award1 from "../../../../public/awards/award1.jpg";
-import award2 from "../../../../public/awards/award2.jpg";
-import award3 from "../../../../public/awards/award3.jpg";
-import award4 from "../../../../public/awards/award4.jpg";
+import award1 from "../../../../../public/awards/award1.jpg";
+import award2 from "../../../../../public/awards/award2.jpg";
+import award3 from "../../../../../public/awards/award3.jpg";
+import award4 from "../../../../../public/awards/award4.jpg";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaEye, FaEyeSlash, FaCheckCircle } from "react-icons/fa";
 import { useLoginActions } from "@/data/features/auth/useAuthActions";

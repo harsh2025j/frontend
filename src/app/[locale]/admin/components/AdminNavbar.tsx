@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Bell, Search, Menu, LogOut, User as UserIcon, Home } from "lucide-react";
-import logo from "../../../assets/logo.png";
+import logo from "../../../../assets/logo.png";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 

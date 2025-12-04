@@ -4,7 +4,7 @@ import { useArticleListActions } from "@/data/features/article/useArticleActions
 import toast from "react-hot-toast";
 import { Article } from "@/data/features/article/article.types";
 import Image from "next/image";
-import logo from "../../../../public/logo.png";
+import logo from "../../../../../public/logo.png";
 import imgs from "../../../assets/img1.png"
 import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
