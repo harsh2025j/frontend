@@ -88,11 +88,6 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     localStorage.clear();
-<<<<<<< HEAD:src/app/profile/page.tsx
-    
-=======
-
->>>>>>> 2569970413525ce9b0d8a0acbf1b6c4c8edcbcd9:src/app/[locale]/profile/page.tsx
     router.push("/auth/login");
   };
 
@@ -349,70 +344,6 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-<<<<<<< HEAD:src/app/profile/page.tsx
-        </div>
-
-        {/* Bottom area: Current Plan (left) + Quick Action (right) */}
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-2">Current Plan</h3>
-
-            <div className="grid gap-4 text-sm text-gray-700">
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Status</span>
-                  <span className="bg-emerald-400 text-emerald-900 px-2 py-0.5 rounded-full text-xs">Active</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Member Since</span>
-                  <span>12 Jan 2021</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Last Updated</span>
-                  <span>02, Aug 2025</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Current Plan</span>
-                  <span>Free</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Plan Expiry</span>
-                  <span>01, Aug 2026</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 mx-auto">
-              <Link
-                className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm inline-block w-full sm:w-auto text-center"
-                href="/subscription"
-              >
-                Upgrade Plan
-              </Link>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Quick Action</h3>
-            <button
-              onClick={() => setShowLogoutConfirm(true)}
-              className="block w-full text-center border rounded-md py-2 mb-3 hover:bg-gray-700 text-sm bg-primary text-white"
-            >
-              Logout
-            </button>
-
-            <button
-              className="block w-full text-center border hover:bg-gray-50 rounded-md py-2 mb-3 text-sm"
-              onClick={resetProfilePassword}
-            >
-              Reset Password
-            </button>
-
-            <button className="w-full bg-red-500 hover:bg-red-400 text-white rounded-md py-2 text-sm mb-4">
-              Delete Account
-            </button>
-=======
->>>>>>> 2569970413525ce9b0d8a0acbf1b6c4c8edcbcd9:src/app/[locale]/profile/page.tsx
 
 
 
