@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Send, Menu, Plus, Clock, X, Scale } from 'lucide-react';
 import Image from 'next/image';
-import logo from '../../../public/logo.png';
+import logo from '../../../../public/logo.png';
 
 interface Message {
     id: number;
