@@ -99,19 +99,20 @@ export const useCreateArticleActions = () => {
 
   useEffect(() => {
     if (!!message) {
-      // setFormData({
-      //   title: "",
-      //   category: "",
-      //   location: "",
-      //   slug: "",
-      //   subHeadline: "",
-      //   advocateName: "",
-      //   language: "English/हिन्दी",
-      //   author: "",
-      //   content: "",
-      //   tags: [],
-      //   thumbnail: null,
-      // });
+      // Reset form after successful submission
+      setFormData({
+        title: "",
+        category: "",
+        location: "",
+        slug: "",
+        subHeadline: "",
+        advocateName: "",
+        language: "English/हिन्दी",
+        author: "",
+        content: "",
+        tags: [],
+        thumbnail: null,
+      });
 
       toast.success(message);
       dispatch(resetArticleState());

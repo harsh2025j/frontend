@@ -59,6 +59,10 @@ const CreateUpdatePage: React.FC = () => {
 
   useEffect(() => {
     if (error) toast.error(error);
+    // Reset tagInput when form is successfully submitted
+    if (message) {
+      setTagInput("");
+    }
   }, [error, message]);
 
   const handleSubmit = (e: React.FormEvent) => {
