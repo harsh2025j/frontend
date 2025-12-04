@@ -153,8 +153,6 @@ export default function SubscriptionPage() {
         src="https://checkout.razorpay.com/v1/checkout.js"
       />
 
-
-
       {/* Gift Banner */}
       {/* {showGiftBanner && (
         <div
