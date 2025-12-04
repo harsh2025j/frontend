@@ -18,7 +18,7 @@ import toast from "react-hot-toast";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import logo from "../../assets/logo.png";
+import logo from "../../../assets/logo.png";
 import Script from "next/script";
 
 declare global {
@@ -27,7 +27,7 @@ declare global {
   }
 }
 
-import Footer from "../../components/layout/Footer";
+import Footer from "../../../components/layout/Footer";
 
 export default function SubscriptionPage() {
   const [showGiftBanner, setShowGiftBanner] = useState(true);
