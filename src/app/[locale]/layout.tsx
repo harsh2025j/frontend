@@ -6,7 +6,6 @@ import ReduxProvider from "@/data/redux/providers/ReduxProvider";
 import { Toaster } from "react-hot-toast";
 import GlobalLoader from "@/components/ui/GlobalLoader";
 import ErrorBoundary from "@/components/ErrorBoundary";
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
