@@ -28,11 +28,13 @@ const EditArticlePage: React.FC = () => {
 
     const [loading, setLoading] = useState(false);
     const [tagInput, setTagInput] = React.useState("");
+    const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
 
     const router = useRouter();
     const { user: reduxUser } = useProfileActions();
     const user = reduxUser as UserData;
 
+    // --- Authentication Check ---
     useEffect(() => {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         if (!token) {
@@ -54,25 +56,14 @@ const EditArticlePage: React.FC = () => {
         dispatch(fetchCategories());
     }, [dispatch]);
 
-    // Fetch article details
+    // --- Fetch Article Details ---
     useEffect(() => {
         const fetchArticleDetails = async () => {
             if (!articleId) return;
 
             setLoading(true);
             try {
-                // We need a method to fetch a single article. 
-                // Assuming fetchArticles can filter by ID or we filter from the list, 
-                // but ideally we should have a getArticleById endpoint.
-                // For now, let's try to fetch all and find it, or use a specific endpoint if available.
-                // Looking at article-service, there isn't a getById. 
-                // I'll assume we can use fetchArticles with a param or I'll add getById.
-                // Let's try fetching all and finding it for now as a fallback, 
-                // but really we should add getArticleById to the service.
-
-                // Actually, let's check if we can filter by ID in fetchArticles params
                 const response = await articleApi.fetchArticles();
-                // response.data is the body, response.data.data is the array of articles
                 const articles = response.data.data || [];
                 const article = articles.find((a: any) => a.id === articleId);
 
@@ -88,12 +79,11 @@ const EditArticlePage: React.FC = () => {
                         author: article.authors || "",
                         content: article.content,
                         tags: Array.isArray(article.tags) ? article.tags : (typeof article.tags === 'string' ? (article.tags as string).split(',') : []),
-                        thumbnail: null, // We can't set file object from URL easily, handled separately or just show preview
-                        status: article.status === 'published' ? 'pending' : 'draft'
+                        thumbnail: null,
+                        status: article.status === 'published' ? 'pending' : 'draft',
+                        isPaywalled: article.isPaywalled || false,
                     });
-                    // If we want to show the existing thumbnail, we might need a separate state for preview URL
-                    // The existing code uses useMemo on formData.thumbnail. 
-                    // We might need to adjust that logic to support string URL for existing image.
+
                     if (article.thumbnail) {
                         setExistingThumbnailUrl(article.thumbnail);
                     }
@@ -112,11 +102,29 @@ const EditArticlePage: React.FC = () => {
         fetchArticleDetails();
     }, [articleId, setFormData, router]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        await handleUpdate("pending");
+    // --- Helper: Generate Slug ---
+    const generateSlug = (text: string) => {
+        return text
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, '') // Remove non-word chars
+            .replace(/[\s_-]+/g, '-') // Replace spaces/underscores with hyphens
+            .replace(/^-+|-+$/g, ''); // Trim leading/trailing hyphens
     };
 
+    // --- Handler: Title Change (Updates Slug automatically) ---
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newTitle = e.target.value;
+        const autoSlug = generateSlug(newTitle);
+
+        setFormData((prev) => ({
+            ...prev,
+            title: newTitle,
+            slug: autoSlug
+        }));
+    };
+
+    // --- Handler: Update Article ---
     const handleUpdate = async (status: "draft" | "pending") => {
         if (!formData.title || !formData.content) {
             toast.error("Please fill in the Title and Main Content.");
@@ -125,8 +133,7 @@ const EditArticlePage: React.FC = () => {
 
         setLoading(true);
         try {
-            // We pass the formData object directly. The service handles FormData construction.
-            await articleApi.updateArticle(articleId!, formData);
+            await articleApi.updateArticle(articleId!, { ...formData, status });
 
             toast.success("Article updated successfully");
             router.push("/admin/content-management");
@@ -138,6 +145,12 @@ const EditArticlePage: React.FC = () => {
         }
     };
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await handleUpdate("pending");
+    };
+
+    // --- Data Preparation for Select ---
     const flattenCategories = (cats: Category[], prefix = ""): { id: string; name: string }[] => {
         let options: { id: string; name: string }[] = [];
         cats.forEach((cat) => {
@@ -154,14 +167,6 @@ const EditArticlePage: React.FC = () => {
         return flattenCategories(categories || []);
     }, [categories]);
 
-    // Handle preview URL for existing image vs new upload
-    // Since we don't store the existing URL in formData (it has File | null), 
-    // we might need a local state or just rely on the fact that if formData.thumbnail is null, 
-    // we might want to show the existing one. 
-    // But I didn't save the existing URL in the fetch. 
-    // Let's add a state for existingThumbnailUrl.
-    const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
-
     const previewUrl = useMemo(() => {
         if (formData.thumbnail) {
             return URL.createObjectURL(formData.thumbnail);
@@ -169,10 +174,10 @@ const EditArticlePage: React.FC = () => {
         return existingThumbnailUrl;
     }, [formData.thumbnail, existingThumbnailUrl]);
 
-
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-800">
             <main className="flex-1 w-full p-3 sm:p-4 md:p-6 lg:p-8">
+
                 <h1 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 px-2">Edit Content</h1>
                 <div className="max-w-6xl mx-auto bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm">
                     <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
@@ -218,7 +223,7 @@ const EditArticlePage: React.FC = () => {
                                 name="title"
                                 placeholder="Enter article headline..."
                                 value={formData.title}
-                                onChange={handleChange}
+                                onChange={handleTitleChange} // ✅ Uses the new handler for auto-slug
                                 className="w-full border rounded-lg px-3 py-2.5 bg-gray-50 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 required
                             />
@@ -243,9 +248,9 @@ const EditArticlePage: React.FC = () => {
                             <input
                                 type="text"
                                 name="slug"
-                                placeholder="Enter slug of article"
+                                placeholder="auto-generated-slug"
                                 value={formData.slug}
-                                onChange={handleChange}
+                                onChange={handleChange} // ✅ Allows manual editing if needed
                                 className="w-full border rounded-lg px-3 py-2.5 bg-gray-50 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 required
                             />
@@ -321,8 +326,8 @@ const EditArticlePage: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Language + Author */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                        {/* Language + Author + Paywalled */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                             <div>
                                 <label className="block text-sm font-medium mb-1.5">Language</label>
                                 <select
@@ -349,6 +354,38 @@ const EditArticlePage: React.FC = () => {
                                     className="w-full border rounded-lg px-3 py-2.5 bg-gray-50 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     required
                                 />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-4">Paywalled</label>
+                                <div className="flex items-center gap-3 mt-2 ml-4">
+                                    <span className={`text-sm font-medium transition-colors ${!formData.isPaywalled ? 'text-gray-900' : 'text-gray-500'}`}>
+                                        No
+                                    </span>
+                                    <button
+                                        type="button"
+                                        role="switch"
+                                        aria-checked={formData.isPaywalled}
+                                        onClick={() => setFormData(prev => ({ ...prev, isPaywalled: !prev.isPaywalled }))}
+                                        className={`
+                                            relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
+                                            transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                                            ${formData.isPaywalled ? 'bg-blue-600' : 'bg-gray-200'}
+                                        `}
+                                    >
+                                        <span
+                                            aria-hidden="true"
+                                            className={`
+                                                pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
+                                                transition duration-200 ease-in-out
+                                                ${formData.isPaywalled ? 'translate-x-5' : 'translate-x-0'}
+                                            `}
+                                        />
+                                    </button>
+                                    <span className={`text-sm font-medium transition-colors ${formData.isPaywalled ? 'text-gray-900' : 'text-gray-500'}`}>
+                                        Yes
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -409,7 +446,7 @@ const EditArticlePage: React.FC = () => {
                                 disabled={loading}
                                 className="w-full sm:w-auto bg-[#0B2149] hover:bg-[#0a1a3a] text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {loading ? "Updating..." : "Update Content"}
+                                {loading ? "Sending..." : "Request to Publish"}
                             </button>
                         </div>
 

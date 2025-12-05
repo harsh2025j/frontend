@@ -148,7 +148,7 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
 };
 
 const contentManagementPage: React.FC = () => {
-  const { articles, loading, error } = useArticleListActions();
+  const { articles, loading, error, refetch } = useArticleListActions();
   const [currentPage, setCurrentPage] = useState(1);
 
   // Delete Modal State
@@ -202,7 +202,7 @@ const contentManagementPage: React.FC = () => {
       const { articleApi } = await import('@/data/services/article-service/article-service');
       await articleApi.deleteArticle(articleToDelete);
       toast.success('Article deleted successfully');
-      window.location.reload();
+      await refetch();
     } catch (err: any) {
       toast.error(err?.message || 'Failed to delete article');
     } finally {

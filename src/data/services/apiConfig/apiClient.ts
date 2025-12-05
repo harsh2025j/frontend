@@ -126,17 +126,17 @@ apiClient.interceptors.response.use(
       toast.error("Server Error: Something went wrong on our end. Please try again later.", {
         id: "server_error",
       });
-      if (typeof window !== "undefined") {
-        window.location.href = "/server-error";
-      }
+      // if (typeof window !== "undefined") {
+      //   window.location.href = "/server-error";
+      // }
     }
     else if (!apiError.statusCode && error.message === "Network Error") {
       toast.error("Network Error: Unable to connect to the server. Please check your internet connection.", {
         id: "network_error",
       });
-      if (typeof window !== "undefined") {
-        window.location.href = "/server-error";
-      }
+      // if (typeof window !== "undefined") {
+      //   window.location.href = "/server-error";
+      // }
     }
 
     if (apiError.statusCode === 401) {

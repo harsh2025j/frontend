@@ -14,10 +14,11 @@ export const rolesApi = {
         return await apiClient.post(API_ENDPOINTS.ROLES.BASE, data);
     },
     updateRole: async (data: UpdateRoleRequest) => {
+        // console.log("update data",data)
         return await apiClient.post(`${API_ENDPOINTS.ROLES.BASE}/${data.id}`, data);
     },
     deleteRole: async (id: string) => {
-        console.log("this id is belongs to detlete role",id);
+        // console.log("this id is belongs to detlete role",id);
 
         return await apiClient.delete(`${API_ENDPOINTS.ROLES.BASE}/${id}`);
     },

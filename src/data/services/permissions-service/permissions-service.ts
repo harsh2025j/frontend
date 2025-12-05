@@ -17,6 +17,7 @@ export const permissionsApi = {
         return await apiClient.post(`${API_ENDPOINTS.PERMISSIONS.BASE}/${data.id}`, data);
     },
     deletePermission: async (id: string) => {
+        // console.log(id)
         return await apiClient.post(`${API_ENDPOINTS.PERMISSIONS.BASE}/${id}`);
     },
 };

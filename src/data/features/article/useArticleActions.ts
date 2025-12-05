@@ -30,6 +30,7 @@ export const useCreateArticleActions = () => {
     content: "",
     tags: [],
     thumbnail: null,
+    isPaywalled:false,
   });
 
   const handleChange = (
@@ -112,6 +113,7 @@ export const useCreateArticleActions = () => {
         content: "",
         tags: [],
         thumbnail: null,
+        isPaywalled:false
       });
 
       toast.success(message);

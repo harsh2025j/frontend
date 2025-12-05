@@ -144,9 +144,9 @@ const TeamManagementPage: React.FC = () => {
                           </span>
                         </td>
                         <td className="py-3 px-4 flex gap-2">
-                          <button className="bg-yellow-500 text-white px-4 py-1 rounded-md text-sm hover:bg-yellow-600">
+                          {/* <button className="bg-yellow-500 text-white px-4 py-1 rounded-md text-sm hover:bg-yellow-600">
                             Message
-                          </button>
+                          </button> */}
                           <button className="bg-gray-300 text-gray-700 px-4 py-1 rounded-md text-sm hover:bg-gray-400">
                             Manage
                           </button>
