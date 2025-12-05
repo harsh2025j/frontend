@@ -73,11 +73,11 @@ const TeamManagementPage: React.FC = () => {
               <div className="text-sm md:text-base">
                 <strong>Total Team:</strong> {filteredUsers?.length || 0}
               </div>
-              <button
-                className="bg-yellow-400 text-white px-5 py-2 rounded-md font-medium hover:bg-yellow-500"
-                onClick={addNewMember}
+               <button
+                onClick={() => router.push('/admin/create-content')}
+                className="bg-[#0B2149] text-white px-5 py-2 rounded-md font-medium hover:bg-[#1a3a75] transition-colors flex items-center gap-2"
               >
-                + Invite new Member
+                <span>+</span> Invite New Member
               </button>
             </div>
 

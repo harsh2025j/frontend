@@ -90,11 +90,12 @@ export default function PlansManagement() {
                         </div>
                         <button
                             onClick={handleAddNew}
-                            className="flex items-center justify-center gap-2 bg-[#C9A227] hover:bg-[#b8921f] text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                            className="flex items-center justify-center gap-2 bg-[#0B2149] text-white  hover:bg-[#1a3a75] px-6 py-2 rounded-lg font-semibold transition-colors"
                         >
                             <Plus className="w-4 h-4" />
                             Add New Plan
                         </button>
+                         
                     </div>
                 </div>
 

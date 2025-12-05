@@ -22,6 +22,7 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import Loader from "@/components/ui/Loader";
 
+
 const data = [
   { label: "Total Articles", value: "12,450", icon: <TrendingUp className="w-8 h-8 text-blue-500" /> },
   { label: "AI Summaries", value: "6,320", icon: <Star className="w-8 h-8 text-yellow-500" /> },
@@ -34,7 +35,8 @@ const data = [
 ]
 
 export default function Page() {
-  //   const router = useRouter();
+  const router = useRouter();
+  
   //   const {
   //     user: reduxProfileUser,
   //   } = useProfileActions();
@@ -64,13 +66,12 @@ export default function Page() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-semibold text-gray-800">Overview</h1>
 
-        <Link
-          href="/admin/create-content"
-          className="flex items-center gap-2 px-4 py-2 bg-[#C9A227] text-white rounded-md hover:bg-orange-600 transition"
-        >
-          <PlusCircle className="w-5 h-5" />
-          Create New Article
-        </Link>
+        <button
+                onClick={() => router.push('/admin/create-content')}
+                className="bg-[#0B2149] text-white px-5 py-2 rounded-md font-medium hover:bg-[#1a3a75] transition-colors flex items-center gap-2"
+              >
+                <span>+</span> Create New Article
+              </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

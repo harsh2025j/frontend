@@ -171,11 +171,12 @@ export default function Settings() {
                 <div className="flex justify-between items-center">
                     <h3 className="text-xl font-semibold">Category Management</h3>
                     <button
-                        className="px-8 py-2 bg-yellow-500 text-black rounded-3xl"
+                        className="px-8 py-2 bg-[#0B2149] text-white hover:bg-[#1a3a75] transition-colors rounded-3xl"
                         onClick={() => handleAddCategory(null)}
                     >
                         Add New Category
                     </button>
+                     
                 </div>
                 <div className="border border-[#1A73E8] rounded-2xl overflow-hidden mt-5">
                     <table className="w-full">
