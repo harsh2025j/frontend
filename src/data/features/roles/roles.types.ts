@@ -37,7 +37,7 @@ export interface CreateRoleRequest {
 
 export interface UpdateRoleRequest {
     id: string;
-    name?: string;
+    name: string;
     description?: string;
 }
 

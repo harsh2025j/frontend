@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { useCategoryArticles } from "@/hooks/useCategoryArticles";
 import Loader from "../ui/Loader";
+import { useMemo } from "react";
 
 interface CategorySectionProps {
   title: string;
@@ -13,54 +14,17 @@ interface CategorySectionProps {
   limit?: number;
 }
 
-import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
-import { useLocale } from "next-intl";
-import { useState, useEffect } from "react";
-
 export default function CategorySection({ title, slug, layout, limit = 6 }: CategorySectionProps) {
   const { articles: allArticles, loading } = useCategoryArticles(slug, limit);
-  const articles = allArticles?.filter(a => a.status === 'published') || [];
-  const locale = useLocale();
-
-  // Prepare text for translation: flatten titles and descriptions
-  const [textsToTranslate, setTextsToTranslate] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (articles && articles.length > 0 && locale !== 'en') {
-      const texts: string[] = [];
-      articles.forEach(a => {
-        texts.push(a.title);
-        // Use subHeadline or content snippet
-        const desc = a.subHeadline || a.content.replace(/<[^>]*>/g, "").substring(0, 150) + "...";
-        texts.push(desc);
-      });
-      setTextsToTranslate(texts);
-    }
-  }, [articles, locale]);
-
-  const { translatedText, loading: translating } = useGoogleTranslate(
-    locale !== 'en' && textsToTranslate.length > 0 ? textsToTranslate : null
-  );
-
-  // Reconstruct articles with translated text
-  const displayArticles = articles?.map((article, index) => {
-    if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return article;
-
-    // Each article corresponds to 2 strings in the translated array
-    const titleIdx = index * 2;
-    const descIdx = index * 2 + 1;
-
-    return {
-      ...article,
-      title: translatedText[titleIdx] || article.title,
-      subHeadline: translatedText[descIdx] || article.subHeadline,
-      // We also update content snippet if subHeadline was missing, but for the card display we mainly use subHeadline or content.
-      // To be safe, let's override content too if we want the card to show translated snippet from content
-      content: translatedText[descIdx] || article.content
-    };
-  }) || [];
+  
+  // Memoize the filtered articles to prevent unnecessary re-renders
+  const articles = useMemo(() => {
+    return allArticles?.filter(a => a.status === 'published') || [];
+  }, [allArticles]);
 
   if (loading) return <div className="py-10 flex justify-center"><Loader /></div>;
+  
+  // Hide section if no articles
   if (!articles || articles.length === 0) return null;
 
   return (
@@ -71,7 +35,6 @@ export default function CategorySection({ title, slug, layout, limit = 6 }: Cate
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 relative pl-4">
             <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#C9A227] rounded-full"></span>
             {title}
-            {translating && <span className="ml-2 text-xs text-[#C9A227] animate-pulse font-normal">Translating...</span>}
           </h2>
           <Link
             href={`/category/${slug}`}
@@ -81,20 +44,19 @@ export default function CategorySection({ title, slug, layout, limit = 6 }: Cate
           </Link>
         </div>
 
-        {/* Layouts */}
-        {layout === "grid" && <GridLayout articles={displayArticles} />}
-        {layout === "list" && <ListLayout articles={displayArticles} />}
-        {layout === "featured" && <FeaturedLayout articles={displayArticles} />}
-        {layout === "slider" && <SliderLayout articles={displayArticles} />}
+        {/* Layouts - Using articles directly */}
+        {layout === "grid" && <GridLayout articles={articles} />}
+        {layout === "list" && <ListLayout articles={articles} />}
+        {layout === "featured" && <FeaturedLayout articles={articles} />}
+        {layout === "slider" && <SliderLayout articles={articles} />}
       </div>
     </section>
   );
 }
 
-
 const ArticleCard = ({ article, compact = false }: { article: any; compact?: boolean }) => (
   <Link href={`/news/${article.slug}`} className="group block h-full">
-    <div className="bg-white rounded-md overflow-hidden border border-gray-100  hover:shadow-md transition-all duration-300 h-full flex flex-col">
+    <div className="bg-white rounded-md overflow-hidden border border-gray-100 hover:shadow-md transition-all duration-300 h-full flex flex-col">
       <div className={`relative overflow-hidden ${compact ? "h-40" : "h-52"}`}>
         <Image
           src={article.thumbnail || "/placeholder.png"}
@@ -136,16 +98,18 @@ const GridLayout = ({ articles }: { articles: any[] }) => (
 const ListLayout = ({ articles }: { articles: any[] }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
     {articles.map((article) => (
-      <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-start bg-white  rounded-xl border border-gray-100 hover:shadow-md transition-all">
+      <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-start bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all">
         <div className="relative w-27 h-27 flex-shrink-0 rounded-l-lg overflow-hidden">
-          <Image
-            src={article.thumbnail || "/placeholder.png"}
-            alt={article.title}
-            fill
-            className="object-cover  transition-transform duration-500 group-hover:scale-105"
-          />
+          <div className="w-28 h-28 relative">
+             <Image
+              src={article.thumbnail || "/placeholder.png"}
+              alt={article.title}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
         </div>
-        <div className="flex-grow py-2">
+        <div className="flex-grow py-2 pr-3">
           <h2 className="font-bold text-gray-900 group-hover:text-[#C9A227] transition-colors line-clamp-2 mb-1">
             {article.title}
           </h2>
@@ -164,6 +128,8 @@ const ListLayout = ({ articles }: { articles: any[] }) => (
 const FeaturedLayout = ({ articles }: { articles: any[] }) => {
   const featured = articles[0];
   const others = articles.slice(1, 5);
+
+  if (!featured) return null;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -194,7 +160,7 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
       {/* Side List */}
       <div className="lg:col-span-5 flex flex-col gap-4">
         {others.map((article) => (
-          <Link key={article._id} href={`/news/${article.slug}`} className="group flex gap-4 items-center bg-white p-3 rounded-xl border border-gray-100 hover:shadow-md transition-all">
+          <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-center bg-white p-3 rounded-xl border border-gray-100 hover:shadow-md transition-all">
             <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
               <Image
                 src={article.thumbnail || "/placeholder.png"}

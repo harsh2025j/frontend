@@ -145,7 +145,7 @@ export const useLoginActions = () => {
       // console.log("udersrolw",user?.roles[0].name)
       const roles = user.roles?.map((r) => r.name) || [];
       // console.log("wertyuijh",roles)
-      if (roles.includes("admin") || roles.includes("superadmin")) {
+      if (roles.includes("admin") || roles.includes("superadmin") || roles.includes("editor") || roles.includes("creator")) {
       // if(true){
         router.push("/admin");
       } else {

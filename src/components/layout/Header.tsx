@@ -7,7 +7,6 @@ import logo from "../../../public/logo.png";
 import { usePathname, useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
 import { Globe } from "lucide-react";
-import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 
 // Types
 import { NavItem } from "@/data/navigation";
@@ -53,7 +52,6 @@ export default function Header() {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-
   const confirmLogout = () => {
     localStorage.clear();
     dispatch(logoutUser());
@@ -69,46 +67,12 @@ export default function Header() {
   }, [user]);
 
   const t = useTranslations('Navigation');
-  const tCommon = useTranslations('Common');
 
-  // --- Dynamic Nav Logic ---
-  // 1. Prepare category names for translation (Recursive)
-  const [catNamesToTranslate, setCatNamesToTranslate] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (categories.length > 0 && locale !== 'en') {
-      const collectNames = (cats: Category[]): string[] => {
-        let names: string[] = [];
-        cats.forEach(cat => {
-          names.push(cat.name);
-          if (cat.children && cat.children.length > 0) {
-            names = names.concat(collectNames(cat.children));
-          }
-        });
-        return names;
-      };
-      setCatNamesToTranslate(collectNames(categories));
-    }
-  }, [categories, locale]);
-
-  // 2. Fetch translations
-  const { translatedText: translatedCatNames } = useGoogleTranslate(
-    locale !== 'en' && catNamesToTranslate.length > 0 ? catNamesToTranslate : null
-  );
-
+  // --- Dynamic Nav Logic (Cleaned: No Auto-Translate) ---
   const navItems = useMemo(() => {
-    let nameIndex = 0;
-
     const mapToNavItem = (cat: Category): NavItem => {
-      // If we have translations, use them. 
-      let label = cat.name;
-      if (locale !== 'en' && Array.isArray(translatedCatNames) && translatedCatNames[nameIndex]) {
-        label = translatedCatNames[nameIndex];
-      }
-      nameIndex++;
-
       return {
-        label: label,
+        label: cat.name, // Display Database Name directly
         href: `/category/${cat.slug}`,
         children: cat.children?.length ? cat.children.map(mapToNavItem) : undefined,
       };
@@ -121,7 +85,7 @@ export default function Header() {
     const final: NavItem[] = [{ label: t('home'), href: "/" }, ...visible];
     if (hidden.length > 0) final.push({ label: t('more'), children: hidden });
     return final;
-  }, [categories, t, translatedCatNames, locale]);
+  }, [categories, t]);
 
   // --- Helper Functions ---
   const isLinkActive = (href?: string) => {
@@ -232,74 +196,28 @@ export default function Header() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-4">
-            {/* Language Switcher */}
             <div className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1.5 border border-gray-200">
               <Globe size={14} className="text-gray-500" />
-              <button
-                onClick={() => switchLocale("en")}
-                className={`text-xs font-medium transition-colors ${locale === "en" ? "text-[#C9A227] font-bold" : "text-gray-500 hover:text-gray-700"}`}
-              >
-                EN
-              </button>
+              <button onClick={() => switchLocale("en")} className={`text-xs font-medium transition-colors ${locale === "en" ? "text-[#C9A227] font-bold" : "text-gray-500 hover:text-gray-700"}`}>EN</button>
               <span className="text-gray-300">|</span>
-              <button
-                onClick={() => switchLocale("hi")}
-                className={`text-xs font-medium transition-colors ${locale === "hi" ? "text-[#C9A227] font-bold" : "text-gray-500 hover:text-gray-700"}`}
-              >
-                HI
-              </button>
+              <button onClick={() => switchLocale("hi")} className={`text-xs font-medium transition-colors ${locale === "hi" ? "text-[#C9A227] font-bold" : "text-gray-500 hover:text-gray-700"}`}>HI</button>
             </div>
 
             {user ? (
-              <div
-                className="relative"
-                onMouseEnter={() => setIsProfileOpen(true)}
-                onMouseLeave={() => setIsProfileOpen(false)}
-              >
+              <div className="relative" onMouseEnter={() => setIsProfileOpen(true)} onMouseLeave={() => setIsProfileOpen(false)}>
                 <button className="flex items-center gap-2 focus:outline-none py-2">
                   <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700 overflow-hidden border-2 border-[#C9A227]">
                     {avatar ? <Image src={avatar} alt="Avatar" width={40} height={40} className="object-cover w-full h-full" /> : (user?.name?.[0] || "U").toUpperCase()}
                   </div>
-                  <span className="text-sm font-medium text-gray-800 hover:text-[#C9A227] transition-colors">
-                    {user?.name}
-                  </span>
+                  <span className="text-sm font-medium text-gray-800 hover:text-[#C9A227] transition-colors">{user?.name}</span>
                   <ChevronDown size={14} className="text-gray-500" />
                 </button>
-
-
-                <div
-                  className={`absolute right-0 top-full w-48 bg-white border border-gray-200 rounded-xl shadow-lg transition-all duration-200 transform origin-top-right z-50 ${isProfileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}
-                >
+                <div className={`absolute right-0 top-full w-48 bg-white border border-gray-200 rounded-xl shadow-lg transition-all duration-200 transform origin-top-right z-50 ${isProfileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
                   <div className="py-2">
-                    <Link
-                      href="/profile"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227]"
-                    >
-                      <UserIcon size={16} /> {t('profile')}
-                    </Link>
-
-                    {hasDashboardAccess && (
-                      <Link
-                        href="/admin"
-                        onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227]"
-                      >
-                        <LayoutDashboard size={16} /> {t('dashboard')}
-                      </Link>
-                    )}
-
+                    <Link href="/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227]"><UserIcon size={16} /> {t('profile')}</Link>
+                    {hasDashboardAccess && <Link href="/admin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227]"><LayoutDashboard size={16} /> {t('dashboard')}</Link>}
                     <div className="h-px bg-gray-100 my-1 mx-2" />
-
-                    <button
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        setShowLogoutConfirm(true);
-                      }}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                    >
-                      <LogOut size={16} /> {t('logout')}
-                    </button>
+                    <button onClick={() => { setIsProfileOpen(false); setShowLogoutConfirm(true); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"><LogOut size={16} /> {t('logout')}</button>
                   </div>
                 </div>
               </div>
@@ -312,9 +230,7 @@ export default function Header() {
           </div>
 
           <div className="lg:hidden">
-            <button onClick={() => setMenuOpen(!menuOpen)} className="text-gray-700 hover:text-[#C9A227]">
-              {menuOpen ? <X size={28} /> : <Menu size={28} />}
-            </button>
+            <button onClick={() => setMenuOpen(!menuOpen)} className="text-gray-700 hover:text-[#C9A227]">{menuOpen ? <X size={28} /> : <Menu size={28} />}</button>
           </div>
         </div>
 
@@ -330,16 +246,7 @@ export default function Header() {
                     </div>
                     <Link href="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><UserIcon size={16} /> Profile</Link>
                     {hasDashboardAccess && <Link href="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><LayoutDashboard size={16} /> Dashboard</Link>}
-
-                    <button
-                      onClick={() => {
-                        setMenuOpen(false);
-                        setShowLogoutConfirm(true);
-                      }}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg text-left"
-                    >
-                      <LogOut size={16} /> Logout
-                    </button>
+                    <button onClick={() => { setMenuOpen(false); setShowLogoutConfirm(true); }} className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg text-left"><LogOut size={16} /> Logout</button>
                   </div>
                 ) : (
                   <div className="flex gap-4">
@@ -348,33 +255,19 @@ export default function Header() {
                   </div>
                 )}
               </div>
-
-              {/* Mobile Language Switcher */}
               <div className="flex items-center gap-3 mb-4 px-2">
                 <span className="text-sm font-medium text-gray-600">Language:</span>
                 <div className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1.5 border border-gray-200">
-                  <button
-                    onClick={() => { switchLocale("en"); setMenuOpen(false); }}
-                    className={`text-xs font-medium transition-colors ${locale === "en" ? "text-[#C9A227] font-bold" : "text-gray-500"}`}
-                  >
-                    English
-                  </button>
+                  <button onClick={() => { switchLocale("en"); setMenuOpen(false); }} className={`text-xs font-medium transition-colors ${locale === "en" ? "text-[#C9A227] font-bold" : "text-gray-500"}`}>English</button>
                   <span className="text-gray-300">|</span>
-                  <button
-                    onClick={() => { switchLocale("hi"); setMenuOpen(false); }}
-                    className={`text-xs font-medium transition-colors ${locale === "hi" ? "text-[#C9A227] font-bold" : "text-gray-500"}`}
-                  >
-                    हिंदी
-                  </button>
+                  <button onClick={() => { switchLocale("hi"); setMenuOpen(false); }} className={`text-xs font-medium transition-colors ${locale === "hi" ? "text-[#C9A227] font-bold" : "text-gray-500"}`}>Hindi</button>
                 </div>
               </div>
-
               {navItems.map((item, i) => <MobileMenuItem key={i} item={item} />)}
             </nav>
           </div>
         )}
       </header>
-
 
       {showLogoutConfirm && (
         <LogoutModal onCancel={() => setShowLogoutConfirm(false)} onConfirm={confirmLogout} />
@@ -386,33 +279,15 @@ export default function Header() {
 function LogoutModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fadeIn">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={onCancel} />
-
-      {/* Modal Content */}
       <div className="relative z-10 w-full max-w-sm bg-white rounded-xl shadow-2xl p-6 border border-gray-100 transform transition-all scale-100">
         <div className="flex flex-col items-center text-center">
-          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <LogOut className="text-red-600" size={24} />
-          </div>
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4"><LogOut className="text-red-600" size={24} /></div>
           <h3 className="text-xl font-bold text-gray-900">Logout?</h3>
-          <p className="text-sm text-gray-500 mt-2 mb-6">
-            Are you sure you want to Logout of your account? You will need to login again to access your profile.
-          </p>
-
+          <p className="text-sm text-gray-500 mt-2 mb-6">Are you sure you want to Logout of your account? You will need to login again to access your profile.</p>
           <div className="flex gap-3 w-full">
-            <button
-              onClick={onCancel}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={onConfirm}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-md shadow-red-600/20 transition-colors"
-            >
-              Logout
-            </button>
+            <button onClick={onCancel} className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">Cancel</button>
+            <button onClick={onConfirm} className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-md shadow-red-600/20 transition-colors">Logout</button>
           </div>
         </div>
       </div>

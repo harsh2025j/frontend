@@ -25,7 +25,7 @@ export default function UserManagementPage() {
 
     // --- Redux Data ---
     const { users, loading, error } = useAppSelector((state) => state.users);
-  
+
     // --- Local State for Filters ---
     const [filters, setFilters] = useState<UserFilter>({
         name: "",
@@ -212,7 +212,7 @@ export default function UserManagementPage() {
                 </div>
 
                 {/* Users Table */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
                     {loading ? (
                         <div className="p-12 flex justify-center">
                             <Loader size="lg" />
@@ -246,15 +246,17 @@ export default function UserManagementPage() {
                                     <tr>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">User</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Roles</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Permissions</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Status</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Verified</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Created By</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Joined</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    
-                                    {users.map((user: User) => (
+
+                                    {[...users].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((user: User) => (
                                         <tr key={user._id} className="hover:bg-gray-50/50 transition-colors">
                                             <td className="py-4 px-6">
                                                 <div className="flex items-center gap-3">
@@ -268,17 +270,10 @@ export default function UserManagementPage() {
                                                 </div>
                                             </td>
                                             <td className="py-4 px-6">
-                                                <div className="flex flex-wrap gap-1">
-                                                    {user.roles.map((role) => (
-                                                        <span
-                                                            key={role._id || (role as any).id}
-                                                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
-                                                        >
-                                                            {role.name}
-                                                        </span>
-                                                    ))}
-                                                    {user.roles.length === 0 && <span className="text-gray-400 text-sm">-</span>}
-                                                </div>
+                                                <TruncatedList items={user.roles} />
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <TruncatedList items={user.permissions} />
                                             </td>
                                             <td className="py-4 px-6">
                                                 {user.isActive ? (
@@ -318,6 +313,9 @@ export default function UserManagementPage() {
                                             </td>
                                             <td className="py-4 px-6 text-sm text-gray-500">
                                                 {new Date(user.createdAt).toLocaleDateString()}
+                                            </td>
+                                            <td className="py-4 px-6 text-sm text-gray-500">
+                                                <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"> Edit</button>
                                             </td>
                                         </tr>
                                     ))}
@@ -359,5 +357,271 @@ function UsersIcon({ size }: { size: number }) {
             <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
+    );
+}
+
+// Helper component for truncating lists (Roles/Permissions)
+function TruncatedListOld({ items }: { items: { _id?: string; id?: string; name: string }[] }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = React.useRef<HTMLDivElement>(null);
+
+    // Close on click outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    if (!items || items.length === 0) {
+        return <span className="text-gray-400 text-sm">-</span>;
+    }
+
+    const displayedItems = items.slice(0, 1);
+    const remainingCount = items.length - 1;
+
+    return (
+        <div className="relative flex flex-wrap gap-1 items-center" ref={containerRef}>
+            {displayedItems.map((item) => (
+                <span
+                    key={item._id || item.id}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap"
+                >
+                    {item.name}
+                </span>
+            ))}
+
+            {remainingCount > 0 && (
+                <div
+                    className="relative"
+                    onMouseEnter={() => setIsOpen(true)}
+                    onMouseLeave={() => setIsOpen(false)}
+                >
+                    <button
+                        onClick={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
+                        className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium transition-colors cursor-pointer
+                            ${isOpen
+                                ? "bg-blue-600 text-white border border-blue-600"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200"
+                            }`}
+                    >
+                        +{remainingCount}
+                    </button>
+
+                    {/* Attached Tooltip (Absolute) */}
+                    {isOpen && (
+                        <div className="absolute left-0 top-full mt-1 z-[9999] bg-white border border-gray-100 rounded-lg shadow-xl p-3 flex flex-col gap-1.5 w-max min-w-[120px] max-w-[200px]">
+                            {items.slice(1).map((item) => (
+                                <span
+                                    key={item._id || item.id}
+                                    className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 shadow-sm"
+                                >
+                                    {item.name}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Helper component for truncating lists (Roles/Permissions)
+function TruncatedListDeprecated({ items }: { items: { _id?: string; id?: string; name: string }[] }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [positionClass, setPositionClass] = useState("top-full mt-1"); // Default: drop down
+    const containerRef = React.useRef<HTMLDivElement>(null);
+    const buttonRef = React.useRef<HTMLButtonElement>(null);
+
+    const updatePosition = () => {
+        if (buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            // Check space below: full viewport height - button bottom
+            const spaceBelow = window.innerHeight - rect.bottom;
+
+            // If less than 200px below, flip up
+            if (spaceBelow < 200) {
+                setPositionClass("bottom-full mb-1");
+            } else {
+                setPositionClass("top-full mt-1");
+            }
+        }
+    };
+
+    // Close on click outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    if (!items || items.length === 0) {
+        return <span className="text-gray-400 text-sm">-</span>;
+    }
+
+    const displayedItems = items.slice(0, 1);
+    const remainingCount = items.length - 1;
+
+    return (
+        <div className="relative flex flex-wrap gap-1 items-center" ref={containerRef}>
+            {displayedItems.map((item) => (
+                <span
+                    key={item._id || item.id}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap"
+                >
+                    {item.name}
+                </span>
+            ))}
+
+            {remainingCount > 0 && (
+                <div
+                    className="relative"
+                    onMouseEnter={() => { updatePosition(); setIsOpen(true); }}
+                    onMouseLeave={() => setIsOpen(false)}
+                >
+                    <button
+                        ref={buttonRef}
+                        onClick={(e) => { e.preventDefault(); updatePosition(); setIsOpen(!isOpen); }}
+                        className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium transition-colors cursor-pointer
+                            ${isOpen
+                                ? "bg-blue-600 text-white border border-blue-600"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200"
+                            }`}
+                    >
+                        +{remainingCount}
+                    </button>
+
+                    {/* Attached Tooltip (Absolute) */}
+                    {isOpen && (
+                        <div className={`absolute left-0 z-[9999] bg-white border border-gray-100 rounded-lg shadow-xl p-3 flex flex-col gap-1.5 w-max min-w-[120px] max-w-[200px] ${positionClass}`}>
+                            {items.slice(1).map((item) => (
+                                <span
+                                    key={item._id || item.id}
+                                    className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 shadow-sm"
+                                >
+                                    {item.name}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Helper component for truncating lists (Roles/Permissions)
+function TruncatedList({ items }: { items: { _id?: string; id?: string; name: string }[] }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [style, setStyle] = useState<React.CSSProperties>({});
+    const containerRef = React.useRef<HTMLDivElement>(null);
+    const buttonRef = React.useRef<HTMLButtonElement>(null);
+
+    const calculateStyle = () => {
+        if (!buttonRef.current) return;
+        const rect = buttonRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+
+        const newStyle: React.CSSProperties = {
+            left: rect.left,
+            position: 'fixed',
+            zIndex: 9999,
+        };
+
+        // Flip up if space below is tight (<200px)
+        if (spaceBelow < 200) {
+            newStyle.bottom = window.innerHeight - rect.top + 4;
+            newStyle.maxHeight = rect.top - 20; // prevent overflow top
+        } else {
+            newStyle.top = rect.bottom + 4;
+            newStyle.maxHeight = window.innerHeight - rect.bottom - 20; // prevent overflow bottom
+        }
+
+        setStyle(newStyle);
+    };
+
+    // Close on click outside or Scroll
+    useEffect(() => {
+        // Generic click listener for outside clicks
+        const handleClick = (e: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        if (isOpen) {
+            window.addEventListener("scroll", () => setIsOpen(false), true);
+            document.addEventListener("mousedown", handleClick);
+        }
+
+        return () => {
+            window.removeEventListener("scroll", () => setIsOpen(false), true);
+            document.removeEventListener("mousedown", handleClick);
+        };
+    }, [isOpen]);
+
+    if (!items || items.length === 0) {
+        return <span className="text-gray-400 text-sm">-</span>;
+    }
+
+    const displayedItems = items.slice(0, 1);
+    const remainingCount = items.length - 1;
+
+    return (
+        <div className="relative flex flex-wrap gap-1 items-center" ref={containerRef}>
+            {displayedItems.map((item) => (
+                <span
+                    key={item._id || item.id}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap"
+                >
+                    {item.name}
+                </span>
+            ))}
+
+            {remainingCount > 0 && (
+                <div
+                    className="relative"
+                    onMouseEnter={() => { calculateStyle(); setIsOpen(true); }}
+                    onMouseLeave={() => setIsOpen(false)}
+                >
+                    <button
+                        ref={buttonRef}
+                        onClick={(e) => { e.preventDefault(); calculateStyle(); setIsOpen(!isOpen); }}
+                        className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium transition-colors cursor-pointer
+                            ${isOpen
+                                ? "bg-blue-600 text-white border border-blue-600"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200"
+                            }`}
+                    >
+                        +{remainingCount}
+                    </button>
+
+                    {/* Fixed Tooltip (Z-Axis Independent) */}
+                    {isOpen && (
+                        <div
+                            className="fixed bg-white border border-gray-100 rounded-lg shadow-xl p-3 flex flex-col gap-1.5 w-max min-w-[120px] max-w-[200px]"
+                            style={style}
+                        >
+                            {items.slice(1).map((item) => (
+                                <span
+                                    key={item._id || item.id}
+                                    className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 shadow-sm"
+                                >
+                                    {item.name}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
     );
 }

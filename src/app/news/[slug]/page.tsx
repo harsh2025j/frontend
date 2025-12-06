@@ -6,10 +6,10 @@ import { useArticleListActions } from "@/data/features/article/useArticleActions
 import { Article } from "@/data/features/article/article.types";
 import Image from "next/image";
 import Link from "next/link";
-import { Clock, Share2, Sparkles, X, MessageCircle, Eye, Facebook, Twitter, Linkedin, Link2 } from "lucide-react";
-import logo from "../../../../public/logo.png";
+import { Share2, Sparkles, X, Facebook, Twitter, Linkedin, Link2, Check, Printer } from "lucide-react";
+import logo from "../../../../../public/logo.png";
 import Loader from "@/components/ui/Loader";
-
+import { useTranslations, useLocale } from "next-intl";
 
 // Helper function to get related articles
 export function getRelatedArticles(currentSlug: string, allArticles: Article[], limit: number = 20) {
@@ -35,17 +35,19 @@ export function getRelatedArticles(currentSlug: string, allArticles: Article[], 
 export default function ArticleDetailPage() {
     const params = useParams();
     const slug = params.slug as string;
-    const { articles, loading } = useArticleListActions();
+    const { articles: allArticles, loading } = useArticleListActions();
+    const articles = useMemo(() => allArticles.filter((a: { status: string; }) => a.status === 'published'), [allArticles]);
     const [article, setArticle] = useState<Article | null>(null);
-    const [showAISummary, setShowAISummary] = useState(false);
+    const [copied, setCopied] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
-    // console.log(slug)
+    const [showAISummary, setShowAISummary] = useState(false);
+    
+    const t = useTranslations('ArticleDetail');
+    const locale = useLocale();
+
     const recommendedArticles = useMemo(() => {
         return getRelatedArticles(slug, articles, 10);
     }, [slug, articles]);
-    // Dummy data
-    const viewCount = 1247;
-    const commentCount = 23;
 
     useEffect(() => {
         if (articles.length > 0 && slug) {
@@ -63,33 +65,47 @@ export default function ArticleDetailPage() {
     const handleShare = (platform: string) => {
         const url = window.location.href;
         const text = article?.title || '';
-
-        const shareUrls: { [key: string]: string } = {
-            facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-            twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
-            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
-        };
+        const encodedUrl = encodeURIComponent(url);
+        const encodedText = encodeURIComponent(text);
 
         if (platform === 'copy') {
             navigator.clipboard.writeText(url);
-            alert('Link copied to clipboard!');
-            setShowShareModal(false);
-        } else {
-            window.open(shareUrls[platform], '_blank', 'width=600,height=400');
-            setShowShareModal(false);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+            return;
         }
+
+        if (platform === 'print') {
+            window.print();
+            return;
+        }
+
+        const shareUrls: { [key: string]: string } = {
+            facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+            twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`,
+            whatsapp: `https://api.whatsapp.com/send?text=${encodedText} ${encodedUrl}`,
+            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+            pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedText}`,
+            tumblr: `https://www.tumblr.com/widgets/share/tool?canonicalUrl=${encodedUrl}&title=${encodedText}`,
+            email: `mailto:?subject=${encodedText}&body=${encodedUrl}`,
+        };
+
+        if (shareUrls[platform]) {
+            window.open(shareUrls[platform], '_blank', 'width=600,height=400');
+        }
+        setShowShareModal(false);
     };
 
     if (loading) {
         return <div className="flex justify-center items-center min-h-screen">
-            <Loader text="Loading Profile..." size="lg" />
+            <Loader text={t('loading')} size="lg" />
         </div>;
     }
 
     if (!article) {
         return (
             <div className="container mx-auto px-4 py-8 text-center">
-                <h1 className="text-2xl font-bold">Article not found</h1>
+                <h1 className="text-2xl font-bold">{t('notFound')}</h1>
             </div>
         );
     }
@@ -104,20 +120,25 @@ export default function ArticleDetailPage() {
                     <div className="lg:col-span-8">
                         {/* Header */}
                         <div className="mb-6">
-                            {/* Metadata */}
-                            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-4">
-                                <span>
-                                    {new Date(article.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                    {' '}
-                                    {new Date(article.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                                    {' '}
-                                    ({readTime} mins read)
-                                </span>
-                            </div>
-
                             <h1 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight">
                                 {article.title}
                             </h1>
+                            {/* Metadata */}
+                            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-4">
+                                <span>
+                                    {t('by')} {article.authors && (
+                                        <>
+                                            <span className="font-medium text-gray-900">{article.authors}</span>
+                                            <span className="mx-2">•</span>
+                                        </>
+                                    )}
+                                    {new Date(article.createdAt).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    {' '}
+                                    {new Date(article.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                    {' '}
+                                    ({readTime} {t('minsRead')})
+                                </span>
+                            </div>
                         </div>
 
                         {/* Featured Image */}
@@ -132,22 +153,32 @@ export default function ArticleDetailPage() {
                             </div>
                         )}
 
-                        {/* Action Buttons */}
-                        <div className="flex gap-3 mb-8 pb-6 border-b border-gray-200">
-                            <button
-                                onClick={() => setShowAISummary(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                            >
-                                <Sparkles size={16} />
-                                AI Summary
-                            </button>
-                            <button
-                                onClick={() => setShowShareModal(true)}
-                                className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50 transition-colors"
-                            >
-                                <Share2 size={16} />
-                                Share
-                            </button>
+                        {/* Social Share Bar */}
+                        <div className="flex flex-col sm:flex-row items-center gap-6 mb-10 py-3 px-6 bg-white rounded-full border border-gray-200 w-fit mx-auto sm:mx-0">
+                            <div className="flex items-center gap-3 text-[#0A2342] font-bold min-w-fit">
+                                <Share2 size={20} className="text-[#0A2342]" />
+                                <span className="text-sm tracking-wider">{t('shareArticle')}</span>
+                            </div>
+
+                            <div className="hidden sm:block w-px h-8 bg-gray-200"></div>
+
+                            <div className="flex items-center gap-3">
+                                <button onClick={() => handleShare('facebook')} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0A2342] text-white hover:text-[#C9A227] transition-all duration-300">
+                                    <Facebook size={18} />
+                                </button>
+                                <button onClick={() => handleShare('twitter')} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0A2342] text-white hover:text-[#C9A227] transition-all duration-300">
+                                    <Twitter size={18} />
+                                </button>
+                                <button onClick={() => handleShare('linkedin')} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0077b5] text-white hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                                    <Linkedin size={18} />
+                                </button>
+                                <button onClick={() => handleShare('copy')} className={`w-10 h-10 flex items-center justify-center rounded-full ${copied ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-all duration-300 hover:-translate-y-1`}>
+                                    {copied ? <Check size={18} /> : <Link2 size={18} />}
+                                </button>
+                                <button onClick={() => handleShare('print')} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:-translate-y-1 transition-all duration-300">
+                                    <Printer size={18} />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Article Content */}
@@ -160,10 +191,7 @@ export default function ArticleDetailPage() {
                             <div className="pt-6 border-t border-gray-200">
                                 <div className="flex flex-wrap gap-2">
                                     {article.tags.map((tag, index) => (
-                                        <span
-                                            key={index}
-                                            className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                                        >
+                                        <span key={index} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
                                             {tag}
                                         </span>
                                     ))}
@@ -175,21 +203,10 @@ export default function ArticleDetailPage() {
                     {/* Sidebar */}
                     <div className="lg:col-span-4">
                         <div className="sticky top-24">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">Related Articles</h3>
-
-                            {/* Sidebar Logic:
-                                - sticky top-24: Keeps sidebar visible below header.
-                                - max-h-[85vh]: Ensures sidebar doesn't overflow screen height.
-                                - overflow-y-auto: Allows scrolling inside sidebar if content is long.
-                                - scrollbar-hide: Hides the scrollbar for a clean look.
-                            */}
+                            <h3 className="text-lg font-bold text-gray-900 mb-4">{t('relatedArticles')}</h3>
                             <div className="space-y-6 max-h-[85vh] overflow-y-auto scrollbar-hide pb-10">
                                 {recommendedArticles.map((rec) => (
-                                    <Link
-                                        key={rec.id}
-                                        href={`/news/${rec.slug}`}
-                                        className="block group"
-                                    >
+                                    <Link key={rec.id} href={`/news/${rec.slug}`} className="block group">
                                         <div className="flex gap-4">
                                             <div className="relative w-24 h-24 flex-shrink-0 rounded overflow-hidden bg-gray-100">
                                                 <Image
@@ -212,105 +229,6 @@ export default function ArticleDetailPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Share Modal */}
-            {showShareModal && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-                    onClick={() => setShowShareModal(false)}
-                >
-                    <div
-                        className="bg-white rounded-lg max-w-md w-full shadow-xl"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="border-b px-6 py-4 flex items-center justify-between">
-                            <h3 className="text-lg font-bold">Share Article</h3>
-                            <button
-                                onClick={() => setShowShareModal(false)}
-                                className="p-1 hover:bg-gray-100 rounded transition-colors"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <div className="p-6">
-                            <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    onClick={() => handleShare('facebook')}
-                                    className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                                >
-                                    <Facebook size={20} className="text-blue-600" />
-                                    <span className="font-medium text-sm">Facebook</span>
-                                </button>
-                                <button
-                                    onClick={() => handleShare('twitter')}
-                                    className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                                >
-                                    <Twitter size={20} className="text-sky-500" />
-                                    <span className="font-medium text-sm">Twitter</span>
-                                </button>
-                                <button
-                                    onClick={() => handleShare('linkedin')}
-                                    className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                                >
-                                    <Linkedin size={20} className="text-blue-700" />
-                                    <span className="font-medium text-sm">LinkedIn</span>
-                                </button>
-                                <button
-                                    onClick={() => handleShare('copy')}
-                                    className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                                >
-                                    <Link2 size={20} className="text-gray-600" />
-                                    <span className="font-medium text-sm">Copy Link</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* AI Summary Modal */}
-            {showAISummary && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-                    onClick={() => setShowAISummary(false)}
-                >
-                    <div
-                        className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Sparkles className="text-blue-600" size={20} />
-                                <h3 className="text-lg font-bold">AI Summary</h3>
-                            </div>
-                            <button
-                                onClick={() => setShowAISummary(false)}
-                                className="p-1 hover:bg-gray-100 rounded transition-colors"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <div className="p-6">
-                            <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                                <p className="text-gray-800 text-sm leading-relaxed">
-                                    This article discusses {article.title.toLowerCase()}. It provides comprehensive information about the legal aspects, procedures, and important considerations.
-                                </p>
-                            </div>
-                            <div className="space-y-2">
-                                <h4 className="font-semibold text-sm text-gray-900">Key Points:</h4>
-                                <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                                    <li>Detailed explanation of legal procedures</li>
-                                    <li>Important considerations for implementation</li>
-                                    <li>Relevant case laws and precedents</li>
-                                </ul>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-4 text-center">
-                                AI-generated summary. Read full article for details.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

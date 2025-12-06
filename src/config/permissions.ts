@@ -21,11 +21,9 @@ export const PERMISSIONS = {
 
 export const ROLES = {
     USER: "user",
-    SUBSCRIBER: "subscriber",
     EDITOR: "editor",
     ADMIN: "admin",
     SUPERADMIN: "superadmin",
-    STAFF: "staff",
 } as const;
 
 export type PermissionType =
@@ -44,8 +42,6 @@ export type PermissionType =
 
 export type RoleType =
     | typeof ROLES.USER
-    | typeof ROLES.SUBSCRIBER
     | typeof ROLES.EDITOR
     | typeof ROLES.ADMIN
     | typeof ROLES.SUPERADMIN
-    | typeof ROLES.STAFF;

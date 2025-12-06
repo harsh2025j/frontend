@@ -161,7 +161,7 @@ const ContentApprovalPanel = () => {
 
     // 2. Role Check
     if (user?.roles?.length) {
-      const allowedRoles = ["admin", "superadmin"];
+      const allowedRoles = ["admin", "superadmin", "editor"];
       const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
       if (!hasAccess) {
         router.replace("/auth/login");
@@ -249,8 +249,22 @@ const ContentApprovalPanel = () => {
     (a: Article) => a.status === "pending"
   );
 
-  // Filter out draft articles
-  const filteredArticles = articles.filter((a: Article) => a.status !== 'draft');
+  // Filter out draft articles and Sort (Pending First -> Recent Date)
+  const filteredArticles = articles
+    .filter((a: Article) => a.status !== 'draft')
+    .sort((a:any, b:any) => {
+      // 1. Primary Sort: Status (Pending first)
+      const isAPending = a.status === 'pending';
+      const isBPending = b.status === "pending";
+
+      if (isAPending && !isBPending) return -1;
+      if (!isAPending && isBPending) return 1;
+
+      // 2. Secondary Sort: CreatedAt (Recent first)
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateB - dateA;
+    });
 
   // Pagination logic
   const totalPages = Math.ceil(filteredArticles.length / ITEMS_PER_PAGE);
