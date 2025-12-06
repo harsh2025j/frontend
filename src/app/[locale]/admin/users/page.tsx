@@ -25,7 +25,7 @@ export default function UserManagementPage() {
 
     // --- Redux Data ---
     const { users, loading, error } = useAppSelector((state) => state.users);
-  
+
     // --- Local State for Filters ---
     const [filters, setFilters] = useState<UserFilter>({
         name: "",
@@ -246,14 +246,16 @@ export default function UserManagementPage() {
                                     <tr>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">User</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Roles</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Permissions</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Status</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Verified</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Created By</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Joined</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    
+
                                     {users.map((user: User) => (
                                         <tr key={user._id} className="hover:bg-gray-50/50 transition-colors">
                                             <td className="py-4 px-6">
@@ -278,6 +280,19 @@ export default function UserManagementPage() {
                                                         </span>
                                                     ))}
                                                     {user.roles.length === 0 && <span className="text-gray-400 text-sm">-</span>}
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <div className="flex flex-wrap gap-1">
+                                                    {user.permissions.map((perm) => (
+                                                        <span
+                                                            key={perm._id || (perm as any).id}
+                                                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
+                                                        >
+                                                            {perm.name}
+                                                        </span>
+                                                    ))}
+                                                    {user.permissions.length === 0 && <span className="text-gray-400 text-sm">-</span>}
                                                 </div>
                                             </td>
                                             <td className="py-4 px-6">
@@ -318,6 +333,9 @@ export default function UserManagementPage() {
                                             </td>
                                             <td className="py-4 px-6 text-sm text-gray-500">
                                                 {new Date(user.createdAt).toLocaleDateString()}
+                                            </td>
+                                            <td className="py-4 px-6 text-sm text-gray-500">
+                                                <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"> Edit</button>
                                             </td>
                                         </tr>
                                     ))}

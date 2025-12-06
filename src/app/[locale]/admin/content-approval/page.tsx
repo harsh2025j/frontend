@@ -161,7 +161,7 @@ const ContentApprovalPanel = () => {
 
     // 2. Role Check
     if (user?.roles?.length) {
-      const allowedRoles = ["admin", "superadmin"];
+      const allowedRoles = ["admin", "superadmin", "editor"];
       const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
       if (!hasAccess) {
         router.replace("/auth/login");

@@ -36,7 +36,7 @@ const data = [
 
 export default function Page() {
   const router = useRouter();
-  
+
   //   const {
   //     user: reduxProfileUser,
   //   } = useProfileActions();
@@ -66,12 +66,12 @@ export default function Page() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-semibold text-gray-800">Overview</h1>
 
-        <button
+        {/* <button
                 onClick={() => router.push('/admin/create-content')}
                 className="bg-[#0B2149] text-white px-5 py-2 rounded-md font-medium hover:bg-[#1a3a75] transition-colors flex items-center gap-2"
               >
                 <span>+</span> Create New Article
-              </button>
+              </button> */}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
