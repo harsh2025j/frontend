@@ -14,9 +14,17 @@ export const permissionsApi = {
         return await apiClient.post(API_ENDPOINTS.PERMISSIONS.BASE, data);
     },
     updatePermission: async (data: UpdatePermissionRequest) => {
-        return await apiClient.post(`${API_ENDPOINTS.PERMISSIONS.BASE}/${data.id}`, data);
+    
+        const formData = new FormData();
+        formData.append("name", data.name);
+        if(data.description){
+        formData.append("description",data.description)
+        }
+        // console.log(`${API_ENDPOINTS.PERMISSIONS.BASE}/${data.id}`, formData);
+        return await apiClient.patch(`${API_ENDPOINTS.PERMISSIONS.BASE}/${data.id}`,formData);
     },
     deletePermission: async (id: string) => {
-        return await apiClient.post(`${API_ENDPOINTS.PERMISSIONS.BASE}/${id}`);
+        // console.log(id)
+        return await apiClient.delete(`${API_ENDPOINTS.PERMISSIONS.BASE}/${id}`);
     },
 };

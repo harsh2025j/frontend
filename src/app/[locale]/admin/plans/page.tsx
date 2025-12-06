@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePlanActions } from "@/data/features/plan/usePlanActions";
 import { Plan } from "@/data/features/plan/plan.types";
@@ -8,14 +8,25 @@ import { Trash2, Edit, Plus, Search } from "lucide-react";
 import Loader from "@/components/ui/Loader";
 import AddEditPlanModal from "./PlanModal";
 
+// Module-level flag to ensure fetch only happens ONCE across ALL instances
+let hasInitiatedFetch = false;
+
 export default function PlansManagement() {
     const router = useRouter();
-    const { plans, loading, deletePlan } = usePlanActions();
+    const { plans, loading, deletePlan, refetchPlans, hasFetched } = usePlanActions();
     const [searchQuery, setSearchQuery] = useState("");
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
     const [showPlanModal, setShowPlanModal] = useState(false);
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+
+    // Fetch plans ONLY ONCE using module-level flag
+    useEffect(() => {
+        if (!hasInitiatedFetch && !hasFetched) {
+            hasInitiatedFetch = true;
+            refetchPlans();
+        }
+    }, []); // Empty deps - only run on first mount
 
     const filteredPlans = plans.filter((plan: Plan) =>
         plan.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -79,11 +90,12 @@ export default function PlansManagement() {
                         </div>
                         <button
                             onClick={handleAddNew}
-                            className="flex items-center justify-center gap-2 bg-[#C9A227] hover:bg-[#b8921f] text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                            className="flex items-center justify-center gap-2 bg-[#0B2149] text-white  hover:bg-[#1a3a75] px-6 py-2 rounded-lg font-semibold transition-colors"
                         >
                             <Plus className="w-4 h-4" />
                             Add New Plan
                         </button>
+                         
                     </div>
                 </div>
 

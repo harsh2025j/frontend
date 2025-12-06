@@ -74,15 +74,23 @@ export default function AddEditPlanModal({ plan, onClose }: AddEditPlanModalProp
             features: formData.features,
         };
 
-        if (plan) {
-            // Update existing plan
-            await updatePlan({ id: plan.id, ...planData });
-        } else {
-            // Create new plan
-            await createPlan(planData);
+        try {
+            if (plan) {
+                // Update existing plan
+                const result = await updatePlan({ id: plan.id, ...planData });
+                if (result.meta.requestStatus === 'fulfilled') {
+                    onClose();
+                }
+            } else {
+                // Create new plan
+                const result = await createPlan(planData);
+                if (result.meta.requestStatus === 'fulfilled') {
+                    onClose();
+                }
+            }
+        } catch (error) {
+            console.error("Error saving plan:", error);
         }
-
-        onClose();
     };
 
     return (

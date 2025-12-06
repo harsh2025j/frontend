@@ -22,6 +22,7 @@ const CreateUpdatePage: React.FC = () => {
     loading,
     error,
     message,
+    setFormData,
   } = useCreateArticleActions();
 
   const [tagInput, setTagInput] = React.useState("");
@@ -59,11 +60,15 @@ const CreateUpdatePage: React.FC = () => {
 
   useEffect(() => {
     if (error) toast.error(error);
+    // Reset tagInput when form is successfully submitted
+    if (message) {
+      setTagInput("");
+    }
   }, [error, message]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleCreateArticle("publish");
+    handleCreateArticle("pending");
   };
 
   const previewUrl = useMemo(() => {
@@ -225,8 +230,8 @@ const CreateUpdatePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Language + Author */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            {/* Language + Author + Paywalled */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               <div>
                 <label className="block text-sm font-medium mb-1.5">Language</label>
                 <select
@@ -254,6 +259,37 @@ const CreateUpdatePage: React.FC = () => {
                   required
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-4">Paywalled</label>
+                <div className="flex items-center gap-3 mt-2 ml-4">
+                  <span className={`text-sm font-medium transition-colors ${!formData.isPaywalled ? 'text-gray-900' : 'text-gray-500'}`}>
+                    No
+                  </span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={formData.isPaywalled}
+                    onClick={() => setFormData(prev => ({ ...prev, isPaywalled: !prev.isPaywalled }))}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
+                                            transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                                            ${formData.isPaywalled ? 'bg-blue-600' : 'bg-gray-200'} `}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`
+                                                pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
+                                                transition duration-200 ease-in-out
+                                                ${formData.isPaywalled ? 'translate-x-5' : 'translate-x-0'}
+                                            `}
+                    />
+                  </button>
+                  <span className={`text-sm font-medium transition-colors ${formData.isPaywalled ? 'text-gray-900' : 'text-gray-500'}`}>
+                    Yes
+                  </span>
+                </div>
+              </div>
+
             </div>
 
             {/* Thumbnail */}

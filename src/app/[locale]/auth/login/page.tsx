@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import logo from "../../../../../public/LightGray.png";
-import award1 from "../../../../../public/awards/award1.jpg";
-import award2 from "../../../../../public/awards/award2.jpg";
-import award3 from "../../../../../public/awards/award3.jpg";
-import award4 from "../../../../../public/awards/award4.jpg";
+import award1 from "../../../../public/awards/award1.jpg";
+import award2 from "../../../../public/awards/award2.jpg";
+import award3 from "../../../../public/awards/award3.jpg";
+import award4 from "../../../../public/awards/award4.jpg";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaEye, FaEyeSlash, FaCheckCircle } from "react-icons/fa";
 import { useLoginActions } from "@/data/features/auth/useAuthActions";
@@ -139,7 +139,7 @@ export default function LoginPage() {
             </div>
 
             <button
-            onClick={handleGoogleLogin}
+              onClick={handleGoogleLogin}
               type="button"
               className="w-full border border-gray-300 rounded-md py-3 flex items-center justify-center space-x-3 hover:bg-gray-50 transition"
             >
@@ -168,7 +168,7 @@ export default function LoginPage() {
               priority
             />
           </div>
-          <h1  className="text-2xl font-semibold text-white text-center mb-8">
+          <h1 className="text-2xl font-semibold text-white text-center mb-8">
             Sajjad Law Associates
           </h1>
 

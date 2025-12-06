@@ -30,13 +30,7 @@ export default function Articles() {
                     </p>
                 </div>
             </div>
-            <div className="bg-[#122340] text-white py-8">
-                <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
-                    <p className="text-sm md:text-base text-blue-200">
-                        © {new Date().getFullYear()} Sajjad Husain Law Associates. All rights reserved.
-                    </p>
-                </div>
-            </div>
+
         </div>
     );
 }

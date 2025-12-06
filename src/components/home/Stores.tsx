@@ -82,7 +82,8 @@ export default function Stores() {
   };
 
 
-  const { articles, loading, error } = useArticleListActions();
+  const { articles: allArticles, loading, error } = useArticleListActions();
+  const articles = useMemo(() => allArticles.filter((a: { status: string; }) => a.status === 'published'), [allArticles]);
 
 
   const LatestNewsData = useMemo(() => getArticlesBySlugs(articles, ["latest-news"]), [articles]);

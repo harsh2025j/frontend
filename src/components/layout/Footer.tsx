@@ -49,7 +49,7 @@ export default function Footer() {
     { icon: FaInstagram, href: "https://www.instagram.com/sajjad_husain_law_associates/?hl=en", color: "hover:bg-pink-600", label: "Instagram" },
     { icon: FaWhatsapp, href: "#", color: "hover:bg-green-600", label: "WhatsApp" },
     { icon: FaTwitter, href: "#", color: "hover:bg-sky-500", label: "Twitter" },
-    { icon: FaLinkedinIn, href: "https://www.linkedin.com/in/sajjad-husain/", color: "hover:bg-blue-700", label: "LinkedIn" },
+    { icon: FaLinkedinIn, href: "https://www.linkedin.com/in/sajjad-husain-associates-law-31715675/", color: "hover:bg-blue-700", label: "LinkedIn" },
     { icon: FaYoutube, href: "https://www.youtube.com/@SajjadHusainLawAssociates", color: "hover:bg-red-600", label: "YouTube" },
   ];
 

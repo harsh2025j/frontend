@@ -14,7 +14,8 @@ import { useLocale } from "next-intl";
 export default function CategoryPage() {
     const params = useParams();
     const slug = params.slug as string;
-    const { articles, loading } = useArticleListActions();
+    const { articles: allArticles, loading } = useArticleListActions();
+    const articles = React.useMemo(() => allArticles.filter((a: { status: string; }) => a.status === 'published'), [allArticles]);
     const [categoryArticles, setCategoryArticles] = useState<Article[]>([]);
     const [categoryName, setCategoryName] = useState<string>("");
     const locale = useLocale();
@@ -53,38 +54,30 @@ export default function CategoryPage() {
 
             setCategoryArticles(filtered);
 
-            // Set the category name from the first matching article
             if (filtered.length > 0 && filtered[0].category) {
                 const firstArticleCategory = filtered[0].category;
                 const currentSlug = slug.toLowerCase();
 
                 let displayName = '';
 
-                // Check if the slug matches the category slug
                 if (firstArticleCategory.slug?.toLowerCase() === currentSlug) {
                     displayName = cleanCategoryName(firstArticleCategory.name);
                 }
-                // Check if the slug matches the category name (formatted)
                 else if (firstArticleCategory.name?.toLowerCase() === currentSlug) {
                     displayName = cleanCategoryName(firstArticleCategory.name);
                 }
-                // Check if the slug matches the parent category slug
                 else if (firstArticleCategory.parent?.slug?.toLowerCase() === currentSlug) {
                     displayName = cleanCategoryName(firstArticleCategory.parent.name);
                 }
-                // Check if the slug matches the parent category name (formatted)
                 else if (firstArticleCategory.parent?.name?.toLowerCase() === currentSlug) {
                     displayName = cleanCategoryName(firstArticleCategory.parent.name);
                 }
-                // Default fallback to the article's category name
                 else {
                     displayName = cleanCategoryName(firstArticleCategory.name);
                 }
 
                 setCategoryName(displayName);
             } else {
-                // Fallback to formatted slug if no articles found
-                // Convert slug to title case (e.g., "supreme-court" -> "Supreme Court")
                 const formattedSlug = slug
                     .split('-')
                     .map(word => word.charAt(0).toUpperCase() + word.slice(1))

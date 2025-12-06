@@ -14,9 +14,19 @@ export const rolesApi = {
         return await apiClient.post(API_ENDPOINTS.ROLES.BASE, data);
     },
     updateRole: async (data: UpdateRoleRequest) => {
-        return await apiClient.post(`${API_ENDPOINTS.ROLES.BASE}/${data.id}`, data);
+        // console.log("update data",data)
+         const formData = new FormData();
+        formData.append("name", data.name);
+        // if(data.description){
+        // formData.append("description",data.description)
+        // }
+
+        console.log(`${API_ENDPOINTS.ROLES.BASE}/${data.id}`, formData)
+        return await apiClient.patch(`${API_ENDPOINTS.ROLES.BASE}/${data.id}`, formData);
     },
     deleteRole: async (id: string) => {
-        return await apiClient.post(`${API_ENDPOINTS.ROLES.BASE}/${id}`);
+        // console.log("this id is belongs to detlete role",id);
+
+        return await apiClient.delete(`${API_ENDPOINTS.ROLES.BASE}/${id}`);
     },
 };

@@ -216,7 +216,7 @@ export default function AddNewMemberPage() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {roles.map((role: Role) => {
-                    const roleId = role._id || (role as any).id;
+                    const roleId = role.id;
                     // console.log("Role ID:", roleId);
                     if (!roleId) return null;
 
@@ -259,7 +259,7 @@ export default function AddNewMemberPage() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {permissions.map((perm: Permission) => {
-                    const permId = perm._id || (perm as any).id;
+                    const permId = perm._id;
                     if (!permId) return null;
 
                     return (

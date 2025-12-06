@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { CreateArticleRequest } from "./article.types";
 import { resetArticleState } from "./articleSlice";
 import { fetchArticles, createArticle } from "./articleThunks";
-
+// test
 // Selectors
 const selectArticleLoading = (state: any) => state.article.loading;
 const selectArticleError = (state: any) => state.article.error;
@@ -30,6 +30,7 @@ export const useCreateArticleActions = () => {
     content: "",
     tags: [],
     thumbnail: null,
+    isPaywalled:false,
   });
 
   const handleChange = (
@@ -42,14 +43,34 @@ export const useCreateArticleActions = () => {
     }));
   };
 
+  // const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (e.target.files && e.target.files[0]) {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       thumbnail: e.target.files![0],
+  //     }));
+  //   }
+  // };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData((prev) => ({
-        ...prev,
-        thumbnail: e.target.files![0],
-      }));
+  if (e.target.files && e.target.files[0]) {
+    const file = e.target.files[0];
+
+    const maxSize = 5 * 1024 * 1024; 
+
+    if (file.size > maxSize) {
+      toast.error("Thumbnail must be less than 5MB");
+      e.target.value = "";
+      return;
     }
-  };
+
+    setFormData((prev) => ({
+      ...prev,
+      thumbnail: file,
+    }));
+  }
+};
+
 
   const handleContentChange = (content: string) => {
     setFormData((prev) => ({
@@ -75,7 +96,7 @@ export const useCreateArticleActions = () => {
     }));
   };
 
-  const handleCreateArticle = (status: "draft" | "publish") => {
+  const handleCreateArticle = (status: "draft" | "pending") => {
     if (!formData.title || !formData.content) {
       toast.error("Please fill in the Title and Main Content.");
       return;
@@ -99,6 +120,7 @@ export const useCreateArticleActions = () => {
 
   useEffect(() => {
     if (!!message) {
+      // Reset form after successful submission
       setFormData({
         title: "",
         category: "",
@@ -111,6 +133,7 @@ export const useCreateArticleActions = () => {
         content: "",
         tags: [],
         thumbnail: null,
+        isPaywalled:false
       });
 
       toast.success(message);

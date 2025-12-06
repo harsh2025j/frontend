@@ -1,7 +1,7 @@
 import apiClient from "../apiConfig/apiClient";
 import { API_ENDPOINTS } from "../apiConfig/apiContants";
 import { CreateArticleRequest, CreateArticleResponse, ArticleListResponse } from "@/data/features/article/article.types";
-
+// test   
 export const articleApi = {
 
   createArticle: async (data: CreateArticleRequest) => {
@@ -12,15 +12,19 @@ export const articleApi = {
     formData.append("slug", data.slug);
     formData.append("content", data.content);
     formData.append("subHeadline", data.subHeadline);
-    formData.append("isPaywalled", "false");
+    formData.append("isPaywalled", String(data.isPaywalled));
     formData.append("language", data.language);
     if (data.location) formData.append("location", data.location);
     formData.append("authors", data.author);
     if (data.thumbnail) formData.append("file", data.thumbnail);
     formData.append("advocateName", data.advocateName);
     formData.append("categoryId", data.category);
-    // formData.append("status", data.status || "draft");
-    // formData.append("tags", data.tags.join(","));
+    formData.append("status", data.status || "draft");
+    if (Array.isArray(data.tags)) {
+      formData.append("tagsAsArray", data.tags.join(","));
+    }
+    // console.log(formData.get("tagsAsArray"));
+    // console.log("form data send to backed ",formData)
     const response = await apiClient.post<CreateArticleResponse>(
       API_ENDPOINTS.ARTICLE.CREATE,
       formData,
@@ -42,9 +46,9 @@ export const articleApi = {
       API_ENDPOINTS.ARTICLE.FETCH_ALL,
       {
         params,
-        headers: {
-          // "ngrok-skip-browser-warning": "true",
-        },
+        // headers: {
+        //    "ngrok-skip-browser-warning": "true",
+        // },
       }
 
     );
@@ -76,23 +80,43 @@ export const articleApi = {
   },
 
   // Update an article
-  updateArticle: async (articleId: string, data: any) => {
-    const payload = {
-      title: data.title,
-      slug: data.slug,
-      content: data.content,
-      subHeadline: data.subHeadline,
-      advocateName: data.advocateName,
-      location: data.location,
-      language: data.language,
-      authors: data.authors || data.author,
-      thumbnail: typeof data.thumbnail === "string" ? data.thumbnail : undefined,
-      isPaywalled: data.isPaywalled,
-    };
+  updateArticle: async (articleId: string, data: CreateArticleRequest) => {
+    // console.log("data", data)
+
+    const formData = new FormData();
+
+    // Append standard fields
+    formData.append("categoryId", data.category);
+    formData.append("title", data.title);
+    formData.append("slug", data.slug);
+    formData.append("content", data.content);
+    formData.append("subHeadline", data.subHeadline);
+    formData.append("advocateName", data.advocateName);
+    if (data.location) formData.append("location", data.location);
+    formData.append("language", data.language);
+    formData.append("authors", data.author);
+    formData.append("isPaywalled", String(data.isPaywalled));
+
+    formData.append("status", data.status || "pending");
+
+    if (Array.isArray(data.tags)) {
+      formData.append("tagsAsArray", data.tags.join(","));
+    }
+    if (data.thumbnail && data.thumbnail instanceof File) {
+      formData.append("file", data.thumbnail);
+    }
+    // console.log(formData.get("slug"));
+    // console.log(formData.get("isPaywalled"));
+
 
     const response = await apiClient.patch<CreateArticleResponse>(
       `${API_ENDPOINTS.ARTICLE.CREATE}/${articleId}`,
-      payload
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
     return response;
   },

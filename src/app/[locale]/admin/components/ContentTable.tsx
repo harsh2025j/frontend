@@ -1,5 +1,5 @@
 import {  Calendar } from "lucide-react";
-import {contentData} from "../../../lib/dummy"
+import {contentData} from "../../../../lib/dummy"
 
 const ContentTable = () => {
 // const contentData = [

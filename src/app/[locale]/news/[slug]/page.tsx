@@ -7,13 +7,12 @@ import { Article } from "@/data/features/article/article.types";
 import Image from "next/image";
 import Link from "next/link";
 import { Clock, X, MessageCircle, Eye, Facebook, Twitter, Linkedin, Link2, Check, Printer, Share2 } from "lucide-react";
-import logo from "../../../../../public/logo.png";
 import Loader from "@/components/ui/Loader";
 import { useTranslations, useLocale } from "next-intl";
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 
 
-// Helper function to get related articles
+// Helper function to get related articless
 export function getRelatedArticles(currentSlug: string, allArticles: Article[], limit: number = 20) {
     const currentArticle = allArticles.find(a => a.slug === currentSlug);
     if (!currentArticle || !currentArticle.category) {
@@ -37,7 +36,8 @@ export function getRelatedArticles(currentSlug: string, allArticles: Article[], 
 export default function ArticleDetailPage() {
     const params = useParams();
     const slug = params.slug as string;
-    const { articles, loading } = useArticleListActions();
+    const { articles: allArticles, loading } = useArticleListActions();
+    const articles = useMemo(() => allArticles.filter((a: { status: string; }) => a.status === 'published'), [allArticles]);
     const [article, setArticle] = useState<Article | null>(null);
     const [copied, setCopied] = useState(false);
     const t = useTranslations('ArticleDetail');
@@ -366,7 +366,7 @@ export default function ArticleDetailPage() {
                                         <div className="flex gap-4">
                                             <div className="relative w-24 h-24 flex-shrink-0 rounded overflow-hidden bg-gray-100">
                                                 <Image
-                                                    src={(rec.thumbnail && (rec.thumbnail.startsWith('http') || rec.thumbnail.startsWith('/'))) ? rec.thumbnail : logo}
+                                                    src={(rec.thumbnail && (rec.thumbnail.startsWith('http') || rec.thumbnail.startsWith('/'))) ? rec.thumbnail : "https://ibb.co/LD3XGttL"}
                                                     alt={rec.title}
                                                     fill
                                                     className="object-cover"

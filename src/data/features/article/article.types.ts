@@ -95,10 +95,11 @@ export interface CreateArticleRequest {
   tags: string[];
   language: string;
   author: string;
+  isPaywalled:boolean;
   content: string;
   advocateName: string;
   thumbnail: File | null;
-  status?: "draft" | "publish";
+  status?: "draft" | "pending";
 }
 
 export interface ArticleState {

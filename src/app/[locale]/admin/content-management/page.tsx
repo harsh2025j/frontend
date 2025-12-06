@@ -46,9 +46,115 @@ const TableSkeleton = () => {
   );
 };
 
+const RejectionReason = ({ reason }: { reason: string | null }) => {
+  const [show, setShow] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+
+  const updatePosition = (element: HTMLElement) => {
+    const rect = element.getBoundingClientRect();
+    // Adjust if close to right edge
+    let left = rect.left;
+    // Assuming max-width of tooltip is 300px
+    if (left + 300 > window.innerWidth) {
+      left = window.innerWidth - 320; // 20px padding from right
+    }
+    setPosition({ top: rect.bottom + 5, left });
+  };
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    updatePosition(e.currentTarget);
+    setShow(true);
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    updatePosition(e.currentTarget);
+    setShow((prev) => !prev);
+  };
+
+  if (!reason) return <span className="text-gray-400">N/A</span>;
+
+  return (
+    <>
+      <div
+        className="truncate max-w-[150px] cursor-pointer hover:text-blue-600"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setShow(false)}
+        onClick={handleClick}
+      >
+        {reason}
+      </div>
+      {show && (
+        <div
+          className="fixed z-[9999] bg-gray-900 text-white text-xs rounded-md p-3 shadow-xl max-w-[300px] whitespace-normal break-words leading-relaxed"
+          style={{ top: position.top, left: position.left }}
+        >
+          {reason}
+        </div>
+      )}
+    </>
+  );
+};
+
+
+
+interface DeleteConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isDeleting: boolean;
+}
+
+const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  isDeleting,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Article</h3>
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to delete this article? This action cannot be undone.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            disabled={isDeleting}
+            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            {isDeleting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              "Delete"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const contentManagementPage: React.FC = () => {
-  const { articles, loading, error } = useArticleListActions();
+  const { articles, loading, error, refetch } = useArticleListActions();
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Delete Modal State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [articleToDelete, setArticleToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const router = useRouter();
   const { user: reduxUser } = useProfileActions();
@@ -83,16 +189,26 @@ const contentManagementPage: React.FC = () => {
     if (error) toast.error(error);
   }, [error]);
 
-  const handleDelete = async (articleId: string) => {
-    if (!confirm('Are you sure you want to delete this article?')) return;
+  const handleDeleteClick = (articleId: string) => {
+    setArticleToDelete(articleId);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!articleToDelete) return;
+
+    setIsDeleting(true);
     try {
       const { articleApi } = await import('@/data/services/article-service/article-service');
-      await articleApi.deleteArticle(articleId);
+      await articleApi.deleteArticle(articleToDelete);
       toast.success('Article deleted successfully');
-      // Refresh list
-      router.refresh(); // or refetch if using hook
+      await refetch();
     } catch (err: any) {
       toast.error(err?.message || 'Failed to delete article');
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalOpen(false);
+      setArticleToDelete(null);
     }
   };
 
@@ -105,14 +221,20 @@ const contentManagementPage: React.FC = () => {
   // Insert after Status column
   // (Will be placed in JSX below)
 
+  // Filter articles by current user
+  const userArticles = React.useMemo(() => {
+    if (!user?._id) return [];
+    return articles.filter((article: any) => article.authorId === user._id);
+  }, [articles, user?._id]);
+
   const startIndex = (currentPage - 1) * ITEM_PER_PAGE;
 
   const paginatedArticles = loading
     ? []
-    : articles.slice(startIndex, startIndex + ITEM_PER_PAGE);
+    : userArticles.slice(startIndex, startIndex + ITEM_PER_PAGE);
 
-  const totalPages = loading ? 0 : Math.ceil(articles.length / ITEM_PER_PAGE);
-  const totalNewsPost = articles.length;
+  const totalPages = loading ? 0 : Math.ceil(userArticles.length / ITEM_PER_PAGE);
+  const totalNewsPost = userArticles.length;
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) setCurrentPage(page);
@@ -121,7 +243,7 @@ const contentManagementPage: React.FC = () => {
   // Table header addition: add Rejection Reason column after Status
   // We'll modify the JSX later where the header rows are defined.
 
-  const pendingNewsRequest = articles.filter((a: Article) => a.status === 'pending').length;
+  const pendingNewsRequest = userArticles.filter((a: Article) => a.status === 'pending').length;
 
   // if (!isAuthorized) {
   //   return (
@@ -161,9 +283,12 @@ const contentManagementPage: React.FC = () => {
                 </span>
               </div>
 
-              {/* <button className="bg-yellow-400 text-white px-5 py-2 rounded-md font-medium hover:bg-yellow-500">
-                ⬇ Export CSV
-              </button> */}
+              <button
+                onClick={() => router.push('/admin/create-content')}
+                className="bg-[#0B2149] text-white px-5 py-2 rounded-md font-medium hover:bg-[#1a3a75] transition-colors flex items-center gap-2"
+              >
+                <span>+</span> Create New Article
+              </button>
             </div>
 
             {/* Table */}
@@ -225,8 +350,8 @@ const contentManagementPage: React.FC = () => {
                           </span>
                         </td>
 
-                        <td className="py-3 px-4 max-w-[150px] truncate">
-                          {item.rejectionReason || "N/A"}
+                        <td className="py-3 px-4">
+                          <RejectionReason reason={item.rejectionReason} />
                         </td>
 
                         <td className="py-3 px-4 flex gap-2">
@@ -236,12 +361,14 @@ const contentManagementPage: React.FC = () => {
                           >
                             Edit
                           </button>
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            className="bg-red-500 text-white px-4 py-1 rounded-md text-sm hover:bg-red-600"
-                          >
-                            Delete
-                          </button>
+                          {item.status !== 'published' && (
+                            <button
+                              onClick={() => handleDeleteClick(item.id)}
+                              className="bg-red-500 text-white px-4 py-1 rounded-md text-sm hover:bg-red-600"
+                            >
+                              Delete
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -291,6 +418,13 @@ const contentManagementPage: React.FC = () => {
           </div>
         </main>
       </div>
+
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 };

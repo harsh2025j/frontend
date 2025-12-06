@@ -32,11 +32,10 @@ const TeamManagementPage: React.FC = () => {
       const hasAccess = user.roles?.some((r) => allowedRoles.includes(r.name));
 
       if (!hasAccess) router.replace("/auth/login");
-      else setIsAuthorized(true); 
+      else setIsAuthorized(true);
     }
   }, [user, router]);
 
-  // 2) Fetch users only when authorized
   useEffect(() => {
     if (isAuthorized) dispatch(fetchUsers());
   }, [isAuthorized, dispatch]);
@@ -75,10 +74,10 @@ const TeamManagementPage: React.FC = () => {
                 <strong>Total Team:</strong> {filteredUsers?.length || 0}
               </div>
               <button
-                className="bg-yellow-400 text-white px-5 py-2 rounded-md font-medium hover:bg-yellow-500"
-                onClick={addNewMember}
+                onClick={() => router.push('/admin/teams/add-new-member')}
+                className="bg-[#0B2149] text-white px-5 py-2 rounded-md font-medium hover:bg-[#1a3a75] transition-colors flex items-center gap-2"
               >
-                + Invite new Member
+                <span>+</span> Invite New Member
               </button>
             </div>
 
@@ -91,6 +90,7 @@ const TeamManagementPage: React.FC = () => {
                     <th className="py-3 px-4 text-sm font-medium">User</th>
                     <th className="py-3 px-4 text-sm font-medium">Email</th>
                     <th className="py-3 px-4 text-sm font-medium">Role</th>
+                    <th className="py-3 px-4 text-sm font-medium">Permissions</th>
                     <th className="py-3 px-4 text-sm font-medium">Status</th>
                     <th className="py-3 px-4 text-sm font-medium">Action</th>
                   </tr>
@@ -99,45 +99,33 @@ const TeamManagementPage: React.FC = () => {
                 <tbody>
                   {loading || !filteredUsers ? (
                     <tr>
-                      <td colSpan={6} className="text-center py-10">
+                      <td colSpan={7} className="text-center py-10">
                         <Loader size="lg" text="Loading Team..." />
                       </td>
                     </tr>
                   ) : filteredUsers.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="text-center py-10 text-gray-500 text-sm"
                       >
                         No team members found.
                       </td>
                     </tr>
                   ) : (
-                    filteredUsers.map((member,index) => (
+                    filteredUsers.map((member, index) => (
                       <tr
                         key={member._id}
                         className="border-b border-bordercolor hover:bg-gray-50 transition-colors"
                       >
-                        <td className="py-3 px-4 text-sm">{index+1}</td>
+                        <td className="py-3 px-4 text-sm">{index + 1}</td>
                         <td className="py-3 px-4 text-sm">{member.name}</td>
                         <td className="py-3 px-4 text-sm">{member.email}</td>
                         <td className="py-3 px-4 text-sm">
-                          <div className="flex flex-wrap gap-1">
-                            {member.roles?.length ? (
-                              member.roles.map((role) => (
-                                <span
-                                  key={role._id}
-                                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
-                                >
-                                  {role.name}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="text-gray-400 text-xs italic">
-                                No Role
-                              </span>
-                            )}
-                          </div>
+                          <TruncatedList items={member.roles || []} />
+                        </td>
+                        <td className="py-3 px-4 text-sm">
+                          <TruncatedList items={member.permissions || []} />
                         </td>
                         <td className="py-3 px-4 text-sm">
                           <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-medium">
@@ -145,9 +133,9 @@ const TeamManagementPage: React.FC = () => {
                           </span>
                         </td>
                         <td className="py-3 px-4 flex gap-2">
-                          <button className="bg-yellow-500 text-white px-4 py-1 rounded-md text-sm hover:bg-yellow-600">
+                          {/* <button className="bg-yellow-500 text-white px-4 py-1 rounded-md text-sm hover:bg-yellow-600">
                             Message
-                          </button>
+                          </button> */}
                           <button className="bg-gray-300 text-gray-700 px-4 py-1 rounded-md text-sm hover:bg-gray-400">
                             Manage
                           </button>
@@ -172,3 +160,111 @@ const TeamManagementPage: React.FC = () => {
 };
 
 export default TeamManagementPage;
+
+// Helper component for truncating lists (Roles/Permissions)
+function TruncatedList({ items }: { items: { _id?: string; id?: string; name: string }[] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [style, setStyle] = useState<React.CSSProperties>({});
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+
+  const calculateStyle = () => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+
+    const newStyle: React.CSSProperties = {
+      left: rect.left,
+      position: 'fixed',
+      zIndex: 9999,
+    };
+
+    // Flip up if space below is tight (<200px)
+    if (spaceBelow < 200) {
+      newStyle.bottom = window.innerHeight - rect.top + 4;
+      newStyle.maxHeight = rect.top - 20; // prevent overflow top
+    } else {
+      newStyle.top = rect.bottom + 4;
+      newStyle.maxHeight = window.innerHeight - rect.bottom - 20; // prevent overflow bottom
+    }
+
+    setStyle(newStyle);
+  };
+
+  // Close on click outside or Scroll
+  useEffect(() => {
+    // Generic click listener for outside clicks
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener("scroll", () => setIsOpen(false), true);
+      document.addEventListener("mousedown", handleClick);
+    }
+
+    return () => {
+      window.removeEventListener("scroll", () => setIsOpen(false), true);
+      document.removeEventListener("mousedown", handleClick);
+    };
+  }, [isOpen]);
+
+  if (!items || items.length === 0) {
+    return <span className="text-gray-400 text-sm">-</span>;
+  }
+
+  const displayedItems = items.slice(0, 1);
+  const remainingCount = items.length - 1;
+
+  return (
+    <div className="relative flex flex-wrap gap-1 items-center" ref={containerRef}>
+      {displayedItems.map((item) => (
+        <span
+          key={item._id || item.id}
+          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap"
+        >
+          {item.name}
+        </span>
+      ))}
+
+      {remainingCount > 0 && (
+        <div
+          className="relative"
+          onMouseEnter={() => { calculateStyle(); setIsOpen(true); }}
+          onMouseLeave={() => setIsOpen(false)}
+        >
+          <button
+            ref={buttonRef}
+            onClick={(e) => { e.preventDefault(); calculateStyle(); setIsOpen(!isOpen); }}
+            className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium transition-colors cursor-pointer
+                          ${isOpen
+                ? "bg-blue-600 text-white border border-blue-600"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200"
+              }`}
+          >
+            +{remainingCount}
+          </button>
+
+          {/* Fixed Tooltip (Z-Axis Independent) */}
+          {isOpen && (
+            <div
+              className="fixed bg-white border border-gray-100 rounded-lg shadow-xl p-3 flex flex-col gap-1.5 w-max min-w-[120px] max-w-[200px]"
+              style={style}
+            >
+              {items.slice(1).map((item) => (
+                <span
+                  key={item._id || item.id}
+                  className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 shadow-sm"
+                >
+                  {item.name}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -21,6 +21,7 @@ import Loader from "@/components/ui/Loader";
 import { useRouter } from "next/navigation";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
+import { resetRolesState } from "@/data/features/roles/rolesSlice";
 
 export default function RolesPermissionsPage() {
     const router = useRouter();
@@ -77,6 +78,10 @@ export default function RolesPermissionsPage() {
     const [editingPermission, setEditingPermission] = useState<any>(null);
     const [permFormData, setPermFormData] = useState({ name: "", description: "" });
 
+    // Delete Modal State
+    const [deleteTarget, setDeleteTarget] = useState<{ id: string; type: "role" | "permission" } | null>(null);
+    const [isActionLoading, setIsActionLoading] = useState(false);
+
     useEffect(() => {
         dispatch(fetchRoles());
         dispatch(fetchPermissions());
@@ -99,22 +104,30 @@ export default function RolesPermissionsPage() {
 
     const handleRoleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (editingRole) {
-            await dispatch(updateRole({ id: editingRole._id, ...roleFormData }));
-        } else {
-            await dispatch(createRole(roleFormData));
+        setIsActionLoading(true);
+        try {
+            if (editingRole) {
+                await dispatch(updateRole({ id: editingRole.id, ...roleFormData }));
+                resetRolesState();
+            } else {
+                await dispatch(createRole(roleFormData));
+                resetRolesState();
+            }
+            setIsModalOpen(false);
+            dispatch(fetchRoles());
+        } catch (error) {
+            console.error("Failed to save role:", error);
+        } finally {
+            setIsActionLoading(false);
         }
-        setIsModalOpen(false);
-        dispatch(fetchRoles());
     };
 
-    const handleRoleDelete = async (id: string) => {
+    const handleRoleDelete = (id: string) => {
         if (!id) return;
-        if (confirm("Are you sure you want to delete this role?")) {
-            await dispatch(deleteRole(id));
-            dispatch(fetchRoles());
-        }
+        setDeleteTarget({ id, type: "role" });
     };
+
+    // console.log("testing")
 
     // --- Permission Handlers ---
     const handleOpenPermModal = (perm?: any) => {
@@ -133,19 +146,43 @@ export default function RolesPermissionsPage() {
 
     const handlePermSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (editingPermission) {
-            await dispatch(updatePermission({ id: editingPermission._id, ...permFormData }));
-        } else {
-            await dispatch(createPermission(permFormData));
+        setIsActionLoading(true);
+        try {
+            if (editingPermission) {
+                await dispatch(updatePermission({ id: editingPermission._id, ...permFormData }));
+            } else {
+                await dispatch(createPermission(permFormData));
+            }
+            setIsModalOpen(false);
+            dispatch(fetchPermissions());
+        } catch (error) {
+            console.error("Failed to save permission:", error);
+        } finally {
+            setIsActionLoading(false);
         }
-        setIsModalOpen(false);
-        dispatch(fetchPermissions());
     };
 
-    const handlePermDelete = async (id: string) => {
-        if (confirm("Are you sure you want to delete this permission?")) {
-            await dispatch(deletePermission(id));
-            dispatch(fetchPermissions());
+    const handlePermDelete = (id: string) => {
+        setDeleteTarget({ id, type: "permission" });
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+
+        setIsActionLoading(true);
+        try {
+            if (deleteTarget.type === "role") {
+                await dispatch(deleteRole(deleteTarget.id));
+                dispatch(fetchRoles());
+            } else {
+                await dispatch(deletePermission(deleteTarget.id));
+                dispatch(fetchPermissions());
+            }
+            setDeleteTarget(null);
+        } catch (error) {
+            console.error("Failed to delete:", error);
+        } finally {
+            setIsActionLoading(false);
         }
     };
 
@@ -217,81 +254,81 @@ export default function RolesPermissionsPage() {
                     )}
                     {rolesError && <p className="text-red-500">{rolesError}</p>}
 
-                   <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
-  <table className="w-full text-left">
-    <thead className="bg-gray-100 border-b">
-      <tr>
-        <th className="px-4 py-3 font-semibold text-gray-700">Role</th>
-        <th className="px-4 py-3 font-semibold text-gray-700">Description</th>
-        <th className="px-4 py-3 font-semibold text-gray-700">Created By</th>
-        <th className="px-4 py-3 font-semibold text-gray-700">Created At</th>
-        <th className="px-4 py-3 font-semibold text-gray-700">Actions</th>
-      </tr>
-    </thead>
+                    <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-100 border-b">
+                                <tr>
+                                    <th className="px-4 py-3 font-semibold text-gray-700">Role</th>
+                                    <th className="px-4 py-3 font-semibold text-gray-700">Description</th>
+                                    <th className="px-4 py-3 font-semibold text-gray-700">Created By</th>
+                                    <th className="px-4 py-3 font-semibold text-gray-700">Created At</th>
+                                    <th className="px-4 py-3 font-semibold text-gray-700">Actions</th>
+                                </tr>
+                            </thead>
 
-    <tbody>
-      {roles.map((role) => (
-        <tr
-          key={role._id}
-          className="border-b hover:bg-gray-50 transition"
-        >
-          {/* Role Name */}
-          <td className="px-4 py-4 font-bold text-gray-800">
-            {role.name}
-          </td>
+                            <tbody>
+                                {roles.map((role) => (
+                                    <tr
+                                        key={role.id}
+                                        className="border-b hover:bg-gray-50 transition"
+                                    >
+                                        {/* Role Name */}
+                                        <td className="px-4 py-4 font-bold text-gray-800">
+                                            {role.name}
+                                        </td>
 
-          {/* Description */}
-          <td className="px-4 py-4">
-            <p className="text-sm text-gray-600 line-clamp-2">
-              {role.description || "--"}
-            </p>
-          </td>
+                                        {/* Description */}
+                                        <td className="px-4 py-4">
+                                            <p className="text-sm text-gray-600 line-clamp-2">
+                                                {role.description || "--"}
+                                            </p>
+                                        </td>
 
-          {/* Created By */}
-          <td className="px-4 py-4 text-sm text-gray-700 font-medium">
-            {role.createdBy?.name ||
-              role.createdBy?.email ||
-              "System"}
-          </td>
+                                        {/* Created By */}
+                                        <td className="px-4 py-4 text-sm text-gray-700 font-medium">
+                                            {role.createdBy?.name ||
+                                                role.createdBy?.email ||
+                                                "System"}
+                                        </td>
 
-          {/* Created At */}
-          <td className="px-4 py-4 text-sm text-gray-700 font-medium">
-           {role.createdAt
-  ? new Date(role.createdAt).toLocaleString("en-IN")
-  : role._id
-  ? new Date(
-      parseInt(role._id.substring(0, 8), 16) * 1000
-    ).toLocaleString("en-IN")
-  : "N/A"}
+                                        {/* Created At */}
+                                        <td className="px-4 py-4 text-sm text-gray-700 font-medium">
+                                            {role.createdAt
+                                                ? new Date(role.createdAt).toLocaleString("en-IN")
+                                                : role.id
+                                                    ? new Date(
+                                                        parseInt(role.id.substring(0, 8), 16) * 1000
+                                                    ).toLocaleString("en-IN")
+                                                    : "N/A"}
 
-               {/* {role.createdAt
+                                            {/* {role.createdAt
               ? new Date(role.createdAt).toLocaleDateString()
               : "N/A"} */}
-          </td>
+                                        </td>
 
-          {/* Actions */}
-          <td className="px-4 py-4">
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleOpenRoleModal(role)}
-                className="text-gray-400 hover:text-blue-600 transition"
-              >
-                <Edit size={18} />
-              </button>
+                                        {/* Actions */}
+                                        <td className="px-4 py-4">
+                                            <div className="flex gap-3">
+                                                <button
+                                                    onClick={() => handleOpenRoleModal(role)}
+                                                    className="text-gray-400 hover:text-blue-600 transition"
+                                                >
+                                                    <Edit size={18} />
+                                                </button>
 
-              <button
-                onClick={() => handleRoleDelete(role._id)}
-                className="text-gray-400 hover:text-red-600 transition"
-              >
-                <Trash2 size={18} />
-              </button>
-            </div>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
+                                                <button
+                                                    onClick={() => handleRoleDelete(role.id)}
+                                                    className="text-gray-400 hover:text-red-600 transition"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
                 </div>
             )}
@@ -315,72 +352,76 @@ export default function RolesPermissionsPage() {
                     {permsError && <p className="text-red-500">{permsError}</p>}
 
                     <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
-  <table className="w-full text-left">
-    <thead className="bg-gray-100 border-b">
-      <tr>
-        <th className="px-4 py-3 font-semibold text-gray-700">Permission</th>
-        <th className="px-4 py-3 font-semibold text-gray-700">Description</th>
-        <th className="px-4 py-3 font-semibold text-gray-700">Created By</th>
-        <th className="px-4 py-3 font-semibold text-gray-700">Created At</th>
-        <th className="px-4 py-3 font-semibold text-gray-700">Actions</th>
-      </tr>
-    </thead>
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-100 border-b">
+                                <tr>
+                                    <th className="px-4 py-3 font-semibold text-gray-700">Permission</th>
+                                    <th className="px-4 py-3 font-semibold text-gray-700">Description</th>
+                                    <th className="px-4 py-3 font-semibold text-gray-700">Created By</th>
+                                    <th className="px-4 py-3 font-semibold text-gray-700">Created At</th>
+                                    <th className="px-4 py-3 font-semibold text-gray-700">Actions</th>
+                                </tr>
+                            </thead>
 
-    <tbody>
-      {permissions.map((perm) => (
-        <tr
-          key={perm._id}
-          className="border-b hover:bg-gray-50 transition"
-        >
-          {/* Permission Name */}
-          <td className="px-4 py-4 font-bold text-gray-800">
-            {perm.name}
-          </td>
+                            <tbody>
+                                {permissions.map((perm) => (
+                                    <tr
+                                        key={perm._id}
+                                        className="border-b hover:bg-gray-50 transition"
+                                    >
+                                        {/* Permission Name */}
+                                        <td className="px-4 py-4 font-bold text-gray-800">
+                                            {perm.name}
+                                        </td>
 
-          {/* Description */}
-          <td className="px-4 py-4">
-            <p className="text-sm text-gray-600 line-clamp-2">
-              {perm.description || "--"}
-            </p>
-          </td>
+                                        {/* Description */}
+                                        <td className="px-4 py-4">
+                                            <p className="text-sm text-gray-600 line-clamp-2">
+                                                {perm.description || "--"}
+                                            </p>
+                                        </td>
 
-          {/* Created By */}
-          <td className="px-4 py-4 text-sm text-gray-700 font-medium">
-            {perm.createdBy?.name ||
-              perm.createdBy?.email ||
-              "System"}
-          </td>
+                                        {/* Created By */}
+                                        <td className="px-4 py-4 text-sm text-gray-700 font-medium">
+                                            {perm.createdBy?.name ||
+                                                perm.createdBy?.email ||
+                                                "System"}
+                                        </td>
 
-          {/* Created At */}
-          <td className="px-4 py-4 text-sm text-gray-700 font-medium">
-            {perm.createdAt
-              ? new Date(perm.createdAt).toLocaleDateString()
-              : "N/A"}
-          </td>
+                                        {/* Created At */}
+                                        <td className="px-4 py-4 text-sm text-gray-700 font-medium">
+                                           {perm.createdAt
+                                                ? new Date(perm.createdAt).toLocaleString("en-IN")
+                                                : perm._id
+                                                    ? new Date(
+                                                        parseInt(perm._id.substring(0, 8), 16) * 1000
+                                                    ).toLocaleString("en-IN")
+                                                    : "N/A"}
+                                        </td>
 
-          {/* Actions */}
-          <td className="px-4 py-4">
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleOpenPermModal(perm)}
-                className="text-gray-400 hover:text-blue-600 transition"
-              >
-                <Edit size={18} />
-              </button>
+                                        {/* Actions */}
+                                        <td className="px-4 py-4">
+                                            <div className="flex gap-3">
+                                                <button
+                                                    onClick={() => handleOpenPermModal(perm)}
+                                                    className="text-gray-400 hover:text-blue-600 transition"
+                                                >
+                                                    <Edit size={18} />
+                                                </button>
 
-              <button
-                onClick={() => handlePermDelete(perm._id)}
-                className="text-gray-400 hover:text-red-600 transition"
-              >
-                <Trash2 size={18} />
-              </button>
-            </div>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
+                                                <button
+                                                    onClick={() => handlePermDelete(perm._id)}
+                                                    className="text-gray-400 hover:text-red-600 transition"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
                 </div>
             )}
@@ -448,8 +489,10 @@ export default function RolesPermissionsPage() {
                                         </button>
                                         <button
                                             type="submit"
-                                            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-medium shadow-sm shadow-orange-500/30"
+                                            disabled={isActionLoading}
+                                            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-medium shadow-sm shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                         >
+                                            {isActionLoading && <Loader size="sm"  />}
                                             {editingRole ? "Save Changes" : "Create Role"}
                                         </button>
                                     </div>
@@ -494,13 +537,54 @@ export default function RolesPermissionsPage() {
                                         </button>
                                         <button
                                             type="submit"
-                                            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-medium shadow-sm shadow-orange-500/30"
+                                            disabled={isActionLoading}
+                                            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-medium shadow-sm shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                         >
+                                            {isActionLoading && <Loader size="sm"  />}
                                             {editingPermission ? "Save Changes" : "Create Permission"}
                                         </button>
                                     </div>
                                 </form>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteTarget && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl transform transition-all p-6">
+                        <div className="flex flex-col items-center text-center mb-6">
+                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                                <AlertTriangle className="text-red-600" size={24} />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">Confirm Delete</h3>
+                            <p className="text-gray-600">
+                                Are you sure you want to delete this {deleteTarget.type}? This action cannot be undone.
+                            </p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setDeleteTarget(null)}
+                                disabled={isActionLoading}
+                                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition font-medium disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                disabled={isActionLoading}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium shadow-sm shadow-red-600/30 disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {isActionLoading ? (
+                                    <>
+                                        <Loader size="sm"  /> Deleting...
+                                    </>
+                                ) : (
+                                    "Delete"
+                                )}
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -7,6 +7,7 @@ const initialState: PlanState = {
     loading: false,
     error: null,
     message: null,
+    hasFetched: false,
 };
 
 const planSlice = createSlice({
@@ -17,6 +18,9 @@ const planSlice = createSlice({
             state.loading = false;
             state.error = null;
             state.message = null;
+        },
+        clearPlanError: (state) => {
+            state.error = null;
         },
     },
     extraReducers: (builder) => {
@@ -29,6 +33,7 @@ const planSlice = createSlice({
             .addCase(fetchPlans.fulfilled, (state, action: PayloadAction<Plan[]>) => {
                 state.loading = false;
                 state.plans = action.payload;
+                state.hasFetched = true;
             })
             .addCase(fetchPlans.rejected, (state, action) => {
                 state.loading = false;
@@ -46,6 +51,8 @@ const planSlice = createSlice({
                 state.loading = false;
                 state.plans.push(action.payload.plan);
                 state.message = action.payload.message || "Plan created successfully";
+                // Reset hasFetched to trigger a refetch on next mount
+                state.hasFetched = false;
             })
             .addCase(createPlan.rejected, (state, action) => {
                 state.loading = false;
@@ -66,6 +73,8 @@ const planSlice = createSlice({
                     state.plans[index] = action.payload.plan;
                 }
                 state.message = action.payload.message || "Plan updated successfully";
+                // Reset hasFetched to trigger a refetch
+                state.hasFetched = false;
             })
             .addCase(updatePlan.rejected, (state, action) => {
                 state.loading = false;
@@ -83,6 +92,8 @@ const planSlice = createSlice({
                 state.loading = false;
                 state.plans = state.plans.filter((p) => p.id !== action.payload.id);
                 state.message = action.payload.message || "Plan deleted successfully";
+                // Reset hasFetched to trigger a refetch
+                state.hasFetched = false;
             })
             .addCase(deletePlan.rejected, (state, action) => {
                 state.loading = false;
@@ -91,5 +102,5 @@ const planSlice = createSlice({
     },
 });
 
-export const { resetPlanState } = planSlice.actions;
+export const { resetPlanState, clearPlanError } = planSlice.actions;
 export default planSlice.reducer;

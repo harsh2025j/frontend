@@ -3,14 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-// import img from "../../assets/img1.png" // Unused import removed
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "@/i18n/routing";
+import { useLocale } from "next-intl";
 import Loader from "@/components/ui/Loader";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
-
-// import { rolesApi } from "@/data/services/roles-service/roles-service"; // Unused import removed
 import { UserData } from "@/data/features/profile/profile.types";
 import { X, Upload, Camera } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
+import { getUserSubscription } from "@/data/features/subscription/subscriptionThunks";
 
 type Prefs = {
   language: string;
@@ -25,8 +25,15 @@ export default function ProfilePage() {
     loading: profileLoading,
     updateProfile: handleUpdateProfile,
   } = useProfileActions();
+
+  const dispatch = useAppDispatch();
+  const subscription = useAppSelector((state) => state.subscription.currentSubscription);
+  const subscriptionLoading = useAppSelector((state) => state.subscription.loading);
+
   const user: UserData = reduxProfileUser || ({} as UserData);
   const router = useRouter();
+  const pathname = usePathname();
+  const currentLocale = useLocale();
 
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -42,7 +49,7 @@ export default function ProfilePage() {
   const [dirty, setDirty] = useState(false);
 
   const [prefs, setPrefs] = useState<Prefs>({
-    language: "english-ind",
+    language: currentLocale,
     doNotDisturb: false,
     caseStatusAlerts: true,
   });
@@ -59,6 +66,14 @@ export default function ProfilePage() {
       }
     }
   }, []);
+
+  // Fetch user subscription
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      dispatch(getUserSubscription());
+    }
+  }, [dispatch]);
 
 
   const name = user?.name || "";
@@ -88,7 +103,6 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     localStorage.clear();
-
     router.push("/auth/login");
   };
 
@@ -98,6 +112,11 @@ export default function ProfilePage() {
     // 1. Persist local preferences (language, toggles) to localStorage
     try {
       localStorage.setItem("profile_prefs", JSON.stringify(prefs));
+
+      // Switch locale if changed
+      if (prefs.language !== currentLocale) {
+        router.replace(pathname, { locale: prefs.language });
+      }
     } catch (err) {
       console.error("Saving prefs failed", err);
     }
@@ -259,37 +278,59 @@ export default function ProfilePage() {
           <div className="lg:col-span-2 bg-white rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-2">Current Plan</h3>
 
-            <div className="grid gap-4 text-sm text-gray-700">
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Status</span>
-                  <span className="bg-emerald-400 text-emerald-900 px-2 py-0.5 rounded-full text-xs">Active</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Member Since</span>
-                  <span>12 Jan 2021</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Last Updated</span>
-                  <span>02, Aug 2025</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Current Plan</span>
-                  <span>Free</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Plan Expiry</span>
-                  <span>01, Aug 2026</span>
+            {subscriptionLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader text="Loading subscription..." size="sm" />
+              </div>
+            ) : subscription ? (
+              <div className="grid gap-4 text-sm text-gray-700">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status</span>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${subscription.status === "active"
+                          ? "bg-emerald-400 text-emerald-900"
+                          : subscription.status === "expired"
+                            ? "bg-red-400 text-red-900"
+                            : "bg-gray-400 text-gray-900"
+                        }`}
+                    >
+                      {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Plan Name</span>
+                    <span className="font-medium">{subscription.planName || "Premium Plan"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Started On</span>
+                    <span>{new Date(subscription.startDate).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Valid Until</span>
+                    <span>{new Date(subscription.endDate).toLocaleDateString()}</span>
+                  </div>
+                  {subscription.autoRenew !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Auto-Renew</span>
+                      <span>{subscription.autoRenew ? "Enabled" : "Disabled"}</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">No active subscription</p>
+                <p className="text-sm text-gray-400">Subscribe to a plan to access premium content</p>
+              </div>
+            )}
 
             <div className="mt-6 mx-auto">
               <Link
-                className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm inline-block w-full sm:w-auto text-center"
+                className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm inline-block w-full sm:w-auto text-center hover:bg-[#b39022] transition"
                 href="/subscription"
               >
-                Upgrade Plan
+                {subscription ? "Upgrade Plan" : "Subscribe Now"}
               </Link>
             </div>
           </div>
@@ -308,10 +349,10 @@ export default function ProfilePage() {
                     setDirty(true);
                   }}
                   options={[
-                    { value: "english-ind", label: "English (IND)" },
-                    { value: "hindi-in", label: "हिन्दी (IN)" },
-                    { value: "english-us", label: "English (US)" },
-                    { value: "marathi-in", label: "मराठी (IN)" },
+                    { value: "en", label: "English" },
+                    { value: "hi", label: "हिन्दी (Hindi)" },
+                    { value: "zh", label: "中文 (Chinese)" },
+                    { value: "mr", label: "मराठी (Marathi)" },
                   ]}
                 />
               </div>

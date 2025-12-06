@@ -8,7 +8,10 @@ export const fetchPlans = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const response = await planService.getAllPlans();
-            return response.data || response;
+            // The API returns { success, message, data: [] }
+            // planService.getAllPlans() already returns response.data
+            // So response should be { success, message, data: [] }
+            return response.data || [];
         } catch (error: any) {
             return rejectWithValue(
                 error.response?.data?.message || "Failed to fetch plans"
@@ -23,8 +26,9 @@ export const createPlan = createAsyncThunk(
     async (planData: CreatePlanRequest, { rejectWithValue }) => {
         try {
             const response = await planService.createPlan(planData);
+            // The API returns { success, message, data: {...} }
             return {
-                plan: response.data || response,
+                plan: response.data,
                 message: response.message || "Plan created successfully",
             };
         } catch (error: any) {
@@ -41,8 +45,9 @@ export const updatePlan = createAsyncThunk(
     async (planData: UpdatePlanRequest, { rejectWithValue }) => {
         try {
             const response = await planService.updatePlan(planData);
+            // The API returns { success, message, data: {...} }
             return {
-                plan: response.data || response,
+                plan: response.data,
                 message: response.message || "Plan updated successfully",
             };
         } catch (error: any) {

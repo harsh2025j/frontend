@@ -32,6 +32,117 @@ const TableSkeleton = () => {
   );
 };
 
+
+interface DeclineConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (reason: string) => void;
+  isProcessing: boolean;
+}
+
+const DeclineConfirmationModal: React.FC<DeclineConfirmationModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  isProcessing,
+}) => {
+  const [reason, setReason] = useState("");
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Decline Article</h3>
+        <p className="text-gray-600 mb-4">
+          Please provide a reason for rejecting this article.
+        </p>
+
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Enter rejection reason..."
+          className="w-full border border-gray-300 rounded-md p-2 mb-6 outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+        />
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            disabled={isProcessing}
+            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onConfirm(reason)}
+            disabled={isProcessing}
+            className="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            {isProcessing ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Processing...
+              </>
+            ) : (
+              "Decline"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+interface ApproveConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isProcessing: boolean;
+}
+
+const ApproveConfirmationModal: React.FC<ApproveConfirmationModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  isProcessing,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Approve Article</h3>
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to approve this article? It will be published immediately.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            disabled={isProcessing}
+            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isProcessing}
+            className="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            {isProcessing ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Processing...
+              </>
+            ) : (
+              "Approve"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ContentApprovalPanel = () => {
 
   const router = useRouter();
@@ -50,7 +161,7 @@ const ContentApprovalPanel = () => {
 
     // 2. Role Check
     if (user?.roles?.length) {
-      const allowedRoles = ["admin", "superadmin"];
+      const allowedRoles = ["admin", "superadmin", "editor"];
       const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
       if (!hasAccess) {
         router.replace("/auth/login");
@@ -67,13 +178,26 @@ const ContentApprovalPanel = () => {
   const [previewArticle, setPreviewArticle] = useState<Article | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  const handleApprove = async (articleId: string) => {
-    if (!confirm("Are you sure you want to approve this article?")) return;
+  // Decline Modal State
+  const [declineModalOpen, setDeclineModalOpen] = useState(false);
+  const [articleToDecline, setArticleToDecline] = useState<string | null>(null);
 
-    setActionLoading(articleId);
+  // Approve Modal State
+  const [approveModalOpen, setApproveModalOpen] = useState(false);
+  const [articleToApprove, setArticleToApprove] = useState<string | null>(null);
+
+  const handleApproveClick = (articleId: string) => {
+    setArticleToApprove(articleId);
+    setApproveModalOpen(true);
+  };
+
+  const handleConfirmApprove = async () => {
+    if (!articleToApprove) return;
+
+    setActionLoading(articleToApprove);
     try {
       const { articleApi } = await import("@/data/services/article-service/article-service");
-      await articleApi.approveArticle(articleId);
+      await articleApi.approveArticle(articleToApprove);
       toast.success("Article approved successfully!");
       setShowPreview(false);
       setPreviewArticle(null);
@@ -82,17 +206,23 @@ const ContentApprovalPanel = () => {
       toast.error(err?.message || "Failed to approve article");
     } finally {
       setActionLoading(null);
+      setApproveModalOpen(false);
+      setArticleToApprove(null);
     }
   };
 
-  const handleReject = async (articleId: string) => {
-    const reason = prompt("Please provide a reason for rejection (optional):");
-    if (reason === null) return; // User cancelled
+  const handleRejectClick = (articleId: string) => {
+    setArticleToDecline(articleId);
+    setDeclineModalOpen(true);
+  };
 
-    setActionLoading(articleId);
+  const handleConfirmReject = async (reason: string) => {
+    if (!articleToDecline) return;
+
+    setActionLoading(articleToDecline);
     try {
       const { articleApi } = await import("@/data/services/article-service/article-service");
-      await articleApi.rejectArticle(articleId, reason || undefined);
+      await articleApi.rejectArticle(articleToDecline, reason || undefined);
       toast.success("Article rejected successfully!");
       setShowPreview(false);
       setPreviewArticle(null);
@@ -101,6 +231,8 @@ const ContentApprovalPanel = () => {
       toast.error(err?.message || "Failed to reject article");
     } finally {
       setActionLoading(null);
+      setDeclineModalOpen(false);
+      setArticleToDecline(null);
     }
   };
 
@@ -117,11 +249,28 @@ const ContentApprovalPanel = () => {
     (a: Article) => a.status === "pending"
   );
 
+  // Filter out draft articles and Sort (Pending First -> Recent Date)
+  const filteredArticles = articles
+    .filter((a: Article) => a.status !== 'draft')
+    .sort((a:any, b:any) => {
+      // 1. Primary Sort: Status (Pending first)
+      const isAPending = a.status === 'pending';
+      const isBPending = b.status === "pending";
+
+      if (isAPending && !isBPending) return -1;
+      if (!isAPending && isBPending) return 1;
+
+      // 2. Secondary Sort: CreatedAt (Recent first)
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateB - dateA;
+    });
+
   // Pagination logic
-  const totalPages = Math.ceil(articles.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredArticles.length / ITEMS_PER_PAGE);
 
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedArticles = articles.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const paginatedArticles = filteredArticles.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -179,7 +328,7 @@ const ContentApprovalPanel = () => {
                     className="border-b hover:bg-gray-50 text-sm transition"
                   >
                     <td className="py-3 px-4 text-sm">{startIndex + idx + 1}</td>
-                    <td className="px-4 py-3">{item.title}</td>
+                    <td className="py-3 px-4 truncate max-w-[220px]">{item.title}</td>
                     <td className="px-4 py-3">{item.category?.name || "No Category"}</td>
                     <td className="px-4 py-3">
                       <span
@@ -197,7 +346,7 @@ const ContentApprovalPanel = () => {
                         {item.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 flex gap-2">
+                    <td className="px-4 py-5 flex gap-2">
                       <button
                         onClick={() => openPreview(item)}
                         className="bg-blue-500 text-white px-4 py-1 rounded-md text-sm hover:bg-blue-600 transition-colors"
@@ -205,19 +354,32 @@ const ContentApprovalPanel = () => {
                         Preview
                       </button>
                       <button
-                        onClick={() => handleApprove(item.id)}
-                        disabled={actionLoading === item.id}
-                        className="bg-green-500 text-white px-4 py-1 rounded-md text-sm hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        onClick={() => handleApproveClick(item.id)}
+                        disabled={actionLoading === item.id || item.status === 'rejected' || item.status === 'published'}
+                        className={`px-4 py-1 rounded-md text-sm transition-colors ${item.status === 'rejected'
+                          ? 'bg-red-100 text-red-600 cursor-not-allowed border border-red-200'
+                          : item.status === 'published'
+                            ? 'bg-green-100 text-green-600 cursor-not-allowed border border-green-200'
+                            : 'bg-green-500 text-white hover:bg-green-600'
+                          } disabled:opacity-50`}
                       >
-                        {actionLoading === item.id ? "Processing..." : "Approve"}
+                        {actionLoading === item.id
+                          ? "Processing..."
+                          : item.status === 'rejected'
+                            ? "Rejected"
+                            : item.status === 'published'
+                              ? "Approved"
+                              : "Approve"}
                       </button>
-                      <button
-                        onClick={() => handleReject(item.id)}
-                        disabled={actionLoading === item.id}
-                        className="bg-red-500 text-white px-4 py-1 rounded-md text-sm hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {actionLoading === item.id ? "Processing..." : "Decline"}
-                      </button>
+                      {item.status === 'pending' && (
+                        <button
+                          onClick={() => handleRejectClick(item.id)}
+                          disabled={actionLoading === item.id}
+                          className="bg-red-500 text-white px-4 py-1 rounded-md text-sm hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {actionLoading === item.id ? "Processing..." : "Decline"}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -400,24 +562,51 @@ const ContentApprovalPanel = () => {
               >
                 Close
               </button>
+              {previewArticle.status === 'pending' && (
+                <button
+                  onClick={() => handleRejectClick(previewArticle.id)}
+                  disabled={actionLoading === previewArticle.id}
+                  className="bg-red-500 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {actionLoading === previewArticle.id ? "Processing..." : "Decline"}
+                </button>
+              )}
               <button
-                onClick={() => handleReject(previewArticle.id)}
-                disabled={actionLoading === previewArticle.id}
-                className="bg-red-500 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                onClick={() => handleApproveClick(previewArticle.id)}
+                disabled={actionLoading === previewArticle.id || previewArticle.status === 'rejected' || previewArticle.status === 'published'}
+                className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${previewArticle.status === 'rejected'
+                  ? 'bg-red-100 text-red-600 cursor-not-allowed border border-red-200'
+                  : previewArticle.status === 'published'
+                    ? 'bg-green-100 text-green-600 cursor-not-allowed border border-green-200'
+                    : 'bg-green-500 text-white hover:bg-green-600'
+                  } disabled:opacity-50`}
               >
-                {actionLoading === previewArticle.id ? "Processing..." : "Decline"}
-              </button>
-              <button
-                onClick={() => handleApprove(previewArticle.id)}
-                disabled={actionLoading === previewArticle.id}
-                className="bg-green-500 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {actionLoading === previewArticle.id ? "Processing..." : "Approve"}
+                {actionLoading === previewArticle.id
+                  ? "Processing..."
+                  : previewArticle.status === 'rejected'
+                    ? "Rejected"
+                    : previewArticle.status === 'published'
+                      ? "Approved"
+                      : "Approve"}
               </button>
             </div>
           </div>
         </div>
       )}
+      {/* Decline Confirmation Modal */}
+      <DeclineConfirmationModal
+        isOpen={declineModalOpen}
+        onClose={() => setDeclineModalOpen(false)}
+        onConfirm={handleConfirmReject}
+        isProcessing={!!actionLoading}
+      />
+      {/* Approve Confirmation Modal */}
+      <ApproveConfirmationModal
+        isOpen={approveModalOpen}
+        onClose={() => setApproveModalOpen(false)}
+        onConfirm={handleConfirmApprove}
+        isProcessing={!!actionLoading}
+      />
     </div>
   );
 };

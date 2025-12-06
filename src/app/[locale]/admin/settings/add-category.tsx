@@ -42,12 +42,9 @@ export default function AddCategory({
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)+/g, "");
 
-      // Only append suffix for new categories to ensure uniqueness
-      // For updates, we might want to keep the slug clean or update it similarly
-      // The requirement was to update name and slug
-      const uniqueSuffix = Date.now().toString().slice(-6);
-      const generatedSlug = categoryToEdit ? baseSlug : `${baseSlug}-${uniqueSuffix}`;
-
+      // const uniqueSuffix = Date.now().toString().slice(-6);
+      // const generatedSlug = categoryToEdit ? baseSlug : `${baseSlug}-${uniqueSuffix}`;
+      const generatedSlug=baseSlug;
       let resultAction;
 
       if (categoryToEdit) {

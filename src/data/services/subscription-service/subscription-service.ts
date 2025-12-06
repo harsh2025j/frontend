@@ -1,4 +1,4 @@
-import { AddPlanRequest, AddPlanResponse, PlanGetResponse } from "@/data/features/subscription/subscription.types";
+import { AddPlanRequest, AddPlanResponse, PlanGetResponse, CreateOrderRequest, CreateOrderResponse, UserSubscriptionResponse, VerifyPaymentRequest, VerifyPaymentResponse } from "@/data/features/subscription/subscription.types";
 import apiClient from "../apiConfig/apiClient";
 import { API_ENDPOINTS } from "../apiConfig/apiContants";
 
@@ -26,5 +26,26 @@ export const subscriptionApi = {
     return response;
   },
 
+  createOrder: async (data: CreateOrderRequest) => {
+    const response = await apiClient.post<CreateOrderResponse>(
+      API_ENDPOINTS.SUBSCRIPTION.CREATE_ORDER,
+      data
+    );
+    return response;
+  },
 
+  verifyPayment: async (data: VerifyPaymentRequest) => {
+    const response = await apiClient.post<VerifyPaymentResponse>(
+      API_ENDPOINTS.SUBSCRIPTION.VERIFY_PAYMENT,
+      data
+    );
+    return response;
+  },
+
+  getMySubscription: async () => {
+    const response = await apiClient.get<UserSubscriptionResponse>(
+      API_ENDPOINTS.SUBSCRIPTION.GET_MY_SUBSCRIPTION
+    );
+    return response;
+  },
 }
