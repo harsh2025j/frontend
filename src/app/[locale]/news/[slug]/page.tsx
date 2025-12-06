@@ -12,7 +12,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 
 
-// Helper function to get related articles
+// Helper function to get related articless
 export function getRelatedArticles(currentSlug: string, allArticles: Article[], limit: number = 20) {
     const currentArticle = allArticles.find(a => a.slug === currentSlug);
     if (!currentArticle || !currentArticle.category) {
