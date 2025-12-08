@@ -21,7 +21,7 @@ import Script from "next/script";
 import Link from "next/link";
 import { subscriptionApi } from "@/data/services/subscription-service/subscription-service";
 import { Plans, UserSubscription } from "@/data/features/subscription/subscription.types";
-
+// test
 declare global {
   interface Window {
     Razorpay: any;
