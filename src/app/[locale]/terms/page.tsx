@@ -1,8 +1,11 @@
 "use client";
 
 import { FileText, Scale, Users, AlertCircle, CheckCircle, Shield, BookOpen, Gavel } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 export default function TermsAndConditions() {
+    useDocTitle("Terms & Conditions | Sajjad Husain Law Associates");
     const lastUpdated = "December 1, 2025";
 
     const sections = [

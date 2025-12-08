@@ -10,6 +10,7 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import { ArrowLeft, Save, CheckCircle } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
 
+
 type RoleOption = {
     _id?: string;
     id?: string;
@@ -23,7 +24,7 @@ type PermissionOption = {
 };
 
 const EditTeamMemberPage: React.FC = () => {
-    useDocTitle("Edit User Roles | Sajjad Husain Law Associates");
+    useDocTitle("Edit User Roles & Permissions | Sajjad Husain Law Associates");
     const dispatch = useAppDispatch();
     const router = useRouter();
     const params = useParams();

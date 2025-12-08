@@ -3,9 +3,9 @@
 import { Megaphone, Target, Users, TrendingUp, Award, BarChart, Mail, Phone } from "lucide-react";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
-
 export default function AdvertiseWithUs() {
     useDocTitle("Advertise | Sajjad Husain Law Associates");
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
             {/* Hero Section */}

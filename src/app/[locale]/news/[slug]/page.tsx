@@ -10,6 +10,9 @@ import { Clock, X, MessageCircle, Eye, Facebook, Twitter, Linkedin, Link2, Check
 import Loader from "@/components/ui/Loader";
 import { useTranslations, useLocale } from "next-intl";
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
+
 // removed test
 // Helper function to get related articless
 export function getRelatedArticles(currentSlug: string, allArticles: Article[], limit: number = 20) {
@@ -41,6 +44,8 @@ export default function ArticleDetailPage() {
     const [copied, setCopied] = useState(false);
     const t = useTranslations('ArticleDetail');
     const locale = useLocale();
+    // Dynamic page title in browser
+    useDocTitle(`${article?.title}`);
 
     const [translatedData, setTranslatedData] = useState<{ title: string, content: string } | null>(null);
     const [isTranslating, setIsTranslating] = useState(false);

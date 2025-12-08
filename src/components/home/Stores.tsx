@@ -17,7 +17,7 @@ import HindiNews from "../ui/HindiNews";
 import CustomInput from "../ui/CustomInput"
 import StateJudgement from "../ui/stateJudgement";
 import HighCourtsModal from "../ui/HighCourtsModal";
-import Loader from "../ui/Loader"; // ✅ IMPORTED LOADER
+import Loader from "../ui/Loader"; 
 import icon1 from '../../assets/icon1.png';
 import icon2 from '../../assets/icon2.png';
 import icon3 from '../../assets/icon3.png';
@@ -30,6 +30,7 @@ import ArticleSkeleton from "../ui/ArticleSkeleton";
 import Link from "next/link";
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 import { useLocale } from "next-intl";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 
 export function getArticlesBySlugs(articles: Article[], slugs: string[]) {
@@ -57,6 +58,7 @@ export function getArticlesBySlugs(articles: Article[], slugs: string[]) {
 }
 
 export default function Stores() {
+  useDocTitle("Sajjad Husain Law Associates");
   const router = useRouter();
   const [SearchData, setSearchData] = useState({ Search: "" });
   const [isModalOpen, setIsModalOpen] = useState(false);

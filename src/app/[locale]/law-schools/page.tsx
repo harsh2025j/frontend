@@ -1,8 +1,11 @@
 "use client";
 
 import { GraduationCap, BookOpen, Users, Award, Calendar, MapPin } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 export default function LawSchools() {
+    useDocTitle("Law Schools | Sajjad Husain Law Associates");
     const opportunities = [
         {
             title: "National Moot Court Competition 2025",

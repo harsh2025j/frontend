@@ -1,3 +1,4 @@
+"use client"
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import NewsCard from "@/components/ui/NewsCard";
@@ -9,9 +10,13 @@ import AdBanner from "@/components/ads/AdBanner";
 import AdSidebar from "@/components/ads/AdSidebar";
 import NewsletterSubscription from "@/components/home/NewsletterSubscription";
 import LegalTimeline from "@/components/home/LegalTimeline";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 // import LiveCourtUpdates from "@/components/home/LiveCourtUpdates";
 
 export default function Home() {
+  useDocTitle("Sajjad Husain Law Associates");
+
   const t = useTranslations('Home');
 
   return (
@@ -23,7 +28,7 @@ export default function Home() {
         <div className="container mx-auto px-4 mt-8 mb-4">
           <AdBanner size="medium" />
         </div>
-
+     
         <CategorySection
           title={t('supreme_court')}
           slug="supreme-court"

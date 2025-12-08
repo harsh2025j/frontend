@@ -10,6 +10,8 @@ import { Share2, Sparkles, X, Facebook, Twitter, Linkedin, Link2, Check, Printer
 import logo from "@/assets/logo.png";   
 import Loader from "@/components/ui/Loader";
 import { useTranslations, useLocale } from "next-intl";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 // Helper function to get related articles
 export function getRelatedArticles(currentSlug: string, allArticles: Article[], limit: number = 20) {
@@ -41,6 +43,8 @@ export default function ArticleDetailPage() {
     const [copied, setCopied] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
     const [showAISummary, setShowAISummary] = useState(false);
+       
+    useDocTitle(`${article?.title}`);
 
     const t = useTranslations('ArticleDetail');
     const locale = useLocale();

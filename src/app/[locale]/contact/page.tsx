@@ -4,8 +4,11 @@ import { Mail, Phone, MapPin, Clock, Send, User, MessageSquare, Building, ArrowR
 import { FaFacebookF, FaInstagram, FaWhatsapp, FaTwitter, FaTelegramPlane, FaLinkedinIn, FaYoutube } from "react-icons/fa";
 import { useState } from "react";
 import Footer from "@/components/layout/Footer";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 export default function ContactUs() {
+    useDocTitle("Contact Us | Sajjad Husain Law Associates");
     const [formData, setFormData] = useState({
         name: "",
         email: "",
