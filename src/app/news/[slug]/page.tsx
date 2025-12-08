@@ -7,7 +7,7 @@ import { Article } from "@/data/features/article/article.types";
 import Image from "next/image";
 import Link from "next/link";
 import { Share2, Sparkles, X, Facebook, Twitter, Linkedin, Link2, Check, Printer } from "lucide-react";
-import logo from "../../../../../public/logo.png";
+import logo from "@/assets/logo.png";   
 import Loader from "@/components/ui/Loader";
 import { useTranslations, useLocale } from "next-intl";
 
@@ -41,7 +41,7 @@ export default function ArticleDetailPage() {
     const [copied, setCopied] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
     const [showAISummary, setShowAISummary] = useState(false);
-    
+
     const t = useTranslations('ArticleDetail');
     const locale = useLocale();
 
