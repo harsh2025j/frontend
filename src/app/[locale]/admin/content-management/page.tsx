@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import Loader from "@/components/ui/Loader";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 const ITEM_PER_PAGE = 15;
 
@@ -148,6 +150,7 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
 };
 
 const contentManagementPage: React.FC = () => {
+  useDocTitle("Content Management  | Sajjad Husain Law Associates");
   const { articles, loading, error, refetch } = useArticleListActions();
   const [currentPage, setCurrentPage] = useState(1);
 

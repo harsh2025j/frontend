@@ -21,9 +21,9 @@ export const articleApi = {
     formData.append("categoryId", data.category);
     formData.append("status", data.status || "draft");
     if (Array.isArray(data.tags)) {
-      formData.append("tagsAsArray", data.tags.join(","));
+      formData.append("tags", data.tags.join(","));
     }
-    // console.log(formData.get("tagsAsArray"));
+    // console.log(formData.get("tags"));
     // console.log("form data send to backed ",formData)
     const response = await apiClient.post<CreateArticleResponse>(
       API_ENDPOINTS.ARTICLE.CREATE,

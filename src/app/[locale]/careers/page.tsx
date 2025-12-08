@@ -1,8 +1,11 @@
 "use client";
 
 import { Briefcase, TrendingUp, Users, Award, Heart, Lightbulb, GraduationCap, Code } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 export default function Careers() {
+    useDocTitle("Careers | Sajjad Husain Law Associates");
     const openPositions = [
         {
             title: "Senior Legal Associate",

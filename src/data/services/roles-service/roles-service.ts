@@ -17,9 +17,9 @@ export const rolesApi = {
         // console.log("update data",data)
          const formData = new FormData();
         formData.append("name", data.name);
-        // if(data.description){
-        // formData.append("description",data.description)
-        // }
+        if(data.description){
+        formData.append("description",data.description)
+        }
 
         console.log(`${API_ENDPOINTS.ROLES.BASE}/${data.id}`, formData)
         return await apiClient.patch(`${API_ENDPOINTS.ROLES.BASE}/${data.id}`, formData);

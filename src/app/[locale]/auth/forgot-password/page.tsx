@@ -11,6 +11,8 @@ import { resetAuthState } from "@/data/features/auth/authSlice";
 import { useRouter } from "next/navigation";
 import { useResendOtp } from "@/data/features/auth/useAuthActions";
 import Link from "next/link";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 import {
   FaEye,
   FaEyeSlash,
@@ -26,6 +28,7 @@ import {
 type Step = "forgot" | "verify" | "reset";
 
 export default function ForgotPasswordPage() {
+  useDocTitle("Forgot Password  | Sajjad Husain Law Associates");
   const router = useRouter();
   const dispatch = useAppDispatch();
 

@@ -6,6 +6,8 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 const ITEMS_PER_PAGE = 15;
 
@@ -145,6 +147,7 @@ const ApproveConfirmationModal: React.FC<ApproveConfirmationModalProps> = ({
 
 const ContentApprovalPanel = () => {
 
+useDocTitle("Content Approval | Sajjad Husain Law Associates");
   const router = useRouter();
   const { user: reduxUser } = useProfileActions();
   const user = reduxUser as UserData;

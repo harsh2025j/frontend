@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { Send, Menu, Plus, Clock, X, Scale } from 'lucide-react';
 import Image from 'next/image';
 import logo from '../../../../public/logo.png';
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 interface Message {
     id: number;
     text: string;
@@ -17,6 +19,7 @@ interface ChatHistory {
 }
 
 export default function AIAssistantPage() {
+    useDocTitle("Ai Assistant | Sajjad Husain Law Associates");
     const [query, setQuery] = useState('');
     const [messages, setMessages] = useState<Message[]>([]);
     const [isTyping, setIsTyping] = useState(false);

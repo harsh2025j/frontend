@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 import {
     fetchRoles,
     createRole,
@@ -24,6 +26,7 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { resetRolesState } from "@/data/features/roles/rolesSlice";
 
 export default function RolesPermissionsPage() {
+    useDocTitle("Roles & Permissions Management | Sajjad Husain Law Associates");
     const router = useRouter();
     const { user: reduxUser } = useProfileActions();
     const user = reduxUser as UserData;
