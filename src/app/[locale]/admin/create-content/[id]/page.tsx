@@ -10,8 +10,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import { articleApi } from "@/data/services/article-service/article-service";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 const EditArticlePage: React.FC = () => {
+    useDocTitle("Edit Article | Sajjad Husain Law Associates");
     const { id } = useParams();
     const articleId = Array.isArray(id) ? id[0] : id;
 

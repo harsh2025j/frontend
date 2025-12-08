@@ -10,6 +10,8 @@ import Loader from "@/components/ui/Loader";
 
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 import { useLocale } from "next-intl";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 export default function CategoryPage() {
     const params = useParams();
@@ -19,7 +21,7 @@ export default function CategoryPage() {
     const [categoryArticles, setCategoryArticles] = useState<Article[]>([]);
     const [categoryName, setCategoryName] = useState<string>("");
     const locale = useLocale();
-
+    useDocTitle(`${categoryName}`);
     // ... (existing cleanCategoryName function) ...
     const cleanCategoryName = (name: string): string => {
         return name

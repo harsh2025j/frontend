@@ -9,8 +9,11 @@ import RichTextEditor from "@/components/ui/RichTextEditor";
 import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 const CreateUpdatePage: React.FC = () => {
+  useDocTitle("Create Article | Sajjad Husain Law Associates");
   const {
     formData,
     handleChange,

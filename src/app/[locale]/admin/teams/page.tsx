@@ -6,8 +6,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import Loader from "@/components/ui/Loader";
 import { fetchUsers } from "@/data/features/users/usersThunks";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 const TeamManagementPage: React.FC = () => {
+  useDocTitle("Team Management  | Sajjad Husain Law Associates");
   const dispatch = useAppDispatch();
   const { users, loading } = useAppSelector((state) => state.users);
 
@@ -133,10 +136,7 @@ const TeamManagementPage: React.FC = () => {
                           </span>
                         </td>
                         <td className="py-3 px-4 flex gap-2">
-                          {/* <button className="bg-yellow-500 text-white px-4 py-1 rounded-md text-sm hover:bg-yellow-600">
-                            Message
-                          </button> */}
-                          <button className="bg-gray-300 text-gray-700 px-4 py-1 rounded-md text-sm hover:bg-gray-400">
+                          <button onClick={() => router.push(`/admin/teams/edit/${member._id}`)} className="bg-gray-300 text-gray-700 px-4 py-1 rounded-md text-sm hover:bg-gray-400">
                             Manage
                           </button>
                         </td>

@@ -7,11 +7,14 @@ import { Plan } from "@/data/features/plan/plan.types";
 import { Trash2, Edit, Plus, Search } from "lucide-react";
 import Loader from "@/components/ui/Loader";
 import AddEditPlanModal from "./PlanModal";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 // Module-level flag to ensure fetch only happens ONCE across ALL instances
 let hasInitiatedFetch = false;
 
 export default function PlansManagement() {
+    useDocTitle("Plans Management | Sajjad Husain Law Associates");
     const router = useRouter();
     const { plans, loading, deletePlan, refetchPlans, hasFetched } = usePlanActions();
     const [searchQuery, setSearchQuery] = useState("");

@@ -5,8 +5,11 @@ import React, { useState, useRef, useEffect } from "react";
 import CustomInput from "@/components/ui/CustomInput";
 import { useResendOtp, useVerifyActions } from "@/data/features/auth/useAuthActions";
 import toast from "react-hot-toast";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 export default function VerifyPage() {
+  useDocTitle("Verify | Sajjad Husain Law Associates");
   const { formData, handleChange, handleVerify, loading: verifyLoading, error, message } = useVerifyActions();
   // Get specific loading state for resend action
   const { handleReSendOtp, loading: resendLoading } = useResendOtp();

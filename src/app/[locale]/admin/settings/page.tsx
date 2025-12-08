@@ -11,9 +11,12 @@ import { UserData } from "@/data/features/profile/profile.types";
 import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import Loader from "@/components/ui/Loader";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 export default function Settings() {
 
+    useDocTitle("Settings | Sajjad Husain Law Associates");
     const router = useRouter();
     const { user: reduxUser } = useProfileActions();
     const user = reduxUser as UserData;
