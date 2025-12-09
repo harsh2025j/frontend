@@ -1,7 +1,7 @@
 "use client";
 import "./globals.css";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import { Link } from "@/i18n/routing";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function NotFound() {

@@ -14,13 +14,8 @@ import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
 
-// removed test
-<<<<<<< HEAD
-// Helper function to get related articlessww
 
-=======
-// Helper function to get related articless
->>>>>>> 2bb956a1eee85668f5ab0b295bcc592683cdd9b0
+// Helper function to get related articles
 export function getRelatedArticles(currentSlug: string, allArticles: Article[], limit: number = 20) {
     const currentArticle = allArticles.find(a => a.slug === currentSlug);
     if (!currentArticle || !currentArticle.category) {
