@@ -1,0 +1,1 @@
+{"success":false,"message":"property slug should not exist","data":{"timestamp":"2025-12-09T11:31:46.511Z","path":"/articles?slug=-article-092432","method":"GET","statusCode":400}}

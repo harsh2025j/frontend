@@ -12,6 +12,7 @@ import Loader from "@/components/ui/Loader";
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 import { useLocale } from "next-intl";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import { timeAgo } from "@/lib/utils/timeAgo";
 
 
 export default function TagPage() {
@@ -163,9 +164,10 @@ export default function TagPage() {
                                 content={article.content}
                                 src={article.thumbnail || undefined}
                                 court={article.location || undefined}
-                                time={new Date(article.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                views={String(0)}
-                                likes={String(0)}
+                                time={timeAgo(article.createdAt)}
+                            // time={new Date(article.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
+                            // views={String(0)}
+                            // likes={String(0)}
                             />
                         </Link>
                     ))}
