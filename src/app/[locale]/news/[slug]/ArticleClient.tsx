@@ -331,6 +331,8 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                         <div className="article-content mb-12">
                             <div dangerouslySetInnerHTML={{ __html: translatedData ? translatedData.content : initialArticle.content }} />
                         </div>
+                        
+                        <div ><span className="text-lg font-bold text-blue-950"> Advocates: </span>{initialArticle.advocateName}</div>
 
 
                     </div>
