@@ -4,7 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { Bell, Search, Menu, LogOut, User as UserIcon, Home } from "lucide-react";
 import logo from "../../../../assets/logo.png";
-import Link from "next/link";
+// import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { useRouter } from "next/navigation";
 
 // Redux & Actions

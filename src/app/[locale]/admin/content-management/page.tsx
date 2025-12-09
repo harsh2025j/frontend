@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import Loader from "@/components/ui/Loader";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 const ITEM_PER_PAGE = 15;
 
@@ -148,6 +150,7 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
 };
 
 const contentManagementPage: React.FC = () => {
+  useDocTitle("Content Management  | Sajjad Husain Law Associates");
   const { articles, loading, error, refetch } = useArticleListActions();
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -173,7 +176,8 @@ const contentManagementPage: React.FC = () => {
 
     // 2. Role Check
     if (user?.roles?.length) {
-      const hasAccess = user.roles.some((r) => r.name !== "user");
+      const allowedRoles = ["admin", "superadmin", "creator"];
+      const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
       if (!hasAccess) {
         router.replace("/auth/login");
       }

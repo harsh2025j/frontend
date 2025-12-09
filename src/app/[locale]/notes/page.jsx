@@ -17,8 +17,11 @@ Features:
 
 import React, { useRef, useState, useEffect } from 'react'
 import { v4 as uuidv4 } from 'uuid'
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 export default function NotesApp() {
+  useDocTitle("Notes | Sajjad Husain Law Associates");
   const canvasRef = useRef(null)
   const ctxRef = useRef(null)
   const drawingRef = useRef(false)

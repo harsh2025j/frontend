@@ -1,7 +1,8 @@
 "use client";
 
 import Image, { StaticImageData } from "next/image";
-import Link from "next/link";
+// import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { useRef, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 

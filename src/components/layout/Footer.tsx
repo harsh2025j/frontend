@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+// import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import logo from "../../assets/logo.png";
 import apple from "../../../public/apple-button.svg";
 import google from "../../../public/playbutton.svg";
@@ -140,6 +141,8 @@ export default function Footer() {
                   return (
                     <a
                       key={index}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       href={social.href}
                       aria-label={social.label}
                       className={`bg-white/10 backdrop-blur-sm p-3 rounded-lg ${social.color} transition-all duration-300 transform hover:scale-110 hover:shadow-lg border border-white/20`}

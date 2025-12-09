@@ -1,8 +1,11 @@
 "use client";
 
 import React from "react";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 const ServerErrorPage = () => {
+    useDocTitle("Server Error | Sajjad Husain Law Associates");
     const handleRefresh = () => {
         window.location.reload();
     };

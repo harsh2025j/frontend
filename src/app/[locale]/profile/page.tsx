@@ -11,6 +11,8 @@ import { UserData } from "@/data/features/profile/profile.types";
 import { X, Upload, Camera } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { getUserSubscription } from "@/data/features/subscription/subscriptionThunks";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 type Prefs = {
   language: string;
@@ -85,7 +87,7 @@ export default function ProfilePage() {
   const resetProfilePassword = () => {
     router.push(`/auth/forgot-password?Step=reset&email=${email}`);
   };
-
+  useDocTitle(`${name} 's Profile`);
   useEffect(() => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");

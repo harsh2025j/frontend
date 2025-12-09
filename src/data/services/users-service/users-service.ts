@@ -1,5 +1,5 @@
 import apiClient from "@/data/services/apiConfig/apiClient";
-import { UserFilter, UserResponse } from "../../features/users/users.types";
+import { UserFilter, UserListResponse, UserVerificationResponse } from "../../features/users/users.types";
 
 export const usersApi = {
     fetchUsers: async (filters?: UserFilter) => {
@@ -18,20 +18,54 @@ export const usersApi = {
         }
 
         try {
-            const response = await apiClient.get<UserResponse>(
+            const response = await apiClient.get<UserListResponse>(
                 `/users?${params.toString()}`,
                 {
                     headers: {
                         // "ngrok-skip-browser-warning": "true",
                     },
                 }
-               
+
             );
 
             // console.log("usersApi fetchUsers responsdfdsfse:", response);
             return response.data;
         } catch (error: any) {
             console.error("usersApi fetchUsers ERROR:", error);
+            throw error;
+        }
+    },
+
+    verifyUser: async (userId: string, isVerified: boolean) => {
+        try {
+            // console.log(userId, isVerified);
+            const response = await apiClient.patch<UserVerificationResponse>(`/users/${userId}/verify`, { isVerified });
+            return response.data;
+        } catch (error: any) {
+            console.error("usersApi verifyUser ERROR:", error);
+            throw error;
+        }
+    },
+
+    getUserById: async (userId: string) => {
+        try {
+            const response = await apiClient.get<UserVerificationResponse>(`/users/${userId}`);
+            // Reuse UserVerificationResponse as it contains a single user data object, 
+            // or we might need a specific/generic SingleUserResponse if strictness matters.
+            // Assuming GET /users/:id returns { success: true, data: User } similar to other endpoints.
+            return response.data;
+        } catch (error: any) {
+            console.error("usersApi getUserById ERROR:", error);
+            throw error;
+        }
+    },
+
+    assignUserRoles: async (userId: string, data: { roleIds: string[]; permissionIds: string[] }) => {
+        try {
+            const response = await apiClient.post(`/assign/${userId}`, data);
+            return response.data;
+        } catch (error: any) {
+            console.error("usersApi assignUserRoles ERROR:", error);
             throw error;
         }
     },

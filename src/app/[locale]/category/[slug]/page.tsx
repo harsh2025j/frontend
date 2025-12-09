@@ -4,12 +4,16 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import NewsCard from "@/components/ui/NewsCard";
-import Link from "next/link";
+// import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { Article } from "@/data/features/article/article.types";
 import Loader from "@/components/ui/Loader";
 
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 import { useLocale } from "next-intl";
+import { useDocTitle } from "@/hooks/useDocTitle";
+import { timeAgo } from "@/lib/utils/timeAgo";
+
 
 export default function CategoryPage() {
     const params = useParams();
@@ -19,7 +23,7 @@ export default function CategoryPage() {
     const [categoryArticles, setCategoryArticles] = useState<Article[]>([]);
     const [categoryName, setCategoryName] = useState<string>("");
     const locale = useLocale();
-
+    useDocTitle(`${categoryName}`);
     // ... (existing cleanCategoryName function) ...
     const cleanCategoryName = (name: string): string => {
         return name
@@ -176,9 +180,10 @@ export default function CategoryPage() {
                                 content={article.content}
                                 src={article.thumbnail || undefined}
                                 court={article.location || undefined}
-                                time={new Date(article.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                views={String(0)}
-                                likes={String(0)}
+                                // time={new Date(article.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                time={timeAgo(article.createdAt)}
+                            // views={String(0)}
+                            // likes={String(0)}
                             />
                         </Link>
                     ))}

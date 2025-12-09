@@ -9,8 +9,11 @@ import RichTextEditor from "@/components/ui/RichTextEditor";
 import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 const CreateUpdatePage: React.FC = () => {
+  useDocTitle("Create Article | Sajjad Husain Law Associates");
   const {
     formData,
     handleChange,
@@ -42,8 +45,9 @@ const CreateUpdatePage: React.FC = () => {
     }
 
     // 2. Role Check
-    if (user?.roles?.length) {
-      const hasAccess = user.roles.some((r) => r.name !== "user");
+     if (user?.roles?.length) {
+      const allowedRoles = ["admin", "superadmin", "creator"];
+      const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
       if (!hasAccess) {
         router.replace("/auth/login");
       }

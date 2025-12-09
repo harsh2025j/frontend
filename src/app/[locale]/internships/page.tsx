@@ -1,8 +1,13 @@
 "use client";
 
 import { Briefcase, Building } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
+
 
 export default function Internships() {
+    useDocTitle("Internship | Sajjad Husain Law Associates");
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
             <div className="relative bg-gradient-to-r from-[#122340] via-[#1A73E8] to-[#122340] text-white py-20 lg:py-32 px-4 overflow-hidden">

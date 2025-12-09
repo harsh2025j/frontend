@@ -2,8 +2,12 @@
 
 import { Users, Scale, Award, Target, Heart, Briefcase, Shield, BookOpen } from "lucide-react";
 import Image from "next/image";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
+
 
 export default function AboutUs() {
+    useDocTitle("About Us | Sajjad Husain Law Associates");
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
             {/* Hero Section */}

@@ -1,10 +1,14 @@
 "use client";
 
 import { TrendingUp, Calendar, User, ArrowRight, Tag, Clock, Eye } from "lucide-react";
-import Link from "next/link";
+// import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { useState } from "react";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 export default function TopStories() {
+    useDocTitle("Top Stories | Sajjad Husain Law Associates");
     const [selectedCategory, setSelectedCategory] = useState("All");
 
     const categories = ["All", "Supreme Court", "High Court", "Tax", "Constitutional Law", "Criminal Law", "Corporate Law"];

@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import Loader from "@/components/ui/Loader";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 
 const data = [
@@ -35,6 +36,7 @@ const data = [
 ]
 
 export default function Page() {
+  useDocTitle("Admin Dashboard  | Sajjad Husain Law Associates");
   const router = useRouter();
 
   //   const {

@@ -10,11 +10,14 @@ import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 
 // Thunks & Types
-import { fetchUsers } from "@/data/features/users/usersThunks";
+import { fetchUsers, verifyUser } from "@/data/features/users/usersThunks";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { User, UserFilter } from "@/data/features/users/users.types";
 import { UserData } from "@/data/features/profile/profile.types";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function UserManagementPage() {
+    useDocTitle("User Management  | Sajjad Husain Law Associates");
     const router = useRouter();
     const dispatch = useAppDispatch();
 
@@ -33,6 +36,10 @@ export default function UserManagementPage() {
         isActive: "",
         isVerified: "",
     });
+
+    // --- Modal State ---
+    const [verifyModalOpen, setVerifyModalOpen] = useState(false);
+    const [userToVerify, setUserToVerify] = useState<{ id: string; name: string; currentStatus: boolean } | null>(null);
 
     // --- Authorization Check ---
     useEffect(() => {
@@ -95,6 +102,26 @@ export default function UserManagementPage() {
         // So we dispatch directly with empty object or use a timeout/effect.
         // Simplest here is to dispatch immediately with empty filters.
         dispatch(fetchUsers({}));
+    };
+
+    // --- Verification Handlers ---
+    const handleVerifyClick = (user: User) => {
+        setUserToVerify({
+            id: user._id,
+            name: user.name,
+            currentStatus: user.isVerified
+        });
+        setVerifyModalOpen(true);
+    };
+
+    const handleConfirmVerify = async () => {
+        if (userToVerify) {
+            const newStatus = !userToVerify.currentStatus;
+
+            await dispatch(verifyUser({ userId: userToVerify.id, isVerified: newStatus }));
+            setVerifyModalOpen(false);
+            setUserToVerify(null);
+        }
     };
 
     if (!isAuthorized) {
@@ -249,34 +276,31 @@ export default function UserManagementPage() {
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Permissions</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Status</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Verified</th>
-                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Created By</th>
-                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Joined</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-
-                                    {[...users].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((user: User) => (
-                                        <tr key={user._id} className="hover:bg-gray-50/50 transition-colors">
+                                    {[...users].sort((a, b) => new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime()).map((tableUser: User) => (
+                                        <tr key={tableUser._id} className="hover:bg-gray-50/50 transition-colors">
                                             <td className="py-4 px-6">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                                                        {user.name.charAt(0).toUpperCase()}
+                                                        {tableUser.name.charAt(0).toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <p className="font-medium text-gray-900">{user.name}</p>
-                                                        <p className="text-sm text-gray-500">{user.email}</p>
+                                                        <p className="font-medium text-gray-900">{tableUser.name}</p>
+                                                        <p className="text-sm text-gray-500">{tableUser.email}</p>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="py-4 px-6">
-                                                <TruncatedList items={user.roles} />
+                                                <TruncatedList items={tableUser.roles || []} />
                                             </td>
                                             <td className="py-4 px-6">
-                                                <TruncatedList items={user.permissions} />
+                                                <TruncatedList items={tableUser.permissions || []} />
                                             </td>
                                             <td className="py-4 px-6">
-                                                {user.isActive ? (
+                                                {tableUser.isActive ? (
                                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
                                                         <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
                                                         Active
@@ -289,52 +313,68 @@ export default function UserManagementPage() {
                                                 )}
                                             </td>
                                             <td className="py-4 px-6">
-                                                {user.isVerified ? (
-                                                    <span className="text-green-600" title="Verified">
-                                                        <CheckCircle size={20} />
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-gray-300" title="Not Verified">
-                                                        <CheckCircle size={20} />
-                                                    </span>
+                                                {user && tableUser._id !== user._id && (
+                                                    <button
+                                                        onClick={() => handleVerifyClick(tableUser)}
+                                                        className="focus:outline-none hover:bg-gray-100 p-1 rounded-full transition-colors"
+                                                        title={tableUser.isVerified ? "Click to Unverify" : "Click to Verify"}
+                                                    >
+                                                        {tableUser.isVerified ? (
+                                                            <span className="text-green-600">
+                                                                <CheckCircle size={20} />
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-300">
+                                                                <CheckCircle size={20} />
+                                                            </span>
+                                                        )}
+                                                    </button>
                                                 )}
                                             </td>
                                             <td className="py-4 px-6">
-                                                {user.createdBy ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-xs font-medium">
-                                                            {user.createdBy.name?.charAt(0) || "?"}
-                                                        </div>
-                                                        <span className="text-sm text-gray-600">{user.createdBy.name}</span>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-gray-400 text-sm italic">Self / System</span>
-                                                )}
-                                            </td>
-                                            <td className="py-4 px-6 text-sm text-gray-500">
-                                                {new Date(user.createdAt).toLocaleDateString()}
-                                            </td>
-                                            <td className="py-4 px-6 text-sm text-gray-500">
-                                                <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"> Edit</button>
+                                                <button
+                                                    onClick={() => router.push(`/admin/teams/edit/${tableUser._id}`)}
+                                                    className="bg-blue-100 text-blue-600 px-3 py-1 rounded flex items-center gap-1 hover:bg-blue-200 transition-colors"
+                                                >
+                                                    <span className="text-xs font-medium">Edit</span>
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                    )}
+                    )
+                    }
 
                     {/* Footer / Pagination (Placeholder for now) */}
-                    {!loading && !error && users.length > 0 && (
-                        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between text-sm text-gray-500">
-                            <span>Showing {users.length} users</span>
-                            {/* Add pagination controls here if API supports it */}
-                        </div>
-                    )}
-                </div>
+                    {
+                        !loading && !error && users.length > 0 && (
+                            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between text-sm text-gray-500">
+                                <span>Showing {users.length} users</span>
+                                {/* Add pagination controls here if API supports it */}
+                            </div>
+                        )
+                    }
+                </div >
 
-            </div>
-        </div>
+                {/* Verification Confirmation Modal */}
+                < ConfirmationModal
+                    isOpen={verifyModalOpen}
+                    onClose={() => setVerifyModalOpen(false)}
+                    onConfirm={handleConfirmVerify}
+                    title={userToVerify?.currentStatus ? "Unverify User" : "Verify User"}
+                    message={
+                        userToVerify?.currentStatus
+                            ? `Are you sure you want to unverify ${userToVerify.name}? They will lose verified status privileges.`
+                            : `Are you sure you want to verify ${userToVerify?.name}? This will grant them verified status.`
+                    }
+                    confirmText={userToVerify?.currentStatus ? "Unverify" : "Verify"}
+                    variant={userToVerify?.currentStatus ? "warning" : "success"}
+                />
+
+            </div >
+        </div >
     );
 }
 
@@ -360,163 +400,6 @@ function UsersIcon({ size }: { size: number }) {
     );
 }
 
-// Helper component for truncating lists (Roles/Permissions)
-function TruncatedListOld({ items }: { items: { _id?: string; id?: string; name: string }[] }) {
-    const [isOpen, setIsOpen] = useState(false);
-    const containerRef = React.useRef<HTMLDivElement>(null);
-
-    // Close on click outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    if (!items || items.length === 0) {
-        return <span className="text-gray-400 text-sm">-</span>;
-    }
-
-    const displayedItems = items.slice(0, 1);
-    const remainingCount = items.length - 1;
-
-    return (
-        <div className="relative flex flex-wrap gap-1 items-center" ref={containerRef}>
-            {displayedItems.map((item) => (
-                <span
-                    key={item._id || item.id}
-                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap"
-                >
-                    {item.name}
-                </span>
-            ))}
-
-            {remainingCount > 0 && (
-                <div
-                    className="relative"
-                    onMouseEnter={() => setIsOpen(true)}
-                    onMouseLeave={() => setIsOpen(false)}
-                >
-                    <button
-                        onClick={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
-                        className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium transition-colors cursor-pointer
-                            ${isOpen
-                                ? "bg-blue-600 text-white border border-blue-600"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200"
-                            }`}
-                    >
-                        +{remainingCount}
-                    </button>
-
-                    {/* Attached Tooltip (Absolute) */}
-                    {isOpen && (
-                        <div className="absolute left-0 top-full mt-1 z-[9999] bg-white border border-gray-100 rounded-lg shadow-xl p-3 flex flex-col gap-1.5 w-max min-w-[120px] max-w-[200px]">
-                            {items.slice(1).map((item) => (
-                                <span
-                                    key={item._id || item.id}
-                                    className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 shadow-sm"
-                                >
-                                    {item.name}
-                                </span>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
-    );
-}
-
-// Helper component for truncating lists (Roles/Permissions)
-function TruncatedListDeprecated({ items }: { items: { _id?: string; id?: string; name: string }[] }) {
-    const [isOpen, setIsOpen] = useState(false);
-    const [positionClass, setPositionClass] = useState("top-full mt-1"); // Default: drop down
-    const containerRef = React.useRef<HTMLDivElement>(null);
-    const buttonRef = React.useRef<HTMLButtonElement>(null);
-
-    const updatePosition = () => {
-        if (buttonRef.current) {
-            const rect = buttonRef.current.getBoundingClientRect();
-            // Check space below: full viewport height - button bottom
-            const spaceBelow = window.innerHeight - rect.bottom;
-
-            // If less than 200px below, flip up
-            if (spaceBelow < 200) {
-                setPositionClass("bottom-full mb-1");
-            } else {
-                setPositionClass("top-full mt-1");
-            }
-        }
-    };
-
-    // Close on click outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    if (!items || items.length === 0) {
-        return <span className="text-gray-400 text-sm">-</span>;
-    }
-
-    const displayedItems = items.slice(0, 1);
-    const remainingCount = items.length - 1;
-
-    return (
-        <div className="relative flex flex-wrap gap-1 items-center" ref={containerRef}>
-            {displayedItems.map((item) => (
-                <span
-                    key={item._id || item.id}
-                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap"
-                >
-                    {item.name}
-                </span>
-            ))}
-
-            {remainingCount > 0 && (
-                <div
-                    className="relative"
-                    onMouseEnter={() => { updatePosition(); setIsOpen(true); }}
-                    onMouseLeave={() => setIsOpen(false)}
-                >
-                    <button
-                        ref={buttonRef}
-                        onClick={(e) => { e.preventDefault(); updatePosition(); setIsOpen(!isOpen); }}
-                        className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium transition-colors cursor-pointer
-                            ${isOpen
-                                ? "bg-blue-600 text-white border border-blue-600"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200"
-                            }`}
-                    >
-                        +{remainingCount}
-                    </button>
-
-                    {/* Attached Tooltip (Absolute) */}
-                    {isOpen && (
-                        <div className={`absolute left-0 z-[9999] bg-white border border-gray-100 rounded-lg shadow-xl p-3 flex flex-col gap-1.5 w-max min-w-[120px] max-w-[200px] ${positionClass}`}>
-                            {items.slice(1).map((item) => (
-                                <span
-                                    key={item._id || item.id}
-                                    className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 shadow-sm"
-                                >
-                                    {item.name}
-                                </span>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
-    );
-}
 
 // Helper component for truncating lists (Roles/Permissions)
 function TruncatedList({ items }: { items: { _id?: string; id?: string; name: string }[] }) {

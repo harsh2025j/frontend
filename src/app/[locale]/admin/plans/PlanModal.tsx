@@ -5,12 +5,15 @@ import { usePlanActions } from "@/data/features/plan/usePlanActions";
 import { Plan } from "@/data/features/plan/plan.types";
 import { X, Plus, Trash2 } from "lucide-react";
 
+
+
 interface AddEditPlanModalProps {
     plan: Plan | null;
     onClose: () => void;
 }
 
 export default function AddEditPlanModal({ plan, onClose }: AddEditPlanModalProps) {
+    
     const { createPlan, updatePlan, loading } = usePlanActions();
     const [formData, setFormData] = useState({
         name: "",

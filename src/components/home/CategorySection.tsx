@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+// import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { useCategoryArticles } from "@/hooks/useCategoryArticles";
@@ -16,14 +17,14 @@ interface CategorySectionProps {
 
 export default function CategorySection({ title, slug, layout, limit = 6 }: CategorySectionProps) {
   const { articles: allArticles, loading } = useCategoryArticles(slug, limit);
-  
+
   // Memoize the filtered articles to prevent unnecessary re-renders
   const articles = useMemo(() => {
     return allArticles?.filter(a => a.status === 'published') || [];
   }, [allArticles]);
 
   if (loading) return <div className="py-10 flex justify-center"><Loader /></div>;
-  
+
   // Hide section if no articles
   if (!articles || articles.length === 0) return null;
 
@@ -101,7 +102,7 @@ const ListLayout = ({ articles }: { articles: any[] }) => (
       <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-start bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all">
         <div className="relative w-27 h-27 flex-shrink-0 rounded-l-lg overflow-hidden">
           <div className="w-28 h-28 relative">
-             <Image
+            <Image
               src={article.thumbnail || "/placeholder.png"}
               alt={article.title}
               fill

@@ -1,8 +1,11 @@
 "use client";
 
 import { Scale, BookOpen, FileText, Award } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 export default function SupremeCourt() {
+    useDocTitle("Supreme Court | Sajjad Husain Law Associates");
     const recentCases = [
         {
             title: "Digital Privacy Rights vs. National Security",

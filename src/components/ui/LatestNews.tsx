@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
-import Link from "next/link";
+// import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import Image, { StaticImageData } from "next/image";
 import { Clock } from "lucide-react";
 

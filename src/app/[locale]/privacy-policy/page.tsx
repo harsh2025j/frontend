@@ -1,8 +1,11 @@
 "use client";
 
 import { Shield, Lock, Eye, FileText, Users, Mail, AlertCircle, CheckCircle, MapPin } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 export default function PrivacyPolicy() {
+    useDocTitle("Privacy Policy | Sajjad Husain Law Associates");
     const lastUpdated = "November 30, 2025";
 
     const sections = [

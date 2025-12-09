@@ -30,7 +30,7 @@ export const useCreateArticleActions = () => {
     content: "",
     tags: [],
     thumbnail: null,
-    isPaywalled:false,
+    isPaywalled: false,
   });
 
   const handleChange = (
@@ -53,23 +53,23 @@ export const useCreateArticleActions = () => {
   // };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  if (e.target.files && e.target.files[0]) {
-    const file = e.target.files[0];
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
 
-    const maxSize = 5 * 1024 * 1024; 
+      const maxSize = 5 * 1024 * 1024;
 
-    if (file.size > maxSize) {
-      toast.error("Thumbnail must be less than 5MB");
-      e.target.value = "";
-      return;
+      if (file.size > maxSize) {
+        toast.error("Thumbnail must be less than 5MB");
+        e.target.value = "";
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        thumbnail: file,
+      }));
     }
-
-    setFormData((prev) => ({
-      ...prev,
-      thumbnail: file,
-    }));
-  }
-};
+  };
 
 
   const handleContentChange = (content: string) => {
@@ -113,7 +113,7 @@ export const useCreateArticleActions = () => {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)+/g, "");
     const uniqueSuffix = Date.now().toString().slice(-6);
-    const generatedSlug = `${baseSlug}-${uniqueSuffix}`;
+    const generatedSlug = `${baseSlug}-article-${uniqueSuffix}`;
 
     dispatch(createArticle({ ...formData, slug: generatedSlug, status }));
   };
@@ -133,7 +133,7 @@ export const useCreateArticleActions = () => {
         content: "",
         tags: [],
         thumbnail: null,
-        isPaywalled:false
+        isPaywalled: false
       });
 
       toast.success(message);

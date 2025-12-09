@@ -11,9 +11,13 @@ import CustomInput from "@/components/ui/CustomInput";
 import { useRegisterActions } from "@/data/features/auth/useAuthActions";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import Link from "next/link";
+// import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 export default function RegisterPage() {
+  useDocTitle("Register  | Sajjad Husain Law Associates");
   const {
     formData,
     handleChange,

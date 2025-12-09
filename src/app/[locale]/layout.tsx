@@ -6,7 +6,8 @@ import ReduxProvider from "@/data/redux/providers/ReduxProvider";
 import { Toaster } from "react-hot-toast";
 import GlobalLoader from "@/components/ui/GlobalLoader";
 import ErrorBoundary from "@/components/ErrorBoundary";
-// Dinesh kumar test
+import { AdProvider } from "@/context/AdContext";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -18,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sajjad Husain Law Associates",
+  // title: "Sajjad Husain Law Associates",
   description: "Next-Gen Legal Tech",
   icons: {
     icon: "/logo.png",
@@ -44,18 +45,20 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <ErrorBoundary>
             <ReduxProvider>
-              <ClientLayout>{children}</ClientLayout>
-              {/* <GlobalLoader /> */}
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 3000,
-                  // Prevent duplicate toasts
-                  style: {
-                    maxWidth: '500px',
-                  },
-                }}
-              />
+              <AdProvider>
+                <ClientLayout>{children}</ClientLayout>
+                {/* <GlobalLoader /> */}
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 3000,
+                    // Prevent duplicate toasts
+                    style: {
+                      maxWidth: '500px',
+                    },
+                  }}
+                />
+              </AdProvider>
             </ReduxProvider>
           </ErrorBoundary>
         </NextIntlClientProvider>

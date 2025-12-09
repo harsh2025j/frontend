@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { ChevronLeft } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
+
 
 // Components & Hooks
 import Loader from "@/components/ui/Loader";
@@ -20,6 +22,7 @@ import { Role } from "@/data/features/roles/roles.types";
 import { Permission } from "@/data/features/permissions/permissions.types";
 
 export default function AddNewMemberPage() {
+  useDocTitle("Add New Member | Sajjad Husain Law Associates");
   const router = useRouter();
   const dispatch = useAppDispatch();
 

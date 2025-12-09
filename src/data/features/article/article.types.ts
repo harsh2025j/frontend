@@ -36,7 +36,16 @@ export interface Article {
   category: Category | null;
   subcategory: Subcategory | null;
 
-  tags: string[];
+  tags: Tag[];
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 // export interface Category {
 //   id: string;
@@ -95,7 +104,7 @@ export interface CreateArticleRequest {
   tags: string[];
   language: string;
   author: string;
-  isPaywalled:boolean;
+  isPaywalled: boolean;
   content: string;
   advocateName: string;
   thumbnail: File | null;
