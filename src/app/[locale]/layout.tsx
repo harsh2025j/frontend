@@ -6,6 +6,7 @@ import ReduxProvider from "@/data/redux/providers/ReduxProvider";
 import { Toaster } from "react-hot-toast";
 import GlobalLoader from "@/components/ui/GlobalLoader";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { AdProvider } from "@/context/AdContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,18 +45,20 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <ErrorBoundary>
             <ReduxProvider>
-              <ClientLayout>{children}</ClientLayout>
-              {/* <GlobalLoader /> */}
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 3000,
-                  // Prevent duplicate toasts
-                  style: {
-                    maxWidth: '500px',
-                  },
-                }}
-              />
+              <AdProvider>
+                <ClientLayout>{children}</ClientLayout>
+                {/* <GlobalLoader /> */}
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 3000,
+                    // Prevent duplicate toasts
+                    style: {
+                      maxWidth: '500px',
+                    },
+                  }}
+                />
+              </AdProvider>
             </ReduxProvider>
           </ErrorBoundary>
         </NextIntlClientProvider>

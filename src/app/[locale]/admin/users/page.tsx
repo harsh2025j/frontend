@@ -280,27 +280,27 @@ export default function UserManagementPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {[...users].sort((a, b) => new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime()).map((user: User) => (
-                                        <tr key={user._id} className="hover:bg-gray-50/50 transition-colors">
+                                    {[...users].sort((a, b) => new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime()).map((tableUser: User) => (
+                                        <tr key={tableUser._id} className="hover:bg-gray-50/50 transition-colors">
                                             <td className="py-4 px-6">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                                                        {user.name.charAt(0).toUpperCase()}
+                                                        {tableUser.name.charAt(0).toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <p className="font-medium text-gray-900">{user.name}</p>
-                                                        <p className="text-sm text-gray-500">{user.email}</p>
+                                                        <p className="font-medium text-gray-900">{tableUser.name}</p>
+                                                        <p className="text-sm text-gray-500">{tableUser.email}</p>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="py-4 px-6">
-                                                <TruncatedList items={user.roles || []} />
+                                                <TruncatedList items={tableUser.roles || []} />
                                             </td>
                                             <td className="py-4 px-6">
-                                                <TruncatedList items={user.permissions || []} />
+                                                <TruncatedList items={tableUser.permissions || []} />
                                             </td>
                                             <td className="py-4 px-6">
-                                                {user.isActive ? (
+                                                {tableUser.isActive ? (
                                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
                                                         <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
                                                         Active
@@ -313,25 +313,27 @@ export default function UserManagementPage() {
                                                 )}
                                             </td>
                                             <td className="py-4 px-6">
-                                                <button
-                                                    onClick={() => handleVerifyClick(user)}
-                                                    className="focus:outline-none hover:bg-gray-100 p-1 rounded-full transition-colors"
-                                                    title={user.isVerified ? "Click to Unverify" : "Click to Verify"}
-                                                >
-                                                    {user.isVerified ? (
-                                                        <span className="text-green-600">
-                                                            <CheckCircle size={20} />
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-gray-300">
-                                                            <CheckCircle size={20} />
-                                                        </span>
-                                                    )}
-                                                </button>
+                                                {user && tableUser._id !== user._id && (
+                                                    <button
+                                                        onClick={() => handleVerifyClick(tableUser)}
+                                                        className="focus:outline-none hover:bg-gray-100 p-1 rounded-full transition-colors"
+                                                        title={tableUser.isVerified ? "Click to Unverify" : "Click to Verify"}
+                                                    >
+                                                        {tableUser.isVerified ? (
+                                                            <span className="text-green-600">
+                                                                <CheckCircle size={20} />
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-300">
+                                                                <CheckCircle size={20} />
+                                                            </span>
+                                                        )}
+                                                    </button>
+                                                )}
                                             </td>
                                             <td className="py-4 px-6">
                                                 <button
-                                                    onClick={() => router.push(`/admin/teams/edit/${user._id}`)}
+                                                    onClick={() => router.push(`/admin/teams/edit/${tableUser._id}`)}
                                                     className="bg-blue-100 text-blue-600 px-3 py-1 rounded flex items-center gap-1 hover:bg-blue-200 transition-colors"
                                                 >
                                                     <span className="text-xs font-medium">Edit</span>

@@ -12,82 +12,65 @@ import Loader from "@/components/ui/Loader";
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 import { useLocale } from "next-intl";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import { timeAgo } from "@/lib/utils/timeAgo";
 
 
-export default function CategoryPage() {
+export default function TagPage() {
     const params = useParams();
     const slug = params.slug as string;
     const { articles: allArticles, loading } = useArticleListActions();
     const articles = React.useMemo(() => allArticles.filter((a: { status: string; }) => a.status === 'published'), [allArticles]);
-    const [categoryArticles, setCategoryArticles] = useState<Article[]>([]);
-    const [categoryName, setCategoryName] = useState<string>("");
+    const [tagArticles, setTagArticles] = useState<Article[]>([]);
+    const [tagName, setTagName] = useState<string>("");
     const locale = useLocale();
-    useDocTitle(`${categoryName}`);
-    // ... (existing cleanCategoryName function) ...
-    const cleanCategoryName = (name: string): string => {
+    useDocTitle(`${tagName}`);
+
+    const cleanTagName = (name: string): string => {
         return name
-            .replace(/\s*\d+\s*$/g, '') // Remove trailing numbers
-            .replace(/\s+/g, ' ')        // Replace multiple spaces with single space
-            .trim();                      // Remove leading/trailing whitespace
+            .replace(/\s*\d+\s*$/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
     };
 
     useEffect(() => {
         if (articles.length > 0 && slug) {
+            const currentSlug = slug.toLowerCase();
+
             const filtered = articles.filter((article: Article) => {
-                const category = article.category;
-                if (!category) return false;
-
-                const currentSlug = slug.toLowerCase();
-
-                const categorySlug = category.slug?.toLowerCase();
-                const categoryName = category.name?.toLowerCase();
-                const parentSlug = category.parent?.slug?.toLowerCase();
-                const parentName = category.parent?.name?.toLowerCase();
-
-                return (
-                    // match current category
-                    categorySlug === currentSlug ||
-                    categoryName === currentSlug ||
-
-                    // match parent → show children
-                    parentSlug === currentSlug ||
-                    parentName === currentSlug
+                // Check Tag match
+                const tagMatch = article.tags?.some(tag =>
+                    tag.slug.toLowerCase() === currentSlug ||
+                    tag.name.toLowerCase() === currentSlug
                 );
+
+                return tagMatch;
             });
 
-            setCategoryArticles(filtered);
+            setTagArticles(filtered);
 
-            if (filtered.length > 0 && filtered[0].category) {
-                const firstArticleCategory = filtered[0].category;
-                const currentSlug = slug.toLowerCase();
+            // Determine Display Name
+            if (filtered.length > 0) {
+                // Try to find exact tag match for naming
+                const matchArticle = filtered.find((a: any) =>
+                    a.tags?.some((t: any) => t.slug.toLowerCase() === currentSlug)
+                );
 
-                let displayName = '';
-
-                if (firstArticleCategory.slug?.toLowerCase() === currentSlug) {
-                    displayName = cleanCategoryName(firstArticleCategory.name);
+                if (matchArticle) {
+                    const matchedTag = matchArticle.tags?.find((t: any) => t.slug.toLowerCase() === currentSlug);
+                    if (matchedTag) {
+                        setTagName(matchedTag.name);
+                    } else {
+                        setTagName(cleanTagName(slug.replace(/-/g, ' ')));
+                    }
+                } else {
+                    setTagName(cleanTagName(slug.replace(/-/g, ' ')));
                 }
-                else if (firstArticleCategory.name?.toLowerCase() === currentSlug) {
-                    displayName = cleanCategoryName(firstArticleCategory.name);
-                }
-                else if (firstArticleCategory.parent?.slug?.toLowerCase() === currentSlug) {
-                    displayName = cleanCategoryName(firstArticleCategory.parent.name);
-                }
-                else if (firstArticleCategory.parent?.name?.toLowerCase() === currentSlug) {
-                    displayName = cleanCategoryName(firstArticleCategory.parent.name);
-                }
-                else {
-                    displayName = cleanCategoryName(firstArticleCategory.name);
-                }
-
-                setCategoryName(displayName);
             } else {
                 const formattedSlug = slug
                     .split('-')
                     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                     .join(' ');
 
-                setCategoryName(cleanCategoryName(formattedSlug));
+                setTagName(cleanTagName(formattedSlug));
             }
         }
     }, [articles, slug]);
@@ -96,39 +79,39 @@ export default function CategoryPage() {
     const [textsToTranslate, setTextsToTranslate] = useState<string[]>([]);
 
     useEffect(() => {
-        if (locale === 'en' || !categoryName) return;
+        if (locale === 'en' || !tagName) return;
 
         const texts: string[] = [];
-        // 1. Category Name
-        texts.push(categoryName);
+        // 1. Tag Name
+        texts.push(tagName);
 
         // 2. Articles (Title + Content Snippet)
-        categoryArticles.forEach(a => {
+        tagArticles.forEach(a => {
             texts.push(a.title);
             texts.push(a.content.replace(/<[^>]*>/g, "").substring(0, 150) + "...");
         });
 
         setTextsToTranslate(texts);
-    }, [categoryName, categoryArticles, locale]);
+    }, [tagName, tagArticles, locale]);
 
     const { translatedText, loading: translating } = useGoogleTranslate(
         locale !== 'en' && textsToTranslate.length > 0 ? textsToTranslate : null
     );
 
-    const displayCategoryName = React.useMemo(() => {
+    const displayTagName = React.useMemo(() => {
         if (locale === 'en' || !translatedText || !Array.isArray(translatedText) || translatedText.length === 0) {
-            return categoryName;
+            return tagName;
         }
         return translatedText[0];
-    }, [categoryName, translatedText, locale]);
+    }, [tagName, translatedText, locale]);
 
     const displayArticles = React.useMemo(() => {
         if (locale === 'en' || !translatedText || !Array.isArray(translatedText) || translatedText.length === 0) {
-            return categoryArticles;
+            return tagArticles;
         }
 
-        // First element is category name, so articles start at index 1
-        return categoryArticles.map((article, index) => {
+        // First element is tag name, so articles start at index 1
+        return tagArticles.map((article, index) => {
             const titleIdx = 1 + (index * 2);
             const contentIdx = 1 + (index * 2) + 1;
 
@@ -138,7 +121,7 @@ export default function CategoryPage() {
                 content: translatedText[contentIdx] || article.content
             };
         });
-    }, [categoryArticles, translatedText, locale]);
+    }, [tagArticles, translatedText, locale]);
 
 
     if (loading) {
@@ -155,21 +138,21 @@ export default function CategoryPage() {
             {/* Header */}
             <div className="text-left mb-10 space-y-2">
                 <h1 className="text-4xl text-[#0A2342] sm:text-5xl font-bold capitalize flex items-center gap-3">
-                    {displayCategoryName}
+                    {displayTagName}
                     {translating && <span className="text-sm text-[#C9A227] animate-pulse font-normal">Translating...</span>}
                 </h1>
                 <p className="text-gray-600 max-w-2xl  text-sm sm:text-base">
                     Explore the latest insights, updates, and reports in the{" "}
-                    <span className="font-medium text-gray-800 capitalize">{displayCategoryName}</span>{" "}
-                    category.
+                    <span className="font-medium text-gray-800 capitalize">{displayTagName}</span>{" "}
+                    topic.
                 </p>
                 <div className="w-24 h-1 bg-black/80  rounded-full mt-3"></div>
             </div>
 
             {/* Article list */}
-            {categoryArticles.length === 0 ? (
+            {tagArticles.length === 0 ? (
                 <div className="text-center text-gray-500 text-lg font-medium py-20">
-                    No articles found in this category.
+                    No articles found for this tag.
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -180,10 +163,9 @@ export default function CategoryPage() {
                                 content={article.content}
                                 src={article.thumbnail || undefined}
                                 court={article.location || undefined}
-                                // time={new Date(article.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                time={timeAgo(article.createdAt)}
-                            // views={String(0)}
-                            // likes={String(0)}
+                                time={new Date(article.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                views={String(0)}
+                                likes={String(0)}
                             />
                         </Link>
                     ))}

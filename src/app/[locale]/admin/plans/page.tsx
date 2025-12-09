@@ -8,6 +8,8 @@ import { Trash2, Edit, Plus, Search } from "lucide-react";
 import Loader from "@/components/ui/Loader";
 import AddEditPlanModal from "./PlanModal";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import { UserData } from "@/data/features/profile/profile.types";
+import { useProfileActions } from "@/data/features/profile/useProfileActions";
 
 
 // Module-level flag to ensure fetch only happens ONCE across ALL instances
@@ -22,6 +24,8 @@ export default function PlansManagement() {
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
     const [showPlanModal, setShowPlanModal] = useState(false);
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+    const { user: reduxUser } = useProfileActions();
+    const user = reduxUser as UserData;
 
     // Fetch plans ONLY ONCE using module-level flag
     useEffect(() => {
@@ -34,6 +38,27 @@ export default function PlansManagement() {
     const filteredPlans = plans.filter((plan: Plan) =>
         plan.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
+    useEffect(() => {
+        // if (loading) return;
+    
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    
+        // 1. No Token? -> Go to Login
+        if (!token) {
+          router.replace("/auth/login");
+          return;
+        }
+    
+        // 2. Role Check
+        if (user?.roles?.length) {
+          const allowedRoles = ["admin", "superadmin"];
+          const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
+          if (!hasAccess) {
+            router.replace("/auth/login");
+          }
+          
+        }
+      }, [user, router]);
 
     const handleDelete = async () => {
         if (selectedPlan) {

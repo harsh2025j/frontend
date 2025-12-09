@@ -5,9 +5,10 @@ import { useParams } from "next/navigation";
 import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import { Article } from "@/data/features/article/article.types";
 import Image from "next/image";
-import Link from "next/link";
+// import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { Share2, Sparkles, X, Facebook, Twitter, Linkedin, Link2, Check, Printer } from "lucide-react";
-import logo from "@/assets/logo.png";   
+import logo from "@/assets/logo.png";
 import Loader from "@/components/ui/Loader";
 import { useTranslations, useLocale } from "next-intl";
 import { useDocTitle } from "@/hooks/useDocTitle";
@@ -43,7 +44,7 @@ export default function ArticleDetailPage() {
     const [copied, setCopied] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
     const [showAISummary, setShowAISummary] = useState(false);
-       
+
     useDocTitle(`${article?.title}`);
 
     const t = useTranslations('ArticleDetail');
@@ -196,7 +197,7 @@ export default function ArticleDetailPage() {
                                 <div className="flex flex-wrap gap-2">
                                     {article.tags.map((tag, index) => (
                                         <span key={index} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-                                            {tag}
+                                            {tag.name}
                                         </span>
                                     ))}
                                 </div>

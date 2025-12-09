@@ -21,7 +21,7 @@ export const articleApi = {
     formData.append("categoryId", data.category);
     formData.append("status", data.status || "draft");
     if (Array.isArray(data.tags)) {
-      formData.append("tags", data.tags.join(","));
+      formData.append("tags", data.tags.join(", "));
     }
     // console.log(formData.get("tags"));
     // console.log("form data send to backed ",formData)
@@ -100,7 +100,7 @@ export const articleApi = {
     formData.append("status", data.status || "pending");
 
     if (Array.isArray(data.tags)) {
-      formData.append("tagsAsArray", data.tags.join(","));
+      formData.append("tags", data.tags.join(", "));
     }
     if (data.thumbnail && data.thumbnail instanceof File) {
       formData.append("file", data.thumbnail);

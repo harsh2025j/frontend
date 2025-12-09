@@ -11,6 +11,7 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import { articleApi } from "@/data/services/article-service/article-service";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import { ArrowLeft } from "lucide-react";
 
 
 const EditArticlePage: React.FC = () => {
@@ -44,12 +45,16 @@ const EditArticlePage: React.FC = () => {
             router.replace("/auth/login");
             return;
         }
-        if (user?.roles?.length) {
-            const hasAccess = user.roles.some((r) => r.name !== "user");
-            if (!hasAccess) {
-                router.replace("/auth/login");
-            }
-        }
+         if (user?.roles?.length) {
+      const allowedRoles = ["admin", "superadmin", "creator"];
+      const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
+      if (!hasAccess) {
+        router.replace("/auth/login");
+      }
+      
+    }
+
+        
     }, [user, router]);
 
     const dispatch = useAppDispatch();
@@ -81,7 +86,9 @@ const EditArticlePage: React.FC = () => {
                         language: article.language || "English/हिन्दी",
                         author: article.authors || "",
                         content: article.content,
-                        tags: Array.isArray(article.tags) ? article.tags : (typeof article.tags === 'string' ? (article.tags as string).split(',') : []),
+                        tags: Array.isArray(article.tags)
+                            ? article.tags.map((t: any) => typeof t === 'object' ? t.name : t)
+                            : (typeof article.tags === 'string' ? (article.tags as string).split(',') : []),
                         thumbnail: null,
                         status: article.status === 'published' ? 'pending' : 'draft',
                         isPaywalled: article.isPaywalled || false,
@@ -108,22 +115,24 @@ const EditArticlePage: React.FC = () => {
     // --- Helper: Generate Slug ---
     const generateSlug = (text: string) => {
         return text
-            .toLowerCase()
-            .trim()
-            .replace(/[^\w\s-]/g, '') // Remove non-word chars
-            .replace(/[\s_-]+/g, '-') // Replace spaces/underscores with hyphens
-            .replace(/^-+|-+$/g, ''); // Trim leading/trailing hyphens
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/(^-|-$)+/g, ""); 
     };
 
     // --- Handler: Title Change (Updates Slug automatically) ---
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newTitle = e.target.value;
         const autoSlug = generateSlug(newTitle);
+        const uniqueSuffix = Date.now().toString().slice(-6);
+        const generatedSlug = `${autoSlug}-article-${uniqueSuffix}`;
+
+        console.log(generatedSlug)
 
         setFormData((prev) => ({
             ...prev,
             title: newTitle,
-            slug: autoSlug
+            slug: generatedSlug
         }));
     };
 
@@ -181,7 +190,16 @@ const EditArticlePage: React.FC = () => {
         <div className="flex min-h-screen bg-gray-50 text-gray-800">
             <main className="flex-1 w-full p-3 sm:p-4 md:p-6 lg:p-8">
 
-                <h1 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 px-2">Edit Content</h1>
+                <div className="flex items-center gap-4 mb-4 sm:mb-6 px-2">
+                    <button
+                        onClick={() => router.back()}
+                        className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                        aria-label="Go back"
+                    >
+                        <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+                    </button>
+                    <h1 className="text-xl sm:text-2xl font-semibold">Edit Content</h1>
+                </div>
                 <div className="max-w-6xl mx-auto bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm">
                     <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
 

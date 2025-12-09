@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Link from "next/link";
+// import Link from "next/link";
+import { Link } from "@/i18n/routing";
 
 const Breadcrumb = () => {
   const pathname = usePathname();
@@ -24,9 +25,8 @@ const Breadcrumb = () => {
 
           <Link
             href={buildPath(index)}
-            className={`hover:underline capitalize ${
-              index === pathParts.length - 1 ? "font-semibold text-black" : ""
-            }`}
+            className={`hover:underline capitalize ${index === pathParts.length - 1 ? "font-semibold text-black" : ""
+              }`}
           >
             {decodeURIComponent(part.replace(/-/g, " "))}
           </Link>

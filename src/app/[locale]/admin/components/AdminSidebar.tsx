@@ -12,7 +12,8 @@ import {
   GitPullRequestArrow,
   UserCog
 } from "lucide-react";
-import Link from "next/link";
+// import Link from "next/link";
+import {Link} from "@/i18n/routing"
 import { LogOut } from "lucide-react";
 import { useAppDispatch } from "@/data/redux/hooks";
 import { logoutUser } from "@/data/features/auth/authSlice";
@@ -54,16 +55,16 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
       show: hasDashboardAccess && !isEditor
     },
     {
-      name: "Create Roles & Permissions",
-      icon: <UserCog size={18} />,
-      href: "/admin/roles-permissions",
-      show: hasAdminPrivileges 
-    },
-    {
       name: "Content Approval",
       icon: <GitPullRequestArrow size={18} />,
       href: "/admin/content-approval",
       show: hasAdminPrivileges  || ( isEditor  && hasPermissionsForContenEdit)
+    },
+    {
+      name: "Create Roles & Permissions",
+      icon: <UserCog size={18} />,
+      href: "/admin/roles-permissions",
+      show: hasAdminPrivileges 
     },
     {
       name: "Team Management",
@@ -78,7 +79,7 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
       show: hasAdminPrivileges
     },
     {
-      name: "Premium",
+      name: "Plan Management",
       icon: <Crown size={18} />,
       href: "/admin/plans",
       show: hasAdminPrivileges

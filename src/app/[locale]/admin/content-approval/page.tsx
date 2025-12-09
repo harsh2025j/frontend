@@ -175,6 +175,7 @@ useDocTitle("Content Approval | Sajjad Husain Law Associates");
 
 
   const { articles, loading, error, refetch } = useArticleListActions();
+  // console.log("article",articles)
 
   const [currentPage, setCurrentPage] = useState(1);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -538,7 +539,7 @@ useDocTitle("Content Approval | Sajjad Husain Law Associates");
                       key={idx}
                       className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm"
                     >
-                      {tag}
+                      {tag.name}
                     </span>
                   ))}
                 </div>

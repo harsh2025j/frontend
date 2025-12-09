@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
+// import Link from "next/link";
+import { Link } from "@/i18n/routing"
 import { Menu, X, ChevronDown, ChevronRight, LogOut, LayoutDashboard, User as UserIcon } from "lucide-react";
 import Image from "next/image";
 import logo from "../../../public/logo.png";
@@ -63,7 +64,7 @@ export default function Header() {
 
   const hasDashboardAccess = useMemo(() => {
     if (!user?.roles) return false;
-    return user.roles.some((r: any) => ["admin", "superadmin"].includes(r.name));
+    return user.roles.some((r: any) => ["admin", "superadmin","creator","editor","manager"].includes(r.name));
   }, [user]);
 
   const t = useTranslations('Navigation');

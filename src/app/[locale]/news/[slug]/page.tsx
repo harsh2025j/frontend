@@ -5,7 +5,8 @@ import { useParams } from "next/navigation";
 import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import { Article } from "@/data/features/article/article.types";
 import Image from "next/image";
-import Link from "next/link";
+// import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { Clock, X, MessageCircle, Eye, Facebook, Twitter, Linkedin, Link2, Check, Printer, Share2 } from "lucide-react";
 import Loader from "@/components/ui/Loader";
 import { useTranslations, useLocale } from "next-intl";
@@ -224,6 +225,22 @@ export default function ArticleDetailPage() {
                             </div>
                         )}
 
+                        {/* Tags */}
+                        {article.tags && article.tags.length > 0 && (
+                            <div className="mb-8 flex flex-wrap items-center gap-2">
+                                <span className="text-sm font-bold text-gray-900 mr-2">Tags:</span>
+                                {article.tags.map((tag) => (
+                                    <Link
+                                        key={tag.id}
+                                        href={`/tags/${tag.slug}`}
+                                        className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-blue-100 hover:text-blue-700 transition-colors"
+                                    >
+                                        {tag.name}
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+
                         {/* Social Share Bar */}
                         <div className="flex flex-col sm:flex-row items-center gap-6 mb-10 py-3 px-6 bg-white rounded-full border border-gray-200 w-fit mx-auto sm:mx-0">
                             <div className="flex items-center gap-3 text-[#0A2342] font-bold min-w-fit">
@@ -332,21 +349,7 @@ export default function ArticleDetailPage() {
                             <div dangerouslySetInnerHTML={{ __html: translatedData ? translatedData.content : article.content }} />
                         </div>
 
-                        {/* Tags */}
-                        {article.tags && article.tags.length > 0 && (
-                            <div className="pt-6 border-t border-gray-200">
-                                <div className="flex flex-wrap gap-2">
-                                    {article.tags.map((tag, index) => (
-                                        <span
-                                            key={index}
-                                            className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                                        >
-                                            {tag}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+
                     </div>
 
                     {/* Sidebar */}

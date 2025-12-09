@@ -10,7 +10,8 @@ import toast from "react-hot-toast";
 import { resetAuthState } from "@/data/features/auth/authSlice";
 import { useRouter } from "next/navigation";
 import { useResendOtp } from "@/data/features/auth/useAuthActions";
-import Link from "next/link";
+// import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
 import {

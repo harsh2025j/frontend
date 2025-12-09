@@ -36,7 +36,7 @@ const data = [
 ]
 
 export default function Page() {
-  useDocTitle("Admin Dashboard");
+  useDocTitle("Admin Dashboard  | Sajjad Husain Law Associates");
   const router = useRouter();
 
   //   const {

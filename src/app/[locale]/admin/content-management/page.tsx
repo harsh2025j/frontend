@@ -176,7 +176,8 @@ const contentManagementPage: React.FC = () => {
 
     // 2. Role Check
     if (user?.roles?.length) {
-      const hasAccess = user.roles.some((r) => r.name !== "user");
+      const allowedRoles = ["admin", "superadmin", "creator"];
+      const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
       if (!hasAccess) {
         router.replace("/auth/login");
       }

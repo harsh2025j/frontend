@@ -1,6 +1,7 @@
 "use client"
 import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { useState, useEffect } from "react";
 import NewsCard from "@/components/ui/NewsCard";
 import logo from "../../public/logo.png";
 import CategorySection from "@/components/home/CategorySection";
@@ -8,6 +9,7 @@ import NewsSlider from "@/components/home/NewsSlider";
 import Stores from "@/components/home/Stores";
 import AdBanner from "@/components/ads/AdBanner";
 import AdSidebar from "@/components/ads/AdSidebar";
+import AdsPopup from "@/components/ads/AdsPopup";
 import NewsletterSubscription from "@/components/home/NewsletterSubscription";
 import LegalTimeline from "@/components/home/LegalTimeline";
 import { useDocTitle } from "@/hooks/useDocTitle";
@@ -19,16 +21,39 @@ export default function Home() {
 
   const t = useTranslations('Home');
 
+
+  const [showAdPopup, setShowAdPopup] = useState(false);
+
+  useEffect(() => {
+    // Show popup after 3 seconds
+    const timer = setTimeout(() => {
+      setShowAdPopup(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <>
+      {showAdPopup && (
+        <AdsPopup
+          onClose={() => setShowAdPopup(false)}
+          imageUrl="/sajjad-husain-ad.jpg"
+          linkUrl="#"
+        />
+      )}
       <div className="bg-gray-50 min-h-screen pb-0">
         <NewsSlider />
         <Stores />
 
         <div className="container mx-auto px-4 mt-8 mb-4">
-          <AdBanner size="medium" />
+          <AdBanner
+            size="large"
+            imageUrl="/banner-expert-legal.jpg"
+            linkUrl="#"
+          />
         </div>
-     
+
         <CategorySection
           title={t('supreme_court')}
           slug="supreme-court"
@@ -67,12 +92,18 @@ export default function Home() {
               <div className="sticky top-24">
                 <div className=" p-4 rounded-md border border-gray-100  mb-6">
                   <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('sponsored')}</h3>
-                  <AdSidebar />
+                  <AdSidebar
+                    imageUrl="/banner-expert-legal.jpg"
+                    linkUrl="#"
+                  />
                 </div>
 
                 <div className=" p-4 rounded-xl border border-gray-100 ">
                   <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('trending')}</h3>
-                  <AdSidebar />
+                  <AdSidebar
+                    imageUrl="/banner-dream-explore.jpg"
+                    linkUrl="#"
+                  />
                 </div>
               </div>
             </div>
@@ -81,7 +112,11 @@ export default function Home() {
         </div>
 
         <div className="container mx-auto px-4 my-8">
-          <AdBanner size="large" />
+          <AdBanner
+            size="large"
+            imageUrl="/banner-dream-explore.jpg"
+            linkUrl="#"
+          />
         </div>
 
         <CategorySection

@@ -24,7 +24,7 @@ export default function DummyChart() {
     return (
         <div className="lg:col-span-2 bg-white p-6 rounded-xl  border border-gray-100">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                AI Summary Generation Trand       </h3>
+                AI Summary Generation Trend</h3>
 
             <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={data}>
