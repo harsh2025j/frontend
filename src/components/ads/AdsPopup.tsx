@@ -59,9 +59,10 @@ export default function AdsPopup({ onClose, imageUrl, linkUrl }: AdsPopupProps) 
 
             {/* Modal Content */}
             <div className="relative z-10 bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-300 scale-100 
-                w-[90vw] aspect-video 
-                md:w-[70vw] md:aspect-video 
-                lg:w-auto lg:h-[60vh] lg:aspect-video">
+            w-[90vw] h-auto aspect-[3/4] 
+            md:w-[70vw] md:aspect-[3/4] 
+            lg:w-auto lg:h-[80vh] lg:aspect-[3/4]"
+             >
 
                 <button
                     onClick={handleClose}
@@ -78,7 +79,7 @@ export default function AdsPopup({ onClose, imageUrl, linkUrl }: AdsPopupProps) 
                             src={displayImage}
                             alt="Promotional Ad"
                             fill
-                            // className="object-cover"
+                            className="object-cover"
                         />
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-6 text-white opacity-0 group-hover:opacity-100 transition-opacity">
                             <p className="font-bold text-lg">Ad</p>
@@ -90,7 +91,7 @@ export default function AdsPopup({ onClose, imageUrl, linkUrl }: AdsPopupProps) 
                             src={displayImage}
                             alt="Promotional Ad"
                             fill
-                            // className="object-cover"
+                            className="object-cover"
                         />
                     </div>
                 )}

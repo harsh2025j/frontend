@@ -22,7 +22,7 @@ const AdBanner: React.FC<AdBannerProps> = ({ size = 'medium', className = '', im
                 <img
                     src={imageUrl}
                     alt="Advertisement"
-
+                   
                     className="w-full h-full"
                 />
             ) : (

@@ -4,6 +4,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import StateJudgement from './stateJudgement';
 import { highCourts } from '@/data/highCourts';
+import { Link } from '@/i18n/routing';
 
 interface HighCourtsModalProps {
     isOpen: boolean;
@@ -39,15 +40,17 @@ export default function HighCourtsModal({ isOpen, onClose }: HighCourtsModalProp
                 </div>
 
                 {/* Content */}
-                <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+                <div className="p-8 pb-30  overflow-y-auto max-h-[calc(90vh-80px)]">
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                         {highCourts.map((court, index) => (
+                         
                             <div
                                 key={court.id}
                                 className="animate-fadeInUp"
-                                style={{ animationDelay: `${index * 30}ms` }}
-                            >
+                                style={{ animationDelay: `${index * 50}ms` }}
+                            > <Link href={`category/${court.slug}`}>
                                 <StateJudgement img={court.image} state={court.name} />
+                            </Link>
                             </div>
                         ))}
                     </div>

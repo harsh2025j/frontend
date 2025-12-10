@@ -22,6 +22,73 @@ import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { fetchCategories } from "@/data/features/category/categoryThunks";
 import { Category } from "@/data/features/category/category.types";
 
+const SubCategoryItem = ({ item, closeMenu }: { item: NavItem; closeMenu: () => void }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const pathname = usePathname();
+  const hasSubItems = item.children && item.children.length > 0;
+
+  const isSelfActive = useMemo(() => {
+    if (!item.href) return false;
+    return pathname === item.href || pathname.startsWith(`${item.href}/`);
+  }, [pathname, item.href]);
+
+  const isChildActive = useMemo(() => {
+    if (!item.children) return false;
+    // Simple check if any child is active
+    const check = (items: NavItem[]): boolean => {
+      return items.some(i => (i.href && (pathname === i.href || pathname.startsWith(`${i.href}/`))) || (i.children && check(i.children)));
+    }
+    return check(item.children);
+  }, [pathname, item.children]);
+
+  return (
+    <div
+      className="flex flex-col gap-2 break-inside-avoid"
+      onMouseEnter={() => setIsExpanded(true)}
+      onMouseLeave={() => setIsExpanded(false)}
+    >
+      <div className="flex items-center justify-between group/sub w-full cursor-pointer" onClick={(e) => { e.preventDefault(); setIsExpanded(!isExpanded); }}>
+        <Link
+          href={item.href || "#"}
+          onClick={(e) => { e.stopPropagation(); closeMenu(); }}
+          className={`font-semibold text-base hover:text-[#C9A227] transition-colors ${isSelfActive || isChildActive ? "text-[#C9A227]" : "text-gray-900"}`}
+        >
+          {item.label}
+        </Link>
+        {hasSubItems && (
+          <button
+            className={`p-1 hover:text-[#C9A227] focus:outline-none transition-colors ${isExpanded || isChildActive ? "text-[#C9A227]" : "text-gray-400"}`}
+          >
+            <ChevronDown size={16} className={`transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
+          </button>
+        )}
+      </div>
+
+      {hasSubItems && (
+        <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+          <div className="overflow-hidden">
+            <div className="flex flex-col gap-1.5 pl-3 border-l-2 border-gray-100 pt-1 pb-2">
+              {item.children!.map((subChild, j) => {
+                const isActive = subChild.href && (pathname === subChild.href || pathname.startsWith(`${subChild.href}/`));
+                return (
+                  <Link
+                    key={j}
+                    href={subChild.href || "#"}
+                    onClick={closeMenu}
+                    className={`text-sm hover:text-[#C9A227] transition-colors block py-0.5 ${isActive ? "text-[#C9A227] font-medium" : "text-gray-600"}`}
+                  >
+                    {subChild.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -64,7 +131,7 @@ export default function Header() {
 
   const hasDashboardAccess = useMemo(() => {
     if (!user?.roles) return false;
-    return user.roles.some((r: any) => ["admin", "superadmin","creator","editor","manager"].includes(r.name));
+    return user.roles.some((r: any) => ["admin", "superadmin", "creator", "editor", "manager"].includes(r.name));
   }, [user]);
 
   const t = useTranslations('Navigation');
@@ -156,28 +223,12 @@ export default function Header() {
           {item.label} <ChevronDown size={14} />
         </button>
         {isOpen && (
-          <div className="absolute top-full left-0 bg-white border border-gray-200 shadow-lg rounded-md py-2 min-w-[200px] z-50">
-            {item.children!.map((child, i) => (
-              <div key={i} className="px-4 py-2 hover:bg-gray-50 relative group/sub">
-                {child.children?.length ? (
-                  <div className={`flex items-center justify-between w-full cursor-pointer hover:text-[#C9A227] ${isItemOrChildActive(child) ? "text-[#C9A227]" : "text-gray-700"}`}>
-                    <span>{child.label}</span>
-                    <ChevronRight size={14} />
-                    <div className="absolute left-full top-0 bg-white border border-gray-200 shadow-lg rounded-md py-2 min-w-[200px] hidden group-hover/sub:block">
-                      {child.children.map((subChild, j) => (
-                        <Link key={j} href={subChild.href || "#"} className={`block px-4 py-2 hover:bg-gray-50 text-sm hover:text-[#C9A227] ${isLinkActive(subChild.href) ? "text-[#C9A227] font-semibold" : "text-gray-700"}`}>
-                          {subChild.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <Link href={child.href || "#"} className={`block text-sm hover:text-[#C9A227] ${isLinkActive(child.href) ? "text-[#C9A227] font-semibold" : "text-gray-700"}`}>
-                    {child.label}
-                  </Link>
-                )}
-              </div>
-            ))}
+          <div className="absolute top-full left-0 bg-white border border-gray-200 shadow-lg rounded-md z-50 w-[600px] max-h-[50vh] overflow-y-auto">
+            <div className="p-6 grid grid-cols-2 md:grid-cols-3 gap-6">
+              {item.children!.map((child, i) => (
+                <SubCategoryItem key={i} item={child} closeMenu={() => setIsOpen(false)} />
+              ))}
+            </div>
           </div>
         )}
       </div>

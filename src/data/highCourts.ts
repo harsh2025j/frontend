@@ -6,7 +6,7 @@ export interface HighCourt {
 }
 
 export const highCourts: HighCourt[] = [
-    { id: 1, name: "Allahabad", image: "https://etimg.etb2bimg.com/photo/104812801.cms", slug: "allahabad-high-court" },
+    { id: 1, name: "Allahabad", image: "https://etimg.etb2bimg.com/photo/104812801.cms", slug: "allahabad-high-court"},
     { id: 2, name: "Andhra Pradesh", image: "https://media.gettyimages.com/id/511610267/photo/delhi-high-court.jpg?s=612x612&w=0&k=20&c=CwkIqGBtAn4vowe3XRKcfp8I-6cKqlthiResZcteaN8=", slug: "andhra-pradesh-high-court" },
     { id: 3, name: "Bombay", image: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=400&h=300&fit=crop", slug: "bombay-high-court" },
     { id: 4, name: "Calcutta", image: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=400&h=300&fit=crop", slug: "calcutta-high-court" },
