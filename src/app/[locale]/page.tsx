@@ -38,7 +38,7 @@ export default function Home() {
       {showAdPopup && (
         <AdsPopup
           onClose={() => setShowAdPopup(false)}
-          imageUrl="/sajjad-husain-ad.jpg"
+          imageUrl="/sajjad-husain-ad.png"
           linkUrl="#"
         />
       )}
@@ -123,7 +123,7 @@ export default function Home() {
           title={t('judgments')}
           slug="judgments-content"
           layout="grid"
-          limit={6}
+          limit={8}
         />
 
         {/* <LegalTimeline /> */}
@@ -139,7 +139,7 @@ export default function Home() {
           title={t('more_latest_news')}
           slug="latest-news"
           layout="grid"
-          limit={9}
+          limit={8}
         />
 
         <NewsletterSubscription />

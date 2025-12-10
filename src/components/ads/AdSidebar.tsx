@@ -17,7 +17,7 @@ const AdSidebar: React.FC<AdSidebarProps> = ({ className = '', imageUrl, linkUrl
                     src={imageUrl}
                     alt="Sidebar Advertisement"
                     fill
-                // className="object-cover"
+                className="object-cover"
                 />
             ) : (
                 <>

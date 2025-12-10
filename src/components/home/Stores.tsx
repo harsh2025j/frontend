@@ -229,28 +229,11 @@ export default function Stores() {
   }, [currentText, isDeleting, loopNum, displayHeadlines, typingSpeed]);
 
 
-  // const [showAdPopup, setShowAdPopup] = useState(false);
+  
 
-  // useEffect(() => {
-  //   // Show popup after 5 seconds
-  //   const timer = setTimeout(() => {
-  //     setShowAdPopup(true);
-  //   }, 3000);
-
-  //   return () => clearTimeout(timer);
-  // }, []);
-
-  return (
-    <>
-      {/* {showAdPopup && (
-        <AdsPopup
-          onClose={() => setShowAdPopup(false)}
-          // imageUrl="/ads/promo.jpg" // Optional: add a real image path here
-          linkUrl="#"
-        />
-      )} */}
+  return ( 
       <div className="bg-[#f6f6f7]">
-        {/* ✅ NEW: Full Screen Loader when navigating */}
+       
         {isNavigating && <Loader fullScreen text="Loading..." />}
 
         <div className="w-full">
@@ -320,7 +303,9 @@ export default function Stores() {
               {/* High Courts Grid */}
               <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4 md:gap-6">
                 {highCourts.slice(0, 8).map((court) => (
+                  <Link href={`category/${court.slug}`}>
                   <StateJudgement key={court.id} img={court.image} state={court.name} />
+                  </Link>
                 ))}
               </div>
 
@@ -526,6 +511,6 @@ export default function Stores() {
           </div>
         </div>
       </div>
-    </>
+    
   );
 }

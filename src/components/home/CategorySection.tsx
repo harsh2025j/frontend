@@ -90,7 +90,7 @@ const ArticleCard = ({ article, compact = false }: { article: any; compact?: boo
 
 const GridLayout = ({ articles }: { articles: any[] }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    {articles.map((article) => (
+    {articles.slice(0,8).map((article) => (
       <ArticleCard key={article.id} article={article} />
     ))}
   </div>
