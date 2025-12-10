@@ -147,7 +147,7 @@ const ApproveConfirmationModal: React.FC<ApproveConfirmationModalProps> = ({
 
 const ContentApprovalPanel = () => {
 
-useDocTitle("Content Approval | Sajjad Husain Law Associates");
+  useDocTitle("Content Approval | Sajjad Husain Law Associates");
   const router = useRouter();
   const { user: reduxUser } = useProfileActions();
   const user = reduxUser as UserData;
@@ -256,7 +256,7 @@ useDocTitle("Content Approval | Sajjad Husain Law Associates");
   // Filter out draft articles and Sort (Pending First -> Recent Date)
   const filteredArticles = articles
     .filter((a: Article) => a.status !== 'draft')
-    .sort((a:any, b:any) => {
+    .sort((a: any, b: any) => {
       // 1. Primary Sort: Status (Pending first)
       const isAPending = a.status === 'pending';
       const isBPending = b.status === "pending";
