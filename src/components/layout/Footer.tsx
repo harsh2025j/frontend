@@ -164,7 +164,7 @@ export default function Footer() {
                 <span className="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-blue-400 to-transparent"></span>
               </h3>
               <ul className="space-y-2.5">
-                {categories.map((category: Category) => (
+                {categories.slice(0,13).map((category: Category) => (
                   <li key={category.id}>
                     <Link
                       href={`/category/${category.slug}`}
@@ -184,7 +184,7 @@ export default function Footer() {
                 <span className="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-blue-400 to-transparent"></span>
               </h3>
               <ul className="space-y-2.5">
-                {subCategories.map((category: Category) => (
+                {subCategories.slice(0,13).map((category: Category) => (
                   <li key={category.id}>
                     <Link
                       href={`/category/${category.slug}`}
@@ -204,7 +204,7 @@ export default function Footer() {
                 <span className="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-blue-400 to-transparent"></span>
               </h3>
               <ul className="space-y-2.5">
-                {resourceLinks.map((link, index) => (
+                {resourceLinks.slice(0,13).map((link, index) => (
                   <li key={index}>
                     <Link
                       href={link.href}

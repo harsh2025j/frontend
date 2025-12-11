@@ -51,7 +51,7 @@ const SubCategoryItem = ({ item, closeMenu }: { item: NavItem; closeMenu: () => 
         <Link
           href={item.href || "#"}
           onClick={(e) => { e.stopPropagation(); closeMenu(); }}
-          className={`font-semibold text-base hover:text-[#C9A227] transition-colors ${isSelfActive || isChildActive ? "text-[#C9A227]" : "text-gray-900"}`}
+          className={`text-sm hover:text-[#C9A227]  transition-colors ${isSelfActive || isChildActive ? "text-[#C9A227]" : "text-gray-900"}`}
         >
           {item.label}
         </Link>
@@ -75,7 +75,7 @@ const SubCategoryItem = ({ item, closeMenu }: { item: NavItem; closeMenu: () => 
                     key={j}
                     href={subChild.href || "#"}
                     onClick={closeMenu}
-                    className={`text-sm hover:text-[#C9A227] transition-colors block py-0.5 ${isActive ? "text-[#C9A227] font-medium" : "text-gray-600"}`}
+                    className={`text-sm hover:text-[#C9A227] transition-colors block py-0.5 ${isActive ? "text-[#C9A227] " : "text-gray-600"}`}
                   >
                     {subChild.label}
                   </Link>
@@ -145,14 +145,76 @@ export default function Header() {
         children: cat.children?.length ? cat.children.map(mapToNavItem) : undefined,
       };
     };
+    
+    const DEFAULT_CATEGORIES = [
+        "latest news",
+        "high court",
+        "supreme court",
+        "crime",
+        "article",
+        "hindi news"
+      ];
+
 
     const dynamicCats = categories.map(mapToNavItem);
-    const LIMIT = 6;
-    const visible = dynamicCats.slice(0, LIMIT);
-    const hidden = dynamicCats.slice(LIMIT);
-    const final: NavItem[] = [{ label: t('home'), href: "/" }, ...visible];
-    if (hidden.length > 0) final.push({ label: t('more'), children: hidden });
-    return final;
+const LIMIT = 6;
+
+
+let visible = dynamicCats.slice(0, LIMIT);
+let hidden = dynamicCats.slice(LIMIT);
+
+
+const defaultCats = dynamicCats.filter(c =>
+  DEFAULT_CATEGORIES.includes(c.label?.toLowerCase())
+);
+
+
+defaultCats.forEach(defaultCat => {
+  const alreadyInVisible = visible.some(v => v.label === defaultCat.label);
+
+  if (!alreadyInVisible) {
+   
+    hidden = hidden.filter(h => h.label !== defaultCat.label);
+
+    
+    visible.push(defaultCat);
+  }
+});
+
+
+if (visible.length > LIMIT) {
+  const excess = visible.length - LIMIT;
+
+  
+  const removable = visible.filter(v =>
+    !DEFAULT_CATEGORIES.includes(v.label?.toLowerCase())
+  );
+
+  
+  const itemsToMove = removable.slice(0, excess);
+
+  itemsToMove.forEach(item => {
+    visible = visible.filter(v => v.label !== item.label);
+    hidden.unshift(item); 
+  });
+}
+
+
+hidden = hidden.filter(h =>
+  !DEFAULT_CATEGORIES.includes(h.label?.toLowerCase())
+);
+
+const final: NavItem[] = [
+  { label: t("home"), href: "/" },
+  ...visible
+];
+
+if (hidden.length > 0) {
+  final.push({ label: t("more"), children: hidden });
+}
+
+return final;
+
   }, [categories, t]);
 
   // --- Helper Functions ---

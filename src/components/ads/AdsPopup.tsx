@@ -23,7 +23,7 @@ export default function AdsPopup({ onClose, imageUrl, linkUrl }: AdsPopupProps) 
         const timer = setTimeout(() => {
             setIsVisible(true);
             markAdAsSeen(); // Mark as seen immediately when shown
-        }, 3000);
+        });
 
         // Lock scroll
         document.body.style.overflow = "hidden";

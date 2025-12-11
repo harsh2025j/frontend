@@ -49,7 +49,7 @@ export default function Home() {
         <div className="container mx-auto px-4 mt-8 mb-4">
           <AdBanner
             size="large"
-            imageUrl="/banner-expert-legal.jpg"
+            imageUrl="/banner-top.png"
             linkUrl="#"
           />
         </div>
@@ -114,7 +114,7 @@ export default function Home() {
         <div className="container mx-auto px-4 my-8">
           <AdBanner
             size="large"
-            imageUrl="/banner-dream-explore.jpg"
+            imageUrl="/banner-bottom.png"
             linkUrl="#"
           />
         </div>
