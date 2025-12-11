@@ -6,7 +6,7 @@ export interface HighCourt {
 }
 
 export const highCourts: HighCourt[] = [
-    { id: 1, name: "Allahabad", image: "/high-courts/allahabad.jpg", slug: "allahabad-high-court"},
+    { id: 1, name: "Allahabad", image: "/high-courts/allahabad.jpg", slug: "allahabad-high-court" },
     { id: 2, name: "Andhra Pradesh", image: "/high-courts/andhra-pradesh.jpg", slug: "andhra-pradesh-high-court" },
     { id: 3, name: "Bombay", image: "/high-courts/bombay.jpg", slug: "bombay-high-court" },
     { id: 4, name: "Calcutta", image: "/high-courts/calcutta.jpg", slug: "calcutta-high-court" },
@@ -28,7 +28,7 @@ export const highCourts: HighCourt[] = [
     { id: 20, name: "Punjab & Haryana", image: "/high-courts/punjab.jpg", slug: "punjab-haryana-high-court" },
     { id: 21, name: "Rajasthan", image: "/high-courts/rajasthan.jpg", slug: "rajasthan-high-court" },
     { id: 22, name: "Sikkim", image: "/high-courts/sikkim.jpg", slug: "sikkim-high-court" },
-    { id: 23, name: "Telangana", image: "/high-courts/Telangana.jpg", slug: "telangana-high-court" },
+    { id: 23, name: "Telangana", image: "/high-courts/telangana.jpg", slug: "telangana-high-court" },
     { id: 24, name: "Tripura", image: "/high-courts/tripura.jpg", slug: "tripura-high-court" },
     { id: 25, name: "Uttarakhand", image: "/high-courts/uttarakhand.jpg", slug: "uttarakhand-high-court" },
 ];

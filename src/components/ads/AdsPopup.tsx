@@ -79,7 +79,7 @@ export default function AdsPopup({ onClose, imageUrl, linkUrl }: AdsPopupProps) 
                             src={displayImage}
                             alt="Promotional Ad"
                             fill
-                            className="object-cover"
+                            className="object-contain"
                         />
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-6 text-white opacity-0 group-hover:opacity-100 transition-opacity">
                             <p className="font-bold text-lg">Ad</p>
@@ -91,7 +91,7 @@ export default function AdsPopup({ onClose, imageUrl, linkUrl }: AdsPopupProps) 
                             src={displayImage}
                             alt="Promotional Ad"
                             fill
-                            className="object-cover"
+                            className="object-contain"
                         />
                     </div>
                 )}
