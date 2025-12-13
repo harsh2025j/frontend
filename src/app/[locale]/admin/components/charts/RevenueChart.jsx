@@ -38,11 +38,11 @@ export default function RevenueChart() {
         </ResponsiveContainer>
 
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-2xl font-bold text-gray-900">10,50,256</span>
+          <span className="text-2xl font-bold text-gray-900">0</span>
         </div>
       </div>
 
-     <div className="flex gap-6 mt-4 text-sm justify-start">
+      <div className="flex gap-6 mt-4 text-sm justify-start">
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-[#1A73E8]" />
           <span className="text-gray-700">Settled</span>
