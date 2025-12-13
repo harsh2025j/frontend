@@ -32,7 +32,7 @@ import { Link } from "@/i18n/routing";
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 import { useLocale } from "next-intl";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import AdsPopup from "../ads/AdsPopup";
+// import AdsPopup from "../ads/AdsPopup";
 
 
 export function getArticlesBySlugs(articles: Article[], slugs: string[]) {

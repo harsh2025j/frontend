@@ -9,7 +9,7 @@ import NewsSlider from "@/components/home/NewsSlider";
 import Stores from "@/components/home/Stores";
 import AdBanner from "@/components/ads/AdBanner";
 import AdSidebar from "@/components/ads/AdSidebar";
-import AdsPopup from "@/components/ads/AdsPopup";
+// import AdsPopup from "@/components/ads/AdsPopup";
 import NewsletterSubscription from "@/components/home/NewsletterSubscription";
 import LegalTimeline from "@/components/home/LegalTimeline";
 import { useDocTitle } from "@/hooks/useDocTitle";
@@ -22,26 +22,26 @@ export default function Home() {
   const t = useTranslations('Home');
 
 
-  const [showAdPopup, setShowAdPopup] = useState(false);
+  // const [showAdPopup, setShowAdPopup] = useState(false);
 
-  useEffect(() => {
-    // Show popup after 3 seconds
-    const timer = setTimeout(() => {
-      setShowAdPopup(true);
-    }, 3000);
+  // useEffect(() => {
+  //   // Show popup after 3 seconds
+  //   const timer = setTimeout(() => {
+  //     setShowAdPopup(true);
+  //   }, 3000);
 
-    return () => clearTimeout(timer);
-  }, []);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   return (
     <>
-      {showAdPopup && (
+      {/* {showAdPopup && (
         <AdsPopup
           onClose={() => setShowAdPopup(false)}
           imageUrl="/sajjad-husain-ad.png"
           linkUrl="#"
         />
-      )}
+      )} */}
       <div className="bg-gray-50 min-h-screen pb-0">
         <NewsSlider />
         <Stores />
@@ -49,7 +49,7 @@ export default function Home() {
         <div className="container mx-auto px-4 mt-8 mb-4">
           <AdBanner
             size="large"
-            imageUrl="/banner-top.png"
+            imageUrl=""   //    /banner-top.png
             linkUrl="#"
           />
         </div>
@@ -93,7 +93,7 @@ export default function Home() {
                 <div className=" p-4 rounded-md border border-gray-100  mb-6">
                   <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('sponsored')}</h3>
                   <AdSidebar
-                    imageUrl="/banner-expert-legal.jpg"
+                    imageUrl=""   // /banner-expert-legal.jpg
                     linkUrl="#"
                   />
                 </div>
@@ -101,7 +101,7 @@ export default function Home() {
                 <div className=" p-4 rounded-xl border border-gray-100 ">
                   <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('trending')}</h3>
                   <AdSidebar
-                    imageUrl="/banner-dream-explore.jpg"
+                    imageUrl=""   //   /banner-dream-explore.jpg
                     linkUrl="#"
                   />
                 </div>
@@ -114,7 +114,7 @@ export default function Home() {
         <div className="container mx-auto px-4 my-8">
           <AdBanner
             size="large"
-            imageUrl="/banner-bottom.png"
+            imageUrl=""   //    /banner-bottom.png
             linkUrl="#"
           />
         </div>

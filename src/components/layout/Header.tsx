@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 // import Link from "next/link";
 import { Link } from "@/i18n/routing"
 import { Menu, X, ChevronDown, ChevronRight, LogOut, LayoutDashboard, User as UserIcon } from "lucide-react";
@@ -145,75 +145,75 @@ export default function Header() {
         children: cat.children?.length ? cat.children.map(mapToNavItem) : undefined,
       };
     };
-    
+
     const DEFAULT_CATEGORIES = [
-        "latest news",
-        "high court",
-        "supreme court",
-        "crime",
-        "article",
-        "hindi news"
-      ];
+      "latest news",
+      "high court",
+      "supreme court",
+      "crime",
+      "article",
+      "hindi news"
+    ];
 
 
     const dynamicCats = categories.map(mapToNavItem);
-const LIMIT = 6;
+    const LIMIT = 6;
 
 
-let visible = dynamicCats.slice(0, LIMIT);
-let hidden = dynamicCats.slice(LIMIT);
+    let visible = dynamicCats.slice(0, LIMIT);
+    let hidden = dynamicCats.slice(LIMIT);
 
 
-const defaultCats = dynamicCats.filter(c =>
-  DEFAULT_CATEGORIES.includes(c.label?.toLowerCase())
-);
+    const defaultCats = dynamicCats.filter(c =>
+      DEFAULT_CATEGORIES.includes(c.label?.toLowerCase())
+    );
 
 
-defaultCats.forEach(defaultCat => {
-  const alreadyInVisible = visible.some(v => v.label === defaultCat.label);
+    defaultCats.forEach(defaultCat => {
+      const alreadyInVisible = visible.some(v => v.label === defaultCat.label);
 
-  if (!alreadyInVisible) {
-   
-    hidden = hidden.filter(h => h.label !== defaultCat.label);
+      if (!alreadyInVisible) {
 
-    
-    visible.push(defaultCat);
-  }
-});
+        hidden = hidden.filter(h => h.label !== defaultCat.label);
 
 
-if (visible.length > LIMIT) {
-  const excess = visible.length - LIMIT;
-
-  
-  const removable = visible.filter(v =>
-    !DEFAULT_CATEGORIES.includes(v.label?.toLowerCase())
-  );
-
-  
-  const itemsToMove = removable.slice(0, excess);
-
-  itemsToMove.forEach(item => {
-    visible = visible.filter(v => v.label !== item.label);
-    hidden.unshift(item); 
-  });
-}
+        visible.push(defaultCat);
+      }
+    });
 
 
-hidden = hidden.filter(h =>
-  !DEFAULT_CATEGORIES.includes(h.label?.toLowerCase())
-);
+    if (visible.length > LIMIT) {
+      const excess = visible.length - LIMIT;
 
-const final: NavItem[] = [
-  { label: t("home"), href: "/" },
-  ...visible
-];
 
-if (hidden.length > 0) {
-  final.push({ label: t("more"), children: hidden });
-}
+      const removable = visible.filter(v =>
+        !DEFAULT_CATEGORIES.includes(v.label?.toLowerCase())
+      );
 
-return final;
+
+      const itemsToMove = removable.slice(0, excess);
+
+      itemsToMove.forEach(item => {
+        visible = visible.filter(v => v.label !== item.label);
+        hidden.unshift(item);
+      });
+    }
+
+
+    hidden = hidden.filter(h =>
+      !DEFAULT_CATEGORIES.includes(h.label?.toLowerCase())
+    );
+
+    const final: NavItem[] = [
+      { label: t("home"), href: "/" },
+      ...visible
+    ];
+
+    if (hidden.length > 0) {
+      final.push({ label: t("more"), children: hidden });
+    }
+
+    return final;
 
   }, [categories, t]);
 
@@ -271,24 +271,66 @@ return final;
     const [isOpen, setIsOpen] = useState(false);
     const active = isItemOrChildActive(item);
 
+    const itemRef = useRef<HTMLDivElement>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [leftPos, setLeftPos] = useState<number>(0);
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+      if (isOpen && itemRef.current && dropdownRef.current) {
+        const itemRect = itemRef.current.getBoundingClientRect();
+        const dropdownRect = dropdownRef.current.getBoundingClientRect();
+        const windowWidth = window.innerWidth;
+
+        // Target: Center the dropdown on the item
+        let targetLeft = itemRect.left + (itemRect.width / 2) - (dropdownRect.width / 2);
+
+        // Constraint 1: Minimum 100px from left
+        targetLeft = Math.max(100, targetLeft);
+
+        // Constraint 2: Maximum so right edge is 100px from right
+        // rightEdge = targetLeft + dropdownRect.width
+        // rightEdge <= windowWidth - 100
+        // targetLeft <= windowWidth - 100 - dropdownRect.width
+        targetLeft = Math.min(targetLeft, windowWidth - 100 - dropdownRect.width);
+
+        setLeftPos(targetLeft);
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    }, [isOpen]);
+
     if (!hasChildren) {
       return (
-        <Link href={item.href || "#"} className={`hover:text-[#C9A227] whitespace-nowrap transition-colors ${active ? "text-[#C9A227] font-semibold" : "text-gray-700"}`}>
+        <Link href={item.href || "#"} className={`flex items-center h-full hover:text-[#C9A227] whitespace-nowrap transition-colors ${active ? "text-[#C9A227] font-semibold" : "text-gray-700"}`}>
           {item.label}
         </Link>
       );
     }
 
     return (
-      <div className="relative group" onMouseEnter={() => setIsOpen(true)} onMouseLeave={() => setIsOpen(false)}>
+      <div
+        ref={itemRef}
+        className="group h-full flex items-center"
+        onMouseEnter={() => setIsOpen(true)}
+        onMouseLeave={() => setIsOpen(false)}
+      >
         <button className={`flex items-center gap-1 hover:text-[#C9A227] whitespace-nowrap transition-colors ${active ? "text-[#C9A227] font-semibold" : "text-gray-700"}`}>
           {item.label} <ChevronDown size={14} />
         </button>
         {isOpen && (
-          <div className="absolute top-full left-0 bg-white border border-gray-200 shadow-lg rounded-md z-50 w-[600px] max-h-[50vh] overflow-y-auto">
+
+          <div
+            ref={dropdownRef}
+            className={`absolute top-full mt-[-20px] bg-white border border-gray-200 shadow-lg rounded-md z-50 max-h-[60vh] overflow-auto w-max max-w-[calc(100vw-200px)] transition-opacity duration-200 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+            style={{ left: `${leftPos}px` }}
+          >
             <div className="p-6 grid grid-cols-2 md:grid-cols-3 gap-6">
               {item.children!.map((child, i) => (
+
                 <SubCategoryItem key={i} item={child} closeMenu={() => setIsOpen(false)} />
+
               ))}
             </div>
           </div>
@@ -305,7 +347,7 @@ return final;
             <Image src={logo} alt="Logo" className="object-contain" width={140} height={40} priority />
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium">
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium h-full">
             {navItems.map((item, i) => <DesktopMenuItem key={i} item={item} />)}
           </nav>
 
