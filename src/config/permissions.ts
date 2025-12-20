@@ -24,6 +24,7 @@ export const ROLES = {
     EDITOR: "editor",
     ADMIN: "admin",
     SUPERADMIN: "superadmin",
+    CREATOR:"creator",
 } as const;
 
 export type PermissionType =
@@ -45,3 +46,4 @@ export type RoleType =
     | typeof ROLES.EDITOR
     | typeof ROLES.ADMIN
     | typeof ROLES.SUPERADMIN
+    | typeof ROLES.CREATOR

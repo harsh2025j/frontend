@@ -33,8 +33,10 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
   const permission = user?.permissions?.map((r) => r.name) || [];
   const hasAdminPrivileges = roles.includes(ROLES.ADMIN) || roles.includes(ROLES.SUPERADMIN);
   const isEditor =  roles.includes(ROLES.EDITOR);
+  const isCreator =  roles.includes(ROLES.CREATOR);
   const hasPermissionsForContenEdit = permission.includes(PERMISSIONS.ARTICLE.EDIT);
   const hasDashboardAccess = roles.some((role) => role !== "user");
+
 
   const handleLogout = () => {
     dispatch(logoutUser());
@@ -52,7 +54,7 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
       name: "Content Management",
       icon: <FolderOpen size={18} />,
       href: "/admin/content-management",
-      show: hasDashboardAccess && !isEditor
+      show: hasDashboardAccess && (isCreator ||hasAdminPrivileges )
     },
     {
       name: "Content Approval",
