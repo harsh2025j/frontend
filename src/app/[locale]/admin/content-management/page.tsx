@@ -13,6 +13,9 @@ import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
 
+import { API_BASE_URL, API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
+import apiClient from "@/data/services/apiConfig/apiClient";
+
 const ITEM_PER_PAGE = 15;
 
 // --- Skeleton component ---
@@ -216,6 +219,25 @@ const contentManagementPage: React.FC = () => {
     }
   };
 
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateNews = async () => {
+    setIsGenerating(true);
+    try {
+      const response = await apiClient.post(API_ENDPOINTS.TASKS.TRIGGER_DAILY_NEWS, {});
+      if (response.data?.success) {
+        toast.success(`${response.data.data?.articleCreates || 0} article created`);
+        await refetch();
+      } else {
+        toast.error(response.data?.message || "Failed to generate news");
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Error generating news");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleEdit = (articleId: string) => {
     // Navigate to edit page (assuming route exists)
     router.push(`/admin/create-content/${articleId}`);
@@ -225,6 +247,7 @@ const contentManagementPage: React.FC = () => {
   // Insert after Status column
   // (Will be placed in JSX below)
 
+
   // Filter articles by current user
 
   const userArticles = React.useMemo(() => {
@@ -233,8 +256,7 @@ const contentManagementPage: React.FC = () => {
   }, [articles, user?._id]);
 
   //this is for all articles means all articles in db show
-
-  // const userArticles=articles
+  // const userArticles = articles
 
   const startIndex = (currentPage - 1) * ITEM_PER_PAGE;
 
@@ -292,14 +314,32 @@ const contentManagementPage: React.FC = () => {
                 </span>
               </div>
 
-              <button
-                onClick={() => router.push('/admin/create-content')}
-                className="bg-[#0B2149] text-white px-5 py-2 rounded-md font-medium hover:bg-[#1a3a75] transition-colors flex items-center gap-2"
-              >
-                <span>+</span> Create New Article
-              </button>
-            </div>
+              <div className="flex gap-4">
+                <button
+                  onClick={handleGenerateNews}
+                  disabled={isGenerating}
+                  className="bg-[#C9A227] text-white px-5 py-2 rounded-md font-medium hover:bg-[#C9A227]/90 transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader size="sm" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <span>⚡</span> Generate News
+                    </>
+                  )}
+                </button>
 
+                <button
+                  onClick={() => router.push('/admin/create-content')}
+                  className="bg-[#0B2149] text-white px-5 py-2 rounded-md font-medium hover:bg-[#1a3a75] transition-colors flex items-center gap-2"
+                >
+                  <span>+</span> Create New Article
+                </button>
+              </div>
+            </div>
             {/* Table */}
             <div className="overflow-x-auto rounded-xl">
               <table className="w-full text-left border-collapse">
@@ -425,8 +465,8 @@ const contentManagementPage: React.FC = () => {
               </div>
             )}
           </div>
-        </main>
-      </div>
+        </main >
+      </div >
 
       <DeleteConfirmationModal
         isOpen={deleteModalOpen}
@@ -434,7 +474,7 @@ const contentManagementPage: React.FC = () => {
         onConfirm={handleConfirmDelete}
         isDeleting={isDeleting}
       />
-    </div>
+    </div >
   );
 };
 

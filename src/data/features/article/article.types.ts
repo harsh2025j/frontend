@@ -18,6 +18,7 @@ export interface Article {
   id: string;
   title: string;
   subHeadline: string | null;
+  aiSummary?: string | null;
   slug: string;
   content: string;
   authorId: string;

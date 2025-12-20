@@ -64,8 +64,8 @@ export const usersApi = {
     assignUserRoles: async (userId: string, data: { roleIds: string[]; permissionIds: string[] }) => {
         try {
             // console.log(data);
-            
-            const response = await apiClient.post(`/assign/${userId}`,data);
+
+            const response = await apiClient.post(`/assign/${userId}`, data);
             return response.data;
         } catch (error: any) {
             console.error("usersApi assignUserRoles ERROR:", error);

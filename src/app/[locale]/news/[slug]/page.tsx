@@ -3,6 +3,7 @@ import { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
 import ArticleClient from "./ArticleClient";
 import { Article } from "@/data/features/article/article.types";
+import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
 
 // Force dynamic rendering as we depend on the slug param
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ type Props = {
 // Function to fetch article data
 async function getArticle(slug: string): Promise<Article | null> {
     try {
-        const res = await fetch(`https://api.sajjadhusainlawassociates.com/articles/${slug}`, {
+        const res = await fetch(`${API_BASE_URL}/articles/${slug}`, {
             cache: "no-store", // Ensure fresh data
         });
 
