@@ -226,10 +226,15 @@ const contentManagementPage: React.FC = () => {
   // (Will be placed in JSX below)
 
   // Filter articles by current user
+
   const userArticles = React.useMemo(() => {
     if (!user?._id) return [];
     return articles.filter((article: any) => article.authorId === user._id);
   }, [articles, user?._id]);
+
+  //this is for all articles means all articles in db show
+
+  // const userArticles=articles
 
   const startIndex = (currentPage - 1) * ITEM_PER_PAGE;
 

@@ -1,5 +1,6 @@
 import apiClient from "@/data/services/apiConfig/apiClient";
 import { UserFilter, UserListResponse, UserVerificationResponse } from "../../features/users/users.types";
+import { permission } from "process";
 
 export const usersApi = {
     fetchUsers: async (filters?: UserFilter) => {
@@ -62,7 +63,9 @@ export const usersApi = {
 
     assignUserRoles: async (userId: string, data: { roleIds: string[]; permissionIds: string[] }) => {
         try {
-            const response = await apiClient.post(`/assign/${userId}`, data);
+            // console.log(data);
+            
+            const response = await apiClient.post(`/assign/${userId}`,data);
             return response.data;
         } catch (error: any) {
             console.error("usersApi assignUserRoles ERROR:", error);

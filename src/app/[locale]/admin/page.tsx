@@ -121,7 +121,7 @@ const Page = () => {
 
       <div className="mt-8 space-y-6">
         {/* <ContentTable /> 
-                 <ContentApprovalPanel /> */}
+            <ContentApprovalPanel /> */}
       </div>
     </>
   );

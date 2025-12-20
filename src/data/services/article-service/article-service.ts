@@ -52,7 +52,7 @@ export const articleApi = {
       }
 
     );
-    // console.log("Fetch Articles API Response:", response.data);
+    console.log("Fetch Articles API Response:", response.data);
     return response;
   },
 
