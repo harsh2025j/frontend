@@ -10,10 +10,15 @@ import {
   Settings,
   Crown,
   GitPullRequestArrow,
-  UserCog
+  UserCog,
+  Gavel,
+  Scale,
+  FileText,
+  Monitor,
+  BarChart
 } from "lucide-react";
 // import Link from "next/link";
-import {Link} from "@/i18n/routing"
+import { Link } from "@/i18n/routing"
 import { LogOut } from "lucide-react";
 import { useAppDispatch } from "@/data/redux/hooks";
 import { logoutUser } from "@/data/features/auth/authSlice";
@@ -32,8 +37,8 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
   const roles = user?.roles?.map((r) => r.name) || [];
   const permission = user?.permissions?.map((r) => r.name) || [];
   const hasAdminPrivileges = roles.includes(ROLES.ADMIN) || roles.includes(ROLES.SUPERADMIN);
-  const isEditor =  roles.includes(ROLES.EDITOR);
-  const isCreator =  roles.includes(ROLES.CREATOR);
+  const isEditor = roles.includes(ROLES.EDITOR);
+  const isCreator = roles.includes(ROLES.CREATOR);
   const hasPermissionsForContenEdit = permission.includes(PERMISSIONS.ARTICLE.EDIT);
   const hasDashboardAccess = roles.some((role) => role !== "user");
 
@@ -54,19 +59,19 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
       name: "Content Management",
       icon: <FolderOpen size={18} />,
       href: "/admin/content-management",
-      show: hasDashboardAccess && (isCreator ||hasAdminPrivileges )
+      show: hasDashboardAccess && (isCreator || hasAdminPrivileges)
     },
     {
       name: "Content Approval",
       icon: <GitPullRequestArrow size={18} />,
       href: "/admin/content-approval",
-      show: hasAdminPrivileges  || ( isEditor  && hasPermissionsForContenEdit)
+      show: hasAdminPrivileges || (isEditor && hasPermissionsForContenEdit)
     },
     {
       name: "Create Roles & Permissions",
       icon: <UserCog size={18} />,
       href: "/admin/roles-permissions",
-      show: hasAdminPrivileges 
+      show: hasAdminPrivileges
     },
     {
       name: "Team Management",
@@ -90,6 +95,36 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
       name: "Settings",
       icon: <Settings size={18} />,
       href: "/admin/settings",
+      show: hasAdminPrivileges
+    },
+    {
+      name: "Legal Cases",
+      icon: <FileText size={18} />,
+      href: "/admin/cases",
+      show: hasAdminPrivileges
+    },
+    {
+      name: "Judgments",
+      icon: <Gavel size={18} />,
+      href: "/admin/judgments",
+      show: hasAdminPrivileges
+    },
+    {
+      name: "Judges",
+      icon: <Scale size={18} />,
+      href: "/admin/judges",
+      show: hasAdminPrivileges
+    },
+    {
+      name: "Reports",
+      icon: <BarChart size={18} />,
+      href: "/admin/reports",
+      show: hasAdminPrivileges
+    },
+    {
+      name: "Display Boards",
+      icon: <Monitor size={18} />,
+      href: "/admin/display-boards",
       show: hasAdminPrivileges
     },
   ];
@@ -129,9 +164,8 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
                 title={!isOpen ? item.name : ""}
               >
                 <span
-                  className={`shrink-0 transition-colors duration-200 ${
-                    isActive ? "text-blue-600 dark:text-blue-400" : "group-hover:text-blue-600 dark:group-hover:text-orange-500"
-                  }`}
+                  className={`shrink-0 transition-colors duration-200 ${isActive ? "text-blue-600 dark:text-blue-400" : "group-hover:text-blue-600 dark:group-hover:text-orange-500"
+                    }`}
                 >
                   {item.icon}
                 </span>

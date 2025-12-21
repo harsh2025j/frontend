@@ -12,6 +12,16 @@ export const navigationData: NavItem[] = [
     // { label: "Explainers", href: "/category/explainers" },
     { label: "Business", href: "/category/business" },
     { label: "Crime", href: "/category/crime" },
+    {
+        label: "Legal Tools",
+        children: [
+            { label: "Cases", href: "/cases" },
+            { label: "Judgments", href: "/judgments" },
+            { label: "Judges", href: "/judges" },
+            { label: "Reports", href: "/reports" },
+            { label: "Display Boards", href: "/display-boards" },
+        ]
+    },
     // {
     //     label: "More ▾",
     //     children: [

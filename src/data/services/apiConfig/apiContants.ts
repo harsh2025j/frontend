@@ -43,6 +43,35 @@ export const API_ENDPOINTS = {
   },
   TASKS: {
     TRIGGER_DAILY_NEWS: "/tasks/trigger-daily-news",
+  },
+  CASES: {
+    BASE: "/cases",
+    UPCOMING_HEARINGS: "/cases/upcoming-hearings",
+    BY_JUDGE: "/cases/judge",
+    BY_NUMBER: "/cases/number",
+  },
+  JUDGMENTS: {
+    BASE: "/judgments",
+    LANDMARK: "/judgments/landmark",
+    BY_CASE: "/judgments/case",
+    BY_JUDGE: "/judgments/judge",
+  },
+  JUDGES: {
+    BASE: "/judges",
+    ACTIVE: "/judges/active",
+    BY_COURT: "/judges/court",
+  },
+  REPORTS: {
+    BASE: "/reports",
+    GENERATE_CASE_STATS: "/reports/generate/case-statistics",
+    GENERATE_JUDGMENT_ANALYSIS: "/reports/generate/judgment-analysis",
+  },
+  DISPLAY_BOARDS: {
+    BASE: "/display-boards",
+    ACTIVE: "/display-boards/active",
+    BY_DATE: "/display-boards/date",
+    BY_COURT: "/display-boards/court",
+    GENERATE_CAUSE_LIST: "/display-boards/generate/cause-list",
   }
 };
 
