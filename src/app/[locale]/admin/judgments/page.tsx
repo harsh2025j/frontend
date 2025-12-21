@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { judgmentsService } from "@/data/services/judgments-service/judgmentsService";
+import { judgesService } from "@/data/services/judges-service/judgesService";
+import { casesService } from "@/data/services/cases-service/casesService";
 import { Link } from "@/i18n/routing";
 import { Trash2, Edit, Plus, Search, Gavel } from "lucide-react";
 import toast from "react-hot-toast";
@@ -11,6 +13,8 @@ export default function AdminJudgmentsPage() {
     const [judgments, setJudgments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [judgesMap, setJudgesMap] = useState<Record<string, string>>({});
+    const [casesMap, setCasesMap] = useState<Record<string, string>>({});
 
     useEffect(() => {
         fetchJudgments();
@@ -18,11 +22,43 @@ export default function AdminJudgmentsPage() {
 
     const fetchJudgments = async () => {
         try {
-            const response = await judgmentsService.getAll();
-            setJudgments(response.data.data.data);
+            const [judgmentsRes, judgesRes, casesRes] = await Promise.all([
+                judgmentsService.getAll(),
+                judgesService.getAll(),
+                casesService.getAll()
+            ]);
+
+            // Process Judgments
+            const rawData = judgmentsRes.data;
+            let results = [];
+            if (Array.isArray(rawData)) {
+                results = rawData;
+            } else if (rawData?.data && Array.isArray(rawData.data)) {
+                results = rawData.data;
+            } else if (rawData?.data?.data && Array.isArray(rawData.data.data)) {
+                results = rawData.data.data;
+            }
+            setJudgments(results);
+
+            // Process Judges Map
+            const judgesData = judgesRes.data?.data?.data || judgesRes.data?.data || judgesRes.data || [];
+            if (Array.isArray(judgesData)) {
+                const jMap: Record<string, string> = {};
+                judgesData.forEach((j: any) => jMap[j.id || j._id] = j.name || j.fullName || "Unknown Judge");
+                setJudgesMap(jMap);
+            }
+
+            // Process Cases Map
+            const casesData = casesRes.data?.data?.data || casesRes.data?.data || casesRes.data || [];
+            if (Array.isArray(casesData)) {
+                const cMap: Record<string, string> = {};
+                casesData.forEach((c: any) => cMap[c.id || c._id] = c.caseNumber || c.title || "Unknown Case");
+                setCasesMap(cMap);
+            }
+
         } catch (error) {
-            console.error("Error fetching judgments:", error);
-            toast.error("Failed to fetch judgments");
+            console.error("Error fetching data:", error);
+            toast.error("Failed to fetch judgments data");
         } finally {
             setLoading(false);
         }
@@ -41,8 +77,9 @@ export default function AdminJudgmentsPage() {
     };
 
     const filteredJudgments = judgments.filter(j =>
-        j.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        j.caseId.toLowerCase().includes(searchTerm.toLowerCase())
+        (j?.title && String(j.title).toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (j?.caseId && String(j.caseId).toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (j?.summary && String(j.summary).toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     if (loading) return <div className="flex justify-center items-center min-h-[400px]"><Loader size="lg" text="Loading Judgments..." /></div>;
@@ -68,7 +105,7 @@ export default function AdminJudgmentsPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
                             type="text"
-                            placeholder="Search by Title or Case ID..."
+                            placeholder="Search by Case ID..."
                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -80,7 +117,7 @@ export default function AdminJudgmentsPage() {
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[200px]">Judgment Summary</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case ID</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judge</th>
@@ -91,12 +128,16 @@ export default function AdminJudgmentsPage() {
                             {filteredJudgments.length > 0 ? (
                                 filteredJudgments.map((j) => (
                                     <tr key={j.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{j.title}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{j.caseId}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[200px]">{j.title || j.summary?.substring(0, 30) || "No Title"}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            {j.caseId ? (casesMap[j.caseId] || j.caseId) : (j.case?.caseNumber || "N/A")}
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                             {new Date(j.judgmentDate).toLocaleDateString()}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{j.judgeName}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            {j.judgeId ? (judgesMap[j.judgeId] || j.judgeId) : (j.judge?.name || "Unknown")}
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end gap-3">
                                                 <Link

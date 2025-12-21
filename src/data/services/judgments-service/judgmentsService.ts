@@ -1,14 +1,29 @@
 import { API_ENDPOINTS } from "../apiConfig/apiContants";
 import apiClient from "../apiConfig/apiClient";
 
+export interface Judgment {
+    caseId: string;
+    judgeId: string;
+    judgmentDate: string;
+    judgmentType: string;
+    summary: string;
+    fullText: string;
+    outcome: string;
+    isLandmark: boolean;
+    citations: string[];
+    keyPoints: string[];
+}
+
 export const judgmentsService = {
+
     getAll: async (params?: any) => {
         return await apiClient.get(API_ENDPOINTS.JUDGMENTS.BASE, { params });
     },
     getById: async (id: string) => {
         return await apiClient.get(`${API_ENDPOINTS.JUDGMENTS.BASE}/${id}`);
     },
-    create: async (data: any) => {
+    create: async (data: Judgment | any) => {
+        console.log(data)
         return await apiClient.post(API_ENDPOINTS.JUDGMENTS.BASE, data);
     },
     update: async (id: string, data: any) => {
