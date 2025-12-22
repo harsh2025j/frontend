@@ -35,9 +35,9 @@ export default function CreateCasePage() {
             await casesService.create(formData);
             toast.success("Case created successfully");
             router.push("/admin/cases");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error creating case:", error);
-            toast.error("Failed to create case");
+            toast.error(error.message || "Failed to create case");
             setSubmitting(false);
         }
     };

@@ -1,223 +1,109 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { judgmentsService, Judgment } from "@/data/services/judgments-service/judgmentsService";
-import { judgesService } from "@/data/services/judges-service/judgesService";
+import React, { useState, useEffect } from "react";
+import { judgmentsService } from "@/data/services/judgments-service/judgmentsService";
 import { casesService } from "@/data/services/cases-service/casesService";
+import { judgesService } from "@/data/services/judges-service/judgesService";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
-import { ArrowLeft, Save, Plus, X, Search } from "lucide-react";
+import { ArrowLeft, Save, Plus, X } from "lucide-react";
 
 export default function CreateJudgmentPage() {
     const router = useRouter();
     const [submitting, setSubmitting] = useState(false);
-
-    // Form State
-    const [formData, setFormData] = useState<Judgment>({
+    const [loadingData, setLoadingData] = useState(true);
+    const [cases, setCases] = useState<any[]>([]);
+    const [judges, setJudges] = useState<any[]>([]);
+    
+    const [formData, setFormData] = useState({
         caseId: "",
         judgeId: "",
         judgmentDate: "",
         judgmentType: "final",
-        summary: "",
-        fullText: "",
         outcome: "",
         isLandmark: false,
-        citations: [],
-        keyPoints: []
+        citations: [] as string[],
+        keyPoints: [] as string[],
+        summary: "",
+        fullText: "",
+        pdfUrl: "",
     });
 
-    // Helper state for searching
-    const [caseQuery, setCaseQuery] = useState("");
-    const [judgeQuery, setJudgeQuery] = useState("");
-    const [foundCases, setFoundCases] = useState<any[]>([]);
-    const [foundJudges, setFoundJudges] = useState<any[]>([]);
-    const [showCaseDropdown, setShowCaseDropdown] = useState(false);
-    const [showJudgeDropdown, setShowJudgeDropdown] = useState(false);
-
-    // Helper state for arrays
     const [newCitation, setNewCitation] = useState("");
     const [newKeyPoint, setNewKeyPoint] = useState("");
 
-    // Debounce Search
     useEffect(() => {
-        const delayDebounceFn = setTimeout(async () => {
-            if (caseQuery.length > 0) {
-                try {
-                    const response = await casesService.getAll({ search: caseQuery });
-                    // Based on admin/cases/page.tsx: response.data.data.data
-                    // But we should handle potential variations just in case
-                    const rawData = response.data;
-                    let results: any[] = [];
-
-                    if (Array.isArray(rawData)) {
-                        results = rawData;
-                    } else if (rawData?.data && Array.isArray(rawData.data)) {
-                        results = rawData.data;
-                    } else if (rawData?.data?.data && Array.isArray(rawData.data.data)) {
-                        results = rawData.data.data;
-                    } else {
-                        results = [];
-                    }
-
-                    // Client-side fallback filter
-                    if (results.length > 0) {
-                        const q = caseQuery.toLowerCase();
-                        results = results.filter((c: any) =>
-                            (c.caseNumber && c.caseNumber.toString().toLowerCase().includes(q)) ||
-                            (c.title && c.title.toLowerCase().includes(q)) ||
-                            (c.caseId && c.caseId.toString().toLowerCase().includes(q))
-                        );
-                    }
-
-                    setFoundCases(results);
-                    setShowCaseDropdown(true);
-                } catch (error) {
-                    console.error("Error searching cases", error);
-                    setFoundCases([]);
-                }
-            } else {
-                setFoundCases([]);
-                setShowCaseDropdown(false);
+        const fetchData = async () => {
+            try {
+                const [casesRes, judgesRes] = await Promise.all([
+                    casesService.getAll(),
+                    judgesService.getAll()
+                ]);
+                
+                const casesData = casesRes.data?.data?.data || casesRes.data?.data || casesRes.data || [];
+                const judgesData = judgesRes.data?.data?.data || judgesRes.data?.data || judgesRes.data || [];
+                
+                setCases(Array.isArray(casesData) ? casesData : []);
+                setJudges(Array.isArray(judgesData) ? judgesData : []);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                toast.error("Failed to load cases and judges");
+            } finally {
+                setLoadingData(false);
             }
-        }, 300);
+        };
+        fetchData();
+    }, []);
 
-        return () => clearTimeout(delayDebounceFn);
-    }, [caseQuery]);
-
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(async () => {
-            if (judgeQuery.length > 0) {
-                try {
-                    const response = await judgesService.getAll({ search: judgeQuery });
-                    // Based on admin/judges/page.tsx: response.data.data.data
-                    const rawData = response.data;
-                    let results: any[] = [];
-
-                    if (Array.isArray(rawData)) {
-                        results = rawData;
-                    } else if (rawData?.data && Array.isArray(rawData.data)) {
-                        results = rawData.data;
-                    } else if (rawData?.data?.data && Array.isArray(rawData.data.data)) {
-                        results = rawData.data.data;
-                    } else {
-                        results = [];
-                    }
-
-                    if (results.length > 0) {
-                        const q = judgeQuery.toLowerCase();
-                        results = results.filter((j: any) =>
-                            (j.name && j.name.toLowerCase().includes(q)) ||
-                            (j.fullName && j.fullName.toLowerCase().includes(q)) ||
-                            (j.court && j.court.toLowerCase().includes(q))
-                        );
-                    }
-
-                    setFoundJudges(results);
-                    setShowJudgeDropdown(true);
-                } catch (error) {
-                    console.error("Error searching judges", error);
-                    setFoundJudges([]);
-                }
-            } else {
-                setFoundJudges([]);
-                setShowJudgeDropdown(false);
-            }
-        }, 300);
-
-        return () => clearTimeout(delayDebounceFn);
-    }, [judgeQuery]);
-
-
-    // Handlers
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
-        if (type === 'checkbox') {
-            const checked = (e.target as HTMLInputElement).checked;
-            setFormData({ ...formData, [name]: checked });
-        } else {
-            setFormData({ ...formData, [name]: value });
-        }
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+        }));
     };
 
-    const handleSelectCase = (selectedCase: any) => {
-        setFormData({ ...formData, caseId: selectedCase.id || selectedCase._id });
-        setCaseQuery(selectedCase.caseNumber || selectedCase.title || "Selected Case"); // Adjust display field
-        setShowCaseDropdown(false);
-    };
-
-    const handleSelectJudge = (judge: any) => {
-        setFormData({ ...formData, judgeId: judge.id || judge._id });
-        setJudgeQuery(judge.name || judge.fullName || "Selected Judge"); // Adjust display field
-        setShowJudgeDropdown(false);
-    };
-
-    // Array Handlers
     const addCitation = () => {
         if (newCitation.trim()) {
-            setFormData({ ...formData, citations: [...formData.citations, newCitation.trim()] });
+            setFormData(prev => ({ ...prev, citations: [...prev.citations, newCitation.trim()] }));
             setNewCitation("");
         }
     };
 
     const removeCitation = (index: number) => {
-        setFormData({ ...formData, citations: formData.citations.filter((_, i) => i !== index) });
+        setFormData(prev => ({ ...prev, citations: prev.citations.filter((_, i) => i !== index) }));
     };
 
     const addKeyPoint = () => {
         if (newKeyPoint.trim()) {
-            setFormData({ ...formData, keyPoints: [...formData.keyPoints, newKeyPoint.trim()] });
+            setFormData(prev => ({ ...prev, keyPoints: [...prev.keyPoints, newKeyPoint.trim()] }));
             setNewKeyPoint("");
         }
     };
 
     const removeKeyPoint = (index: number) => {
-        setFormData({ ...formData, keyPoints: formData.keyPoints.filter((_, i) => i !== index) });
+        setFormData(prev => ({ ...prev, keyPoints: prev.keyPoints.filter((_, i) => i !== index) }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!formData.caseId) {
-            toast.error("Please search and select a Case");
-            return;
-        }
-        if (!formData.judgeId) {
-            toast.error("Please search and select a Judge");
-            return;
-        }
-
         setSubmitting(true);
         try {
-
             await judgmentsService.create(formData);
             toast.success("Judgment created successfully");
             router.push("/admin/judgments");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error creating judgment:", error);
-            toast.error("Failed to create judgment");
+            toast.error(error.message || "Failed to create judgment");
             setSubmitting(false);
         }
     };
 
-    // Click outside to close dropdowns
-    const wrapperRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-                setShowCaseDropdown(false);
-                setShowJudgeDropdown(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, [wrapperRef]);
-
+    if (loadingData) return <div className="flex justify-center items-center min-h-screen"><Loader size="lg" text="Loading Data..." /></div>;
 
     return (
-        <div className="p-6 max-w-4xl mx-auto" ref={wrapperRef}>
+        <div className="p-6 max-w-4xl mx-auto">
             {submitting && <Loader fullScreen text="Creating Judgment..." />}
 
             <div className="flex items-center gap-4 mb-6">
@@ -229,82 +115,33 @@ export default function CreateJudgmentPage() {
                 </button>
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Add New Judgment</h1>
-                    <p className="text-gray-500 text-sm">Enter the details of the judgment</p>
+                    <p className="text-gray-500 text-sm">Create a new legal judgment record</p>
                 </div>
             </div>
 
             <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8 space-y-8">
 
                 <div className="space-y-6">
-                    <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Case & Judge Info</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
-                        {/* Case Search */}
-                        <div className="relative">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Search Case (ID/Number) <span className="text-red-500">*</span></label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-                                <input
-                                    type="text"
-                                    value={caseQuery}
-                                    onChange={(e) => {
-                                        setCaseQuery(e.target.value);
-                                        if (formData.caseId) setFormData({ ...formData, caseId: "" }); // Clear selection on edit
-                                    }}
-                                    className={`w-full pl-10 pr-4 py-2 border rounded-lg outline-none transition-all ${formData.caseId ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-300 focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]'}`}
-                                    placeholder="Type to search case..."
-                                />
-                            </div>
-                            {showCaseDropdown && foundCases.length > 0 && (
-                                <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
-                                    {foundCases.map((c) => (
-                                        <li
-                                            key={c.id || c._id}
-                                            onClick={() => handleSelectCase(c)}
-                                            className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm border-b last:border-0"
-                                        >
-                                            <div className="font-medium">{c.caseNumber || c.title || "No Number"}</div>
-                                            <div className="text-xs text-gray-500">{c.title || c.description || "No Title"}</div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-
-                        {/* Judge Search */}
-                        <div className="relative">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Search Judge (Name) <span className="text-red-500">*</span></label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-                                <input
-                                    type="text"
-                                    value={judgeQuery}
-                                    onChange={(e) => {
-                                        setJudgeQuery(e.target.value);
-                                        if (formData.judgeId) setFormData({ ...formData, judgeId: "" });
-                                    }}
-                                    className={`w-full pl-10 pr-4 py-2 border rounded-lg outline-none transition-all ${formData.judgeId ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-300 focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]'}`}
-                                    placeholder="Type judge name..."
-                                />
-                            </div>
-                            {showJudgeDropdown && foundJudges.length > 0 && (
-                                <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
-                                    {foundJudges.map((j) => (
-                                        <li
-                                            key={j.id || j._id}
-                                            onClick={() => handleSelectJudge(j)}
-                                            className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm border-b last:border-0"
-                                        >
-                                            <div className="font-medium">{j.name || j.fullName || j.username || "Unknown"}</div>
-                                            <div className="text-xs text-gray-500">{j.court || j.designation || ""}</div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-                    </div>
-
-                    <h2 className="text-lg font-semibold text-gray-800 border-b pb-2 pt-4">Judgment Details</h2>
+                    <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Judgment Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Select Case <span className="text-red-500">*</span></label>
+                            <select
+                                name="caseId"
+                                value={formData.caseId}
+                                onChange={handleChange}
+                                required
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all bg-white"
+                            >
+                                <option value="">Select a Case</option>
+                                {cases.map((c: any) => (
+                                    <option key={c.id} value={c.id}>
+                                        {c.caseNumber} - {c.title}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Judgment Date <span className="text-red-500">*</span></label>
                             <input
@@ -316,6 +153,24 @@ export default function CreateJudgmentPage() {
                                 onChange={handleChange}
                             />
                         </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Select Judge</label>
+                            <select
+                                name="judgeId"
+                                value={formData.judgeId}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all bg-white"
+                            >
+                                <option value="">Select a Judge</option>
+                                {judges.map((j: any) => (
+                                    <option key={j.id} value={j.id}>
+                                        {j.name} ({j.designation})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Judgment Type</label>
                             <select
@@ -326,7 +181,8 @@ export default function CreateJudgmentPage() {
                             >
                                 <option value="final">Final</option>
                                 <option value="interim">Interim</option>
-                                <option value="reserved">Reserved</option>
+                                <option value="order">Order</option>
+                                <option value="directive">Directive</option>
                             </select>
                         </div>
                         <div>

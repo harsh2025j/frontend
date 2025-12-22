@@ -16,24 +16,34 @@ export default function CreateJudgePage() {
         court: "",
         appointmentDate: "",
         retirementDate: "",
-        bio: "",
-        imageUrl: "",
+        biography: "",
+        photoUrl: "",
+        specialization: "",
+        isActive: true,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value, type } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+        }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            await judgesService.create(formData);
+            const dataToSend = {
+                ...formData,
+                specialization: formData.specialization.split(",").map(s => s.trim()).filter(Boolean),
+            };
+            await judgesService.create(dataToSend);
             toast.success("Judge profile created successfully");
             router.push("/admin/judges");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error creating judge:", error);
-            toast.error("Failed to create judge profile");
+            toast.error(error.message || "Failed to create judge profile");
             setSubmitting(false);
         }
     };
@@ -94,10 +104,10 @@ export default function CreateJudgePage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Photo URL</label>
                             <input
                                 type="text"
-                                name="imageUrl"
+                                name="photoUrl"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
                                 placeholder="https://example.com/image.jpg"
                                 onChange={handleChange}
@@ -122,18 +132,41 @@ export default function CreateJudgePage() {
                                 onChange={handleChange}
                             />
                         </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                            <input
+                                type="text"
+                                name="specialization"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="Constitutional Law, Criminal Law (comma separated)"
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    name="isActive"
+                                    checked={formData.isActive}
+                                    onChange={handleChange}
+                                    className="w-4 h-4 text-[#0A2342] border-gray-300 rounded focus:ring-[#C9A227]"
+                                />
+                                <span className="text-sm font-medium text-gray-700">Active Judge</span>
+                            </label>
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Biography</label>
+                            <textarea
+                                name="biography"
+                                rows={4}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="Distinguished jurist..."
+                                onChange={handleChange}
+                            />
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Biography</label>
-                        <textarea
-                            name="bio"
-                            rows={6}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
-                            placeholder="Enter biography..."
-                            onChange={handleChange}
-                        />
-                    </div>
+
                 </div>
 
                 <div className="flex justify-end gap-4 pt-4 border-t border-gray-100">

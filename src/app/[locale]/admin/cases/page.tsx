@@ -20,9 +20,9 @@ export default function AdminCasesPage() {
         try {
             const response = await casesService.getAll();
             setCases(response.data.data.data);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching cases:", error);
-            toast.error("Failed to fetch cases");
+            toast.error(error.message || "Failed to fetch cases");
         } finally {
             setLoading(false);
         }
@@ -34,9 +34,9 @@ export default function AdminCasesPage() {
             await casesService.delete(id);
             toast.success("Case deleted successfully");
             fetchCases();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error deleting case:", error);
-            toast.error("Failed to delete case");
+            toast.error(error.message || "Failed to delete case");
         }
     };
 

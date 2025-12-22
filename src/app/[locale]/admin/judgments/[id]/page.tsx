@@ -2,70 +2,158 @@
 
 import React, { useEffect, useState } from "react";
 import { judgmentsService } from "@/data/services/judgments-service/judgmentsService";
+import { casesService } from "@/data/services/cases-service/casesService";
+import { judgesService } from "@/data/services/judges-service/judgesService";
 import { useRouter, useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Plus, X } from "lucide-react";
 
 export default function EditJudgmentPage() {
     const router = useRouter();
     const params = useParams();
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [cases, setCases] = useState<any[]>([]);
+    const [judges, setJudges] = useState<any[]>([]);
+
     const [formData, setFormData] = useState({
         title: "",
         caseId: "",
+        judgeId: "",
         judgmentDate: "",
-        judgeName: "",
-        content: "",
+        judgmentType: "final",
+        outcome: "",
+        isLandmark: false,
+        citations: [] as string[],
+        keyPoints: [] as string[],
         summary: "",
-        tags: "",
+        fullText: "",
+        pdfUrl: "",
     });
 
+    const [newCitation, setNewCitation] = useState("");
+    const [newKeyPoint, setNewKeyPoint] = useState("");
+
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [judgmentRes, casesRes, judgesRes] = await Promise.all([
+                    judgmentsService.getById(params.id as string),
+                    casesService.getAll(),
+                    judgesService.getAll()
+                ]);
+
+                // Process Cases and Judges
+                const casesData = casesRes.data?.data?.data || casesRes.data?.data || casesRes.data || [];
+                const judgesData = judgesRes.data?.data?.data || judgesRes.data?.data || judgesRes.data || [];
+                
+                setCases(Array.isArray(casesData) ? casesData : []);
+                setJudges(Array.isArray(judgesData) ? judgesData : []);
+
+                // Process Judgment Data
+                let data = judgmentRes.data;
+                if (data.data) {
+                    data = data.data;
+                }
+                
+                // Ensure arrays are initialized
+                if (!data.citations) data.citations = [];
+                if (!data.keyPoints) data.keyPoints = [];
+                
+                // Map fields if necessary
+                let caseId = "";
+                if (data.case && data.case.id) {
+                    caseId = data.case.id;
+                } else if (data.caseId) {
+                    caseId = data.caseId;
+                }
+
+                let judgeId = "";
+                if (data.judge && data.judge.id) {
+                    judgeId = data.judge.id;
+                } else if (data.judgeId) {
+                    judgeId = data.judgeId;
+                }
+
+                // Format date for input
+                let judgmentDate = "";
+                if (data.judgmentDate) {
+                    judgmentDate = new Date(data.judgmentDate).toISOString().split('T')[0];
+                }
+
+                setFormData({
+                    title: data.title || "",
+                    caseId: caseId,
+                    judgeId: judgeId,
+                    judgmentDate: judgmentDate,
+                    judgmentType: data.judgmentType || "final",
+                    outcome: data.outcome || "",
+                    isLandmark: data.isLandmark || false,
+                    citations: Array.isArray(data.citations) ? data.citations : [],
+                    keyPoints: Array.isArray(data.keyPoints) ? data.keyPoints : [],
+                    summary: data.summary || "",
+                    fullText: data.fullText || data.content || "",
+                    pdfUrl: data.pdfUrl || "",
+                });
+
+            } catch (error: any) {
+                console.error("Error fetching data:", error);
+                toast.error(error.message || "Failed to fetch data");
+            } finally {
+                setLoading(false);
+            }
+        };
+
         if (params.id) {
-            fetchJudgmentDetails(params.id as string);
+            fetchData();
         }
     }, [params.id]);
 
-    const fetchJudgmentDetails = async (id: string) => {
-        try {
-            const response = await judgmentsService.getById(id);
-            const data = response.data.data;
-            if (data.judgmentDate) {
-                data.judgmentDate = new Date(data.judgmentDate).toISOString().split('T')[0];
-            }
-            if (Array.isArray(data.tags)) {
-                data.tags = data.tags.join(", ");
-            }
-            setFormData(data);
-        } catch (error) {
-            console.error("Error fetching judgment details:", error);
-            toast.error("Failed to fetch judgment details");
-        } finally {
-            setLoading(false);
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+        }));
+    };
+
+    const addCitation = () => {
+        if (newCitation.trim()) {
+            setFormData(prev => ({ ...prev, citations: [...prev.citations, newCitation.trim()] }));
+            setNewCitation("");
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const removeCitation = (index: number) => {
+        setFormData(prev => ({ ...prev, citations: prev.citations.filter((_, i) => i !== index) }));
+    };
+
+    const addKeyPoint = () => {
+        if (newKeyPoint.trim()) {
+            setFormData(prev => ({ ...prev, keyPoints: [...prev.keyPoints, newKeyPoint.trim()] }));
+            setNewKeyPoint("");
+        }
+    };
+
+    const removeKeyPoint = (index: number) => {
+        setFormData(prev => ({ ...prev, keyPoints: prev.keyPoints.filter((_, i) => i !== index) }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            const { title, ...dataWithoutTitle } = formData;
-            const dataToSend = {
-                ...dataWithoutTitle,
-                tags: formData.tags.split(",").map((tag) => tag.trim()),
-            };
+            // Exclude read-only and relational fields from payload
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { title, ...dataToSend } = formData;
+            
             await judgmentsService.update(params.id as string, dataToSend);
             toast.success("Judgment updated successfully");
             router.push("/admin/judgments");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error updating judgment:", error);
-            toast.error("Failed to update judgment");
+            toast.error(error.message || "Failed to update judgment");
             setSubmitting(false);
         }
     };
@@ -104,17 +192,24 @@ export default function EditJudgmentPage() {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed outline-none"
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Case ID <span className="text-red-500">*</span></label>
-                            <input
-                                type="text"
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Select Case <span className="text-red-500">*</span></label>
+                            <select
                                 name="caseId"
                                 value={formData.caseId}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
                                 onChange={handleChange}
-                            />
+                                required
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all bg-white"
+                            >
+                                <option value="">Select a Case</option>
+                                {cases.map((c: any) => (
+                                    <option key={c.id} value={c.id}>
+                                        {c.caseNumber} - {c.title}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
+                        
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Judgment Date <span className="text-red-500">*</span></label>
                             <input
@@ -126,27 +221,114 @@ export default function EditJudgmentPage() {
                                 onChange={handleChange}
                             />
                         </div>
+
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Judge Name <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Select Judge</label>
+                            <select
+                                name="judgeId"
+                                value={formData.judgeId}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all bg-white"
+                            >
+                                <option value="">Select a Judge</option>
+                                {judges.map((j: any) => (
+                                    <option key={j.id} value={j.id}>
+                                        {j.name} ({j.designation})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Judgment Type</label>
+                            <select
+                                name="judgmentType"
+                                value={formData.judgmentType}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all bg-white"
+                            >
+                                <option value="final">Final</option>
+                                <option value="interim">Interim</option>
+                                <option value="order">Order</option>
+                                <option value="directive">Directive</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Outcome</label>
                             <input
                                 type="text"
-                                name="judgeName"
-                                value={formData.judgeName}
-                                required
+                                name="outcome"
+                                value={formData.outcome}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="e.g. Dismissed, Allowed"
                                 onChange={handleChange}
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                        <div className="flex items-end pb-3">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    name="isLandmark"
+                                    checked={formData.isLandmark}
+                                    onChange={handleChange}
+                                    className="w-5 h-5 text-[#C9A227] rounded focus:ring-[#C9A227] border-gray-300"
+                                />
+                                <span className="text-sm font-medium text-gray-700">Is Distingushed/Landmark Judgment?</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* Citations */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Citations</label>
+                        <div className="flex gap-2 mb-2">
                             <input
                                 type="text"
-                                name="tags"
-                                value={formData.tags}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
-                                onChange={handleChange}
+                                value={newCitation}
+                                onChange={(e) => setNewCitation(e.target.value)}
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none"
+                                placeholder="Add citation (e.g. 2024 SCC 123)"
+                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCitation())}
                             />
+                            <button type="button" onClick={addCitation} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                                <Plus size={20} className="text-gray-700" />
+                            </button>
                         </div>
+                        <div className="flex flex-wrap gap-2">
+                            {formData.citations.map((cit, idx) => (
+                                <span key={idx} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                                    {cit}
+                                    <button type="button" onClick={() => removeCitation(idx)} className="hover:text-blue-900"><X size={14} /></button>
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Key Points */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Key Points</label>
+                        <div className="flex gap-2 mb-2">
+                            <input
+                                type="text"
+                                value={newKeyPoint}
+                                onChange={(e) => setNewKeyPoint(e.target.value)}
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none"
+                                placeholder="Add key point..."
+                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addKeyPoint())}
+                            />
+                            <button type="button" onClick={addKeyPoint} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                                <Plus size={20} className="text-gray-700" />
+                            </button>
+                        </div>
+                        <ul className="space-y-1">
+                            {formData.keyPoints.map((point, idx) => (
+                                <li key={idx} className="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                                    <span className="mt-0.5">•</span>
+                                    <span className="flex-1">{point}</span>
+                                    <button type="button" onClick={() => removeKeyPoint(idx)} className="text-gray-400 hover:text-red-500"><X size={16} /></button>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
 
                     <div>
@@ -161,13 +343,13 @@ export default function EditJudgmentPage() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Content <span className="text-red-500">*</span></label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Judgment Text <span className="text-red-500">*</span></label>
                         <textarea
-                            name="content"
-                            value={formData.content}
+                            name="fullText"
+                            value={formData.fullText}
                             required
-                            rows={10}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono text-sm"
+                            rows={15}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all font-mono text-xs sm:text-sm"
                             onChange={handleChange}
                         />
                     </div>

@@ -41,9 +41,9 @@ export default function EditCasePage() {
                 data.filingDate = new Date(data.filingDate).toISOString().split('T')[0];
             }
             setFormData(data);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching case details:", error);
-            toast.error("Failed to fetch case details");
+            toast.error(error.message || "Failed to fetch case details");
         } finally {
             setLoading(false);
         }
@@ -57,12 +57,12 @@ export default function EditCasePage() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            await casesService.update(params.id as string, formData);
+            const { id, createdAt, updatedAt, isDeleted, judge, judgments, displayBoards, ...dataToSend } = formData as any; await casesService.update(params.id as string, dataToSend);
             toast.success("Case updated successfully");
             router.push("/admin/cases");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error updating case:", error);
-            toast.error("Failed to update case");
+            toast.error(error.message || "Failed to update case");
             setSubmitting(false);
         }
     };

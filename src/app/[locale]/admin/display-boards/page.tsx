@@ -21,9 +21,9 @@ export default function AdminDisplayBoardsPage() {
         try {
             const response = await displayBoardsService.getAll();
             setBoards(response.data.data.data);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching display boards:", error);
-            toast.error("Failed to fetch display boards");
+            toast.error(error.message || "Failed to fetch display boards");
         } finally {
             setLoading(false);
         }
@@ -35,9 +35,9 @@ export default function AdminDisplayBoardsPage() {
             await displayBoardsService.delete(id);
             toast.success("Display board deleted successfully");
             fetchBoards();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error deleting display board:", error);
-            toast.error("Failed to delete display board");
+            toast.error(error.message || "Failed to delete display board");
         }
     };
 
@@ -49,9 +49,9 @@ export default function AdminDisplayBoardsPage() {
             toast.success("Cause list generated successfully");
             setShowGenerateModal(false);
             fetchBoards();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error generating cause list:", error);
-            toast.error("Failed to generate cause list");
+            toast.error(error.message || "Failed to generate cause list");
         } finally {
             setGenerating(false);
         }
