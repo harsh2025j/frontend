@@ -56,9 +56,9 @@ export default function AdminJudgmentsPage() {
                 setCasesMap(cMap);
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching data:", error);
-            toast.error("Failed to fetch judgments data");
+            toast.error(error.message || "Failed to fetch judgments data");
         } finally {
             setLoading(false);
         }
@@ -70,16 +70,16 @@ export default function AdminJudgmentsPage() {
             await judgmentsService.delete(id);
             toast.success("Judgment deleted successfully");
             fetchJudgments();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error deleting judgment:", error);
-            toast.error("Failed to delete judgment");
+            toast.error(error.message || "Failed to delete judgment");
         }
     };
 
     const filteredJudgments = judgments.filter(j =>
-        (j?.title && String(j.title).toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (j?.caseId && String(j.caseId).toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (j?.summary && String(j.summary).toLowerCase().includes(searchTerm.toLowerCase()))
+        (j.title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+        (j.caseId?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+        (j.summary?.toLowerCase() || "").includes(searchTerm.toLowerCase())
     );
 
     if (loading) return <div className="flex justify-center items-center min-h-[400px]"><Loader size="lg" text="Loading Judgments..." /></div>;
@@ -130,13 +130,13 @@ export default function AdminJudgmentsPage() {
                                     <tr key={j.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[200px]">{j.title || j.summary?.substring(0, 30) || "No Title"}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {j.caseId ? (casesMap[j.caseId] || j.caseId) : (j.case?.caseNumber || "N/A")}
+                                            {j.case?.caseNumber || (j.caseId && casesMap[j.caseId]) || "N/A"}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                             {new Date(j.judgmentDate).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {j.judgeId ? (judgesMap[j.judgeId] || j.judgeId) : (j.judge?.name || "Unknown")}
+                                            {j.judge?.name || (j.judgeId && judgesMap[j.judgeId]) || "Unknown"}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end gap-3">

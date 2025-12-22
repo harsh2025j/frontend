@@ -21,7 +21,7 @@ export default function EditJudgePage() {
         biography: "",
         photoUrl: "",
         specialization: "",
-        isActive: true
+        isActive: true,
     });
 
     useEffect(() => {
@@ -41,19 +41,23 @@ export default function EditJudgePage() {
                 data.retirementDate = new Date(data.retirementDate).toISOString().split('T')[0];
             }
             if (Array.isArray(data.specialization)) {
-                data.specialization = data.specialization.join(', ');
+                data.specialization = data.specialization.join(", ");
             }
             setFormData(data);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching judge details:", error);
-            toast.error("Failed to fetch judge details");
+            toast.error(error.message || "Failed to fetch judge details");
         } finally {
             setLoading(false);
         }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value, type } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+        }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -61,19 +65,17 @@ export default function EditJudgePage() {
         setSubmitting(true);
         try {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { id, _id, createdAt, updatedAt, isDeleted, cases, ...rest } = formData as any;
-            const payload = {
-                ...rest,
-                specialization: formData.specialization && typeof formData.specialization === 'string'
-                    ? formData.specialization.split(',').map(s => s.trim()).filter(Boolean)
-                    : []
+            const { id, createdAt, updatedAt, isDeleted, cases, judgments, bio, ...dataWithoutReadOnly } = formData as any;
+            const dataToSend = {
+                ...dataWithoutReadOnly,
+                specialization: formData.specialization.split(",").map((s: string) => s.trim()).filter(Boolean),
             };
-            await judgesService.update(params.id as string, payload);
+            await judgesService.update(params.id as string, dataToSend);
             toast.success("Judge profile updated successfully");
             router.push("/admin/judges");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error updating judge:", error);
-            toast.error("Failed to update judge profile");
+            toast.error(error.message || "Failed to update judge profile");
             setSubmitting(false);
         }
     };
@@ -166,41 +168,43 @@ export default function EditJudgePage() {
                                 onChange={handleChange}
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Specialization <span className="text-gray-400 text-xs">(Comma separated)</span></label>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
                             <input
                                 type="text"
                                 name="specialization"
                                 value={formData.specialization || ""}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
-                                placeholder="e.g. Constitutional Law, Criminal Law"
+                                placeholder="Constitutional Law, Criminal Law (comma separated)"
                                 onChange={handleChange}
                             />
                         </div>
-                        <div className="flex items-center pt-8">
-                            <label className="flex items-center space-x-3 cursor-pointer">
+                        <div className="md:col-span-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="checkbox"
                                     name="isActive"
                                     checked={formData.isActive}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                                    className="w-5 h-5 text-[#C9A227] rounded focus:ring-[#C9A227]"
+                                    onChange={handleChange}
+                                    className="w-4 h-4 text-[#0A2342] border-gray-300 rounded focus:ring-[#C9A227]"
                                 />
-                                <span className="text-gray-700 font-medium select-none">Active Status</span>
+                                <span className="text-sm font-medium text-gray-700">Active Judge</span>
                             </label>
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Biography</label>
+                            <textarea
+                                name="biography"
+                                value={formData.biography || ""}
+                                rows={4}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="Distinguished jurist..."
+                                onChange={handleChange}
+                            />
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Biography</label>
-                        <textarea
-                            name="biography"
-                            value={formData.biography || ""}
-                            rows={6}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
-                            onChange={handleChange}
-                        />
-                    </div>
+
                 </div>
 
                 <div className="flex justify-end gap-4 pt-4 border-t border-gray-100">

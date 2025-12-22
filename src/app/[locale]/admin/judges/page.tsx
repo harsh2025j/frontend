@@ -20,9 +20,9 @@ export default function AdminJudgesPage() {
         try {
             const response = await judgesService.getAll();
             setJudges(response.data.data.data);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching judges:", error);
-            toast.error("Failed to fetch judges");
+            toast.error(error.message || "Failed to fetch judges");
         } finally {
             setLoading(false);
         }
@@ -34,9 +34,9 @@ export default function AdminJudgesPage() {
             await judgesService.delete(id);
             toast.success("Judge deleted successfully");
             fetchJudges();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error deleting judge:", error);
-            toast.error("Failed to delete judge");
+            toast.error(error.message || "Failed to delete judge");
         }
     };
 
