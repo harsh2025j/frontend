@@ -16,9 +16,13 @@ export default function CreateJudgePage() {
         court: "",
         appointmentDate: "",
         retirementDate: "",
-        bio: "",
-        imageUrl: "",
+        biography: "",
+        photoUrl: "",
+        specialization: "",
+        isActive: true
     });
+
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -28,7 +32,11 @@ export default function CreateJudgePage() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            await judgesService.create(formData);
+            const payload = {
+                ...formData,
+                specialization: formData.specialization ? formData.specialization.split(',').map(s => s.trim()) : []
+            };
+            await judgesService.create(payload);
             toast.success("Judge profile created successfully");
             router.push("/admin/judges");
         } catch (error) {
@@ -94,10 +102,10 @@ export default function CreateJudgePage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Photo URL</label>
                             <input
                                 type="text"
-                                name="imageUrl"
+                                name="photoUrl"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
                                 placeholder="https://example.com/image.jpg"
                                 onChange={handleChange}
@@ -114,7 +122,7 @@ export default function CreateJudgePage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Retirement Date</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Retirement Date <span className="text-red-500">*</span></label>
                             <input
                                 type="date"
                                 name="retirementDate"
@@ -122,12 +130,34 @@ export default function CreateJudgePage() {
                                 onChange={handleChange}
                             />
                         </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Specialization <span className="text-gray-400 text-xs">(Comma separated)</span></label>
+                            <input
+                                type="text"
+                                name="specialization"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="e.g. Constitutional Law, Criminal Law"
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="flex items-center pt-8">
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    name="isActive"
+                                    defaultChecked={true}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                                    className="w-5 h-5 text-[#C9A227] rounded focus:ring-[#C9A227]"
+                                />
+                                <span className="text-gray-700 font-medium select-none">Active Status</span>
+                            </label>
+                        </div>
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Biography</label>
                         <textarea
-                            name="bio"
+                            name="biography"
                             rows={6}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
                             placeholder="Enter biography..."

@@ -25,5 +25,8 @@ export const casesService = {
     },
     getByNumber: async (caseNumber: string) => {
         return await apiClient.get(`${API_ENDPOINTS.CASES.BY_NUMBER}/${caseNumber}`);
+    },
+    updateStatus: async (id: string, status: string) => {
+        return await apiClient.patch(`${API_ENDPOINTS.CASES.BASE}/${id}/status`, { status });
     }
 };

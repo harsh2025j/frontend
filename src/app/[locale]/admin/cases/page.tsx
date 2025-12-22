@@ -7,10 +7,13 @@ import { Trash2, Edit, Plus, Search, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
+
 export default function AdminCasesPage() {
     const [cases, setCases] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, caseId: "", newStatus: "" });
 
     useEffect(() => {
         fetchCases();
@@ -37,6 +40,30 @@ export default function AdminCasesPage() {
         } catch (error) {
             console.error("Error deleting case:", error);
             toast.error("Failed to delete case");
+        }
+    };
+
+    const handleStatusChange = (id: string, newStatus: string) => {
+        setConfirmModal({ isOpen: true, caseId: id, newStatus });
+    };
+
+    const handleConfirmUpdate = async () => {
+        const { caseId, newStatus } = confirmModal;
+        if (!caseId || !newStatus) return;
+
+        try {
+            // Optimistic update
+            setCases(cases.map(c => c.id === caseId ? { ...c, status: newStatus } : c));
+            setConfirmModal({ isOpen: false, caseId: "", newStatus: "" });
+
+            await casesService.updateStatus(caseId, newStatus);
+            toast.success("Status updated successfully");
+            fetchCases(); // Ensure sync
+        } catch (error) {
+            console.error("Error updating status:", error);
+            toast.error("Failed to update status");
+            fetchCases(); // Revert on error
+            setConfirmModal({ isOpen: false, caseId: "", newStatus: "" });
         }
     };
 
@@ -94,16 +121,24 @@ export default function AdminCasesPage() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{c.caseNumber}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{c.title}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span
-                                                className={`px-2.5 py-0.5 inline-flex text-xs font-medium rounded-full capitalize ${c.status === "pending"
-                                                    ? "bg-yellow-100 text-yellow-800"
-                                                    : c.status === "closed"
-                                                        ? "bg-gray-100 text-gray-800"
-                                                        : "bg-green-100 text-green-800"
+                                            <select
+                                                className={`block w-full px-2 py-1 text-xs font-medium border-gray-300 rounded-full capitalize focus:ring-2 focus:ring-offset-1 focus:outline-none cursor-pointer ${(confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status) === "pending"
+                                                    ? "bg-yellow-100 text-yellow-800 border-yellow-200 focus:ring-yellow-500"
+                                                    : (confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status) === "closed"
+                                                        ? "bg-gray-100 text-gray-800 border-gray-200 focus:ring-gray-500"
+                                                        : (confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status) === "filed"
+                                                            ? "bg-blue-100 text-blue-800 border-blue-200 focus:ring-blue-500"
+                                                            : "bg-green-100 text-green-800 border-green-200 focus:ring-green-500"
                                                     }`}
+                                                value={confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status}
+                                                onChange={(e) => handleStatusChange(c.id, e.target.value)}
                                             >
-                                                {c.status}
-                                            </span>
+                                                <option value="filed">Filed</option>
+                                                <option value="pending">Pending</option>
+                                                <option value="hearing">Hearing</option>
+                                                <option value="judgment">Judgment</option>
+                                                <option value="closed">Closed</option>
+                                            </select>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{c.court}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -140,6 +175,17 @@ export default function AdminCasesPage() {
                     </table>
                 </div>
             </div>
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ isOpen: false, caseId: "", newStatus: "" })}
+                onConfirm={handleConfirmUpdate}
+                title="Update Case Status"
+                message={`Are you sure you want to change the status to "${confirmModal.newStatus}"?`}
+                confirmText="Yes, Update"
+                cancelText="Cancel"
+                variant="warning"
+            />
         </div>
     );
 }
