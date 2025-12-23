@@ -1,94 +1,329 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { casesService } from "@/data/services/cases-service/casesService";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
+import toast from "react-hot-toast";
+
+import { useSearchParams } from "next/navigation";
+import { Search, FileText, User, Gavel, Calendar } from 'lucide-react';
+import { performCaseSearch, SearchInputs, SearchType } from "./searchLogic";
 
 export default function CasesPage() {
-    const [cases, setCases] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const initialSearchType = searchParams.get("searchType") as SearchType | null;
 
+    // We only need local state for "no results found" messaging now
+    const [loading, setLoading] = useState(false);
+    const [noResults, setNoResults] = useState(false);
+
+    // Search Configuration State
+    const [searchType, setSearchType] = useState<SearchType>(initialSearchType || "caseNumber");
+
+    // Input State
+    const [inputs, setInputs] = useState<SearchInputs>({
+        caseNumber: searchParams.get("caseNumber") || "",
+        partyName: searchParams.get("partyName") || "",
+        partyType: searchParams.get("partyType") || "",
+        advocateName: searchParams.get("advocateName") || "",
+        court: searchParams.get("court") || "",
+        caseType: searchParams.get("caseType") || "",
+        year: searchParams.get("year") || ""
+    });
+
+    // Initial Fetch (Optional - can be removed if we only want search results)
     useEffect(() => {
-        fetchCases();
-    }, []);
+        // Only fetch all cases if no specific search intent was passed
+        // For now, keeping original behavior but ignoring results display here
+        if (!initialSearchType) {
+            // fetchCases(); // Context: User wants search flow, initial load might not be needed or logic changed. Keeping it disabled for now to focus on search.
+        }
+    }, [initialSearchType]);
 
-    const fetchCases = async () => {
+    const handleSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setNoResults(false);
+
         try {
-            const response = await casesService.getAll();
-            setCases(response.data.data.data);
+            // 1. Check for results using shared logic
+            const results = await performCaseSearch(searchType, inputs);
+
+            if (results && results.length > 0) {
+                // 2. Results found - Redirect to Result Page
+                toast.success("Cases found successfully!");
+                const queryParams = new URLSearchParams();
+                queryParams.set("searchType", searchType);
+
+                // Add only relevant inputs for the URL
+                if (searchType === "caseNumber") {
+                    queryParams.set("caseNumber", inputs.caseNumber);
+                } else if (searchType === "partyName") {
+                    queryParams.set("partyName", inputs.partyName);
+                    queryParams.set("partyType", inputs.partyType);
+                    queryParams.set("year", inputs.year);
+                } else if (searchType === "advocateName") {
+                    queryParams.set("advocateName", inputs.advocateName);
+                    queryParams.set("partyType", inputs.partyType);
+                    queryParams.set("year", inputs.year);
+                } else if (searchType === "caseDetails") {
+                    queryParams.set("court", inputs.court);
+                    queryParams.set("caseType", inputs.caseType);
+                    queryParams.set("year", inputs.year);
+                }
+
+                router.push(`/cases/result?${queryParams.toString()}`);
+            } else {
+                // 3. No results - Show message on this page
+                toast.error("No records found matching your criteria.");
+                setNoResults(true);
+            }
+
         } catch (error) {
-            console.error("Error fetching cases:", error);
+            // console.error("Error searching cases:", error);
+            toast.error("No records found matching your criteria.");
+            setNoResults(true);
         } finally {
             setLoading(false);
         }
     };
 
-    return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">Cases</h1>
-            </div>
+    const years = Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i);
+    const courts = ["Supreme Court", "High Court", "District Court"];
+    const caseTypes = ["Civil", "Criminal", "Corporate", "Family", "Tax", "Constitutional", "Labour", "Property"];
 
-            {loading ? (
-                <div>Loading...</div>
-            ) : (
-                <div className="bg-white shadow-md rounded-lg overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Case Number
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Title
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Court
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Next Hearing
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {cases.map((c) => (
-                                <tr key={c.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap">{c.caseNumber}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">{c.title}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${c.status === "pending"
-                                                ? "bg-yellow-100 text-yellow-800"
-                                                : "bg-green-100 text-green-800"
-                                                }`}
-                                        >
-                                            {c.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">{c.court}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {c.nextHearingDate ? new Date(c.nextHearingDate).toLocaleDateString() : "-"}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <Link
-                                            href={`/cases/${c.id}`}
-                                            className="text-indigo-600 hover:text-indigo-900 mr-4"
-                                        >
-                                            View
-                                        </Link>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+    return (
+        <div className="min-h-screen bg-gray-50/50 p-6">
+            <div className="max-w-7xl mx-auto space-y-8">
+
+                {/* Header */}
+                <div className="text-center space-y-2 pt-8">
+                    <h1 className="text-3xl md:text-4xl font-bold text-[#0A2342]">Case Status</h1>
+                    <p className="text-gray-500">Access live case data, orders, and hearing history</p>
                 </div>
-            )}
+
+                {/* Search Interaction Area */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden max-w-4xl mx-auto">
+
+                    {/* Search Type Selector */}
+                    {/* <div className="flex justify-center gap-4 pt-6 px-6 border-b pb-4 overflow-x-auto">
+                        {(["caseNumber", "partyName", "advocateName", "caseDetails"] as SearchType[]).map((type) => (
+                            <button
+                                key={type}
+                                type="button"
+                                onClick={() => { setSearchType(type); setInputs({ ...inputs, caseNumber: "", partyName: "", advocateName: "" }); setNoResults(false); }}
+                                className={`px-4 py-2 text-sm font-medium transition-colors relative whitespace-nowrap ${searchType === type
+                                    ? "text-[#0A2342]"
+                                    : "text-gray-500 hover:text-gray-700"
+                                    }`}
+                            >
+                                {type.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                                {searchType === type && (
+                                    <span className="absolute bottom-[-17px] left-0 w-full h-0.5 bg-[#C9A227]" />
+                                )}
+                            </button>
+                        ))}
+                    </div> */}
+
+                    {/* Dynamic Search Form */}
+                    <form onSubmit={handleSearch} className="p-6 md:p-8 space-y-6">
+
+                        {/* Dynamic Inputs Area */}
+                        <div className="min-h-[80px] flex items-center">
+
+                            {searchType === "caseNumber" && (
+                                <div className="w-full space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 my-2">Enter Case Number <span className="text-red-500">*</span></label>
+                                    <div className="relative">
+                                        <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                        <input
+                                            type="text"
+                                            placeholder="e.g.CSE10000000001"
+                                            required
+                                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all mt-1 mb-2"
+                                            value={inputs.caseNumber}
+                                            onChange={(e) => setInputs({ ...inputs, caseNumber: e.target.value })}
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <label className="text-sm font-medium text-gray-700 ">Enter Case Type (Optional) </label>
+                                    <input type="text" className="w-full pl-2 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all mt-1 mb-2" placeholder="Enter case type (optional)" />
+                                    <label className="text-sm font-medium text-gray-700 ">Enter case year (Optional) </label>
+                                    <input type="number" className="w-full pl-2 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all mt-1 mb-2" placeholder="eg. 2026" />
+
+                                </div>
+                            )}
+
+                            {searchType === "partyName" && (
+                                <div className="w-full grid grid-cols-1 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-medium text-gray-700">Party Type <span className="text-red-500">*</span></label>
+                                        <div className="relative">
+                                            <select
+                                                required
+                                                className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-sm"
+                                                value={inputs.partyType}
+                                                onChange={(e) => setInputs({ ...inputs, partyType: e.target.value })}
+                                            >
+                                                <option value="">---- select party type ----</option>
+                                                <option value="Petitioner">Petitioner</option>
+                                                <option value="Respondent">Respondent</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-medium text-gray-700">Party Name <span className="text-red-500">*</span></label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="Enter Party Name"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                value={inputs.partyName}
+                                                onChange={(e) => setInputs({ ...inputs, partyName: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-medium text-gray-700">Year <span className="text-red-500">*</span></label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="eg. 2026"
+                                                className="w-full px-4 py-3  border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                value={inputs.year}
+                                                onChange={(e) => setInputs({ ...inputs, year: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {searchType === "advocateName" && (
+                                <div className="w-full grid grid-cols-1 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-medium text-gray-700">Party Type <span className="text-red-500">*</span></label>
+                                        <div className="relative">
+                                            <select
+                                                required
+                                                className="w-full px-4 py-3 bg-gray-100 my-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-sm"
+                                                value={inputs.partyType}
+                                                onChange={(e) => setInputs({ ...inputs, partyType: e.target.value })}
+                                            >
+                                                <option value="">---- select party type ----</option>
+                                                <option value="Petitioner">Petitioner</option>
+                                                <option value="Respondent">Respondent</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="w-full space-y-2">
+                                            <label className="text-sm font-medium text-gray-700">Enter Advocate Name <span className="text-red-500">*</span></label>
+                                            <div className="relative">
+                                                <Gavel className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    placeholder="Advocate Name"
+                                                    className="w-full pl-10 pr-4 py-3 my-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                    value={inputs.advocateName}
+                                                    onChange={(e) => setInputs({ ...inputs, advocateName: e.target.value })}
+                                                    autoFocus
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-medium text-gray-700">Year <span className="text-red-500">*</span></label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="eg. 2026"
+                                                className="w-full px-4 py-3 my-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                value={inputs.year}
+                                                onChange={(e) => setInputs({ ...inputs, year: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {searchType === "caseDetails" && (
+                                <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-gray-700">Court <span className="text-red-500">*</span> </label>
+                                        <select
+                                            required
+                                            className="w-full px-4 py-3 my-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none bg-white"
+                                            value={inputs.court}
+                                            onChange={(e) => setInputs({ ...inputs, court: e.target.value })}
+                                        >
+                                            <option value="">Select Court</option>
+                                            {courts.map(c => <option key={c} value={c}>{c}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-gray-700">Case Type <span className="text-red-500">*</span> </label>
+                                        <select
+                                            required
+                                            className="w-full px-4 py-3 border my-1 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none bg-white"
+                                            value={inputs.caseType}
+                                            onChange={(e) => setInputs({ ...inputs, caseType: e.target.value })}
+                                        >
+                                            <option value="">Select Type</option>
+                                            {caseTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-gray-700">Year <span className="text-red-500">*</span> </label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="eg. 2026"
+                                            className="w-full px-4 py-3 border my-1 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                            value={inputs.year}
+                                            onChange={(e) => setInputs({ ...inputs, year: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* Search Action */}
+                        <div className="flex justify-end pt-2">
+                            <button
+                                type="submit"
+                                className="flex items-center gap-2 bg-[#0A2342] text-white px-8 py-3 rounded-lg hover:bg-[#153a66] transition-colors shadow-lg shadow-blue-900/10 font-medium"
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <>Searching...</>
+                                ) : (
+                                    <>
+                                        <Search size={18} /> Search Records
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {/* No Results Message - Only shown when searching and no results found on this page */}
+                {/* {noResults && !loading && (
+                    <div className="max-w-7xl mx-auto">
+                        <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                            <div className="text-gray-400 mb-2">
+                                <Search size={48} className="mx-auto opacity-20" />
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-900">No records found</h3>
+                            <p className="text-gray-500 max-w-sm mx-auto mt-1">
+                                We couldn't find any cases matching your search criteria. Please check the details and try again.
+                            </p>
+                        </div>
+                    </div>
+                )} */}
+            </div>
         </div>
     );
 }

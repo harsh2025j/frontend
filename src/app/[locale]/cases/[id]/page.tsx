@@ -2,10 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import { casesService } from "@/data/services/cases-service/casesService";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 export default function CaseDetailPage() {
     const params = useParams();
+    const router = useRouter();
     const [caseData, setCaseData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
@@ -31,6 +33,16 @@ export default function CaseDetailPage() {
 
     return (
         <div className="p-6 max-w-4xl mx-auto">
+
+            {/* Back Button */}
+            <button
+                onClick={() => router.back()}
+                className="flex items-center gap-2 text-gray-600 hover:text-[#0A2342] mb-6 transition-colors font-medium"
+            >
+                <ArrowLeft size={20} />
+                Back
+            </button>
+
             <div className="bg-white shadow rounded-lg p-6 mb-6">
                 <div className="flex justify-between items-start mb-6">
                     <div>

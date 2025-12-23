@@ -4,14 +4,24 @@ interface UniversalSelectProps {
   name: string;
   options: string[];
   className?: string;
+  onSelect?: (value: string) => void;
 }
 
 const UniversalSelect: React.FC<UniversalSelectProps> = ({
   name,
   options,
   className = "",
+  onSelect
 }) => {
   const [selected, setSelected] = useState<string>("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setSelected(val);
+    if (onSelect) {
+      onSelect(val);
+    }
+  };
 
   return (
     <div className={`flex flex-col ${className}`}>
@@ -27,7 +37,7 @@ const UniversalSelect: React.FC<UniversalSelectProps> = ({
       >
         <select
           value={selected}
-          onChange={(e) => setSelected(e.target.value)}
+          onChange={handleChange}
           className="
             w-full 
             bg-transparent 
@@ -37,7 +47,7 @@ const UniversalSelect: React.FC<UniversalSelectProps> = ({
             appearance-auto   /* ensures default arrow shows */
           "
         >
-          <option value="">{name}</option>
+          <option value="" disabled hidden>{name}</option>
 
           {options.map((opt, i) => (
             <option key={i} value={opt} className="text-black">

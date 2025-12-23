@@ -254,7 +254,19 @@ export default function Stores() {
         {/* Universal Selectors */}
         <div className="container mx-auto px-4 mb-3 md:mb-5">
           <div className="flex flex-wrap justify-center gap-2 md:gap-3">
-            <UniversalSelect name="Case Status" options={[]} />
+            <UniversalSelect
+              name="Case Status"
+              options={["Case Number", "Party Name", "Advocate Name", "Court + Case Type + Year"]}
+              onSelect={(val) => {
+                if (!val) return;
+                let typeKey = "caseNumber";
+                if (val === "Party Name") typeKey = "partyName";
+                else if (val === "Advocate Name") typeKey = "advocateName";
+                else if (val === "Court + Case Type + Year") typeKey = "caseDetails";
+
+                router.push(`/cases?searchType=${typeKey}`);
+              }}
+            />
             <UniversalSelect name="Case List" options={[]} />
             <UniversalSelect name="Reports" options={[]} />
             <UniversalSelect name="Judgment" options={[]} />

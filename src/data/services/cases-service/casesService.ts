@@ -3,6 +3,7 @@ import apiClient from "../apiConfig/apiClient";
 
 export const casesService = {
     getAll: async (params?: any) => {
+
         return await apiClient.get(API_ENDPOINTS.CASES.BASE, { params });
     },
     getById: async (id: string) => {

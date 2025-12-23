@@ -116,6 +116,11 @@ export default function CreateCasePage() {
                                 <option value="criminal">Criminal</option>
                                 <option value="constitutional">Constitutional</option>
                                 <option value="corporate">Corporate</option>
+                                <option value="family">Family</option>
+                                <option value="tax">Tax</option>
+                                <option value="labor">Labor</option>
+                                <option value="property">Property</option>
+                                <option value="other">Other</option>
                             </select>
                         </div>
                         <div>
