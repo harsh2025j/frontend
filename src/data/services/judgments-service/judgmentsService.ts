@@ -17,6 +17,7 @@ export interface Judgment {
 export const judgmentsService = {
 
     getAll: async (params?: any) => {
+        // console.log("Judgments Service", API_ENDPOINTS.JUDGMENTS.BASE, { params })
         return await apiClient.get(API_ENDPOINTS.JUDGMENTS.BASE, { params });
     },
     getById: async (id: string) => {

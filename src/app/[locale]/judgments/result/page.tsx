@@ -19,6 +19,10 @@ export default function JudgmentResultPage() {
         const caseNumber = searchParams.get("caseNumber") || "";
         const judgeName = searchParams.get("judgeName") || "";
         const judgmentDate = searchParams.get("judgmentDate") || "";
+        const year = searchParams.get("year") || "";
+        const startDate = searchParams.get("startDate") || "";
+        const endDate = searchParams.get("endDate") || "";
+        const court = searchParams.get("court") || "";
 
         if (type) {
             setSearchType(type);
@@ -26,7 +30,11 @@ export default function JudgmentResultPage() {
                 caseId: caseNumber, // Mapping caseNumber param to caseId input as per logic
                 caseNumber,
                 judgeName,
-                judgmentDate
+                judgmentDate,
+                year,
+                startDate,
+                endDate,
+                court
             };
             executeSearch(type, inputs);
         }

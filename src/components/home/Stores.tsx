@@ -10,7 +10,7 @@ import AiPoweredFeatures from "../ui/AiPoweredFeatures";
 import ContentSlider from "@/components/home/ContentSlider";
 import LatestNews from "../ui/LatestNews";
 import Judgement from "../ui/judgement";
-import UniversalSelect from "../ui/universalSelector";
+
 import TopAdvocate from "../ui/TopAdvocate"
 import LiveCourt from "../ui/LiveCourt"
 import HindiNews from "../ui/HindiNews";
@@ -251,37 +251,41 @@ export default function Stores() {
           </div>
         </div>
 
-        {/* Universal Selectors */}
+        {/* Navigation Buttons */}
         <div className="container mx-auto px-4 mb-3 md:mb-5">
-          <div className="flex flex-wrap justify-center gap-2 md:gap-3">
-            <UniversalSelect
-              name="Case Status"
-              options={["Case Number", "Party Name", "Advocate Name", "Court + Case Type + Year"]}
-              onSelect={(val) => {
-                if (!val) return;
-                let typeKey = "caseNumber";
-                if (val === "Party Name") typeKey = "partyName";
-                else if (val === "Advocate Name") typeKey = "advocateName";
-                else if (val === "Court + Case Type + Year") typeKey = "caseDetails";
-
-                router.push(`/cases?searchType=${typeKey}`);
-              }}
-            />
-            <UniversalSelect name="Case List" options={[]} />
-            <UniversalSelect name="Reports" options={[]} />
-
-            <UniversalSelect name="Judgments"
-              options={["Case Number", "Judge", "Judgement Date"]}
-              onSelect={(val) => {
-                if (!val) return;
-                let typeKey = "caseNumber";
-                if (val === "Judge") typeKey = "Judge";
-                else if (val === "Judgement Date") typeKey = "JudgementDate";
-                router.push(`/judgments?searchType=${typeKey}`);
-              }} />
-
-            <UniversalSelect name="Display Boards" options={[]} />
-            <UniversalSelect name="Judges" options={[]} />
+          <div className="flex flex-wrap justify-center gap-2 md:gap-4">
+            <button
+              onClick={() => router.push('/cases')}
+              className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
+            >
+              Case Status
+            </button>
+            <button
+              className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
+            >
+              Case List
+            </button>
+            <button
+              className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
+            >
+              Reports
+            </button>
+            <button
+              onClick={() => router.push('/judgments')}
+              className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
+            >
+              Judgments
+            </button>
+            <button
+              className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
+            >
+              Display Boards
+            </button>
+            <button
+              className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
+            >
+              Judges
+            </button>
           </div>
         </div>
 
