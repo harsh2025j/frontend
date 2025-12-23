@@ -85,6 +85,7 @@ apiClient.interceptors.request.use(
     if (store) {
       store.dispatch(startLoading());
     }
+    // console.log("only for testing",localStorage.getItem("token"))
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
@@ -143,8 +144,8 @@ apiClient.interceptors.response.use(
     if (apiError.statusCode === 401) {
       if (shouldShowError('auth-error')) {
         if (typeof window !== "undefined") {
-          localStorage.removeItem("token");
-          toast.error("Session expired. Please login again.", {
+           localStorage.removeItem("token");
+           toast.error("Session expired. Please login again.", {
             duration: 3000,
             id: 'auth-error-toast'
           });

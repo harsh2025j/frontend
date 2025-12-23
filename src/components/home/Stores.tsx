@@ -269,7 +269,17 @@ export default function Stores() {
             />
             <UniversalSelect name="Case List" options={[]} />
             <UniversalSelect name="Reports" options={[]} />
-            <UniversalSelect name="Judgment" options={[]} />
+
+            <UniversalSelect name="Judgments"
+              options={["Case Number", "Judge", "Judgement Date"]}
+              onSelect={(val) => {
+                if (!val) return;
+                let typeKey = "caseNumber";
+                if (val === "Judge") typeKey = "Judge";
+                else if (val === "Judgement Date") typeKey = "JudgementDate";
+                router.push(`/judgments?searchType=${typeKey}`);
+              }} />
+
             <UniversalSelect name="Display Boards" options={[]} />
             <UniversalSelect name="Judges" options={[]} />
           </div>
