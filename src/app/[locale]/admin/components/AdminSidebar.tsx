@@ -15,7 +15,8 @@ import {
   Scale,
   FileText,
   Monitor,
-  BarChart
+  BarChart,
+  Bell
 } from "lucide-react";
 // import Link from "next/link";
 import { Link } from "@/i18n/routing"
@@ -125,6 +126,12 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
       name: "Display Boards",
       icon: <Monitor size={18} />,
       href: "/admin/display-boards",
+      show: hasAdminPrivileges
+    },
+    {
+      name: "Broadcast",
+      icon: <Bell size={18} />, // Need to import Bell
+      href: "/admin/broadcast",
       show: hasAdminPrivileges
     },
   ];

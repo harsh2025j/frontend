@@ -2,9 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import { judgesService } from "@/data/services/judges-service/judgesService";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { Link } from "@/i18n/routing";
+import { ArrowLeft } from "lucide-react";
 
 export default function JudgeDetailPage() {
+    const router = useRouter();
     const params = useParams();
     const [judge, setJudge] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -32,6 +35,14 @@ export default function JudgeDetailPage() {
     return (
         <div className="p-6 max-w-4xl mx-auto">
             <div className="bg-white shadow rounded-lg overflow-hidden">
+
+                <button
+                    onClick={() => router.back()}
+                    className="flex items-center gap-2 text-gray-600 hover:text-[#0A2342] mb-6 transition-colors font-medium"
+                >
+                    <ArrowLeft size={20} />
+                    Back
+                </button>
                 <div className="bg-blue-600 h-32"></div>
                 <div className="px-6 pb-6">
                     <div className="relative flex items-end -mt-16 mb-6">
@@ -40,7 +51,7 @@ export default function JudgeDetailPage() {
                                 {judge.name.charAt(0)}
                             </div>
                         </div>
-                        <div className="ml-6 mb-2">
+                        <div className="ml-6 mb-2 pt-16">
                             <h1 className="text-3xl font-bold text-gray-900">{judge.name}</h1>
                             <p className="text-lg text-gray-600">{judge.designation}</p>
                         </div>

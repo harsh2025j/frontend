@@ -61,6 +61,9 @@ export const API_ENDPOINTS = {
     ACTIVE: "/judges/active",
     BY_COURT: "/judges/court",
   },
+  USERS: {
+    BROADCAST: "/users/broadcast",
+  },
   REPORTS: {
     BASE: "/reports",
     GENERATE_CASE_STATS: "/reports/generate/case-statistics",

@@ -261,11 +261,13 @@ export default function Stores() {
               Case Status
             </button>
             <button
+             onClick={() => router.push('/')}
               className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
             >
               Case List
             </button>
             <button
+              onClick={() => router.push('/reports')}
               className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
             >
               Reports
@@ -277,11 +279,13 @@ export default function Stores() {
               Judgments
             </button>
             <button
+              onClick={() => router.push('/display-boards')}
               className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
             >
               Display Boards
             </button>
             <button
+             onClick={() => router.push('/judges')}
               className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
             >
               Judges
