@@ -9,11 +9,11 @@ import {
   FaFacebookF,
   FaInstagram,
   FaWhatsapp,
-  FaTwitter,
   FaTelegramPlane,
   FaLinkedinIn,
   FaYoutube,
 } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import { Mail, Phone, MapPin } from "lucide-react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
@@ -48,8 +48,9 @@ export default function Footer() {
   const socialLinks = [
     { icon: FaFacebookF, href: "https://www.facebook.com/advocatesajjadofficial", color: "hover:bg-blue-600", label: "Facebook" },
     { icon: FaInstagram, href: "https://www.instagram.com/sajjad_husain_law_associates/?hl=en", color: "hover:bg-pink-600", label: "Instagram" },
-    { icon: FaWhatsapp, href: "#", color: "hover:bg-green-600", label: "WhatsApp" },
-    { icon: FaTwitter, href: "#", color: "hover:bg-sky-500", label: "Twitter" },
+    { icon: FaWhatsapp, href: "https://wa.me/917080909786", color: "hover:bg-green-600", label: "WhatsApp" },
+    { icon: FaXTwitter, href: "https://x.com/advocatesajjad", color: "hover:bg-black", label: "X (Twitter)" },
+    { icon: FaTelegramPlane, href: "https://t.me/sajjadhusainlaw", color: "hover:bg-blue-600", label: "Telegram" },
     { icon: FaLinkedinIn, href: "https://www.linkedin.com/in/sajjad-husain-associates-law-31715675/", color: "hover:bg-blue-700", label: "LinkedIn" },
     { icon: FaYoutube, href: "https://www.youtube.com/@SajjadHusainLawAssociates", color: "hover:bg-red-600", label: "YouTube" },
   ];
@@ -164,7 +165,7 @@ export default function Footer() {
                 <span className="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-blue-400 to-transparent"></span>
               </h3>
               <ul className="space-y-2.5">
-                {categories.slice(0,13).map((category: Category) => (
+                {categories.slice(0, 13).map((category: Category) => (
                   <li key={category.id}>
                     <Link
                       href={`/category/${category.slug}`}
@@ -184,7 +185,7 @@ export default function Footer() {
                 <span className="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-blue-400 to-transparent"></span>
               </h3>
               <ul className="space-y-2.5">
-                {subCategories.slice(0,13).map((category: Category) => (
+                {subCategories.slice(0, 13).map((category: Category) => (
                   <li key={category.id}>
                     <Link
                       href={`/category/${category.slug}`}
@@ -204,7 +205,7 @@ export default function Footer() {
                 <span className="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-blue-400 to-transparent"></span>
               </h3>
               <ul className="space-y-2.5">
-                {resourceLinks.slice(0,13).map((link, index) => (
+                {resourceLinks.slice(0, 13).map((link, index) => (
                   <li key={index}>
                     <Link
                       href={link.href}

@@ -4,8 +4,9 @@ import { Link } from "@/i18n/routing";
 import {
     Menu, X, ChevronDown, ChevronRight, LogOut, LayoutDashboard,
     User as UserIcon, Search, Bell, Scale, Globe, Mail, Phone,
-    Facebook, Twitter, Linkedin, Instagram
+    Facebook, Linkedin, Instagram
 } from "lucide-react";
+import { FaXTwitter } from "react-icons/fa6";
 import Image from "next/image";
 import logo from "../../../public/logo-gold.png";
 import { usePathname, useRouter } from "@/i18n/routing";
@@ -148,7 +149,7 @@ export default function HeaderNew() {
 
     const hasDashboardAccess = useMemo(() => {
         if (!user?.roles) return false;
-        return user.roles.some((r: any) => ["admin", "superadmin", "creator", "editor", "manager"].includes(r.name));
+        return user.roles.some((r: any) => ["admin", "superadmin", "creator", "editor", "manager", "advocate"].includes(r.name));
     }, [user]);
 
     const t = useTranslations('Navigation');
@@ -348,24 +349,24 @@ export default function HeaderNew() {
                         <div className="flex items-center justify-between h-10 text-xs">
                             {/* Left - Contact Info */}
                             <div className="hidden md:flex items-center gap-4">
-                                <a href="mailto:info@sajjadhusain.com" className="flex items-center gap-1.5 hover:text-amber-400 transition-all duration-300 hover:scale-105 group">
+                                <a href="mailto:sajjadhusainlawassociates@gmail.com" className="flex items-center gap-1.5 hover:text-amber-400 transition-all duration-300 hover:scale-105 group">
                                     <Mail size={12} className="group-hover:rotate-12 transition-transform duration-300" />
-                                    <span className="font-medium">info@sajjadhusain.com</span>
+                                    <span className="font-medium">sajjadhusainlawassociates@gmail.com</span>
                                 </a>
                                 <span className="text-blue-400/50">|</span>
-                                <a href="tel:+911234567890" className="flex items-center gap-1.5 hover:text-amber-400 transition-all duration-300 hover:scale-105 group">
+                                <a href="tel:+917080909786" className="flex items-center gap-1.5 hover:text-amber-400 transition-all duration-300 hover:scale-105 group">
                                     <Phone size={12} className="group-hover:rotate-12 transition-transform duration-300" />
-                                    <span>+91 123 456 7890</span>
+                                    <span>+91 7080909786</span>
                                 </a>
                             </div>
 
                             {/* Right - Social & Language */}
                             <div className="flex items-center gap-4 ml-auto">
                                 <div className="hidden sm:flex items-center gap-2">
-                                    <a href="#" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Facebook size={14} /></a>
-                                    <a href="#" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Twitter size={14} /></a>
-                                    <a href="#" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Linkedin size={14} /></a>
-                                    <a href="#" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Instagram size={14} /></a>
+                                    <a target="_blank" href="https://www.facebook.com/advocatesajjadofficial" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Facebook size={14} /></a>
+                                    <a target="_blank" href="https://x.com/advocatesajjad" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><FaXTwitter size={14} /></a>
+                                    <a target="_blank" href="https://www.linkedin.com/in/sajjad-husain-associates-law-31715675/" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Linkedin size={14} /></a>
+                                    <a target="_blank" href="https://www.instagram.com/sajjad_husain_law_associates/?hl=en" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Instagram size={14} /></a>
                                 </div>
                                 <span className="hidden sm:block text-blue-400/50">|</span>
                                 <div className="flex items-center gap-2">
@@ -405,8 +406,7 @@ export default function HeaderNew() {
                                     <SearchWithDropdown placeholder="Search articles, cases..." />
                                 </div>
 
-                                {/* Notifications */}
-                                {user && <NotificationDropdown userId={user._id} />}
+
 
                                 {/* User Profile or Auth Buttons */}
                                 {user ? (
@@ -453,6 +453,8 @@ export default function HeaderNew() {
                                         </Link>
                                     </div>
                                 )}
+                                {/* Notifications */}
+                                {user && <NotificationDropdown userId={user._id} />}
                             </div>
 
                             {/* Mobile Search & Menu Buttons */}
