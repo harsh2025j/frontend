@@ -3,9 +3,19 @@
 import React, { useState, useEffect } from "react";
 import { Scale, Home, ChevronRight, FileText, Download, Eye, Calendar, Loader2, AlertCircle, RefreshCw, Filter } from 'lucide-react';
 import toast from "react-hot-toast";
-import { reportsService, Report } from "@/data/services/reports-service/reportsService";
+import { reportsService } from "@/data/services/reports-service/reportsService";
 
 type ReportType = "all" | "case-statistics" | "judgment-analysis" | "custom";
+
+interface Report {
+    id: string;
+    title: string;
+    description: string;
+    type: "case-statistics" | "judgment-analysis" | "custom";
+    generatedDate: string;
+    generatedBy: string;
+    fileUrl?: string;
+}
 
 export default function ReportsPage() {
     const [activeType, setActiveType] = useState<ReportType>("all");
@@ -22,8 +32,10 @@ export default function ReportsPage() {
         setLoading(true);
         setError(null);
         try {
-            const response = await reportsService.getAllReports();
-            setReports(response.reports || []);
+            const response = await reportsService.getAll();
+            const data = response.data?.data || response.data || [];
+            // Ensure we always have an array
+            setReports(Array.isArray(data) ? data : []);
         } catch (err: any) {
             console.error("Error fetching reports:", err);
             setError(err.message || "Failed to load reports data from the server");
@@ -36,7 +48,8 @@ export default function ReportsPage() {
 
     const handleDownloadReport = async (reportId: string, title: string) => {
         try {
-            const blob = await reportsService.downloadReport(reportId);
+            const response = await reportsService.downloadReport(reportId);
+            const blob = response.data;
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;

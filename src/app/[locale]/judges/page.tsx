@@ -4,9 +4,26 @@ import React, { useState, useEffect } from "react";
 import { Scale, Gavel, Home, ChevronRight, Mail, Phone, Award, Calendar, BookOpen, User, Building2, Info, Search, Loader2 } from 'lucide-react';
 import Image from "next/image";
 import toast from "react-hot-toast";
-import { judgesService, Judge } from "@/data/services/judges-service/judgesService";
+import { judgesService } from "@/data/services/judges-service/judgesService";
 
 type JudgeCategory = "chief-justice" | "senior-judges" | "judges" | "retired";
+
+interface Judge {
+    id: string;
+    name: string;
+    designation: string;
+    category: JudgeCategory;
+    courtType?: string;
+    appointmentDate: string;
+    retirementDate?: string;
+    education: string[];
+    specialization: string[];
+    courtNumber?: string;
+    email?: string;
+    phone?: string;
+    imageUrl?: string;
+    bio?: string;
+}
 
 export default function JudgesPage() {
     const [activeCategory, setActiveCategory] = useState<JudgeCategory>("chief-justice");
@@ -24,8 +41,9 @@ export default function JudgesPage() {
             setLoading(true);
             setError(null);
             try {
-                const response = await judgesService.getActiveJudges();
-                setJudges(response.judges || []);
+                const response = await judgesService.getActive();
+                const data = response.data?.data || response.data || [];
+                setJudges(Array.isArray(data) ? data : []);
             } catch (err: any) {
                 console.error("Error fetching judges:", err);
                 setError(err.message || "Failed to load judges data from the server");

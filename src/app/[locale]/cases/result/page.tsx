@@ -18,6 +18,8 @@ function ResultPageContent() {
                 const searchType = (searchParams.get("searchType") as SearchType) || "caseNumber";
 
                 const inputs: SearchInputs = {
+                    filingNumber: searchParams.get("filingNumber") || "",
+                    crimeNumber: searchParams.get("crimeNumber") || "",
                     caseNumber: searchParams.get("caseNumber") || "",
                     partyName: searchParams.get("partyName") || "",
                     partyType: searchParams.get("partyType") || "",

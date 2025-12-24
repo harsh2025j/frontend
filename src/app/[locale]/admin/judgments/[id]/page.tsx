@@ -47,7 +47,7 @@ export default function EditJudgmentPage() {
                 // Process Cases and Judges
                 const casesData = casesRes.data?.data?.data || casesRes.data?.data || casesRes.data || [];
                 const judgesData = judgesRes.data?.data?.data || judgesRes.data?.data || judgesRes.data || [];
-                
+
                 setCases(Array.isArray(casesData) ? casesData : []);
                 setJudges(Array.isArray(judgesData) ? judgesData : []);
 
@@ -56,11 +56,11 @@ export default function EditJudgmentPage() {
                 if (data.data) {
                     data = data.data;
                 }
-                
+
                 // Ensure arrays are initialized
                 if (!data.citations) data.citations = [];
                 if (!data.keyPoints) data.keyPoints = [];
-                
+
                 // Map fields if necessary
                 let caseId = "";
                 if (data.case && data.case.id) {
@@ -147,7 +147,7 @@ export default function EditJudgmentPage() {
             // Exclude read-only and relational fields from payload
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { title, ...dataToSend } = formData;
-            
+
             await judgmentsService.update(params.id as string, dataToSend);
             toast.success("Judgment updated successfully");
             router.push("/admin/judgments");
@@ -209,7 +209,7 @@ export default function EditJudgmentPage() {
                                 ))}
                             </select>
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Judgment Date <span className="text-red-500">*</span></label>
                             <input
