@@ -49,4 +49,10 @@ export const judgesService = {
         const response = await apiClient.get<Judge>(`${API_ENDPOINTS.JUDGES.BASE}/${id}`);
         return response.data;
     },
+
+    // Update judge
+    update: async (id: string, data: Partial<Judge>): Promise<Judge> => {
+        const response = await apiClient.put<Judge>(`${API_ENDPOINTS.JUDGES.BASE}/${id}`, data);
+        return response.data;
+    },
 };

@@ -20,8 +20,8 @@ export default function JudgeDetailPage() {
 
     const fetchJudgeDetails = async (id: string) => {
         try {
-            const response = await judgesService.getById(id);
-            setJudge(response.data.data);
+            const data = await judgesService.getJudgeById(id);
+            setJudge(data);
         } catch (error) {
             console.error("Error fetching judge details:", error);
         } finally {

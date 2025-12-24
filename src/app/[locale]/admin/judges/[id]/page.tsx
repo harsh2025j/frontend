@@ -12,7 +12,17 @@ export default function EditJudgePage() {
     const params = useParams();
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<{
+        name: string;
+        designation: string;
+        court: string;
+        appointmentDate: string;
+        retirementDate: string;
+        biography: string;
+        photoUrl: string;
+        specialization: string; // Stored as comma-separated string for form editing
+        isActive: boolean;
+    }>({
         name: "",
         designation: "",
         court: "",
@@ -32,18 +42,19 @@ export default function EditJudgePage() {
 
     const fetchJudgeDetails = async (id: string) => {
         try {
-            const response = await judgesService.getById(id);
-            const data = response.data.data;
-            if (data.appointmentDate) {
-                data.appointmentDate = new Date(data.appointmentDate).toISOString().split('T')[0];
-            }
-            if (data.retirementDate) {
-                data.retirementDate = new Date(data.retirementDate).toISOString().split('T')[0];
-            }
-            if (Array.isArray(data.specialization)) {
-                data.specialization = data.specialization.join(", ");
-            }
-            setFormData(data);
+            const data = await judgesService.getJudgeById(id);
+            // Transform data for form - only extract the fields we need
+            setFormData({
+                name: data.name || "",
+                designation: data.designation || "",
+                court: data.courtType || "",
+                appointmentDate: data.appointmentDate ? new Date(data.appointmentDate).toISOString().split('T')[0] : '',
+                retirementDate: data.retirementDate ? new Date(data.retirementDate).toISOString().split('T')[0] : '',
+                biography: data.bio || "",
+                photoUrl: data.imageUrl || "",
+                specialization: Array.isArray(data.specialization) ? data.specialization.join(", ") : '',
+                isActive: true, // Default to true as this property doesn't exist in Judge interface
+            });
         } catch (error: any) {
             console.error("Error fetching judge details:", error);
             toast.error(error.message || "Failed to fetch judge details");
@@ -64,10 +75,15 @@ export default function EditJudgePage() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { id, createdAt, updatedAt, isDeleted, cases, judgments, bio, ...dataWithoutReadOnly } = formData as any;
+            // Map form fields to Judge interface property names
             const dataToSend = {
-                ...dataWithoutReadOnly,
+                name: formData.name,
+                designation: formData.designation,
+                courtType: formData.court,
+                appointmentDate: formData.appointmentDate,
+                retirementDate: formData.retirementDate || undefined,
+                bio: formData.biography,
+                imageUrl: formData.photoUrl,
                 specialization: formData.specialization.split(",").map((s: string) => s.trim()).filter(Boolean),
             };
             await judgesService.update(params.id as string, dataToSend);
