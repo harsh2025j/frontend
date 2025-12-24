@@ -10,7 +10,7 @@ import Stores from "@/components/home/Stores";
 import AdBanner from "@/components/ads/AdBanner";
 import AdSidebar from "@/components/ads/AdSidebar";
 // import AdsPopup from "@/components/ads/AdsPopup";
-import NewsletterSubscription from "@/components/home/NewsletterSubscription";
+// import NewsletterSubscription from "@/components/home/NewsletterSubscription";
 import LegalTimeline from "@/components/home/LegalTimeline";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
@@ -156,9 +156,9 @@ export default function Home() {
         />
 
         {/* Newsletter Subscription */}
-        <div className="mt-12">
+        {/* <div className="mt-12">
           <NewsletterSubscription />
-        </div>
+        </div> */}
       </div>
     </>
   );

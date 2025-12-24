@@ -268,60 +268,64 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                         )}
 
                         {/* Tags */}
-                        {initialArticle.tags && initialArticle.tags.length > 0 && (
-                            <div className="mb-8 flex flex-wrap items-center gap-2 relative pr-40">
-                                <span className="text-sm font-bold text-gray-900 mr-2">Tags:</span>
-                                {initialArticle.tags.map((tag: any) => (
-                                    <Link
-                                        key={tag.id}
-                                        href={`/tags/${tag.slug}`}
-                                        className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-blue-100 hover:text-blue-700 transition-colors"
-                                    >
-                                        {tag.name}
-                                    </Link>
-                                ))}
+                        <div className="mb-8 flex flex-wrap items-center gap-2 relative pr-40 min-h-[40px]">
+                            {/* Tags */}
+                            {initialArticle.tags && initialArticle.tags.length > 0 && (
+                                <>
+                                    <span className="text-sm font-bold text-gray-900 mr-2">Tags:</span>
+                                    {initialArticle.tags.map((tag) => (
+                                        <Link
+                                            key={tag.id}
+                                            href={`/tags/${tag.slug}`}
+                                            className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-blue-100 hover:text-blue-700 transition-colors"
+                                        >
+                                            {tag.name}
+                                        </Link>
+                                    ))}
+                                </>
+                            )}
 
-                                <div className="absolute right-0 top-0">
-                                    <button
-                                        type="button"
-                                        onClick={handleSummaryClick}
-                                        className="px-6 py-2 bg-blue-600 text-white text-base font-medium rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
-                                    >
-                                        <Sparkles size={18} />
-                                        <span>AI Summary</span>
-                                    </button>
+                            <div className="absolute right-0 top-0">
+                                <button
+                                    type="button"
+                                    onClick={handleSummaryClick}
+                                    className="px-6 py-2 bg-blue-600 text-white text-base font-medium rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
+                                >
+                                    <Sparkles size={18} />
+                                    <span>AI Summary</span>
+                                </button>
 
-                                    {showSummary && (
-                                        <div className="absolute right-0 top-12 sm:right-full sm:top-0 sm:mr-3 w-[85vw] sm:w-[400px] max-w-[400px] bg-[#C9A227] p-4 rounded-xl shadow-2xl border border-gray-200 z-50 text-left">
-                                            <div className="flex justify-between items-start mb-3 border-b border-gray-200 pb-2">
-                                                <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                                                    <Sparkles size={16} className="text-blue-600" />
-                                                    AI Summary
-                                                </h3>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowSummary(false)}
-                                                    className="p-1 hover:bg-gray-200 rounded-full transition-colors text-gray-900 hover:text-red-500"
-                                                >
-                                                    <X size={18} />
-                                                </button>
-                                            </div>
-                                            <div className="text-md text-black leading-relaxed max-h-[300px] overflow-y-auto">
-                                                {isFetchingSummary ? (
-                                                    <div className="flex justify-center py-6">
-                                                        <Loader size="sm" text="Thinking..." />
-                                                    </div>
-                                                ) : (
-                                                    summary ? <TypewriterText text={summary} speed={30} /> : "No summary available."
-                                                )}
-                                            </div>
-                                            {/* Pointer arrow - specific to desktop alignment */}
-                                            <div className="hidden sm:block absolute top-4 -right-2 w-4 h-4 bg-[#C9A227] border-t border-r border-gray-200 transform rotate-45"></div>
+                                {showSummary && (
+                                    <div className="absolute right-0 top-12 sm:right-full sm:top-0 sm:mr-3 w-[85vw] sm:w-[400px] max-w-[400px] bg-[#C9A227] p-4 rounded-xl shadow-2xl border border-gray-200 z-50 text-left">
+                                        <div className="flex justify-between items-start mb-3 border-b border-gray-200 pb-2">
+                                            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                                <Sparkles size={16} className="text-blue-600" />
+                                                AI Summary
+                                            </h3>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowSummary(false)}
+                                                className="p-1 hover:bg-gray-200 rounded-full transition-colors text-gray-900 hover:text-red-500"
+                                            >
+                                                <X size={18} />
+                                            </button>
                                         </div>
-                                    )}
-                                </div>
+                                        <div className="text-md text-black leading-relaxed max-h-[300px] overflow-y-auto">
+                                            {isFetchingSummary ? (
+                                                <div className="flex justify-center py-6">
+                                                    <Loader size="sm" text="Thinking..." />
+                                                </div>
+                                            ) : (
+                                                summary ? <TypewriterText text={summary} speed={30} /> : "No summary available."
+                                            )}
+                                        </div>
+                                        {/* Pointer arrow - specific to desktop alignment */}
+                                        <div className="hidden sm:block absolute top-4 -right-2 w-4 h-4 bg-[#C9A227] border-t border-r border-gray-200 transform rotate-45"></div>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
+
 
                         {/* Social Share Bar */}
                         <div className="flex flex-col sm:flex-row items-center gap-6 mb-10 py-3 px-6 bg-white rounded-full border border-gray-200 w-fit mx-auto sm:mx-0">
