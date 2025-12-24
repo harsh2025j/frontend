@@ -18,12 +18,14 @@ interface SearchWithDropdownProps {
     placeholder?: string;
     className?: string;
     onSearch?: (query: string) => void;
+    onResultSelect?: () => void;
 }
 
 export default function SearchWithDropdown({
     placeholder = "Search any Legal question or track a case...",
     className = "",
-    onSearch
+    onSearch,
+    onResultSelect
 }: SearchWithDropdownProps) {
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
@@ -92,10 +94,11 @@ export default function SearchWithDropdown({
 
     const handleResultClick = (result: SearchResult) => {
         if (result.slug) {
-            router.push(`/article/${result.slug}`);
+            router.push(`/news/${result.slug}`);
         }
         setQuery('');
         setIsOpen(false);
+        if (onResultSelect) onResultSelect();
     };
 
     const handleSearchClick = () => {

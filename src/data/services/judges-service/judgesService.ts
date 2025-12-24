@@ -1,26 +1,52 @@
-import { API_ENDPOINTS } from "../apiConfig/apiContants";
 import apiClient from "../apiConfig/apiClient";
+import { API_ENDPOINTS } from "../apiConfig/apiContants";
+
+export interface Judge {
+    id: string;
+    name: string;
+    designation: string;
+    category: "chief-justice" | "senior-judges" | "judges" | "retired";
+    courtType?: string; // High Court, Supreme Court, District Court
+    appointmentDate: string;
+    retirementDate?: string;
+    education: string[];
+    specialization: string[];
+    courtNumber?: string;
+    email?: string;
+    phone?: string;
+    imageUrl?: string;
+    bio?: string;
+}
+
+export interface JudgesResponse {
+    judges: Judge[];
+    total: number;
+}
 
 export const judgesService = {
-    getAll: async (params?: any) => {
-        return await apiClient.get(API_ENDPOINTS.JUDGES.BASE, { params });
+    // Get all judges
+    getAllJudges: async (): Promise<JudgesResponse> => {
+        const response = await apiClient.get<JudgesResponse>(API_ENDPOINTS.JUDGES.BASE);
+        return response.data;
     },
-    getById: async (id: string) => {
-        return await apiClient.get(`${API_ENDPOINTS.JUDGES.BASE}/${id}`);
+
+    // Get active judges
+    getActiveJudges: async (): Promise<JudgesResponse> => {
+        const response = await apiClient.get<JudgesResponse>(API_ENDPOINTS.JUDGES.ACTIVE);
+        return response.data;
     },
-    create: async (data: any) => {
-        return await apiClient.post(API_ENDPOINTS.JUDGES.BASE, data);
+
+    // Get judges by court type
+    getJudgesByCourt: async (courtType: string): Promise<JudgesResponse> => {
+        const response = await apiClient.get<JudgesResponse>(
+            `${API_ENDPOINTS.JUDGES.BY_COURT}/${courtType}`
+        );
+        return response.data;
     },
-    update: async (id: string, data: any) => {
-        return await apiClient.patch(`${API_ENDPOINTS.JUDGES.BASE}/${id}`, data);
+
+    // Get judge by ID
+    getJudgeById: async (id: string): Promise<Judge> => {
+        const response = await apiClient.get<Judge>(`${API_ENDPOINTS.JUDGES.BASE}/${id}`);
+        return response.data;
     },
-    delete: async (id: string) => {
-        return await apiClient.delete(`${API_ENDPOINTS.JUDGES.BASE}/${id}`);
-    },
-    getActive: async () => {
-        return await apiClient.get(API_ENDPOINTS.JUDGES.ACTIVE);
-    },
-    getByCourt: async (court: string) => {
-        return await apiClient.get(`${API_ENDPOINTS.JUDGES.BY_COURT}/${court}`);
-    }
 };
