@@ -32,7 +32,8 @@ const useAuth = () => {
 
   const logout = () => {
     dispatch(logoutUser());
-    router.push('/'); // Redirect to home page
+    window.location.href = '/'; // Force full page reload
+
   };
 
   return { user, isAuthenticated, loading, error, logout, message, token, debugOtp };

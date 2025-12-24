@@ -118,7 +118,6 @@ apiClient.interceptors.response.use(
     }
     const apiError = handleApiError(error);
     const errorKey = `${apiError.statusCode || 'network'}-${error.config?.url || 'unknown'}`;
-
     // Silently handle server errors (500+) and network errors
     // if (apiError.statusCode && apiError.statusCode >= 500) {
     //   Server error - handled silently
@@ -126,7 +125,6 @@ apiClient.interceptors.response.use(
     // else if (!apiError.statusCode && error.message === "Network Error") {
     //   Network error - handled silently
     // }
-
     // Handle 401 errors - but distinguish between auth failures and resource-not-found
     if (apiError.statusCode === 401) {
       const url = error.config?.url || '';

@@ -46,7 +46,7 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
 
   const handleLogout = () => {
     dispatch(logoutUser());
-    router.push("/"); // Redirect to home page instead of login
+    window.location.href = "/"; // Force full page reload
   };
 
   const allNavItems = [

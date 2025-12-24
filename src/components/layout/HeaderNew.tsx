@@ -125,8 +125,10 @@ export default function HeaderNew() {
     useEffect(() => {
         if (reduxProfileUser && Object.keys(checkuser).length > 0) {
             setUser(checkuser);
+        } else {
+            setUser(null);
         }
-    }, [reduxProfileUser]);
+    }, [reduxProfileUser, checkuser]);
 
     const dispatch = useAppDispatch();
     const { categories } = useAppSelector((state) => state.category);

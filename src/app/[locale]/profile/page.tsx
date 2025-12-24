@@ -105,7 +105,7 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     localStorage.clear();
-    router.push("/"); // Redirect to home page instead of login
+    window.location.href = "/"; // Force full page reload
   };
 
   const handleSave = () => {

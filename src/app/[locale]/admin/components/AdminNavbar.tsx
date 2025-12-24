@@ -37,7 +37,7 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
     localStorage.clear();
     setIsProfileOpen(false);
     setShowLogoutConfirm(false);
-    router.replace("/");
+    window.location.href = "/"; // Force full page reload
   };
 
   return (
