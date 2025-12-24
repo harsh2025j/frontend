@@ -56,7 +56,7 @@ export default function SubscriptionPage() {
           setUserSubscription(response.data.data);
         }
       } catch (error) {
-        console.error("Error fetching subscription:", error);
+        // Silently handle error - user may not be subscribed
       } finally {
         setSubscriptionLoading(false);
       }
@@ -78,8 +78,8 @@ export default function SubscriptionPage() {
           }
         }
       } catch (error) {
-        console.error("Error fetching plans:", error);
-        toast.error("Failed to load subscription plans");
+        // Silently handle error - UI will show "No plans available" message
+        setPlans([]);
       } finally {
         setLoading(false);
       }
@@ -104,14 +104,15 @@ export default function SubscriptionPage() {
     // Check if user is logged in
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (!token) {
-      toast.error("Please login to subscribe");
+      // Silently redirect to login
       router.push("/auth/login");
       return;
     }
 
     // Check if Razorpay is loaded
     if (!window.Razorpay) {
-      toast.error("Payment gateway failed to load. Please refresh the page.");
+      // Silently fail - payment gateway not loaded
+      setProcessingPlanId(null);
       return;
     }
 
@@ -168,8 +169,7 @@ export default function SubscriptionPage() {
               throw new Error(verifyResponse.data?.message || "Payment verification failed");
             }
           } catch (error) {
-            console.error("Payment verification error:", error);
-            toast.error("Payment verification failed. Please contact support.");
+            // Silently handle payment verification error
           } finally {
             setProcessingPlanId(null);
           }
@@ -196,17 +196,13 @@ export default function SubscriptionPage() {
       const rzp = new window.Razorpay(options);
 
       rzp.on('payment.failed', function (response: any) {
-        toast.error(`Payment Failed: ${response.error.description}`);
+        // Silently handle payment failure - Razorpay shows its own error UI
         setProcessingPlanId(null);
       });
 
       rzp.open();
     } catch (error: any) {
-      console.error("Error creating order:", error);
-      console.error("Error response:", error.response);
-
-      const errorMessage = error.response?.data?.message || error.message || "Failed to initiate payment";
-      toast.error(errorMessage);
+      // Silently handle order creation error
       setProcessingPlanId(null);
     }
   };
@@ -319,9 +315,34 @@ export default function SubscriptionPage() {
         {/* Pricing Cards */}
         <div id="plans-section" className="scroll-mt-24">
           {plans.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600">No subscription plans available at the moment.</p>
-              <p className="text-sm text-gray-500 mt-2">Please check back later or contact support.</p>
+            <div className="text-center py-20 px-4">
+              <div className="max-w-md mx-auto">
+                {/* Icon */}
+                <div className="mb-6 flex justify-center">
+                  <div className="w-24 h-24 bg-gradient-to-br from-[#C9A227]/10 to-[#0A2342]/10 rounded-full flex items-center justify-center">
+                    <FileText className="w-12 h-12 text-[#C9A227]" />
+                  </div>
+                </div>
+
+                {/* Message */}
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  No Plans Available
+                </h3>
+                <p className="text-gray-600 mb-2">
+                  We're currently updating our subscription plans.
+                </p>
+                <p className="text-sm text-gray-500 mb-8">
+                  Please check back later or contact our support team for assistance.
+                </p>
+
+                {/* Contact Button */}
+                <Link href="/contact">
+                  <button className="px-6 py-3 bg-[#0A2342] text-white rounded-lg font-semibold hover:bg-[#153a66] transition-colors inline-flex items-center gap-2">
+                    <Bell size={18} />
+                    Contact Support
+                  </button>
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-7xl mx-auto px-4">

@@ -4,6 +4,7 @@ import React from "react";
 import { Link } from "@/i18n/routing";
 import Image, { StaticImageData } from "next/image";
 import { Clock } from "lucide-react";
+import { getSafeImageUrl } from "@/utils/imageUtils";
 
 interface LatestNewsProps {
   img: StaticImageData | string;
@@ -30,7 +31,7 @@ const LatestNews: React.FC<LatestNewsProps> = ({
       <div className="relative w-full h-60 ">
         <Link href={`/news/${slug}`}>
           <Image
-            src={img}
+            src={getSafeImageUrl(typeof img === 'string' ? img : img.src)}
             alt={title}
             fill
             className="object-cover rounded-t-md"

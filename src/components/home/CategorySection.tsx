@@ -7,6 +7,7 @@ import { ChevronRight } from "lucide-react";
 import { useCategoryArticles } from "@/hooks/useCategoryArticles";
 import Loader from "../ui/Loader";
 import { useMemo } from "react";
+import { getSafeImageUrl } from "@/utils/imageUtils";
 
 interface CategorySectionProps {
   title: string;
@@ -29,10 +30,10 @@ export default function CategorySection({ title, slug, layout, limit = 6 }: Cate
   if (!articles || articles.length === 0) return null;
 
   return (
-    <section className="py-12 border-b border-gray-100 last:border-0">
+    <section className="py-8 border-b border-gray-100 last:border-0">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 relative pl-4">
             <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#C9A227] rounded-full"></span>
             {title}
@@ -60,7 +61,7 @@ const ArticleCard = ({ article, compact = false }: { article: any; compact?: boo
     <div className="bg-white rounded-md overflow-hidden border border-gray-100 hover:shadow-md transition-all duration-300 h-full flex flex-col">
       <div className={`relative overflow-hidden ${compact ? "h-40" : "h-52"}`}>
         <Image
-          src={article.thumbnail || "/placeholder.png"}
+          src={getSafeImageUrl(article.thumbnail)}
           alt={article.title}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -90,7 +91,7 @@ const ArticleCard = ({ article, compact = false }: { article: any; compact?: boo
 
 const GridLayout = ({ articles }: { articles: any[] }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    {articles.slice(0,8).map((article) => (
+    {articles.slice(0, 8).map((article) => (
       <ArticleCard key={article.id} article={article} />
     ))}
   </div>
@@ -103,7 +104,7 @@ const ListLayout = ({ articles }: { articles: any[] }) => (
         <div className="relative w-27 h-27 flex-shrink-0 rounded-l-lg overflow-hidden">
           <div className="w-28 h-28 relative">
             <Image
-              src={article.thumbnail || "/placeholder.png"}
+              src={getSafeImageUrl(article.thumbnail)}
               alt={article.title}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -138,7 +139,7 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
       <div className="lg:col-span-7">
         <Link href={`/news/${featured.slug}`} className="group block relative h-[400px] lg:h-[500px] rounded-2xl overflow-hidden shadow-lg">
           <Image
-            src={featured.thumbnail || "/placeholder.png"}
+            src={getSafeImageUrl(featured.thumbnail)}
             alt={featured.title}
             fill
             className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -164,7 +165,7 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
           <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-center bg-white p-3 rounded-xl border border-gray-100 hover:shadow-md transition-all">
             <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
               <Image
-                src={article.thumbnail || "/placeholder.png"}
+                src={getSafeImageUrl(article.thumbnail)}
                 alt={article.title}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"

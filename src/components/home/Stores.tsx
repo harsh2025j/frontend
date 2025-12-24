@@ -18,6 +18,7 @@ import CustomInput from "../ui/CustomInput"
 import StateJudgement from "../ui/stateJudgement";
 import HighCourtsModal from "../ui/HighCourtsModal";
 import Loader from "../ui/Loader";
+import SearchWithDropdown from "../ui/SearchWithDropdown";
 import icon1 from '../../assets/icon1.png';
 import icon2 from '../../assets/icon2.png';
 import icon3 from '../../assets/icon3.png';
@@ -62,23 +63,9 @@ export function getArticlesBySlugs(articles: Article[], slugs: string[]) {
 export default function Stores() {
   useDocTitle("Sajjad Husain Law Associates");
   const router = useRouter();
-  const [SearchData, setSearchData] = useState({ Search: "" });
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-
   const [isNavigating, setIsNavigating] = useState(false);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    if (e.target instanceof HTMLInputElement) {
-      setSearchData({ ...SearchData, [e.target.name]: e.target.value });
-    }
-  };
-
-
-  const handleSearchClick = () => {
-    setIsNavigating(true);
-    router.push('/ai-assistant');
-  };
 
 
   const handleNavClick = () => {
@@ -239,7 +226,7 @@ export default function Stores() {
       <div className="w-full">
 
         {/* Live News Banner */}
-        <div className="border-2 border-dotted border-[#000000] min-h-14 my-3 md:my-5 flex flex-col sm:flex-row bg-white">
+        <div className="border-2 border-dotted border-[#000000] min-h-14 my-3 md:my-5 flex flex-col sm:flex-row bg-white mb-20 md:mb-24">
           <div className="w-full sm:w-40 h-full min-h-14 flex justify-center items-center bg-[#0A2342] text-white text-sm md:text-md py-2 sm:py-0 shrink-0">
             Live News
           </div>
@@ -251,101 +238,127 @@ export default function Stores() {
           </div>
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="container mx-auto px-4 mb-3 md:mb-5">
-          <div className="flex flex-wrap justify-center gap-2 md:gap-4">
+
+        {/* Quick Access Section - Overlapping Cards */}
+        <div className="container mx-auto px-4 -mt-16 md:-mt-20 mb-8 md:mb-10 relative z-10">
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
             <button
               onClick={() => router.push('/cases')}
-              className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
+              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg shadow-md hover:border-[#C9A227] hover:shadow-xl transition-all group"
             >
-              Case Status
+              <div className="w-12 h-12 md:w-14 md:h-14 mb-3 bg-[#0A2342] rounded-full flex items-center justify-center group-hover:bg-[#C9A227] transition-colors">
+                <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <span className="text-xs md:text-sm font-semibold text-gray-700 text-center group-hover:text-[#C9A227] transition-colors">
+                Case Status
+              </span>
             </button>
+
             <button
-             onClick={() => router.push('/')}
-              className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
+              onClick={() => router.push('/')}
+              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg shadow-md hover:border-[#C9A227] hover:shadow-xl transition-all group"
             >
-              Case List
+              <div className="w-12 h-12 md:w-14 md:h-14 mb-3 bg-[#0A2342] rounded-full flex items-center justify-center group-hover:bg-[#C9A227] transition-colors">
+                <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              </div>
+              <span className="text-xs md:text-sm font-semibold text-gray-700 text-center group-hover:text-[#C9A227] transition-colors">
+                Case List
+              </span>
             </button>
+
             <button
               onClick={() => router.push('/reports')}
-              className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
+              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg shadow-md hover:border-[#C9A227] hover:shadow-xl transition-all group"
             >
-              Reports
+              <div className="w-12 h-12 md:w-14 md:h-14 mb-3 bg-[#0A2342] rounded-full flex items-center justify-center group-hover:bg-[#C9A227] transition-colors">
+                <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <span className="text-xs md:text-sm font-semibold text-gray-700 text-center group-hover:text-[#C9A227] transition-colors">
+                Reports
+              </span>
             </button>
+
             <button
               onClick={() => router.push('/judgments')}
-              className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
+              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg shadow-md hover:border-[#C9A227] hover:shadow-xl transition-all group"
             >
-              Judgments
+              <div className="w-12 h-12 md:w-14 md:h-14 mb-3 bg-[#0A2342] rounded-full flex items-center justify-center group-hover:bg-[#C9A227] transition-colors">
+                <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                </svg>
+              </div>
+              <span className="text-xs md:text-sm font-semibold text-gray-700 text-center group-hover:text-[#C9A227] transition-colors">
+                Judgments
+              </span>
             </button>
+
             <button
               onClick={() => router.push('/display-boards')}
-              className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
+              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg shadow-md hover:border-[#C9A227] hover:shadow-xl transition-all group"
             >
-              Display Boards
+              <div className="w-12 h-12 md:w-14 md:h-14 mb-3 bg-[#0A2342] rounded-full flex items-center justify-center group-hover:bg-[#C9A227] transition-colors">
+                <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <span className="text-xs md:text-sm font-semibold text-gray-700 text-center group-hover:text-[#C9A227] transition-colors">
+                Display Boards
+              </span>
             </button>
+
             <button
-             onClick={() => router.push('/judges')}
-              className="px-6 py-2 bg-white border border-gray-300 rounded-xl text-sm md:text-base font-medium hover:bg-gray-50 transition-colors text-gray-700 min-w-[150px]"
+              onClick={() => router.push('/judges')}
+              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg shadow-md hover:border-[#C9A227] hover:shadow-xl transition-all group"
             >
-              Judges
+              <div className="w-12 h-12 md:w-14 md:h-14 mb-3 bg-[#0A2342] rounded-full flex items-center justify-center group-hover:bg-[#C9A227] transition-colors">
+                <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <span className="text-xs md:text-sm font-semibold text-gray-700 text-center group-hover:text-[#C9A227] transition-colors">
+                Judges
+              </span>
             </button>
           </div>
         </div>
 
-        {/* Search Section */}
-        <div className="bg-white w-full flex justify-center mb-6 md:mb-10">
-          <div className="w-full px-4 sm:px-6 md:px-8 lg:px-10 py-6 md:py-10">
+        {/* High Courts Section */}
+        <div className="bg-white w-full mb-8 md:mb-12">
+          <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-8 md:py-12">
 
-            {/* Search Bar */}
-            <div className="w-full flex justify-center items-center mb-8 md:mb-10">
-              <div className="relative w-full max-w-[700px]">
-                <CustomInput
-                  name="Search"
-                  value={SearchData.Search}
-                  onChange={handleSearchChange}
-                  placeholder="Search any Legal question or track a case..."
-                  className="bg-[#f6f6f7] w-full pl-10 sm:pl-12 pr-12 sm:pr-14 py-2 sm:py-3 text-sm sm:text-base md:text-lg rounded-xl"
-                />
-
-                <button
-                  type="button"
-                  onClick={handleSearchClick}
-                  className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 cursor-pointer hover:scale-110 transition-transform"
-                >
-                  <svg
-                    className="w-5 h-5 sm:w-6 sm:h-6 bg-[#f6f6f7] text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </button>
-              </div>
+            {/* Section Title */}
+            <div className="text-center mb-8 md:mb-10">
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                High Courts of India
+              </h2>
+              <p className="text-sm md:text-base text-gray-600">
+                Access judgments and legal information from courts across India
+              </p>
             </div>
 
             {/* High Courts Grid */}
-            <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4 md:gap-6">
+            <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 sm:gap-6 md:gap-8 mb-8 md:mb-10">
               {highCourts.slice(0, 8).map((court) => (
-                <Link href={`category/${court.slug}`}>
-                  <StateJudgement key={court.id} img={court.image} state={court.name} />
+                <Link key={court.id} href={`category/${court.slug}`}>
+                  <StateJudgement img={court.image} state={court.name} />
                 </Link>
               ))}
             </div>
 
             {/* Show More Button */}
-            <div className="flex justify-center mt-6 md:mt-8">
+            <div className="flex justify-center">
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="px-4 sm:px-6 py-2 sm:py-3 bg-[#0A2342] text-white text-sm sm:text-base rounded-lg hover:bg-[#1a3a75] transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+                className="px-8 py-3 bg-gradient-to-r from-[#0A2342] to-[#1a3a75] text-white text-sm md:text-base rounded-lg hover:shadow-xl transition-all duration-300 font-semibold shadow-lg transform hover:scale-105 hover:from-[#1a3a75] hover:to-[#0A2342]"
               >
-                Show All High Courts
+                View All High Courts
               </button>
             </div>
 

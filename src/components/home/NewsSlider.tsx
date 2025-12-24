@@ -103,46 +103,53 @@ export default function NewsSlider() {
               </div>
             </div>
 
-            <div className="order-1 md:order-2 space-y-6">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                </span>
-                <span className="text-red-500 font-bold tracking-wider text-sm uppercase animate-pulse">Latest News</span>
-              </div>
 
-              <div className="space-y-4">
-                <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight tracking-tight line-clamp-3 transition-opacity duration-500 ${fade ? "opacity-100" : "opacity-0"}`}>
-                  {slides[current].title}
-                </h2>
-                <p className={`text-gray-300 text-base md:text-lg leading-relaxed line-clamp-3 transition-opacity duration-500 ${fade ? "opacity-100" : "opacity-0"}`}>
-                  {slides[current].description}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Link href={slides[current].link} className={`inline-flex items-center text-sm font-semibold text-white hover:text-gray-300 transition-opacity duration-500 ${fade ? "opacity-100" : "opacity-0"}`}>
-                  Read Article
-                  <svg className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </div>
-
-              <div className="flex items-center gap-6 pt-4">
-                <div className="flex gap-3">
-                  <button onClick={prevSlide} className="p-2 rounded-full border border-gray-600 hover:border-white hover:bg-white/10 transition-all">
-                    <ChevronLeft size={20} className="text-white" />
-                  </button>
-                  <button onClick={nextSlide} className="p-2 rounded-full border border-gray-600 hover:border-white hover:bg-white/10 transition-all">
-                    <ChevronRight size={20} className="text-white" />
-                  </button>
+            <div className="order-1 md:order-2 flex flex-col justify-center h-[350px] md:h-[450px]">
+              <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                  </span>
+                  <span className="text-red-500 font-bold tracking-wider text-sm uppercase animate-pulse">Latest News</span>
                 </div>
-                <div className="text-sm text-gray-400 font-medium">
-                  <span className="text-white">{String(current + 1).padStart(2, "0")}</span>
-                  <span className="mx-1">/</span>
-                  <span>{String(slides.length).padStart(2, "0")}</span>
+
+                <div className="space-y-4">
+                  <div className="h-[6.75rem] md:h-[8.25rem] lg:h-[10.5rem] overflow-hidden">
+                    <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight tracking-tight line-clamp-3 transition-opacity duration-500 ${fade ? "opacity-100" : "opacity-0"}`}>
+                      {slides[current].title}
+                    </h2>
+                  </div>
+                  <div className="h-[4.5rem] md:h-[5.25rem] overflow-hidden">
+                    <p className={`text-gray-300 text-base md:text-lg leading-relaxed line-clamp-3 transition-opacity duration-500 ${fade ? "opacity-100" : "opacity-0"}`}>
+                      {slides[current].description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <Link href={slides[current].link} className={`inline-flex items-center text-sm font-semibold text-white hover:text-gray-300 transition-opacity duration-500 ${fade ? "opacity-100" : "opacity-0"}`}>
+                    Read Article
+                    <svg className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                </div>
+
+                <div className="flex items-center gap-6 pt-4">
+                  <div className="flex gap-3">
+                    <button onClick={prevSlide} className="p-2 rounded-full border border-gray-600 hover:border-white hover:bg-white/10 transition-all">
+                      <ChevronLeft size={20} className="text-white" />
+                    </button>
+                    <button onClick={nextSlide} className="p-2 rounded-full border border-gray-600 hover:border-white hover:bg-white/10 transition-all">
+                      <ChevronRight size={20} className="text-white" />
+                    </button>
+                  </div>
+                  <div className="text-sm text-gray-400 font-medium">
+                    <span className="text-white">{String(current + 1).padStart(2, "0")}</span>
+                    <span className="mx-1">/</span>
+                    <span>{String(slides.length).padStart(2, "0")}</span>
+                  </div>
                 </div>
               </div>
             </div>

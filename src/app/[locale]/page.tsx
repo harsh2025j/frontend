@@ -42,11 +42,15 @@ export default function Home() {
           linkUrl="#"
         />
       )} */}
-      <div className="bg-gray-50 min-h-screen pb-0">
+      <div className="bg-gray-50 min-h-screen">
+        {/* Hero Section - NewsSlider */}
         <NewsSlider />
+
+        {/* Stores Section */}
         <Stores />
 
-        <div className="container mx-auto px-4 mt-8 mb-4">
+        {/* Top Banner Ad */}
+        <div className="container mx-auto px-4 py-8">
           <AdBanner
             size="large"
             imageUrl=""   //    /banner-top.png
@@ -54,6 +58,7 @@ export default function Home() {
           />
         </div>
 
+        {/* Supreme Court Section */}
         <CategorySection
           title={t('supreme_court')}
           slug="supreme-court"
@@ -61,6 +66,7 @@ export default function Home() {
           limit={5}
         />
 
+        {/* High Court Section */}
         <CategorySection
           title={t('high_court')}
           slug="high-court"
@@ -68,9 +74,10 @@ export default function Home() {
           limit={6}
         />
 
-        <div className="container mx-auto px-4 my-12">
+        {/* Main Content Grid with Sidebar */}
+        <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
+            {/* Main Content Column */}
             <div className="lg:col-span-2 space-y-12">
               <CategorySection
                 title={t('business')}
@@ -88,9 +95,10 @@ export default function Home() {
             </div>
 
             {/* Sidebar Column */}
-            <div className="space-y-8">
-              <div className="sticky top-24">
-                <div className=" p-4 rounded-md border border-gray-100  mb-6">
+            <div className="space-y-6">
+              <div className="sticky top-24 space-y-6">
+                {/* Sponsored Ad */}
+                <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
                   <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('sponsored')}</h3>
                   <AdSidebar
                     imageUrl=""   // /banner-expert-legal.jpg
@@ -98,7 +106,8 @@ export default function Home() {
                   />
                 </div>
 
-                <div className=" p-4 rounded-xl border border-gray-100 ">
+                {/* Trending Ad */}
+                <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
                   <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('trending')}</h3>
                   <AdSidebar
                     imageUrl=""   //   /banner-dream-explore.jpg
@@ -107,11 +116,11 @@ export default function Home() {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
 
-        <div className="container mx-auto px-4 my-8">
+        {/* Bottom Banner Ad */}
+        <div className="container mx-auto px-4 py-8">
           <AdBanner
             size="large"
             imageUrl=""   //    /banner-bottom.png
@@ -119,6 +128,7 @@ export default function Home() {
           />
         </div>
 
+        {/* Judgments Section */}
         <CategorySection
           title={t('judgments')}
           slug="judgments-content"
@@ -126,8 +136,10 @@ export default function Home() {
           limit={8}
         />
 
+        {/* Legal Timeline - Commented */}
         {/* <LegalTimeline /> */}
 
+        {/* Hindi News Section */}
         <CategorySection
           title={t('hindi_news')}
           slug="hindi-news"
@@ -135,6 +147,7 @@ export default function Home() {
           limit={8}
         />
 
+        {/* More Latest News Section */}
         <CategorySection
           title={t('more_latest_news')}
           slug="latest-news"
@@ -142,7 +155,10 @@ export default function Home() {
           limit={8}
         />
 
-        <NewsletterSubscription />
+        {/* Newsletter Subscription */}
+        <div className="mt-12">
+          <NewsletterSubscription />
+        </div>
       </div>
     </>
   );

@@ -57,12 +57,7 @@ const retryRequest = async (error: AxiosError): Promise<any> => {
     config.retryCount += 1;
     const delay = getRetryDelay(config.retryCount - 1);
 
-    if (config.retryCount === 1 && shouldShowError('retry-attempt')) {
-      toast.loading(`Connection issue detected. Retrying... (${config.retryCount}/${MAX_RETRIES})`, {
-        duration: delay,
-        id: 'retry-toast'
-      });
-    }
+    // Silently retry without showing toast
 
     await new Promise(resolve => setTimeout(resolve, delay));
     return apiClient(config);
@@ -124,28 +119,26 @@ apiClient.interceptors.response.use(
     const apiError = handleApiError(error);
     const errorKey = `${apiError.statusCode || 'network'}-${error.config?.url || 'unknown'}`;
 
-    if (apiError.statusCode && apiError.statusCode >= 500) {
-      toast.error("Server Error: Something went wrong on our end. Please try again later.", {
-        id: "server_error",
-      });
-      // if (typeof window !== "undefined") {
-      //   window.location.href = "/server-error";
-      // }
-    }
-    else if (!apiError.statusCode && error.message === "Network Error") {
-      toast.error("Network Error: Unable to connect to the server. Please check your internet connection.", {
-        id: "network_error",
-      });
-      // if (typeof window !== "undefined") {
-      //   window.location.href = "/server-error";
-      // }
-    }
+    // Silently handle server errors (500+) and network errors
+    // if (apiError.statusCode && apiError.statusCode >= 500) {
+    //   Server error - handled silently
+    // }
+    // else if (!apiError.statusCode && error.message === "Network Error") {
+    //   Network error - handled silently
+    // }
 
+    // Handle 401 errors - but distinguish between auth failures and resource-not-found
     if (apiError.statusCode === 401) {
-      if (shouldShowError('auth-error')) {
+      const url = error.config?.url || '';
+
+      // Only logout for actual authentication failures (login, profile, etc.)
+      // Don't logout for resource-not-found errors (like no subscription)
+      const isAuthFailure = !url.includes('/subscriptions/me') && !url.includes('/subscription');
+
+      if (isAuthFailure && shouldShowError('auth-error')) {
         if (typeof window !== "undefined") {
-           localStorage.removeItem("token");
-           toast.error("Session expired. Please login again.", {
+          localStorage.removeItem("token");
+          toast.error("Session expired. Please login again.", {
             duration: 3000,
             id: 'auth-error-toast'
           });

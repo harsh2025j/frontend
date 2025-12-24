@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname } from "@/i18n/routing";
-import Header from "@/components/layout/Header";
+import HeaderNew from "@/components/layout/HeaderNew";
+// import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -21,9 +22,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <>
-      <Header />
-      {/* Add margin-top equal to header height */}
-      <div className="mt-20">
+      {/* <HeaderNew /> */}
+      <HeaderNew />
+      {/* Add margin-top equal to new header height (top bar 40px + main header 80px + nav 56px = 176px, using 130px for mobile) */}
+      <div className="mt-[130px] lg:mt-[176px]">
         {children}
       </div>
       <Footer />

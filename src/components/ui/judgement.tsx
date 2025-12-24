@@ -4,6 +4,7 @@ import Image, { StaticImageData } from "next/image";
 // import Link from "next/link";
 import { Link } from "@/i18n/routing";
 import { Clock } from "lucide-react";
+import { getSafeImageUrl } from "@/utils/imageUtils";
 
 interface JudgementProps {
   img: StaticImageData | string;
@@ -19,7 +20,7 @@ const Judgement: React.FC<JudgementProps> = ({ img, description, slug, author, d
       <Link href={`/news/${slug}`} className="flex flex-col sm:flex-row gap-5 w-full">
         <div className="relative w-full sm:w-[150px] h-[150px] flex-shrink-0">
           <Image
-            src={img}
+            src={getSafeImageUrl(typeof img === 'string' ? img : img.src)}
             alt="Judgement Image"
             fill
             className="object-cover rounded-l-md"

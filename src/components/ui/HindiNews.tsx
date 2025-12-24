@@ -3,6 +3,7 @@ import React from "react";
 import Image, { StaticImageData } from "next/image";
 // import Link from "next/link";
 import { Link } from "@/i18n/routing";
+import { getSafeImageUrl } from "@/utils/imageUtils";
 
 interface HindiNews {
   img: StaticImageData | string;
@@ -24,7 +25,7 @@ const HindiNews: React.FC<HindiNews> = ({
       <Link href={`/news/${slug}`} className="w-[25%]">
         <div className="relative h-[120px] sm:h-[160px] w-full">
           <Image
-            src={img}
+            src={getSafeImageUrl(typeof img === 'string' ? img : img.src)}
             alt="Image"
             fill
             className="object-cover rounded-l-md"
