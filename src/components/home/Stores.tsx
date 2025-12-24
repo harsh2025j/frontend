@@ -11,19 +11,19 @@ import ContentSlider from "@/components/home/ContentSlider";
 import LatestNews from "../ui/LatestNews";
 import Judgement from "../ui/judgement";
 
-import TopAdvocate from "../ui/TopAdvocate"
-import LiveCourt from "../ui/LiveCourt"
+import TopJudges from "../ui/TopJudgesSection";
+import TopAdvocateSection from "../ui/TopAdvocateSection";
 import HindiNews from "../ui/HindiNews";
 import CustomInput from "../ui/CustomInput"
 import StateJudgement from "../ui/stateJudgement";
 import HighCourtsModal from "../ui/HighCourtsModal";
 import Loader from "../ui/Loader";
 import SearchWithDropdown from "../ui/SearchWithDropdown";
-import icon1 from '../../assets/icon1.png';
 import icon2 from '../../assets/icon2.png';
 import icon3 from '../../assets/icon3.png';
 import icon4 from '../../assets/icon4.png';
-// import img1 from '../../assets/img1.png'; 
+// import img1 from '../../assets/img1.png';
+
 import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import { highCourts } from "@/data/highCourts";
 import { Article, Category } from "@/data/features/article/article.types";
@@ -33,6 +33,8 @@ import { Link } from "@/i18n/routing";
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 import { useLocale } from "next-intl";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import LiveCourtSection from "../ui/LiveCourtSection";
+import LatestInformationSection from "../ui/LatestInformationSection";
 // import AdsPopup from "../ads/AdsPopup";
 
 
@@ -330,23 +332,24 @@ export default function Stores() {
         </div>
 
         {/* High Courts Section */}
-        <div className="bg-white w-full mb-8 md:mb-12">
-          <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-8 md:py-12">
+        <div className="bg-gradient-to-b from-white to-gray-50 w-full mb-8 md:mb-12 py-12 md:py-16">
+          <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-10">
 
             {/* Section Title */}
-            <div className="text-center mb-8 md:mb-10">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+            <div className="text-center mb-10 md:mb-14">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 md:mb-4">
                 High Courts of India
               </h2>
-              <p className="text-sm md:text-base text-gray-600">
+              <div className="w-24 h-1 bg-gradient-to-r from-[#C9A227] to-[#b39022] mx-auto mb-4"></div>
+              <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
                 Access judgments and legal information from courts across India
               </p>
             </div>
 
             {/* High Courts Grid */}
-            <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 sm:gap-6 md:gap-8 mb-8 md:mb-10">
+            <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-6 sm:gap-8 md:gap-10 mb-10 md:mb-14">
               {highCourts.slice(0, 8).map((court) => (
-                <Link key={court.id} href={`category/${court.slug}`}>
+                <Link key={court.id} href={`category/${court.slug}`} className="transform hover:scale-110 transition-transform duration-300">
                   <StateJudgement img={court.image} state={court.name} />
                 </Link>
               ))}
@@ -356,9 +359,15 @@ export default function Stores() {
             <div className="flex justify-center">
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="px-8 py-3 bg-gradient-to-r from-[#0A2342] to-[#1a3a75] text-white text-sm md:text-base rounded-lg hover:shadow-xl transition-all duration-300 font-semibold shadow-lg transform hover:scale-105 hover:from-[#1a3a75] hover:to-[#0A2342]"
+                className="group relative px-10 py-4 bg-[#0A2342] text-white text-sm md:text-base rounded-full hover:bg-[#1a3a75] transition-all duration-300 font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 overflow-hidden"
               >
-                View All High Courts
+                <span className="relative z-10 flex items-center gap-2">
+                  View All High Courts
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#C9A227] to-[#b39022] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </button>
             </div>
 
@@ -366,31 +375,28 @@ export default function Stores() {
         </div>
 
         <HighCourtsModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-        {/* Live Court & Top Advocate */}
-        <div className="flex justify-center px-4 mb-6 md:mb-10">
-          <div className="container flex flex-col lg:flex-row gap-4 md:gap-6">
-            <div className="flex flex-col gap-3 md:gap-4 w-full lg:flex-1">
-              <div className="flex justify-between items-center">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold font-merriweather">
-                  Live Court
-                </h1>
-              </div>
-              <LiveCourt />
-            </div>
 
-            <div className="flex flex-col gap-3 md:gap-4 w-full lg:max-w-[600px]">
-              <div>
-                <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold font-merriweather">
-                  Top Advocate
-                </h1>
-              </div>
-              <div className="flex flex-col p-4 sm:p-5 bg-white justify-evenly transition-all duration-300 rounded-sm h-full gap-3">
-                <h1>
-                  For now we are collecting Advocate data from showing here
-                </h1>
-                {/* <TopAdvocate img={icon1} title="Mr. Sunil Prajapati," description="Senior Advocate " /> */}
-              </div>
+
+        {/* Live Streaming & Latest Information - SCI Style */}
+        <div className="bg-gradient-to-b from-gray-50 to-white py-12 md:py-16">
+          <div className="container mx-auto px-4 sm:px-6 md:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 items-start">
+
+              {/* Live Streaming & Live Court Section (Merged) */}
+              <LiveCourtSection />
+
+              {/* Latest Information Section */}
+              <LatestInformationSection />
+
             </div>
+          </div>
+        </div>
+
+        {/* Top Judges & Top Advocate */}
+        <div className="flex justify-center px-4 mb-6 md:mb-10 pt-8">
+          <div className="container flex flex-col lg:flex-row gap-4 md:gap-6">
+            <TopJudges />
+            <TopAdvocateSection />
           </div>
         </div>
 
