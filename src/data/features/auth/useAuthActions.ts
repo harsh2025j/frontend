@@ -21,6 +21,7 @@ const selectDebugOtp = (state: RootState) => state.auth.debugOtp;
 
 const useAuth = () => {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const user = useAppSelector(selectAuthUser);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const loading = useAppSelector(selectAuthLoading);
@@ -28,7 +29,12 @@ const useAuth = () => {
   const message = useAppSelector(selectAuthMessage);
   const token = useAppSelector(selectIsToken);
   const debugOtp = useAppSelector(selectDebugOtp);
-  const logout = () => dispatch(logoutUser());
+
+  const logout = () => {
+    dispatch(logoutUser());
+    router.push('/'); // Redirect to home page
+  };
+
   return { user, isAuthenticated, loading, error, logout, message, token, debugOtp };
 };
 
@@ -139,14 +145,14 @@ export const useLoginActions = () => {
   useEffect(() => {
     // Check if we have a token and user in the state (successful login)
     // console.log(localStorage.getItem("token"));
-    
+
     if (localStorage.getItem("token") && user) {
       // console.log("user details",user);
       // console.log("udersrolw",user?.roles[0].name)
       const roles = user.roles?.map((r) => r.name) || [];
       // console.log("wertyuijh",roles)
       if (roles.includes("admin") || roles.includes("superadmin") || roles.includes("editor") || roles.includes("creator")) {
-      // if(true){
+        // if(true){
         router.push("/admin");
       } else {
         router.push("/");
@@ -155,7 +161,7 @@ export const useLoginActions = () => {
       localStorage.setItem("email", formData.email);
       dispatch(resetAuthState());
     }
-    
+
   }, [token, user]);
 
   return {

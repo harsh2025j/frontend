@@ -37,7 +37,7 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
     localStorage.clear();
     setIsProfileOpen(false);
     setShowLogoutConfirm(false);
-    router.replace("/auth/login");
+    router.replace("/");
   };
 
   return (

@@ -66,6 +66,19 @@ export default function LoginPage() {
       <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row bg-white">
         {/* Left Panel - Login Form */}
         <div className="w-full lg:w-1/2 bg-[#ffffff] border px-6 sm:px-10 py-10">
+          {/* Go to Home Button */}
+          <div className="flex justify-start mb-6">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 px-4 py-2 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:border-[#C9A227] hover:text-[#C9A227] hover:bg-[#FFF9E6] transition-all duration-200 group"
+            >
+              <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>Back to Home</span>
+            </Link>
+          </div>
+
           <h2 className="text-2xl font-semibold text-center mb-4">Welcome Back!</h2>
           <p className="text-center text-gray-600 mb-6">
             Login to get your daily dose of hot premium legal updates

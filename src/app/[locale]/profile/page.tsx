@@ -105,7 +105,7 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     localStorage.clear();
-    router.push("/auth/login");
+    router.push("/"); // Redirect to home page instead of login
   };
 
   const handleSave = () => {
@@ -291,10 +291,10 @@ export default function ProfilePage() {
                     <span className="text-gray-600">Status</span>
                     <span
                       className={`px-2 py-0.5 rounded-full text-xs font-medium ${subscription.status === "active"
-                          ? "bg-emerald-400 text-emerald-900"
-                          : subscription.status === "expired"
-                            ? "bg-red-400 text-red-900"
-                            : "bg-gray-400 text-gray-900"
+                        ? "bg-emerald-400 text-emerald-900"
+                        : subscription.status === "expired"
+                          ? "bg-red-400 text-red-900"
+                          : "bg-gray-400 text-gray-900"
                         }`}
                     >
                       {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}

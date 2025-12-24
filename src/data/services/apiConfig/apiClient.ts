@@ -143,7 +143,7 @@ apiClient.interceptors.response.use(
             id: 'auth-error-toast'
           });
           setTimeout(() => {
-            window.location.href = "/auth/login";
+            window.location.href = "/";
           }, 1500);
         }
       }

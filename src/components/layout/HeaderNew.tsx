@@ -141,7 +141,7 @@ export default function HeaderNew() {
         setIsProfileOpen(false);
         setShowLogoutConfirm(false);
         setMenuOpen(false);
-        router.replace("/auth/login");
+        router.replace("/");
     };
 
     const hasDashboardAccess = useMemo(() => {

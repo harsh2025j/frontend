@@ -171,7 +171,7 @@ export default function ForgotPasswordPage() {
                   {loading ? "Sending..." : "Request a reset link"}
                 </button>
 
-                <div className="text-center text-sm">
+                <div className="text-center">
                   <span className="text-gray-600">Don’t have an account? </span>
                   <Link href="/auth/signup" className="text-blue-600 hover:underline">
                     Register
