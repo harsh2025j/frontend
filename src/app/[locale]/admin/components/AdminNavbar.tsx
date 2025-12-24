@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Bell, Search, Menu, LogOut, User as UserIcon, Home } from "lucide-react";
+import { Search, Menu, LogOut, User as UserIcon, Home } from "lucide-react";
 import logo from "../../../../assets/logo.png";
+import AdminNotificationDropdown from "./AdminNotificationDropdown";
 // import Link from "next/link";
 import { Link } from "@/i18n/routing";
 import { useRouter } from "next/navigation";
@@ -78,10 +79,7 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
 
         {/* Right section: Notifications + User Dropdown */}
         <div className="flex items-center gap-4">
-          <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative">
-            <Bell className="text-gray-600 dark:text-gray-300" size={20} />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-[#0A2342]"></span>
-          </button>
+          {user?._id && <AdminNotificationDropdown userId={user._id} />}
 
           {/* User Dropdown */}
           <div

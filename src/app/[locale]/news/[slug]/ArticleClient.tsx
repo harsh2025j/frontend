@@ -7,6 +7,7 @@ import Image from "next/image";
 import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
 import { Link } from "@/i18n/routing";
 import { Share2, Facebook, Linkedin, Link2, Check, Printer, Sparkles, X } from "lucide-react";
+import { FaTelegramPlane } from "react-icons/fa";
 import Loader from "@/components/ui/Loader";
 import { useTranslations, useLocale } from "next-intl";
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
@@ -171,7 +172,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
             whatsapp: `https://api.whatsapp.com/send?text=${encodedText} ${encodedUrl}`,
             linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
             pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedText}`,
-            tumblr: `https://www.tumblr.com/widgets/share/tool?canonicalUrl=${encodedUrl}&title=${encodedText}`,
+            tumblr: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`,
             email: `mailto:?subject=${encodedText}&body=${encodedUrl}`,
         };
 
@@ -381,15 +382,13 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                                     </svg>
                                 </button>
 
-                                {/* Tumblr */}
+                                {/* Telegram */}
                                 <button
                                     onClick={() => handleShare('tumblr')}
-                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-[#35465c] text-white hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
-                                    title={t('shareOn', { platform: 'Tumblr' })}
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0088cc] text-white hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+                                    title={t('shareOn', { platform: 'Telegram' })}
                                 >
-                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" className="fill-current">
-                                        <path d="M14.563 24c-5.093 0-7.031-3.756-7.031-6.411V9.747H5.116V6.648c3.63-1.313 4.512-4.596 4.71-6.469C9.84.051 9.941 0 9.999 0h3.517v6.114h4.801v3.633h-4.82v7.47c.016 1.001.375 2.371 2.207 2.371h.09c.631-.02 1.486-.205 1.936-.419l1.156 3.425c-.436.636-2.4 1.374-4.156 1.406h-.178l.011.002z" />
-                                    </svg>
+                                    <FaTelegramPlane size={18} />
                                 </button>
 
                                 {/* Email */}
