@@ -54,9 +54,9 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
             setIsFetchingSummary(true);
             try {
                 const response = await fetch(`${API_BASE_URL}ai/summary/${initialArticle.id}`, {
-                    headers: {
-                        "ngrok-skip-browser-warning": "true",
-                    },
+                    // headers: {
+                    //     "ngrok-skip-browser-warning": "true",
+                    // },
                 });
                 const data = await response.json();
                 if (data.success) {
