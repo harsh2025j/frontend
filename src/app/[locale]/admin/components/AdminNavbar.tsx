@@ -74,6 +74,7 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
               className="w-full bg-transparent focus:outline-none text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div> */}
+          {/* test */}
         </div>
 
         {/* Right section: Notifications + User Dropdown */}

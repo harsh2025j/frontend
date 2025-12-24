@@ -8,9 +8,11 @@ export interface SearchInputs {
     court: string;
     caseType: string;
     year: string;
+    filingNumber: string;
+    crimeNumber: string;
 }
 
-export type SearchType = "caseNumber" | "partyName" | "advocateName" | "caseDetails";
+export type SearchType = "caseNumber" | "partyName" | "advocateName" | "caseDetails" | "filingNumber" | "crimeNumber";
 
 export const performCaseSearch = async (searchType: SearchType, inputs: SearchInputs) => {
     let response;
