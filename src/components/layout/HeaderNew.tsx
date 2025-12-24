@@ -341,22 +341,22 @@ export default function HeaderNew() {
         <>
             <header className={`w-full bg-white z-50 fixed top-0 left-0 transition-shadow duration-300 ${scrolled ? "shadow-md" : "border-b border-gray-200"}`}>
                 {/* Top Bar - Premium Gradient */}
-                <div className="bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
+                <div className="bg-gradient-to-br from-[#112240] via-[#1a365d] to-[#112240] text-white relative overflow-hidden">
                     {/* Subtle animated background pattern */}
                     <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDE2YzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00em0wIDI0YzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00ek0xMiAxNmMwLTIuMjEgMS43OS00IDQtNHM0IDEuNzkgNCA0LTEuNzkgNC00IDQtNC0xLjc5LTQtNHptMCAyNGMwLTIuMjEgMS43OS00IDQtNHM0IDEuNzkgNCA0LTEuNzkgNC00IDQtNC0xLjc5LTQtNHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-50"></div>
 
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                         <div className="flex items-center justify-between h-10 text-xs">
                             {/* Left - Contact Info */}
-                            <div className="hidden md:flex items-center gap-4">
+                            <div className="flex md:flex-row items-center gap-4 ml-2 md:ml-0">
                                 <a href="mailto:sajjadhusainlawassociates@gmail.com" className="flex items-center gap-1.5 hover:text-amber-400 transition-all duration-300 hover:scale-105 group">
-                                    <Mail size={12} className="group-hover:rotate-12 transition-transform duration-300" />
-                                    <span className="font-medium">sajjadhusainlawassociates@gmail.com</span>
+                                    <Mail size={10} className="md:w-3 md:h-3 group-hover:rotate-12 transition-transform duration-300" />
+                                    <span className="font-medium text-[9px] sm:text-xs">sajjadhusainlawassociates@gmail.com</span>
                                 </a>
-                                <span className="text-blue-400/50">|</span>
-                                <a href="tel:+917080909786" className="flex items-center gap-1.5 hover:text-amber-400 transition-all duration-300 hover:scale-105 group">
-                                    <Phone size={12} className="group-hover:rotate-12 transition-transform duration-300" />
-                                    <span>+91 7080909786</span>
+                                <span className="hidden md:block text-blue-400/50">|</span>
+                                <a href="tel:+917080909786" className="hidden sm:flex items-center gap-1.5 hover:text-amber-400 transition-all duration-300 hover:scale-105 group">
+                                    <Phone size={10} className="md:w-3 md:h-3 group-hover:rotate-12 transition-transform duration-300" />
+                                    <span className="text-[9px] sm:text-xs">+91 7080909786</span>
                                 </a>
                             </div>
 
@@ -390,9 +390,12 @@ export default function HeaderNew() {
                                     <Image src={logo} alt="Sajjad Husain Law Associates" className="object-contain" width={50} height={50} priority />
                                     <div className="absolute -inset-1 bg-[#C9A227]/20 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 </div>
-                                <div className="hidden sm:block">
-                                    <h1 className="text-xl font-bold text-gray-900 leading-tight">Sajjad Husain Law Associates</h1>
-                                    <p className="text-xs text-gray-600 flex items-center gap-1">
+                                <div className="block">
+                                    <h1 className="text-sm min-[400px]:text-base sm:text-xl font-bold text-gray-900 leading-tight">
+                                        <span className="sm:hidden">Sajjad Husain Law</span>
+                                        <span className="hidden sm:inline">Sajjad Husain Law Associates</span>
+                                    </h1>
+                                    <p className="hidden min-[350px]:flex text-[10px] sm:text-xs text-gray-600 items-center gap-1">
                                         <Scale size={12} className="text-[#C9A227]" />
                                         Excellence in Legal Services
                                     </p>
@@ -486,7 +489,10 @@ export default function HeaderNew() {
                         {/* Mobile/Tablet Search Bar (Toggleable) */}
                         {searchOpen && (
                             <div className="lg:hidden py-3 border-t border-gray-100 animate-slideDown">
-                                <SearchWithDropdown placeholder="Search articles, cases..." />
+                                <SearchWithDropdown
+                                    placeholder="Search articles, cases..."
+                                    onResultSelect={() => setSearchOpen(false)}
+                                />
                             </div>
                         )}
                     </div>
@@ -547,9 +553,9 @@ export default function HeaderNew() {
                             </div>
 
                             {/* Mobile Search */}
-                            <div className="mb-4">
+                            {/* <div className="mb-4">
                                 <SearchWithDropdown placeholder="Search..." />
-                            </div>
+                            </div> */}
 
                             {/* Mobile Navigation Items */}
                             <div className="border-t border-gray-100 pt-4">

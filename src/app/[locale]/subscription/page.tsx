@@ -13,7 +13,8 @@ import {
   Minus,
   Check,
   Loader2,
-  CheckCircle
+  CheckCircle,
+  ChevronLeft
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -228,13 +229,22 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white font-sans pt-24 relative">
+    <div className="min-h-screen bg-white font-sans pt-24 relative mb-8">
       <Script
         id="razorpay-checkout-js"
         src="https://checkout.razorpay.com/v1/checkout.js"
       />
 
       <div className="container mx-auto px-4 pb-20">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center border-2 border-[#C9A227] py-1 px-5 pr-7 rounded-md gap-2 text-gray-600 hover:text-[#C9A227] transition-colors mb-6 font-medium"
+        >
+          <ChevronLeft size={20} />
+          Back
+        </button>
+
+
         {/* Active Subscription Banner */}
         {subscriptionLoading ? (
           <div className="mb-8 bg-gradient-to-r from-[#0A2342] to-[#153a66] rounded-xl p-8 text-white">
