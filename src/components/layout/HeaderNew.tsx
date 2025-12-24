@@ -24,6 +24,7 @@ import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { fetchCategories } from "@/data/features/category/categoryThunks";
 import { Category } from "@/data/features/category/category.types";
 import SearchWithDropdown from "../ui/SearchWithDropdown";
+import NotificationDropdown from "./NotificationDropdown";
 
 const SubCategoryItem = ({ item, closeMenu }: { item: NavItem; closeMenu: () => void }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -403,10 +404,7 @@ export default function HeaderNew() {
                                 </div>
 
                                 {/* Notifications */}
-                                <button className="relative p-2 hover:bg-gray-100 rounded-full transition-colors">
-                                    <Bell size={20} className="text-gray-600" />
-                                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                                </button>
+                                {user && <NotificationDropdown userId={user._id} />}
 
                                 {/* User Profile or Auth Buttons */}
                                 {user ? (
@@ -457,6 +455,9 @@ export default function HeaderNew() {
 
                             {/* Mobile Search & Menu Buttons */}
                             <div className="lg:hidden flex items-center gap-2">
+                                {/* Mobile Notification */}
+                                {user && <NotificationDropdown userId={user._id} />}
+
                                 {/* Search Toggle Button */}
                                 <button
                                     onClick={() => setSearchOpen(!searchOpen)}
@@ -498,7 +499,7 @@ export default function HeaderNew() {
 
                 {/* Mobile Menu */}
                 {menuOpen && (
-                    <div className="lg:hidden bg-white border-t border-gray-200 w-full h-[calc(100vh-130px)] overflow-y-auto shadow-xl absolute top-[130px] left-0 z-40">
+                    <div className="lg:hidden bg-white border-t border-gray-200 w-full h-[calc(100vh-130px)] overflow-y-auto shadow-xl absolute top-[120px] left-0 z-40">
                         <nav className="flex flex-col p-5 gap-2">
                             {/* Mobile User Section */}
                             <div className="mb-4 border-b border-gray-200 pb-4">

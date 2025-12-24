@@ -64,6 +64,12 @@ export const API_ENDPOINTS = {
   USERS: {
     BROADCAST: "/users/broadcast",
   },
+  NOTIFICATIONS: {
+    FETCH_BY_ID: "/notifications",
+    READ_ALL: "/notifications/read-all",
+    MARK_READ: "/notifications/:id/read",
+    DELETE: "/notifications/:id",
+  },
   REPORTS: {
     BASE: "/reports",
     GENERATE_CASE_STATS: "/reports/generate/case-statistics",
