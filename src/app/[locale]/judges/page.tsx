@@ -587,7 +587,7 @@ export default function JudgesPage() {
                             Direct communication with judges regarding pending cases is not permitted.
                         </p>
                         <p className="text-xs text-gray-500">
-                            © 2024 Sajjad Husain Law Associates. All rights reserved.
+                            © {new Date().getFullYear()} Sajjad Husain Law Associates. All rights reserved.
                         </p>
                     </div>
                 </div>

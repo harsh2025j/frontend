@@ -444,7 +444,7 @@ export default function JudgmentsPage() {
                             For official records and certified copies, please contact the court registry.
                         </p>
                         <p className="text-xs text-gray-500">
-                            © 2024 Sajjad Husain Law Associates. All rights reserved.
+                            © {new Date().getFullYear()} Sajjad Husain Law Associates. All rights reserved.
                         </p>
                     </div>
                 </div>

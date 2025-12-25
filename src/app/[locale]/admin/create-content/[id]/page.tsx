@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { useCreateArticleActions } from "@/data/features/article/useArticleActions";
+import { useCreateArticleActions, useArticleListActions } from "@/data/features/article/useArticleActions";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { fetchCategories } from "@/data/features/category/categoryThunks";
 import { Category } from "@/data/features/category/category.types";
@@ -45,16 +45,16 @@ const EditArticlePage: React.FC = () => {
             router.replace("/auth/login");
             return;
         }
-         if (user?.roles?.length) {
-      const allowedRoles = ["admin", "superadmin", "creator"];
-      const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
-      if (!hasAccess) {
-        router.replace("/auth/login");
-      }
-      
-    }
+        if (user?.roles?.length) {
+            const allowedRoles = ["admin", "superadmin", "creator"];
+            const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
+            if (!hasAccess) {
+                router.replace("/auth/login");
+            }
 
-        
+        }
+
+
     }, [user, router]);
 
     const dispatch = useAppDispatch();
@@ -115,9 +115,9 @@ const EditArticlePage: React.FC = () => {
     // --- Helper: Generate Slug ---
     const generateSlug = (text: string) => {
         return text
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, "-")
-                .replace(/(^-|-$)+/g, ""); 
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)+/g, "");
     };
 
     // --- Handler: Title Change (Updates Slug automatically) ---
@@ -136,6 +136,8 @@ const EditArticlePage: React.FC = () => {
         }));
     };
 
+    const { refetch } = useArticleListActions();
+
     // --- Handler: Update Article ---
     const handleUpdate = async (status: "draft" | "pending") => {
         if (!formData.title || !formData.content) {
@@ -148,6 +150,7 @@ const EditArticlePage: React.FC = () => {
             await articleApi.updateArticle(articleId!, { ...formData, status });
 
             toast.success("Article updated successfully");
+            await refetch(true); // Force refresh list
             router.push("/admin/content-management");
         } catch (error: any) {
             console.error("Update failed", error);

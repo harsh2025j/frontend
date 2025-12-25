@@ -197,8 +197,8 @@ export default function Stores() {
       const fullText = displayHeadlines[i];
 
       setCurrentText(isDeleting
-        ? fullText.substring(0, currentText.length - 5)
-        : fullText.substring(0, currentText.length + 3)
+        ? fullText.substring(0, currentText.length - 1)
+        : fullText.substring(0, currentText.length + 1)
       );
 
       if (!isDeleting && currentText === fullText) {
@@ -209,7 +209,7 @@ export default function Stores() {
         setLoopNum(loopNum + 1);
         setTypingSpeed(200);
       } else {
-        setTypingSpeed(isDeleting ? 5 : 10);
+        setTypingSpeed(isDeleting ? 10 : 15);
       }
     };
 

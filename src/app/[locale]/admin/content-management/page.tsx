@@ -157,6 +157,94 @@ const contentManagementPage: React.FC = () => {
   const { articles, loading, error, refetch } = useArticleListActions();
   const [currentPage, setCurrentPage] = useState(1);
 
+  // --- Search State ---
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Article[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [totalSearchItems, setTotalSearchItems] = useState(0);
+
+  // Debounce hook
+  const useDebounce = (value: string, delay: number) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+      return () => clearTimeout(handler);
+    }, [value, delay]);
+    return debouncedValue;
+  };
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  // Reset page when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery]);
+
+  // Fetch Search Results
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      if (debouncedSearchQuery.length >= 3) {
+        setIsSearching(true);
+        try {
+          const { searchService } = await import("@/data/features/search/searchService");
+
+          // Note: using 'article' as type since this is content management
+          const results = await searchService.searchContentWithPagination(
+            debouncedSearchQuery,
+            currentPage,
+            ITEM_PER_PAGE
+          );
+
+          console.log("Search Service Results:", results);
+
+          // Map search results to Article type (aligned with Content Approval)
+          const mappedResults: any[] = results.data.map((item) => ({
+            id: item.id,
+            title: item.title,
+            category: item.category, // Pass full category object
+            status: item.status || 'draft',
+            authors: item.authors || "Unknown",
+            thumbnail: item.thumbnail,
+            rejectionReason: null,
+            authorId: item.authorId || "",
+            createdAt: item.date || new Date().toISOString(), // Ensure createdAt exists
+            slug: item.slug || "",
+            content: item.description || "",
+            subHeadline: item.description || "",
+            isPaywalled: false,
+            language: "English",
+            tags: [], // Default tags
+            updatedAt: new Date().toISOString(), // Default updatedAt
+          }));
+
+          const filteredResults = mappedResults.filter((article: any) => {
+            if (!user?._id) return false;
+            return article.authorId === user._id;
+          });
+
+          setSearchResults(filteredResults);
+
+          // ROBUST PAGINATION FIX: Check all possible meta fields
+          const totalInfo = results.meta?.totalItems || (results.meta as any)?.pagination?.total || (results.meta as any)?.total || (results.meta as any)?.count || 0;
+          setTotalSearchItems(totalInfo);
+
+        } catch (error) {
+          console.error("Search failed", error);
+          // toast.error("Failed to fetch search results");
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+        setTotalSearchItems(0);
+      }
+    };
+
+    fetchSearchResults();
+  }, [debouncedSearchQuery, currentPage]);
+
   // Delete Modal State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<string | null>(null);
@@ -179,7 +267,7 @@ const contentManagementPage: React.FC = () => {
 
     // 2. Role Check
     if (user?.roles?.length) {
-      const allowedRoles = ["admin", "superadmin", "creator"];
+      const allowedRoles = ["admin", "superadmin", "creator", "editor"];
       const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
       if (!hasAccess) {
         router.replace("/auth/login");
@@ -209,7 +297,7 @@ const contentManagementPage: React.FC = () => {
       const { articleApi } = await import('@/data/services/article-service/article-service');
       await articleApi.deleteArticle(articleToDelete);
       toast.success('Article deleted successfully');
-      await refetch();
+      await refetch(true);
     } catch (err: any) {
       toast.error(err?.message || 'Failed to delete article');
     } finally {
@@ -227,7 +315,7 @@ const contentManagementPage: React.FC = () => {
       const response = await apiClient.post(API_ENDPOINTS.TASKS.TRIGGER_DAILY_NEWS, {});
       if (response.data?.success) {
         toast.success(`${response.data.data?.articleCreates || 0} article created`);
-        await refetch();
+        await refetch(true);
       } else {
         toast.error(response.data?.message || "Failed to generate news");
       }
@@ -258,13 +346,18 @@ const contentManagementPage: React.FC = () => {
   //this is for all articles means all articles in db show
   // const userArticles = articles
 
+  const isSearchMode = debouncedSearchQuery.length >= 3;
+
   const startIndex = (currentPage - 1) * ITEM_PER_PAGE;
 
-  const paginatedArticles = loading
-    ? []
-    : userArticles.slice(startIndex, startIndex + ITEM_PER_PAGE);
+  const paginatedArticles = isSearchMode
+    ? searchResults
+    : (loading ? [] : userArticles.slice(startIndex, startIndex + ITEM_PER_PAGE));
 
-  const totalPages = loading ? 0 : Math.ceil(userArticles.length / ITEM_PER_PAGE);
+  const totalPages = isSearchMode
+    ? Math.ceil(totalSearchItems / ITEM_PER_PAGE)
+    : (loading ? 0 : Math.ceil(userArticles.length / ITEM_PER_PAGE));
+
   const totalNewsPost = userArticles.length;
 
   const goToPage = (page: number) => {
@@ -295,9 +388,33 @@ const contentManagementPage: React.FC = () => {
 
   return (
     <div>
-      <h1 className="text-xl font-poppins text-black font-medium">
-        Content Management
-      </h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-xl font-poppins text-black font-medium">
+          Content Management
+        </h1>
+        <div className="relative w-64 md:w-80">
+          <input
+            type="text"
+            placeholder="Search articles..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0B2149]"
+          />
+          <svg
+            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+      </div>
 
       <div className="flex min-h-screen bg-gray-50 text-gray-800">
         <main className="flex-1 p-6">
@@ -315,7 +432,9 @@ const contentManagementPage: React.FC = () => {
               </div>
 
               <div className="flex gap-4">
-                <button
+
+
+                {/* <button
                   onClick={handleGenerateNews}
                   disabled={isGenerating}
                   className="bg-[#C9A227] text-white px-5 py-2 rounded-md font-medium hover:bg-[#C9A227]/90 transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
@@ -330,7 +449,7 @@ const contentManagementPage: React.FC = () => {
                       <span>⚡</span> Generate News
                     </>
                   )}
-                </button>
+                </button> */}
 
                 <button
                   onClick={() => router.push('/admin/create-content')}
@@ -357,7 +476,7 @@ const contentManagementPage: React.FC = () => {
                 </thead>
 
                 {/* --- Skeleton OR Data --- */}
-                {loading ? (
+                {loading || isSearching ? (
                   <TableSkeleton />
                 ) : (
                   <tbody>
@@ -421,6 +540,16 @@ const contentManagementPage: React.FC = () => {
                         </td>
                       </tr>
                     ))}
+                  </tbody>
+                )}
+
+                {!loading && !isSearching && paginatedArticles.length === 0 && (
+                  <tbody>
+                    <tr>
+                      <td colSpan={8} className="text-center py-8 text-gray-500">
+                        No articles found.
+                      </td>
+                    </tr>
                   </tbody>
                 )}
               </table>

@@ -147,6 +147,11 @@ export default function HeaderNew() {
         router.replace("/");
     };
 
+    const handleSearch = (query: string) => {
+        router.push(`/search?q=${encodeURIComponent(query)}`);
+        setSearchOpen(false);
+    };
+
     const hasDashboardAccess = useMemo(() => {
         if (!user?.roles) return false;
         return user.roles.some((r: any) => ["admin", "superadmin", "creator", "editor", "manager", "advocate"].includes(r.name));
@@ -406,7 +411,10 @@ export default function HeaderNew() {
                             <div className="hidden lg:flex items-center gap-3">
                                 {/* Search Bar */}
                                 <div className="w-64">
-                                    <SearchWithDropdown placeholder="Search articles, cases..." />
+                                    <SearchWithDropdown
+                                        placeholder="Search articles, cases..."
+                                        onSearch={handleSearch}
+                                    />
                                 </div>
 
 
@@ -492,6 +500,7 @@ export default function HeaderNew() {
                                 <SearchWithDropdown
                                     placeholder="Search articles, cases..."
                                     onResultSelect={() => setSearchOpen(false)}
+                                    onSearch={handleSearch}
                                 />
                             </div>
                         )}

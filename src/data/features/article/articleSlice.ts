@@ -29,14 +29,14 @@ const articleSlice = createSlice({
       .addCase(createArticle.fulfilled, (state, action) => {
         state.loading = false;
         state.message = action.payload.message || MESSAGES.ARTICLE_CREATE_SUCCESS;
-  
+
       })
       .addCase(createArticle.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
 
-      
+
       .addCase(fetchArticles.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -45,7 +45,7 @@ const articleSlice = createSlice({
       .addCase(fetchArticles.fulfilled, (state, action) => {
         state.loading = false;
         // FIX: Correctly access the articles array from the 'data' property
-        const payload: any = action.payload as any; 
+        const payload: any = action.payload as any;
         state.articles = payload.data || [];
       })
       .addCase(fetchArticles.rejected, (state, action) => {

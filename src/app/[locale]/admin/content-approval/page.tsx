@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { FiSearch } from "react-icons/fi";
 import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import { Article } from "@/data/features/article/article.types";
 import toast from "react-hot-toast";
@@ -181,6 +182,7 @@ const ContentApprovalPanel = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [previewArticle, setPreviewArticle] = useState<Article | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Decline Modal State
   const [declineModalOpen, setDeclineModalOpen] = useState(false);
@@ -205,7 +207,8 @@ const ContentApprovalPanel = () => {
       toast.success("Article approved successfully!");
       setShowPreview(false);
       setPreviewArticle(null);
-      refetch(); // Refresh the list
+      setPreviewArticle(null);
+      refetch(true); // Refresh the list forcefully
     } catch (err: any) {
       toast.error(err?.message || "Failed to approve article");
     } finally {
@@ -230,7 +233,8 @@ const ContentApprovalPanel = () => {
       toast.success("Article rejected successfully!");
       setShowPreview(false);
       setPreviewArticle(null);
-      refetch(); // Refresh the list
+      setPreviewArticle(null);
+      refetch(true); // Refresh the list forcefully
     } catch (err: any) {
       toast.error(err?.message || "Failed to reject article");
     } finally {
@@ -253,9 +257,93 @@ const ContentApprovalPanel = () => {
     (a: Article) => a.status === "pending"
   );
 
+  // useDebounce Hook
+  const useDebounce = (value: string, delay: number) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+    return debouncedValue;
+  };
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  // Search Results State
+  const [searchResults, setSearchResults] = useState<Article[]>([]);
+  const [totalSearchItems, setTotalSearchItems] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Reset page when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery]);
+
+  // Effect to trigger search
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      if (debouncedSearchQuery.length >= 3) {
+        setIsSearching(true);
+        try {
+          const { searchService } = await import("@/data/features/search/searchService");
+
+          // Pass currentPage and ITEMS_PER_PAGE for server-side pagination
+          const results = await searchService.searchContentWithPagination(
+            debouncedSearchQuery,
+            currentPage,
+            ITEMS_PER_PAGE
+          );
+
+          // Map SearchResult to Article (best effort)
+          const mappedArticles: Article[] = results.data.map((r: any) => ({
+            id: r.id,
+            title: r.title,
+            category: r.category,
+            status: r.status,
+            thumbnail: r.thumbnail,
+            createdAt: r.date || new Date().toISOString(),
+            slug: r.slug,
+            content: r.description || "",
+            subHeadline: r.description || "",
+            isPaywalled: false,
+            language: "English",
+            // views: 0,
+            // likes: [],
+            // sections: []
+          } as Article));
+
+          setSearchResults(mappedArticles);
+          // ROBUST PAGINATION FIX: Check all possible meta fields
+          const totalInfo = results.meta?.totalItems || (results.meta as any)?.pagination?.total || (results.meta as any)?.total || (results.meta as any)?.count || 0;
+          setTotalSearchItems(totalInfo);
+
+        } catch (error) {
+          console.error("Search failed", error);
+          setSearchResults([]);
+          setTotalSearchItems(0);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+        setTotalSearchItems(0);
+      }
+    };
+
+    fetchSearchResults();
+  }, [debouncedSearchQuery, currentPage]);
+
   // Filter out draft articles and Sort (Pending First -> Recent Date)
-  const filteredArticles = articles
-    .filter((a: Article) => a.status !== 'draft')
+  const filteredArticles = (debouncedSearchQuery.length >= 3 ? searchResults : articles)
+    .filter((a: Article) => {
+      // 1. Exclude drafts
+      if (a.status === 'draft') return false;
+      return true;
+    })
     .sort((a: any, b: any) => {
       // 1. Primary Sort: Status (Pending first)
       const isAPending = a.status === 'pending';
@@ -271,10 +359,17 @@ const ContentApprovalPanel = () => {
     });
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredArticles.length / ITEMS_PER_PAGE);
+  const isSearchMode = debouncedSearchQuery.length >= 3;
+  const totalPages = isSearchMode
+    ? Math.ceil(totalSearchItems / ITEMS_PER_PAGE)
+    : Math.ceil(filteredArticles.length / ITEMS_PER_PAGE);
 
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedArticles = filteredArticles.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // If searching, usage results as-is (already paginated). Else, slice the client-side filtered list.
+  const paginatedArticles = isSearchMode
+    ? filteredArticles
+    : filteredArticles.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -296,12 +391,15 @@ const ContentApprovalPanel = () => {
             Pending Requests: {pendingArticles.length}
           </h2>
 
-          <div className="flex items-center gap-3">
+          <div className="relative">
             <input
               type="text"
-              placeholder="Search Item"
-              className="border border-gray-300 px-4 py-2 rounded-xl outline-none text-sm w-52"
+              placeholder="Search Article..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl outline-none text-sm w-64 transition-all focus:ring-2 focus:ring-[#0B2149]/20 focus:border-[#0B2149] shadow-sm bg-gray-50 hover:bg-white"
             />
+            <FiSearch className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
           </div>
         </div>
 
@@ -319,74 +417,82 @@ const ContentApprovalPanel = () => {
             </thead>
 
             <tbody>
-              {loading ? (
+              {loading || isSearching ? (
                 <tr>
                   <td colSpan={5}>
                     <TableSkeleton />
                   </td>
                 </tr>
               ) : (
-                paginatedArticles.map((item: Article, idx: any) => (
-                  <tr
-                    key={item.id}
-                    className="border-b hover:bg-gray-50 text-sm transition"
-                  >
-                    <td className="py-3 px-4 text-sm">{startIndex + idx + 1}</td>
-                    <td className="py-3 px-4 truncate max-w-[220px]">{item.title}</td>
-                    <td className="px-4 py-3">{item.category?.name || "No Category"}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium
-                          ${item.status === "published"
-                            ? "bg-green-200 text-green-900"
-                            : item.status === "pending"
-                              ? "bg-yellow-200 text-yellow-800"
-                              : item.status === "rejected"
-                                ? "bg-red-200 text-red-800"
-                                : "bg-gray-200 text-gray-700"
-                          }
-                        `}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-5 flex gap-2">
-                      <button
-                        onClick={() => openPreview(item)}
-                        className="bg-blue-500 text-white px-4 py-1 rounded-md text-sm hover:bg-blue-600 transition-colors"
-                      >
-                        Preview
-                      </button>
-                      <button
-                        onClick={() => handleApproveClick(item.id)}
-                        disabled={actionLoading === item.id || item.status === 'rejected' || item.status === 'published'}
-                        className={`px-4 py-1 rounded-md text-sm transition-colors ${item.status === 'rejected'
-                          ? 'bg-red-100 text-red-600 cursor-not-allowed border border-red-200'
-                          : item.status === 'published'
-                            ? 'bg-green-100 text-green-600 cursor-not-allowed border border-green-200'
-                            : 'bg-green-500 text-white hover:bg-green-600'
-                          } disabled:opacity-50`}
-                      >
-                        {actionLoading === item.id
-                          ? "Processing..."
-                          : item.status === 'rejected'
-                            ? "Rejected"
-                            : item.status === 'published'
-                              ? "Approved"
-                              : "Approve"}
-                      </button>
-                      {item.status === 'pending' && (
-                        <button
-                          onClick={() => handleRejectClick(item.id)}
-                          disabled={actionLoading === item.id}
-                          className="bg-red-500 text-white px-4 py-1 rounded-md text-sm hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                paginatedArticles.length > 0 ? (
+                  paginatedArticles.map((item: Article, idx: any) => (
+                    <tr
+                      key={item.id}
+                      className="border-b hover:bg-gray-50 text-sm transition"
+                    >
+                      <td className="py-3 px-4 text-sm">{startIndex + idx + 1}</td>
+                      <td className="py-3 px-4 truncate max-w-[220px]">{item.title}</td>
+                      <td className="px-4 py-3">{item.category?.name || "No Category"}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium
+                            ${item.status === "published"
+                              ? "bg-green-200 text-green-900"
+                              : item.status === "pending"
+                                ? "bg-yellow-200 text-yellow-800"
+                                : item.status === "rejected"
+                                  ? "bg-red-200 text-red-800"
+                                  : "bg-gray-200 text-gray-700"
+                            }
+                          `}
                         >
-                          {actionLoading === item.id ? "Processing..." : "Decline"}
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-5 flex gap-2">
+                        <button
+                          onClick={() => openPreview(item)}
+                          className="bg-blue-500 text-white px-4 py-1 rounded-md text-sm hover:bg-blue-600 transition-colors"
+                        >
+                          Preview
                         </button>
-                      )}
+                        <button
+                          onClick={() => handleApproveClick(item.id)}
+                          disabled={actionLoading === item.id || item.status === 'rejected' || item.status === 'published'}
+                          className={`px-4 py-1 rounded-md text-sm transition-colors ${item.status === 'rejected'
+                            ? 'bg-red-100 text-red-600 cursor-not-allowed border border-red-200'
+                            : item.status === 'published'
+                              ? 'bg-green-100 text-green-600 cursor-not-allowed border border-green-200'
+                              : 'bg-green-500 text-white hover:bg-green-600'
+                            } disabled:opacity-50`}
+                        >
+                          {actionLoading === item.id
+                            ? "Processing..."
+                            : item.status === 'rejected'
+                              ? "Rejected"
+                              : item.status === 'published'
+                                ? "Approved"
+                                : "Approve"}
+                        </button>
+                        {item.status === 'pending' && (
+                          <button
+                            onClick={() => handleRejectClick(item.id)}
+                            disabled={actionLoading === item.id}
+                            className="bg-red-500 text-white px-4 py-1 rounded-md text-sm hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {actionLoading === item.id ? "Processing..." : "Decline"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-gray-500">
+                      No result found
                     </td>
                   </tr>
-                ))
+                )
               )}
             </tbody>
 

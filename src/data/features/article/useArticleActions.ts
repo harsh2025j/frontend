@@ -202,9 +202,10 @@ export const useArticleListActions = () => {
     loading,
     error,
     // Expose a method to force refresh manually if needed (e.g. Pull to Refresh)
-    refetch: () => {
+    // Expose a method to force refresh manually if needed (e.g. Pull to Refresh)
+    refetch: (force: boolean = false) => {
       const now = Date.now();
-      if (!isFetching && (now - lastFetchTime) > FETCH_COOLDOWN) {
+      if ((force || (!isFetching && (now - lastFetchTime) > FETCH_COOLDOWN))) {
         isFetching = true;
         lastFetchTime = now;
         return dispatch(fetchArticles({}))
