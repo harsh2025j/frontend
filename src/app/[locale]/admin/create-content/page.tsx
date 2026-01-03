@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import { ArrowLeft } from "lucide-react";
 
 
 const CreateUpdatePage: React.FC = () => {
@@ -45,7 +46,7 @@ const CreateUpdatePage: React.FC = () => {
     }
 
     // 2. Role Check
-     if (user?.roles?.length) {
+    if (user?.roles?.length) {
       const allowedRoles = ["admin", "superadmin", "creator"];
       const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
       if (!hasAccess) {
@@ -98,7 +99,15 @@ const CreateUpdatePage: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-gray-50 text-gray-800">
       <main className="flex-1 w-full p-3 sm:p-4 md:p-6 lg:p-8">
-        <h1 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 px-2">Create New Content</h1>
+        <div className="flex">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-gray-200 rounded-full transition-colors mb-4"
+          >
+            <ArrowLeft size={24} className="text-gray-600" />
+          </button>
+          <span className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 px-2">Create New Content</span>
+        </div>
         <div className="max-w-6xl mx-auto bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm">
           <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
 

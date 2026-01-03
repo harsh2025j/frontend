@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { ChevronLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
 
@@ -155,9 +155,9 @@ export default function AddNewMemberPage() {
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-200 rounded-full transition"
+            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
           >
-            <ChevronLeft size={24} className="text-gray-700" />
+            <ArrowLeft size={24} className="text-gray-700" />
           </button>
           <div>
             <h1 className="text-2xl font-bold text-[#0A2342]">Invite New Team Member</h1>

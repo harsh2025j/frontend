@@ -76,7 +76,7 @@ export default function EditCasePage() {
             <div className="flex items-center gap-4 mb-6">
                 <button
                     onClick={() => router.back()}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    className="p-2 hover:bg-gray-200 rounded-full transition-colors"
                 >
                     <ArrowLeft size={24} className="text-gray-600" />
                 </button>

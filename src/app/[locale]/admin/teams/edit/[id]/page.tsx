@@ -160,9 +160,9 @@ const EditTeamMemberPage: React.FC = () => {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => router.back()}
-                            className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-100 transition-colors text-gray-600"
+                            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
                         >
-                            <ArrowLeft size={20} />
+                            <ArrowLeft size={24} className="text-gray-600" />
                         </button>
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">Edit User Privileges</h1>

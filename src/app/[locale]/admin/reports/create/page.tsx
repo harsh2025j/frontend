@@ -46,7 +46,7 @@ export default function CreateReportPage() {
             <div className="flex items-center gap-4 mb-6">
                 <button
                     onClick={() => router.back()}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    className="p-2 hover:bg-gray-200 rounded-full transition-colors"
                 >
                     <ArrowLeft size={24} className="text-gray-600" />
                 </button>
@@ -64,8 +64,8 @@ export default function CreateReportPage() {
                             type="button"
                             onClick={() => setReportType("case_statistics")}
                             className={`p-4 rounded-lg border-2 flex flex-col items-center justify-center gap-2 transition-all ${reportType === "case_statistics"
-                                    ? "border-[#0A2342] bg-[#0A2342]/5 text-[#0A2342]"
-                                    : "border-gray-200 hover:border-gray-300 text-gray-600"
+                                ? "border-[#0A2342] bg-[#0A2342]/5 text-[#0A2342]"
+                                : "border-gray-200 hover:border-gray-300 text-gray-600"
                                 }`}
                         >
                             <BarChart2 size={24} />
@@ -75,8 +75,8 @@ export default function CreateReportPage() {
                             type="button"
                             onClick={() => setReportType("judgment_analysis")}
                             className={`p-4 rounded-lg border-2 flex flex-col items-center justify-center gap-2 transition-all ${reportType === "judgment_analysis"
-                                    ? "border-[#0A2342] bg-[#0A2342]/5 text-[#0A2342]"
-                                    : "border-gray-200 hover:border-gray-300 text-gray-600"
+                                ? "border-[#0A2342] bg-[#0A2342]/5 text-[#0A2342]"
+                                : "border-gray-200 hover:border-gray-300 text-gray-600"
                                 }`}
                         >
                             <FileText size={24} />

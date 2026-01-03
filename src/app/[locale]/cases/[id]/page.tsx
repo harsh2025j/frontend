@@ -37,10 +37,9 @@ export default function CaseDetailPage() {
             {/* Back Button */}
             <button
                 onClick={() => router.back()}
-                className="flex items-center gap-2 text-gray-600 hover:text-[#0A2342] mb-6 transition-colors font-medium"
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors mb-6"
             >
-                <ArrowLeft size={20} />
-                Back
+                <ArrowLeft size={24} className="text-gray-600" />
             </button>
 
             <div className="bg-white shadow rounded-lg p-6 mb-6">

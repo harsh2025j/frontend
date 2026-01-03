@@ -6,6 +6,7 @@ export interface BroadcastPayload {
     body: string;
     sendToAll: boolean;
     channels: string[];
+    userIds?: string[];
 }
 
 export const broadcastService = {

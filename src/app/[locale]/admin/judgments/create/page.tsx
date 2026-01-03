@@ -15,7 +15,7 @@ export default function CreateJudgmentPage() {
     const [loadingData, setLoadingData] = useState(true);
     const [cases, setCases] = useState<any[]>([]);
     const [judges, setJudges] = useState<any[]>([]);
-    
+
     const [formData, setFormData] = useState({
         caseId: "",
         judgeId: "",
@@ -40,10 +40,10 @@ export default function CreateJudgmentPage() {
                     casesService.getAll(),
                     judgesService.getAll()
                 ]);
-                
+
                 const casesData = casesRes.data?.data?.data || casesRes.data?.data || casesRes.data || [];
                 const judgesData = judgesRes.data?.data?.data || judgesRes.data?.data || judgesRes.data || [];
-                
+
                 setCases(Array.isArray(casesData) ? casesData : []);
                 setJudges(Array.isArray(judgesData) ? judgesData : []);
             } catch (error) {
@@ -109,7 +109,7 @@ export default function CreateJudgmentPage() {
             <div className="flex items-center gap-4 mb-6">
                 <button
                     onClick={() => router.back()}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    className="p-2 hover:bg-gray-200 rounded-full transition-colors"
                 >
                     <ArrowLeft size={24} className="text-gray-600" />
                 </button>
@@ -141,7 +141,7 @@ export default function CreateJudgmentPage() {
                                 ))}
                             </select>
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Judgment Date <span className="text-red-500">*</span></label>
                             <input

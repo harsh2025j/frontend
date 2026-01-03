@@ -197,9 +197,8 @@ const EditArticlePage: React.FC = () => {
                     <button
                         onClick={() => router.back()}
                         className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-                        aria-label="Go back"
                     >
-                        <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+                        <ArrowLeft size={24} className="text-gray-600" />
                     </button>
                     <h1 className="text-xl sm:text-2xl font-semibold">Edit Content</h1>
                 </div>

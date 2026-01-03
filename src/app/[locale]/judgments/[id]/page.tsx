@@ -35,10 +35,9 @@ export default function JudgmentDetailPage() {
         <div className="p-6 max-w-4xl mx-auto">
             <button
                 onClick={() => router.back()}
-                className="flex items-center gap-2 text-gray-600 hover:text-[#0A2342] transition-colors font-medium mb-4"
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors mb-4"
             >
-                <ArrowLeft size={18} />
-                Back
+                <ArrowLeft size={24} className="text-gray-600" />
             </button>
             <div className="bg-white shadow rounded-lg p-6">
                 <div className="flex justify-between items-start mb-6">

@@ -14,7 +14,7 @@ import {
   Check,
   Loader2,
   CheckCircle,
-  ChevronLeft
+  ArrowLeft
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -238,10 +238,9 @@ export default function SubscriptionPage() {
       <div className="container mx-auto px-4 pb-20">
         <button
           onClick={() => router.back()}
-          className="flex items-center border-2 border-[#C9A227] py-1 px-5 pr-7 rounded-md gap-2 text-gray-600 hover:text-[#C9A227] transition-colors mb-6 font-medium"
+          className="p-2 hover:bg-gray-200 rounded-full transition-colors mb-6"
         >
-          <ChevronLeft size={20} />
-          Back
+          <ArrowLeft size={24} className="text-gray-600" />
         </button>
 
 

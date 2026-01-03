@@ -108,7 +108,7 @@ export default function AdminCasesPage() {
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case Number</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[200px]">Title</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Court</th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -119,7 +119,7 @@ export default function AdminCasesPage() {
                                 filteredCases.map((c) => (
                                     <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{c.caseNumber}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{c.title}</td>
+                                        <td className="px-6 py-4 max-w-[200px] text-sm text-gray-600">{c.title}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <select
                                                 className={`block w-full px-2 py-1 text-xs font-medium border-gray-300 rounded-full capitalize focus:ring-2 focus:ring-offset-1 focus:outline-none cursor-pointer ${(confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status) === "pending"

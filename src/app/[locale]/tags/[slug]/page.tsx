@@ -23,7 +23,7 @@ export default function TagPage() {
     const [tagArticles, setTagArticles] = useState<Article[]>([]);
     const [tagName, setTagName] = useState<string>("");
     const locale = useLocale();
-    useDocTitle(`${tagName}`);
+    useDocTitle(`${tagName} | Sajjad Husain Law Associates`);
 
     const cleanTagName = (name: string): string => {
         return name
