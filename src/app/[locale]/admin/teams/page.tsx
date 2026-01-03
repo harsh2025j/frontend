@@ -135,8 +135,8 @@ const TeamManagementPage: React.FC = () => {
                             {member.isActive ? "Active" : "Inactive"}
                           </span>
                         </td>
-                        <td className="py-3 px-4 flex gap-2">
-                          <button onClick={() => router.push(`/admin/teams/edit/${member._id}`)} className="bg-gray-300 text-gray-700 px-4 py-1 rounded-md text-sm hover:bg-gray-400">
+                        <td className="py-3 px-4 flex gap-2 ">
+                          <button onClick={() => router.push(`/admin/teams/edit/${member._id}`)} className="bg-[#0B2149] text-white px-4 py-1 rounded-md text-sm hover:bg-gray-400">
                             Manage
                           </button>
                         </td>

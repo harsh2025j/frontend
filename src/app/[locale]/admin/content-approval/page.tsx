@@ -12,7 +12,7 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 
 const ITEMS_PER_PAGE = 15;
 
-// ✅ YouTube Style Table Skeleton
+
 const TableSkeleton = () => {
   return (
     <div className="animate-pulse">

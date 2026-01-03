@@ -541,7 +541,7 @@ function EditProfileModal({ isOpen, onClose, currentUser, onSave }: EditProfileM
               value={formData.phone}
               onChange={handleChange}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#C9A227]/20 focus:border-[#C9A227] outline-none transition text-sm"
-              placeholder="+91 XXXXX XXXXX"
+              placeholder="99XXX XXX73"
             />
           </div> 
           <div>

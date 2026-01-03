@@ -176,7 +176,7 @@ export default function ContactUs() {
                                             value={formData.phone}
                                             onChange={handleChange}
                                             className="w-full pb-3 border-b border-gray-200 focus:border-[#C9A227] outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium"
-                                            placeholder="+91 XXXXX XXXXX"
+                                            placeholder="99XXX XXX73"
                                         />
                                     </div>
                                     <div className="group">

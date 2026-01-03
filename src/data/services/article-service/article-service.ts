@@ -23,6 +23,7 @@ export const articleApi = {
     if (Array.isArray(data.tags)) {
       formData.append("tags", data.tags.join(", "));
     }
+    
     // console.log(formData.get("tags"));
     // console.log("form data send to backed ",formData)
     const response = await apiClient.post<CreateArticleResponse>(
@@ -105,9 +106,8 @@ export const articleApi = {
     if (data.thumbnail && data.thumbnail instanceof File) {
       formData.append("file", data.thumbnail);
     }
-    // console.log(formData.get("slug"));
+    // console.log(formData.get("tags"));
     // console.log(formData.get("isPaywalled"));
-
 
     const response = await apiClient.patch<CreateArticleResponse>(
       `${API_ENDPOINTS.ARTICLE.CREATE}/${articleId}`,

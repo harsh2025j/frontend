@@ -193,7 +193,7 @@ export default function AddNewMemberPage() {
                 <CustomInput
                   label="Phone Number"
                   name="phone"
-                  placeholder="+91 987xx xx210"
+                  placeholder="987xx xx210"
                   value={formData.phone}
                   onChange={handleChange}
                 />

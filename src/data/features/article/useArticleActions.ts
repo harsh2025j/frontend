@@ -56,7 +56,7 @@ export const useCreateArticleActions = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
 
-      const maxSize = 5 * 1024 * 1024;
+      const maxSize = 10 * 1024 * 1024;
 
       if (file.size > maxSize) {
         toast.error("Thumbnail must be less than 5MB");
