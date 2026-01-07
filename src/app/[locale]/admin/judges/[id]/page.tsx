@@ -45,7 +45,7 @@ export default function EditJudgePage() {
             }
             setFormData(data);
         } catch (error: any) {
-            console.error("Error fetching judge details:", error);
+            // console.error("Error fetching judge details:", error);
             toast.error(error.message || "Failed to fetch judge details");
         } finally {
             setLoading(false);

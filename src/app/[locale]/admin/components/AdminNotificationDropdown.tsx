@@ -24,7 +24,7 @@ export default function AdminNotificationDropdown({ userId }: AdminNotificationD
             const data = Array.isArray(response.data) ? response.data : [];
             setNotifications(data);
         } catch (error) {
-            console.error("Failed to fetch notifications", error);
+            // console.error("Failed to fetch notifications", error);
         } finally {
             setLoading(false);
         }
@@ -64,7 +64,7 @@ export default function AdminNotificationDropdown({ userId }: AdminNotificationD
             setShowReadAllConfirm(false);
             toast.success("All notifications marked as read");
         } catch (error) {
-            console.error("Failed to mark all as read", error);
+            // console.error("Failed to mark all as read", error);
             toast.error("Failed to mark all as read");
         }
     };

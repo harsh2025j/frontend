@@ -42,8 +42,36 @@ export default function JudgesPage() {
             setError(null);
             try {
                 const response = await judgesService.getActive();
-                const data = response.data?.data || response.data || [];
-                setJudges(Array.isArray(data) ? data : []);
+                const rawData = response.data?.data || response.data || [];
+                // console.log("Judges data:", rawData);
+
+                const mappedData = Array.isArray(rawData) ? rawData.map((j: any) => {
+                    // Derive category from designation since backend doesn't provide it
+                    let category: JudgeCategory = "judges";
+                    const des = (j.designation || "").toLowerCase();
+
+                    // improved logic: check for retired first, then designation
+                    if (j.isActive === false || (j.retirementDate && new Date(j.retirementDate) <= new Date())) {
+                        category = "retired";
+                    } else if (des.includes("chief justice")) {
+                        category = "chief-justice";
+                    } else if (des.includes("senior")) {
+                        category = "senior-judges";
+                    }
+
+                    return {
+                        ...j,
+                        category,
+                        // Ensure arrays exist to prevent render crashes
+                        education: Array.isArray(j.education) ? j.education : [],
+                        specialization: Array.isArray(j.specialization) ? j.specialization : [],
+                        // Map 'court' from API to 'courtNumber' if 'courtNumber' is missing
+                        courtNumber: j.courtNumber || j.court || "Unknown Court",
+                        courtType: j.courtType || "High Court" // Default fallback
+                    };
+                }) : [];
+
+                setJudges(mappedData);
             } catch (err: any) {
                 console.error("Error fetching judges:", err);
                 setError(err.message || "Failed to load judges data from the server");
@@ -58,9 +86,10 @@ export default function JudgesPage() {
     }, []);
 
     // Get unique courts, years, and court types for filters
-    const availableCourts = Array.from(new Set(judges.filter(j => j.courtNumber).map(j => j.courtNumber))).sort();
-    const availableYears = Array.from(new Set(judges.map(j => new Date(j.appointmentDate).getFullYear()))).sort((a, b) => b - a);
-    const availableCourtTypes = Array.from(new Set(judges.filter(j => j.courtType).map(j => j.courtType!))).sort();
+    // Safely access properties even if they might still be missing (though mappedData should fix it)
+    const availableCourts = Array.from(new Set(judges.filter(j => j.courtNumber).map(j => j.courtNumber))).filter(Boolean).sort();
+    const availableYears = Array.from(new Set(judges.map(j => new Date(j.appointmentDate).getFullYear()))).filter(Boolean).sort((a, b) => b - a);
+    const availableCourtTypes = Array.from(new Set(judges.filter(j => j.courtType).map(j => j.courtType!))).filter(Boolean).sort();
 
     const filteredJudges = judges.filter(judge => {
         // Category filter
@@ -289,7 +318,7 @@ export default function JudgesPage() {
                         </div>
 
                         {/* Court Number Filter */}
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                                 Filter by Court
                             </label>
@@ -309,7 +338,7 @@ export default function JudgesPage() {
                                 </select>
                                 <ChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" size={18} />
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Appointment Year Filter */}
                         <div>

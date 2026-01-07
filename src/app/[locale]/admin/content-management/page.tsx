@@ -197,7 +197,7 @@ const contentManagementPage: React.FC = () => {
             ITEM_PER_PAGE
           );
 
-          console.log("Search Service Results:", results);
+          // console.log("Search Service Results:", results);
 
           // Map search results to Article type (aligned with Content Approval)
           const mappedResults: any[] = results.data.map((item) => ({
@@ -231,7 +231,7 @@ const contentManagementPage: React.FC = () => {
           setTotalSearchItems(totalInfo);
 
         } catch (error) {
-          console.error("Search failed", error);
+          // console.error("Search failed", error);
           // toast.error("Failed to fetch search results");
         } finally {
           setIsSearching(false);

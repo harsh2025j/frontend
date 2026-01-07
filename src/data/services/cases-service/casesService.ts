@@ -24,8 +24,8 @@ export const casesService = {
     getByJudge: async (judgeId: string) => {
         return await apiClient.get(`${API_ENDPOINTS.CASES.BY_JUDGE}/${judgeId}`);
     },
-    getByNumber: async (caseNumber: string) => {
-        return await apiClient.get(`${API_ENDPOINTS.CASES.BY_NUMBER}/${caseNumber}`);
+    getByNumber: async (params: any) => {
+        return await apiClient.get(API_ENDPOINTS.CASES.BASE, { params });
     },
     updateStatus: async (id: string, status: string) => {
         return await apiClient.patch(`${API_ENDPOINTS.CASES.BASE}/${id}/status`, { status });

@@ -15,23 +15,23 @@ const selectSubscriptionPlans = (state: any) => state.subscription.plans;
 
 const useSubscription = () => {
   const loading = useAppSelector(selectSubscriptionLoading);
-  const error = useAppSelector(selectSubscriptionError );
+  const error = useAppSelector(selectSubscriptionError);
   const message = useAppSelector(selectSubscriptionMessage);
-  const plans=useAppSelector(selectSubscriptionPlans)
-  return { plans,loading, error,message};
+  const plans = useAppSelector(selectSubscriptionPlans)
+  return { plans, loading, error, message };
 };
 
 export const useCreatePlanActions = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { loading, error, message} = useSubscription();
+  const { loading, error, message } = useSubscription();
 
   const [formData, setFormData] = useState<AddPlanRequest>({
     name: "",
-    price:"",
+    price: "",
     discount: "",
     features: [] as string[],
-});
+  });
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -63,21 +63,21 @@ export const useCreatePlanActions = () => {
 
   useEffect(() => {
     if (message === MESSAGES.SUBSCRIPTION_ADDING_SUCCESS) {
-        setFormData({
-             name: "",
-    price:"",
-    discount: "",
-    features: [] as string[],
-        })
+      setFormData({
+        name: "",
+        price: "",
+        discount: "",
+        features: [] as string[],
+      })
       toast.success(message);
-      router.push("/admin/plans"); 
-    }else{
-        
+      router.push("/admin/plans");
+    } else {
+
     }
-   
+
 
   }, [message]);
-  
+
   return {
     formData,
     setFormData,
@@ -94,16 +94,16 @@ export const useCreatePlanActions = () => {
 export const useSubscriptionListActions = () => {
   const dispatch = useAppDispatch();
 
-  const {plans,loading,error,message} = useSubscription();
-  
+  const { plans, loading, error, message } = useSubscription();
+
   useEffect(() => {
     // console.log("data fetching ");
     dispatch(fetchPlans());
-    
-  },[dispatch]);
+
+  }, [dispatch]);
 
   useEffect(() => {
-    console.log("Fetched Articles (useArticleListActions hook):", plans?.[0]?.id);
+    // console.log("Fetched Articles (useArticleListActions hook):", plans?.[0]?.id);
   }, [plans]);
 
   return {

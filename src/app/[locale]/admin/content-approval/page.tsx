@@ -322,7 +322,7 @@ const ContentApprovalPanel = () => {
           setTotalSearchItems(totalInfo);
 
         } catch (error) {
-          console.error("Search failed", error);
+          // console.error("Search failed", error);
           setSearchResults([]);
           setTotalSearchItems(0);
         } finally {

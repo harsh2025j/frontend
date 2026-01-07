@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Calendar, Bell, FileText, Download, Eye, Search, Filter, ChevronRight, Home, Scale, Megaphone, Clock, AlertCircle, Info } from 'lucide-react';
+import { displayBoardsService } from "@/data/services/display-boards-service/displayBoardsService";
 
 type BoardType = "daily-orders" | "cause-list" | "notices" | "announcements";
 
@@ -21,117 +22,54 @@ export default function DisplayBoardsPage() {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [loading, setLoading] = useState(false);
 
-    // Mock data - replace with actual API calls
-    const mockData: Record<BoardType, DisplayItem[]> = {
-        "daily-orders": [
-            {
-                id: "1",
-                title: "Daily Order List - Civil Cases",
-                date: "2024-12-24",
-                type: "Civil",
-                description: "Orders passed in civil matters today",
-                fileUrl: "#",
-                isNew: true
-            },
-            {
-                id: "2",
-                title: "Daily Order List - Criminal Cases",
-                date: "2024-12-24",
-                type: "Criminal",
-                description: "Orders passed in criminal matters today",
-                fileUrl: "#",
-                isNew: true
-            },
-            {
-                id: "3",
-                title: "Daily Order List - Writ Petitions",
-                date: "2024-12-24",
-                type: "Writ",
-                description: "Orders in writ petitions",
-                fileUrl: "#"
-            }
-        ],
-        "cause-list": [
-            {
-                id: "4",
-                title: "Cause List - Court No. 1",
-                date: "2024-12-24",
-                type: "Court 1",
-                description: "Cases listed before Hon'ble Chief Justice",
-                fileUrl: "#",
-                isNew: true
-            },
-            {
-                id: "5",
-                title: "Cause List - Court No. 2",
-                date: "2024-12-24",
-                type: "Court 2",
-                description: "Cases listed before Hon'ble Justice",
-                fileUrl: "#",
-                isNew: true
-            },
-            {
-                id: "6",
-                title: "Supplementary Cause List",
-                date: "2024-12-24",
-                type: "Supplementary",
-                description: "Additional cases listed for today",
-                fileUrl: "#"
-            }
-        ],
-        "notices": [
-            {
-                id: "7",
-                title: "Notice - Court Timings During Winter",
-                date: "2024-12-20",
-                type: "General",
-                description: "Revised court timings effective from December 2024",
-                isNew: true
-            },
-            {
-                id: "8",
-                title: "Notice - E-Filing Guidelines",
-                date: "2024-12-18",
-                type: "E-Filing",
-                description: "Updated guidelines for electronic filing of cases"
-            },
-            {
-                id: "9",
-                title: "Notice - Holiday List 2025",
-                date: "2024-12-15",
-                type: "Holidays",
-                description: "List of court holidays for the year 2025"
-            }
-        ],
-        "announcements": [
-            {
-                id: "10",
-                title: "Important Announcement - New Court Complex",
-                date: "2024-12-22",
-                type: "Infrastructure",
-                description: "Information regarding the new court complex inauguration",
-                isNew: true
-            },
-            {
-                id: "11",
-                title: "Announcement - Bar Association Meeting",
-                date: "2024-12-19",
-                type: "Meeting",
-                description: "Monthly meeting of the Bar Association scheduled"
-            }
-        ]
-    };
 
-    const [displayItems, setDisplayItems] = useState<DisplayItem[]>(mockData["daily-orders"]);
 
+    const [displayItems, setDisplayItems] = useState<DisplayItem[]>([]);
+    const [error, setError] = useState<string | null>(null);
+
+    // Fetch data from API
     useEffect(() => {
-        setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            setDisplayItems(mockData[activeBoard]);
-            setLoading(false);
-        }, 300);
-    }, [activeBoard]);
+        const fetchBoards = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                // Pass activeBoard (as type) and selectedDate as params
+                const params = {
+                    type: activeBoard,
+                    date: selectedDate
+                };
+
+                const response = await displayBoardsService.getAll(params);
+                const rawData = response.data?.data || response.data || [];
+                console.log("Display Boards data:", rawData);
+
+                // Handle pagination structure: if rawData is an object with a 'data' array, use that
+                const itemsArray = Array.isArray(rawData) ? rawData : (Array.isArray(rawData.data) ? rawData.data : []);
+
+                // Map and validate data
+                const mappedItems: DisplayItem[] = itemsArray.map((item: any) => ({
+                    id: item.id || Math.random().toString(36).substr(2, 9),
+                    title: item.title || "Untitled Item",
+                    date: item.date || item.createdAt || new Date().toISOString(),
+                    type: item.type || "General",
+                    description: item.description || "",
+                    fileUrl: item.fileUrl || item.url || null,
+                    isNew: item.isNew || (new Date(item.date || item.createdAt) > new Date(Date.now() - 86400000)) // Mark as new if within last 24h
+                }));
+
+                setDisplayItems(mappedItems);
+            } catch (err: any) {
+                console.error("Error fetching display boards:", err);
+                setError(err.message || "Failed to load data");
+                setDisplayItems([]);
+                // toast.error("Unable to load display board data.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBoards();
+    }, [activeBoard, selectedDate]);
 
     const filteredItems = displayItems.filter(item =>
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -217,8 +155,8 @@ export default function DisplayBoardsPage() {
                     <button
                         onClick={() => setActiveBoard("daily-orders")}
                         className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "daily-orders"
-                                ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
-                                : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
+                            ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
                             }`}
                     >
                         <div className="flex flex-col items-center gap-3">
@@ -238,8 +176,8 @@ export default function DisplayBoardsPage() {
                     <button
                         onClick={() => setActiveBoard("cause-list")}
                         className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "cause-list"
-                                ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
-                                : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
+                            ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
                             }`}
                     >
                         <div className="flex flex-col items-center gap-3">
@@ -259,8 +197,8 @@ export default function DisplayBoardsPage() {
                     <button
                         onClick={() => setActiveBoard("notices")}
                         className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "notices"
-                                ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
-                                : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
+                            ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
                             }`}
                     >
                         <div className="flex flex-col items-center gap-3">
@@ -280,8 +218,8 @@ export default function DisplayBoardsPage() {
                     <button
                         onClick={() => setActiveBoard("announcements")}
                         className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "announcements"
-                                ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
-                                : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
+                            ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
                             }`}
                     >
                         <div className="flex flex-col items-center gap-3">

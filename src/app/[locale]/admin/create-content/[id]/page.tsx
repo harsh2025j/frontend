@@ -102,7 +102,7 @@ const EditArticlePage: React.FC = () => {
                     router.push("/admin/content-management");
                 }
             } catch (error) {
-                console.error("Failed to fetch article", error);
+                // console.error("Failed to fetch article", error);
                 toast.error("Failed to load article details");
             } finally {
                 setLoading(false);
@@ -127,7 +127,7 @@ const EditArticlePage: React.FC = () => {
         const uniqueSuffix = Date.now().toString().slice(-6);
         const generatedSlug = `${autoSlug}-article-${uniqueSuffix}`;
 
-        console.log(generatedSlug)
+        // console.log(generatedSlug)
 
         setFormData((prev) => ({
             ...prev,
@@ -153,7 +153,7 @@ const EditArticlePage: React.FC = () => {
             await refetch(true); // Force refresh list
             router.push("/admin/content-management");
         } catch (error: any) {
-            console.error("Update failed", error);
+            // console.error("Update failed", error);
             toast.error(error?.message || "Failed to update article");
         } finally {
             setLoading(false);

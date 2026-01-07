@@ -22,7 +22,12 @@ export const performCaseSearch = async (searchType: SearchType, inputs: SearchIn
             return [];
         }
         // Use specific endpoint for case number
-        response = await casesService.getByNumber(inputs.caseNumber.trim());
+        const params = {
+            caseNumber: inputs.caseNumber.trim(),
+            caseType: inputs.caseType,
+            year: inputs.year
+        };
+        response = await casesService.getByNumber(params);
     }
     else {
         const params: any = {};
@@ -71,22 +76,18 @@ export const performCaseSearch = async (searchType: SearchType, inputs: SearchIn
         const rawData = response.data;
         let results: any[] = [];
 
-        if (searchType === "caseNumber") {
-            if (rawData.data && !Array.isArray(rawData.data)) {
-                results = [rawData.data];
-            } else if (Array.isArray(rawData.data)) {
-                results = rawData.data;
-            } else if (!Array.isArray(rawData) && rawData.id) {
-                results = [rawData];
-            }
-        } else {
-            if (rawData.data && Array.isArray(rawData.data.data)) {
-                results = rawData.data.data;
-            } else if (rawData.data && Array.isArray(rawData.data)) {
-                results = rawData.data;
-            } else if (Array.isArray(rawData)) {
-                results = rawData;
-            }
+        // Universal parsing logic for all search types
+        if (rawData.data && Array.isArray(rawData.data.data)) {
+            results = rawData.data.data;
+        } else if (rawData.data && Array.isArray(rawData.data)) {
+            results = rawData.data;
+        } else if (Array.isArray(rawData)) {
+            results = rawData;
+        } else if (rawData.data && !Array.isArray(rawData.data)) {
+            // Fallback for single object response wrapped in data
+            results = [rawData.data];
+        } else if (!Array.isArray(rawData) && rawData.id) {
+            results = [rawData];
         }
 
         return results;

@@ -36,7 +36,7 @@ export default function CreateCasePage() {
             toast.success("Case created successfully");
             router.push("/admin/cases");
         } catch (error: any) {
-            console.error("Error creating case:", error);
+            // console.error("Error creating case:", error);
             toast.error(error.message || "Failed to create case");
             setSubmitting(false);
         }

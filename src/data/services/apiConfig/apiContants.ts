@@ -63,6 +63,8 @@ export const API_ENDPOINTS = {
     BROADCAST: "/users/broadcast",
   },
   NOTIFICATIONS: {
+    GET_BROADCAST: "/notifications/broadcasts",
+    RESEND_BROADCAST: "/notifications/broadcasts/:id/resend",
     FETCH_BY_ID: "/notifications",
     READ_ALL: "/notifications/read-all",
     MARK_READ: "/notifications/:id/read",

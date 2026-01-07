@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { broadcastService, BroadcastPayload } from "@/data/services/broadcast-service/broadcastService";
+import { BroadcastPayload, postBroadcastService } from "@/data/services/broadcast-service/broadcastService";
 import toast from "react-hot-toast";
 import { Send, Bell, AlertTriangle, Users, Search, Loader, ArrowLeft } from "lucide-react";
 import { usersApi } from "@/data/services/users-service/users-service";
@@ -14,8 +14,6 @@ export default function CreateBroadcastPage() {
     const router = useRouter();
     const { user: reduxUser } = useProfileActions();
     const user = reduxUser as UserData;
-
-    // --- ALL HOOKS MUST BE DECLARED HERE AT THE TOP ---
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -57,7 +55,6 @@ export default function CreateBroadcastPage() {
         }
     }, [user, router]);
 
-    // --- EARLY RETURN LOGIC (MUST BE AFTER ALL HOOKS) ---
     if (!isAuthorized) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -66,7 +63,6 @@ export default function CreateBroadcastPage() {
         );
     }
 
-    // --- HANDLERS ---
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -90,7 +86,7 @@ export default function CreateBroadcastPage() {
                 setUsersFetched(true);
             }
         } catch (error) {
-            console.error("Failed to fetch users", error);
+            // console.error("Failed to fetch users", error);
             toast.error("Failed to load users list");
         } finally {
             setIsLoadingUsers(false);
@@ -140,7 +136,7 @@ export default function CreateBroadcastPage() {
         setLoading(true);
         setShowConfirm(false);
         try {
-            await broadcastService.sendBroadcast({
+            await postBroadcastService.sendBroadcast({
                 ...formData,
                 userIds: formData.sendToAll ? [] : selectedUserIds
             });

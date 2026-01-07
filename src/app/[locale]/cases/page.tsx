@@ -38,8 +38,8 @@ export default function CasesPage() {
         setLoading(true);
 
         try {
+            // console.log("Inputs:", inputs);
             const results = await performCaseSearch(searchType, inputs);
-
             if (results && results.length > 0) {
                 toast.success("Cases found successfully!");
                 const queryParams = new URLSearchParams();
@@ -307,12 +307,15 @@ export default function CasesPage() {
                                                     onChange={(e) => setInputs({ ...inputs, caseType: e.target.value })}
                                                 >
                                                     <option value="">-- Select Case Type --</option>
-                                                    <option value="Civil">Civil Case</option>
-                                                    <option value="Criminal">Criminal Case</option>
-                                                    <option value="Writ">Writ Petition</option>
-                                                    <option value="Appeal">Appeal</option>
-                                                    <option value="Revision">Revision</option>
-                                                    <option value="Execution">Execution</option>
+                                                    <option value="civil">Civil</option>
+                                                    <option value="criminal">Criminal</option>
+                                                    <option value="constitutional">Constitutional</option>
+                                                    <option value="corporate">Corporate</option>
+                                                    <option value="family">Family</option>
+                                                    <option value="tax">Tax</option>
+                                                    <option value="labor">Labor</option>
+                                                    <option value="property">Property</option>
+                                                    <option value="other">Other</option>
                                                 </select>
                                             </div>
 
@@ -398,11 +401,11 @@ export default function CasesPage() {
                                                     onChange={(e) => setInputs({ ...inputs, partyType: e.target.value })}
                                                 >
                                                     <option value="">-- Select Party Type --</option>
-                                                    <option value="Petitioner">Petitioner</option>
-                                                    <option value="Respondent">Respondent</option>
-                                                    <option value="Appellant">Appellant</option>
+                                                    <option value="petitioner">Petitioner</option>
+                                                    <option value="respondent">Respondent</option>
+                                                    {/* <option value="Appellant">Appellant</option>
                                                     <option value="Defendant">Defendant</option>
-                                                    <option value="Plaintiff">Plaintiff</option>
+                                                    <option value="Plaintiff">Plaintiff</option> */}
                                                 </select>
                                             </div>
 

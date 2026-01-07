@@ -24,7 +24,7 @@ export default function AdminCasesPage() {
             const response = await casesService.getAll();
             setCases(response.data.data.data);
         } catch (error: any) {
-            console.error("Error fetching cases:", error);
+            // console.error("Error fetching cases:", error);
             toast.error(error.message || "Failed to fetch cases");
         } finally {
             setLoading(false);
@@ -38,7 +38,7 @@ export default function AdminCasesPage() {
             toast.success("Case deleted successfully");
             fetchCases();
         } catch (error: any) {
-            console.error("Error deleting case:", error);
+            // console.error("Error deleting case:", error);
             toast.error(error.message || "Failed to delete case");
         }
     };
@@ -60,7 +60,7 @@ export default function AdminCasesPage() {
             toast.success("Status updated successfully");
             fetchCases(); // Ensure sync
         } catch (error) {
-            console.error("Error updating status:", error);
+            // console.error("Error updating status:", error);
             toast.error("Failed to update status");
             fetchCases(); // Revert on error
             setConfirmModal({ isOpen: false, caseId: "", newStatus: "" });

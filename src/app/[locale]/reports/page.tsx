@@ -33,9 +33,29 @@ export default function ReportsPage() {
         setError(null);
         try {
             const response = await reportsService.getAll();
-            const data = response.data?.data || response.data || [];
-            // Ensure we always have an array
-            setReports(Array.isArray(data) ? data : []);
+            const rawData = response.data?.data || response.data || [];
+            console.log("Reports data:", rawData);
+
+            // Handle pagination structure: if rawData is an object with a 'data' array, use that
+            const reportsArray = Array.isArray(rawData) ? rawData : (Array.isArray(rawData.data) ? rawData.data : []);
+
+            // Map and validate data
+            const mappedReports: Report[] = reportsArray.map((item: any) => ({
+                id: item.id || Math.random().toString(36).substr(2, 9),
+                title: item.title || "Untitled Report",
+                description: item.description || "No description available",
+                // Normalize type or fallback to 'custom'
+                type: ["case-statistics", "judgment-analysis", "custom"].includes(item.type)
+                    ? item.type
+                    : "custom",
+                // Handle different date fields
+                generatedDate: item.generatedDate || item.createdAt || item.date || new Date().toISOString(),
+                // Handle generatedBy variants
+                generatedBy: item.generatedBy || item.createdBy || item.author || "System",
+                fileUrl: item.fileUrl || item.url || null
+            }));
+
+            setReports(mappedReports);
         } catch (err: any) {
             console.error("Error fetching reports:", err);
             setError(err.message || "Failed to load reports data from the server");

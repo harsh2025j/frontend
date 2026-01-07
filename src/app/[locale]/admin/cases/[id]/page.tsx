@@ -42,7 +42,7 @@ export default function EditCasePage() {
             }
             setFormData(data);
         } catch (error: any) {
-            console.error("Error fetching case details:", error);
+            // console.error("Error fetching case details:", error);
             toast.error(error.message || "Failed to fetch case details");
         } finally {
             setLoading(false);
@@ -61,7 +61,7 @@ export default function EditCasePage() {
             toast.success("Case updated successfully");
             router.push("/admin/cases");
         } catch (error: any) {
-            console.error("Error updating case:", error);
+            // console.error("Error updating case:", error);
             toast.error(error.message || "Failed to update case");
             setSubmitting(false);
         }

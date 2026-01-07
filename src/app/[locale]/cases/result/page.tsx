@@ -52,6 +52,7 @@ function ResultPageContent() {
     }
 
     return (
+        console.log(cases),
         <div className="min-h-screen bg-gray-50/50 p-6">
             <div className="max-w-7xl mx-auto space-y-6">
 
@@ -84,7 +85,7 @@ function ResultPageContent() {
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case Number</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[250px]">Title</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Court</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Hearing</th>
@@ -95,7 +96,7 @@ function ResultPageContent() {
                                     {cases.map((c) => (
                                         <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-[#0A2342]">{c.caseNumber}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{c.title}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[250px] overflow-hidden text-ellipsis">{c.title}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-2.5 py-0.5 inline-flex text-xs font-medium rounded-full capitalize ${c.status === "pending" ? "bg-yellow-100 text-yellow-800" :
                                                     c.status === "closed" ? "bg-gray-100 text-gray-800" :
