@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, Bell, FileText, Download, Eye, Search, Filter, ChevronRight, Home, Scale, Megaphone, Clock, AlertCircle, Info } from 'lucide-react';
 import { displayBoardsService } from "@/data/services/display-boards-service/displayBoardsService";
+import { useDocTitle } from "@/hooks/useDocTitle";
+import { formatDate, formatDateTime } from "@/utils/dateUtils";
 
 type BoardType = "daily-orders" | "cause-list" | "notices" | "announcements";
 
@@ -17,6 +19,7 @@ interface DisplayItem {
 }
 
 export default function DisplayBoardsPage() {
+    useDocTitle("Display Boards | Sajjad Husain Law Associates");
     const [activeBoard, setActiveBoard] = useState<BoardType>("daily-orders");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -280,7 +283,7 @@ export default function DisplayBoardsPage() {
                             </div>
                             <div className="flex items-center gap-2 text-sm bg-white/10 px-4 py-2 rounded-lg">
                                 <Clock size={16} />
-                                <span>Last updated: Today, {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                                <span>Last updated: Today, {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                         </div>
                     </div>
@@ -320,11 +323,7 @@ export default function DisplayBoardsPage() {
                                             <div className="flex items-center gap-4 text-sm text-gray-500">
                                                 <div className="flex items-center gap-1">
                                                     <Calendar size={16} />
-                                                    <span>{new Date(item.date).toLocaleDateString('en-US', {
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric'
-                                                    })}</span>
+                                                    <span>{formatDate(item.date)}</span>
                                                 </div>
                                             </div>
                                         </div>

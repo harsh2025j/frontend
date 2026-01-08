@@ -28,12 +28,12 @@ const Judgement: React.FC<JudgementProps> = ({ img, description, slug, author, d
         </div>
         <div className="flex flex-col py-3 w-full">
           <div
-            className="line-clamp-5 sm:text-base md:text-xs font-merriweather "
+            className="line-clamp-5 px-1 sm:text-base md:text-xs font-merriweather "
             dangerouslySetInnerHTML={{ __html: description }}
           />
           <div className="text-gray-500 text-xs sm:text-sm ">
-            {author && <span className="mr-3">Author: {author}</span>}
-            <div className="flex items-center gap-1 text-gray-600">
+            {author && <span className="mr-3 ml-1">Author: {author}</span>}
+            <div className="flex ml-1 items-center gap-1 text-gray-600">
               <Clock size={14} />
               {date && <span>{date}</span>}
             </div>

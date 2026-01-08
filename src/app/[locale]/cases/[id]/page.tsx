@@ -4,8 +4,11 @@ import React, { useEffect, useState } from "react";
 import { casesService } from "@/data/services/cases-service/casesService";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
+import { formatDate } from "@/utils/dateUtils";
 
 export default function CaseDetailPage() {
+    useDocTitle("Case Details | Sajjad Husain Law Associates");
     const params = useParams();
     const router = useRouter();
     const [caseData, setCaseData] = useState<any>(null);
@@ -69,13 +72,13 @@ export default function CaseDetailPage() {
                     </div>
                     <div>
                         <h3 className="text-sm font-medium text-gray-500">Filing Date</h3>
-                        <p className="text-lg">{new Date(caseData.filingDate).toLocaleDateString()}</p>
+                        <p className="text-lg">{formatDate(caseData.filingDate)}</p>
                     </div>
                     <div>
                         <h3 className="text-sm font-medium text-gray-500">Next Hearing</h3>
                         <p className="text-lg">
                             {caseData.nextHearingDate
-                                ? new Date(caseData.nextHearingDate).toLocaleDateString()
+                                ? formatDate(caseData.nextHearingDate)
                                 : "Not Scheduled"}
                         </p>
                     </div>

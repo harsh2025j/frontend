@@ -5,6 +5,8 @@ import { Scale, Gavel, Home, ChevronRight, Mail, Phone, Award, Calendar, BookOpe
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { judgesService } from "@/data/services/judges-service/judgesService";
+import { useDocTitle } from "@/hooks/useDocTitle";
+import { formatDate } from "@/utils/dateUtils";
 
 type JudgeCategory = "chief-justice" | "senior-judges" | "judges" | "retired";
 
@@ -26,6 +28,7 @@ interface Judge {
 }
 
 export default function JudgesPage() {
+    useDocTitle("Judges | Sajjad Husain Law Associates");
     const [activeCategory, setActiveCategory] = useState<JudgeCategory>("chief-justice");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCourt, setSelectedCourt] = useState("");
@@ -525,10 +528,7 @@ export default function JudgesPage() {
                                                         <Calendar size={16} className="text-[#C9A227]" />
                                                         <span className="text-gray-600">Appointed:</span>
                                                         <span className="font-semibold text-gray-900">
-                                                            {new Date(judge.appointmentDate).toLocaleDateString('en-US', {
-                                                                year: 'numeric',
-                                                                month: 'short'
-                                                            })}
+                                                            {formatDate(judge.appointmentDate)}
                                                         </span>
                                                     </div>
                                                     {judge.retirementDate && (
@@ -536,10 +536,7 @@ export default function JudgesPage() {
                                                             <Calendar size={16} className="text-gray-400" />
                                                             <span className="text-gray-600">Retires:</span>
                                                             <span className="font-semibold text-gray-900">
-                                                                {new Date(judge.retirementDate).toLocaleDateString('en-US', {
-                                                                    year: 'numeric',
-                                                                    month: 'short'
-                                                                })}
+                                                                {formatDate(judge.retirementDate)}
                                                             </span>
                                                         </div>
                                                     )}

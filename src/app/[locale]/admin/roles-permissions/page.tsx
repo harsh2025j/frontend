@@ -18,6 +18,7 @@ import {
 } from "@/data/features/permissions/permissionsThunks";
 import { Plus, Edit, Trash2, X, Shield, Key, AlertTriangle, RefreshCw } from "lucide-react";
 import { MESSAGES } from "@/lib/constants/messageConstants";
+import { formatDate, formatDateTime } from "@/utils/dateUtils";
 
 import Loader from "@/components/ui/Loader";
 import { useRouter } from "next/navigation";
@@ -297,11 +298,9 @@ export default function RolesPermissionsPage() {
                                         {/* Created At */}
                                         <td className="px-4 py-4 text-sm text-gray-700 font-medium">
                                             {role.createdAt
-                                                ? new Date(role.createdAt).toLocaleString("en-IN")
+                                                ? formatDateTime(role.createdAt)
                                                 : role.id
-                                                    ? new Date(
-                                                        parseInt(role.id.substring(0, 8), 16) * 1000
-                                                    ).toLocaleString("en-IN")
+                                                    ? formatDateTime(new Date(parseInt(role.id.substring(0, 8), 16) * 1000))
                                                     : "N/A"}
 
                                             {/* {role.createdAt
@@ -393,12 +392,10 @@ export default function RolesPermissionsPage() {
 
                                         {/* Created At */}
                                         <td className="px-4 py-4 text-sm text-gray-700 font-medium">
-                                           {perm.createdAt
-                                                ? new Date(perm.createdAt).toLocaleString("en-IN")
+                                            {perm.createdAt
+                                                ? formatDateTime(perm.createdAt)
                                                 : perm._id
-                                                    ? new Date(
-                                                        parseInt(perm._id.substring(0, 8), 16) * 1000
-                                                    ).toLocaleString("en-IN")
+                                                    ? formatDateTime(new Date(parseInt(perm._id.substring(0, 8), 16) * 1000))
                                                     : "N/A"}
                                         </td>
 
@@ -495,7 +492,7 @@ export default function RolesPermissionsPage() {
                                             disabled={isActionLoading}
                                             className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-medium shadow-sm shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                         >
-                                            {isActionLoading && <Loader size="sm"  />}
+                                            {isActionLoading && <Loader size="sm" />}
                                             {editingRole ? "Save Changes" : "Create Role"}
                                         </button>
                                     </div>
@@ -543,7 +540,7 @@ export default function RolesPermissionsPage() {
                                             disabled={isActionLoading}
                                             className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-medium shadow-sm shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                         >
-                                            {isActionLoading && <Loader size="sm"  />}
+                                            {isActionLoading && <Loader size="sm" />}
                                             {editingPermission ? "Save Changes" : "Create Permission"}
                                         </button>
                                     </div>
@@ -582,7 +579,7 @@ export default function RolesPermissionsPage() {
                             >
                                 {isActionLoading ? (
                                     <>
-                                        <Loader size="sm"  /> Deleting...
+                                        <Loader size="sm" /> Deleting...
                                     </>
                                 ) : (
                                     "Delete"

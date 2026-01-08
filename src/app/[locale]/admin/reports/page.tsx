@@ -6,8 +6,11 @@ import { Link } from "@/i18n/routing";
 import { Trash2, Plus, FileText, BarChart, Download } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
+import { useDocTitle } from "@/hooks/useDocTitle";
+import { formatDate, formatDateTime } from "@/utils/dateUtils";
 
 export default function AdminReportsPage() {
+    useDocTitle("Reports | Sajjad Husain Law Associates");
     const [reports, setReports] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -77,11 +80,11 @@ export default function AdminReportsPage() {
                                             {r.reportType.replace("_", " ")}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {new Date(r.startDate).toLocaleDateString()} -{" "}
-                                            {new Date(r.endDate).toLocaleDateString()}
+                                            {formatDate(r.startDate)} -{" "}
+                                            {formatDate(r.endDate)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {new Date(r.generatedAt).toLocaleString()}
+                                            {formatDateTime(r.generatedAt)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end gap-3">

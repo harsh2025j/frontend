@@ -5,11 +5,14 @@ import { judgmentsService } from "@/data/services/judgments-service/judgmentsSer
 import { judgesService } from "@/data/services/judges-service/judgesService";
 import { casesService } from "@/data/services/cases-service/casesService";
 import { Link } from "@/i18n/routing";
+import { formatDate } from "@/utils/dateUtils";
 import { Trash2, Edit, Plus, Search, Gavel } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function AdminJudgmentsPage() {
+    useDocTitle("Judgments  | Sajjad Husain Law Associates");
     const [judgments, setJudgments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -133,7 +136,7 @@ export default function AdminJudgmentsPage() {
                                             {j.case?.caseNumber || (j.caseId && casesMap[j.caseId]) || "N/A"}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {new Date(j.judgmentDate).toLocaleDateString()}
+                                            {formatDate(j.judgmentDate)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                             {j.judge?.name || (j.judgeId && judgesMap[j.judgeId]) || "Unknown"}

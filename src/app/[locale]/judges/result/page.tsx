@@ -5,8 +5,10 @@ import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { performJudgeSearch, JudgeSearchInputs, JudgeSearchType } from "../searchLogic";
 import { ArrowLeft } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function JudgesResultPage() {
+    useDocTitle("Judges | Sajjad Husain Law Associates");
     const searchParams = useSearchParams();
     const [judges, setJudges] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);

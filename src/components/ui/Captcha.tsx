@@ -91,7 +91,7 @@ export default function Captcha({ value, onChange, onCaptchaChange }: CaptchaPro
                 type="text"
                 required
                 placeholder="Enter Captcha Here"
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-center text-lg font-semibold tracking-widest"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-center text-base md:text-lg font-semibold tracking-widest"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 maxLength={4}

@@ -8,8 +8,10 @@ import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function AdminCasesPage() {
+    useDocTitle("Cases | Sajjad Husain Law Associates");
     const [cases, setCases] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");

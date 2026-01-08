@@ -41,7 +41,7 @@ const LatestNews: React.FC<LatestNewsProps> = ({
 
       <div className="flex flex-col p-3 ">
         <Link href={`/news/${slug}`}>
-          <h2 className="text-gray-900  font-merriweather font-semibold md:text-base text-[13px]  leading-snug">
+          <h2 className="text-gray-900   font-merriweather font-semibold md:text-base text-[13px]  leading-snug">
             {title}
           </h2>
         </Link>

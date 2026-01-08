@@ -5,8 +5,11 @@ import { judgmentsService } from "@/data/services/judgments-service/judgmentsSer
 import { useParams, useRouter } from "next/navigation";
 import Loader from "@/components/ui/Loader";
 import { ArrowLeft } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
+import { formatDate } from "@/utils/dateUtils";
 
 export default function JudgmentDetailPage() {
+    useDocTitle("Judgment Details | Sajjad Husain Law Associates");
     const params = useParams();
     const router = useRouter();
     const [judgment, setJudgment] = useState<any>(null);
@@ -44,7 +47,7 @@ export default function JudgmentDetailPage() {
                     <div>
                         <h1 className="text-2xl font-bold mb-2">Judgment Details</h1>
                         <p className="text-gray-500">
-                            Date: {new Date(judgment.judgmentDate).toLocaleDateString()}
+                            Date: {formatDate(judgment.judgmentDate)}
                         </p>
                     </div>
                     {judgment.isLandmark && (

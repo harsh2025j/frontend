@@ -5,15 +5,18 @@ import { useRouter } from "@/i18n/routing";
 import toast from "react-hot-toast";
 import { Search, FileText, Gavel, Calendar, Home, ChevronRight, Scale, BookOpen, Info, AlertCircle } from 'lucide-react';
 import Captcha from "@/components/ui/Captcha";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 type SearchType = "caseNumber" | "diaryNumber" | "freeText";
 
 export default function JudgmentsPage() {
+    useDocTitle("Judgments | Sajjad Husain Law Associates");
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [searchType, setSearchType] = useState<SearchType>("caseNumber");
     const [captcha, setCaptcha] = useState("");
     const [captchaInput, setCaptchaInput] = useState("");
+    const formRef = React.useRef<HTMLDivElement>(null);
 
     const [inputs, setInputs] = useState({
         caseType: "",
@@ -25,6 +28,15 @@ export default function JudgmentsPage() {
         fromDate: "",
         toDate: ""
     });
+
+    const scrollToForm = () => {
+        // Only scroll on mobile/tablet devices
+        if (window.innerWidth < 1024 && formRef.current) {
+            setTimeout(() => {
+                formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+    };
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -150,10 +162,10 @@ export default function JudgmentsPage() {
                             {/* Search Methods */}
                             <div className="bg-gray-50">
                                 <button
-                                    onClick={() => { setSearchType("caseNumber"); resetForm(); }}
+                                    onClick={() => { setSearchType("caseNumber"); resetForm(); scrollToForm(); }}
                                     className={`w-full px-6 py-3 text-left text-sm transition-all border-l-4 ${searchType === "caseNumber"
-                                            ? 'bg-white border-[#C9A227] text-[#0A2342] font-medium'
-                                            : 'border-transparent text-gray-600 hover:bg-white/50 hover:border-gray-300'
+                                        ? 'bg-white border-[#C9A227] text-[#0A2342] font-medium'
+                                        : 'border-transparent text-gray-600 hover:bg-white/50 hover:border-gray-300'
                                         }`}
                                 >
                                     <div className="flex items-center gap-2">
@@ -163,10 +175,10 @@ export default function JudgmentsPage() {
                                 </button>
 
                                 <button
-                                    onClick={() => { setSearchType("diaryNumber"); resetForm(); }}
+                                    onClick={() => { setSearchType("diaryNumber"); resetForm(); scrollToForm(); }}
                                     className={`w-full px-6 py-3 text-left text-sm transition-all border-l-4 ${searchType === "diaryNumber"
-                                            ? 'bg-white border-[#C9A227] text-[#0A2342] font-medium'
-                                            : 'border-transparent text-gray-600 hover:bg-white/50 hover:border-gray-300'
+                                        ? 'bg-white border-[#C9A227] text-[#0A2342] font-medium'
+                                        : 'border-transparent text-gray-600 hover:bg-white/50 hover:border-gray-300'
                                         }`}
                                 >
                                     <div className="flex items-center gap-2">
@@ -176,10 +188,10 @@ export default function JudgmentsPage() {
                                 </button>
 
                                 <button
-                                    onClick={() => { setSearchType("freeText"); resetForm(); }}
+                                    onClick={() => { setSearchType("freeText"); resetForm(); scrollToForm(); }}
                                     className={`w-full px-6 py-3 text-left text-sm transition-all border-l-4 ${searchType === "freeText"
-                                            ? 'bg-white border-[#C9A227] text-[#0A2342] font-medium'
-                                            : 'border-transparent text-gray-600 hover:bg-white/50 hover:border-gray-300'
+                                        ? 'bg-white border-[#C9A227] text-[#0A2342] font-medium'
+                                        : 'border-transparent text-gray-600 hover:bg-white/50 hover:border-gray-300'
                                         }`}
                                 >
                                     <div className="flex items-center gap-2">
@@ -205,7 +217,7 @@ export default function JudgmentsPage() {
                     </div>
 
                     {/* Right Side - Form */}
-                    <div className="flex-1">
+                    <div ref={formRef} className="flex-1 scroll-mt-6">
                         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                             {/* Form Header */}
                             <div className="bg-gradient-to-r from-[#0A2342] to-[#1a3a75] border-b border-gray-200 px-6 py-5">

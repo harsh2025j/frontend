@@ -6,13 +6,16 @@ import toast from "react-hot-toast";
 import { Search, FileText, User, Gavel, Calendar, Home, ChevronRight, Scale, Building2, FileCheck, Info, AlertCircle } from 'lucide-react';
 import { performCaseSearch, SearchInputs, SearchType } from "./searchLogic";
 import Captcha from "@/components/ui/Captcha";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function CasesPage() {
+    useDocTitle("Cases | Sajjad Husain Law Associates");
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [searchType, setSearchType] = useState<SearchType>("caseNumber");
     const [captcha, setCaptcha] = useState("");
     const [captchaInput, setCaptchaInput] = useState("");
+    const formRef = React.useRef<HTMLDivElement>(null);
 
     const [inputs, setInputs] = useState<SearchInputs>({
         caseNumber: "",
@@ -25,6 +28,21 @@ export default function CasesPage() {
         filingNumber: "",
         crimeNumber: ""
     });
+
+    const scrollToForm = () => {
+        // Only scroll on mobile/tablet devices
+        if (window.innerWidth < 1024 && formRef.current) {
+            setTimeout(() => {
+                formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+    };
+
+    const handleSearchTypeChange = (type: SearchType) => {
+        setSearchType(type);
+        resetForm();
+        scrollToForm();
+    };
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -146,7 +164,7 @@ export default function CasesPage() {
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* Left Sidebar - Tabs */}
                     <div className="w-full lg:w-80 flex-shrink-0">
-                        <div className="bg-white rounded-xl overflow-hidden border border-gray-200 sticky top-4">
+                        <div className="bg-white rounded-xl overflow-hidden border border-gray-200 lg:sticky lg:top-4">
                             <div className="bg-gradient-to-r from-[#0A2342] to-[#1a3a75] text-white p-4">
                                 <h3 className="font-bold text-lg flex items-center gap-2">
                                     <FileText className="w-5 h-5" />
@@ -166,7 +184,7 @@ export default function CasesPage() {
                                 {/* Sub-tabs for Case Status */}
                                 <div className="bg-gray-50">
                                     <button
-                                        onClick={() => { setSearchType("caseNumber"); resetForm(); }}
+                                        onClick={() => handleSearchTypeChange("caseNumber")}
                                         className={`w-full px-6 py-3 text-left text-sm transition-all border-l-4 ${searchType === "caseNumber"
                                             ? 'bg-white border-[#C9A227] text-[#0A2342] font-medium'
                                             : 'border-transparent text-gray-600 hover:bg-white/50 hover:border-gray-300'
@@ -179,7 +197,7 @@ export default function CasesPage() {
                                     </button>
 
                                     <button
-                                        onClick={() => { setSearchType("filingNumber"); resetForm(); }}
+                                        onClick={() => handleSearchTypeChange("filingNumber")}
                                         className={`w-full px-6 py-3 text-left text-sm transition-all border-l-4 ${searchType === "filingNumber"
                                             ? 'bg-white border-[#C9A227] text-[#0A2342] font-medium'
                                             : 'border-transparent text-gray-600 hover:bg-white/50 hover:border-gray-300'
@@ -192,7 +210,7 @@ export default function CasesPage() {
                                     </button>
 
                                     <button
-                                        onClick={() => { setSearchType("partyName"); resetForm(); }}
+                                        onClick={() => handleSearchTypeChange("partyName")}
                                         className={`w-full px-6 py-3 text-left text-sm transition-all border-l-4 ${searchType === "partyName"
                                             ? 'bg-white border-[#C9A227] text-[#0A2342] font-medium'
                                             : 'border-transparent text-gray-600 hover:bg-white/50 hover:border-gray-300'
@@ -205,7 +223,7 @@ export default function CasesPage() {
                                     </button>
 
                                     <button
-                                        onClick={() => { setSearchType("crimeNumber"); resetForm(); }}
+                                        onClick={() => handleSearchTypeChange("crimeNumber")}
                                         className={`w-full px-6 py-3 text-left text-sm transition-all border-l-4 ${searchType === "crimeNumber"
                                             ? 'bg-white border-[#C9A227] text-[#0A2342] font-medium'
                                             : 'border-transparent text-gray-600 hover:bg-white/50 hover:border-gray-300'
@@ -275,7 +293,7 @@ export default function CasesPage() {
                     </div>
 
                     {/* Right Side - Form */}
-                    <div className="flex-1">
+                    <div ref={formRef} className="flex-1 scroll-mt-6">
                         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                             {/* Form Header */}
                             <div className="bg-gradient-to-r from-[#0A2342] to-[#1a3a75] border-b border-gray-200 px-6 py-5">
@@ -302,7 +320,7 @@ export default function CasesPage() {
                                                 </label>
                                                 <select
                                                     required
-                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
                                                     value={inputs.caseType}
                                                     onChange={(e) => setInputs({ ...inputs, caseType: e.target.value })}
                                                 >
@@ -327,7 +345,7 @@ export default function CasesPage() {
                                                     type="text"
                                                     required
                                                     placeholder="Enter Case Number (e.g., 123/2024)"
-                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
                                                     value={inputs.caseNumber}
                                                     onChange={(e) => setInputs({ ...inputs, caseNumber: e.target.value })}
                                                 />
@@ -341,7 +359,7 @@ export default function CasesPage() {
                                                     type="text"
                                                     required
                                                     placeholder="Enter Year (e.g., 2024)"
-                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
                                                     value={inputs.year}
                                                     onChange={(e) => setInputs({ ...inputs, year: e.target.value })}
                                                     maxLength={4}
@@ -361,7 +379,7 @@ export default function CasesPage() {
                                                     type="text"
                                                     required
                                                     placeholder="Enter Filing/Token/Diary Number"
-                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
                                                     value={inputs.filingNumber}
                                                     onChange={(e) => setInputs({ ...inputs, filingNumber: e.target.value })}
                                                 />
@@ -378,7 +396,7 @@ export default function CasesPage() {
                                                     type="text"
                                                     required
                                                     placeholder="Year (yyyy)"
-                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
                                                     value={inputs.year}
                                                     onChange={(e) => setInputs({ ...inputs, year: e.target.value })}
                                                     maxLength={4}
@@ -396,7 +414,7 @@ export default function CasesPage() {
                                                 </label>
                                                 <select
                                                     required
-                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
                                                     value={inputs.partyType}
                                                     onChange={(e) => setInputs({ ...inputs, partyType: e.target.value })}
                                                 >
@@ -418,7 +436,7 @@ export default function CasesPage() {
                                                         type="text"
                                                         required
                                                         placeholder="Enter Party Name"
-                                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
                                                         value={inputs.partyName}
                                                         onChange={(e) => setInputs({ ...inputs, partyName: e.target.value })}
                                                     />
@@ -432,7 +450,7 @@ export default function CasesPage() {
                                                         type="text"
                                                         required
                                                         placeholder="Year (yyyy)"
-                                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
                                                         value={inputs.year}
                                                         onChange={(e) => setInputs({ ...inputs, year: e.target.value })}
                                                         maxLength={4}
@@ -453,7 +471,7 @@ export default function CasesPage() {
                                                     type="text"
                                                     required
                                                     placeholder="Enter Crime Number (e.g., CR-456/2024)"
-                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
                                                     value={inputs.crimeNumber}
                                                     onChange={(e) => setInputs({ ...inputs, crimeNumber: e.target.value })}
                                                 />
@@ -470,7 +488,7 @@ export default function CasesPage() {
                                                     type="text"
                                                     required
                                                     placeholder="Year (yyyy)"
-                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
                                                     value={inputs.year}
                                                     onChange={(e) => setInputs({ ...inputs, year: e.target.value })}
                                                     maxLength={4}

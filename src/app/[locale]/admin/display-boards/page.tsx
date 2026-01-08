@@ -2,11 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import { displayBoardsService } from "@/data/services/display-boards-service/displayBoardsService";
+import { formatDate } from "@/utils/dateUtils";
 import { Trash2, Plus, Monitor, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function AdminDisplayBoardsPage() {
+    useDocTitle("Display Boards  | Sajjad Husain Law Associates");
     const [boards, setBoards] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showGenerateModal, setShowGenerateModal] = useState(false);
@@ -95,8 +98,8 @@ export default function AdminDisplayBoardsPage() {
                                 <p className="text-sm text-gray-500 mb-4">{board.court}</p>
 
                                 <div className="flex items-center gap-2 text-sm text-gray-600 mb-4 bg-gray-50 p-2 rounded">
-                                    <Calendar size={16} />
-                                    <span>{new Date(board.date).toLocaleDateString()}</span>
+                                    {/* <Calendar size={16} /> */}
+                                    <span>{formatDate(board.date)}</span>
                                 </div>
 
                                 <div className="bg-gray-50 p-3 rounded border border-gray-100 mb-4">

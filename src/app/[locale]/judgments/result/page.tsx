@@ -5,8 +5,11 @@ import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/routing";
 import { ArrowLeft } from "lucide-react";
 import { performJudgmentSearch, JudgmentSearchType, JudgmentSearchInputs } from "../searchLogic";
+import { useDocTitle } from "@/hooks/useDocTitle";
+import { formatDate } from "@/utils/dateUtils";
 
 export default function JudgmentResultPage() {
+    useDocTitle("Judgments | Sajjad Husain Law Associates");
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -118,7 +121,7 @@ export default function JudgmentResultPage() {
 
                                             {/* Date */}
                                             <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
-                                                {item.judgmentDate ? new Date(item.judgmentDate).toLocaleDateString() : "-"}
+                                                {item.judgmentDate ? formatDate(item.judgmentDate) : "-"}
                                             </td>
 
                                             {/* Court & Bench */}

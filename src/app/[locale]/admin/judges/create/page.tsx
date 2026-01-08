@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { ArrowLeft, Save } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function CreateJudgePage() {
+    useDocTitle("Create Judge  | Sajjad Husain Law Associates");
     const router = useRouter();
     const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({

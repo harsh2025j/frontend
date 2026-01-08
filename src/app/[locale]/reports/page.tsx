@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { Scale, Home, ChevronRight, FileText, Download, Eye, Calendar, Loader2, AlertCircle, RefreshCw, Filter } from 'lucide-react';
 import toast from "react-hot-toast";
 import { reportsService } from "@/data/services/reports-service/reportsService";
+import { useDocTitle } from "@/hooks/useDocTitle";
+import { formatDate } from "@/utils/dateUtils";
 
 type ReportType = "all" | "case-statistics" | "judgment-analysis" | "custom";
 
@@ -18,6 +20,7 @@ interface Report {
 }
 
 export default function ReportsPage() {
+    useDocTitle("Reports | Sajjad Husain Law Associates");
     const [activeType, setActiveType] = useState<ReportType>("all");
     const [reports, setReports] = useState<Report[]>([]);
     const [loading, setLoading] = useState(true);
@@ -258,11 +261,7 @@ export default function ReportsPage() {
                                                     <div className="flex items-center gap-1">
                                                         <Calendar size={16} />
                                                         <span>
-                                                            {new Date(report.generatedDate).toLocaleDateString('en-US', {
-                                                                year: 'numeric',
-                                                                month: 'long',
-                                                                day: 'numeric'
-                                                            })}
+                                                            {formatDate(report.generatedDate)}
                                                         </span>
                                                     </div>
                                                     <span>•</span>

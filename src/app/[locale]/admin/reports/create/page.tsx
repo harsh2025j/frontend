@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { ArrowLeft, BarChart2, FileText } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function CreateReportPage() {
+    useDocTitle("Create Report | Sajjad Husain Law Associates");
     const router = useRouter();
     const [submitting, setSubmitting] = useState(false);
     const [reportType, setReportType] = useState("case_statistics");

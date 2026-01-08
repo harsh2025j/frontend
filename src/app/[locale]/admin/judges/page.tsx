@@ -3,11 +3,14 @@
 import React, { useEffect, useState } from "react";
 import { judgesService } from "@/data/services/judges-service/judgesService";
 import { Link } from "@/i18n/routing";
+import { formatDate } from "@/utils/dateUtils";
 import { Trash2, Edit, Plus, Search, Scale } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function AdminJudgesPage() {
+    useDocTitle("Judges  | Sajjad Husain Law Associates");
     const [judges, setJudges] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -95,7 +98,7 @@ export default function AdminJudgesPage() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{j.designation}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{j.court}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {new Date(j.appointmentDate).toLocaleDateString()}
+                                            {formatDate(j.appointmentDate)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end gap-3">

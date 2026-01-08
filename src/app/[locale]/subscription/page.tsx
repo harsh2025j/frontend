@@ -23,6 +23,7 @@ import Link from "next/link";
 import { subscriptionApi } from "@/data/services/subscription-service/subscription-service";
 import { Plans, UserSubscription } from "@/data/features/subscription/subscription.types";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import { formatDate } from "@/utils/dateUtils";
 
 // test
 declare global {
@@ -229,7 +230,7 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white font-sans pt-24 relative mb-8">
+    <div className="min-h-screen bg-white font-sans pt-8 relative mb-8">
       <Script
         id="razorpay-checkout-js"
         src="https://checkout.razorpay.com/v1/checkout.js"
@@ -253,11 +254,11 @@ export default function SubscriptionPage() {
             </div>
           </div>
         ) : userSubscription && userSubscription.status === "active" ? (
-          <div className="mb-12 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-8 text-white shadow-2xl mx-24">
+          <div className="mb-12 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-8 text-white shadow-2xl md:mx-24 mx-4">
             <div className="flex items-start justify-between flex-wrap gap-4">
               <div className="flex items-start gap-4">
                 <div className="bg-white/20 p-3 rounded-full">
-                  <CheckCircle className="w-8 h-8" />
+                  <CheckCircle className="sm:w-8 h-8" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-2 mx">
@@ -272,11 +273,11 @@ export default function SubscriptionPage() {
                   <div className="grid grid-cols-2 gap-6 text-sm">
                     <div>
                       <p className="text-white/70 mb-1">Started On</p>
-                      <p className="font-semibold text-lg">{new Date(userSubscription.startDate).toLocaleDateString()}</p>
+                      <p className="font-semibold text-lg">{formatDate(userSubscription.startDate)}</p>
                     </div>
                     <div>
                       <p className="text-white/70 mb-1">Valid Until</p>
-                      <p className="font-semibold text-lg">{new Date(userSubscription.endDate).toLocaleDateString()}</p>
+                      <p className="font-semibold text-lg">{formatDate(userSubscription.endDate)}</p>
                     </div>
                   </div>
                 </div>
@@ -433,7 +434,7 @@ export default function SubscriptionPage() {
             </div>
           )}
         </div>
-        <div className="bg-[#0A2342]/5 border border-[#0A2342]/10 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all hover:shadow-md mt-4 mx-24">
+        <div className="bg-[#0A2342]/5 border border-[#0A2342]/10 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all hover:shadow-md mt-4 md:mx-24 mx-4">
           <div className="space-y-3">
             <span className="bg-[#C9A227] text-white text-xs font-bold px-3 py-1.5 rounded-full inline-block">
               Bulk Subscription Query Form
@@ -449,7 +450,7 @@ export default function SubscriptionPage() {
           </Link>
         </div>
 
-        <div className="bg-[#0A2342]/5 border border-[#0A2342]/10 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all hover:shadow-md mt-4 mx-24">
+        <div className="bg-[#0A2342]/5 border border-[#0A2342]/10 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all hover:shadow-md mt-4 md:mx-24 mx-4">
           <div className="space-y-3">
             <span className="bg-[#C9A227] text-white text-xs font-bold px-3 py-1.5 rounded-full inline-block">
               Need more assistance?
@@ -468,7 +469,7 @@ export default function SubscriptionPage() {
 
       {/* FAQ Section */}
       <div className="max-w-7xl mx-auto mb-16">
-        <h2 className="text-3xl font-bold text-[#0A2342] mb-8 border-b-2 border-[#C9A227] pb-2 inline-block">
+        <h2 className="text-3xl ml-2 font-bold text-[#0A2342] mb-8 border-b-2 border-[#C9A227] pb-2 inline-block">
           Frequently asked questions
         </h2>
 

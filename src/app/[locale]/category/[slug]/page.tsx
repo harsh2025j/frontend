@@ -16,6 +16,7 @@ import { timeAgo } from "@/lib/utils/timeAgo";
 
 
 export default function CategoryPage() {
+    useDocTitle("Category | Sajjad Husain Law Associates");
     const params = useParams();
     const slug = params.slug as string;
     const { articles: allArticles, loading } = useArticleListActions();

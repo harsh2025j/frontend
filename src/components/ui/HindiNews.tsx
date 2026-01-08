@@ -39,11 +39,12 @@ const HindiNews: React.FC<HindiNews> = ({
             {title}
           </h1>
         </Link>
-
-        <div
-          className="font-merriweather text-gray-700 text-xs line-clamp-3 sm:line-clamp-5 mt-4"
-          dangerouslySetInnerHTML={{ __html: description }}
-        />
+        <Link href={`/news/${slug}`}>
+          <div
+            className="font-merriweather text-gray-700 text-xs line-clamp-3 sm:line-clamp-5 mt-4"
+            dangerouslySetInnerHTML={{ __html: description }}
+          />
+        </Link>
       </div>
 
 

@@ -5,8 +5,10 @@ import { judgesService } from "@/data/services/judges-service/judgesService";
 import { useParams, useRouter } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { ArrowLeft } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function JudgeDetailPage() {
+    useDocTitle("Judge Details | Sajjad Husain Law Associates");
     const router = useRouter();
     const params = useParams();
     const [judge, setJudge] = useState<any>(null);

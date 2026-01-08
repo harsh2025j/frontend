@@ -4,8 +4,11 @@ import React, { useEffect, useState, Suspense } from "react";
 import { Link } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { performCaseSearch, SearchInputs, SearchType } from "../searchLogic";
+import { useDocTitle } from "@/hooks/useDocTitle";
+import { formatDate } from "@/utils/dateUtils";
 
 function ResultPageContent() {
+    useDocTitle("Cases | Sajjad Husain Law Associates");
     const searchParams = useSearchParams();
     const [cases, setCases] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -108,7 +111,7 @@ function ResultPageContent() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{c.court}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                {c.nextHearingDate ? new Date(c.nextHearingDate).toLocaleDateString() : <span className="text-gray-400 italic">-</span>}
+                                                {c.nextHearingDate ? formatDate(c.nextHearingDate) : <span className="text-gray-400 italic">-</span>}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <Link

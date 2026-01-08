@@ -8,6 +8,7 @@ import { useCategoryArticles } from "@/hooks/useCategoryArticles";
 import Loader from "../ui/Loader";
 import { useMemo } from "react";
 import { getSafeImageUrl } from "@/utils/imageUtils";
+import { formatDate } from "@/utils/dateUtils";
 
 interface CategorySectionProps {
   title: string;
@@ -73,7 +74,7 @@ const ArticleCard = ({ article, compact = false }: { article: any; compact?: boo
             {article.category?.name || "News"}
           </span>
           <span className="text-xs text-gray-400">
-            {new Date(article.createdAt).toLocaleDateString()}
+            {formatDate(article.createdAt)}
           </span>
         </div>
         <h3 className={`font-bold text-gray-900 group-hover:text-[#C9A227] transition-colors line-clamp-2 ${compact ? "text-base" : "text-lg"}`}>
@@ -119,7 +120,7 @@ const ListLayout = ({ articles }: { articles: any[] }) => (
             {article.subHeadline || article.content.replace(/<[^>]*>/g, "").substring(0, 80)}...
           </p>
           <span className="text-xs text-gray-400 mt-2 block">
-            {new Date(article.createdAt).toLocaleDateString()}
+            {formatDate(article.createdAt)}
           </span>
         </div>
       </Link>
@@ -176,7 +177,7 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
                 {article.title}
               </h3>
               <span className="text-xs text-gray-400 mt-1 block">
-                {new Date(article.createdAt).toLocaleDateString()}
+                {formatDate(article.createdAt)}
               </span>
             </div>
           </Link>

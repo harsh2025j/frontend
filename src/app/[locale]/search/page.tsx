@@ -6,6 +6,7 @@ import { searchService } from '@/data/features/search/searchService';
 import { SearchResult } from '@/data/features/search/search.types';
 import { Search, Loader2, ChevronLeft, ChevronRight, FileText, Gavel, Scale } from 'lucide-react';
 import { Link } from '@/i18n/routing';
+import { useDocTitle } from '@/hooks/useDocTitle';
 
 const SearchResultsContent = () => {
     const searchParams = useSearchParams();
@@ -13,6 +14,7 @@ const SearchResultsContent = () => {
     const query = searchParams.get('q') || '';
     const pageParam = searchParams.get('page');
     const currentPage = pageParam ? parseInt(pageParam) : 1;
+    useDocTitle("Sajjad Husain Law Associates");
 
     const [results, setResults] = useState<SearchResult[]>([]);
     const [meta, setMeta] = useState<any>(null);
@@ -161,8 +163,8 @@ const SearchResultsContent = () => {
                                             key={p}
                                             onClick={() => handlePageChange(p)}
                                             className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${currentPage === p
-                                                    ? 'bg-[#C9A227] text-white'
-                                                    : 'text-gray-700 hover:bg-gray-300'
+                                                ? 'bg-[#C9A227] text-white'
+                                                : 'text-gray-700 hover:bg-gray-300'
                                                 }`}
                                         >
                                             {p}

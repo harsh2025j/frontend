@@ -35,6 +35,7 @@ import { useLocale } from "next-intl";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import LiveCourtSection from "../ui/LiveCourtSection";
 import LatestInformationSection from "../ui/LatestInformationSection";
+import { formatDate } from "@/utils/dateUtils";
 // import AdsPopup from "../ads/AdsPopup";
 
 
@@ -442,7 +443,7 @@ export default function Stores() {
                     title={data.title}
                     slug={data.slug}
                     author={data.authors}
-                    date={new Date(data.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    date={formatDate(data.createdAt)}
                     button1Text="Read Full Case"
                     button2Text="AI Summary"
                   />
@@ -463,7 +464,7 @@ export default function Stores() {
                   key={data.id}
                   img={data.thumbnail}
                   description={data.content}
-                  date={new Date(data.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  date={formatDate(data.createdAt)}
                   author={data.authors}
                   slug={data.slug}
                 />

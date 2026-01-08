@@ -6,8 +6,10 @@ import { useCreatePlanActions } from "@/data/features/subscription/useSubscripti
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function AddNewPlan() {
+    useDocTitle("Add New Plan | Sajjad Husain Law Associates");
     const featureList = [
         "Daily News Feed",
         "Latest News",

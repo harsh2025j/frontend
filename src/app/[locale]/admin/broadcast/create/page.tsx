@@ -9,8 +9,10 @@ import { User } from "@/data/features/users/users.types";
 import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function CreateBroadcastPage() {
+    useDocTitle("Create Broadcast | Sajjad Husain Law Associates");
     const router = useRouter();
     const { user: reduxUser } = useProfileActions();
     const user = reduxUser as UserData;
@@ -151,23 +153,24 @@ export default function CreateBroadcastPage() {
     };
 
     return (
-        <div className="p-6 max-w-4xl mx-auto">
-            {/* ... Rest of your JSX remains exactly the same ... */}
-            <div className="flex items-center gap-4 mb-8">
-                <button
-                    onClick={() => router.back()}
-                    className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-                >
-                    <ArrowLeft size={24} className="text-gray-600" />
-                </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Create Broadcast</h1>
-                    <p className="text-gray-500">Compose and send a new announcement.</p>
+        <div className="md:p-6 max-w-4xl mx-auto">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6 md:mb-8">
+                <div className="flex items-center gap-4 w-full">
+                    <button
+                        onClick={() => router.back()}
+                        className="p-2 hover:bg-gray-200 rounded-full transition-colors flex-shrink-0"
+                    >
+                        <ArrowLeft size={24} className="text-gray-600" />
+                    </button>
+                    <div>
+                        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Create Broadcast</h1>
+                        <p className="text-gray-500 text-sm md:text-base">Compose and send a new announcement.</p>
+                    </div>
                 </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <form onSubmit={handleSendClick} className="p-6 space-y-6">
+                <form onSubmit={handleSendClick} className="p-4 md:p-6 space-y-4 md:space-y-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                         <input
@@ -176,7 +179,7 @@ export default function CreateBroadcastPage() {
                             value={formData.title}
                             onChange={handleInputChange}
                             placeholder="Enter notification title"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0A2342] focus:border-transparent outline-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0A2342] focus:border-transparent outline-none text-sm md:text-base"
                             required
                         />
                     </div>
@@ -189,14 +192,14 @@ export default function CreateBroadcastPage() {
                             onChange={handleInputChange}
                             placeholder="Type your message here..."
                             rows={6}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0A2342] focus:border-transparent outline-none resize-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0A2342] focus:border-transparent outline-none resize-none text-sm md:text-base"
                             required
                         />
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Recipients</label>
-                        <div className="flex gap-4 mb-4">
+                        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-4">
                             <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto">
                                 <input
                                     type="radio"
@@ -207,7 +210,7 @@ export default function CreateBroadcastPage() {
                                 />
                                 <div className="flex items-center gap-2">
                                     <Bell size={18} className="text-gray-500" />
-                                    <span className="text-gray-700 font-medium">All Users</span>
+                                    <span className="text-gray-700 font-medium text-sm md:text-base">All Users</span>
                                 </div>
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto">
@@ -220,13 +223,13 @@ export default function CreateBroadcastPage() {
                                 />
                                 <div className="flex items-center gap-2">
                                     <Users size={18} className="text-gray-500" />
-                                    <span className="text-gray-700 font-medium">Specific Users</span>
+                                    <span className="text-gray-700 font-medium text-sm md:text-base">Specific Users</span>
                                 </div>
                             </label>
                         </div>
 
                         {!formData.sendToAll && (
-                            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <div className="border border-gray-200 rounded-lg p-3 md:p-4 bg-gray-50">
                                 <div className="relative mb-4">
                                     <Search className="absolute left-3 top-2.5 text-gray-400 w-5 h-5" />
                                     <input
@@ -234,7 +237,7 @@ export default function CreateBroadcastPage() {
                                         placeholder="Search users by name or email..."
                                         value={searchUser}
                                         onChange={(e) => setSearchUser(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#0A2342]"
+                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#0A2342] text-sm"
                                     />
                                 </div>
 
@@ -271,7 +274,7 @@ export default function CreateBroadcastPage() {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Channels</label>
-                        <div className="flex gap-4">
+                        <div className="flex flex-wrap gap-4">
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="checkbox"
@@ -279,7 +282,7 @@ export default function CreateBroadcastPage() {
                                     onChange={() => handleChannelChange("push")}
                                     className="w-4 h-4 text-[#0A2342] rounded focus:ring-[#0A2342]"
                                 />
-                                <span className="text-gray-700">Push Notification</span>
+                                <span className="text-gray-700 text-sm md:text-base">Push Notification</span>
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
@@ -288,27 +291,27 @@ export default function CreateBroadcastPage() {
                                     onChange={() => handleChannelChange("email")}
                                     className="w-4 h-4 text-[#0A2342] rounded focus:ring-[#0A2342]"
                                 />
-                                <span className="text-gray-700">Email</span>
+                                <span className="text-gray-700 text-sm md:text-base">Email</span>
                             </label>
                         </div>
                     </div>
 
                     <div className="bg-blue-50 p-4 rounded-lg flex gap-3 text-sm text-blue-800">
-                        <AlertTriangle size={20} className="shrink-0" />
+                        <AlertTriangle size={20} className="shrink-0 mt-0.5" />
                         <p className="leading-relaxed">This message will be sent to <strong>{formData.sendToAll ? "ALL" : selectedUserIds.length}</strong> {formData.sendToAll ? "" : "selected"} registered users.</p>
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-4 border-t border-gray-100">
                         <button
                             type="button"
                             onClick={() => router.back()}
-                            className="px-6 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium border border-gray-300"
+                            className="w-full md:w-auto px-6 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium border border-gray-300 text-center"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2.5 bg-[#0A2342] text-white rounded-lg hover:bg-[#153a66] transition-colors font-medium shadow-md flex items-center gap-2"
+                            className="w-full md:w-auto px-6 py-2.5 bg-[#0A2342] text-white rounded-lg hover:bg-[#153a66] transition-colors font-medium shadow-md flex items-center justify-center gap-2"
                         >
                             <Send size={18} />
                             Preview & Send
@@ -319,7 +322,7 @@ export default function CreateBroadcastPage() {
 
             {showConfirm && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full animate-in fade-in zoom-in duration-200 text-center">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-md w-full animate-in fade-in zoom-in duration-200 text-center">
                         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
                             <AlertTriangle size={32} />
                         </div>
@@ -328,10 +331,10 @@ export default function CreateBroadcastPage() {
                             Are you sure you want to send this notification to {formData.sendToAll ? "all users" : <strong>{selectedUserIds.length} specific users</strong>}?
                         </p>
 
-                        <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left border border-gray-200">
-                            <p className="font-bold text-gray-900 text-sm mb-1">{formData.title}</p>
-                            <p className="text-gray-600 text-sm line-clamp-2">{formData.body}</p>
-                            <div className="mt-2 flex gap-2">
+                        <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left border border-gray-200 overflow-hidden">
+                            <p className="font-bold text-gray-900 text-sm mb-1 truncate">{formData.title}</p>
+                            <p className="text-gray-600 text-sm line-clamp-3">{formData.body}</p>
+                            <div className="mt-2 flex flex-wrap gap-2">
                                 {formData.channels.map(c => (
                                     <span key={c} className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full capitalize">
                                         {c}
@@ -340,17 +343,17 @@ export default function CreateBroadcastPage() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3 justify-center">
+                        <div className="flex flex-col-reverse sm:flex-row gap-3 justify-center">
                             <button
                                 onClick={() => setShowConfirm(false)}
-                                className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                                className="w-full sm:w-auto px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
                             >
                                 No, Cancel
                             </button>
                             <button
                                 onClick={confirmSend}
                                 disabled={loading}
-                                className="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium shadow-md transition-colors flex items-center gap-2"
+                                className="w-full sm:w-auto px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium shadow-md transition-colors flex items-center justify-center gap-2"
                             >
                                 {loading ? "Sending..." : "Yes, Send Now"}
                             </button>

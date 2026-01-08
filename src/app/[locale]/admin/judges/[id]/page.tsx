@@ -6,8 +6,10 @@ import { useRouter, useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { ArrowLeft, Save } from "lucide-react";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function EditJudgePage() {
+    useDocTitle("Edit Judge  | Sajjad Husain Law Associates");
     const router = useRouter();
     const params = useParams();
     const [loading, setLoading] = useState(true);

@@ -12,6 +12,7 @@ import { X, Upload, Camera } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { getUserSubscription } from "@/data/features/subscription/subscriptionThunks";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import { formatDate } from "@/utils/dateUtils";
 
 
 type Prefs = {
@@ -306,11 +307,11 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Started On</span>
-                    <span>{new Date(subscription.startDate).toLocaleDateString()}</span>
+                    <span>{formatDate(subscription.startDate)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Valid Until</span>
-                    <span>{new Date(subscription.endDate).toLocaleDateString()}</span>
+                    <span>{formatDate(subscription.endDate)}</span>
                   </div>
                   {subscription.autoRenew !== undefined && (
                     <div className="flex justify-between">

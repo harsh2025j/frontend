@@ -9,10 +9,12 @@ import { UserData } from "@/data/features/profile/profile.types";
 import { Loader } from "lucide-react";
 import { getBroadcastService, postBroadcastService } from "@/data/services/broadcast-service/broadcastService";
 import toast from "react-hot-toast";
+import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function BroadcastPage() {
     // Mock History Data (since no endpoint provided yet)
     // Replace with real data fetch if endpoint becomes available
+    useDocTitle("Broadcast | Sajjad Husain Law Associates");
     const [history, setHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [sendingId, setSendingId] = useState<string | null>(null);
@@ -101,15 +103,15 @@ export default function BroadcastPage() {
     }
 
     return (
-        <div className="p-6 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
+        <div className="md:p-6 max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Broadcast Notifications</h1>
-                    <p className="text-gray-500">Send announcements to all users via Push or Email.</p>
+                    <p className="text-gray-500 text-sm md:text-base">Send announcements to all users via Push or Email.</p>
                 </div>
                 <Link
                     href="/admin/broadcast/create"
-                    className="flex items-center gap-2 bg-[#0A2342] text-white px-4 py-2 rounded-lg hover:bg-[#153a66] transition-colors shadow-md"
+                    className="w-full md:w-auto flex items-center justify-center gap-2 bg-[#0A2342] text-white px-4 py-2 rounded-lg hover:bg-[#153a66] transition-colors shadow-md"
                 >
                     <Send size={18} />
                     Broadcast Notification
@@ -135,14 +137,16 @@ export default function BroadcastPage() {
                         <>
                             <div className="divide-y divide-gray-100">
                                 {currentItems.map((item: any, idx: any) => (
-                                    <div key={idx} className="p-6 hover:bg-gray-50 transition-colors">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <h4 className="font-bold text-gray-900">{item.content?.title || 'No Title'}</h4>
-                                            <span className="text-xs text-gray-400">{new Date(item.createdAt).toLocaleString()}</span>
+                                    <div key={idx} className="p-4 md:p-6 hover:bg-gray-50 transition-colors">
+                                        <div className="flex flex-col md:flex-row justify-between items-start mb-2 gap-2">
+                                            <h4 className="font-bold text-gray-900 line-clamp-1">{item.content?.title || 'No Title'}</h4>
+                                            <span className="text-xs text-gray-400 whitespace-nowrap">
+                                                {new Date(item.createdAt).toLocaleDateString('en-GB')} {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                            </span>
                                         </div>
-                                        <p className="text-gray-600 text-sm mb-3">{item.content?.body || 'No Content'}</p>
-                                        <div className="flex items-center justify-between mt-3">
-                                            <div className="flex gap-2">
+                                        <p className="text-gray-600 text-sm mb-3 line-clamp-3">{item.content?.body || 'No Content'}</p>
+                                        <div className="flex flex-wrap items-center justify-between mt-3 gap-3">
+                                            <div className="flex gap-2 flex-wrap">
                                                 {item.channels?.map((c: string) => (
                                                     <span key={c} className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full capitalize border border-blue-100">
                                                         {c}
@@ -168,7 +172,7 @@ export default function BroadcastPage() {
 
                             {/* Pagination Controls */}
                             {totalPages > 1 && (
-                                <div className="px-6 py-4 border-t border-gray-200 flex justify-center gap-6 items-center bg-gray-50">
+                                <div className="px-4 md:px-6 py-4 border-t border-gray-200 flex flex-wrap justify-center gap-4 md:gap-6 items-center bg-gray-50">
                                     <button
                                         onClick={() => handlePageChange(currentPage - 1)}
                                         disabled={currentPage === 1}
