@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getMessaging } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBKkIgYyPqGNirX_K4DFklYh-I_HvHKCFg",
@@ -14,12 +15,17 @@ const firebaseConfig = {
 let app;
 let auth: any;
 let googleProvider: any;
+let messaging: any;
 
 if (firebaseConfig.apiKey) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
     googleProvider = new GoogleAuthProvider();
+
+    if (typeof window !== "undefined") {
+      messaging = getMessaging(app);
+    }
   } catch (error) {
     console.error("Firebase initialization error:", error);
   }
@@ -27,4 +33,4 @@ if (firebaseConfig.apiKey) {
   console.warn("Firebase config missing. Firebase features will not work.");
 }
 
-export { auth, googleProvider };
+export { auth, googleProvider, messaging };

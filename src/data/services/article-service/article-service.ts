@@ -17,13 +17,18 @@ export const articleApi = {
     if (data.location) formData.append("location", data.location);
     formData.append("authors", data.author);
     if (data.thumbnail) formData.append("file", data.thumbnail);
+    if (data.documents && data.documents.length > 0) {
+      data.documents.forEach((doc) => {
+        formData.append("documents", doc);
+      });
+    }
     formData.append("advocateName", data.advocateName);
     formData.append("categoryId", data.category);
     formData.append("status", data.status || "draft");
     if (Array.isArray(data.tags)) {
       formData.append("tags", data.tags.join(", "));
     }
-    
+
     // console.log(formData.get("tags"));
     // console.log("form data send to backed ",formData)
     const response = await apiClient.post<CreateArticleResponse>(
@@ -53,7 +58,7 @@ export const articleApi = {
       }
 
     );
-    console.log("Fetch Articles API Response:", response.data);
+    // console.log("Fetch Articles API Response:", response.data);
     return response;
   },
 
@@ -106,6 +111,12 @@ export const articleApi = {
     if (data.thumbnail && data.thumbnail instanceof File) {
       formData.append("file", data.thumbnail);
     }
+    if (data.documents && data.documents.length > 0) {
+      data.documents.forEach((doc) => {
+        formData.append("documents", doc);
+      });
+    }
+
     // console.log(formData.get("tags"));
     // console.log(formData.get("isPaywalled"));
 

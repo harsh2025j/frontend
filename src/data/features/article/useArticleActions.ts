@@ -30,6 +30,7 @@ export const useCreateArticleActions = () => {
     content: "",
     tags: [],
     thumbnail: null,
+    documents: [],
     isPaywalled: false,
   });
 
@@ -59,7 +60,7 @@ export const useCreateArticleActions = () => {
       const maxSize = 10 * 1024 * 1024;
 
       if (file.size > maxSize) {
-        toast.error("Thumbnail must be less than 5MB");
+        toast.error("Thumbnail must be less than 10MB");
         e.target.value = "";
         return;
       }
@@ -71,9 +72,41 @@ export const useCreateArticleActions = () => {
     }
   };
 
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      const maxSize = 10 * 1024 * 1024; // 10MB
+
+      const validFiles = newFiles.filter(file => {
+        if (file.size > maxSize) {
+          toast.error(`Document ${file.name} is too large (max 10MB)`);
+          return false;
+        }
+        return true;
+      });
+
+      if (validFiles.length > 0) {
+        setFormData((prev: CreateArticleRequest) => ({
+          ...prev,
+          documents: [...(prev.documents || []), ...validFiles],
+        }));
+      }
+
+      // Reset input value to allow selecting same file again if needed
+      e.target.value = "";
+    }
+  };
+
+  const handleRemoveDocument = (index: number) => {
+    setFormData((prev: CreateArticleRequest) => ({
+      ...prev,
+      documents: (prev.documents || []).filter((_, i) => i !== index),
+    }));
+  };
+
 
   const handleContentChange = (content: string) => {
-    setFormData((prev) => ({
+    setFormData((prev: CreateArticleRequest) => ({
       ...prev,
       content,
     }));
@@ -82,17 +115,17 @@ export const useCreateArticleActions = () => {
   const handleAddTag = (tag: string) => {
     const trimmedTag = tag.trim();
     if (trimmedTag && !formData.tags.includes(trimmedTag)) {
-      setFormData((prev) => ({
+      setFormData((prev: CreateArticleRequest) => ({
         ...prev,
-        tags: [...prev.tags, trimmedTag],
+        tags: [...(prev.tags || []), trimmedTag],
       }));
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setFormData((prev) => ({
+    setFormData((prev: CreateArticleRequest) => ({
       ...prev,
-      tags: prev.tags.filter((tag) => tag !== tagToRemove),
+      tags: (prev.tags || []).filter((tag) => tag !== tagToRemove),
     }));
   };
 
@@ -133,6 +166,7 @@ export const useCreateArticleActions = () => {
         content: "",
         tags: [],
         thumbnail: null,
+        documents: [],
         isPaywalled: false
       });
 
@@ -146,6 +180,8 @@ export const useCreateArticleActions = () => {
     handleChange,
     handleContentChange,
     handleFileUpload,
+    handleDocumentUpload,
+    handleRemoveDocument,
     handleCreateArticle,
     handleAddTag,
     handleRemoveTag,

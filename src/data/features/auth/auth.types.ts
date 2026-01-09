@@ -4,6 +4,8 @@ export interface forgotPasswordRequest {
 export interface LoginRequest {
   email: string;
   password: string;
+  fcmToken?: string;
+  platform?: string;
 }
 
 export interface RegisterRequest {
@@ -14,6 +16,8 @@ export interface RegisterRequest {
   roles?: string[];
   permissions?: string[];
   createdBy?: string;
+  fcmToken?: string;
+  platform?: string;
 }
 
 export interface VerifyOtpRequest {
@@ -35,6 +39,7 @@ export interface ResetPasswordRequest {
   newPassword: string;
   conformPassword: string;
 }
+
 export interface Permission {
   _id: string;
   name: string;

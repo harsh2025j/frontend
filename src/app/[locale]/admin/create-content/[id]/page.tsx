@@ -25,14 +25,17 @@ const EditArticlePage: React.FC = () => {
         handleChange,
         handleContentChange,
         handleFileUpload,
+        handleDocumentUpload,
         handleAddTag,
         handleRemoveTag,
+        handleRemoveDocument,
         loading: createLoading,
     } = useCreateArticleActions();
 
     const [loading, setLoading] = useState(false);
     const [tagInput, setTagInput] = React.useState("");
     const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
+    const [existingDocuments, setExistingDocuments] = useState<string[]>([]);
 
     const router = useRouter();
     const { user: reduxUser } = useProfileActions();
@@ -90,12 +93,19 @@ const EditArticlePage: React.FC = () => {
                             ? article.tags.map((t: any) => typeof t === 'object' ? t.name : t)
                             : (typeof article.tags === 'string' ? (article.tags as string).split(',') : []),
                         thumbnail: null,
+                        documents: [], // New documents to be uploaded
                         status: article.status === 'published' ? 'pending' : 'draft',
                         isPaywalled: article.isPaywalled || false,
                     });
 
                     if (article.thumbnail) {
                         setExistingThumbnailUrl(article.thumbnail);
+                    }
+                    if (article.documents && Array.isArray(article.documents)) {
+                        setExistingDocuments(article.documents);
+                    } else if (article.documents) {
+                        // Fallback if it comes as a single string
+                        setExistingDocuments([article.documents as any]);
                     }
                 } else {
                     toast.error("Article not found");
@@ -451,6 +461,89 @@ const EditArticlePage: React.FC = () => {
                                     placeholder="Write your content here..."
                                 />
                             </div>
+                        </div>
+
+                        {/* Document Uploader */}
+                        <div>
+                            <label className="block text-sm font-medium mb-1.5">Related Documents (PDF, DOCX, PPT)</label>
+
+                            {/* Existing Documents */}
+                            {existingDocuments?.length > 0 && (
+                                <div className="mb-4">
+                                    <p className="text-sm font-medium text-gray-700 mb-2">Existing Documents:</p>
+                                    <div className="space-y-2">
+                                        {existingDocuments.map((doc, index) => (
+                                            <div key={index} className="flex items-center justify-between p-2 bg-gray-50 border rounded-lg">
+                                                <a href={doc} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 overflow-hidden text-blue-600 hover:underline">
+                                                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    <span className="text-sm truncate">Document {index + 1}</span>
+                                                </a>
+                                                {/* TODO: Add remove functionality for existing documents if API supports it */}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <label className="border-2 border-dashed rounded-lg p-4 sm:p-6 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-center flex-col h-32 sm:h-40">
+                                <input
+                                    type="file"
+                                    name="documents"
+                                    className="hidden"
+                                    onChange={handleDocumentUpload}
+                                    accept=".pdf,.docx,.ppt,.pptx"
+                                    multiple
+                                />
+                                <svg
+                                    className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mb-2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2
+                                        M12 4v10
+                                        m0-10l-3 3
+                                        m3-3l3 3"
+                                    />
+                                </svg>
+                                <span className="text-gray-500 text-sm text-center">Click to upload new documents</span>
+
+                                {(formData.documents || []).length > 0 && (
+                                    <p className="text-xs text-blue-500 mt-2 text-center">{(formData.documents || []).length} new files selected</p>
+                                )}
+                            </label>
+
+                            {/* New Documents List */}
+                            {(formData.documents || []).length > 0 && (
+                                <div className="mt-4 space-y-2">
+                                    <p className="text-sm font-medium text-gray-700 mb-2">New Documents:</p>
+                                    {(formData.documents || []).map((doc, index) => (
+                                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 border rounded-lg">
+                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                                <span className="text-sm text-gray-700 truncate">{doc.name}</span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveDocument(index)}
+                                                className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Action Buttons */}

@@ -383,7 +383,7 @@ const ContentApprovalPanel = () => {
         Content Approval Panel
       </h1>
 
-      <div className="bg-white rounded-2xl shadow-md p-8 max-w-6xl mx-auto">
+      <div className="bg-white rounded-2xl shadow-md p-8 mx-auto">
 
         {/* TOP BAR */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">

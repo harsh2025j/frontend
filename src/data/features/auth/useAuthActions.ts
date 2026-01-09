@@ -10,6 +10,7 @@ import { resetAuthState, logoutUser } from "./authSlice";
 
 import { RootState } from "@/data/redux/store";
 import toast from "react-hot-toast";
+import { requestFcmToken } from "@/lib/fcmUtils";
 
 const selectAuthLoading = (state: RootState) => state.auth.loading;
 const selectAuthError = (state: RootState) => state.auth.error;
@@ -58,17 +59,22 @@ export const useRegisterActions = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleRegister = () => {
+
+  const handleRegister = async () => {
     if (!formData.name || !formData.email || !formData.password) {
       toast.error("Please fill in all required fields");
       return;
     }
+
+    const fcmToken = await requestFcmToken();
 
     const payload: RegisterRequest = {
       name: formData.name.trim(),
       email: formData.email.trim(),
       password: formData.password,
       phone: formData.phone,
+      fcmToken: fcmToken || undefined,
+      platform: "web",
     };
 
     dispatch(registerUser(payload));
@@ -125,15 +131,19 @@ export const useLoginActions = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!formData.email || !formData.password) {
       toast.error("Please enter both email and password");
       return;
     }
 
+    const fcmToken = await requestFcmToken();
+
     dispatch(loginUser({
       ...formData,
       email: formData.email.trim(),
+      fcmToken: fcmToken || undefined,
+      platform: "web",
     }));
   };
 

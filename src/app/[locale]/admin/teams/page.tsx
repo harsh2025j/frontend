@@ -71,7 +71,7 @@ const TeamManagementPage: React.FC = () => {
 
       <div className="flex min-h-screen bg-gray-50 text-gray-800">
         <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow p-8">
+          <div className="mx-auto bg-white rounded-2xl shadow p-8">
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-gray rounded-xl px-6 py-3">
               <div className="text-sm md:text-base">
                 <strong>Total Team:</strong> {filteredUsers?.length || 0}

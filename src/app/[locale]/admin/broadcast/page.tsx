@@ -49,7 +49,7 @@ export default function BroadcastPage() {
         setLoading(true);
         try {
             const response = await getBroadcastService.getBroadcast();
-            console.log(response.data)
+            // console.log(response.data)
             setHistory(response.data);
         } catch (error) {
             toast.error("Failed to fetch broadcast.");

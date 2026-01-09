@@ -66,6 +66,7 @@ export const authApi = {
   },
 
   login: async (data: LoginRequest) => {
+    // console.log("data", data);
     const response = await apiClient.post<LoginResponse>(
       API_ENDPOINTS.AUTH.LOGIN,
       data

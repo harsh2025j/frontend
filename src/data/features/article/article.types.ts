@@ -27,6 +27,7 @@ export interface Article {
   location: string | null;
   authors: string | null;
   thumbnail: string | null;
+  documents?: string[] | null;
   status: "pending" | "published" | "draft" | "rejected";
   rejectionReason: string | null;
   language: string | null;
@@ -109,6 +110,7 @@ export interface CreateArticleRequest {
   content: string;
   advocateName: string;
   thumbnail: File | null;
+  documents?: File[];
   status?: "draft" | "pending";
 }
 
