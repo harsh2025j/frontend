@@ -258,7 +258,55 @@ export default function RolesPermissionsPage() {
                     )}
                     {rolesError && <p className="text-red-500">{rolesError}</p>}
 
-                    <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+                    {/* Mobile Card View for Roles */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden mb-6">
+                        {roles.map((role) => (
+                            <div key={role.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4">
+                                <div className="border-b border-gray-100 pb-3">
+                                    <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Role Name</span>
+                                    <h3 className="text-lg font-bold text-[#0A2342]">{role.name}</h3>
+                                </div>
+
+                                <div className="space-y-2 text-sm text-gray-600">
+                                    <div className="flex gap-2">
+                                        <span className="font-medium text-gray-900 min-w-[80px]">Description:</span>
+                                        <span className="line-clamp-2">{role.description || "--"}</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <span className="font-medium text-gray-900 min-w-[80px]">Created By:</span>
+                                        <span>{role.createdBy?.name || role.createdBy?.email || "System"}</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <span className="font-medium text-gray-900 min-w-[80px]">Created At:</span>
+                                        <span>
+                                            {role.createdAt
+                                                ? formatDateTime(role.createdAt)
+                                                : role.id
+                                                    ? formatDateTime(new Date(parseInt(role.id.substring(0, 8), 16) * 1000))
+                                                    : "N/A"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 mt-auto pt-2">
+                                    <button
+                                        onClick={() => handleOpenRoleModal(role)}
+                                        className="flex-1 bg-blue-50 text-blue-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
+                                    >
+                                        <Edit size={16} /> Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleRoleDelete(role.id)}
+                                        className="flex-1 bg-red-50 text-red-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+                                    >
+                                        <Trash2 size={16} /> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="hidden lg:block overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
                         <table className="w-full text-left">
                             <thead className="bg-gray-100 border-b">
                                 <tr>
@@ -304,8 +352,8 @@ export default function RolesPermissionsPage() {
                                                     : "N/A"}
 
                                             {/* {role.createdAt
-              ? new Date(role.createdAt).toLocaleDateString()
-              : "N/A"} */}
+                                                ? new Date(role.createdAt).toLocaleDateString()
+                                                : "N/A"} */}
                                         </td>
 
                                         {/* Actions */}
@@ -353,7 +401,55 @@ export default function RolesPermissionsPage() {
                     )}
                     {permsError && <p className="text-red-500">{permsError}</p>}
 
-                    <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+                    {/* Mobile Card View for Permissions */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden mb-6">
+                        {permissions.map((perm) => (
+                            <div key={perm._id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4">
+                                <div className="border-b border-gray-100 pb-3">
+                                    <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Permission Name</span>
+                                    <h3 className="text-lg font-bold text-[#0A2342]">{perm.name}</h3>
+                                </div>
+
+                                <div className="space-y-2 text-sm text-gray-600">
+                                    <div className="flex gap-2">
+                                        <span className="font-medium text-gray-900 min-w-[80px]">Description:</span>
+                                        <span className="line-clamp-2">{perm.description || "--"}</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <span className="font-medium text-gray-900 min-w-[80px]">Created By:</span>
+                                        <span>{perm.createdBy?.name || perm.createdBy?.email || "System"}</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <span className="font-medium text-gray-900 min-w-[80px]">Created At:</span>
+                                        <span>
+                                            {perm.createdAt
+                                                ? formatDateTime(perm.createdAt)
+                                                : perm._id
+                                                    ? formatDateTime(new Date(parseInt(perm._id.substring(0, 8), 16) * 1000))
+                                                    : "N/A"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 mt-auto pt-2">
+                                    <button
+                                        onClick={() => handleOpenPermModal(perm)}
+                                        className="flex-1 bg-blue-50 text-blue-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
+                                    >
+                                        <Edit size={16} /> Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handlePermDelete(perm._id)}
+                                        className="flex-1 bg-red-50 text-red-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+                                    >
+                                        <Trash2 size={16} /> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="hidden lg:block overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
                         <table className="w-full text-left">
                             <thead className="bg-gray-100 border-b">
                                 <tr>

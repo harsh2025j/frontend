@@ -109,11 +109,12 @@ export default function ContentSlider({ name, FilteredData, slug }: ContentSlide
               className="min-w-[260px] max-w-[260px] bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300"
             >
               <div className="relative w-full h-[160px] overflow-hidden bg-gray-200">
-                <Link href={`/news/${item.slug}`}>
+                <Link href={`/news/${item.slug}`} className="relative block w-full h-full">
                   <Image
                     src={item.img}
                     alt={item.title || "Article Image"}
                     fill
+                    sizes="260px"
                     className="object-cover hover:scale-105 transition-transform duration-500"
                   />
                 </Link>

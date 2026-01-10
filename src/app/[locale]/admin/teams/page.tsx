@@ -70,8 +70,8 @@ const TeamManagementPage: React.FC = () => {
       </h1>
 
       <div className="flex min-h-screen bg-gray-50 text-gray-800">
-        <main className="flex-1 p-6">
-          <div className="mx-auto bg-white rounded-2xl shadow p-8">
+        <main className="flex-1 pt-4">
+          <div className="mx-auto bg-white rounded-2xl shadow p-4">
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-gray rounded-xl px-6 py-3">
               <div className="text-sm md:text-base">
                 <strong>Total Team:</strong> {filteredUsers?.length || 0}
@@ -84,8 +84,66 @@ const TeamManagementPage: React.FC = () => {
               </button>
             </div>
 
+            {/* Mobile/Tablet Card View */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden mb-6">
+              {loading || !filteredUsers ? (
+                // Skeleton
+                [...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl shadow p-5 animate-pulse flex flex-col gap-4">
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-8 bg-gray-200 rounded w-full mt-auto"></div>
+                  </div>
+                ))
+              ) : filteredUsers.length === 0 ? (
+                <div className="col-span-full text-center py-10 text-gray-500 bg-white rounded-xl shadow">
+                  No team members found.
+                </div>
+              ) : (
+                filteredUsers.map((member) => (
+                  <div key={member._id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4">
+                    <div className="border-b border-gray-100 pb-3 flex justify-between items-start">
+                      <div>
+                        <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">User</span>
+                        <h3 className="text-lg font-bold text-[#0A2342]">{member.name}</h3>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${member.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                        {member.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 text-sm text-gray-600">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium text-gray-900">Email:</span>
+                        <span className="truncate">{member.email}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium text-gray-900">Roles:</span>
+                        <div className="flex flex-wrap gap-1">
+                          <TruncatedList items={member.roles || []} />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium text-gray-900">Permissions:</span>
+                        <div className="flex flex-wrap gap-1">
+                          <TruncatedList items={member.permissions || []} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => router.push(`/admin/teams/edit/${member._id}`)}
+                      className="mt-auto w-full bg-[#0B2149] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#1a3a75] transition-colors flex items-center justify-center gap-2"
+                    >
+                      Manage Member
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
             {/* Table */}
-            <div className="overflow-x-auto rounded-xl bg-lightgray">
+            <div className="hidden lg:block overflow-x-auto rounded-xl bg-lightgray">
               <table className="w-full text-left border-collapse">
                 <thead className="bg-gray-100 text-gray-700 border-b border-bordercolor">
                   <tr>

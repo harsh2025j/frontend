@@ -97,6 +97,7 @@ export default function NewsSlider() {
                   src={slides[current].image}
                   alt={slides[current].title}
                   fill
+                  sizes="(max-width: 768px) 100vw, 600px"
                   className={`object-cover transition-opacity duration-500 ${fade ? "opacity-100" : "opacity-0"} group-hover:scale-105`}
                   priority
                 />

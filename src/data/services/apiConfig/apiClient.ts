@@ -136,10 +136,10 @@ apiClient.interceptors.response.use(
       if (isAuthFailure && shouldShowError('auth-error')) {
         if (typeof window !== "undefined") {
           localStorage.removeItem("token");
-          toast.error("Session expired. Please login again.", {
-            duration: 3000,
-            id: 'auth-error-toast'
-          });
+          // toast.error("Session expired. Please login again.", {
+          //   duration: 3000,
+          //   id: 'auth-error-toast'
+          // });
           setTimeout(() => {
             window.location.href = "/";
           }, 1500);

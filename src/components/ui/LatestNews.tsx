@@ -29,11 +29,12 @@ const LatestNews: React.FC<LatestNewsProps> = ({
     <div className="bg-white  rounded-md  overflow-hidden hover:border-blue-300 transition-all duration-300 flex flex-col justify-between border border-gray-200 p-0">
 
       <div className="relative w-full h-60 ">
-        <Link href={`/news/${slug}`}>
+        <Link href={`/news/${slug}`} className="relative block w-full h-full">
           <Image
             src={getSafeImageUrl(typeof img === 'string' ? img : img.src)}
             alt={title}
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover rounded-t-md"
           />
         </Link>

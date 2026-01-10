@@ -28,6 +28,7 @@ const HindiNews: React.FC<HindiNews> = ({
             src={getSafeImageUrl(typeof img === 'string' ? img : img.src)}
             alt="Image"
             fill
+            sizes="(max-width: 640px) 100vw, 25vw"
             className="object-cover rounded-l-md"
           />
         </div>

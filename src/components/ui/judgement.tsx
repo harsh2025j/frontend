@@ -23,6 +23,7 @@ const Judgement: React.FC<JudgementProps> = ({ img, description, slug, author, d
             src={getSafeImageUrl(typeof img === 'string' ? img : img.src)}
             alt="Judgement Image"
             fill
+            sizes="(max-width: 640px) 100vw, 150px"
             className="object-cover rounded-l-md"
           />
         </div>

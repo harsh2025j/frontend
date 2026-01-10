@@ -263,6 +263,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                                     src={initialArticle.thumbnail}
                                     alt={translatedData ? translatedData.title : initialArticle.title}
                                     fill
+                                    sizes="(max-width: 1024px) 100vw, 800px"
                                     className="object-cover"
                                 />
                             </div>
@@ -382,8 +383,8 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                                     className="w-10 h-10 flex items-center justify-center rounded-full bg-[#bd081c] text-white hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
                                     title={t('shareOn', { platform: 'Pinterest' })}
                                 >
-                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" className="fill-current">
-                                        <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.399.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.951-7.252 4.173 0 7.41 2.967 7.41 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.367 18.62 0 12.017 0z" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" className="fill-current" viewBox="0 0 16 16">
+                                        <path d="M8 0a8 8 0 0 0-2.915 15.452c-.07-.633-.134-1.606.027-2.297.146-.625.938-4.02.938-4.02s-.239-.479-.239-1.187c0-1.113.645-1.943 1.448-1.943.682 0 1.012.512 1.012 1.127 0 .686-.437 1.712-.663 2.663-.188.796.4 1.446 1.185 1.446 1.422 0 2.515-1.5 2.515-3.664 0-1.915-1.377-3.254-3.342-3.254-2.436 0-3.853 1.84-3.853 3.744 0 .74.284 1.533.64 1.965.07.084.08.156.058.24-.06.255-.192.793-.217.904-.034.137-.109.166-.251.1-1.402-.652-2.277-2.698-2.277-4.343 0-3.53 2.568-6.002 6.907-6.002 3.633 0 6.005 2.652 6.005 6.137 0 3.662-2.306 6.353-5.511 6.353-1.077 0-2.09-.56-2.437-1.218.002-.007.59-2.327.734-2.872.13-.489.206-.757.305-1.055.458.87.893 1.743 1.342 2.613a7.994 7.994 0 0 0 1.259-.062c3.543-.594 6.22-3.67 6.22-7.394C16 3.58 12.42 0 8 0z" />
                                     </svg>
                                 </button>
 
@@ -472,6 +473,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                                                     src={(rec.thumbnail && (rec.thumbnail.startsWith('http') || rec.thumbnail.startsWith('/'))) ? rec.thumbnail : "https://ibb.co/LD3XGttL"}
                                                     alt={rec.title}
                                                     fill
+                                                    sizes="96px"
                                                     className="object-cover"
                                                 />
                                             </div>

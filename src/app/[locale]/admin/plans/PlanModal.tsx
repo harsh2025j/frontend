@@ -13,7 +13,7 @@ interface AddEditPlanModalProps {
 }
 
 export default function AddEditPlanModal({ plan, onClose }: AddEditPlanModalProps) {
-    
+
     const { createPlan, updatePlan, loading } = usePlanActions();
     const [formData, setFormData] = useState({
         name: "",
@@ -97,10 +97,10 @@ export default function AddEditPlanModal({ plan, onClose }: AddEditPlanModalProp
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl my-8">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-none">
                     <h2 className="text-2xl font-bold text-[#0A2342]">
                         {plan ? "Edit Plan" : "Add New Plan"}
                     </h2>
@@ -113,130 +113,134 @@ export default function AddEditPlanModal({ plan, onClose }: AddEditPlanModalProp
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    {/* Plan Name */}
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Plan Name *
-                        </label>
-                        <input
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            required
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-transparent outline-none"
-                            placeholder="e.g., Basic Plan"
-                        />
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Description *
-                        </label>
-                        <textarea
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            required
-                            rows={3}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-transparent outline-none resize-none"
-                            placeholder="Describe the plan..."
-                        />
-                    </div>
-
-                    {/* Price and Currency */}
-                    <div className="grid grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+                    {/* Scrollable Content */}
+                    <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                        {/* Plan Name */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Price *
+                                Plan Name *
                             </label>
-                            <input
-                                type="number"
-                                name="price"
-                                value={formData.price}
-                                onChange={handleChange}
-                                required
-                                min="0"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-transparent outline-none"
-                                placeholder="20999"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Currency *
-                            </label>
-                            <select
-                                name="currency"
-                                value={formData.currency}
-                                onChange={handleChange}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-transparent outline-none"
-                            >
-                                <option value="INR">INR</option>
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Features */}
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Features *
-                        </label>
-
-                        {/* Add Feature Input */}
-                        <div className="flex gap-2 mb-3">
                             <input
                                 type="text"
-                                value={newFeature}
-                                onChange={(e) => setNewFeature(e.target.value)}
-                                onKeyPress={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        handleAddFeature();
-                                    }
-                                }}
-                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-transparent outline-none"
-                                placeholder="Add a feature..."
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                required
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-transparent outline-none"
+                                placeholder="e.g., Basic Plan"
                             />
-                            <button
-                                type="button"
-                                onClick={handleAddFeature}
-                                className="px-4 py-2 bg-[#0A2342] text-white rounded-lg hover:bg-[#153a66] transition-colors flex items-center gap-2"
-                            >
-                                <Plus className="w-4 h-4" />
-                                Add
-                            </button>
                         </div>
 
-                        {/* Features List */}
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {formData.features.length === 0 ? (
-                                <p className="text-sm text-gray-500 italic">No features added yet</p>
-                            ) : (
-                                formData.features.map((feature, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100 transition-colors"
-                                    >
-                                        <span className="text-sm text-gray-700">{feature}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveFeature(index)}
-                                            className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors opacity-0 group-hover:opacity-100"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                ))
-                            )}
+                        {/* Description */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Description *
+                            </label>
+                            <textarea
+                                name="description"
+                                value={formData.description}
+                                onChange={handleChange}
+                                required
+                                rows={3}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-transparent outline-none resize-none"
+                                placeholder="Describe the plan..."
+                            />
                         </div>
+
+                        {/* Price and Currency */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Price *
+                                </label>
+                                <input
+                                    type="number"
+                                    name="price"
+                                    value={formData.price}
+                                    onChange={handleChange}
+                                    required
+                                    min="0"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-transparent outline-none"
+                                    placeholder="20999"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Currency *
+                                </label>
+                                <select
+                                    name="currency"
+                                    value={formData.currency}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-transparent outline-none"
+                                >
+                                    <option value="INR">INR</option>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Features */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Features *
+                            </label>
+
+                            {/* Add Feature Input */}
+                            <div className="flex gap-2 mb-3">
+                                <input
+                                    type="text"
+                                    value={newFeature}
+                                    onChange={(e) => setNewFeature(e.target.value)}
+                                    onKeyPress={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            handleAddFeature();
+                                        }
+                                    }}
+                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-transparent outline-none"
+                                    placeholder="Add a feature..."
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleAddFeature}
+                                    className="px-4 py-2 bg-[#0A2342] text-white rounded-lg hover:bg-[#153a66] transition-colors flex items-center gap-2"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Add
+                                </button>
+                            </div>
+
+                            {/* Features List */}
+                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                                {formData.features.length === 0 ? (
+                                    <p className="text-sm text-gray-500 italic">No features added yet</p>
+                                ) : (
+                                    formData.features.map((feature, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100 transition-colors"
+                                        >
+                                            <span className="text-sm text-gray-700">{feature}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveFeature(index)}
+                                                className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
                     </div>
 
                     {/* Actions */}
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                    <div className="flex-none p-6 border-t border-gray-200 bg-white rounded-b-xl flex justify-end gap-3">
                         <button
                             type="button"
                             onClick={onClose}

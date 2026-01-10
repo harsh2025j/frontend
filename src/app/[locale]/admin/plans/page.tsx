@@ -40,25 +40,25 @@ export default function PlansManagement() {
     );
     useEffect(() => {
         // if (loading) return;
-    
+
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    
+
         // 1. No Token? -> Go to Login
         if (!token) {
-          router.replace("/auth/login");
-          return;
+            router.replace("/auth/login");
+            return;
         }
-    
+
         // 2. Role Check
         if (user?.roles?.length) {
-          const allowedRoles = ["admin", "superadmin"];
-          const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
-          if (!hasAccess) {
-            router.replace("/auth/login");
-          }
-          
+            const allowedRoles = ["admin", "superadmin"];
+            const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
+            if (!hasAccess) {
+                router.replace("/auth/login");
+            }
+
         }
-      }, [user, router]);
+    }, [user, router]);
 
     const handleDelete = async () => {
         if (selectedPlan) {
@@ -92,10 +92,10 @@ export default function PlansManagement() {
     }
 
     return (
-        <div className="p-6">
+        <div className="">
             <h1 className="text-2xl font-bold mb-6 text-[#0A2342]">Premium Plans Management</h1>
 
-            <div className="bg-white p-6 rounded-xl border border-gray-200">
+            <div className="bg-white md:p-6 p-4 rounded-xl border border-gray-200">
                 {/* Header Section */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -123,12 +123,69 @@ export default function PlansManagement() {
                             <Plus className="w-4 h-4" />
                             Add New Plan
                         </button>
-                         
+
                     </div>
                 </div>
 
-                {/* Table */}
-                <div className="overflow-x-auto">
+                {/* Card Grid View for Mobile/Tablet */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:hidden gap-4 mb-6">
+                    {filteredPlans.length === 0 ? (
+                        <div className="col-span-full text-center p-8 text-gray-500 bg-white rounded-lg border border-gray-100">
+                            No plans found
+                        </div>
+                    ) : (
+                        filteredPlans.map((plan: Plan) => (
+                            <div key={plan.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4">
+                                <div className="border-b border-gray-100 pb-3 flex flex-col gap-3">
+                                    <div>
+                                        <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Plan Name</span>
+                                        <h3 className="text-lg font-bold text-[#0A2342]">{plan.name}</h3>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Price</span>
+                                        <div className="text-lg font-bold text-[#0A2342]">
+                                            {plan.currency} {plan.price.toLocaleString()}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 text-sm text-gray-600 flex-1">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="font-medium text-gray-900">Description:</span>
+                                        <span className="line-clamp-2">{plan.description}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-900">Features:</span>
+                                        <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-medium border border-blue-100">
+                                            {plan.features.length} included
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 mt-auto pt-2 border-t border-gray-50">
+                                    <button
+                                        onClick={() => handleEdit(plan)}
+                                        className="flex-1 bg-blue-50 text-blue-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
+                                    >
+                                        <Edit className="w-4 h-4" /> Edit
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setSelectedPlan(plan);
+                                            setShowDeleteModal(true);
+                                        }}
+                                        className="flex-1 bg-red-50 text-red-600 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+                                    >
+                                        <Trash2 className="w-4 h-4" /> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* Table View (Desktop) */}
+                <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-gray-200">

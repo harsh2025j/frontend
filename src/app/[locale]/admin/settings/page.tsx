@@ -107,7 +107,7 @@ export default function Settings() {
                             <span>{category.name}</span>
                         </div>
                     </td>
-                    <td className="p-2 text-gray-500">{category.slug}</td>
+                    <td className="p-2 text-gray-500 hidden sm:table-cell">{category.slug}</td>
                     <td className="p-2">
                         <div className="flex gap-2">
                             <button
@@ -186,7 +186,7 @@ export default function Settings() {
                         <thead className="bg-gray-100">
                             <tr>
                                 <th className="p-2 text-left pl-4">Category Name</th>
-                                <th className="p-2 text-left">Slug</th>
+                                <th className="p-2 text-left hidden sm:table-cell">Slug</th>
                                 <th className="p-2 text-left">Action</th>
                             </tr>
                         </thead>

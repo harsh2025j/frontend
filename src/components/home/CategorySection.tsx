@@ -65,6 +65,7 @@ const ArticleCard = ({ article, compact = false }: { article: any; compact?: boo
           src={getSafeImageUrl(article.thumbnail)}
           alt={article.title}
           fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </div>
@@ -108,6 +109,7 @@ const ListLayout = ({ articles }: { articles: any[] }) => (
               src={getSafeImageUrl(article.thumbnail)}
               alt={article.title}
               fill
+              sizes="112px"
               className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
@@ -143,6 +145,7 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
             src={getSafeImageUrl(featured.thumbnail)}
             alt={featured.title}
             fill
+            sizes="(max-width: 1024px) 100vw, 700px"
             className="object-cover transition-transform duration-700 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
@@ -169,6 +172,7 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
                 src={getSafeImageUrl(article.thumbnail)}
                 alt={article.title}
                 fill
+                sizes="80px"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
             </div>

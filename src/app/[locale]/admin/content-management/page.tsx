@@ -490,6 +490,7 @@ const contentManagementPage: React.FC = () => {
                           src={(item.thumbnail && (item.thumbnail.startsWith('http') || item.thumbnail.startsWith('/'))) ? item.thumbnail : logo}
                           alt={item.title || "Article Image"}
                           fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           className="object-cover"
                         />
                         {/* Status Badge Overlay */}
@@ -596,6 +597,7 @@ const contentManagementPage: React.FC = () => {
                               src={(item.thumbnail && (item.thumbnail.startsWith('http') || item.thumbnail.startsWith('/'))) ? item.thumbnail : logo}
                               alt={"not found"}
                               fill
+                              sizes="48px"
                               className="object-cover"
                             />
                           </div>
