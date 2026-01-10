@@ -378,12 +378,12 @@ const ContentApprovalPanel = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FC] px-6 py-10">
+    <div className="min-h-screen bg-[#F8F9FC]  py-10">
       <h1 className="text-xl font-semibold text-[#0B2149] mb-5">
         Content Approval Panel
       </h1>
 
-      <div className="bg-white rounded-2xl shadow-md p-8 mx-auto">
+      <div className="bg-white rounded-2xl shadow-md md:p-8 p-1 mx-auto">
 
         {/* TOP BAR */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -397,14 +397,117 @@ const ContentApprovalPanel = () => {
               placeholder="Search Article..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl outline-none text-sm w-64 transition-all focus:ring-2 focus:ring-[#0B2149]/20 focus:border-[#0B2149] shadow-sm bg-gray-50 hover:bg-white"
+              className="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl outline-none text-sm w-80 transition-all focus:ring-2 focus:ring-[#0B2149]/20 focus:border-[#0B2149] shadow-sm bg-gray-50 hover:bg-white"
             />
             <FiSearch className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
           </div>
         </div>
 
+        {/* Mobile/Tablet Card View */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:hidden mb-6">
+          {loading || isSearching ? (
+            // Simple skeleton for cards
+            [...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white rounded-xl shadow overflow-hidden animate-pulse">
+                <div className="h-48 bg-gray-200" />
+                <div className="p-4 space-y-3">
+                  <div className="h-6 bg-gray-200 rounded w-3/4" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  <div className="flex gap-2 pt-2">
+                    <div className="h-8 bg-gray-200 rounded flex-1" />
+                    <div className="h-8 bg-gray-200 rounded flex-1" />
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            paginatedArticles.length > 0 ? (
+              paginatedArticles.map((item: Article) => (
+                <div key={item.id} className="bg-white rounded-xl shadow overflow-hidden flex flex-col h-full border border-gray-100">
+                  {/* Image - Full Width Top */}
+                  <div className="relative h-48 w-full bg-gray-100">
+                    <img
+                      src={(item.thumbnail && (item.thumbnail.startsWith('http') || item.thumbnail.startsWith('/'))) ? item.thumbnail : "/placeholder.png"}
+                      alt={item.title || "Article Image"}
+                      className="object-cover w-full h-full"
+                    />
+                    {/* Status Badge Overlay */}
+                    <div className="absolute top-3 right-3">
+                      <span className={`text-xs px-3 py-1 rounded-full font-medium shadow-sm ${item.status === 'published'
+                        ? 'bg-green-100 text-green-700'
+                        : item.status === 'draft'
+                          ? 'bg-white text-yellow-600'
+                          : item.status === 'rejected'
+                            ? 'bg-red-100 text-red-600'
+                            : item.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-gray-100 text-gray-700'
+                        }`}>
+                        {item.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 flex flex-col flex-1">
+                    {/* Title - Single Line Truncated */}
+                    <h3 className="font-bold text-gray-900 mb-3 truncate text-lg" title={item.title}>
+                      {item.title}
+                    </h3>
+
+                    {/* Details */}
+                    <div className="space-y-2 mb-4 text-sm text-gray-600 flex-1">
+                      <div className="flex gap-2 items-center">
+                        <span className="font-medium text-gray-800"><b>Category:</b></span>
+                        <span className="">{item.category?.name || "N/A"}</span>
+                      </div>
+                      {/* You can add Author or other details here if available in Content Approval item */}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="grid grid-cols-1 gap-3 mt-auto">
+                      <button
+                        onClick={() => openPreview(item)}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                      >
+                        Preview
+                      </button>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => handleApproveClick(item.id)}
+                          disabled={actionLoading === item.id || item.status === 'rejected' || item.status === 'published'}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${item.status === 'rejected'
+                            ? 'bg-red-100 text-red-600 cursor-not-allowed border border-red-200'
+                            : item.status === 'published'
+                              ? 'bg-green-100 text-green-600 cursor-not-allowed border border-green-200'
+                              : 'bg-green-500 text-white hover:bg-green-600'
+                            } disabled:opacity-50`}
+                        >
+                          {actionLoading === item.id ? "..." : (item.status === 'published' ? "Approved" : "Approve")}
+                        </button>
+                        {item.status === 'pending' && (
+                          <button
+                            onClick={() => handleRejectClick(item.id)}
+                            disabled={actionLoading === item.id}
+                            className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                          >
+                            {actionLoading === item.id ? "..." : "Decline"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-10 text-gray-500 bg-white rounded-xl shadow">
+                No result found
+              </div>
+            )
+          )}
+        </div>
+
         {/* TABLE */}
-        <div className="overflow-x-auto rounded-xl border border-gray-200">
+        <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200">
           <table className="w-full border-collapse">
             <thead className="bg-gray-100 text-gray-600">
               <tr>

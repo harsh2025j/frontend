@@ -45,7 +45,8 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) setIsSidebarOpen(false);
+      // On mobile/tablet (< 1024), default to closed
+      if (window.innerWidth < 1024) setIsSidebarOpen(false);
       else setIsSidebarOpen(true);
     };
     handleResize();
@@ -63,8 +64,8 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <AdminSidebar isOpen={isSidebarOpen} />
-      <div className={`flex flex-col flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-72" : "ml-20"}`}>
+      <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <div className={`flex flex-col flex-1 transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : "lg:ml-20"} ml-0`}>
         <AdminNavbar onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)} />
         <main className="flex-1 pt-24 p-8">{children}</main>
       </div>

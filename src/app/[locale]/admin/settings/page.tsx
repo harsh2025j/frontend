@@ -140,7 +140,7 @@ export default function Settings() {
     };
 
     return (
-        <div className="p-8 space-y-8">
+        <div className="space-y-8">
             <h2 className="text-2xl font-semibold">Settings</h2>
 
             {/* Organization & Branding */}
@@ -179,7 +179,7 @@ export default function Settings() {
                     >
                         Add New Category
                     </button>
-                     
+
                 </div>
                 <div className="border border-[#1A73E8] rounded-2xl overflow-hidden mt-5">
                     <table className="w-full">

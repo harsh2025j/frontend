@@ -106,7 +106,7 @@ export default function AdminNotificationDropdown({ userId }: AdminNotificationD
             </button>
 
             {isOpen && (
-                <div className="fixed left-4 right-4 top-12 min-[400px]:top-24 mt-2 z-50 lg:absolute lg:inset-auto lg:right-0 lg:left-auto lg:top-full lg:mt-2 lg:w-96 bg-white dark:bg-[#0d2b4f] border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="fixed left-4 right-4 top-12 min-[400px]:top-12 mt-2 z-50 lg:absolute lg:inset-auto lg:right-0 lg:left-auto lg:top-full lg:mt-2 lg:w-96 bg-white dark:bg-[#0d2b4f] border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                     <div className="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-[#0A2342]/50">
                         <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
                         {unreadCount > 0 && (

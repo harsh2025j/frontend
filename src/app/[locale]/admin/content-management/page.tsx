@@ -225,10 +225,12 @@ const contentManagementPage: React.FC = () => {
           });
 
           setSearchResults(filteredResults);
+          // setSearchResults(mappedResults);   // if enable this, then disable the filter by current user in searching
 
           // ROBUST PAGINATION FIX: Check all possible meta fields
           const totalInfo = results.meta?.totalItems || (results.meta as any)?.pagination?.total || (results.meta as any)?.total || (results.meta as any)?.count || 0;
           setTotalSearchItems(totalInfo);
+
 
         } catch (error) {
           // console.error("Search failed", error);
@@ -417,12 +419,12 @@ const contentManagementPage: React.FC = () => {
       </div>
 
       <div className="flex min-h-screen bg-gray-50 text-gray-800">
-        <main className="flex-1 p-6">
-          <div className="mx-auto bg-white rounded-2xl shadow p-8">
+        <main className="flex-1">
+          <div className="mx-auto bg-white rounded-2xl shadow md:p-6 p-4">
 
             {/* Stats */}
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-              <div className="flex bg-gray rounded-xl px-6 py-3 items-center gap-6 text-sm md:text-base">
+              <div className="flex bg-gray rounded-xl  py-3 items-center gap-6 text-sm md:text-base w-full lg:w-auto  lg:justify-start">
                 <span>
                   <strong>Total News Post:</strong> {loading ? "..." : totalNewsPost}
                 </span>
@@ -431,13 +433,13 @@ const contentManagementPage: React.FC = () => {
                 </span>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
 
 
                 {/* <button
                   onClick={handleGenerateNews}
                   disabled={isGenerating}
-                  className="bg-[#C9A227] text-white px-5 py-2 rounded-md font-medium hover:bg-[#C9A227]/90 transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="bg-[#C9A227] text-white px-5 py-2 rounded-md font-medium hover:bg-[#C9A227]/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed w-full sm:w-auto"
                 >
                   {isGenerating ? (
                     <>
@@ -453,14 +455,118 @@ const contentManagementPage: React.FC = () => {
 
                 <button
                   onClick={() => router.push('/admin/create-content')}
-                  className="bg-[#0B2149] text-white px-5 py-2 rounded-md font-medium hover:bg-[#1a3a75] transition-colors flex items-center gap-2"
+                  className="bg-[#0B2149] text-white px-5 py-2 rounded-md font-medium hover:bg-[#1a3a75] transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
                 >
                   <span>+</span> Create New Article
                 </button>
               </div>
             </div>
             {/* Table */}
-            <div className="overflow-x-auto rounded-xl">
+            {/* Mobile/Tablet Card View */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:hidden mb-6">
+              {loading || isSearching ? (
+                // Simple skeleton for cards
+                [...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl shadow overflow-hidden animate-pulse">
+                    <div className="h-48 bg-gray-200" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-6 bg-gray-200 rounded w-3/4" />
+                      <div className="h-4 bg-gray-200 rounded w-1/2" />
+                      <div className="flex gap-2 pt-2">
+                        <div className="h-8 bg-gray-200 rounded flex-1" />
+                        <div className="h-8 bg-gray-200 rounded flex-1" />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                paginatedArticles.map((item: Article) => {
+                  const showDelete = item.status !== 'published';
+                  return (
+                    <div key={item.id} className="bg-white rounded-xl shadow overflow-hidden flex flex-col h-full border border-gray-100">
+                      {/* Image - Full Width Top */}
+                      <div className="relative h-48 w-full bg-gray-100">
+                        <Image
+                          src={(item.thumbnail && (item.thumbnail.startsWith('http') || item.thumbnail.startsWith('/'))) ? item.thumbnail : logo}
+                          alt={item.title || "Article Image"}
+                          fill
+                          className="object-cover"
+                        />
+                        {/* Status Badge Overlay */}
+                        <div className="absolute top-3 right-3">
+                          <span className={`text-xs px-3 py-1 rounded-full font-medium shadow-sm ${item.status === 'published'
+                            ? 'bg-green-100 text-green-700'
+                            : item.status === 'draft'
+                              ? 'bg-white text-yellow-600'
+                              : item.status === 'rejected'
+                                ? 'bg-red-100 text-red-600'
+                                : item.status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-700'
+                                  : 'bg-gray-100 text-gray-700'
+                            }`}>
+                            {item.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-4 flex flex-col flex-1">
+                        {/* Title - Single Line Truncated */}
+                        <h3 className="font-bold text-gray-900 mb-3 truncate text-lg" title={item.title}>
+                          {item.title}
+                        </h3>
+
+                        {/* Details */}
+                        <div className="space-y-2 mb-4 text-sm text-gray-600 flex-1">
+                          <div className="flex gap-2 items-center">
+                            <span className="font-medium text-gray-800"><b>Category:</b></span>
+                            <span className="">{item.category?.name || "N/A"}</span>
+                          </div>
+                          <div className="flex gap-2 items-center">
+                            <span className="font-medium text-gray-800"><b>Author:</b></span>
+                            <span className="truncate max-w-[150px]" title={item.authors || ""}>{item.authors || "Unknown"}</span>
+                          </div>
+                          {item.rejectionReason && item.status !== 'published' && (
+                            <div className="mt-2 pt-2 border-t border-gray-100">
+                              <span className="block text-xs font-medium text-red-500 mb-1">Rejection Reason:</span>
+                              <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
+                                {item.rejectionReason}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Actions */}
+                        <div className={`grid ${showDelete ? 'grid-cols-2' : 'grid-cols-1'} gap-3 mt-auto`}>
+                          <button
+                            onClick={() => handleEdit(item.id)}
+                            className="bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-600 transition-colors flex items-center justify-center gap-2"
+                          >
+                            Edit
+                          </button>
+                          {showDelete && (
+                            <button
+                              onClick={() => handleDeleteClick(item.id)}
+                              className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+
+              {!loading && !isSearching && paginatedArticles.length === 0 && (
+                <div className="col-span-full text-center py-10 text-gray-500 bg-white rounded-xl shadow">
+                  No articles found.
+                </div>
+              )}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto rounded-xl">
               <table className="w-full text-left border-collapse">
                 <thead className="bg-gray-100 text-gray-700">
                   <tr>

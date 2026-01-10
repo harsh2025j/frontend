@@ -27,7 +27,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { PERMISSIONS, ROLES } from "@/config/permissions";
 
-const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
+const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { user: reduxProfileUser } = useProfileActions();
@@ -47,6 +47,14 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
   const handleLogout = () => {
     dispatch(logoutUser());
     window.location.href = "/"; // Force full page reload
+  };
+
+  const handleItemClick = (name: string) => {
+    setActiveNav(name);
+    // Auto-close on mobile/tablet when an item is clicked
+    if (window.innerWidth < 1024) {
+      onClose();
+    }
   };
 
   const allNavItems = [
@@ -139,110 +147,120 @@ const AdminSidebar = ({ isOpen }: { isOpen: boolean }) => {
   const navItems = allNavItems.filter((item) => item.show);
 
   return (
-    <aside
-      className={`
+    <>
+      {/* Mobile/Tablet Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`
         fixed left-0 top-16
         h-[calc(100vh-4rem)]
         bg-white dark:bg-[#0A2342]
         border-r border-gray-200 dark:border-gray-800
-        shadow-sm flex flex-col justify-between z-20
+        shadow-sm flex flex-col justify-between z-40
         transition-all duration-300 ease-in-out
-        ${isOpen ? "w-72" : "w-20"}
+        ${isOpen ? "translate-x-0 w-72" : "-translate-x-full lg:translate-x-0 lg:w-20"}
       `}
-    >
-      <div className="flex-1 overflow-y-auto py-6 px-3">
-        <nav className="space-y-1">
-          {navItems.map((item) => {
-            const isActive = activeNav === item.name;
+      >
+        <div className="flex-1 overflow-y-auto py-6 px-3">
+          <nav className="space-y-1">
+            {navItems.map((item) => {
+              const isActive = activeNav === item.name;
 
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => setActiveNav(item.name)}
-                className={`
-                  group flex items-center ${isOpen ? "gap-4" : ""} px-3 py-3 rounded-xl transition-all duration-200
-                  ${isActive
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-white"
-                  }
-                  ${!isOpen ? "justify-center" : ""}
-                `}
-                title={!isOpen ? item.name : ""}
-              >
-                <span
-                  className={`shrink-0 transition-colors duration-200 ${isActive ? "text-blue-600 dark:text-blue-400" : "group-hover:text-blue-600 dark:group-hover:text-orange-500"
-                    }`}
-                >
-                  {item.icon}
-                </span>
-
-                <span
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => handleItemClick(item.name)}
                   className={`
-                    whitespace-nowrap text-base font-medium transition-all duration-300 origin-left
-                    ${isOpen ? "opacity-100 translate-x-0 w-auto" : "opacity-0 -translate-x-4 w-0 overflow-hidden"}
-                  `}
+                  group flex items-center ${isOpen ? "gap-4" : "lg:justify-center"} px-3 py-3 rounded-xl transition-all duration-200
+                  ${isActive
+                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-white"
+                    }
+                `}
+                  title={!isOpen ? item.name : ""}
                 >
-                  {item.name}
-                </span>
+                  <span
+                    className={`shrink-0 transition-colors duration-200 ${isActive ? "text-blue-600 dark:text-blue-400" : "group-hover:text-blue-600 dark:group-hover:text-orange-500"
+                      }`}
+                  >
+                    {item.icon}
+                  </span>
 
-                {isActive && isOpen && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></div>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
+                  <span
+                    className={`
+                    whitespace-nowrap text-base font-medium transition-all duration-300 origin-left
+                    ${isOpen ? "opacity-100 translate-x-0 w-auto" : "hidden lg:block lg:opacity-0 lg:-translate-x-4 lg:w-0 lg:overflow-hidden"}
+                  `}
+                  >
+                    {item.name}
+                  </span>
 
-      <div className="border-t border-gray-200 dark:border-gray-800 p-4 bg-gray-50 dark:bg-[#0d2b4f]">
-        <div className={`flex items-center ${isOpen ? "gap-3" : ""} ${!isOpen ? "justify-center" : ""}`}>
-          <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-600 shrink-0 ring-2 ring-white dark:ring-gray-700 shadow-sm">
-            {user?.profilePicture ? (
-              <Image src={user.profilePicture} alt={user.name} fill className="object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-600 dark:text-white font-bold text-lg">
-                {user?.name?.charAt(0).toUpperCase() || "U"}
-              </div>
-            )}
-          </div>
+                  {isActive && isOpen && (
+                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
-          <div
-            className={`
+        {/* <div className="border-t border-gray-200 dark:border-gray-800 p-4 bg-gray-50 dark:bg-[#0d2b4f]">
+          <div className={`flex items-center ${isOpen ? "gap-3" : "lg:justify-center"}`}>
+            <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-600 shrink-0 ring-2 ring-white dark:ring-gray-700 shadow-sm">
+              {user?.profilePicture ? (
+                <Image src={user.profilePicture} alt={user.name} fill className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-600 dark:text-white font-bold text-lg">
+                  {user?.name?.charAt(0).toUpperCase() || "U"}
+                </div>
+              )}
+            </div>
+
+            <div
+              className={`
               flex-1 min-w-0 transition-all duration-300 overflow-hidden
-              ${isOpen ? "opacity-100 w-auto ml-1" : "opacity-0 w-0 ml-0"}
+              ${isOpen ? "opacity-100 w-auto ml-1" : "hidden lg:block lg:opacity-0 lg:w-0 lg:ml-0"}
             `}
-          >
-            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user?.name || "User"}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
-            <p className="text-xs font-medium text-blue-600 dark:text-blue-400 truncate mt-0.5 capitalize">
-              {user?.roles?.map((r) => r.name).join(" & ") || "User"}
-            </p>
-          </div>
+            >
+              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user?.name || "User"}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+              <p className="text-xs font-medium text-blue-600 dark:text-blue-400 truncate mt-0.5 capitalize">
+                {user?.roles?.map((r) => r.name).join(" & ") || "User"}
+              </p>
+            </div>
 
-          <button
-            onClick={handleLogout}
-            className={`
+            <button
+              onClick={handleLogout}
+              className={`
               text-gray-400 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700
               ${isOpen ? "block" : "hidden"}
             `}
-            title="Logout"
-          >
-            <LogOut size={20} />
-          </button>
-        </div>
+              title="Logout"
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
 
-        {!isOpen && (
-          <button
-            onClick={handleLogout}
-            className="mt-4 w-full flex justify-center text-gray-400 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-            title="Logout"
-          >
-            <LogOut size={20} />
-          </button>
-        )}
-      </div>
-    </aside>
+          {!isOpen && (
+            <button
+              onClick={handleLogout}
+              className="mt-4 w-full justify-center text-gray-400 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hidden lg:flex"
+              title="Logout"
+            >
+              <LogOut size={20} />
+            </button>
+          )}
+        </div> */}
+      </aside>
+    </>
   );
 };
 
