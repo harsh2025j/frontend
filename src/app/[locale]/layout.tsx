@@ -22,7 +22,9 @@ export const metadata: Metadata = {
   // title: "Sajjad Husain Law Associates",
   description: "Next-Gen Legal Tech",
   icons: {
-    icon: "/logo.png",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
 };
 
