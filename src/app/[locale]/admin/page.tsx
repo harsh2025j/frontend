@@ -27,17 +27,48 @@ import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { fetchArticles } from "@/data/features/article/articleThunks";
 import { fetchUsers } from "@/data/features/users/usersThunks";
 
-
 const data = [
-  { label: "Total Articles", value: "12,450", icon: <TrendingUp className="w-8 h-8 text-blue-500" /> },
-  { label: "AI Summaries", value: "6,320", icon: <Star className="w-8 h-8 text-yellow-500" /> },
-  { label: "Active Users", value: "8,911", icon: <UserCheck className="w-8 h-8 text-green-500" /> },
-  { label: "Total Users", value: "1,51,254", icon: <Users className="w-8 h-8 text-indigo-500" /> },
-  { label: "Premium Subscribers", value: "1,450", icon: <CircleDollarSign className="w-8 h-8 text-orange-500" /> },
-  { label: "Most Viewed Category", value: "1,450", icon: <Eye className="w-8 h-8 text-blue-500" /> },
-  { label: "Most Search City", value: "1,450", icon: <MapPin className="w-8 h-8 text-red-500" /> },
-  { label: "Free Users", value: "10,520", icon: <Users className="w-8 h-8 text-gray-400" /> },
-]
+  {
+    label: "Total Articles",
+    value: "12,450",
+    icon: <TrendingUp className="w-8 h-8 text-blue-500" />,
+  },
+  {
+    label: "AI Summaries",
+    value: "6,320",
+    icon: <Star className="w-8 h-8 text-yellow-500" />,
+  },
+  {
+    label: "Active Users",
+    value: "8,911",
+    icon: <UserCheck className="w-8 h-8 text-green-500" />,
+  },
+  {
+    label: "Total Users",
+    value: "1,51,254",
+    icon: <Users className="w-8 h-8 text-indigo-500" />,
+  },
+  {
+    label: "Premium Subscribers",
+    value: "1,450",
+    icon: <CircleDollarSign className="w-8 h-8 text-orange-500" />,
+  },
+  {
+    label: "Most Viewed Category",
+    value: "1,450",
+    icon: <Eye className="w-8 h-8 text-blue-500" />,
+  },
+  {
+    label: "Most Search City",
+    value: "1,450",
+    icon: <MapPin className="w-8 h-8 text-red-500" />,
+  },
+  {
+    label: "Free Users",
+    value: "10,520",
+    icon: <Users className="w-8 h-8 text-gray-400" />,
+  },
+];
 
 const Page = () => {
   useDocTitle("Admin Dashboard | Sajjad Husain Law Associates");
@@ -57,22 +88,25 @@ const Page = () => {
   const totalArticles = articles.length;
 
   // 2. Active Users (Verified)
-  const activeUsers = users.filter(u => u.isVerified).length;
+  const activeUsers = users.filter((u) => u.isVerified).length;
 
   // 3. Total Users
   const totalUsers = users.length;
 
-  // 4. AI Summaries (Placeholder or derived if available, reusing dummy for now if no field exists, 
+  // 4. AI Summaries (Placeholder or derived if available, reusing dummy for now if no field exists,
   //    or perhaps counting articles that have content length > X? Let's use a dummy or separate count if needed.
   //    For now, I'll calculate "Published Articles" as a proxy or just keep it 0 if unknown)
-  const publishedArticles = articles.filter(a => a.status === 'published').length;
-  const pendingArticles = articles.filter(a => a.status === 'pending').length;
+  const publishedArticles = articles.filter(
+    (a) => a.status === "published",
+  ).length;
+  const pendingArticles = articles.filter((a) => a.status === "pending").length;
 
   // 5. Most Active Category
   const categoryCounts: Record<string, number> = {};
   articles.forEach((article) => {
     if (article.category?.name) {
-      categoryCounts[article.category.name] = (categoryCounts[article.category.name] || 0) + 1;
+      categoryCounts[article.category.name] =
+        (categoryCounts[article.category.name] || 0) + 1;
     }
   });
 
@@ -86,29 +120,57 @@ const Page = () => {
     }
   });
 
-
   // --- Chart Data: Passed directly to component for processing ---
 
   const stats = [
-    { label: "Total Articles", value: totalArticles.toLocaleString(), icon: <TrendingUp className="w-8 h-8 text-blue-500" /> },
-    { label: "Published Articles", value: publishedArticles.toLocaleString(), icon: <Star className="w-8 h-8 text-yellow-500" /> },
-    { label: "Pending Articles", value: pendingArticles.toLocaleString(), icon: <Clock className="w-8 h-8 text-orange-500" /> },
-    { label: "Active Users", value: activeUsers.toLocaleString(), icon: <UserCheck className="w-8 h-8 text-green-500" /> },
-    { label: "Total Users", value: totalUsers.toLocaleString(), icon: <Users className="w-8 h-8 text-indigo-500" /> },
-    { label: "Most Active Category", value: mostActiveCategory, icon: <Eye className="w-8 h-8 text-blue-500" /> },
+    {
+      label: "Total Articles",
+      value: totalArticles.toLocaleString(),
+      icon: <TrendingUp className="w-8 h-8 text-blue-500" />,
+    },
+    {
+      label: "Published Articles",
+      value: publishedArticles.toLocaleString(),
+      icon: <Star className="w-8 h-8 text-yellow-500" />,
+    },
+    {
+      label: "Pending Articles",
+      value: pendingArticles.toLocaleString(),
+      icon: <Clock className="w-8 h-8 text-orange-500" />,
+    },
+    {
+      label: "Active Users",
+      value: activeUsers.toLocaleString(),
+      icon: <UserCheck className="w-8 h-8 text-green-500" />,
+    },
+    {
+      label: "Total Users",
+      value: totalUsers.toLocaleString(),
+      path: "/admin/users",
+      icon: <Users className="w-8 h-8 text-indigo-500" />,
+    },
+    {
+      label: "Most Active Category",
+      value: mostActiveCategory,
+      icon: <Eye className="w-8 h-8 text-blue-500" />,
+    },
     // Keeping placeholders for data we don't have yet but reducing confusion
-    // { label: "Premium Subscribers", value: "0", icon: <CircleDollarSign className="w-8 h-8 text-orange-500" /> }, 
+    // { label: "Premium Subscribers", value: "0", icon: <CircleDollarSign className="w-8 h-8 text-orange-500" /> },
   ];
 
   return (
     <>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-semibold text-gray-800">Overview</h1>
+        <h1 className="text-2xl font-semibold text-gray-800">Overview </h1>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {stats.map((item, i) => (
-          <div key={i}>
+          <div
+            key={i}
+            onClick={() => item.path && router.push(item.path)}
+            className={item.path ? "cursor-pointer" : ""}
+          >
             <StatCard icon={item.icon} title={item.label} value={item.value} />
           </div>
         ))}
@@ -125,10 +187,6 @@ const Page = () => {
       </div>
     </>
   );
-}
+};
 
 export default Page;
-
-
-
-
