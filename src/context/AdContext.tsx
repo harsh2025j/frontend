@@ -15,8 +15,10 @@ export const AdProvider = ({ children }: { children: ReactNode }) => {
         setHasSeenAd(true);
     };
 
+    const value = React.useMemo(() => ({ hasSeenAd, markAdAsSeen }), [hasSeenAd]);
+
     return (
-        <AdContext.Provider value={{ hasSeenAd, markAdAsSeen }}>
+        <AdContext.Provider value={value}>
             {children}
         </AdContext.Provider>
     );

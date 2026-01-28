@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Filter, RefreshCw, CheckCircle, XCircle, Shield } from "lucide-react";
+import { Search, Filter, RefreshCw, CheckCircle, XCircle, Shield, Building2, Scale } from "lucide-react";
 
 // Components & Hooks
 import Loader from "@/components/ui/Loader";
@@ -11,6 +11,8 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 
 // Thunks & Types
 import { fetchUsers, verifyUser } from "@/data/features/users/usersThunks";
+import { fetchOffices } from "@/data/features/offices/officesThunks";
+import { fetchPracticeAreas } from "@/data/features/practiceAreas/practiceAreasThunks";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { User, UserFilter } from "@/data/features/users/users.types";
 import { UserData } from "@/data/features/profile/profile.types";
@@ -28,6 +30,8 @@ export default function UserManagementPage() {
 
     // --- Redux Data ---
     const { users, loading, error } = useAppSelector((state) => state.users);
+    const { offices } = useAppSelector((state) => state.offices);
+    const { practiceAreas } = useAppSelector((state) => state.practiceAreas);
 
     // --- Local State for Filters ---
     const [filters, setFilters] = useState<UserFilter>({
@@ -35,6 +39,9 @@ export default function UserManagementPage() {
         email: "",
         isActive: "",
         isVerified: "",
+        officeId: "",
+        practiceAreaId: "",
+        clearanceLevel: "",
     });
 
     // --- Modal State ---
@@ -71,13 +78,20 @@ export default function UserManagementPage() {
             if (filters.email) activeFilters.email = filters.email;
             if (filters.isActive !== "") activeFilters.isActive = filters.isActive === "true";
             if (filters.isVerified !== "") activeFilters.isVerified = filters.isVerified === "true";
+            if (filters.officeId) activeFilters.officeId = filters.officeId;
+            if (filters.practiceAreaId) activeFilters.practiceAreaId = filters.practiceAreaId;
+            if (filters.clearanceLevel !== "") activeFilters.clearanceLevel = parseInt(filters.clearanceLevel as string);
 
             dispatch(fetchUsers(activeFilters));
         }
     };
 
     useEffect(() => {
-        loadUsers();
+        if (isAuthorized) {
+            loadUsers();
+            dispatch(fetchOffices());
+            dispatch(fetchPracticeAreas());
+        }
     }, [dispatch, isAuthorized]); // Initial load
 
     // --- Handlers ---
@@ -97,6 +111,9 @@ export default function UserManagementPage() {
             email: "",
             isActive: "",
             isVerified: "",
+            officeId: "",
+            practiceAreaId: "",
+            clearanceLevel: "",
         });
         // We need to trigger a fetch with empty filters, but state update is async.
         // So we dispatch directly with empty object or use a timeout/effect.
@@ -153,88 +170,155 @@ export default function UserManagementPage() {
 
                 {/* Filters Card */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
-                    <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                    <form onSubmit={handleSearch} className="space-y-4">
+                        {/* Row 1: Basic Filters */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Name Search */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        placeholder="Search by name..."
+                                        value={filters.name}
+                                        onChange={handleFilterChange}
+                                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                    />
+                                </div>
+                            </div>
 
-                        {/* Name Search */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-                                <input
-                                    type="text"
-                                    name="name"
-                                    placeholder="Search by name..."
-                                    value={filters.name}
+                            {/* Email Search */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                                    <input
+                                        type="text"
+                                        name="email"
+                                        placeholder="Search by email..."
+                                        value={filters.email}
+                                        onChange={handleFilterChange}
+                                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Status Filter */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</label>
+                                <select
+                                    name="isActive"
+                                    value={filters.isActive as string}
                                     onChange={handleFilterChange}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                />
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                                >
+                                    <option value="">All Statuses</option>
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+
+                            {/* Verified Filter */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Verified</label>
+                                <select
+                                    name="isVerified"
+                                    value={filters.isVerified as string}
+                                    onChange={handleFilterChange}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                                >
+                                    <option value="">All</option>
+                                    <option value="true">Verified</option>
+                                    <option value="false">Unverified</option>
+                                </select>
                             </div>
                         </div>
 
-                        {/* Email Search */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-                                <input
-                                    type="text"
-                                    name="email"
-                                    placeholder="Search by email..."
-                                    value={filters.email}
+                        {/* Row 2: Law Firm Access Control Filters */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Office Filter */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                    <Building2 size={14} />
+                                    Office
+                                </label>
+                                <select
+                                    name="officeId"
+                                    value={filters.officeId as string}
                                     onChange={handleFilterChange}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                />
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                                >
+                                    <option value="">All Offices</option>
+                                    {offices.filter(o => o.isActive).map((office) => (
+                                        <option key={office.id} value={office.id}>
+                                            {office.name} ({office.code})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Practice Area Filter */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                    <Scale size={14} />
+                                    Practice Area
+                                </label>
+                                <select
+                                    name="practiceAreaId"
+                                    value={filters.practiceAreaId as string}
+                                    onChange={handleFilterChange}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                                >
+                                    <option value="">All Practice Areas</option>
+                                    {practiceAreas.filter(pa => pa.isActive).map((area) => (
+                                        <option key={area.id} value={area.id}>
+                                            {area.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Clearance Level Filter */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                    <Shield size={14} />
+                                    Clearance Level
+                                </label>
+                                <select
+                                    name="clearanceLevel"
+                                    value={filters.clearanceLevel as string}
+                                    onChange={handleFilterChange}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                                >
+                                    <option value="">All Levels</option>
+                                    <option value="1">Level 1 (Public)</option>
+                                    <option value="2">Level 2 (Internal)</option>
+                                    <option value="3">Level 3 (Confidential)</option>
+                                    <option value="4">Level 4 (Restricted)</option>
+                                    <option value="5">Level 5 (Highly Sensitive)</option>
+                                </select>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-2 items-end">
+                                <button
+                                    type="submit"
+                                    className="flex-1 bg-[#0A2342] text-white px-4 py-2 rounded-lg hover:bg-[#0A2342]/90 transition flex items-center justify-center gap-2"
+                                >
+                                    <Filter size={18} />
+                                    Filter
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleReset}
+                                    className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition"
+                                >
+                                    Reset
+                                </button>
                             </div>
                         </div>
-
-                        {/* Status Filter */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</label>
-                            <select
-                                name="isActive"
-                                value={filters.isActive as string}
-                                onChange={handleFilterChange}
-                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                            >
-                                <option value="">All Statuses</option>
-                                <option value="true">Active</option>
-                                <option value="false">Inactive</option>
-                            </select>
-                        </div>
-
-                        {/* Verified Filter */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Verified</label>
-                            <select
-                                name="isVerified"
-                                value={filters.isVerified as string}
-                                onChange={handleFilterChange}
-                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                            >
-                                <option value="">All</option>
-                                <option value="true">Verified</option>
-                                <option value="false">Unverified</option>
-                            </select>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex gap-2">
-                            <button
-                                type="submit"
-                                className="flex-1 bg-[#0A2342] text-white px-4 py-2 rounded-lg hover:bg-[#0A2342]/90 transition flex items-center justify-center gap-2"
-                            >
-                                <Filter size={18} />
-                                Filter
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleReset}
-                                className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition"
-                            >
-                                Reset
-                            </button>
-                        </div>
-
                     </form>
                 </div>
 
@@ -272,8 +356,10 @@ export default function UserManagementPage() {
                                 <thead className="bg-gray-50/50 text-gray-500 border-b border-gray-100">
                                     <tr>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">User</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Office</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Practice Areas</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Clearance</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Roles</th>
-                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Permissions</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Status</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Verified</th>
                                         <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Actions</th>
@@ -294,10 +380,51 @@ export default function UserManagementPage() {
                                                 </div>
                                             </td>
                                             <td className="py-4 px-6">
-                                                <TruncatedList items={tableUser.roles || []} />
+                                                {tableUser.office ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <Building2 size={16} className="text-blue-600" />
+                                                        <div>
+                                                            <p className="text-sm font-medium text-gray-900">{tableUser.office.name}</p>
+                                                            <p className="text-xs text-gray-500">{tableUser.office.code}</p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-400 text-sm">-</span>
+                                                )}
                                             </td>
                                             <td className="py-4 px-6">
-                                                <TruncatedList items={tableUser.permissions || []} />
+                                                {tableUser.practiceAreas && tableUser.practiceAreas.length > 0 ? (
+                                                    <TruncatedPracticeAreas items={tableUser.practiceAreas} />
+                                                ) : (
+                                                    <span className="text-gray-400 text-sm">-</span>
+                                                )}
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                {tableUser.clearanceLevel ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <Shield size={16} className={
+                                                            tableUser.clearanceLevel === 5 ? "text-red-600" :
+                                                            tableUser.clearanceLevel === 4 ? "text-orange-600" :
+                                                            tableUser.clearanceLevel === 3 ? "text-yellow-600" :
+                                                            tableUser.clearanceLevel === 2 ? "text-blue-600" :
+                                                            "text-gray-600"
+                                                        } />
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                            tableUser.clearanceLevel === 5 ? "bg-red-50 text-red-700 border border-red-100" :
+                                                            tableUser.clearanceLevel === 4 ? "bg-orange-50 text-orange-700 border border-orange-100" :
+                                                            tableUser.clearanceLevel === 3 ? "bg-yellow-50 text-yellow-700 border border-yellow-100" :
+                                                            tableUser.clearanceLevel === 2 ? "bg-blue-50 text-blue-700 border border-blue-100" :
+                                                            "bg-gray-50 text-gray-700 border border-gray-100"
+                                                        }`}>
+                                                            Level {tableUser.clearanceLevel}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-400 text-sm">-</span>
+                                                )}
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <TruncatedList items={tableUser.roles || []} />
                                             </td>
                                             <td className="py-4 px-6">
                                                 {tableUser.isActive ? (
@@ -498,6 +625,112 @@ function TruncatedList({ items }: { items: { _id?: string; id?: string; name: st
                                     key={item._id || item.id}
                                     className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 shadow-sm"
                                 >
+                                    {item.name}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Helper component for truncating practice areas
+function TruncatedPracticeAreas({ items }: { items: { _id: string; name: string; slug: string }[] }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [style, setStyle] = useState<React.CSSProperties>({});
+    const containerRef = React.useRef<HTMLDivElement>(null);
+    const buttonRef = React.useRef<HTMLButtonElement>(null);
+
+    const calculateStyle = () => {
+        if (!buttonRef.current) return;
+        const rect = buttonRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+
+        const newStyle: React.CSSProperties = {
+            left: rect.left,
+            position: 'fixed',
+            zIndex: 9999,
+        };
+
+        if (spaceBelow < 200) {
+            newStyle.bottom = window.innerHeight - rect.top + 4;
+            newStyle.maxHeight = rect.top - 20;
+        } else {
+            newStyle.top = rect.bottom + 4;
+            newStyle.maxHeight = window.innerHeight - rect.bottom - 20;
+        }
+
+        setStyle(newStyle);
+    };
+
+    useEffect(() => {
+        const handleClick = (e: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        if (isOpen) {
+            window.addEventListener("scroll", () => setIsOpen(false), true);
+            document.addEventListener("mousedown", handleClick);
+        }
+
+        return () => {
+            window.removeEventListener("scroll", () => setIsOpen(false), true);
+            document.removeEventListener("mousedown", handleClick);
+        };
+    }, [isOpen]);
+
+    if (!items || items.length === 0) {
+        return <span className="text-gray-400 text-sm">-</span>;
+    }
+
+    const displayedItems = items.slice(0, 1);
+    const remainingCount = items.length - 1;
+
+    return (
+        <div className="relative flex flex-wrap gap-1 items-center" ref={containerRef}>
+            {displayedItems.map((item) => (
+                <span
+                    key={item._id}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100 whitespace-nowrap"
+                >
+                    <Scale size={12} className="mr-1" />
+                    {item.name}
+                </span>
+            ))}
+
+            {remainingCount > 0 && (
+                <div
+                    className="relative"
+                    onMouseEnter={() => { calculateStyle(); setIsOpen(true); }}
+                    onMouseLeave={() => setIsOpen(false)}
+                >
+                    <button
+                        ref={buttonRef}
+                        onClick={(e) => { e.preventDefault(); calculateStyle(); setIsOpen(!isOpen); }}
+                        className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium transition-colors cursor-pointer
+                            ${isOpen
+                                ? "bg-purple-600 text-white border border-purple-600"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200"
+                            }`}
+                    >
+                        +{remainingCount}
+                    </button>
+
+                    {isOpen && (
+                        <div
+                            className="fixed bg-white border border-gray-100 rounded-lg shadow-xl p-3 flex flex-col gap-1.5 w-max min-w-[120px] max-w-[200px]"
+                            style={style}
+                        >
+                            {items.slice(1).map((item) => (
+                                <span
+                                    key={item._id}
+                                    className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100 shadow-sm"
+                                >
+                                    <Scale size={12} className="mr-1" />
                                     {item.name}
                                 </span>
                             ))}

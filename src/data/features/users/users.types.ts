@@ -27,6 +27,30 @@ export interface User {
         email: string;
     } | null;
     unverifiedAt?: string | null;
+
+    // Law Firm Access Control Fields
+    officeId?: string | null;
+    office?: {
+        _id: string;
+        name: string;
+        code: string;
+    } | null;
+    practiceAreaIds?: string[];
+    practiceAreas?: Array<{
+        _id: string;
+        name: string;
+        slug: string;
+    }>;
+    clearanceLevel?: number; // 1-5 scale
+    accessEndDate?: string | null;
+    conflictList?: string[];
+    reportingTo?: string | null;
+    reportingManager?: {
+        _id: string;
+        name: string;
+        email: string;
+    } | null;
+    hierarchyLevel?: number | null;
 }
 
 export interface UserFilter {
@@ -36,6 +60,9 @@ export interface UserFilter {
     isVerified?: boolean | string;
     roleId?: string;
     createdBy?: string;
+    officeId?: string;
+    practiceAreaId?: string;
+    clearanceLevel?: number | string;
 }
 
 export interface UserListResponse {

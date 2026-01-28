@@ -18,7 +18,12 @@ import {
   BarChart,
   Bell,
   ShieldCheck,
-  ChevronDown
+  ChevronDown,
+  Building2,
+  Briefcase,
+  Shield,
+  Grid3x3,
+  ClipboardList
 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { LogOut } from "lucide-react";
@@ -63,7 +68,59 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       show: hasDashboardAccess
     },
 
-    // 🔽 DROPDOWN CATEGORY (NO COLOR CHANGED)
+    // 🔽 ACCESS CONTROL SECTION
+    {
+      name: "Access Control",
+      icon: <Shield size={18} />,
+      isDropdown: true,
+      show: hasAdminPrivileges,
+      children: [
+        {
+          name: "Users",
+          icon: <Users size={18} />,
+          href: "/admin/users",
+          show: hasAdminPrivileges
+        },
+        {
+          name: "Teams",
+          icon: <Users size={18} />,
+          href: "/admin/teams",
+          show: hasAdminPrivileges
+        },
+        {
+          name: "Roles & Permissions",
+          icon: <UserCog size={18} />,
+          href: "/admin/roles-permissions",
+          show: hasAdminPrivileges
+        },
+        {
+          name: "Permission Matrix",
+          icon: <Grid3x3 size={18} />,
+          href: "/admin/permission-matrix",
+          show: hasAdminPrivileges
+        },
+        {
+          name: "Offices",
+          icon: <Building2 size={18} />,
+          href: "/admin/offices",
+          show: hasAdminPrivileges
+        },
+        {
+          name: "Practice Areas",
+          icon: <Briefcase size={18} />,
+          href: "/admin/practice-areas",
+          show: hasAdminPrivileges
+        },
+        {
+          name: "Audit Logs",
+          icon: <ClipboardList size={18} />,
+          href: "/admin/audit-logs",
+          show: hasAdminPrivileges
+        }
+      ]
+    },
+
+    // 🔽 CONTENT SECTION
     {
       name: "Content",
       icon: <ShieldCheck size={18} />,
@@ -87,28 +144,10 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
           icon: <GitPullRequestArrow size={18} />,
           href: "/admin/content-approval",
           show: hasAdminPrivileges || (isEditor && hasPermissionsForContenEdit)
-        },
-        // {
-        //   name: "Create Roles & Permissions",
-        //   icon: <UserCog size={18} />,
-        //   href: "/admin/roles-permissions",
-        //   show: hasAdminPrivileges
-        // }
+        }
       ]
     },
 
-    // {
-    //   name: "Team Management",
-    //   icon: <Users size={18} />,
-    //   href: "/admin/teams",
-    //   show: hasAdminPrivileges
-    // },
-    // {
-    //   name: "User Management",
-    //   icon: <Users size={18} />,
-    //   href: "/admin/users",
-    //   show: hasAdminPrivileges
-    // },
     {
       name: "Plan Management",
       icon: <Crown size={18} />,
@@ -185,42 +224,55 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
               // 🔽 TREE ITEM (NESTED)
               if (item.isDropdown) {
+                const isExpanded = openDropdown === item.name;
+                const isChildActive = item.children?.some((child: any) => activeNav === child.name);
+
                 return (
                   <div key={item.name} className="space-y-1">
                     <div
+                      onClick={() => setOpenDropdown(isExpanded ? null : item.name)}
                       className={`
                         flex items-center w-full ${isOpen ? "gap-4" : "lg:justify-center"} 
-                        px-3 py-2 rounded-xl text-gray-400 dark:text-gray-500 text-xs uppercase font-bold tracking-wider mt-4 mb-1
+                        px-3 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+                        cursor-pointer transition-all duration-200 select-none
+                        ${isChildActive ? "bg-blue-50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400" : ""}
                       `}
                     >
                       <span className="shrink-0">{item.icon}</span>
-                      {isOpen && <span>{item.name}</span>}
+                      {isOpen && (
+                        <>
+                          <span className="flex-1 text-[13px] font-medium">{item.name}</span>
+                          <ChevronDown size={14} className={`transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                        </>
+                      )}
                     </div>
 
-                    <div className={`${isOpen ? "ml-4 border-l-2 border-gray-100 dark:border-gray-800 pl-2" : ""} space-y-1`}>
-                      {item.children
-                        .filter((child: any) => child.show)
-                        .map((child: any) => {
-                          const isChildActive = activeNav === child.name;
-                          return (
-                            <Link
-                              key={child.name}
-                              href={child.href}
-                              onClick={() => handleItemClick(child.name)}
-                              className={`
-                                group flex items-center ${isOpen ? "gap-3" : "lg:justify-center"} px-3 py-1.5 rounded-xl transition-all duration-200
-                                ${isChildActive
-                                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-white"
-                                }
-                              `}
-                            >
-                              <span className="shrink-0">{child.icon}</span>
-                              {isOpen && <span className="text-[12px] font-medium">{child.name}</span>}
-                            </Link>
-                          );
-                        })}
-                    </div>
+                    {(isExpanded || (!isOpen && isChildActive)) && (
+                      <div className={`${isOpen ? "ml-4 border-l-2 border-gray-100 dark:border-gray-800 pl-2" : "hidden"} space-y-1`}>
+                        {item.children
+                          .filter((child: any) => child.show)
+                          .map((child: any) => {
+                            const isItemActive = activeNav === child.name;
+                            return (
+                              <Link
+                                key={child.name}
+                                href={child.href}
+                                onClick={() => handleItemClick(child.name)}
+                                className={`
+                                  group flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-200
+                                  ${isItemActive
+                                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-white"
+                                  }
+                                `}
+                              >
+                                <span className="shrink-0 opacity-70 group-hover:opacity-100">{child.icon}</span>
+                                <span className="text-[12px] font-medium">{child.name}</span>
+                              </Link>
+                            );
+                          })}
+                      </div>
+                    )}
                   </div>
                 );
               }

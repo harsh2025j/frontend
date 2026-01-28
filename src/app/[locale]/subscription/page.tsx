@@ -146,7 +146,7 @@ export default function SubscriptionPage() {
 
       // Razorpay options
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_RgsP9vGhuEYlfv",
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_S7lSvWtu89c6zD",
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Sajjad Husain Law Associates",

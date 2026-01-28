@@ -9,11 +9,14 @@ import toast from "react-hot-toast";
 import { resetProfileState, setUser } from "./profileSlice";
 import { UserData } from "./profile.types";
 
+import { useRef, useMemo } from "react";
 const selectProfileState = (state: RootState) => state.profile;
 
 export const useProfileActions = () => {
   const dispatch = useAppDispatch();
   const { user, loading, error, message } = useAppSelector(selectProfileState);
+
+  const fetchAttempted = useRef(false);
 
   // Fetch profile on component mount if token exists
   useEffect(() => {
@@ -21,17 +24,16 @@ export const useProfileActions = () => {
       const token = localStorage.getItem('token');
       const storedUserStr = localStorage.getItem('user');
 
-      if (token && !user) {
+      if (token && !user && !loading && !fetchAttempted.current) {
+        fetchAttempted.current = true;
         // Try to load from localStorage first (fast)
         if (storedUserStr) {
           try {
             const storedUser = JSON.parse(storedUserStr);
-            // Check if it needs mapping (AuthUser -> UserData)
-            // AuthUser has 'id', UserData has '_id'
+            // ... mapping logic remains the same ...
             let userData: UserData;
 
             if (storedUser.id && !storedUser._id) {
-              // Map AuthUser to UserData
               userData = {
                 _id: storedUser.id,
                 name: storedUser.name,
@@ -58,7 +60,6 @@ export const useProfileActions = () => {
                 dob: "",
               };
             } else {
-              // Assume it's already UserData
               userData = storedUser as UserData;
             }
 
@@ -72,7 +73,7 @@ export const useProfileActions = () => {
         dispatch(fetchProfile());
       }
     }
-  }, [dispatch, user]);
+  }, [dispatch, user, loading]);
 
   useEffect(() => {
     if (error) {
@@ -92,12 +93,12 @@ export const useProfileActions = () => {
     dispatch(updateProfile(formData));
   };
 
-  return {
+  return useMemo(() => ({
     user,
     loading,
     error,
     message,
     fetchProfile: () => dispatch(fetchProfile()),
     updateProfile: handleUpdateProfile,
-  };
+  }), [user, loading, error, message, dispatch]);
 };

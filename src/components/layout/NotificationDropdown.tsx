@@ -14,9 +14,11 @@ export default function NotificationDropdown({ userId }: NotificationDropdownPro
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const isFetching = useRef(false);
 
     const fetchNotifications = async () => {
-        if (!userId) return;
+        if (!userId || isFetching.current) return;
+        isFetching.current = true;
         setLoading(true);
         try {
             const response = await notificationService.getNotifications(userId);
@@ -27,6 +29,7 @@ export default function NotificationDropdown({ userId }: NotificationDropdownPro
             console.error("Failed to fetch notifications", error);
         } finally {
             setLoading(false);
+            isFetching.current = false;
         }
     };
 

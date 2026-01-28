@@ -70,7 +70,7 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
-    // "ngrok-skip-browser-warning": "true",    // only for ngrok remove in production 
+    "ngrok-skip-browser-warning": "true",
   },
   timeout: 30000,
 });
@@ -78,16 +78,19 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     if (store) {
-      store.dispatch(startLoading());
+      // store.dispatch(startLoading());
     }
-    // console.log("only for testing",localStorage.getItem("token"))
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.warn(`Request to ${config.url} has no token`);
+    }
     return config;
   },
   (error) => {
     if (store) {
-      store.dispatch(stopLoading());
+      // store.dispatch(stopLoading());
     }
     return Promise.reject(error);
   }
@@ -96,14 +99,14 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => {
     if (store) {
-      store.dispatch(stopLoading());
+      // store.dispatch(stopLoading());
     }
     toast.dismiss('retry-toast');
     return response;
   },
   async (error: AxiosError) => {
     if (store) {
-      store.dispatch(stopLoading());
+      // store.dispatch(stopLoading());
     }
     toast.dismiss('retry-toast');
     const config = error.config as AxiosRequestConfig & { retryCount?: number };
@@ -117,6 +120,7 @@ apiClient.interceptors.response.use(
       }
     }
     const apiError = handleApiError(error);
+    console.error(`API Error [${error.config?.method?.toUpperCase()}] ${error.config?.url}:`, apiError);
     const errorKey = `${apiError.statusCode || 'network'}-${error.config?.url || 'unknown'}`;
     // Silently handle server errors (500+) and network errors
     // if (apiError.statusCode && apiError.statusCode >= 500) {

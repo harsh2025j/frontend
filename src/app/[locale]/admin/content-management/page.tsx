@@ -379,7 +379,7 @@ const contentManagementPage: React.FC = () => {
   //   );
   // }
 
-  if (!articles.length) {
+  if (loading && !articles.length) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
         <Loader size="lg" text="Loading content" />

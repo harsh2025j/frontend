@@ -1,5 +1,5 @@
-// export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev/";
-export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
+export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev";
+// export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
 export const API_ENDPOINTS = {
   AUTH: {
     REGISTER: "/auth/register",
@@ -7,20 +7,19 @@ export const API_ENDPOINTS = {
     RESET_PASSWORD: "/auth/reset-password",
     VERIFY_OTP: "/auth/verify",
     LOGIN: "/auth/login",
-    RESEND_OTP: "/auth/forgot-password"
+    RESEND_OTP: "/auth/resend-otp"
   },
   PROFILE: {
     FETCH: "/profile",
     UPDATE: "/profile",
   },
-
   ARTICLE: {
     CREATE: "/articles",
     FETCH_ALL: "/articles",
     APPROVE: "/articles/:id/approve",
     REJECT: "/articles/:id/reject",
   },
-  CATEGORIE: {
+  CATEGORIES: {
     CREATE: "/categories",
     FETCH_ALL_CATEGORY: "/categories",
   },
@@ -78,9 +77,20 @@ export const API_ENDPOINTS = {
   DISPLAY_BOARDS: {
     BASE: "/display-boards",
     ACTIVE: "/display-boards/active",
-    BY_DATE: "/display-boards/date",
-    BY_COURT: "/display-boards/court",
-    GENERATE_CAUSE_LIST: "/display-boards/generate/cause-list",
+  },
+  OFFICES: {
+    BASE: "/offices",
+    ACTIVE: "/offices/active",
+  },
+  PRACTICE_AREAS: {
+    BASE: "/practice-areas",
+    ACTIVE: "/practice-areas/active",
+  },
+  AUDIT_LOGS: {
+    BASE: "/audit-logs",
+    STATISTICS: "/audit-logs/statistics",
+    FAILED_ATTEMPTS: "/audit-logs/failed-attempts",
+    EXPORT: "/audit-logs/export",
   }
 };
 

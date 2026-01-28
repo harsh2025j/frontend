@@ -93,7 +93,6 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const [mobileExpanded, setMobileExpanded] = useState<Record<string, boolean>>({});
   const pathname = usePathname();
   const router = useRouter();
@@ -103,15 +102,8 @@ export default function Header() {
     router.replace(pathname, { locale: newLocale });
   };
 
-  const { user: reduxProfileUser } = useProfileActions();
-  const checkuser = reduxProfileUser as UserData;
-  const avatar = checkuser?.profilePicture || null;
-
-  useEffect(() => {
-    if (reduxProfileUser && Object.keys(checkuser).length > 0) {
-      setUser(checkuser);
-    }
-  }, [reduxProfileUser]);
+  const { user } = useProfileActions();
+  const avatar = user?.profilePicture || null;
 
   const dispatch = useAppDispatch();
   const { categories } = useAppSelector((state) => state.category);
@@ -360,7 +352,7 @@ export default function Header() {
             </div>
 
             {user ? (
-              <div className="relative" onMouseEnter={() => setIsProfileOpen(true)} onMouseLeave={() => setIsProfileOpen(false)}>
+              <div className="relative pb-4 -mb-4" onMouseEnter={() => setIsProfileOpen(true)} onMouseLeave={() => setIsProfileOpen(false)}>
                 <button className="flex items-center gap-2 focus:outline-none py-2">
                   <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700 overflow-hidden border-2 border-[#C9A227]">
                     {avatar ? <Image src={avatar} alt="Avatar" width={40} height={40} className="object-cover w-full h-full" /> : (user?.name?.[0] || "U").toUpperCase()}

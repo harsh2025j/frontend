@@ -54,3 +54,22 @@ export const deleteRole = createAsyncThunk<RoleResponse, string>(
         }
     }
 );
+
+export const updateRolePermissions = createAsyncThunk<
+    RoleResponse,
+    { roleId: string; permissionIds: string[] }
+>(
+    "roles/updateRolePermissions",
+    async ({ roleId, permissionIds }, thunkAPI) => {
+        try {
+            const res = await rolesApi.updateRolePermissions(roleId, permissionIds);
+            return res.data;
+        } catch (err: unknown) {
+            const apiError = err as ApiError;
+            return thunkAPI.rejectWithValue(apiError.message || "Failed to update role permissions");
+        }
+    }
+);
+
+// Alias for backward compatibility
+export const fetchAllRoles = fetchRoles;

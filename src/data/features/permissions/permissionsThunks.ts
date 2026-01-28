@@ -54,3 +54,6 @@ export const deletePermission = createAsyncThunk<PermissionResponse, string>(
         }
     }
 );
+
+// Alias for backward compatibility
+export const fetchAllPermissions = fetchPermissions;

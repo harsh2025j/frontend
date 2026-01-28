@@ -44,6 +44,10 @@ import subscriptionReducer from "../features/subscription/subscriptionSlice"
 import profileReducer from "../features/profile/profileSlice"
 import usersReducer from "../features/users/usersSlice"
 import planReducer from "../features/plan/planSlice"
+import officesReducer from "../features/offices/officesSlice"
+import practiceAreasReducer from "../features/practiceAreas/practiceAreasSlice"
+import matterTeamReducer from "../features/matter-team/matterTeamSlice"
+import auditLogsReducer from "../features/audit-logs/auditLogsSlice"
 
 export const store = configureStore({
   reducer: {
@@ -57,6 +61,10 @@ export const store = configureStore({
     subscription: subscriptionReducer,
     users: usersReducer,
     plan: planReducer,
+    offices: officesReducer,
+    practiceAreas: practiceAreasReducer,
+    matterTeam: matterTeamReducer,
+    auditLogs: auditLogsReducer,
   },
 
 },

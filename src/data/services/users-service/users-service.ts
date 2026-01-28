@@ -16,6 +16,10 @@ export const usersApi = {
                 params.append("isVerified", String(filters.isVerified));
             if (filters.roleId) params.append("roleId", filters.roleId);
             if (filters.createdBy) params.append("createdBy", filters.createdBy);
+            if (filters.officeId) params.append("officeId", filters.officeId);
+            if (filters.practiceAreaId) params.append("practiceAreaId", filters.practiceAreaId);
+            if (filters.clearanceLevel !== undefined && filters.clearanceLevel !== "")
+                params.append("clearanceLevel", String(filters.clearanceLevel));
         }
 
         try {
@@ -69,6 +73,24 @@ export const usersApi = {
             return response.data;
         } catch (error: any) {
             console.error("usersApi assignUserRoles ERROR:", error);
+            throw error;
+        }
+    },
+
+    updateUserAccessControl: async (userId: string, data: {
+        officeId?: string | null;
+        practiceAreaIds?: string[];
+        clearanceLevel?: number;
+        accessEndDate?: string | null;
+        conflictList?: string[];
+        reportingTo?: string | null;
+        hierarchyLevel?: number | null;
+    }) => {
+        try {
+            const response = await apiClient.patch(`/users/${userId}/access-control`, data);
+            return response.data;
+        } catch (error: any) {
+            console.error("usersApi updateUserAccessControl ERROR:", error);
             throw error;
         }
     },

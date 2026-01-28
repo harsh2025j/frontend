@@ -29,4 +29,9 @@ export const rolesApi = {
 
         return await apiClient.delete(`${API_ENDPOINTS.ROLES.BASE}/${id}`);
     },
+    updateRolePermissions: async (roleId: string, permissionIds: string[]) => {
+        return await apiClient.patch(`${API_ENDPOINTS.ROLES.BASE}/${roleId}/permissions`, {
+            permissionIds
+        });
+    },
 };

@@ -16,21 +16,18 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   if (isHiddenLayout) {
     return <>{children}</>;
   }
+
   const hiddenFooter =
     pathname.startsWith("/subscription") ||
-    pathname.startsWith("/profile")
-  if (hiddenFooter) {
-    return <><HeaderNew /> <div className="mt-[100px] lg:mt-[176px]">{children}</div></>;
-  }
+    pathname.startsWith("/profile");
+
   return (
     <>
-      {/* <HeaderNew /> */}
       <HeaderNew />
-      {/* Add margin-top equal to new header height (top bar 40px + main header 80px + nav 56px = 176px, using 130px for mobile) */}
       <div className="mt-[100px] lg:mt-[176px]">
         {children}
       </div>
-      <Footer />
+      {!hiddenFooter && <Footer />}
     </>
   );
 }

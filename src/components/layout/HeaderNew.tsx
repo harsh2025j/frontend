@@ -97,7 +97,6 @@ export default function HeaderNew() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-    const [user, setUser] = useState<any>(null);
     const [mobileExpanded, setMobileExpanded] = useState<Record<string, boolean>>({});
     const [searchOpen, setSearchOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
@@ -119,24 +118,17 @@ export default function HeaderNew() {
         router.replace(pathname, { locale: newLocale });
     };
 
-    const { user: reduxProfileUser } = useProfileActions();
-    const checkuser = reduxProfileUser as UserData;
-    const avatar = checkuser?.profilePicture || null;
-
-    useEffect(() => {
-        if (reduxProfileUser && Object.keys(checkuser).length > 0) {
-            setUser(checkuser);
-        } else {
-            setUser(null);
-        }
-    }, [reduxProfileUser, checkuser]);
+    const { user } = useProfileActions();
+    const avatar = user?.profilePicture || null;
 
     const dispatch = useAppDispatch();
     const { categories } = useAppSelector((state) => state.category);
 
     useEffect(() => {
-        dispatch(fetchCategories());
-    }, [dispatch]);
+        if (categories.length === 0) {
+            dispatch(fetchCategories());
+        }
+    }, [dispatch, categories.length]);
 
     const confirmLogout = () => {
         localStorage.clear();
@@ -421,7 +413,7 @@ export default function HeaderNew() {
 
                                 {/* User Profile or Auth Buttons */}
                                 {user ? (
-                                    <div className="relative" onMouseEnter={() => setIsProfileOpen(true)} onMouseLeave={() => setIsProfileOpen(false)}>
+                                    <div className="relative pb-4 -mb-4" onMouseEnter={() => setIsProfileOpen(true)} onMouseLeave={() => setIsProfileOpen(false)}>
                                         <button className="flex items-center gap-2 focus:outline-none py-2 px-3 hover:bg-gray-50 rounded-full transition-colors">
                                             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#C9A227] to-[#b39022] flex items-center justify-center text-sm font-semibold text-white overflow-hidden border-2 border-white shadow-md">
                                                 {avatar ? <Image src={avatar} alt="Avatar" width={40} height={40} className="object-cover w-full h-full" /> : (user?.name?.[0] || "U").toUpperCase()}
@@ -429,7 +421,7 @@ export default function HeaderNew() {
                                             <span className="text-sm font-medium text-gray-800 hidden xl:block">{user?.name}</span>
                                             <ChevronDown size={14} className="text-gray-500 hidden xl:block" />
                                         </button>
-                                        <div className={`absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl transition-all duration-200 transform origin-top-right z-50 ${isProfileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
+                                        <div className={`absolute right-0 top-full w-56 bg-white border border-gray-200 rounded-xl shadow-xl transition-all duration-200 transform origin-top-right z-50 ${isProfileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
                                             <div className="p-3 border-b border-gray-100">
                                                 <p className="font-semibold text-gray-900">{user?.name}</p>
                                                 <p className="text-xs text-gray-500">{user?.email}</p>

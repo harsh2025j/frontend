@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchRoles, createRole, updateRole, deleteRole } from "./rolesThunks";
+import { fetchRoles, createRole, updateRole, deleteRole, updateRolePermissions } from "./rolesThunks";
 import { RolesState, Role } from "./roles.types";
 
 const initialState: RolesState = {
@@ -69,6 +69,27 @@ const rolesSlice = createSlice({
                 state.message = "Role deleted successfully";
             })
             .addCase(deleteRole.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            // Update Role Permissions
+            .addCase(updateRolePermissions.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateRolePermissions.fulfilled, (state, action) => {
+                state.loading = false;
+                state.message = "Role permissions updated successfully";
+                // Update the role in the state
+                const updatedRole = action.payload?.data as Role;
+                if (updatedRole) {
+                    const index = state.roles.findIndex(r => r._id === updatedRole._id);
+                    if (index !== -1) {
+                        state.roles[index] = updatedRole;
+                    }
+                }
+            })
+            .addCase(updateRolePermissions.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });

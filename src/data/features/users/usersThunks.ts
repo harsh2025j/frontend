@@ -55,3 +55,25 @@ export const assignUserRoles = createAsyncThunk<
         return thunkAPI.rejectWithValue(apiError.message || "Failed to assign roles");
     }
 });
+
+export const updateUserAccessControl = createAsyncThunk<
+    any,
+    {
+        userId: string;
+        officeId?: string | null;
+        practiceAreaIds?: string[];
+        clearanceLevel?: number;
+        accessEndDate?: string | null;
+        conflictList?: string[];
+        reportingTo?: string | null;
+        hierarchyLevel?: number | null;
+    }
+>("users/updateUserAccessControl", async ({ userId, ...data }, thunkAPI) => {
+    try {
+        const res = await usersApi.updateUserAccessControl(userId, data);
+        return res;
+    } catch (err: unknown) {
+        const apiError = err as ApiError;
+        return thunkAPI.rejectWithValue(apiError.message || "Failed to update user access control");
+    }
+});

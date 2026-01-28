@@ -3,7 +3,7 @@ import { fetchProfile, updateProfile } from "./profileThunks";
 import { loginWithGoogle } from "../auth/authThunks";
 import { ProfileState } from "./profile.types";
 // 1. Import the logout action
-import { logoutUser } from "../auth/authSlice"; 
+import { logoutUser } from "../auth/authSlice";
 
 const initialState: ProfileState = {
   loading: false,
@@ -20,7 +20,7 @@ const profileSlice = createSlice({
       state.error = null;
       state.message = null;
       // It is good practice to clear user here too, though usually unnecessary if handled in extraReducers
-      state.user = null; 
+      state.user = null;
     },
     setUser: (state, action) => {
       state.user = action.payload;
@@ -36,8 +36,9 @@ const profileSlice = createSlice({
       })
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.data;
-        state.message = action.payload.message || "Profile fetched successfully";
+        // Handle both { data: user } and direct user object
+        state.user = (action.payload as any).data || action.payload;
+        state.message = (action.payload as any).message || "Profile fetched successfully";
       })
       .addCase(fetchProfile.rejected, (state, action) => {
         state.loading = false;
@@ -51,8 +52,8 @@ const profileSlice = createSlice({
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.data;
-        state.message = action.payload.message || "Profile updated successfully";
+        state.user = (action.payload as any).data || action.payload;
+        state.message = (action.payload as any).message || "Profile updated successfully";
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
@@ -61,8 +62,8 @@ const profileSlice = createSlice({
       .addCase(loginWithGoogle.fulfilled, (state, action) => {
         const googleUser = action.payload.user;
         if (googleUser) {
-           // ... (your existing mapping logic) ...
-           state.user = {
+          // ... (your existing mapping logic) ...
+          state.user = {
             _id: googleUser._id,
             name: googleUser.name,
             email: googleUser.email,
@@ -89,8 +90,8 @@ const profileSlice = createSlice({
           state.message = "Profile synced with Google Login";
         }
       })
-      
-      
+
+
       .addCase(logoutUser, (state) => {
         localStorage.clear();
         state.user = null;

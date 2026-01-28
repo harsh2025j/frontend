@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchUsers, verifyUser, fetchUserById, assignUserRoles } from "./usersThunks";
+import { fetchUsers, verifyUser, fetchUserById, assignUserRoles, updateUserAccessControl } from "./usersThunks";
 import { UsersState, User } from "./users.types";
 
 const initialState: UsersState = {
@@ -87,6 +87,20 @@ const usersSlice = createSlice({
                 state.message = "Roles assigned successfully";
             })
             .addCase(assignUserRoles.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+
+            // Update User Access Control
+            .addCase(updateUserAccessControl.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateUserAccessControl.fulfilled, (state) => {
+                state.loading = false;
+                state.message = "User access control updated successfully";
+            })
+            .addCase(updateUserAccessControl.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
