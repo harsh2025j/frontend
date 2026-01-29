@@ -2,9 +2,9 @@
 
 // import Link from "next/link";
 import { Link } from "@/i18n/routing";
-import logo from "../../assets/logo.png";
-import apple from "../../../public/apple-button.svg";
-import google from "../../../public/playbutton.svg";
+import logo from "../../../public/logo-gold.png";
+import apple from "../../../public/applestore.jpeg";
+import google from "../../../public/playbutton.jpeg";
 import {
   FaFacebookF,
   FaInstagram,
@@ -14,7 +14,7 @@ import {
   FaYoutube,
 } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Scale } from "lucide-react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
@@ -48,7 +48,6 @@ export default function Footer() {
   const socialLinks = [
     { icon: FaFacebookF, href: "https://www.facebook.com/advocatesajjadofficial", color: "hover:bg-blue-600", label: "Facebook" },
     { icon: FaInstagram, href: "https://www.instagram.com/sajjad_husain_law_associates/?hl=en", color: "hover:bg-pink-600", label: "Instagram" },
-    { icon: FaWhatsapp, href: "https://wa.me/917080909786", color: "hover:bg-green-600", label: "WhatsApp" },
     { icon: FaXTwitter, href: "https://x.com/advocatesajjad", color: "hover:bg-black", label: "X (Twitter)" },
     { icon: FaTelegramPlane, href: "https://t.me/sajjadhusainlaw", color: "hover:bg-blue-600", label: "Telegram" },
     { icon: FaLinkedinIn, href: "https://www.linkedin.com/in/sajjad-husain-associates-law-31715675/", color: "hover:bg-blue-700", label: "LinkedIn" },
@@ -77,12 +76,22 @@ export default function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-12 border-b border-white/10">
           {/* Brand Section */}
           <div className="lg:col-span-4 space-y-6">
-            <div className="transform bg-white p-2 rounded-sm hover:scale-105 transition-transform duration-300">
-              <Image
-                src={logo}
-                alt="Sajjad Husain Law Associates Logo"
-                className="h-14 w-auto"
-              />
+            <div className="transform p-2 rounded-sm hover:scale-105 transition-transform duration-300 -ml-2">
+              <Link href="/" className="flex items-center gap-3 group text-decoration-none">
+                <div className="relative">
+                  <Image src={logo} alt="Sajjad Husain Law Associates" className="object-contain" width={50} height={50} />
+                  <div className="absolute -inset-1 bg-white/10 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+                <div className="block">
+                  <h1 className="text-base sm:text-xl font-bold text-white leading-tight">
+                    Sajjad Husain Law Associates
+                  </h1>
+                  <p className="flex text-[10px] sm:text-xs text-blue-200 items-center gap-1 mt-1">
+                    <Scale size={12} className="text-[#C9A227]" />
+                    Excellence in Legal Services
+                  </p>
+                </div>
+              </Link>
             </div>
 
             <p className="text-blue-100 leading-relaxed text-sm">
@@ -95,38 +104,80 @@ export default function Footer() {
                 href="https://play.google.com/store/apps/details?id=com.sajjadhusainlawassociates.sajjadlaw"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
+                className="transform hover:scale-105 transition-all duration-300 hover:shadow-lg bg-white rounded-md px-2 py-1 flex items-center"
               >
-                <Image src={google} alt="Get it on Google Play" className="h-12 w-auto" />
+                <Image src={google} alt="Get it on Google Play" className="h-10 w-auto" />
               </a>
-              <a
+              {/* <a
                 href="#"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
               >
-                <Image src={apple} alt="Download on App Store" className="h-12 w-auto" />
+                <svg
+                  width="180"
+                  height="60"
+                  viewBox="0 0 220 60"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-auto"
+                >
+                  <g fill="white">
+
+                    <path d="M38.3 30.2c-.1-5.3 4.3-7.9 4.5-8-2.4-3.5-6.1-4-7.4-4.1-3.1-.3-6 1.8-7.6 1.8-1.5 0-3.9-1.8-6.4-1.7-3.3 0-6.3 1.9-8 4.9-3.4 5.8-.9 14.4 2.4 19.1 1.6 2.3 3.5 4.8 6.1 4.7 2.4-.1 3.4-1.6 6.3-1.6s3.8 1.6 6.4 1.6c2.7 0 4.4-2.3 6-4.6 1.8-2.6 2.6-5.2 2.7-5.3-.1-.1-5.1-2-5.1-7.8z" />
+                    <path d="M33.6 15.2c1.3-1.6 2.2-3.9 2-6.1-1.9.1-4.3 1.3-5.7 2.9-1.2 1.4-2.3 3.7-2 5.9 2.1.2 4.3-1.1 5.7-2.7z" />
+
+
+                    <text
+                      x="65"
+                      y="26"
+                      fontSize="12"
+                      fontFamily="Arial, Helvetica, sans-serif"
+                    >
+                      Download on the
+                    </text>
+                    <text
+                      x="65"
+                      y="44"
+                      fontSize="20"
+                      fontWeight="bold"
+                      fontFamily="Arial, Helvetica, sans-serif"
+                    >
+                      App Store
+                    </text>
+                  </g>
+                </svg>
+              </a> */}
+
+
+              <a
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transform hover:scale-105 transition-all duration-300 hover:shadow-lg bg-white rounded-md px-2 py-1 flex items-center"
+              >
+
+
+                <Image src={apple} alt="Download on App Store" className="h-10 w-auto" />
               </a>
             </div>
 
             {/* Contact Info */}
             <div className="space-y-3 text-sm">
               <div className="flex items-start gap-3 group">
-                <MapPin className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5 group-hover:text-blue-300 transition-colors" />
+                <MapPin className="w-5 h-5 text-[#C9A227] flex-shrink-0 mt-0.5 group-hover:text-[#C9A227]/90 transition-colors" />
                 <p className="text-blue-100 group-hover:text-white transition-colors">
-                  Block-C, High Court, Sajjad Husain, Advocates Chamber.515,<br />
-                  Lucknow - Ayodhya Rd, Gomti Nagar,<br />
-                  Lucknow, Faizabad, Uttar Pradesh 226010
+                  Block-C, High Court,Advocates Chamber.515,<br />
+                  Lucknow - Ayodhya Rd, Gomti Nagar, Lucknow 226010<br />
                 </p>
               </div>
 
-              <a href="tel:07080909786" className="flex items-center gap-3 group hover:translate-x-1 transition-transform">
-                <Phone className="w-5 h-5 text-blue-400 flex-shrink-0 group-hover:text-blue-300 transition-colors" />
-                <span className="text-blue-100 group-hover:text-white transition-colors">070809 09786</span>
+              <a href="tel:+917080909786" className="flex items-center gap-3 group hover:translate-x-1 transition-transform">
+                <Phone className="w-5 h-5 text-[#C9A227] flex-shrink-0 mt-0.5 group-hover:text-[#C9A227]/90 transition-colors" />
+                <span className="text-blue-100 group-hover:text-white transition-colors">+91 70809 09786</span>
               </a>
 
               <a href="mailto:sajjadhusainlawassociates@gmail.com" className="flex items-start gap-3 group hover:translate-x-1 transition-transform">
-                <Mail className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5 group-hover:text-blue-300 transition-colors" />
+                <Mail className="w-5 h-5 text-[#C9A227] flex-shrink-0 mt-0.5 group-hover:text-[#C9A227]/90 transition-colors" />
                 <span className="text-blue-100 group-hover:text-white transition-colors break-all">
                   sajjadhusainlawassociates@gmail.com
                 </span>

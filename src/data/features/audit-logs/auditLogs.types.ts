@@ -23,7 +23,7 @@ export interface AuditLogFilter {
   action?: string;
   resource?: string;
   resourceId?: string;
-  success?: boolean;
+  success?: boolean | string;
   startDate?: string;
   endDate?: string;
   policyName?: string;

@@ -1,6 +1,7 @@
 import Image, { StaticImageData } from "next/image";
 import { Eye, Heart, Clock } from "lucide-react"; // 👈 Lucide icons
 import logo from "../../../public/logo.png";
+import { getSafeImageUrl } from "@/utils/imageUtils";
 
 interface NewsCardProps {
   src?: StaticImageData | string;
@@ -21,13 +22,7 @@ export default function NewsCard({
   likes,
   content,
 }: NewsCardProps) {
-  const validSrc =
-    typeof src === "string" &&
-      (src.startsWith("http") || src.startsWith("/"))
-      ? src
-      : typeof src === "object"
-        ? src
-        : logo;
+  const validSrc = getSafeImageUrl(src as string);
 
   return (
     <div className="w-full max-w-[600px] rounded-[4px] bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition">
@@ -38,6 +33,7 @@ export default function NewsCard({
           width={600}
           height={200}
           alt={title}
+          unoptimized
           className="object-cover w-full h-full"
         />
       </div>
@@ -71,7 +67,7 @@ export default function NewsCard({
           {title}
         </p>
 
-  
+
 
 
 

@@ -9,8 +9,10 @@ import { fetchPracticeAreas } from "@/data/features/practiceAreas/practiceAreasT
 import { rolesApi } from "@/data/services/roles-service/roles-service";
 import { permissionsApi } from "@/data/services/permissions-service/permissions-service";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import { ArrowLeft, Save, CheckCircle, Building2, Scale, Shield, Calendar, Users } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle, Building2, Scale, Shield, Calendar, Users, Plus, X } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
+import { createRole, fetchRoles } from "@/data/features/roles/rolesThunks";
+import { createPermission, fetchPermissions } from "@/data/features/permissions/permissionsThunks";
 
 
 type RoleOption = {
@@ -55,11 +57,29 @@ const EditTeamMemberPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [loadingConfig, setLoadingConfig] = useState(true);
 
+    // --- Modal States ---
+    const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+    const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
+    const [newRole, setNewRole] = useState({ name: "", description: "" });
+    const [newPermission, setNewPermission] = useState({ name: "", description: "" });
+    const [creatingRole, setCreatingRole] = useState(false);
+    const [creatingPermission, setCreatingPermission] = useState(false);
+
     // Find user from redux to display info
     const user = users.find((u) => u._id === userId);
 
     // Available managers (all users except current user)
     const availableManagers = users.filter(u => u._id !== userId && u.isActive);
+
+    // Helper to extract an array from potentially nested response structures
+    const extractArray = (data: any): any[] => {
+        if (Array.isArray(data)) return data;
+        if (data && typeof data === 'object') {
+            if (Array.isArray(data.data)) return extractArray(data.data);
+            if (data.data && typeof data.data === 'object') return extractArray(data.data);
+        }
+        return [];
+    };
 
     useEffect(() => {
         const init = async () => {
@@ -78,9 +98,9 @@ const EditTeamMemberPage: React.FC = () => {
                     dispatch(fetchPracticeAreas()),
                 ]);
 
-                // Normalize data
-                const rolesData = rolesRes.data?.data || rolesRes.data || [];
-                const permsData = permsRes.data?.data || permsRes.data || [];
+                // Normalize data with robust extraction
+                const rolesData = extractArray(rolesRes.data);
+                const permsData = extractArray(permsRes.data);
 
                 setAvailableRoles(rolesData as RoleOption[]);
                 setAvailablePermissions(permsData as PermissionOption[]);
@@ -102,8 +122,9 @@ const EditTeamMemberPage: React.FC = () => {
     useEffect(() => {
         if (user) {
             // Map user roles/permissions to IDs
-            const userRoleIds = user.roles?.map((r: any) => r._id || r.id || r) || [];
-            const userPermIds = user.permissions?.map((p: any) => p._id || p.id || p) || [];
+            // Map user roles/permissions to IDs (handling nested structure role.role._id)
+            const userRoleIds = user.roles?.map((r: any) => r.role?._id || r.role?.id || r._id || r.id || r) || [];
+            const userPermIds = user.permissions?.map((p: any) => p.permission?._id || p.permission?.id || p._id || p.id || p) || [];
 
             setSelectedRoles(userRoleIds as string[]);
             setSelectedPermissions(userPermIds as string[]);
@@ -143,6 +164,76 @@ const EditTeamMemberPage: React.FC = () => {
         );
     };
 
+    const handleCreateRole = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newRole.name) {
+            toast.error("Role name is required");
+            return;
+        }
+        setCreatingRole(true);
+        try {
+            const resultAction = await dispatch(createRole(newRole));
+            if (createRole.fulfilled.match(resultAction)) {
+                toast.success("Role created successfully!");
+                setIsRoleModalOpen(false);
+                setNewRole({ name: "", description: "" });
+
+                // Re-fetch roles
+                const res = await rolesApi.fetchRoles();
+                const rolesData = extractArray(res.data);
+                setAvailableRoles(rolesData as RoleOption[]);
+
+                // Auto-select the new one
+                const createdRole = (resultAction.payload as any)?.data || resultAction.payload;
+                const roleId = createdRole?._id || createdRole?.id;
+                if (roleId) {
+                    setSelectedRoles(prev => [...prev, roleId]);
+                }
+            } else {
+                toast.error(resultAction.payload as string || "Failed to create role");
+            }
+        } catch (error) {
+            toast.error("An unexpected error occurred");
+        } finally {
+            setCreatingRole(false);
+        }
+    };
+
+    const handleCreatePermission = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newPermission.name) {
+            toast.error("Permission name is required");
+            return;
+        }
+        setCreatingPermission(true);
+        try {
+            const resultAction = await dispatch(createPermission(newPermission));
+            if (createPermission.fulfilled.match(resultAction)) {
+                toast.success("Permission created successfully!");
+                setIsPermissionModalOpen(false);
+                setNewPermission({ name: "", description: "" });
+
+                // Re-fetch permissions
+                const res = await permissionsApi.fetchPermissions();
+                const permsData = extractArray(res.data);
+                setAvailablePermissions(permsData as PermissionOption[]);
+
+                // Auto-select the new one
+                const createdPerm = (resultAction.payload as any)?.data || resultAction.payload;
+                const permId = createdPerm?._id || createdPerm?.id;
+                if (permId) {
+                    setSelectedPermissions(prev => [...prev, permId]);
+                }
+            } else {
+                toast.error(resultAction.payload as string || "Failed to create permission");
+            }
+        } catch (error) {
+            toast.error("An unexpected error occurred");
+        } finally {
+            setCreatingPermission(false);
+        }
+    };
+
     const handleSubmit = async () => {
         if (!userId) return;
         try {
@@ -156,15 +247,19 @@ const EditTeamMemberPage: React.FC = () => {
             })).unwrap();
 
             // Update access control
-            await dispatch(updateUserAccessControl({
+            const payload = {
                 userId,
-                officeId: selectedOfficeId || null,
-                practiceAreaIds: selectedPracticeAreaIds,
+                officeId: selectedOfficeId && selectedOfficeId !== "" ? selectedOfficeId : null,
+                practiceAreaIds: selectedPracticeAreaIds.filter(id => id && id !== ""),
                 clearanceLevel: selectedClearanceLevel,
                 accessEndDate: accessEndDate || null,
-                reportingTo: reportingTo || null,
+                reportingTo: reportingTo && reportingTo !== "" ? reportingTo : null,
                 conflictList: conflictList ? conflictList.split(",").map(s => s.trim()).filter(Boolean) : [],
-            })).unwrap();
+            };
+
+            console.log("Submitting updateUserAccessControl with payload:", payload);
+
+            await dispatch(updateUserAccessControl(payload)).unwrap();
 
             toast.success("User updated successfully!");
             // Redirect back
@@ -251,7 +346,7 @@ const EditTeamMemberPage: React.FC = () => {
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                             <h3 className="text-base font-semibold text-gray-900 mb-4 border-b pb-2">Roles</h3>
                             <div className="space-y-3 max-h-80 overflow-y-auto">
-                                {availableRoles.length === 0 ? (
+                                {!Array.isArray(availableRoles) || availableRoles.length === 0 ? (
                                     <p className="text-gray-400 text-sm italic">No roles available.</p>
                                 ) : (
                                     availableRoles.map(role => {
@@ -265,7 +360,7 @@ const EditTeamMemberPage: React.FC = () => {
                                                     : 'border-gray-200 hover:bg-gray-50'
                                                     }`}
                                             >
-                                                <span className="font-medium text-gray-700">{role.name}</span>
+                                                <span className="font-medium text-gray-700 uppercase">{role.name}</span>
                                                 <input
                                                     type="checkbox"
                                                     className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
@@ -276,6 +371,16 @@ const EditTeamMemberPage: React.FC = () => {
                                         );
                                     })
                                 )}
+
+                                {/* Add New Role Button at the end of the list */}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsRoleModalOpen(true)}
+                                    className="flex items-center justify-center p-3 border border-dashed border-blue-300 rounded-lg bg-blue-50/30 hover:bg-blue-50 text-blue-600 transition-all gap-2 group min-h-[50px] w-full mt-2"
+                                >
+                                    <Plus size={18} className="group-hover:scale-110 transition-transform" />
+                                    <span className="font-semibold text-sm">ADD NEW ROLE</span>
+                                </button>
                             </div>
                         </div>
 
@@ -283,7 +388,7 @@ const EditTeamMemberPage: React.FC = () => {
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                             <h3 className="text-base font-semibold text-gray-900 mb-4 border-b pb-2">Extra Permissions</h3>
                             <div className="space-y-3 max-h-80 overflow-y-auto">
-                                {availablePermissions.length === 0 ? (
+                                {!Array.isArray(availablePermissions) || availablePermissions.length === 0 ? (
                                     <p className="text-gray-400 text-sm italic">No permissions available.</p>
                                 ) : (
                                     availablePermissions.map(perm => {
@@ -297,7 +402,7 @@ const EditTeamMemberPage: React.FC = () => {
                                                     : 'border-gray-200 hover:bg-gray-50'
                                                     }`}
                                             >
-                                                <span className="font-medium text-gray-700">{perm.name}</span>
+                                                <span className="font-medium text-gray-700 uppercase">{perm.name}</span>
                                                 <input
                                                     type="checkbox"
                                                     className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
@@ -308,6 +413,16 @@ const EditTeamMemberPage: React.FC = () => {
                                         );
                                     })
                                 )}
+
+                                {/* Add New Permission Button at the end of the list */}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsPermissionModalOpen(true)}
+                                    className="flex items-center justify-center p-3 border border-dashed border-purple-300 rounded-lg bg-purple-50/30 hover:bg-purple-50 text-purple-600 transition-all gap-2 group min-h-[50px] w-full mt-2"
+                                >
+                                    <Plus size={18} className="group-hover:scale-110 transition-transform" />
+                                    <span className="font-semibold text-sm">ADD NEW PERMISSION</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -332,7 +447,7 @@ const EditTeamMemberPage: React.FC = () => {
                                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                             >
                                 <option value="">No Office Assigned</option>
-                                {offices.filter(o => o.isActive).map((office) => (
+                                {Array.isArray(offices) && offices.filter(o => o.isActive).map((office) => (
                                     <option key={office.id} value={office.id}>
                                         {office.name} ({office.code})
                                     </option>
@@ -358,7 +473,7 @@ const EditTeamMemberPage: React.FC = () => {
                                     <label
                                         key={level}
                                         className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-all ${selectedClearanceLevel === level
-                                            ? `border-${color}-500 bg-${color}-50`
+                                            ? `border-blue-500 bg-blue-50`
                                             : 'border-gray-200 hover:bg-gray-50'
                                             }`}
                                     >
@@ -383,7 +498,7 @@ const EditTeamMemberPage: React.FC = () => {
                                 Practice Areas
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
-                                {practiceAreas.filter(pa => pa.isActive).length === 0 ? (
+                                {!Array.isArray(practiceAreas) || practiceAreas.filter(pa => pa.isActive).length === 0 ? (
                                     <p className="text-gray-400 text-sm italic col-span-full">No practice areas available.</p>
                                 ) : (
                                     practiceAreas.filter(pa => pa.isActive).map(area => {
@@ -479,6 +594,118 @@ const EditTeamMemberPage: React.FC = () => {
                     Save All Changes
                 </button>
             </div>
+
+            {/* Role Creation Modal */}
+            {isRoleModalOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-xl border w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center p-6 border-b">
+                            <h2 className="text-xl font-bold text-[#0A2342]">Create New Role</h2>
+                            <button
+                                onClick={() => setIsRoleModalOpen(false)}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                disabled={creatingRole}
+                            >
+                                <X size={20} className="text-gray-500" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleCreateRole} className="p-6 space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="block text-sm font-medium text-gray-700">Role Name</label>
+                                <input
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                                    value={newRole.name}
+                                    onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                                    placeholder="e.g. Legal Advisor"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="block text-sm font-medium text-gray-700">Description</label>
+                                <textarea
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition min-h-[100px]"
+                                    value={newRole.description}
+                                    onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+                                    placeholder="Describe the responsibilities of this role..."
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsRoleModalOpen(false)}
+                                    className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 transition"
+                                    disabled={creatingRole}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 px-4 py-2 bg-[#0B2149] text-white rounded-lg hover:bg-[#1a3a75] transition disabled:opacity-50"
+                                    disabled={creatingRole}
+                                >
+                                    {creatingRole ? "Creating..." : "Create Role"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Permission Creation Modal */}
+            {isPermissionModalOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-xl border w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center p-6 border-b">
+                            <h2 className="text-xl font-bold text-[#0A2342]">Create New Permission</h2>
+                            <button
+                                onClick={() => setIsPermissionModalOpen(false)}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                disabled={creatingPermission}
+                            >
+                                <X size={20} className="text-gray-500" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleCreatePermission} className="p-6 space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="block text-sm font-medium text-gray-700">Permission Name</label>
+                                <input
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition"
+                                    value={newPermission.name}
+                                    onChange={(e) => setNewPermission({ ...newPermission, name: e.target.value })}
+                                    placeholder="e.g. manage:billing"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="block text-sm font-medium text-gray-700">Description</label>
+                                <textarea
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition min-h-[100px]"
+                                    value={newPermission.description}
+                                    onChange={(e) => setNewPermission({ ...newPermission, description: e.target.value })}
+                                    placeholder="What does this permission allow?"
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsPermissionModalOpen(false)}
+                                    className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 transition"
+                                    disabled={creatingPermission}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 px-4 py-2 bg-[#0B2149] text-white rounded-lg hover:bg-[#1a3a75] transition disabled:opacity-50"
+                                    disabled={creatingPermission}
+                                >
+                                    {creatingPermission ? "Creating..." : "Create Permission"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -65,6 +65,7 @@ const ArticleCard = ({ article, compact = false }: { article: any; compact?: boo
           src={getSafeImageUrl(article.thumbnail)}
           alt={article.title}
           fill
+          unoptimized
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
@@ -172,6 +173,7 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
                 src={getSafeImageUrl(article.thumbnail)}
                 alt={article.title}
                 fill
+                unoptimized
                 sizes="80px"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />

@@ -27,7 +27,15 @@ const practiceAreasSlice = createSlice({
             })
             .addCase(fetchPracticeAreas.fulfilled, (state, action) => {
                 state.loading = false;
-                state.practiceAreas = (action.payload?.data as PracticeArea[]) || [];
+                const extract = (d: any): any[] => {
+                    if (Array.isArray(d)) return d;
+                    if (d && typeof d === 'object') {
+                        if (Array.isArray(d.data)) return extract(d.data);
+                        if (d.data && typeof d.data === 'object') return extract(d.data);
+                    }
+                    return [];
+                };
+                state.practiceAreas = extract(action.payload);
             })
             .addCase(fetchPracticeAreas.rejected, (state, action) => {
                 state.loading = false;
@@ -40,7 +48,15 @@ const practiceAreasSlice = createSlice({
             })
             .addCase(fetchActivePracticeAreas.fulfilled, (state, action) => {
                 state.loading = false;
-                state.practiceAreas = (action.payload?.data as PracticeArea[]) || [];
+                const extract = (d: any): any[] => {
+                    if (Array.isArray(d)) return d;
+                    if (d && typeof d === 'object') {
+                        if (Array.isArray(d.data)) return extract(d.data);
+                        if (d.data && typeof d.data === 'object') return extract(d.data);
+                    }
+                    return [];
+                };
+                state.practiceAreas = extract(action.payload);
             })
             .addCase(fetchActivePracticeAreas.rejected, (state, action) => {
                 state.loading = false;

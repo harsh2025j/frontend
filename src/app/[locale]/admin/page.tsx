@@ -26,6 +26,8 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { fetchArticles } from "@/data/features/article/articleThunks";
 import { fetchUsers } from "@/data/features/users/usersThunks";
+import { PERMISSIONS, ROLES } from "@/config/permissions";
+import { getUserType, hasDashboardAccess } from "@/utils/permissions";
 
 const data = [
   {
@@ -158,10 +160,25 @@ const Page = () => {
     // { label: "Premium Subscribers", value: "0", icon: <CircleDollarSign className="w-8 h-8 text-orange-500" /> },
   ];
 
+  // --- Authorization Check for View ---
+  const { user: reduxUser, loading: profileLoading } = useProfileActions();
+  const userData = reduxUser as UserData;
+
+  const userType = getUserType(userData);
+  const hasStaffAccess = hasDashboardAccess(userData);
+
+  if (profileLoading) return <Loader />;
+
+  // Redirect normal users with no privileges to the membership page immediately
+  if (userType === 'user' && typeof window !== "undefined") {
+    router.replace("/admin/membership");
+    return <Loader />;
+  }
+
   return (
     <>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-semibold text-gray-800">Overview </h1>
+      <div className="flex items-center justify-between mb-8 animate-fadeIn">
+        <h1 className="text-2xl font-semibold text-gray-800">Admin Overview</h1>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -190,3 +207,4 @@ const Page = () => {
 };
 
 export default Page;
+

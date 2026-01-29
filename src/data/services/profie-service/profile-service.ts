@@ -22,9 +22,9 @@ export const profileApi = {
 
   updateProfile: async (data: UpdateProfileRequest) => {
     const formData = new FormData();
-    if (data.name) formData.append("name", data.name);
-    if (data.phone) formData.append("phone", data.phone);
-    if (data.dob) formData.append("dob", data.dob);
+    if (data.name !== undefined) formData.append("name", data.name);
+    if (data.phone !== undefined) formData.append("phone", data.phone);
+    if (data.dob !== undefined) formData.append("dob", data.dob);
     if (data.avatar) formData.append("file", data.avatar);
 
     return await apiClient.post<ProfileResponse>(API_ENDPOINTS.PROFILE.UPDATE, formData,

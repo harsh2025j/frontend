@@ -117,6 +117,10 @@ export const articleApi = {
       });
     }
 
+    if (data.removedDocumentIds && data.removedDocumentIds.length > 0) {
+      formData.append("removedDocumentIds", data.removedDocumentIds.join(","));
+    }
+
     // console.log(formData.get("tags"));
     // console.log(formData.get("isPaywalled"));
 

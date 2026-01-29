@@ -27,7 +27,15 @@ const officesSlice = createSlice({
             })
             .addCase(fetchOffices.fulfilled, (state, action) => {
                 state.loading = false;
-                state.offices = (action.payload?.data as Office[]) || [];
+                const extract = (d: any): any[] => {
+                    if (Array.isArray(d)) return d;
+                    if (d && typeof d === 'object') {
+                        if (Array.isArray(d.data)) return extract(d.data);
+                        if (d.data && typeof d.data === 'object') return extract(d.data);
+                    }
+                    return [];
+                };
+                state.offices = extract(action.payload);
             })
             .addCase(fetchOffices.rejected, (state, action) => {
                 state.loading = false;
@@ -40,7 +48,15 @@ const officesSlice = createSlice({
             })
             .addCase(fetchActiveOffices.fulfilled, (state, action) => {
                 state.loading = false;
-                state.offices = (action.payload?.data as Office[]) || [];
+                const extract = (d: any): any[] => {
+                    if (Array.isArray(d)) return d;
+                    if (d && typeof d === 'object') {
+                        if (Array.isArray(d.data)) return extract(d.data);
+                        if (d.data && typeof d.data === 'object') return extract(d.data);
+                    }
+                    return [];
+                };
+                state.offices = extract(action.payload);
             })
             .addCase(fetchActiveOffices.rejected, (state, action) => {
                 state.loading = false;

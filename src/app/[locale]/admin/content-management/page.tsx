@@ -11,6 +11,7 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import { PERMISSIONS } from "@/config/permissions";
 
 
 import { API_BASE_URL, API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
@@ -267,15 +268,22 @@ const contentManagementPage: React.FC = () => {
       return;
     }
 
-    // 2. Role Check
-    if (user?.roles?.length) {
+    // 2. Role and Permission Check
+    if (user) {
       const allowedRoles = ["admin", "superadmin", "creator", "editor"];
-      const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
-      if (!hasAccess) {
+      const hasRoleAccess = user.roles?.some((r) => allowedRoles.includes(r.name));
+
+      // Also check for article creation/editing permissions
+      const hasPermissionAccess = user.permissions?.some((p) =>
+        p.name === PERMISSIONS.ARTICLE.CREATE ||
+        p.name === PERMISSIONS.ARTICLE.EDIT ||
+        p.name === PERMISSIONS.ARTICLE.PUBLISH
+      );
+
+      if (!hasRoleAccess && !hasPermissionAccess) {
         router.replace("/auth/login");
-      }
-      else {
-        setIsAuthorized(true)
+      } else {
+        setIsAuthorized(true);
       }
     }
   }, [user, router]);

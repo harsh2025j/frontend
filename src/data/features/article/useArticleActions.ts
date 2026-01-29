@@ -185,6 +185,12 @@ export const useCreateArticleActions = () => {
     handleCreateArticle,
     handleAddTag,
     handleRemoveTag,
+    handleRemoveExistingDocument: (id: string) => {
+      setFormData((prev: CreateArticleRequest) => ({
+        ...prev,
+        removedDocumentIds: [...(prev.removedDocumentIds || []), id],
+      }));
+    },
     loading,
     error,
     message,

@@ -48,11 +48,17 @@ const CreateUpdatePage: React.FC = () => {
       return;
     }
 
-    // 2. Role Check
-    if (user?.roles?.length) {
+    // 2. Role and Permission Check
+    if (user) {
       const allowedRoles = ["admin", "superadmin", "creator"];
-      const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
-      if (!hasAccess) {
+      const hasRoleAccess = user.roles?.some((r) => allowedRoles.includes(r.name));
+
+      // Also check for article creation permissions
+      const hasPermissionAccess = user.permissions?.some((p) =>
+        p.name === "create:article" || p.name === "edit:article"
+      );
+
+      if (!hasRoleAccess && !hasPermissionAccess) {
         router.replace("/auth/login");
       }
     }
@@ -351,14 +357,14 @@ const CreateUpdatePage: React.FC = () => {
 
             {/* Document Uploader */}
             <div>
-              <label className="block text-sm font-medium mb-1.5">Related Documents (PDF, DOCX, PPT)</label>
+              <label className="block text-sm font-medium mb-1.5">Related Documents (Images, PDF, DOCX, etc.)</label>
               <label className="border-2 border-dashed rounded-lg p-4 sm:p-6 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-center flex-col h-32 sm:h-40">
                 <input
                   type="file"
                   name="documents"
                   className="hidden"
                   onChange={handleDocumentUpload}
-                  accept=".pdf,.docx,.ppt,.pptx"
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
                   multiple
                 />
                 <svg
@@ -378,7 +384,7 @@ const CreateUpdatePage: React.FC = () => {
                   />
                 </svg>
 
-                <span className="text-gray-500 text-sm text-center">Click to upload documents</span>
+                <span className="text-gray-500 text-sm text-center">Click to upload images or documents</span>
 
                 {(formData.documents || []).length > 0 && (
                   <p className="text-xs text-blue-500 mt-2 text-center">{(formData.documents || []).length} files selected</p>
@@ -387,26 +393,42 @@ const CreateUpdatePage: React.FC = () => {
 
               {/* Selected Documents List */}
               {(formData.documents || []).length > 0 && (
-                <div className="mt-4 space-y-2">
-                  {(formData.documents || []).map((doc, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 border rounded-lg">
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <span className="text-sm text-gray-700 truncate">{doc.name}</span>
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {(formData.documents || []).map((doc, index) => {
+                    const isImage = doc.type.startsWith('image/');
+                    return (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 border rounded-lg gap-2">
+                        <div className="flex items-center gap-2 overflow-hidden flex-1">
+                          {isImage ? (
+                            <div className="w-10 h-10 relative flex-shrink-0 bg-gray-200 rounded overflow-hidden">
+                              <img
+                                src={URL.createObjectURL(doc)}
+                                alt={doc.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <svg className="w-8 h-8 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          )}
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-xs font-medium text-gray-700 truncate">{doc.name}</span>
+                            <span className="text-[10px] text-gray-500">{(doc.size / 1024).toFixed(1)} KB</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveDocument(index)}
+                          className="text-gray-400 hover:text-red-500 transition-colors p-1 flex-shrink-0"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveDocument(index)}
-                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

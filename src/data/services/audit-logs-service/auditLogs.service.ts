@@ -14,7 +14,7 @@ const auditLogsApi = {
     if (filter.action) params.append("action", filter.action);
     if (filter.resource) params.append("resource", filter.resource);
     if (filter.resourceId) params.append("resourceId", filter.resourceId);
-    if (filter.success !== undefined) params.append("success", String(filter.success));
+    if (filter.success !== undefined && filter.success !== "" && filter.success !== null) params.append("success", String(filter.success));
     if (filter.startDate) params.append("startDate", filter.startDate);
     if (filter.endDate) params.append("endDate", filter.endDate);
     if (filter.policyName) params.append("policyName", filter.policyName);

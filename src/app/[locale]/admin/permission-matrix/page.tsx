@@ -223,9 +223,8 @@ export default function PermissionMatrixPage() {
                 filteredPermissions.map((permission, index) => (
                   <tr
                     key={permission._id}
-                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                      index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    }`}
+                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`}
                   >
                     <td className="py-3 px-6 sticky left-0 bg-inherit z-10">
                       <div>
@@ -246,7 +245,7 @@ export default function PermissionMatrixPage() {
                         >
                           <button
                             onClick={() => handleTogglePermission(role._id, permission._id)}
-                            className={`
+                            className={`ml-9
                               w-10 h-10 rounded-lg flex items-center justify-center transition-all
                               ${hasPermission
                                 ? wasChanged

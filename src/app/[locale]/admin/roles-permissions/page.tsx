@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { resetRolesState } from "@/data/features/roles/rolesSlice";
+import { resetPermissionsState } from "@/data/features/permissions/permissionsSlice";
 
 export default function RolesPermissionsPage() {
     useDocTitle("Roles & Permissions Management | Sajjad Husain Law Associates");
@@ -45,7 +46,7 @@ export default function RolesPermissionsPage() {
 
         // 2. Role Check
         if (user?.roles && user.roles.length > 0) {
-            const userRoles = user.roles.map((r) => r.name);
+            const userRoles = Array.isArray(user?.roles) ? user.roles.map((r) => r.name) : [];
             const allowedRoles = ["admin", "superadmin"];
             const hasAccess = userRoles.some((role) => allowedRoles.includes(role));
 
@@ -112,16 +113,15 @@ export default function RolesPermissionsPage() {
         try {
             if (editingRole) {
                 await dispatch(updateRole({ id: editingRole.id, ...roleFormData }));
-                resetRolesState();
             } else {
                 await dispatch(createRole(roleFormData));
-                resetRolesState();
             }
             setIsModalOpen(false);
-            dispatch(fetchRoles());
+            dispatch(resetRolesState());
         } catch (error) {
             console.error("Failed to save role:", error);
         } finally {
+            dispatch(fetchRoles());
             setIsActionLoading(false);
         }
     };
@@ -158,10 +158,11 @@ export default function RolesPermissionsPage() {
                 await dispatch(createPermission(permFormData));
             }
             setIsModalOpen(false);
-            dispatch(fetchPermissions());
+            dispatch(resetPermissionsState());
         } catch (error) {
             console.error("Failed to save permission:", error);
         } finally {
+            dispatch(fetchPermissions());
             setIsActionLoading(false);
         }
     };
@@ -260,7 +261,7 @@ export default function RolesPermissionsPage() {
 
                     {/* Mobile Card View for Roles */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden mb-6">
-                        {roles.map((role) => (
+                        {Array.isArray(roles) && roles.map((role) => (
                             <div key={role.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4">
                                 <div className="border-b border-gray-100 pb-3">
                                     <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Role Name</span>
@@ -319,7 +320,7 @@ export default function RolesPermissionsPage() {
                             </thead>
 
                             <tbody>
-                                {roles.map((role) => (
+                                {Array.isArray(roles) && roles.map((role) => (
                                     <tr
                                         key={role.id}
                                         className="border-b hover:bg-gray-50 transition"
@@ -403,7 +404,7 @@ export default function RolesPermissionsPage() {
 
                     {/* Mobile Card View for Permissions */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden mb-6">
-                        {permissions.map((perm) => (
+                        {Array.isArray(permissions) && permissions.map((perm) => (
                             <div key={perm._id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4">
                                 <div className="border-b border-gray-100 pb-3">
                                     <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Permission Name</span>
@@ -462,7 +463,7 @@ export default function RolesPermissionsPage() {
                             </thead>
 
                             <tbody>
-                                {permissions.map((perm) => (
+                                {Array.isArray(permissions) && permissions.map((perm) => (
                                     <tr
                                         key={perm._id}
                                         className="border-b hover:bg-gray-50 transition"

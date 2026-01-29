@@ -14,6 +14,18 @@
 //   thumbnailUrl?: string;
 //   createdAt: string;
 // }
+export interface ArticleDocument {
+  id: string;
+  articleId: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  uploadedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -27,7 +39,7 @@ export interface Article {
   location: string | null;
   authors: string | null;
   thumbnail: string | null;
-  documents?: string[] | null;
+  documents?: ArticleDocument[] | null;
   status: "pending" | "published" | "draft" | "rejected";
   rejectionReason: string | null;
   language: string | null;
@@ -111,6 +123,7 @@ export interface CreateArticleRequest {
   advocateName: string;
   thumbnail: File | null;
   documents?: File[];
+  removedDocumentIds?: string[];
   status?: "draft" | "pending";
 }
 

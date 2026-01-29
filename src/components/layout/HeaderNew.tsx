@@ -4,7 +4,7 @@ import { Link } from "@/i18n/routing";
 import {
     Menu, X, ChevronDown, ChevronRight, LogOut, LayoutDashboard,
     User as UserIcon, Search, Bell, Scale, Globe, Mail, Phone,
-    Facebook, Linkedin, Instagram
+    Facebook, Linkedin, Instagram, PlusCircle
 } from "lucide-react";
 import { FaXTwitter } from "react-icons/fa6";
 import Image from "next/image";
@@ -26,6 +26,8 @@ import { fetchCategories } from "@/data/features/category/categoryThunks";
 import { Category } from "@/data/features/category/category.types";
 import SearchWithDropdown from "../ui/SearchWithDropdown";
 import NotificationDropdown from "./NotificationDropdown";
+import { ROLES, PERMISSIONS } from "@/config/permissions";
+import { hasDashboardAccess } from "@/utils/permissions";
 
 const SubCategoryItem = ({ item, closeMenu }: { item: NavItem; closeMenu: () => void }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -144,10 +146,7 @@ export default function HeaderNew() {
         setSearchOpen(false);
     };
 
-    const hasDashboardAccess = useMemo(() => {
-        if (!user?.roles) return false;
-        return user.roles.some((r: any) => ["admin", "superadmin", "creator", "editor", "manager", "advocate"].includes(r.name));
-    }, [user]);
+    const dashboardAccess = hasDashboardAccess(user);
 
     const t = useTranslations('Navigation');
 
@@ -427,12 +426,16 @@ export default function HeaderNew() {
                                                 <p className="text-xs text-gray-500">{user?.email}</p>
                                             </div>
                                             <div className="py-2">
-                                                <Link href="/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
+                                                <Link href="/admin/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
                                                     <UserIcon size={16} /> {t('profile')}
                                                 </Link>
-                                                {hasDashboardAccess && (
+                                                {dashboardAccess ? (
                                                     <Link href="/admin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
                                                         <LayoutDashboard size={16} /> {t('dashboard')}
+                                                    </Link>
+                                                ) : (
+                                                    <Link href="/admin/membership" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
+                                                        <PlusCircle size={16} /> {t('submit_post')}
                                                     </Link>
                                                 )}
                                                 <div className="h-px bg-gray-100 my-1 mx-2" />
@@ -525,12 +528,16 @@ export default function HeaderNew() {
                                                 <p className="text-xs text-gray-500">{user?.email}</p>
                                             </div>
                                         </div>
-                                        <Link href="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                                            <UserIcon size={16} /> Profile
+                                        <Link href="/admin/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                                            <UserIcon size={16} /> {t('profile')}
                                         </Link>
-                                        {hasDashboardAccess && (
+                                        {dashboardAccess ? (
                                             <Link href="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                                                <LayoutDashboard size={16} /> Dashboard
+                                                <LayoutDashboard size={16} /> {t('dashboard')}
+                                            </Link>
+                                        ) : (
+                                            <Link href="/admin/membership" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                                                <PlusCircle size={16} /> {t('submit_post')}
                                             </Link>
                                         )}
                                         <button onClick={() => { setMenuOpen(false); setShowLogoutConfirm(true); }} className="flex items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg text-left transition-colors">

@@ -12,6 +12,7 @@ import img2 from '../../assets/slider/mask.svg';
 import img3 from '../../assets/slider/maskgroup.svg';
 import headerBg from '../../assets/svgimage/header.png';
 import { StaticImageData } from "next/image";
+import { getSafeImageUrl } from "@/utils/imageUtils";
 
 interface Slide {
   image: string | StaticImageData;
@@ -31,7 +32,7 @@ export default function NewsSlider() {
     const latestArticles = articles.slice(0, 6);
     return latestArticles.length > 0
       ? latestArticles.map((article: any) => ({
-        image: article.thumbnail || img1,
+        image: getSafeImageUrl(article.thumbnail),
         title: article.title,
         description: article.content.replace(/<[^>]*>/g, '').substring(0, 150) + "...",
         link: `/news/${article.slug}`,
@@ -94,9 +95,10 @@ export default function NewsSlider() {
             <div className="relative order-2 md:order-1">
               <div className="relative h-[350px] md:h-[450px] overflow-hidden shadow-2xl group">
                 <Image
-                  src={slides[current].image}
+                  src={getSafeImageUrl(slides[current].image as string)}
                   alt={slides[current].title}
                   fill
+                  unoptimized
                   sizes="(max-width: 768px) 100vw, 600px"
                   className={`object-cover transition-opacity duration-500 ${fade ? "opacity-100" : "opacity-0"} group-hover:scale-105`}
                   priority

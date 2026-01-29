@@ -39,10 +39,13 @@ const auditLogsSlice = createSlice({
       })
       .addCase(fetchAuditLogs.fulfilled, (state, action) => {
         state.loading = false;
-        state.logs = action.payload.data;
-        state.total = action.payload.total;
-        state.page = action.payload.page;
-        state.limit = action.payload.limit;
+        // Handle nested structure: action.payload.data.data or action.payload.data
+        const payloadData = (action.payload as any)?.data;
+        const data = Array.isArray(payloadData?.data) ? payloadData.data : (Array.isArray(payloadData) ? payloadData : []);
+        state.logs = data;
+        state.total = payloadData?.total || (Array.isArray(payloadData) ? 0 : data.length) || 0;
+        state.page = payloadData?.page || 1;
+        state.limit = payloadData?.limit || 50;
       })
       .addCase(fetchAuditLogs.rejected, (state, action) => {
         state.loading = false;

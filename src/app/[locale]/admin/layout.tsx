@@ -7,6 +7,7 @@ import AdminSidebar from "./components/AdminSidebar";
 import Loader from "@/components/ui/Loader";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
+import { PERMISSIONS } from "@/config/permissions";
 
 export default function DashboardLayout({
   children,
@@ -32,14 +33,11 @@ export default function DashboardLayout({
       return;
     }
 
-    // 2. Role Check
-    if (user?.roles?.length) {
-      const hasAdminAccess = user.roles.some((r) => r.name !== "user");
-      if (!hasAdminAccess) {
-        router.replace("/auth/login");
-      } else {
-        setIsAuthorized(true);
-      }
+    // 2. Authorization Check
+    if (user && !loading) {
+      // We now allow all logged-in users to access the /admin layout
+      // Specific pages will handle additional permission checks if needed
+      setIsAuthorized(true);
     }
   }, [user, loading, router]);
 

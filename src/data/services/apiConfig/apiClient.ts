@@ -131,11 +131,14 @@ apiClient.interceptors.response.use(
     // }
     // Handle 401 errors - but distinguish between auth failures and resource-not-found
     if (apiError.statusCode === 401) {
-      const url = error.config?.url || '';
+      const url = String(error.config?.url || '');
 
       // Only logout for actual authentication failures (login, profile, etc.)
-      // Don't logout for resource-not-found errors (like no subscription)
-      const isAuthFailure = !url.includes('/subscriptions/me') && !url.includes('/subscription');
+      // Don't logout for resource-not-found errors (like no subscription or permission requests)
+      const isAuthFailure = typeof url === 'string' &&
+        !url.includes('/subscriptions/me') &&
+        !url.includes('/subscription') &&
+        !url.includes('/permission-requests/my');
 
       if (isAuthFailure && shouldShowError('auth-error')) {
         if (typeof window !== "undefined") {

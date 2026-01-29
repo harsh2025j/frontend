@@ -5,9 +5,10 @@ interface LoaderProps {
     size?: 'sm' | 'md' | 'lg';
     text?: string;
     fullScreen?: boolean;
+    color?: string;
 }
 
-export default function Loader({ size = 'md', text, fullScreen = false }: LoaderProps) {
+export default function Loader({ size = 'md', text, fullScreen = false, color }: LoaderProps) {
     const sizeClasses = {
         sm: 'w-8 h-8',
         md: 'w-12 h-12',
@@ -24,10 +25,16 @@ export default function Loader({ size = 'md', text, fullScreen = false }: Loader
         <div className="flex flex-col items-center justify-center gap-3">
             <div className={`relative flex items-center justify-center ${sizeClasses[size]}`}>
                 {/* Outer rotating ring */}
-                <div className="absolute inset-0 border-4 border-[#0A2342]/20 border-t-[#0A2342] rounded-full animate-spin"></div>
+                <div
+                    className={`absolute inset-0 border-4 rounded-full animate-spin ${!color ? 'border-[#0A2342]/20 border-t-[#0A2342]' : ''}`}
+                    style={color ? { borderColor: `${color}33`, borderTopColor: color } : {}}
+                ></div>
 
                 {/* Inner Scale Icon */}
-                <div className="relative z-10 text-orange-500 animate-pulse">
+                <div
+                    className={`relative z-10 animate-pulse ${!color ? 'text-orange-500' : ''}`}
+                    style={color ? { color } : {}}
+                >
                     <Scale size={iconSizes[size]} strokeWidth={2.5} />
                 </div>
             </div>

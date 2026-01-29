@@ -10,6 +10,10 @@ const nextConfig = {
         protocol: "https" as const,
         hostname: "**",
       },
+      {
+        protocol: "http" as const,
+        hostname: "**",
+      },
     ],
   },
 };

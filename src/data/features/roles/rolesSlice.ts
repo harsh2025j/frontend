@@ -27,7 +27,10 @@ const rolesSlice = createSlice({
             })
             .addCase(fetchRoles.fulfilled, (state, action) => {
                 state.loading = false;
-                state.roles = (action.payload?.data as Role[]) || [];
+                // Handle potentially double-wrapped response: { data: { data: [...] } } or { data: [...] } or [...]
+                const level1 = (action.payload as any)?.data || action.payload;
+                const level2 = (level1 as any)?.data || level1;
+                state.roles = Array.isArray(level2) ? level2 : [];
             })
             .addCase(fetchRoles.rejected, (state, action) => {
                 state.loading = false;
@@ -81,9 +84,9 @@ const rolesSlice = createSlice({
                 state.loading = false;
                 state.message = "Role permissions updated successfully";
                 // Update the role in the state
-                const updatedRole = action.payload?.data as Role;
-                if (updatedRole) {
-                    const index = state.roles.findIndex(r => r._id === updatedRole._id);
+                const updatedRole = ((action.payload as any)?.data || action.payload) as Role;
+                if (updatedRole && updatedRole._id) {
+                    const index = (state.roles as Role[]).findIndex(r => r._id === updatedRole._id);
                     if (index !== -1) {
                         state.roles[index] = updatedRole;
                     }

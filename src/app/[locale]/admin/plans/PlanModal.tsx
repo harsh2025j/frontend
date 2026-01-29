@@ -20,7 +20,7 @@ export default function AddEditPlanModal({ plan, onClose }: AddEditPlanModalProp
         description: "",
         price: "",
         currency: "INR",
-        features: [] as string[],
+        features: [] as (string | any)[],
     });
     const [newFeature, setNewFeature] = useState("");
 
@@ -72,9 +72,9 @@ export default function AddEditPlanModal({ plan, onClose }: AddEditPlanModalProp
         const planData = {
             name: formData.name,
             description: formData.description,
-            price: parseInt(formData.price),
+            price: parseFloat(formData.price),
             currency: formData.currency,
-            features: formData.features,
+            features: formData.features.map(f => typeof f === 'string' ? f : f.name),
         };
 
         try {
@@ -223,7 +223,9 @@ export default function AddEditPlanModal({ plan, onClose }: AddEditPlanModalProp
                                             key={index}
                                             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100 transition-colors"
                                         >
-                                            <span className="text-sm text-gray-700">{feature}</span>
+                                            <span className="text-sm text-gray-700">
+                                                {typeof feature === 'string' ? feature : feature.name}
+                                            </span>
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveFeature(index)}

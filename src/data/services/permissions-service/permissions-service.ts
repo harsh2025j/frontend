@@ -14,14 +14,11 @@ export const permissionsApi = {
         return await apiClient.post(API_ENDPOINTS.PERMISSIONS.BASE, data);
     },
     updatePermission: async (data: UpdatePermissionRequest) => {
-    
-        const formData = new FormData();
-        formData.append("name", data.name);
-        if(data.description){
-        formData.append("description",data.description)
-        }
-        // console.log(`${API_ENDPOINTS.PERMISSIONS.BASE}/${data.id}`, formData);
-        return await apiClient.patch(`${API_ENDPOINTS.PERMISSIONS.BASE}/${data.id}`,formData);
+        const payload = {
+            name: data.name,
+            description: data.description
+        };
+        return await apiClient.patch(`${API_ENDPOINTS.PERMISSIONS.BASE}/${data.id}`, payload);
     },
     deletePermission: async (id: string) => {
         // console.log(id)

@@ -325,7 +325,7 @@ export default function AuditLogsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map((log) => (
+                  {Array.isArray(logs) && logs.map((log) => (
                     <tr key={log.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="py-4 px-6 text-sm text-gray-700">
                         {new Date(log.timestamp).toLocaleString()}
@@ -380,7 +380,7 @@ export default function AuditLogsPage() {
 
             {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-gray-100">
-              {logs.map((log) => (
+              {Array.isArray(logs) && logs.map((log) => (
                 <div key={log.id} className="p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">

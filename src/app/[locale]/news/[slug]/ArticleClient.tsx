@@ -9,10 +9,12 @@ import { Link } from "@/i18n/routing";
 import { Share2, Facebook, Linkedin, Link2, Check, Printer, Sparkles, X } from "lucide-react";
 import { FaTelegramPlane } from "react-icons/fa";
 import Loader from "@/components/ui/Loader";
+import apiClient from "@/data/services/apiConfig/apiClient";
 import { useTranslations, useLocale } from "next-intl";
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 import TypewriterText from "@/components/ui/TypewriterText";
 import { formatDate } from "@/utils/dateUtils";
+import { getSafeImageUrl } from "@/utils/imageUtils";
 
 // Helper function to get related articles
 export function getRelatedArticles(currentSlug: string, allArticles: Article[], limit: number = 20) {
@@ -55,12 +57,8 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
         if (newShowSummary && !summary && !initialArticle.aiSummary) {
             setIsFetchingSummary(true);
             try {
-                const response = await fetch(`${API_BASE_URL}ai/summary/${initialArticle.id}`, {
-                    // headers: {
-                    //     "ngrok-skip-browser-warning": "true",
-                    // },
-                });
-                const data = await response.json();
+                const response = await apiClient.get(`ai/summary/${initialArticle.id}`);
+                const data = response.data;
                 if (data.success) {
                     setSummary(data.data.summary);
                 }
@@ -258,11 +256,13 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
 
                         {/* Featured Image */}
                         {initialArticle.thumbnail && (
-                            <div className="relative w-full h-[450px] mb-8 rounded overflow-hidden">
+                            <div className="relative w-full h-[450px] mb-8 rounded-2xl overflow-hidden shadow-sm border border-gray-100">
                                 <Image
-                                    src={initialArticle.thumbnail}
+                                    src={getSafeImageUrl(initialArticle.thumbnail)}
                                     alt={translatedData ? translatedData.title : initialArticle.title}
                                     fill
+                                    priority
+                                    unoptimized
                                     sizes="(max-width: 1024px) 100vw, 800px"
                                     className="object-cover"
                                 />
@@ -434,6 +434,65 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                         <div className="article-content mb-12">
                             <div dangerouslySetInnerHTML={{ __html: translatedData ? translatedData.content : initialArticle.content }} />
                         </div>
+
+                        {/* Related Documents */}
+                        {initialArticle.documents && initialArticle.documents.length > 0 && (
+                            <div className="mb-12 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                    </svg>
+                                    Related Documents
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {initialArticle.documents.map((doc) => {
+                                        const isImage = doc.fileType?.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(doc.fileUrl);
+                                        return (
+                                            <a
+                                                key={doc.id}
+                                                href={doc.fileUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="group flex items-center gap-4 p-3 bg-white border border-gray-200 rounded-xl hover:border-[#C9A227] hover:shadow-md transition-all duration-300"
+                                            >
+                                                {isImage ? (
+                                                    <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100 bg-gray-50">
+                                                        <Image
+                                                            src={getSafeImageUrl(doc.fileUrl)}
+                                                            alt={doc.fileName}
+                                                            fill
+                                                            className="object-cover group-hover:scale-110 transition-transform duration-500"
+                                                            unoptimized
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-16 h-16 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 group-hover:bg-[#C9A227]/10 transition-colors">
+                                                        <svg className="w-8 h-8 text-gray-400 group-hover:text-[#C9A227] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                        </svg>
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-bold text-gray-900 truncate group-hover:text-[#C9A227] transition-colors">
+                                                        {doc.fileName}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 uppercase flex items-center gap-1.5 mt-0.5">
+                                                        <span className="font-semibold text-[#C9A227]">{doc.fileType?.split('/')[1]?.toUpperCase() || 'FILE'}</span>
+                                                        <span className="inline-block w-1 h-1 rounded-full bg-gray-300"></span>
+                                                        <span>{doc.fileSize ? (doc.fileSize / 1024 / 1024).toFixed(2) : '0.00'} MB</span>
+                                                    </p>
+                                                </div>
+                                                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#C9A227] group-hover:text-white transition-all transform group-hover:translate-x-1 shrink-0">
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                                    </svg>
+                                                </div>
+                                            </a>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                         <div className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
                             {/* Avatar */}
                             <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0">
@@ -470,7 +529,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                                         <div className="flex gap-4">
                                             <div className="relative w-24 h-24 flex-shrink-0 rounded overflow-hidden bg-gray-100">
                                                 <Image
-                                                    src={(rec.thumbnail && (rec.thumbnail.startsWith('http') || rec.thumbnail.startsWith('/'))) ? rec.thumbnail : "https://ibb.co/LD3XGttL"}
+                                                    src={getSafeImageUrl(rec.thumbnail)}
                                                     alt={rec.title}
                                                     fill
                                                     sizes="96px"

@@ -27,7 +27,10 @@ const permissionsSlice = createSlice({
             })
             .addCase(fetchPermissions.fulfilled, (state, action) => {
                 state.loading = false;
-                state.permissions = (action.payload?.data as Permission[]) || [];
+                // Handle potentially double-wrapped response: { data: { data: [...] } } or { data: [...] } or [...]
+                const level1 = (action.payload as any)?.data || action.payload;
+                const level2 = (level1 as any)?.data || level1;
+                state.permissions = Array.isArray(level2) ? level2 : [];
             })
             .addCase(fetchPermissions.rejected, (state, action) => {
                 state.loading = false;

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
-import { Search, Menu, LogOut, User as UserIcon, Home } from "lucide-react";
+import { Search, Menu, LogOut, User as UserIcon, Home, LayoutDashboard, PlusCircle } from "lucide-react";
 import logo from "../../../../assets/logo.png";
 import AdminNotificationDropdown from "./AdminNotificationDropdown";
 // import Link from "next/link";
@@ -14,6 +14,8 @@ import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { useAppDispatch } from "@/data/redux/hooks";
 import { logoutUser } from "@/data/features/auth/authSlice";
+import { ROLES, PERMISSIONS } from "@/config/permissions";
+import { hasDashboardAccess } from "@/utils/permissions";
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -31,6 +33,8 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
   const user = reduxProfileUser as UserData;
   const avatar = user?.profilePicture || null;
 
+
+  const dashboardAccess = hasDashboardAccess(user);
 
   const confirmLogout = () => {
 
@@ -116,20 +120,30 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
             >
               <div className="py-2">
                 <Link
-                  href="/profile"
+                  href="/admin/profile"
                   onClick={() => setIsProfileOpen(false)}
                   className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   <UserIcon size={16} /> Profile
                 </Link>
 
-                {/* <Link 
-                  href="/" 
-                  onClick={() => setIsProfileOpen(false)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  <Home size={16} /> Home
-                </Link> */}
+                {dashboardAccess ? (
+                  <Link
+                    href="/admin"
+                    onClick={() => setIsProfileOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    <LayoutDashboard size={16} /> Dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    href="/admin/membership"
+                    onClick={() => setIsProfileOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    <PlusCircle size={16} /> Submit Post
+                  </Link>
+                )}
 
                 <div className="h-px bg-gray-100 dark:bg-gray-700 my-1 mx-2" />
 
