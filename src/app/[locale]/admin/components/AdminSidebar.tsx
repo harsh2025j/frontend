@@ -319,7 +319,7 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
               return (
                 <Link
                   key={item.name}
-                  href={item.href}
+                  href={item.href || "#"}
                   onClick={() => handleItemClick(item.name)}
                   className={`
                   group flex items-center ${isOpen ? "gap-4" : "lg:justify-center"} px-3 py-2 rounded-xl transition-all duration-200

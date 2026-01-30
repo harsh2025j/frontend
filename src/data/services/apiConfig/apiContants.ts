@@ -77,6 +77,9 @@ export const API_ENDPOINTS = {
   DISPLAY_BOARDS: {
     BASE: "/display-boards",
     ACTIVE: "/display-boards/active",
+    BY_DATE: "/display-boards/date",
+    BY_COURT: "/display-boards/court",
+    GENERATE_CAUSE_LIST: "/display-boards/generate-cause-list",
   },
   OFFICES: {
     BASE: "/offices",

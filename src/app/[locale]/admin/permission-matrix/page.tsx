@@ -66,7 +66,7 @@ export default function PermissionMatrixPage() {
 
   const handleSaveChanges = async () => {
     if (changedRoles.size === 0) {
-      toast.info("No changes to save");
+      toast("No changes to save");
       return;
     }
 
@@ -105,7 +105,7 @@ export default function PermissionMatrixPage() {
     });
     setMatrix(initialMatrix);
     setChangedRoles(new Set());
-    toast.info("Changes discarded");
+    toast("Changes discarded");
   };
 
   const filteredPermissions = permissions.filter((perm) =>

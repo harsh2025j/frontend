@@ -76,6 +76,7 @@ export interface AuthUser {
   isActive: boolean;
   isVerified: boolean;
   preferredLanguage: string;
+  clearanceLevel?: number;
   createdBy?: string | null;
   createdAt: string;
   updatedAt: string;

@@ -8,10 +8,12 @@ import {
   createTeamMember,
   updateTeamMember,
   removeTeamMember,
+} from "@/data/features/matter-team/matterTeamThunks";
+import {
   clearMatterTeamMessage,
   clearMatterTeamError,
-} from "@/data/features/matter-team/matterTeamThunks";
-import { fetchAllUsers } from "@/data/features/users/usersThunks";
+} from "@/data/features/matter-team/matterTeamSlice";
+import { fetchUsers } from "@/data/features/users/usersThunks";
 import { RoleInMatter, AccessLevel, MatterTeamMember } from "@/data/features/matter-team/matter-team.types";
 import { casesService } from "@/data/services/cases-service/casesService";
 import toast from "react-hot-toast";
@@ -53,7 +55,7 @@ export default function MatterTeamPage() {
     if (matterId) {
       fetchCaseDetails();
       dispatch(fetchTeamByMatter(matterId));
-      dispatch(fetchAllUsers());
+      dispatch(fetchUsers());
     }
   }, [matterId]);
 
@@ -79,7 +81,7 @@ export default function MatterTeamPage() {
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentUser?.id) {
+    if (!currentUser?._id) {
       toast.error("You must be logged in to add team members");
       return;
     }
@@ -91,7 +93,7 @@ export default function MatterTeamPage() {
         roleInMatter: newMember.roleInMatter,
         accessLevel: newMember.accessLevel,
       },
-      assignedBy: currentUser.id,
+      assignedBy: currentUser._id,
     }));
 
     setShowAddModal(false);

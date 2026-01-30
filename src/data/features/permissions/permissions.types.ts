@@ -2,6 +2,7 @@ export interface Permission {
     _id: string;
     name: string;
     description?: string;
+    resource?: string;
     isDeleted: boolean;
     createdBy?: {
         _id: string;

@@ -29,14 +29,15 @@ export function usePermissions() {
       if (!userPermissions || userPermissions.length === 0) return false;
 
       // Check for exact match
-      if (userPermissions.includes(permission)) {
+      if (userPermissions.some((p: any) => p.name === permission)) {
         return true;
       }
 
       // Check for wildcard matches
-      return userPermissions.some((userPerm: string) => {
+      return userPermissions.some((userPerm: any) => {
+        const permName = userPerm.name || userPerm;
         // Convert wildcard pattern to regex
-        const pattern = userPerm
+        const pattern = permName
           .replace(/\./g, "\\.")
           .replace(/\*/g, ".*");
         const regex = new RegExp(`^${pattern}$`);
@@ -75,7 +76,7 @@ export function usePermissions() {
     (role: string): boolean => {
       if (!role) return false;
       if (!userRoles || userRoles.length === 0) return false;
-      return userRoles.includes(role);
+      return userRoles.some((r: any) => r.name === role);
     },
     [userRoles]
   );

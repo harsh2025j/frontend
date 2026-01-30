@@ -1,0 +1,55 @@
+﻿
+> frontend-web@0.1.0 build
+> next build --turbopack
+
+node.exe : [baseline-browser-mapping] 
+The data in this module is over two 
+months old.  To ensure accurate 
+Baseline data, please update: `npm i 
+baseline-browser-mapping@latest -D`
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpec 
+   ified: ([baseline-brows...ping@la  
+  test -D`:String) [], RemoteExcept   
+ ion
+    + FullyQualifiedErrorId : NativeC 
+   ommandError
+ 
+   Γû▓ Next.js 16.0.7 (Turbopack)
+   - Environments: .env
+
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data 
+in this module is over two months 
+old.  To ensure accurate Baseline 
+data, please update: `npm i 
+baseline-browser-mapping@latest -D`
+ Γ£ô Compiled successfully in 13.8s
+   Running TypeScript ...
+Failed to compile.
+
+./src/hooks/usePermissions.ts:32:36
+Type error: Argument of type 'string' 
+is not assignable to parameter of 
+type 'Permission'.
+
+[0m [90m 30 |[39m
+ [90m 31 |[39m       [90m// Check 
+for exact match[39m
+[31m[1m>[22m[39m[90m 32 |[39m   
+    [36mif[39m (userPermissions[33m
+.[39mincludes(permission)) {
+ [90m    |[39m                      
+              [31m[1m^[22m[39m
+ [90m 33 |[39m         
+[36mreturn[39m 
+[36mtrue[39m[33m;[39m
+ [90m 34 |[39m       }
+ [90m 35 |[39m[0m
+Next.js build worker exited with 
+code: 1 and signal: null

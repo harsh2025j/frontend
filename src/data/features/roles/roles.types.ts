@@ -16,6 +16,7 @@ export interface Role {
     description?: string;
     isDeleted: boolean;
     isActive?: boolean;
+    permissions?: RolePermission[];
     createdBy?: {
         _id: string;
         name: string;

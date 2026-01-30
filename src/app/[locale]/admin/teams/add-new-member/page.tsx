@@ -437,6 +437,7 @@ export default function AddNewMemberPage() {
             <form onSubmit={handleCreateRole} className="p-6 space-y-4">
               <CustomInput
                 label="Role Name"
+                name="roleName"
                 value={newRole.name}
                 onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
                 placeholder="e.g. Legal Advisor"
@@ -490,6 +491,7 @@ export default function AddNewMemberPage() {
             <form onSubmit={handleCreatePermission} className="p-6 space-y-4">
               <CustomInput
                 label="Permission Name"
+                name="permissionName"
                 value={newPermission.name}
                 onChange={(e) => setNewPermission({ ...newPermission, name: e.target.value })}
                 placeholder="e.g. manage:billing"
