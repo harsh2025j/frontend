@@ -762,6 +762,33 @@ const ContentApprovalPanel = () => {
                   dangerouslySetInnerHTML={{ __html: previewArticle.content }}
                 />
               </div>
+
+              {/* Timeline Updates Preview */}
+              {previewArticle.updates && previewArticle.updates.length > 0 && (
+                <div className="border-t pt-6">
+                  <h3 className="text-xl font-semibold mb-4 text-gray-800">Developing Story Timeline</h3>
+                  <div className="space-y-4">
+                    {[...previewArticle.updates].map((update, idx) => (
+                      <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <h4 className="font-semibold text-lg text-gray-900">{update.title || 'Update'}</h4>
+                          <span className="text-sm text-gray-500 font-medium">
+                            {new Date(update.updateDate).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                        <div
+                          className="prose prose-sm max-w-none text-gray-700"
+                          dangerouslySetInnerHTML={{ __html: update.content }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer with Actions */}

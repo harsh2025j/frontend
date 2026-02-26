@@ -15,6 +15,7 @@ import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 import TypewriterText from "@/components/ui/TypewriterText";
 import { formatDate } from "@/utils/dateUtils";
 import { getSafeImageUrl } from "@/utils/imageUtils";
+import SavePostButton from "@/components/ui/SavePostButton";
 
 // Helper function to get related articles
 export function getRelatedArticles(currentSlug: string, allArticles: Article[], limit: number = 20) {
@@ -298,7 +299,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                                 </button>
 
                                 {showSummary && (
-                                    <div className="absolute right-0 top-12 sm:right-full sm:top-0 sm:mr-3 w-[85vw] sm:w-[400px] max-w-[400px] bg-[#C9A227] p-4 rounded-xl shadow-2xl border border-gray-200 z-50 text-left">
+                                    <div className="absolute right-0 top-12 sm:right-full sm:top-0 sm:mr-3 w-[85vw] sm:w-[400px] max-w-[400px] bg-[#C9A227] p-4 rounded-xl shadow-2xl border border-gray-200 z-10 text-left">
                                         <div className="flex justify-between items-start mb-3 border-b border-gray-200 pb-2">
                                             <h3 className="font-bold text-gray-900 flex items-center gap-2">
                                                 <Sparkles size={16} className="text-blue-600" />
@@ -339,6 +340,9 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                             <div className="hidden sm:block w-px h-8 bg-gray-200"></div>
 
                             <div className="flex items-center gap-3">
+                                {/* Save Post */}
+                                <SavePostButton postId={initialArticle.id || (initialArticle as any)._id} className="hover:-translate-y-1 hover:shadow-lg transition-all duration-300" iconSize={20} />
+
                                 {/* Facebook */}
                                 <button
                                     onClick={() => handleShare('facebook')}
@@ -488,6 +492,50 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                                                     </svg>
                                                 </div>
                                             </a>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+
+                        {/* Developing Story Timeline */}
+                        {initialArticle.updates && initialArticle.updates.length > 0 && (
+                            <div className="mb-16 mt-12 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                                <h3 className="text-3xl font-bold text-gray-900 mb-10 pb-4 border-b">Developing Story Timeline</h3>
+
+                                <div className="space-y-12 relative pl-8 border-l-[3px] border-[#2A65A4] ml-2">
+                                    {[...initialArticle.updates].map((update, idx) => {
+                                        const isLatest = idx === initialArticle.updates!.length - 1;
+                                        return (
+                                            <div key={idx} className="relative">
+                                                {/* Node Icon */}
+                                                {isLatest ? (
+                                                    <div className="absolute -left-[41px] top-1 w-4 h-4 z-10">
+                                                        <div className="absolute inset-0 rounded-full border-[3px] border-[#2A65A4] bg-[#2A65A4] ring-4 ring-white z-10"></div>
+                                                        <div className="absolute -inset-1 rounded-full bg-[#2A65A4] animate-ping opacity-75 z-0"></div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="absolute -left-[41px] top-1 w-4 h-4 rounded-full border-[3px] border-[#2A65A4] bg-white ring-4 ring-white z-10"></div>
+                                                )}
+
+                                                <div className="flex flex-col gap-2">
+                                                    {/* Date */}
+                                                    <span className="text-gray-500 text-sm font-semibold tracking-wide uppercase">
+                                                        {formatDate(update.updateDate as string)}
+                                                    </span>
+
+                                                    {/* Title */}
+                                                    {update.title && (
+                                                        <h4 className="font-bold text-[22px] text-[#0A2342] leading-snug">
+                                                            {update.title}
+                                                        </h4>
+                                                    )}
+
+                                                    {/* Content */}
+                                                    <div className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1" dangerouslySetInnerHTML={{ __html: update.content }} />
+                                                </div>
+                                            </div>
                                         );
                                     })}
                                 </div>

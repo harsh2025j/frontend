@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchProfile, updateProfile } from "./profileThunks";
+import { fetchProfile, updateProfile, toggleSavePost } from "./profileThunks";
 import { loginWithGoogle } from "../auth/authThunks";
 import { ProfileState } from "./profile.types";
 // 1. Import the logout action
@@ -37,8 +37,12 @@ const profileSlice = createSlice({
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.loading = false;
         // Handle both { data: user } and direct user object
-        state.user = (action.payload as any).data || action.payload;
+        const updatedUser = (action.payload as any).data || action.payload;
+        state.user = updatedUser;
         state.message = (action.payload as any).message || "Profile fetched successfully";
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
       })
       .addCase(fetchProfile.rejected, (state, action) => {
         state.loading = false;
@@ -58,6 +62,17 @@ const profileSlice = createSlice({
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      // --- Toggle Save Post ---
+      .addCase(toggleSavePost.fulfilled, (state, action) => {
+        // action.payload is ProfileResponse, meaning it has the updated UserData with new savedPosts
+        const updatedUser = (action.payload as any).data || action.payload;
+        if (state.user) {
+          state.user.savedPosts = updatedUser.savedPosts || [];
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(state.user));
+          }
+        }
       })
       .addCase(loginWithGoogle.fulfilled, (state, action) => {
         const googleUser = action.payload.user;

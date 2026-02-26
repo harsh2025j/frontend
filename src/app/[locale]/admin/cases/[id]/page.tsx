@@ -2,11 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import { casesService } from "@/data/services/cases-service/casesService";
+import { judgesService } from "@/data/services/judges-service/judgesService";
 import { useRouter, useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { ArrowLeft, Save } from "lucide-react";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import CustomSelect from "@/components/ui/CustomSelect";
+import { caseTypeOptions } from "@/constants/caseOptions";
+import SearchableSelect, { SearchableOption } from "@/components/ui/SearchableSelect";
 
 export default function EditCasePage() {
     useDocTitle("Edit Case  | Sajjad Husain Law Associates");
@@ -16,17 +20,77 @@ export default function EditCasePage() {
     const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         caseNumber: "",
+        cnrNumber: "",
         title: "",
         description: "",
         caseType: "civil",
         status: "filed",
         filingDate: "",
+        firstHearingDate: "",
+        nextHearingDate: "",
         court: "",
+        judgeId: "",
+        acts: "",
+        underSections: "",
+        policeStation: "",
+        firNumber: "",
+        firYear: "",
         petitioner: "",
         respondent: "",
         petitionerAdvocate: "",
         respondentAdvocate: "",
+        officeId: "",
+        practiceAreaId: "",
+        confidentialityLevel: "3",
+        opposingParties: "", // visual string state
     });
+
+    const [judges, setJudges] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchJudges = async () => {
+            try {
+                const response = await judgesService.getAll();
+                const judgesData = response.data.data;
+                if (Array.isArray(judgesData)) {
+                    setJudges(judgesData);
+                } else if (judgesData && Array.isArray(judgesData.data)) {
+                    setJudges(judgesData.data);
+                } else {
+                    setJudges([]);
+                }
+            } catch (error) {
+                console.error("Failed to fetch judges", error);
+            }
+        };
+        fetchJudges();
+    }, []);
+
+    const loadJudgesOptions = async (query: string): Promise<SearchableOption[]> => {
+        try {
+            const response = await judgesService.searchJudges(query, 1, 20);
+            let items: any[] = [];
+            if (Array.isArray(response.data.data)) {
+                items = response.data.data;
+            } else if (response.data && Array.isArray(response.data.data?.data)) {
+                items = response.data.data.data;
+            } else if (Array.isArray(response.data)) {
+                items = response.data;
+            }
+            return items.map((judge: any) => ({
+                value: judge.id,
+                label: `${judge.name} (${judge.designation})`,
+            }));
+        } catch (error) {
+            console.error("Failed to search judges", error);
+            return [];
+        }
+    };
+
+    const judgeOptions: SearchableOption[] = judges.map(j => ({
+        value: j.id,
+        label: `${j.name} (${j.designation})`
+    }));
 
     useEffect(() => {
         if (params.id) {
@@ -39,9 +103,21 @@ export default function EditCasePage() {
             const response = await casesService.getById(id);
             const data = response.data.data;
             // Format date for input field
-            if (data.filingDate) {
-                data.filingDate = new Date(data.filingDate).toISOString().split('T')[0];
-            }
+            // Format date for input field
+            const formatDate = (dateString: string | null) => dateString ? new Date(dateString).toISOString().split('T')[0] : "";
+
+            if (data.filingDate) data.filingDate = formatDate(data.filingDate);
+            if (data.firstHearingDate) data.firstHearingDate = formatDate(data.firstHearingDate);
+            if (data.nextHearingDate) data.nextHearingDate = formatDate(data.nextHearingDate);
+
+            // Handle arrays for visual state
+            if (Array.isArray(data.acts)) data.acts = data.acts.join(', ');
+            if (Array.isArray(data.underSections)) data.underSections = data.underSections.join(', ');
+            if (Array.isArray(data.opposingParties)) data.opposingParties = data.opposingParties.join(', ');
+
+            // Handle judge relation
+            if (data.judge) data.judgeId = data.judge.id;
+
             setFormData(data);
         } catch (error: any) {
             // console.error("Error fetching case details:", error);
@@ -59,7 +135,22 @@ export default function EditCasePage() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            const { id, createdAt, updatedAt, isDeleted, judge, judgments, displayBoards, ...dataToSend } = formData as any; await casesService.update(params.id as string, dataToSend);
+            const dataToSubmit: any = {
+                ...formData,
+                acts: typeof formData.acts === 'string' ? formData.acts.split(',').map(s => s.trim()).filter(Boolean) : formData.acts,
+                underSections: typeof formData.underSections === 'string' ? formData.underSections.split(',').map(s => s.trim()).filter(Boolean) : formData.underSections,
+            };
+            if (typeof formData.opposingParties === 'string') {
+                dataToSubmit.opposingParties = formData.opposingParties.split(',').map(s => s.trim()).filter(Boolean);
+            }
+            if (formData.confidentialityLevel) {
+                dataToSubmit.confidentialityLevel = parseInt(String(formData.confidentialityLevel));
+            }
+            if (!formData.officeId) delete dataToSubmit.officeId;
+            if (!formData.practiceAreaId) delete dataToSubmit.practiceAreaId;
+
+            const { id, createdAt, updatedAt, isDeleted, judge, judgments, displayBoards, ...dataToSend } = dataToSubmit as any;
+            await casesService.update(params.id as string, dataToSend);
             toast.success("Case updated successfully");
             router.push("/admin/cases");
         } catch (error: any) {
@@ -106,6 +197,17 @@ export default function EditCasePage() {
                             />
                         </div>
                         <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">CNR Number</label>
+                            <input
+                                type="text"
+                                name="cnrNumber"
+                                value={formData.cnrNumber || ""}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="16-digit unique number"
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Title <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
@@ -136,22 +238,24 @@ export default function EditCasePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Case Type</label>
-                            <select
-                                name="caseType"
+                            <CustomSelect
+                                options={caseTypeOptions}
                                 value={formData.caseType}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
-                                onChange={handleChange}
-                            >
-                                <option value="civil">Civil</option>
-                                <option value="criminal">Criminal</option>
-                                <option value="constitutional">Constitutional</option>
-                                <option value="corporate">Corporate</option>
-                                <option value="family">Family</option>
-                                <option value="tax">Tax</option>
-                                <option value="labor">Labor</option>
-                                <option value="property">Property</option>
-                                <option value="other">Other</option>
-                            </select>
+                                onChange={(value) => setFormData({ ...formData, caseType: value })}
+                                placeholder="Select Case Type"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Presiding Judge</label>
+                            <SearchableSelect
+                                options={judgeOptions}
+                                value={formData.judgeId}
+                                onChange={(value) => setFormData({ ...formData, judgeId: value })}
+                                onSearch={loadJudgesOptions}
+                                placeholder="Select Judge"
+                                name="judgeId"
+                            />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -192,6 +296,74 @@ export default function EditCasePage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Legal Details */}
+                <div className="space-y-6">
+                    <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Legal Details</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Under Acts</label>
+                            <input
+                                type="text"
+                                name="acts"
+                                value={formData.acts || ""}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="Comma separated e.g. IPC, CrPC"
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Under Sections</label>
+                            <input
+                                type="text"
+                                name="underSections"
+                                value={formData.underSections || ""}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="Comma separated e.g. 420, 302"
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Police & FIR Details (Conditional) */}
+                {(formData.caseType === 'criminal' || formData.caseType === 'other') && (
+                    <div className="space-y-6">
+                        <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Police & FIR Details</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Police Station</label>
+                                <input
+                                    type="text"
+                                    name="policeStation"
+                                    value={formData.policeStation || ""}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                    onChange={handleChange}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">FIR Number</label>
+                                <input
+                                    type="text"
+                                    name="firNumber"
+                                    value={formData.firNumber || ""}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                    onChange={handleChange}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">FIR Year</label>
+                                <input
+                                    type="text"
+                                    name="firYear"
+                                    value={formData.firYear || ""}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Parties & Advocates */}
                 <div className="space-y-6">
@@ -236,6 +408,61 @@ export default function EditCasePage() {
                                 name="respondentAdvocate"
                                 value={formData.respondentAdvocate || ""}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Law Firm Access Control Details */}
+                <div className="space-y-6">
+                    <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Law Firm specific Details</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Office ID</label>
+                            <input
+                                type="text"
+                                name="officeId"
+                                value={formData.officeId || ""}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="Enter Office ID"
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Practice Area ID</label>
+                            <input
+                                type="text"
+                                name="practiceAreaId"
+                                value={formData.practiceAreaId || ""}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="Enter Practice Area ID"
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Confidentiality Level (1-5)</label>
+                            <select
+                                name="confidentialityLevel"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all bg-white"
+                                value={formData.confidentialityLevel || "3"}
+                                onChange={handleChange}
+                            >
+                                <option value="1">1 - Public</option>
+                                <option value="2">2 - Internal</option>
+                                <option value="3">3 - Confidential</option>
+                                <option value="4">4 - Highly Confidential</option>
+                                <option value="5">5 - Top Secret</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Opposing Parties</label>
+                            <input
+                                type="text"
+                                name="opposingParties"
+                                value={formData.opposingParties || ""}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="Comma separated for conflicts check"
                                 onChange={handleChange}
                             />
                         </div>

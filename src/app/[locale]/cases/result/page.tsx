@@ -83,48 +83,62 @@ function ResultPageContent() {
                             <h2 className="font-semibold text-gray-800">Cases Found</h2>
                             <span className="text-xs font-medium text-gray-500 bg-white border px-2 py-1 rounded-full text-nowrap">{cases.length} records</span>
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case Number</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[250px]">Title</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Court</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Hearing</th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {cases.map((c) => (
-                                        <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-[#0A2342]">{c.caseNumber}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[250px] overflow-hidden text-ellipsis">{c.title}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-2.5 py-0.5 inline-flex text-xs font-medium rounded-full capitalize ${c.status === "pending" ? "bg-yellow-100 text-yellow-800" :
-                                                    c.status === "closed" ? "bg-gray-100 text-gray-800" :
-                                                        c.status === "filed" ? "bg-blue-100 text-blue-800" :
-                                                            "bg-green-100 text-green-800"
-                                                    }`}>
-                                                    {c.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{c.court}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                {c.nextHearingDate ? formatDate(c.nextHearingDate) : <span className="text-gray-400 italic">-</span>}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="p-6 bg-gray-50/30">
+                            <div className="space-y-6">
+                                {cases.map((c) => (
+                                    <div key={c.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 group relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-1.5 h-full bg-[#0A2342] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                                        <div className="flex justify-between items-start gap-4 mb-3">
+                                            <div className="flex-1">
+                                                <div className="flex flex-wrap items-center gap-2 mb-3">
+                                                    <span className={`px-2.5 py-0.5 inline-flex text-xs font-bold rounded-md capitalize border ${c.status === "pending" ? "bg-yellow-50 text-yellow-800 border-yellow-200" :
+                                                            c.status === "closed" ? "bg-gray-50 text-gray-800 border-gray-200" :
+                                                                c.status === "filed" ? "bg-blue-50 text-blue-800 border-blue-200" :
+                                                                    "bg-green-50 text-green-800 border-green-200"
+                                                        }`}>
+                                                        {c.status}
+                                                    </span>
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded bg-blue-50 text-[#0A2342] text-xs font-mono font-bold border border-blue-100">
+                                                        {c.caseNumber}
+                                                    </span>
+                                                </div>
+
                                                 <Link
                                                     href={`/cases/${c.id}`}
-                                                    className="text-[#0A2342] hover:text-[#C9A227] font-semibold transition-colors"
+                                                    className="text-xl font-bold text-[#0A2342] hover:text-[#C9A227] transition-colors leading-tight line-clamp-2"
                                                 >
-                                                    View Details →
+                                                    {c.title || "Untitled Case"}
                                                 </Link>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+
+                                                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 text-sm text-gray-600">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path></svg>
+                                                        <span className="font-medium">{c.court || "Court N/A"}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                        <span className="text-gray-500 font-medium">Next Hearing:</span>
+                                                        <span className="font-semibold text-[#0A2342]">
+                                                            {c.nextHearingDate ? formatDate(c.nextHearingDate) : "Not Scheduled"}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-5 pt-4 border-t border-gray-100 flex justify-end">
+                                            <Link
+                                                href={`/cases/${c.id}`}
+                                                className="inline-flex items-center gap-2 text-sm font-semibold text-[#0A2342] hover:text-[#C9A227] transition-colors bg-white border border-gray-200 hover:border-[#C9A227] px-4 py-2 rounded-lg"
+                                            >
+                                                View Case Details
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                            </Link>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}

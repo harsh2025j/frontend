@@ -25,7 +25,7 @@ export const performCaseSearch = async (searchType: SearchType, inputs: SearchIn
         const params = {
             caseNumber: inputs.caseNumber.trim(),
             caseType: inputs.caseType,
-            year: inputs.year
+            year: inputs.year.trim()
         };
         response = await casesService.getByNumber(params);
     }
@@ -41,8 +41,8 @@ export const performCaseSearch = async (searchType: SearchType, inputs: SearchIn
             const name = inputs.partyName.trim();
             const type = inputs.partyType.trim().toLowerCase();
 
-            if (type === 'petitioner') params.petitioner = name;
-            else if (type === 'respondent') params.respondent = name;
+            if (type === 'petitioner') params.petitionerName = name;
+            else if (type === 'respondent') params.respondentName = name;
 
             params.year = inputs.year.trim();
         }
@@ -59,12 +59,26 @@ export const performCaseSearch = async (searchType: SearchType, inputs: SearchIn
             if (inputs.year.trim()) params.year = inputs.year.trim();
         }
         else if (searchType === "caseDetails") {
-            if (!inputs.court || !inputs.caseType || !inputs.year) {
+            if (!inputs.court.trim() || !inputs.caseType.trim() || !inputs.year.trim()) {
                 return [];
             }
-            params.court = inputs.court;
-            params.caseType = inputs.caseType;
-            params.year = inputs.year;
+            params.court = inputs.court.trim();
+            params.caseType = inputs.caseType.trim();
+            params.year = inputs.year.trim();
+        }
+        else if (searchType === "filingNumber") {
+            if (!inputs.filingNumber.trim() || !inputs.year.trim()) {
+                return [];
+            }
+            params.cnrNumber = inputs.filingNumber.trim();
+            params.year = inputs.year.trim();
+        }
+        else if (searchType === "crimeNumber") {
+            if (!inputs.crimeNumber.trim() || !inputs.year.trim()) {
+                return [];
+            }
+            params.firNumber = inputs.crimeNumber.trim();
+            params.year = inputs.year.trim();
         }
 
         // Fetch with server-side params

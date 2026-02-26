@@ -26,6 +26,13 @@ export interface ArticleDocument {
   updatedAt: string;
 }
 
+export interface TimelineUpdate {
+  _localId?: string;
+  updateDate: Date | string;
+  title?: string;
+  content: string;
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -40,6 +47,7 @@ export interface Article {
   authors: string | null;
   thumbnail: string | null;
   documents?: ArticleDocument[] | null;
+  updates?: TimelineUpdate[];
   status: "pending" | "published" | "draft" | "rejected";
   rejectionReason: string | null;
   language: string | null;
@@ -113,6 +121,7 @@ export interface CreateArticleRequest {
   title: string;
   location: string;
   subHeadline: string;
+  updates?: TimelineUpdate[];
   category: string;
   slug: string;
   tags: string[];

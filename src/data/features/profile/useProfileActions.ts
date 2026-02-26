@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
-import { fetchProfile, updateProfile } from "./profileThunks";
+import { fetchProfile, updateProfile, toggleSavePost } from "./profileThunks";
 import { UpdateProfileRequest } from "./profile.types";
 import { RootState } from "@/data/redux/store";
 import toast from "react-hot-toast";
@@ -100,5 +100,6 @@ export const useProfileActions = () => {
     message,
     fetchProfile: () => dispatch(fetchProfile()),
     updateProfile: handleUpdateProfile,
+    toggleSavePost: (postId: string) => dispatch(toggleSavePost(postId)),
   }), [user, loading, error, message, dispatch]);
 };

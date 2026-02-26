@@ -22,5 +22,10 @@ export const judgesService = {
     },
     getByCourt: async (court: string) => {
         return await apiClient.get(`${API_ENDPOINTS.JUDGES.BY_COURT}/${court}`);
+    },
+    searchJudges: async (q: string, page: number = 1, limit: number = 10) => {
+        return await apiClient.get(API_ENDPOINTS.SEARCH.JUDGES, {
+            params: { q, page, limit }
+        });
     }
 };

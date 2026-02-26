@@ -1,7 +1,7 @@
 import apiClient from "../apiConfig/apiClient";
 import { API_ENDPOINTS } from "../apiConfig/apiContants";
 import { CreateArticleRequest, CreateArticleResponse, ArticleListResponse } from "@/data/features/article/article.types";
-// test   
+
 export const articleApi = {
 
   createArticle: async (data: CreateArticleRequest) => {
@@ -27,6 +27,9 @@ export const articleApi = {
     formData.append("status", data.status || "draft");
     if (Array.isArray(data.tags)) {
       formData.append("tags", data.tags.join(", "));
+    }
+    if (data.updates && data.updates.length > 0) {
+      formData.append("updates", JSON.stringify(data.updates));
     }
 
     // console.log(formData.get("tags"));
@@ -59,6 +62,14 @@ export const articleApi = {
 
     );
     // console.log("Fetch Articles API Response:", response.data);
+    return response;
+  },
+
+  fetchMultipleArticles: async (ids: string[]) => {
+    const response = await apiClient.post<any>(
+      API_ENDPOINTS.ARTICLE.FETCH_MULTI,
+      { ids }
+    );
     return response;
   },
 
@@ -110,6 +121,9 @@ export const articleApi = {
     }
     if (data.thumbnail && data.thumbnail instanceof File) {
       formData.append("file", data.thumbnail);
+    }
+    if (data.updates && data.updates.length > 0) {
+      formData.append("updates", JSON.stringify(data.updates));
     }
     if (data.documents && data.documents.length > 0) {
       data.documents.forEach((doc) => {

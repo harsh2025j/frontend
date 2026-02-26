@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { casesService } from "@/data/services/cases-service/casesService";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Link } from "@/i18n/routing";
 import { Trash2, Edit, Plus, Search, FileText } from "lucide-react";
 import toast from "react-hot-toast";
@@ -16,17 +17,34 @@ export default function AdminCasesPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, caseId: "", newStatus: "" });
+    const debouncedSearchTerm = useDebounce(searchTerm, 800);
 
     useEffect(() => {
-        fetchCases();
-    }, []);
+        if (debouncedSearchTerm) {
+            handleSearch(debouncedSearchTerm);
+        } else {
+            fetchCases();
+        }
+    }, [debouncedSearchTerm]);
+
+    const handleSearch = async (query: string) => {
+        setLoading(true);
+        try {
+            const response = await casesService.searchCases(query);
+            setCases(response.data.data?.data || response.data.data || []);
+        } catch (error: any) {
+            toast.error(error.message || "Failed to search cases");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchCases = async () => {
+        setLoading(true);
         try {
             const response = await casesService.getAll();
-            setCases(response.data.data.data);
+            setCases(response.data.data.data || response.data.data); // Handle both formats
         } catch (error: any) {
-            // console.error("Error fetching cases:", error);
             toast.error(error.message || "Failed to fetch cases");
         } finally {
             setLoading(false);
@@ -69,12 +87,7 @@ export default function AdminCasesPage() {
         }
     };
 
-    const filteredCases = cases.filter(c =>
-        c.caseNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    if (loading) return <div className="flex justify-center items-center min-h-[400px]"><Loader size="lg" text="Loading Cases..." /></div>;
+    // Removed full page loader to maintain search focus
 
     return (
         <div className="p-6 space-y-6">
@@ -117,8 +130,16 @@ export default function AdminCasesPage() {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredCases.length > 0 ? (
-                                filteredCases.map((c) => (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-12 text-center">
+                                        <div className="flex justify-center items-center">
+                                            <Loader size="md" text="Loading Cases..." />
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : cases && cases.length > 0 ? (
+                                cases.map((c) => (
                                     <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{c.caseNumber}</td>
                                         <td className="px-6 py-4 max-w-[200px] text-sm text-gray-600">{c.title}</td>

@@ -14,6 +14,7 @@ export default function CreateJudgePage() {
     const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         name: "",
+        email: "",
         designation: "",
         court: "",
         appointmentDate: "",
@@ -21,7 +22,8 @@ export default function CreateJudgePage() {
         biography: "",
         photoUrl: "",
         specialization: "",
-        isActive: true,
+        isServing: true,
+        isPublished: true,
     });
 
 
@@ -86,6 +88,17 @@ export default function CreateJudgePage() {
                             />
                         </div>
                         <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Official Email <span className="text-red-500">*</span></label>
+                            <input
+                                type="email"
+                                name="email"
+                                required
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="judge@court.gov.in"
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Designation <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
@@ -127,8 +140,20 @@ export default function CreateJudgePage() {
                                 onChange={handleChange}
                             />
                         </div>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                name="isServing"
+                                checked={formData.isServing}
+                                onChange={handleChange}
+                                className="w-4 h-4 text-[#0A2342] border-gray-300 rounded focus:ring-[#C9A227]"
+                            />
+                            <span className="text-sm font-medium text-gray-700">Currently Serving</span>
+                        </label>
+
+                        {/* {!formData.isServing && ( */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Retirement Date <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Retirement Date</label>
                             <input
                                 type="date"
                                 name="retirementDate"
@@ -136,6 +161,7 @@ export default function CreateJudgePage() {
                                 onChange={handleChange}
                             />
                         </div>
+                        {/* )} */}
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
                             <input
@@ -146,18 +172,7 @@ export default function CreateJudgePage() {
                                 onChange={handleChange}
                             />
                         </div>
-                        <div className="md:col-span-2">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    name="isActive"
-                                    checked={formData.isActive}
-                                    onChange={handleChange}
-                                    className="w-4 h-4 text-[#0A2342] border-gray-300 rounded focus:ring-[#C9A227]"
-                                />
-                                <span className="text-sm font-medium text-gray-700">Active Judge</span>
-                            </label>
-                        </div>
+
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Biography</label>
                             <textarea
@@ -168,6 +183,16 @@ export default function CreateJudgePage() {
                                 onChange={handleChange}
                             />
                         </div>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                name="isPublished"
+                                checked={formData.isPublished}
+                                onChange={handleChange}
+                                className="w-4 h-4 text-[#0A2342] border-gray-300 rounded focus:ring-[#C9A227]"
+                            />
+                            <span className="text-sm font-medium text-gray-700">Published</span>
+                        </label>
                     </div>
 
 

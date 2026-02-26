@@ -6,8 +6,11 @@ import toast from "react-hot-toast";
 import { Search, FileText, Gavel, Calendar, Home, ChevronRight, Scale, BookOpen, Info, AlertCircle } from 'lucide-react';
 import Captcha from "@/components/ui/Captcha";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import CustomSelect from "@/components/ui/CustomSelect";
+import { caseTypeOptions } from "@/constants/caseOptions";
+import { performJudgmentSearch, JudgmentSearchType } from "./searchLogic";
 
-type SearchType = "caseNumber" | "diaryNumber" | "freeText";
+type SearchType = "caseNumber" | "diaryNumber" | "freeText" | "judgeName";
 
 export default function JudgmentsPage() {
     useDocTitle("Judgments | Sajjad Husain Law Associates");
@@ -24,6 +27,8 @@ export default function JudgmentsPage() {
         year: "",
         diaryNumber: "",
         diaryYear: "",
+        judgeName: "",
+        judgeYear: "",
         freeText: "",
         fromDate: "",
         toDate: ""
@@ -50,10 +55,33 @@ export default function JudgmentsPage() {
         setLoading(true);
 
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // toast.success("Searching judgments...");
 
-            toast.success("Searching judgments...");
+            const searchInputs: any = { page: 1 };
+            if (searchType === "caseNumber") {
+                searchInputs.caseType = inputs.caseType;
+                searchInputs.caseNumber = inputs.caseNumber;
+                searchInputs.year = inputs.year;
+            } else if (searchType === "diaryNumber") {
+                searchInputs.diaryNumber = inputs.diaryNumber;
+                searchInputs.year = inputs.diaryYear;
+            } else if (searchType === "freeText") {
+                searchInputs.freeText = inputs.freeText;
+                searchInputs.fromDate = inputs.fromDate;
+                searchInputs.toDate = inputs.toDate;
+            } else if (searchType === "judgeName") {
+                searchInputs.judgeName = inputs.judgeName;
+                searchInputs.judgeYear = inputs.judgeYear;
+            }
+
+            const searchResults = await performJudgmentSearch(searchType as JudgmentSearchType, searchInputs);
+
+            if (!searchResults || !searchResults.data || searchResults.data.length === 0) {
+                toast.error("No judgments found matching your criteria.");
+                return;
+            }
+            else toast.success("Judgments found successfully.");
+
             const queryParams = new URLSearchParams();
             queryParams.set("searchType", searchType);
 
@@ -68,6 +96,11 @@ export default function JudgmentsPage() {
                 queryParams.set("freeText", inputs.freeText);
                 queryParams.set("fromDate", inputs.fromDate);
                 queryParams.set("toDate", inputs.toDate);
+            } else if (searchType === "judgeName") {
+                queryParams.set("judgeName", inputs.judgeName);
+                if (inputs.judgeYear) {
+                    queryParams.set("judgeYear", inputs.judgeYear);
+                }
             }
 
             router.push(`/judgments/result?${queryParams.toString()}`);
@@ -85,6 +118,8 @@ export default function JudgmentsPage() {
             year: "",
             diaryNumber: "",
             diaryYear: "",
+            judgeName: "",
+            judgeYear: "",
             freeText: "",
             fromDate: "",
             toDate: ""
@@ -199,6 +234,19 @@ export default function JudgmentsPage() {
                                         <span>Free Text Search</span>
                                     </div>
                                 </button>
+
+                                <button
+                                    onClick={() => { setSearchType("judgeName"); resetForm(); scrollToForm(); }}
+                                    className={`w-full px-6 py-3 text-left text-sm transition-all border-l-4 ${searchType === "judgeName"
+                                        ? 'bg-white border-[#C9A227] text-[#0A2342] font-medium'
+                                        : 'border-transparent text-gray-600 hover:bg-white/50 hover:border-gray-300'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <ChevronRight size={16} className={searchType === "judgeName" ? "text-[#C9A227]" : ""} />
+                                        <span>Search by Judge Name</span>
+                                    </div>
+                                </button>
                             </div>
 
                             {/* Quick Info */}
@@ -227,6 +275,7 @@ export default function JudgmentsPage() {
                                         {searchType === "caseNumber" && "Search Judgments by Case Number"}
                                         {searchType === "diaryNumber" && "Search Judgments by Diary Number"}
                                         {searchType === "freeText" && "Free Text Search in Judgments"}
+                                        {searchType === "judgeName" && "Search Judgments by Judge Name"}
                                     </h3>
                                 </div>
                             </div>
@@ -241,23 +290,13 @@ export default function JudgmentsPage() {
                                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                                                     Case Type <span className="text-red-500">*</span>
                                                 </label>
-                                                <select
+                                                <CustomSelect
                                                     required
-                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                    options={caseTypeOptions}
                                                     value={inputs.caseType}
-                                                    onChange={(e) => setInputs({ ...inputs, caseType: e.target.value })}
-                                                >
-                                                    <option value="">-- Select Case Type --</option>
-                                                    <option value="Civil Appeal">Civil Appeal</option>
-                                                    <option value="Criminal Appeal">Criminal Appeal</option>
-                                                    <option value="Writ Petition">Writ Petition (Civil)</option>
-                                                    <option value="Writ Petition (Criminal)">Writ Petition (Criminal)</option>
-                                                    <option value="Special Leave Petition">Special Leave Petition (Civil)</option>
-                                                    <option value="Special Leave Petition (Criminal)">Special Leave Petition (Criminal)</option>
-                                                    <option value="Transfer Petition">Transfer Petition (Civil)</option>
-                                                    <option value="Review Petition">Review Petition</option>
-                                                    <option value="Contempt Petition">Contempt Petition</option>
-                                                </select>
+                                                    onChange={(value) => setInputs({ ...inputs, caseType: value })}
+                                                    placeholder="-- Select Case Type --"
+                                                />
                                                 <p className="text-xs text-gray-500 mt-1">
                                                     Select the type of case for which you're searching the judgment
                                                 </p>
@@ -334,6 +373,42 @@ export default function JudgmentsPage() {
                                         </>
                                     )}
 
+                                    {/* Judge Name Search */}
+                                    {searchType === "judgeName" && (
+                                        <>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Judge Name <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    placeholder="Enter Judge Name (e.g., D.Y. Chandrachud)"
+                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                    value={inputs.judgeName}
+                                                    onChange={(e) => setInputs({ ...inputs, judgeName: e.target.value })}
+                                                />
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    Enter any part of the judge's name
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Year
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Enter Year (e.g., 2024)"
+                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                                    value={inputs.judgeYear}
+                                                    onChange={(e) => setInputs({ ...inputs, judgeYear: e.target.value })}
+                                                    maxLength={4}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
                                     {/* Free Text Search */}
                                     {searchType === "freeText" && (
                                         <>
@@ -344,6 +419,7 @@ export default function JudgmentsPage() {
                                                 <textarea
                                                     required
                                                     rows={4}
+                                                    minLength={10}
                                                     placeholder="Enter keywords to search in judgments (e.g., fundamental rights, contract breach, etc.)"
                                                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all resize-none"
                                                     value={inputs.freeText}

@@ -34,4 +34,10 @@ export const profileApi = {
         },
       });
   },
+
+  toggleSavePost: async (postId: string) => {
+    return await apiClient.post<ProfileResponse>(
+      `/profile/save-post/${postId}`
+    );
+  },
 };

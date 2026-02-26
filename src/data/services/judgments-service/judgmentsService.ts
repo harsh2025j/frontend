@@ -20,6 +20,12 @@ export const judgmentsService = {
         // console.log("Judgments Service", API_ENDPOINTS.JUDGMENTS.BASE, { params })
         return await apiClient.get(API_ENDPOINTS.JUDGMENTS.BASE, { params });
     },
+    search: async (params?: any) => {
+        return await apiClient.get(API_ENDPOINTS.SEARCH.JUDGMENTS, { params });
+    },
+    fetchMultipleJudgments: async (ids: string[]) => {
+        return await apiClient.post<any>(API_ENDPOINTS.JUDGMENTS.FETCH_MULTI, { ids });
+    },
     getById: async (id: string) => {
         return await apiClient.get(`${API_ENDPOINTS.JUDGMENTS.BASE}/${id}`);
     },

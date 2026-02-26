@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { judgesService } from "@/data/services/judges-service/judgesService";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Link } from "@/i18n/routing";
 import { formatDate } from "@/utils/dateUtils";
 import { Trash2, Edit, Plus, Search, Scale } from "lucide-react";
@@ -14,17 +15,34 @@ export default function AdminJudgesPage() {
     const [judges, setJudges] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearchTerm = useDebounce(searchTerm, 800);
 
     useEffect(() => {
-        fetchJudges();
-    }, []);
+        if (debouncedSearchTerm) {
+            handleSearch(debouncedSearchTerm);
+        } else {
+            fetchJudges();
+        }
+    }, [debouncedSearchTerm]);
+
+    const handleSearch = async (query: string) => {
+        setLoading(true);
+        try {
+            const response = await judgesService.searchJudges(query);
+            setJudges(response.data.data?.data || response.data.data || []);
+        } catch (error: any) {
+            toast.error(error.message || "Failed to search judges");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchJudges = async () => {
+        setLoading(true);
         try {
             const response = await judgesService.getAll();
-            setJudges(response.data.data.data);
+            setJudges(response.data.data.data || response.data.data); // Handle both response formats
         } catch (error: any) {
-            // console.error("Error fetching judges:", error);
             toast.error(error.message || "Failed to fetch judges");
         } finally {
             setLoading(false);
@@ -43,12 +61,7 @@ export default function AdminJudgesPage() {
         }
     };
 
-    const filteredJudges = judges.filter(j =>
-        j.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        j.court.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    if (loading) return <div className="flex justify-center items-center min-h-[400px]"><Loader size="lg" text="Loading Judges..." /></div>;
+    // Removed full page loader to maintain search focus
 
     return (
         <div className="p-6 space-y-6">
@@ -91,8 +104,16 @@ export default function AdminJudgesPage() {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredJudges.length > 0 ? (
-                                filteredJudges.map((j) => (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-12 text-center">
+                                        <div className="flex justify-center items-center">
+                                            <Loader size="md" text="Loading Judges..." />
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : judges && judges.length > 0 ? (
+                                judges.map((j) => (
                                     <tr key={j.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{j.name}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{j.designation}</td>

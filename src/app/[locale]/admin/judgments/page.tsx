@@ -10,18 +10,46 @@ import { Trash2, Edit, Plus, Search, Gavel } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function AdminJudgmentsPage() {
     useDocTitle("Judgments  | Sajjad Husain Law Associates");
     const [judgments, setJudgments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearchTerm = useDebounce(searchTerm, 800);
     const [judgesMap, setJudgesMap] = useState<Record<string, string>>({});
     const [casesMap, setCasesMap] = useState<Record<string, string>>({});
 
     useEffect(() => {
-        fetchJudgments();
-    }, []);
+        if (debouncedSearchTerm) {
+            handleSearch(debouncedSearchTerm);
+        } else {
+            fetchJudgments();
+        }
+    }, [debouncedSearchTerm]);
+
+    const handleSearch = async (query: string) => {
+        setLoading(true);
+        try {
+            const res = await judgmentsService.search({ q: query });
+            const rawData = res.data;
+            let results = [];
+            if (Array.isArray(rawData)) {
+                results = rawData;
+            } else if (rawData?.data && Array.isArray(rawData.data)) {
+                results = rawData.data;
+            } else if (rawData?.data?.data && Array.isArray(rawData.data.data)) {
+                results = rawData.data.data;
+            }
+            setJudgments(results);
+        } catch (error: any) {
+            console.error("Error searching judgments:", error);
+            toast.error("Failed to search judgments");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchJudgments = async () => {
         try {
@@ -79,14 +107,6 @@ export default function AdminJudgmentsPage() {
         }
     };
 
-    const filteredJudgments = judgments.filter(j =>
-        (j.title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-        (j.caseId?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-        (j.summary?.toLowerCase() || "").includes(searchTerm.toLowerCase())
-    );
-
-    if (loading) return <div className="flex justify-center items-center min-h-[400px]"><Loader size="lg" text="Loading Judgments..." /></div>;
-
     return (
         <div className="p-6 space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -108,7 +128,7 @@ export default function AdminJudgmentsPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
                             type="text"
-                            placeholder="Search by Case ID..."
+                            placeholder="Search by Case Number or Summary, Parties ..."
                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -120,7 +140,7 @@ export default function AdminJudgmentsPage() {
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[200px]">Judgment Summary</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[200px]">Judgment Title</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case ID</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judge</th>
@@ -128,10 +148,18 @@ export default function AdminJudgmentsPage() {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredJudgments.length > 0 ? (
-                                filteredJudgments.map((j) => (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-12 text-center">
+                                        <div className="flex justify-center items-center min-h-[200px]">
+                                            <Loader size="lg" text="Loading Judgments..." />
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : judgments.length > 0 ? (
+                                judgments.map((j) => (
                                     <tr key={j.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[200px]">{j.title || j.summary?.substring(0, 30) || "No Title"}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[200px]">{j.title?.substring(0, 400) + "..." || "No Title"}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                             {j.case?.caseNumber || (j.caseId && casesMap[j.caseId]) || "N/A"}
                                         </td>

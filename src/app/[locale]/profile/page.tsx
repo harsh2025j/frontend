@@ -13,7 +13,7 @@ import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { getUserSubscription } from "@/data/features/subscription/subscriptionThunks";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
-
+import SavedPostsModal from "./components/SavedPostsModal";
 
 type Prefs = {
   language: string;
@@ -44,6 +44,7 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSavedPostsModalOpen, setIsSavedPostsModalOpen] = useState(false);
 
   // --- LOCAL/UI STATE ---
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -268,6 +269,13 @@ export default function ProfilePage() {
               Reset Password
             </button>
 
+            <button
+              className="block w-full text-center border border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium rounded-md py-2 mb-3 text-sm flex items-center justify-center gap-2 transition-colors"
+              onClick={() => setIsSavedPostsModalOpen(true)}
+            >
+              View Saved Posts
+            </button>
+
             {/* <button className="w-full bg-red-500 hover:bg-red-400 text-white rounded-md py-2 text-sm mb-4">
               Delete Account
             </button> */}
@@ -471,6 +479,9 @@ export default function ProfilePage() {
           currentUser={{ name, phone, dob }}
           onSave={handleSaveProfileData}
         />
+      )}
+      {isSavedPostsModalOpen && (
+        <SavedPostsModal onClose={() => setIsSavedPostsModalOpen(false)} />
       )}
 
     </div>

@@ -8,6 +8,16 @@ export interface LoginRequest {
   platform?: string;
 }
 
+export interface SocialLoginRequest {
+  email: string;
+  name?: string;
+  provider: string;
+  providerId: string;
+  profilePicture?: string;
+  fcmToken?: string;
+  platform?: string;
+}
+
 export interface RegisterRequest {
   name: string;
   email: string;

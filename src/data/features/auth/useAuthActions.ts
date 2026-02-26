@@ -155,24 +155,30 @@ export const useLoginActions = () => {
 
   useEffect(() => {
     // Check if we have a token and user in the state (successful login)
-    // console.log(localStorage.getItem("token"));
-    if (localStorage.getItem("token") && user) {
-      // console.log("user details",user);
-      // console.log("udersrolw",user?.roles[0].name)
+    if (token && user) {
       const roles = user.roles?.map((r) => r.name) || [];
-      // console.log("wertyuijh",roles)
       if (roles.includes("admin") || roles.includes("superadmin") || roles.includes("editor") || roles.includes("creator")) {
-        // if(true){
         router.push("/admin");
       } else {
         router.push("/");
       }
-
       localStorage.setItem("email", formData.email);
+      // Ensure localStorage is set if not already (redundant safety)
+      if (user) localStorage.setItem("user", JSON.stringify(user));
+      if (token) localStorage.setItem("token", token);
+
+      // dispatch(resetAuthState()); // Delay reset to allow redirect to happen?
+      // Actually, resetAuthState clears the message, which might be fine, but let's be careful.
+    }
+
+    // Specific handler for Google Login success message if needed, but the token check above should suffice 
+    // provided the state is updated correctly. 
+    // However, if the user is already redirected, we might want to reset state.
+    if (message === "Google Login Successful" || message === MESSAGES.LOGIN_SUCCESS) {
       dispatch(resetAuthState());
     }
 
-  }, [token, user]);
+  }, [token, user, message]);
 
   return {
     formData,

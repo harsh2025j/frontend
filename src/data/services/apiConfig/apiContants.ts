@@ -1,13 +1,19 @@
-// export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev";
-export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
+export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev";
+// export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
 export const API_ENDPOINTS = {
+  SEARCH: {
+    JUDGES: "/search/judges",
+    CASES: "/search/cases",
+    JUDGMENTS: "/search/judgments",
+  },
   AUTH: {
     REGISTER: "/auth/register",
     FORGOT_PASSWORD: "/auth/forgot-password",
     RESET_PASSWORD: "/auth/reset-password",
     VERIFY_OTP: "/auth/verify",
     LOGIN: "/auth/login",
-    RESEND_OTP: "/auth/resend-otp"
+    RESEND_OTP: "/auth/resend-otp",
+    SOCIAL_LOGIN: "/auth/social-login"
   },
   PROFILE: {
     FETCH: "/profile",
@@ -16,6 +22,7 @@ export const API_ENDPOINTS = {
   ARTICLE: {
     CREATE: "/articles",
     FETCH_ALL: "/articles",
+    FETCH_MULTI: "/articles/multi",
     APPROVE: "/articles/:id/approve",
     REJECT: "/articles/:id/reject",
   },
@@ -49,6 +56,7 @@ export const API_ENDPOINTS = {
   },
   JUDGMENTS: {
     BASE: "/judgments",
+    FETCH_MULTI: "/judgments/multi",
     LANDMARK: "/judgments/landmark",
     BY_CASE: "/judgments/case",
     BY_JUDGE: "/judgments/judge",
@@ -79,7 +87,7 @@ export const API_ENDPOINTS = {
     ACTIVE: "/display-boards/active",
     BY_DATE: "/display-boards/date",
     BY_COURT: "/display-boards/court",
-    GENERATE_CAUSE_LIST: "/display-boards/generate-cause-list",
+    GENERATE_CAUSE_LIST: "/display-boards/generate/cause-list",
   },
   OFFICES: {
     BASE: "/offices",

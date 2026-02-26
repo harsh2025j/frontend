@@ -121,29 +121,24 @@ export const loginWithGoogle = createAsyncThunk<LoginResponse, void>(
   async (_, thunkAPI) => {
     try {
       const firebaseUser = await firebaseAuth.loginWithGoogle();
-      const token = await firebaseUser.getIdToken();
 
-      const user: AuthUser = {
-        _id: firebaseUser.uid,
-        name: firebaseUser.displayName || "",
+      const socialLoginData = {
         email: firebaseUser.email || "",
+        name: firebaseUser.displayName || "",
+        provider: "google",
+        providerId: firebaseUser.uid,
         profilePicture: firebaseUser.photoURL || "",
-        roles: [],
-        permissions: [],
-        isActive: true,
-        isVerified: firebaseUser.emailVerified,
-        preferredLanguage: "en",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        fcmToken: "", // Add logic to get FCM token if available
+        platform: "web"
       };
 
-      return {
-        accessToken: token,
-        refreshToken: "",
-        user: user
-      };
+      const res = await authApi.socialLogin(socialLoginData);
+
+      // The backend returns the same structure as normal login
+      return res.data;
     } catch (err: unknown) {
-      return thunkAPI.rejectWithValue("Google Login Failed");
+      const apiError = err as ApiError;
+      return thunkAPI.rejectWithValue(apiError.message || "Google Login Failed");
     }
   }
 );

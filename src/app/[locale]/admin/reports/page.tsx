@@ -42,6 +42,35 @@ export default function AdminReportsPage() {
         }
     };
 
+    const handleDownload = async (id: string, title: string) => {
+        try {
+            const blob = await reportsService.downloadReport(id);
+            // Create a link element, set the download attribute, and trigger a click
+            const url = window.URL.createObjectURL(new Blob([blob.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `${title}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error("Error downloading report:", error);
+            toast.error("Failed to download report");
+        }
+    };
+
+    const handleView = async (id: string) => {
+        try {
+            const blob = await reportsService.downloadReport(id);
+            const file = new Blob([blob.data], { type: 'application/pdf' });
+            const fileURL = URL.createObjectURL(file);
+            window.open(fileURL, '_blank');
+        } catch (error) {
+            console.error("Error viewing report:", error);
+            toast.error("Failed to view report");
+        }
+    };
+
     if (loading) return <div className="flex justify-center items-center min-h-[400px]"><Loader size="lg" text="Loading Reports..." /></div>;
 
     return (
@@ -84,11 +113,20 @@ export default function AdminReportsPage() {
                                             {formatDate(r.endDate)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {formatDateTime(r.generatedAt)}
+                                            {/* Use createdAt or fallback */}
+                                            {formatDateTime(r.createdAt || r.generatedAt)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end gap-3">
                                                 <button
+                                                    onClick={() => handleView(r.id)}
+                                                    className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
+                                                    title="View PDF"
+                                                >
+                                                    <FileText size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDownload(r.id, r.title)}
                                                     className="text-indigo-600 hover:text-indigo-900 p-1 hover:bg-indigo-50 rounded transition-colors"
                                                     title="Download PDF"
                                                 >

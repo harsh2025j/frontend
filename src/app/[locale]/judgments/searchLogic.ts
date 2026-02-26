@@ -1,66 +1,97 @@
 import { judgmentsService } from "@/data/services/judgments-service/judgmentsService";
 
 export interface JudgmentSearchInputs {
-    caseId: string;
-    caseNumber: string;
+    caseNumber?: string;
     caseType?: string;
-    court?: string;
-    judgeName: string;
-    judgmentDate: string;
-    startDate?: string;
-    endDate?: string;
     year?: string;
+    diaryNumber?: string;
+    freeText?: string;
+    fromDate?: string;
+    toDate?: string;
+    judgeName?: string;
+    judgeYear?: string;
+    page?: number;
 }
 
-export type JudgmentSearchType = "caseNumber" | "Judge" | "JudgementDate";
+export type JudgmentSearchType = "caseNumber" | "diaryNumber" | "freeText" | "judgeName";
 
 export const performJudgmentSearch = async (searchType: JudgmentSearchType, inputs: JudgmentSearchInputs) => {
     let response;
-    let results: any[] = [];
+    let resultsData = { data: [] as any[], total: 0, page: inputs.page || 1, limit: 10 };
 
-    const params: any = {};
-
-    // Validations & Param Construction
-    if (searchType === "caseNumber") {
-        if (!inputs.caseNumber.trim()) return [];
-        params.caseNumber = inputs.caseNumber.trim();
-        if (inputs.caseType) params.caseType = inputs.caseType;
-    }
-    else if (searchType === "Judge") {
-        if (!inputs.judgeName.trim()) return [];
-        params.judgeName = inputs.judgeName.trim();
-        if (inputs.court) params.court = inputs.court;
-        if (inputs.year) params.year = inputs.year.trim();
-    }
-    else if (searchType === "JudgementDate") {
-        // Required: Court, Start Date, End Date
-        if (!inputs.court || !inputs.startDate?.trim() || !inputs.endDate?.trim()) {
-            return [];
-        }
-        params.courtName = inputs.court;
-        params.startDate = inputs.startDate.trim();
-        params.endDate = inputs.endDate.trim();
-    }
+    const params: any = {
+        page: inputs.page || 1,
+        limit: 10
+    };
 
     try {
-        // Fetch all judgments for all search types to allow client-side filtering
-        response = await judgmentsService.getAll(params);
-        // console.log("All Judgments filtered", response);
+        if (searchType === "caseNumber") {
+            if (!inputs.caseNumber?.trim()) return resultsData;
+            params.caseNumber = inputs.caseNumber.trim();
+            if (inputs.caseType) params.caseType = inputs.caseType.trim();
+            if (inputs.year) params.year = inputs.year.trim();
+
+            response = await judgmentsService.getAll(params);
+        }
+        else if (searchType === "diaryNumber") {
+            if (!inputs.diaryNumber?.trim()) return resultsData;
+            params.diaryNumber = inputs.diaryNumber.trim();
+            if (inputs.year) params.year = inputs.year.trim();
+
+            response = await judgmentsService.getAll(params);
+        }
+        else if (searchType === "freeText") {
+            if (!inputs.freeText?.trim()) return resultsData;
+            response = await judgmentsService.search({
+                q: inputs.freeText.trim(),
+                page: inputs.page || 1,
+                limit: 10
+            });
+        }
+        else if (searchType === "judgeName") {
+            if (!inputs.judgeName?.trim()) return resultsData;
+            params.judgeName = inputs.judgeName.trim();
+            if (inputs.judgeYear) params.judgeYear = parseInt(inputs.judgeYear.trim());
+
+            response = await judgmentsService.getAll(params);
+        }
 
         if (response && response.data) {
             const rawData = response.data;
             if (rawData.data && Array.isArray(rawData.data.data)) {
-                results = rawData.data.data;
+                resultsData = {
+                    data: rawData.data.data,
+                    total: rawData.data.total ?? rawData.data.data.length,
+                    page: rawData.data.page ?? params.page,
+                    limit: rawData.data.limit ?? params.limit
+                };
             } else if (rawData.data && Array.isArray(rawData.data)) {
-                results = rawData.data;
+                resultsData = {
+                    data: rawData.data,
+                    total: rawData.meta?.totalItems ?? rawData.total ?? rawData.data.length,
+                    page: rawData.meta?.currentPage ?? rawData.page ?? params.page,
+                    limit: rawData.limit ?? params.limit
+                };
             } else if (Array.isArray(rawData)) { // Direct array
-                results = rawData;
+                resultsData = {
+                    data: rawData,
+                    total: rawData.length,
+                    page: params.page,
+                    limit: params.limit
+                };
+            } else if (rawData.data && rawData.total !== undefined) {
+                resultsData = {
+                    data: rawData.data,
+                    total: rawData.total,
+                    page: rawData.page ?? params.page,
+                    limit: rawData.limit ?? params.limit
+                };
             }
         }
     } catch (error) {
         console.error("Error performing judgment search:", error);
-        return [];
+        return resultsData;
     }
 
-    return results;
+    return resultsData;
 };

@@ -46,6 +46,7 @@ export interface UserData {
   __v?: number;
   phone?: string;
   dob?: string;
+  savedPosts?: string[];
 }
 
 // ================= Update Profile =================

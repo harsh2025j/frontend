@@ -36,3 +36,20 @@ export const updateProfile = createAsyncThunk<
     }
   }
 );
+
+export const toggleSavePost = createAsyncThunk<
+  ProfileResponse,
+  string,
+  { rejectValue: string }
+>(
+  "profile/toggleSavePost",
+  async (postId, thunkAPI) => {
+    try {
+      const res = await profileApi.toggleSavePost(postId);
+      return res.data;
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      return thunkAPI.rejectWithValue(apiError.message || "Failed to toggle saved post");
+    }
+  }
+);

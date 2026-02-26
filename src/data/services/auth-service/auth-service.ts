@@ -4,6 +4,7 @@ import {
   ForgotPasswordResponse,
   LoginRequest,
   LoginResponse,
+  SocialLoginRequest,
   RegisterRequest,
   RegisterResponse,
   ResendOtpRequest,
@@ -72,6 +73,14 @@ export const authApi = {
       data
     );
     // console.log("Login API Response:", response.data);
+    return response;
+  },
+
+  socialLogin: async (data: SocialLoginRequest) => {
+    const response = await apiClient.post<LoginResponse>(
+      API_ENDPOINTS.AUTH.SOCIAL_LOGIN,
+      data
+    );
     return response;
   },
 

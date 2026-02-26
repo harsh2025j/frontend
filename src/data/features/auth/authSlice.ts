@@ -28,6 +28,11 @@ const authSlice = createSlice({
       state.user = null;
       localStorage.clear();
     },
+    restoreSession: (state, action) => {
+      state.token = action.payload.token;
+      state.user = action.payload.user;
+      // state.message = "Session restored";
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -186,16 +191,22 @@ const authSlice = createSlice({
       })
       .addCase(loginWithGoogle.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.accessToken;
-        state.refreshToken = action.payload.refreshToken;
+        // console.log("Google Login Fulfilled Payload:", action.payload);
+
+        // Handle nested data structure from backend response
+        const payload = action.payload as any;
+        const data = payload.data || payload;
+
+        state.user = data.user;
+        state.token = data.accessToken;
+        state.refreshToken = data.refreshToken;
         state.error = null;
         state.message = "Google Login Successful";
 
         try {
           if (typeof window !== "undefined") {
-            if (action.payload.user) localStorage.setItem("user", JSON.stringify(action.payload.user));
-            if (action.payload.accessToken) localStorage.setItem("token", action.payload.accessToken);
+            if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+            if (data.accessToken) localStorage.setItem("token", data.accessToken);
           }
         } catch { }
       })
@@ -209,5 +220,5 @@ const authSlice = createSlice({
 
 });
 
-export const { resetAuthState, logoutUser } = authSlice.actions;
+export const { resetAuthState, logoutUser, restoreSession } = authSlice.actions;
 export default authSlice.reducer;

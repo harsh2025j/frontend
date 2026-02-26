@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 
 
 
@@ -30,9 +30,24 @@ const CreateUpdatePage: React.FC = () => {
     error,
     message,
     setFormData,
+    handleAddTimelineUpdate,
+    handleUpdateTimelineUpdate,
+    handleRemoveTimelineUpdate,
   } = useCreateArticleActions();
 
   const [tagInput, setTagInput] = React.useState("");
+  const [expandedUpdates, setExpandedUpdates] = React.useState<string[]>([]);
+
+  const toggleUpdateExpansion = (id: string) => {
+    setExpandedUpdates(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleAddNewTimelineUpdate = () => {
+    const newId = handleAddTimelineUpdate();
+    if (newId) setExpandedUpdates(prev => [...prev, newId as string]);
+  };
 
   const router = useRouter();
   const { user: reduxUser } = useProfileActions();
@@ -431,6 +446,101 @@ const CreateUpdatePage: React.FC = () => {
                   })}
                 </div>
               )}
+            </div>
+
+            {/* Timeline Updates Section */}
+            <div className="space-y-4">
+
+              {(formData.updates || []).length > 0 && (
+                <div className="space-y-6 mt-4">
+                  {(formData.updates || []).map((update, index) => {
+                    const isExpanded = expandedUpdates.includes(update._localId as string);
+                    return (
+                      <div key={update._localId || index} className="border border-gray-200 rounded-xl p-5 bg-white relative shadow-sm transition-all">
+                        <div
+                          className="flex justify-between items-center cursor-pointer"
+                          onClick={() => toggleUpdateExpansion(update._localId as string)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="font-semibold text-gray-800">{update.title || `Timeline Update ${index + 1}`}</span>
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                              {typeof update.updateDate === 'string' ? update.updateDate : (update.updateDate as Date).toISOString().split('T')[0]}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveTimelineUpdate(update._localId as string);
+                              }}
+                              className="text-red-500 hover:text-red-700 p-1 flex items-center justify-center rounded transition-colors"
+                              title="Remove update"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                            {isExpanded ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
+                          </div>
+                        </div>
+
+                        {isExpanded && (
+                          <div className="mt-4 pt-4 border-t border-gray-100">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wider">Update Date</label>
+                                <input
+                                  type="date"
+                                  value={typeof update.updateDate === 'string' ? update.updateDate : (update.updateDate as Date).toISOString().split('T')[0]}
+                                  onClick={(e) => e.stopPropagation()}
+                                  onChange={(e) => handleUpdateTimelineUpdate(update._localId as string, 'updateDate', e.target.value)}
+                                  className="w-full border rounded-lg px-3 py-2 bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wider">Title (Optional)</label>
+                                <input
+                                  type="text"
+                                  placeholder="e.g. Trial Commences Today"
+                                  value={update.title || ""}
+                                  onClick={(e) => e.stopPropagation()}
+                                  onChange={(e) => handleUpdateTimelineUpdate(update._localId as string, 'title', e.target.value)}
+                                  className="w-full border rounded-lg px-3 py-2 bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </div>
+                            </div>
+
+                            <div onClick={(e) => e.stopPropagation()}>
+                              <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Update Content details</label>
+                              <div className="border rounded-lg overflow-hidden shadow-inner">
+                                <RichTextEditor
+                                  value={update.content}
+                                  onChange={(content) => handleUpdateTimelineUpdate(update._localId as string, 'content', content)}
+                                  placeholder="Write the timeline update..."
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+              <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg border">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Developing Story Timeline</h3>
+                  <p className="text-sm text-gray-500">Add chronological updates to this article (optional).</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddNewTimelineUpdate}
+                  className="flex items-center gap-2 bg-[#0B2149] hover:bg-[#0a1a3a] text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+                >
+                  <Plus size={16} /> Add Timeline Update
+                </button>
+              </div>
+
             </div>
 
             {/* Action Buttons */}

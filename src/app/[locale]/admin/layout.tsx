@@ -35,9 +35,20 @@ export default function DashboardLayout({
 
     // 2. Authorization Check
     if (user && !loading) {
-      // We now allow all logged-in users to access the /admin layout
-      // Specific pages will handle additional permission checks if needed
-      setIsAuthorized(true);
+      // const userRoles = user.roles.map(r => r.name);
+      // // Check if user has any of the allowed roles
+      // const hasAccess = userRoles.some(role =>
+      //   ["admin", "superadmin", "editor", "creator"].includes(role)
+      // );
+
+      // if (hasAccess) {
+      //     setIsAuthorized(true);
+      // } else {
+      //   // Redirect to home if not authorized
+      //   router.replace("/");
+      // }
+
+       setIsAuthorized(true);
     }
   }, [user, loading, router]);
 

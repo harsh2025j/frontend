@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Scale, Gavel, Home, ChevronRight, Mail, Phone, Award, Calendar, BookOpen, User, Building2, Info, Search, Loader2 } from 'lucide-react';
 import Image from "next/image";
+import { useDebounce } from "@/hooks/useDebounce";
 import toast from "react-hot-toast";
 import { judgesService } from "@/data/services/judges-service/judgesService";
 import { useDocTitle } from "@/hooks/useDocTitle";
@@ -31,6 +32,7 @@ export default function JudgesPage() {
     useDocTitle("Judges | Sajjad Husain Law Associates");
     const [activeCategory, setActiveCategory] = useState<JudgeCategory>("chief-justice");
     const [searchQuery, setSearchQuery] = useState("");
+    const debouncedSearchTerm = useDebounce(searchQuery, 500);
     const [selectedCourt, setSelectedCourt] = useState("");
     const [selectedYear, setSelectedYear] = useState("");
     const [selectedCourtType, setSelectedCourtType] = useState("");
@@ -44,9 +46,14 @@ export default function JudgesPage() {
             setLoading(true);
             setError(null);
             try {
-                const response = await judgesService.getActive();
-                const rawData = response.data?.data || response.data || [];
-                // console.log("Judges data:", rawData);
+                let response;
+                if (debouncedSearchTerm) {
+                    response = await judgesService.searchJudges(debouncedSearchTerm);
+                } else {
+                    response = await judgesService.getActive();
+                }
+
+                const rawData = response.data?.data?.data || response.data?.data || response.data || [];
 
                 const mappedData = Array.isArray(rawData) ? rawData.map((j: any) => {
                     // Derive category from designation since backend doesn't provide it
@@ -86,7 +93,7 @@ export default function JudgesPage() {
         };
 
         fetchJudges();
-    }, []);
+    }, [debouncedSearchTerm]);
 
     // Get unique courts, years, and court types for filters
     // Safely access properties even if they might still be missing (though mappedData should fix it)
@@ -98,7 +105,7 @@ export default function JudgesPage() {
         // Category filter
         if (judge.category !== activeCategory) return false;
 
-        // Name/Specialization search
+        // Name/Specialization search (handled partially by backend now but preserved for frontend specialization filtering if any remain)
         if (searchQuery && !(
             judge.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             judge.specialization.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()))

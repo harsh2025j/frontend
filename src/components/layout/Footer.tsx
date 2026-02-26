@@ -80,7 +80,7 @@ export default function Footer() {
               <Link href="/" className="flex items-center gap-3 group text-decoration-none">
                 <div className="relative">
                   <Image src={logo} alt="Sajjad Husain Law Associates" className="object-contain" width={50} height={50} />
-                  <div className="absolute -inset-1 bg-white/10 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute -inset-1 bg-white/10 rounded-full blur-sm opacity-0 "></div>
                 </div>
                 <div className="block">
                   <h1 className="text-base sm:text-xl font-bold text-white leading-tight">

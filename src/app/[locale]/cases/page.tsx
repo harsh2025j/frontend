@@ -7,6 +7,8 @@ import { Search, FileText, User, Gavel, Calendar, Home, ChevronRight, Scale, Bui
 import { performCaseSearch, SearchInputs, SearchType } from "./searchLogic";
 import Captcha from "@/components/ui/Captcha";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import CustomSelect from "@/components/ui/CustomSelect";
+import { caseTypeOptions } from "@/constants/caseOptions";
 
 export default function CasesPage() {
     useDocTitle("Cases | Sajjad Husain Law Associates");
@@ -76,6 +78,12 @@ export default function CasesPage() {
                 } else if (searchType === "caseDetails") {
                     queryParams.set("court", inputs.court);
                     queryParams.set("caseType", inputs.caseType);
+                    queryParams.set("year", inputs.year);
+                } else if (searchType === "filingNumber") {
+                    queryParams.set("filingNumber", inputs.filingNumber);
+                    queryParams.set("year", inputs.year);
+                } else if (searchType === "crimeNumber") {
+                    queryParams.set("crimeNumber", inputs.crimeNumber);
                     queryParams.set("year", inputs.year);
                 }
 
@@ -205,7 +213,7 @@ export default function CasesPage() {
                                     >
                                         <div className="flex items-center gap-2">
                                             <ChevronRight size={16} className={searchType === "filingNumber" ? "text-[#C9A227]" : ""} />
-                                            <span>Filing/Token/Diary Number</span>
+                                            <span>Filing/Diary Number</span>
                                         </div>
                                     </button>
 
@@ -232,6 +240,19 @@ export default function CasesPage() {
                                         <div className="flex items-center gap-2">
                                             <ChevronRight size={16} className={searchType === "crimeNumber" ? "text-[#C9A227]" : ""} />
                                             <span>Search by Crime Number</span>
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() => handleSearchTypeChange("advocateName")}
+                                        className={`w-full px-6 py-3 text-left text-sm transition-all border-l-4 ${searchType === "advocateName"
+                                            ? 'bg-white border-[#C9A227] text-[#0A2342] font-medium'
+                                            : 'border-transparent text-gray-600 hover:bg-white/50 hover:border-gray-300'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <ChevronRight size={16} className={searchType === "advocateName" ? "text-[#C9A227]" : ""} />
+                                            <span>Search by Advocate Name</span>
                                         </div>
                                     </button>
 
@@ -301,9 +322,10 @@ export default function CasesPage() {
                                     <FileCheck className="w-6 h-6 text-[#C9A227]" />
                                     <h3 className="text-xl font-bold text-white">
                                         {searchType === "caseNumber" && "Search by Case Number"}
-                                        {searchType === "filingNumber" && "Search by Filing/Token/Diary Number"}
+                                        {searchType === "filingNumber" && "Search by Filing/Diary Number"}
                                         {searchType === "partyName" && "Search by Party Name"}
                                         {searchType === "crimeNumber" && "Search by Crime Number"}
+                                        {searchType === "advocateName" && "Search by Advocate Name"}
                                     </h3>
                                 </div>
                             </div>
@@ -318,23 +340,13 @@ export default function CasesPage() {
                                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                                                     Case Type <span className="text-red-500">*</span>
                                                 </label>
-                                                <select
+                                                <CustomSelect
                                                     required
-                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
+                                                    options={caseTypeOptions}
                                                     value={inputs.caseType}
-                                                    onChange={(e) => setInputs({ ...inputs, caseType: e.target.value })}
-                                                >
-                                                    <option value="">-- Select Case Type --</option>
-                                                    <option value="civil">Civil</option>
-                                                    <option value="criminal">Criminal</option>
-                                                    <option value="constitutional">Constitutional</option>
-                                                    <option value="corporate">Corporate</option>
-                                                    <option value="family">Family</option>
-                                                    <option value="tax">Tax</option>
-                                                    <option value="labor">Labor</option>
-                                                    <option value="property">Property</option>
-                                                    <option value="other">Other</option>
-                                                </select>
+                                                    onChange={(value) => setInputs({ ...inputs, caseType: value })}
+                                                    placeholder="-- Select Case Type --"
+                                                />
                                             </div>
 
                                             <div>
@@ -373,12 +385,12 @@ export default function CasesPage() {
                                         <>
                                             <div>
                                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                    Filing/Token/Diary Number <span className="text-red-500">*</span>
+                                                    Filing/Diary Number <span className="text-red-500">*</span>
                                                 </label>
                                                 <input
                                                     type="text"
                                                     required
-                                                    placeholder="Enter Filing/Token/Diary Number"
+                                                    placeholder="Enter Filing/Diary Number"
                                                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
                                                     value={inputs.filingNumber}
                                                     onChange={(e) => setInputs({ ...inputs, filingNumber: e.target.value })}
@@ -421,9 +433,6 @@ export default function CasesPage() {
                                                     <option value="">-- Select Party Type --</option>
                                                     <option value="petitioner">Petitioner</option>
                                                     <option value="respondent">Respondent</option>
-                                                    {/* <option value="Appellant">Appellant</option>
-                                                    <option value="Defendant">Defendant</option>
-                                                    <option value="Plaintiff">Plaintiff</option> */}
                                                 </select>
                                             </div>
 
@@ -439,6 +448,58 @@ export default function CasesPage() {
                                                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
                                                         value={inputs.partyName}
                                                         onChange={(e) => setInputs({ ...inputs, partyName: e.target.value })}
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                        Year <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        placeholder="Year (yyyy)"
+                                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
+                                                        value={inputs.year}
+                                                        onChange={(e) => setInputs({ ...inputs, year: e.target.value })}
+                                                        maxLength={4}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {/* Advocate Name Search */}
+                                    {searchType === "advocateName" && (
+                                        <>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Party Type <span className="text-red-500">*</span>
+                                                </label>
+                                                <select
+                                                    required
+                                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
+                                                    value={inputs.partyType}
+                                                    onChange={(e) => setInputs({ ...inputs, partyType: e.target.value })}
+                                                >
+                                                    <option value="">-- Select Party Type --</option>
+                                                    <option value="petitioner">Petitioner</option>
+                                                    <option value="respondent">Respondent</option>
+                                                </select>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                        Advocate Name <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        placeholder="Enter Advocate Name"
+                                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
+                                                        value={inputs.advocateName}
+                                                        onChange={(e) => setInputs({ ...inputs, advocateName: e.target.value })}
                                                     />
                                                 </div>
 

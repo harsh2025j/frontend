@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { casesService } from "@/data/services/cases-service/casesService";
+import { judgesService } from "@/data/services/judges-service/judgesService";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { ArrowLeft, Save } from "lucide-react";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import CustomSelect from "@/components/ui/CustomSelect";
+import { caseTypeOptions } from "@/constants/caseOptions";
+import SearchableSelect, { SearchableOption } from "@/components/ui/SearchableSelect";
 
 export default function CreateCasePage() {
     useDocTitle("Create Case  | Sajjad Husain Law Associates");
@@ -14,17 +18,78 @@ export default function CreateCasePage() {
     const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         caseNumber: "",
+        cnrNumber: "",
         title: "",
         description: "",
         caseType: "civil",
         status: "filed",
         filingDate: "",
+        firstHearingDate: "",
+        nextHearingDate: "",
         court: "",
+        judgeId: "",
+        acts: "", // visual state as string
+        underSections: "", // visual state as string
+        policeStation: "",
+        firNumber: "",
+        firYear: "",
         petitioner: "",
         respondent: "",
         petitionerAdvocate: "",
         respondentAdvocate: "",
+        officeId: "",
+        practiceAreaId: "",
+        confidentialityLevel: "3",
+        opposingParties: "", // visual state as string
     });
+
+    const [judges, setJudges] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchJudges = async () => {
+            try {
+                const response = await judgesService.getAll();
+                // Check if response.data.data is an array (direct) or object with data property (paginated)
+                const judgesData = response.data.data;
+                if (Array.isArray(judgesData)) {
+                    setJudges(judgesData);
+                } else if (judgesData && Array.isArray(judgesData.data)) {
+                    setJudges(judgesData.data);
+                } else {
+                    setJudges([]);
+                }
+            } catch (error) {
+                console.error("Failed to fetch judges", error);
+            }
+        };
+        fetchJudges();
+    }, []);
+
+    const loadJudgesOptions = async (query: string): Promise<SearchableOption[]> => {
+        try {
+            const response = await judgesService.searchJudges(query, 1, 20);
+            let items: any[] = [];
+            if (Array.isArray(response.data.data)) {
+                items = response.data.data;
+            } else if (response.data && Array.isArray(response.data.data?.data)) {
+                items = response.data.data.data;
+            } else if (Array.isArray(response.data)) {
+                items = response.data;
+            }
+            return items.map((judge: any) => ({
+                value: judge.id,
+                label: `${judge.name} (${judge.designation})`,
+            }));
+        } catch (error) {
+            console.error("Failed to search judges", error);
+            return [];
+        }
+    };
+
+    const judgeOptions: SearchableOption[] = judges.map(j => ({
+        value: j.id,
+        label: `${j.name} (${j.designation})`
+    }));
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -34,7 +99,22 @@ export default function CreateCasePage() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            await casesService.create(formData);
+            const dataToSubmit: any = {
+                ...formData,
+                acts: formData.acts.split(',').map(s => s.trim()).filter(Boolean),
+                underSections: formData.underSections.split(',').map(s => s.trim()).filter(Boolean),
+            };
+
+            if (formData.opposingParties) {
+                dataToSubmit.opposingParties = formData.opposingParties.split(',').map(s => s.trim()).filter(Boolean);
+            }
+            if (formData.confidentialityLevel) {
+                dataToSubmit.confidentialityLevel = parseInt(formData.confidentialityLevel);
+            }
+            if (!formData.officeId) delete dataToSubmit.officeId;
+            if (!formData.practiceAreaId) delete dataToSubmit.practiceAreaId;
+
+            await casesService.create(dataToSubmit);
             toast.success("Case created successfully");
             router.push("/admin/cases");
         } catch (error: any) {
@@ -79,6 +159,16 @@ export default function CreateCasePage() {
                             />
                         </div>
                         <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">CNR Number</label>
+                            <input
+                                type="text"
+                                name="cnrNumber"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="16-digit unique number"
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Title <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
@@ -109,21 +199,13 @@ export default function CreateCasePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Case Type</label>
-                            <select
-                                name="caseType"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
-                                onChange={handleChange}
-                            >
-                                <option value="civil">Civil</option>
-                                <option value="criminal">Criminal</option>
-                                <option value="constitutional">Constitutional</option>
-                                <option value="corporate">Corporate</option>
-                                <option value="family">Family</option>
-                                <option value="tax">Tax</option>
-                                <option value="labor">Labor</option>
-                                <option value="property">Property</option>
-                                <option value="other">Other</option>
-                            </select>
+                            <CustomSelect
+                                options={caseTypeOptions}
+                                value={formData.caseType}
+                                onChange={(value) => setFormData({ ...formData, caseType: value })}
+                                placeholder="Select Case Type"
+                                required
+                            />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -160,8 +242,100 @@ export default function CreateCasePage() {
                                 onChange={handleChange}
                             />
                         </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Presiding Judge</label>
+                            <SearchableSelect
+                                options={judgeOptions}
+                                value={formData.judgeId}
+                                onChange={(value) => setFormData({ ...formData, judgeId: value })}
+                                onSearch={loadJudgesOptions}
+                                placeholder="Select Judge"
+                                name="judgeId"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">First Hearing Date</label>
+                            <input
+                                type="date"
+                                name="firstHearingDate"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Next Hearing Date</label>
+                            <input
+                                type="date"
+                                name="nextHearingDate"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                onChange={handleChange}
+                            />
+                        </div>
                     </div>
                 </div>
+
+                {/* Legal Details */}
+                <div className="space-y-6">
+                    <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Legal Details</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Under Acts</label>
+                            <input
+                                type="text"
+                                name="acts"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="Comma separated e.g. IPC, CrPC"
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Under Sections</label>
+                            <input
+                                type="text"
+                                name="underSections"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="Comma separated e.g. 420, 302"
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Police & FIR Details (Conditional) */}
+                {(formData.caseType === 'criminal' || formData.caseType === 'other') && (
+                    <div className="space-y-6">
+                        <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Police & FIR Details</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Police Station</label>
+                                <input
+                                    type="text"
+                                    name="policeStation"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                    onChange={handleChange}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">FIR Number</label>
+                                <input
+                                    type="text"
+                                    name="firNumber"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                    onChange={handleChange}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">FIR Year</label>
+                                <input
+                                    type="text"
+                                    name="firYear"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Parties & Advocates */}
                 <div className="space-y-6">
@@ -202,6 +376,58 @@ export default function CreateCasePage() {
                                 type="text"
                                 name="respondentAdvocate"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Law Firm Access Control Details */}
+                <div className="space-y-6">
+                    <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Law Firm specific Details</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Office ID</label>
+                            <input
+                                type="text"
+                                name="officeId"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="Enter Office ID"
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Practice Area ID</label>
+                            <input
+                                type="text"
+                                name="practiceAreaId"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="Enter Practice Area ID"
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Confidentiality Level (1-5)</label>
+                            <select
+                                name="confidentialityLevel"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all bg-white"
+                                value={formData.confidentialityLevel}
+                                onChange={handleChange}
+                            >
+                                <option value="1">1 - Public</option>
+                                <option value="2">2 - Internal</option>
+                                <option value="3">3 - Confidential</option>
+                                <option value="4">4 - Highly Confidential</option>
+                                <option value="5">5 - Top Secret</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Opposing Parties</label>
+                            <input
+                                type="text"
+                                name="opposingParties"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                placeholder="Comma separated for conflicts check"
                                 onChange={handleChange}
                             />
                         </div>

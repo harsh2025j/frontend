@@ -22,6 +22,7 @@ export const useCreateArticleActions = () => {
     title: "",
     location: "",
     subHeadline: "",
+    updates: [],
     category: "",
     slug: "",
     advocateName: "",
@@ -129,16 +130,47 @@ export const useCreateArticleActions = () => {
     }));
   };
 
+  const handleAddTimelineUpdate = () => {
+    const newId = Math.random().toString(36).substr(2, 9);
+    setFormData((prev: CreateArticleRequest) => ({
+      ...prev,
+      updates: [
+        ...(prev.updates || []),
+        { _localId: newId, updateDate: new Date().toISOString().split('T')[0], title: "", content: "" }
+      ],
+    }));
+    return newId;
+  };
+
+  const handleUpdateTimelineUpdate = (id: string, field: "updateDate" | "title" | "content", value: string | Date) => {
+    setFormData((prev: CreateArticleRequest) => {
+      const idx = (prev.updates || []).findIndex(u => u._localId === id);
+      if (idx === -1) return prev;
+
+      const newUpdates = [...(prev.updates || [])];
+      newUpdates[idx] = { ...newUpdates[idx], [field]: value };
+
+      return { ...prev, updates: newUpdates };
+    });
+  };
+
+  const handleRemoveTimelineUpdate = (id: string) => {
+    setFormData((prev: CreateArticleRequest) => ({
+      ...prev,
+      updates: (prev.updates || []).filter((u) => u._localId !== id),
+    }));
+  };
+
   const handleCreateArticle = (status: "draft" | "pending") => {
     if (!formData.title || !formData.content) {
       toast.error("Please fill in the Title and Main Content.");
       return;
     }
 
-    if (!formData.thumbnail) {
-      toast.error("Please upload a thumbnail image.");
-      return;
-    }
+    // if (!formData.thumbnail) {
+    //   toast.error("Please upload a thumbnail image.");
+    //   return;
+    // }
 
     // Generate unique slug from title
     const baseSlug = formData.title
@@ -160,6 +192,7 @@ export const useCreateArticleActions = () => {
         location: "",
         slug: "",
         subHeadline: "",
+        updates: [],
         advocateName: "",
         language: "English/हिन्दी",
         author: "",
@@ -185,6 +218,9 @@ export const useCreateArticleActions = () => {
     handleCreateArticle,
     handleAddTag,
     handleRemoveTag,
+    handleAddTimelineUpdate,
+    handleUpdateTimelineUpdate,
+    handleRemoveTimelineUpdate,
     handleRemoveExistingDocument: (id: string) => {
       setFormData((prev: CreateArticleRequest) => ({
         ...prev,
