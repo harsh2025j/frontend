@@ -138,7 +138,9 @@ apiClient.interceptors.response.use(
       const isAuthFailure = typeof url === 'string' &&
         !url.includes('/subscriptions/me') &&
         !url.includes('/subscription') &&
-        !url.includes('/permission-requests/my');
+        !url.includes('/permission-requests/my') &&
+        !url.includes('/auth/login') &&
+        !url.includes('/auth/social-login');
 
       if (isAuthFailure && shouldShowError('auth-error')) {
         if (typeof window !== "undefined") {
