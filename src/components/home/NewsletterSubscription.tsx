@@ -16,7 +16,7 @@ const NewsletterSubscription = () => {
             setTimeout(() => {
                 setSubscribed(true);
                 setEmail('');
-            }, 500);
+            }, 600);
         }
     };
 

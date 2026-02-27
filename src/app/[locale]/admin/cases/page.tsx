@@ -17,7 +17,7 @@ export default function AdminCasesPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, caseId: "", newStatus: "" });
-    const debouncedSearchTerm = useDebounce(searchTerm, 800);
+    const debouncedSearchTerm = useDebounce(searchTerm, 600);
 
     useEffect(() => {
         if (debouncedSearchTerm) {

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import { Article } from "@/data/features/article/article.types";
 import Image from "next/image";
 import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
@@ -16,27 +15,7 @@ import TypewriterText from "@/components/ui/TypewriterText";
 import { formatDate } from "@/utils/dateUtils";
 import { getSafeImageUrl } from "@/utils/imageUtils";
 import SavePostButton from "@/components/ui/SavePostButton";
-
-// Helper function to get related articles
-export function getRelatedArticles(currentSlug: string, allArticles: Article[], limit: number = 20) {
-    const currentArticle = allArticles.find(a => a.slug === currentSlug);
-    if (!currentArticle || !currentArticle.category) {
-        return [];
-    }
-
-    const currentCategorySlug = currentArticle.category.slug;
-
-    const filteredArticles = allArticles.filter((article) => {
-        const isSameCategory = article.category?.slug === currentCategorySlug;
-        const isNotCurrentArticle = article.slug !== currentSlug;
-
-        return isSameCategory && isNotCurrentArticle;
-    });
-
-    const shuffled = [...filteredArticles].sort(() => 0.5 - Math.random());
-
-    return shuffled.slice(0, limit);
-}
+import { articleApi } from "@/data/services/article-service/article-service";
 
 interface ArticleClientProps {
     initialArticle: Article;
@@ -44,8 +23,6 @@ interface ArticleClientProps {
 }
 
 export default function ArticleClient({ initialArticle, slug }: ArticleClientProps) {
-    const { articles: allArticles, loading } = useArticleListActions();
-    const articles = useMemo(() => allArticles.filter((a: { status: string; }) => a.status === 'published'), [allArticles]);
     const [copied, setCopied] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
     const [summary, setSummary] = useState<string | null>(initialArticle.aiSummary || null);
@@ -79,10 +56,53 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
 
     // Translate Related Articles
     const [relatedTitlesToTranslate, setRelatedTitlesToTranslate] = useState<string[]>([]);
+    const [recommendedArticles, setRecommendedArticles] = useState<Article[]>([]);
+    const [loadingRecommended, setLoadingRecommended] = useState(true);
 
-    const recommendedArticles = useMemo(() => {
-        return getRelatedArticles(slug, articles, 10);
-    }, [slug, articles]);
+    useEffect(() => {
+        const fetchRelated = async () => {
+            if (!initialArticle.category?.slug) {
+                setLoadingRecommended(false);
+                return;
+            }
+
+            try {
+                // First determine how many pages there are
+                const initialRes = await articleApi.fetchArticles({
+                    category: initialArticle.category.slug,
+                    limit: 12,
+                    page: 1
+                });
+
+                const data = initialRes.data as any;
+                const totalPages = data.meta?.total_pages || 1;
+                let fetchedItems: Article[] = data.data || [];
+
+                // If >1 pages, fetch a random page
+                if (totalPages > 1) {
+                    const randomPage = Math.floor(Math.random() * totalPages) + 1;
+                    if (randomPage !== 1) {
+                        const randomRes = await articleApi.fetchArticles({
+                            category: initialArticle.category.slug,
+                            limit: 12,
+                            page: randomPage
+                        });
+                        fetchedItems = (randomRes.data as any).data || [];
+                    }
+                }
+
+                // Filter out the current article
+                const finalFiltered = fetchedItems.filter((a: Article) => a.slug !== slug);
+                setRecommendedArticles(finalFiltered);
+            } catch (error) {
+                console.error("Failed to fetch related", error);
+            } finally {
+                setLoadingRecommended(false);
+            }
+        };
+
+        fetchRelated();
+    }, [initialArticle.category?.slug, slug]);
 
     useEffect(() => {
         if (recommendedArticles.length > 0 && locale !== 'en') {
@@ -181,7 +201,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
         }
     };
 
-    if (loading && !initialArticle) {
+    if (!initialArticle) {
         return <div className="flex justify-center items-center min-h-screen">
             <Loader text={t('loading')} size="lg" />
         </div>;
@@ -568,30 +588,44 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                             <h3 className="text-lg font-bold text-gray-900 mb-4">{t('relatedArticles')}</h3>
 
                             <div className="space-y-6 max-h-[85vh] overflow-y-auto scrollbar-hide pb-10">
-                                {displayRecommended.map((rec) => (
-                                    <Link
-                                        key={rec.id}
-                                        href={`/news/${rec.slug}`}
-                                        className="block group"
-                                    >
-                                        <div className="flex gap-4">
-                                            <div className="relative w-24 h-24 flex-shrink-0 rounded overflow-hidden bg-gray-100">
-                                                <Image
-                                                    src={getSafeImageUrl(rec.thumbnail)}
-                                                    alt={rec.title}
-                                                    fill
-                                                    sizes="96px"
-                                                    className="object-cover"
-                                                />
-                                            </div>
-                                            <div className="flex-1">
-                                                <h4 className="font-medium text-sm text-gray-900 line-clamp-3 group-hover:text-blue-600 transition-colors leading-snug">
-                                                    {rec.title}
-                                                </h4>
+                                {loadingRecommended ? (
+                                    Array(5).fill(0).map((_, i) => (
+                                        <div key={i} className="flex gap-4 animate-pulse">
+                                            <div className="w-24 h-24 bg-gray-200 rounded shrink-0" />
+                                            <div className="flex-1 space-y-2 py-1">
+                                                <div className="h-4 bg-gray-200 rounded w-full" />
+                                                <div className="h-4 bg-gray-200 rounded w-5/6" />
                                             </div>
                                         </div>
-                                    </Link>
-                                ))}
+                                    ))
+                                ) : displayRecommended.length > 0 ? (
+                                    displayRecommended.map((rec) => (
+                                        <Link
+                                            key={rec.id}
+                                            href={`/news/${rec.slug}`}
+                                            className="block group"
+                                        >
+                                            <div className="flex gap-4">
+                                                <div className="relative w-24 h-24 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                                                    <Image
+                                                        src={getSafeImageUrl(rec.thumbnail)}
+                                                        alt={rec.title}
+                                                        fill
+                                                        sizes="96px"
+                                                        className="object-cover"
+                                                    />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h4 className="font-medium text-sm text-gray-900 line-clamp-3 group-hover:text-blue-600 transition-colors leading-snug">
+                                                        {rec.title}
+                                                    </h4>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    ))
+                                ) : (
+                                    <p className="text-gray-500 text-sm">No related articles found.</p>
+                                )}
                             </div>
                         </div>
                     </div>

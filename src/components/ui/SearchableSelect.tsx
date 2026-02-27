@@ -33,7 +33,7 @@ export default function SearchableSelect({
 }: SearchableSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const debouncedSearchQuery = useDebounce(searchQuery, 800);
+    const debouncedSearchQuery = useDebounce(searchQuery, 600);
     const [isLoading, setIsLoading] = useState(false);
     const [asyncOptions, setAsyncOptions] = useState<SearchableOption[]>([]);
 

@@ -36,7 +36,7 @@ export default function SearchWithDropdown({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-   
+
     useEffect(() => {
         // 1. Reset if query is empty
         if (query.trim().length < 1) {
@@ -66,7 +66,7 @@ export default function SearchWithDropdown({
                 // Only turn off loading if the request wasn't cancelled
                 if (!signal.aborted) setIsLoading(false);
             }
-        }, 500);
+        }, 600);
 
         // Cleanup: Cancel the fetch if the user types again before it finishes
         return () => {

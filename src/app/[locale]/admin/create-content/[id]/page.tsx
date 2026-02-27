@@ -12,6 +12,7 @@ import { UserData } from "@/data/features/profile/profile.types";
 import { articleApi } from "@/data/services/article-service/article-service";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import CategorySelect from "@/components/ui/CategorySelect";
 
 
 const EditArticlePage: React.FC = () => {
@@ -93,9 +94,9 @@ const EditArticlePage: React.FC = () => {
 
             setLoading(true);
             try {
-                const response = await articleApi.fetchArticles();
-                const articles = response.data.data || [];
-                const article = articles.find((a: any) => a.id === articleId);
+                const response = await articleApi.fetchArticleById(articleId);
+                // findOne may return the article directly, or wrapped in { data: article }
+                const article = response.data?.id ? response.data : response.data?.data;
 
                 if (article) {
                     setFormData({
@@ -113,7 +114,7 @@ const EditArticlePage: React.FC = () => {
                             ? article.tags.map((t: any) => typeof t === 'object' ? t.name : t)
                             : (typeof article.tags === 'string' ? (article.tags as string).split(',') : []),
                         thumbnail: null,
-                        documents: [], // New documents to be uploaded
+                        documents: [],
                         status: article.status === 'published' ? 'pending' : 'draft',
                         isPaywalled: article.isPaywalled || false,
                     });
@@ -124,7 +125,6 @@ const EditArticlePage: React.FC = () => {
                     if (article.documents && Array.isArray(article.documents)) {
                         setExistingDocuments(article.documents);
                     } else if (article.documents) {
-                        // Fallback if it comes as a single string
                         setExistingDocuments([article.documents]);
                     }
                 } else {
@@ -132,8 +132,8 @@ const EditArticlePage: React.FC = () => {
                     router.push("/admin/content-management");
                 }
             } catch (error) {
-                // console.error("Failed to fetch article", error);
                 toast.error("Failed to load article details");
+                router.push("/admin/content-management");
             } finally {
                 setLoading(false);
             }
@@ -141,6 +141,7 @@ const EditArticlePage: React.FC = () => {
 
         fetchArticleDetails();
     }, [articleId, setFormData, router]);
+
 
     // --- Helper: Generate Slug ---
     const generateSlug = (text: string) => {
@@ -239,20 +240,12 @@ const EditArticlePage: React.FC = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                             <div>
                                 <label className="block text-sm font-medium mb-1.5">Category</label>
-                                <select
-                                    name="category"
+                                <CategorySelect
                                     value={formData.category}
-                                    onChange={handleChange}
-                                    className="w-full border rounded-lg px-3 py-2.5 bg-gray-50 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    onChange={(id) => setFormData((prev) => ({ ...prev, category: id }))}
+                                    options={categoryOptions}
                                     required
-                                >
-                                    <option value="">Select Category</option>
-                                    {categoryOptions.map((opt) => (
-                                        <option key={opt.name} value={opt.id}>
-                                            {opt.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                />
                             </div>
 
                             <div>

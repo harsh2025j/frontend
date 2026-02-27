@@ -17,7 +17,7 @@ export default function AdminJudgmentsPage() {
     const [judgments, setJudgments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    const debouncedSearchTerm = useDebounce(searchTerm, 800);
+    const debouncedSearchTerm = useDebounce(searchTerm, 600);
     const [judgesMap, setJudgesMap] = useState<Record<string, string>>({});
     const [casesMap, setCasesMap] = useState<Record<string, string>>({});
 

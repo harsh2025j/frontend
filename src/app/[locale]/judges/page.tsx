@@ -32,7 +32,7 @@ export default function JudgesPage() {
     useDocTitle("Judges | Sajjad Husain Law Associates");
     const [activeCategory, setActiveCategory] = useState<JudgeCategory>("chief-justice");
     const [searchQuery, setSearchQuery] = useState("");
-    const debouncedSearchTerm = useDebounce(searchQuery, 500);
+    const debouncedSearchTerm = useDebounce(searchQuery, 600);
     const [selectedCourt, setSelectedCourt] = useState("");
     const [selectedYear, setSelectedYear] = useState("");
     const [selectedCourtType, setSelectedCourtType] = useState("");

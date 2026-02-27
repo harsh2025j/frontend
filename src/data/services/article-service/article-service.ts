@@ -48,6 +48,11 @@ export const articleApi = {
   },
 
 
+  fetchArticleById: async (id: string) => {
+    const response = await apiClient.get<any>(`${API_ENDPOINTS.ARTICLE.FETCH_ALL}/${id}`);
+    return response;
+  },
+
   fetchArticles: async (params?: any) => {
     // console.log("Fetch Articles Request URL:", ` ${API_ENDPOINTS.ARTICLE.FETCH_ALL}`);
     const response = await apiClient.get<ArticleListResponse>(

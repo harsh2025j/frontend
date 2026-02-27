@@ -15,7 +15,7 @@ export default function AdminJudgesPage() {
     const [judges, setJudges] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    const debouncedSearchTerm = useDebounce(searchTerm, 800);
+    const debouncedSearchTerm = useDebounce(searchTerm, 600);
 
     useEffect(() => {
         if (debouncedSearchTerm) {

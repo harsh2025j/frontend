@@ -152,9 +152,13 @@ export default function HeaderNew() {
 
     // Dynamic Nav Logic
     const navItems = useMemo(() => {
+        // Strip trailing UUID-like suffixes (e.g. "High Court Updates - 53478322" → "High Court Updates")
+        const cleanLabel = (name: string) =>
+            name.replace(/\s*-\s*[0-9a-f]{4,}\s*$/i, "").replace(/\s+/g, " ").trim();
+
         const mapToNavItem = (cat: Category): NavItem => {
             return {
-                label: cat.name,
+                label: cleanLabel(cat.name),
                 href: `/category/${cat.slug}`,
                 children: cat.children?.length ? cat.children.map(mapToNavItem) : undefined,
             };
@@ -510,8 +514,8 @@ export default function HeaderNew() {
 
                 {/* Navigation Bar */}
                 <div className="hidden lg:block bg-white border-b border-gray-100">
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <nav className="flex items-center gap-8 h-14 text-sm font-medium">
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8 overflow-hidden">
+                        <nav className="flex items-center gap-8 h-14 text-sm font-medium overflow-hidden">
                             {navItems.map((item, i) => <DesktopMenuItem key={i} item={item} />)}
                         </nav>
                     </div>

@@ -11,6 +11,7 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import CategorySelect from "@/components/ui/CategorySelect";
 
 
 
@@ -139,20 +140,12 @@ const CreateUpdatePage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div>
                 <label className="block text-sm font-medium mb-1.5">Category</label>
-                <select
-                  name="category"
+                <CategorySelect
                   value={formData.category}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2.5 bg-gray-50 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(id) => setFormData((prev) => ({ ...prev, category: id }))}
+                  options={categoryOptions}
                   required
-                >
-                  <option value="">Select Category</option>
-                  {categoryOptions.map((opt) => (
-                    <option key={opt.name} value={opt.id}>
-                      {opt.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>

@@ -1,133 +1,111 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import NewsCard from "@/components/ui/NewsCard";
-// import Link from "next/link";
 import { Link } from "@/i18n/routing";
 import { Article } from "@/data/features/article/article.types";
 import Loader from "@/components/ui/Loader";
-
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
 import { useLocale } from "next-intl";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { timeAgo } from "@/lib/utils/timeAgo";
+import { articleApi } from "@/data/services/article-service/article-service";
+import Pagination from "@/components/Pagination";
 
+const ITEMS_PER_PAGE = 12;
 
 export default function TagPage() {
     const params = useParams();
     const slug = params.slug as string;
-    const { articles: allArticles, loading } = useArticleListActions();
-    const articles = React.useMemo(() => allArticles.filter((a: { status: string; }) => a.status === 'published'), [allArticles]);
-    const [tagArticles, setTagArticles] = useState<Article[]>([]);
-    const [tagName, setTagName] = useState<string>("");
     const locale = useLocale();
-    useDocTitle(`${tagName} | Sajjad Husain Law Associates`);
 
-    const cleanTagName = (name: string): string => {
-        return name
-            .replace(/\s*\d+\s*$/g, '')
-            .replace(/\s+/g, ' ')
-            .trim();
-    };
+    const [articles, setArticles] = useState<Article[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [tagName, setTagName] = useState("");
 
-    useEffect(() => {
-        if (articles.length > 0 && slug) {
-            const currentSlug = slug.toLowerCase();
+    useDocTitle(`${tagName || "Tag"} | Sajjad Husain Law Associates`);
 
-            const filtered = articles.filter((article: Article) => {
-                // Check Tag match
-                const tagMatch = article.tags?.some(tag =>
-                    tag.slug.toLowerCase() === currentSlug ||
-                    tag.name.toLowerCase() === currentSlug
-                );
+    const cleanTagName = (name: string) =>
+        name.replace(/\s*\d+\s*$/g, "").replace(/\s+/g, " ").trim();
 
-                return tagMatch;
+    const fetchData = useCallback(async () => {
+        if (!slug) return;
+        setLoading(true);
+        try {
+            const res = await articleApi.fetchArticles({
+                tag: slug,
+                page: currentPage,
+                limit: ITEMS_PER_PAGE,
             });
+            const data = res.data as any;
+            const items: Article[] = data.data ?? [];
+            setArticles(items);
+            setTotalPages(data.meta?.total_pages ?? 1);
+            setTotalItems(data.meta?.total_items ?? 0);
 
-            setTagArticles(filtered);
+            // Derive tag display name from first article or from slug
+            if (items.length > 0) {
+                const currentSlugLower = slug.toLowerCase();
+                const matchedTag = items
+                    .flatMap((a) => a.tags || [])
+                    .find((t: any) => t.slug?.toLowerCase() === currentSlugLower || t.name?.toLowerCase() === currentSlugLower);
 
-            // Determine Display Name
-            if (filtered.length > 0) {
-                // Try to find exact tag match for naming
-                const matchArticle = filtered.find((a: any) =>
-                    a.tags?.some((t: any) => t.slug.toLowerCase() === currentSlug)
-                );
-
-                if (matchArticle) {
-                    const matchedTag = matchArticle.tags?.find((t: any) => t.slug.toLowerCase() === currentSlug);
-                    if (matchedTag) {
-                        setTagName(matchedTag.name);
-                    } else {
-                        setTagName(cleanTagName(slug.replace(/-/g, ' ')));
-                    }
-                } else {
-                    setTagName(cleanTagName(slug.replace(/-/g, ' ')));
-                }
-            } else {
-                const formattedSlug = slug
-                    .split('-')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ');
-
-                setTagName(cleanTagName(formattedSlug));
+                setTagName(matchedTag ? cleanTagName(matchedTag.name) : cleanTagName(slug.replace(/-/g, " ")));
+            } else if (currentPage === 1) {
+                const formatted = slug
+                    .split("-")
+                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                    .join(" ");
+                setTagName(cleanTagName(formatted));
             }
+        } catch {
+            // silently fail
+        } finally {
+            setLoading(false);
         }
-    }, [articles, slug]);
+    }, [slug, currentPage]);
 
-    // --- Translation Logic ---
+    useEffect(() => { fetchData(); }, [fetchData]);
+    // Reset page on slug change
+    useEffect(() => { setCurrentPage(1); }, [slug]);
+
+    // ── Translation ──
     const [textsToTranslate, setTextsToTranslate] = useState<string[]>([]);
-
     useEffect(() => {
-        if (locale === 'en' || !tagName) return;
-
-        const texts: string[] = [];
-        // 1. Tag Name
-        texts.push(tagName);
-
-        // 2. Articles (Title + Content Snippet)
-        tagArticles.forEach(a => {
+        if (locale === "en" || !tagName) return;
+        const texts: string[] = [tagName];
+        articles.forEach((a) => {
             texts.push(a.title);
             texts.push(a.content.replace(/<[^>]*>/g, "").substring(0, 150) + "...");
         });
-
         setTextsToTranslate(texts);
-    }, [tagName, tagArticles, locale]);
+    }, [tagName, articles, locale]);
 
     const { translatedText, loading: translating } = useGoogleTranslate(
-        locale !== 'en' && textsToTranslate.length > 0 ? textsToTranslate : null
+        locale !== "en" && textsToTranslate.length > 0 ? textsToTranslate : null
     );
 
     const displayTagName = React.useMemo(() => {
-        if (locale === 'en' || !translatedText || !Array.isArray(translatedText) || translatedText.length === 0) {
-            return tagName;
-        }
+        if (locale === "en" || !translatedText?.length) return tagName;
         return translatedText[0];
     }, [tagName, translatedText, locale]);
 
     const displayArticles = React.useMemo(() => {
-        if (locale === 'en' || !translatedText || !Array.isArray(translatedText) || translatedText.length === 0) {
-            return tagArticles;
-        }
+        if (locale === "en" || !translatedText?.length) return articles;
+        return articles.map((a, i) => ({
+            ...a,
+            title: translatedText[1 + i * 2] || a.title,
+            content: translatedText[1 + i * 2 + 1] || a.content,
+        }));
+    }, [articles, translatedText, locale]);
 
-        // First element is tag name, so articles start at index 1
-        return tagArticles.map((article, index) => {
-            const titleIdx = 1 + (index * 2);
-            const contentIdx = 1 + (index * 2) + 1;
-
-            return {
-                ...article,
-                title: translatedText[titleIdx] || article.title,
-                content: translatedText[contentIdx] || article.content
-            };
-        });
-    }, [tagArticles, translatedText, locale]);
-
-
-    if (loading) {
+    if (loading && currentPage === 1) {
         return (
-            <div className="flex justify-center items-center min-h-screen text-lg font-medium text-gray-600">
+            <div className="flex justify-center items-center min-h-screen">
                 <Loader text="Loading Content..." size="lg" />
             </div>
         );
@@ -135,43 +113,52 @@ export default function TagPage() {
 
     return (
         <div className="container mx-auto px-4 py-10">
-
             {/* Header */}
             <div className="text-left mb-10 space-y-2">
                 <h1 className="text-4xl text-[#0A2342] sm:text-5xl font-bold capitalize flex items-center gap-3">
                     {displayTagName}
                     {translating && <span className="text-sm text-[#C9A227] animate-pulse font-normal">Translating...</span>}
                 </h1>
-                <p className="text-gray-600 max-w-2xl  text-sm sm:text-base">
+                <p className="text-gray-600 max-w-2xl text-sm sm:text-base">
                     Explore the latest insights, updates, and reports in the{" "}
                     <span className="font-medium text-gray-800 capitalize">{displayTagName}</span>{" "}
                     topic.
                 </p>
-                <div className="w-24 h-1 bg-black/80  rounded-full mt-3"></div>
+                <div className="w-24 h-1 bg-black/80 rounded-full mt-3" />
+                <p className="text-sm text-gray-400 pt-1">{totalItems} article{totalItems !== 1 ? "s" : ""}</p>
             </div>
 
-            {/* Article list */}
-            {tagArticles.length === 0 ? (
+            {/* Article grid */}
+            {!loading && displayArticles.length === 0 ? (
                 <div className="text-center text-gray-500 text-lg font-medium py-20">
                     No articles found for this tag.
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {displayArticles.map((article) => (
-                        <Link href={`/news/${article.slug}`} key={article.id}>
-                            <NewsCard
-                                title={article.title}
-                                content={article.content}
-                                src={article.thumbnail || undefined}
-                                court={article.location || undefined}
-                                time={timeAgo(article.createdAt)}
-                            // time={new Date(article.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
-                            // views={String(0)}
-                            // likes={String(0)}
-                            />
-                        </Link>
-                    ))}
-                </div>
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {(loading ? Array(ITEMS_PER_PAGE).fill(null) : displayArticles).map((article, i) =>
+                            loading ? (
+                                <div key={i} className="bg-gray-100 rounded-xl animate-pulse h-64" />
+                            ) : (
+                                <Link href={`/news/${article.slug}`} key={article.id}>
+                                    <NewsCard
+                                        title={article.title}
+                                        content={article.content}
+                                        src={article.thumbnail || undefined}
+                                        court={article.location || undefined}
+                                        time={timeAgo(article.createdAt)}
+                                    />
+                                </Link>
+                            )
+                        )}
+                    </div>
+
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </>
             )}
         </div>
     );
