@@ -28,6 +28,7 @@ import { useArticleListActions } from "@/data/features/article/useArticleActions
 import { highCourts } from "@/data/highCourts";
 import { Article, Category } from "@/data/features/article/article.types";
 import ArticleSkeleton from "../ui/ArticleSkeleton";
+import { useCategoryArticles } from "@/hooks/useCategoryArticles";
 // import Link from "next/link";
 import { Link } from "@/i18n/routing";
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
@@ -76,15 +77,22 @@ export default function Stores() {
   };
 
 
-  const { articles: allArticles, loading, error } = useArticleListActions();
+  const { articles: allArticles, loading: mainLoading, error } = useArticleListActions();
   const articles = useMemo(() => allArticles.filter((a: { status: string; }) => a.status === 'published'), [allArticles]);
 
+  const { articles: latestRaw, loading: loadingLatest } = useCategoryArticles("latest-news", 4);
+  const { articles: judgmentsRaw, loading: loadingJudgements } = useCategoryArticles("judgments", 3);
+  const { articles: hindiRaw, loading: loadingHindi } = useCategoryArticles("hindi-news", 3);
+  const { articles: financeRaw, loading: loadingFinance } = useCategoryArticles("finance-articles", 10);
+  const { articles: legalRaw, loading: loadingLegal } = useCategoryArticles("legal-articles", 10);
 
-  const LatestNewsData = useMemo(() => getArticlesBySlugs(articles, ["latest-news"]), [articles]);
-  const JudgementNewsData = useMemo(() => getArticlesBySlugs(articles, ["judgments-content"]), [articles]);
-  const HindiNewsData = useMemo(() => getArticlesBySlugs(articles, ["hindi-news"]), [articles]);
-  const FinanceArticleData = useMemo(() => getArticlesBySlugs(articles, ["finance-articles"]), [articles]);
-  const LegalArticleData = useMemo(() => getArticlesBySlugs(articles, ["legal-articles"]), [articles]);
+  const LatestNewsData = useMemo(() => latestRaw.filter(a => a.status === 'published'), [latestRaw]);
+  const JudgementNewsData = useMemo(() => judgmentsRaw.filter(a => a.status === 'published'), [judgmentsRaw]);
+  const HindiNewsData = useMemo(() => hindiRaw.filter(a => a.status === 'published'), [hindiRaw]);
+  const FinanceArticleData = useMemo(() => financeRaw.filter(a => a.status === 'published'), [financeRaw]);
+  const LegalArticleData = useMemo(() => legalRaw.filter(a => a.status === 'published'), [legalRaw]);
+
+  const loading = mainLoading || loadingLatest || loadingJudgements || loadingHindi || loadingFinance || loadingLegal;
 
   // ... inside Stores component ...
   const locale = useLocale();

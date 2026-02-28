@@ -77,7 +77,6 @@ export interface Tag {
 //   parentId: string | null;
 //   createdAt: string;
 //   updatedAt: string;
-
 // }
 export interface Category {
   id: string;

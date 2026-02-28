@@ -31,7 +31,7 @@ const LatestNews: React.FC<LatestNewsProps> = ({
       <div className="relative w-full h-60 ">
         <Link href={`/news/${slug}`} className="relative block w-full h-full">
           <Image
-            src={getSafeImageUrl(typeof img === 'string' ? img : img.src)}
+            src={getSafeImageUrl(typeof img === 'string' ? img : (img as StaticImageData)?.src || '')}
             alt={title}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
