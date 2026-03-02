@@ -1,41 +1,41 @@
-import {  Calendar } from "lucide-react";
-import {contentData} from "../../../../lib/dummy"
+import { Calendar } from "lucide-react";
+import { contentData } from "../../../../lib/dummy"
 
 const ContentTable = () => {
-// const contentData = [
-//   {
-//     title: "Bombay HC on Insolvency",
-//     writer: "Ujjwal Singh",
-//     category: "Supreme Court",
-//     status: "Draft",
-//     language: "English",
-//     date: "Oct 22",
-//   },
-//   {
-//     title: "Global Markets Weekly",
-//     writer: "Satyam Singh",
-//     category: "Business",
-//     status: "Pending",
-//     language: "Hindi",
-//     date: "Oct 22",
-//   },
-//   {
-//     title: "Sport Law Doping Case",
-//     writer: "Ravi Sharma",
-//     category: "Criminal Law",
-//     status: "Published",
-//     language: "English",
-//     date: "Oct 22",
-//   },
-//   {
-//     title: "Consumer Law Update",
-//     writer: "Ankit Rana",
-//     category: "Consumer Law",
-//     status: "Pending",
-//     language: "Hindi",
-//     date: "Oct 22",
-//   },
-// ];
+  // const contentData = [
+  //   {
+  //     title: "Bombay HC on Insolvency",
+  //     writer: "Ujjwal Singh",
+  //     category: "Supreme Court",
+  //     status: "Draft",
+  //     language: "English",
+  //     date: "Oct 22",
+  //   },
+  //   {
+  //     title: "Global Markets Weekly",
+  //     writer: "Satyam Singh",
+  //     category: "Business",
+  //     status: "Pending",
+  //     language: "Hindi",
+  //     date: "Oct 22",
+  //   },
+  //   {
+  //     title: "Sport Law Doping Case",
+  //     writer: "Ravi Sharma",
+  //     category: "Criminal Law",
+  //     status: "Published",
+  //     language: "English",
+  //     date: "Oct 22",
+  //   },
+  //   {
+  //     title: "Consumer Law Update",
+  //     writer: "Ankit Rana",
+  //     category: "Consumer Law",
+  //     status: "Pending",
+  //     language: "Hindi",
+  //     date: "Oct 22",
+  //   },
+  // ];
 
 
   return (
@@ -65,7 +65,7 @@ const ContentTable = () => {
               <td className="py-2">{item.category}</td>
               <td className="py-2">{item.status}</td>
               <td className="py-2">{item.language}</td>
-         
+
               <td className="py-2 flex items-center gap-2 text-gray-600">
                 <Calendar size={14} /> {item.date}
               </td>

@@ -15,9 +15,10 @@ import StatCard from "./components/StatCard";
 import DummyChart from "./components/charts/LineChart";
 import RevenueChart from "./components/charts/RevenueChart";
 import ContentApprovalPanel from "./components/UrgentTable";
+import RecentActivity from "./components/RecentActivity";
 import { Router } from "next/router";
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
@@ -28,49 +29,9 @@ import { fetchArticles } from "@/data/features/article/articleThunks";
 import { fetchUsers } from "@/data/features/users/usersThunks";
 import { PERMISSIONS, ROLES } from "@/config/permissions";
 import { getUserType, hasDashboardAccess } from "@/utils/permissions";
+import apiClient from "@/data/services/apiConfig/apiClient";
 
-const data = [
-  {
-    label: "Total Articles",
-    value: "12,450",
-    icon: <TrendingUp className="w-8 h-8 text-blue-500" />,
-  },
-  {
-    label: "AI Summaries",
-    value: "6,320",
-    icon: <Star className="w-8 h-8 text-yellow-500" />,
-  },
-  {
-    label: "Active Users",
-    value: "8,911",
-    icon: <UserCheck className="w-8 h-8 text-green-500" />,
-  },
-  {
-    label: "Total Users",
-    value: "1,51,254",
-    icon: <Users className="w-8 h-8 text-indigo-500" />,
-  },
-  {
-    label: "Premium Subscribers",
-    value: "1,450",
-    icon: <CircleDollarSign className="w-8 h-8 text-orange-500" />,
-  },
-  {
-    label: "Most Viewed Category",
-    value: "1,450",
-    icon: <Eye className="w-8 h-8 text-blue-500" />,
-  },
-  {
-    label: "Most Search City",
-    value: "1,450",
-    icon: <MapPin className="w-8 h-8 text-red-500" />,
-  },
-  {
-    label: "Free Users",
-    value: "10,520",
-    icon: <Users className="w-8 h-8 text-gray-400" />,
-  },
-];
+
 
 const Page = () => {
   useDocTitle("Admin Dashboard | Sajjad Husain Law Associates");
@@ -80,85 +41,97 @@ const Page = () => {
   const { articles } = useAppSelector((state) => state.article);
   const { users } = useAppSelector((state) => state.users);
 
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+
   useEffect(() => {
     dispatch(fetchArticles({}));
     dispatch(fetchUsers({}));
+
+    const fetchDashboard = async () => {
+      try {
+        setLoadingStats(true);
+        const { data } = await apiClient.get('/users/dashboard-stats');
+        setDashboardStats(data?.data || data);
+        console.log(data?.data || data);
+      } catch (error) {
+        console.error('Failed to fetch dynamic dashboard stats', error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    fetchDashboard();
   }, [dispatch]);
-
-  // --- Stats Calculation ---
-  // 1. Total Articles
-  const totalArticles = articles.length;
-
-  // 2. Active Users (Verified)
-  const activeUsers = users.filter((u) => u.isVerified).length;
-
-  // 3. Total Users
-  const totalUsers = users.length;
-
-  // 4. AI Summaries (Placeholder or derived if available, reusing dummy for now if no field exists,
-  //    or perhaps counting articles that have content length > X? Let's use a dummy or separate count if needed.
-  //    For now, I'll calculate "Published Articles" as a proxy or just keep it 0 if unknown)
-  const publishedArticles = articles.filter(
-    (a) => a.status === "published",
-  ).length;
-  const pendingArticles = articles.filter((a) => a.status === "pending").length;
-
-  // 5. Most Active Category
-  const categoryCounts: Record<string, number> = {};
-  articles.forEach((article) => {
-    if (article.category?.name) {
-      categoryCounts[article.category.name] =
-        (categoryCounts[article.category.name] || 0) + 1;
-    }
-  });
-
-  let mostActiveCategory = "N/A";
-  let maxCount = 0;
-
-  Object.entries(categoryCounts).forEach(([category, count]) => {
-    if (count > maxCount) {
-      maxCount = count;
-      mostActiveCategory = category;
-    }
-  });
 
   // --- Chart Data: Passed directly to component for processing ---
 
-  const stats = [
+  const stats = dashboardStats ? [
     {
       label: "Total Articles",
-      value: totalArticles.toLocaleString(),
-      icon: <TrendingUp className="w-8 h-8 text-blue-500" />,
+      value: dashboardStats.totalArticles?.value?.toLocaleString() ?? "N/A",
+      icon: <TrendingUp className="w-5 h-5" />,
+      trend: dashboardStats.totalArticles?.trend ?? null,
+      trendUp: dashboardStats.totalArticles?.trendUp ?? true,
+      sparklineData: dashboardStats.totalArticles?.sparklineData ?? [],
     },
     {
       label: "Published Articles",
-      value: publishedArticles.toLocaleString(),
-      icon: <Star className="w-8 h-8 text-yellow-500" />,
+      value: dashboardStats.publishedArticles?.value?.toLocaleString() ?? "N/A",
+      icon: <Star className="w-5 h-5" />,
+      trend: dashboardStats.publishedArticles?.trend ?? null,
+      trendUp: dashboardStats.publishedArticles?.trendUp ?? true,
+      sparklineData: dashboardStats.publishedArticles?.sparklineData ?? [],
     },
     {
       label: "Pending Articles",
-      value: pendingArticles.toLocaleString(),
-      icon: <Clock className="w-8 h-8 text-orange-500" />,
+      value: dashboardStats.pendingArticles?.value?.toLocaleString() ?? "N/A",
+      icon: <Clock className="w-5 h-5" />,
+      trend: dashboardStats.pendingArticles?.trend ?? null,
+      trendUp: dashboardStats.pendingArticles?.trendUp ?? false,
+      sparklineData: dashboardStats.pendingArticles?.sparklineData ?? [],
     },
     {
       label: "Active Users",
-      value: activeUsers.toLocaleString(),
-      icon: <UserCheck className="w-8 h-8 text-green-500" />,
+      value: dashboardStats.activeUsers?.value?.toLocaleString() ?? "N/A",
+      icon: <UserCheck className="w-5 h-5" />,
+      trend: dashboardStats.activeUsers?.trend ?? null,
+      trendUp: dashboardStats.activeUsers?.trendUp ?? true,
+      sparklineData: dashboardStats.activeUsers?.sparklineData ?? [],
     },
     {
       label: "Total Users",
-      value: totalUsers.toLocaleString(),
+      value: dashboardStats.totalUsers?.value?.toLocaleString() ?? "N/A",
       path: "/admin/users",
-      icon: <Users className="w-8 h-8 text-indigo-500" />,
+      icon: <Users className="w-5 h-5" />,
+      trend: dashboardStats.totalUsers?.trend ?? null,
+      trendUp: dashboardStats.totalUsers?.trendUp ?? true,
+      sparklineData: dashboardStats.totalUsers?.sparklineData ?? [],
     },
     {
       label: "Most Active Category",
-      value: mostActiveCategory,
-      icon: <Eye className="w-8 h-8 text-blue-500" />,
+      value: dashboardStats.mostActiveCategory?.value ?? "—",
+      icon: <Eye className="w-5 h-5" />,
+      trend: dashboardStats.mostActiveCategory?.trend ?? null,
+      trendUp: dashboardStats.mostActiveCategory?.trendUp ?? true,
+      sparklineData: dashboardStats.mostActiveCategory?.sparklineData ?? [],
     },
-    // Keeping placeholders for data we don't have yet but reducing confusion
-    // { label: "Premium Subscribers", value: "0", icon: <CircleDollarSign className="w-8 h-8 text-orange-500" /> },
-  ];
+    {
+      label: "Premium Subscribers",
+      value: dashboardStats.premiumSubscribers?.value?.toLocaleString() ?? "N/A",
+      icon: <CircleDollarSign className="w-5 h-5" />,
+      trend: dashboardStats.premiumSubscribers?.trend ?? null,
+      trendUp: dashboardStats.premiumSubscribers?.trendUp ?? true,
+      sparklineData: dashboardStats.premiumSubscribers?.sparklineData ?? [],
+    },
+    {
+      label: "Free Users",
+      value: dashboardStats.freeUsers?.value?.toLocaleString() ?? "N/A",
+      icon: <Users className="w-5 h-5" />,
+      trend: dashboardStats.freeUsers?.trend ?? null,
+      trendUp: dashboardStats.freeUsers?.trendUp ?? true,
+      sparklineData: dashboardStats.freeUsers?.sparklineData ?? [],
+    },
+  ] : [];
 
   // --- Authorization Check for View ---
   const { user: reduxUser, loading: profileLoading } = useProfileActions();
@@ -175,34 +148,73 @@ const Page = () => {
     return <Loader />;
   }
 
+  const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
   return (
-    <>
-      <div className="flex items-center justify-between mb-8 animate-fadeIn">
-        <h1 className="text-2xl font-semibold text-gray-800">Admin Overview</h1>
+    <div className="min-h-screen bg-[#f8fafc] text-slate-800 pb-12">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 animate-fadeIn pt-4 px-2">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Admin Overview</h1>
+          <p className="text-gray-500 mt-1 font-medium">{currentDate}</p>
+        </div>
+        {/* <div className="mt-4 md:mt-0 flex flex-col items-end gap-3">
+          <div className="flex gap-3">
+            <button className="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-gray-50 transition-colors">
+              Export Report
+            </button>
+            <button className="bg-[#0B2149] text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-[#0B2149]/90 transition-colors">
+              + Create
+            </button>
+          </div>
+        </div> */}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Top Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((item, i) => (
           <div
             key={i}
             onClick={() => item.path && router.push(item.path)}
-            className={item.path ? "cursor-pointer" : ""}
+            className={item.path ? "cursor-pointer h-full" : "h-full"}
           >
-            <StatCard icon={item.icon} title={item.label} value={item.value} />
+            <StatCard
+              icon={item.icon}
+              title={item.label}
+              value={item.value}
+              trend={item.trend}
+              trendUp={item.trendUp}
+              sparklineData={item.sparklineData}
+            />
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-        <DummyChart articles={articles} />
-        <RevenueChart />
+      {/* Main Content Grid Layers */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="lg:col-span-2">
+          <DummyChart articles={articles} />
+        </div>
+        <div className="lg:col-span-1">
+          <RevenueChart />
+        </div>
       </div>
 
-      <div className="mt-8 space-y-6">
-        {/* <ContentTable /> 
-            <ContentApprovalPanel /> */}
+      {/* Bottom Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Placeholders for original tables or newly styled tables */}
+          {/* <ContentTable /> 
+               <ContentApprovalPanel /> */}
+          {/* <div className="bg-white p-8 rounded-2xl border border-dashed border-gray-300 flex items-center justify-center text-gray-400 font-medium">
+            Data Tables Area...
+          </div> */}
+        </div>
+        {/* <div className="lg:col-span-1">
+          <RecentActivity />
+        </div> */}
       </div>
-    </>
+    </div>
   );
 };
 

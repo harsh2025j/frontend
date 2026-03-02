@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
     LineChart,
     Line,
@@ -9,6 +9,7 @@ import {
     ResponsiveContainer,
 } from "recharts";
 import { ChevronDown } from "lucide-react";
+import apiClient from "@/data/services/apiConfig/apiClient";
 
 // Helper to generating years (e.g., current year - 5 to current year)
 const currentYear = new Date().getFullYear();
@@ -42,10 +43,7 @@ const CustomSelect = ({ value, options, onChange }: CustomSelectProps) => {
             onMouseLeave={() => setIsOpen(false)}
         >
             <button
-                // Combine click toggle with focus behavior
                 onClick={() => setIsOpen(!isOpen)}
-                // onBlur handles closing when tabbing away or clicking outside if the container doesn't capture it
-                // We use a small timeout to allow option clicks to register before closing
                 onBlur={() => setTimeout(() => setIsOpen(false), 200)}
                 className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white flex items-center gap-2 min-w-[100px] justify-between"
             >
@@ -71,32 +69,35 @@ const CustomSelect = ({ value, options, onChange }: CustomSelectProps) => {
     );
 };
 
-export default function DummyChart({ articles = [] }: { articles: any[] }) {
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+export default function DummyChart({ articles = [] }: { articles?: any[] }) {
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-indexed
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [chartData, setChartData] = useState<{ name: string; value: number; fullDate: string }[]>([]);
+    const [loading, setLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    const chartData = useMemo(() => {
-        // ... (logic remains same)
-        const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
-        const stats: Record<number, number> = {};
-        for (let i = 1; i <= daysInMonth; i++) {
-            stats[i] = 0;
-        }
-        articles.forEach((article) => {
-            if (!article.createdAt) return;
-            const date = new Date(article.createdAt);
-            if (date.getMonth() === selectedMonth && date.getFullYear() === selectedYear) {
-                const day = date.getDate();
-                stats[day] = (stats[day] || 0) + 1;
+    useEffect(() => {
+        const fetchDailyCounts = async () => {
+            setLoading(true);
+            try {
+                const res = await apiClient.get(`/articles/internal/daily-counts?month=${selectedMonth}&year=${selectedYear}`);
+                const raw: { day: number; count: number }[] = res.data?.data || res.data;
+                setChartData(
+                    raw.map(({ day, count }) => ({
+                        name: String(day),
+                        value: count,
+                        fullDate: `${months[selectedMonth - 1]} ${day}, ${selectedYear}`,
+                    }))
+                );
+            } catch (e) {
+                console.error('Failed to fetch daily article counts', e);
+                setChartData([]);
+            } finally {
+                setLoading(false);
             }
-        });
-        return Object.keys(stats).map((day) => ({
-            name: `${day}`,
-            value: stats[parseInt(day)],
-            fullDate: `${months[selectedMonth]} ${day}, ${selectedYear}`
-        }));
-    }, [articles, selectedMonth, selectedYear]);
+        };
+        fetchDailyCounts();
+    }, [selectedMonth, selectedYear]);
 
     return (
         <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-100">
@@ -107,8 +108,8 @@ export default function DummyChart({ articles = [] }: { articles: any[] }) {
                 <div className="flex gap-2 z-20">
                     <CustomSelect
                         value={selectedMonth}
-                        onChange={setSelectedMonth}
-                        options={months.map((m, i) => ({ label: m, value: i }))}
+                        onChange={(v) => setSelectedMonth(v)}
+                        options={months.map((m, i) => ({ label: m, value: i + 1 }))}
                     />
                     <CustomSelect
                         value={selectedYear}
@@ -123,65 +124,70 @@ export default function DummyChart({ articles = [] }: { articles: any[] }) {
                 className="overflow-x-auto pb-2 outline-none"
                 tabIndex={0}
                 onMouseEnter={() => {
-                    // Prevent jumping if focus causes scroll, though unlikely with simple focus()
                     scrollRef.current?.focus({ preventScroll: true });
                 }}
             >
-                <div className="min-w-[800px] h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData}>
-                            <defs>
-                                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#1A73E8" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#1A73E8" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
+                {loading ? (
+                    <div className="min-w-[800px] h-[300px] flex items-center justify-center text-gray-400 text-sm">
+                        Loading chart data...
+                    </div>
+                ) : (
+                    <div className="min-w-[800px] h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={chartData}>
+                                <defs>
+                                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#1A73E8" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#1A73E8" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
 
-                            <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
-                            <XAxis
-                                dataKey="name"
-                                stroke="#9CA3AF"
-                                tickLine={false}
-                                axisLine={false}
-                                tickMargin={10}
-                                interval={0}
-                            />
-                            <YAxis
-                                stroke="#9CA3AF"
-                                tickLine={false}
-                                axisLine={false}
-                                tickMargin={10}
-                                allowDecimals={false}
-                            />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: "white",
-                                    borderRadius: "8px",
-                                    border: "1px solid #E5E7EB",
-                                    boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
-                                }}
-                                labelStyle={{ color: "#6B7280", fontWeight: 500 }}
-                                labelFormatter={(label, payload) => {
-                                    if (payload && payload.length > 0 && payload[0].payload) {
-                                        return payload[0].payload.fullDate;
-                                    }
-                                    return label;
-                                }}
-                            />
-                            <Line
-                                type="monotone"
-                                dataKey="value"
-                                stroke="#1A73E8"
-                                strokeWidth={3}
-                                dot={{ r: 4, strokeWidth: 2, fill: "#fff" }}
-                                activeDot={{ r: 7, stroke: "#1A73E8", fill: "#1A73E8" }}
-                                fillOpacity={1}
-                                fill="url(#colorValue)"
-                                animationDuration={1200}
-                            />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+                                <XAxis
+                                    dataKey="name"
+                                    stroke="#9CA3AF"
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickMargin={10}
+                                    interval={0}
+                                />
+                                <YAxis
+                                    stroke="#9CA3AF"
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickMargin={10}
+                                    allowDecimals={false}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: "white",
+                                        borderRadius: "8px",
+                                        border: "1px solid #E5E7EB",
+                                        boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
+                                    }}
+                                    labelStyle={{ color: "#6B7280", fontWeight: 500 }}
+                                    labelFormatter={(label, payload) => {
+                                        if (payload && payload.length > 0 && payload[0].payload) {
+                                            return payload[0].payload.fullDate;
+                                        }
+                                        return label;
+                                    }}
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="value"
+                                    stroke="#1A73E8"
+                                    strokeWidth={3}
+                                    dot={{ r: 4, strokeWidth: 2, fill: "#fff" }}
+                                    activeDot={{ r: 7, stroke: "#1A73E8", fill: "#1A73E8" }}
+                                    fillOpacity={1}
+                                    fill="url(#colorValue)"
+                                    animationDuration={1200}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                )}
             </div>
         </div>
     );
