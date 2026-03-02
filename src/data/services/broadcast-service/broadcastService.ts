@@ -10,10 +10,11 @@ export interface BroadcastPayload {
 }
 
 export const getBroadcastService = {
-    getBroadcast: async () => {
-        return await apiClient.get(API_ENDPOINTS.NOTIFICATIONS.GET_BROADCAST);
+    getBroadcast: async (page = 1, limit = 16) => {
+        return await apiClient.get(API_ENDPOINTS.NOTIFICATIONS.GET_BROADCAST, {
+            params: { page, limit },
+        });
     },
-
 };
 export const postBroadcastService = {
     sendBroadcast: async (data: BroadcastPayload) => {

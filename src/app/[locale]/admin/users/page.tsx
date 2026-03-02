@@ -404,18 +404,17 @@ export default function UserManagementPage() {
                                                     <div className="flex items-center gap-2">
                                                         <Shield size={16} className={
                                                             tableUser.clearanceLevel === 5 ? "text-red-600" :
-                                                            tableUser.clearanceLevel === 4 ? "text-orange-600" :
-                                                            tableUser.clearanceLevel === 3 ? "text-yellow-600" :
-                                                            tableUser.clearanceLevel === 2 ? "text-blue-600" :
-                                                            "text-gray-600"
+                                                                tableUser.clearanceLevel === 4 ? "text-orange-600" :
+                                                                    tableUser.clearanceLevel === 3 ? "text-yellow-600" :
+                                                                        tableUser.clearanceLevel === 2 ? "text-blue-600" :
+                                                                            "text-gray-600"
                                                         } />
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                            tableUser.clearanceLevel === 5 ? "bg-red-50 text-red-700 border border-red-100" :
-                                                            tableUser.clearanceLevel === 4 ? "bg-orange-50 text-orange-700 border border-orange-100" :
-                                                            tableUser.clearanceLevel === 3 ? "bg-yellow-50 text-yellow-700 border border-yellow-100" :
-                                                            tableUser.clearanceLevel === 2 ? "bg-blue-50 text-blue-700 border border-blue-100" :
-                                                            "bg-gray-50 text-gray-700 border border-gray-100"
-                                                        }`}>
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tableUser.clearanceLevel === 5 ? "bg-red-50 text-red-700 border border-red-100" :
+                                                                tableUser.clearanceLevel === 4 ? "bg-orange-50 text-orange-700 border border-orange-100" :
+                                                                    tableUser.clearanceLevel === 3 ? "bg-yellow-50 text-yellow-700 border border-yellow-100" :
+                                                                        tableUser.clearanceLevel === 2 ? "bg-blue-50 text-blue-700 border border-blue-100" :
+                                                                            "bg-gray-50 text-gray-700 border border-gray-100"
+                                                            }`}>
                                                             Level {tableUser.clearanceLevel}
                                                         </span>
                                                     </div>
