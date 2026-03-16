@@ -6,6 +6,9 @@ import toast from "react-hot-toast";
 import { reportsService } from "@/data/services/reports-service/reportsService";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
+import Pagination from "@/components/Pagination";
+
+const LIMIT = 12;
 
 type ReportType = "all" | "case-statistics" | "judgment-analysis" | "custom";
 
@@ -25,44 +28,51 @@ export default function ReportsPage() {
     const [reports, setReports] = useState<Report[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     // Fetch reports data
     useEffect(() => {
-        fetchReports();
-    }, []);
+        fetchReports(currentPage);
+    }, [currentPage, activeType]);
 
-    const fetchReports = async () => {
+    const fetchReports = async (page: number) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await reportsService.getAll();
-            const rawData = response.data?.data || response.data || [];
-            console.log("Reports data:", rawData);
+            const params = {
+                page,
+                limit: LIMIT,
+                reportType: activeType === "all" ? undefined : activeType
+            };
+            const response = await reportsService.getAll(params);
+            const payload = response.data;
 
-            // Handle pagination structure: if rawData is an object with a 'data' array, use that
-            const reportsArray = Array.isArray(rawData) ? rawData : (Array.isArray(rawData.data) ? rawData.data : []);
+            if (payload.success && Array.isArray(payload.data)) {
+                // Map and validate data
+                const mappedReports: Report[] = payload.data.map((item: any) => ({
+                    id: item.id || Math.random().toString(36).substr(2, 9),
+                    title: item.title || "Untitled Report",
+                    description: item.description || "No description available",
+                    type: ["case-statistics", "judgment-analysis", "custom"].includes(item.type)
+                        ? item.type
+                        : "custom",
+                    generatedDate: item.generatedDate || item.createdAt || item.date || new Date().toISOString(),
+                    generatedBy: item.generatedBy || item.createdBy || item.author || "System",
+                    fileUrl: item.fileUrl || item.url || null
+                }));
 
-            // Map and validate data
-            const mappedReports: Report[] = reportsArray.map((item: any) => ({
-                id: item.id || Math.random().toString(36).substr(2, 9),
-                title: item.title || "Untitled Report",
-                description: item.description || "No description available",
-                // Normalize type or fallback to 'custom'
-                type: ["case-statistics", "judgment-analysis", "custom"].includes(item.type)
-                    ? item.type
-                    : "custom",
-                // Handle different date fields
-                generatedDate: item.generatedDate || item.createdAt || item.date || new Date().toISOString(),
-                // Handle generatedBy variants
-                generatedBy: item.generatedBy || item.createdBy || item.author || "System",
-                fileUrl: item.fileUrl || item.url || null
-            }));
-
-            setReports(mappedReports);
+                setReports(mappedReports);
+                setTotalPages(payload.meta?.totalPages || 1);
+            } else {
+                setReports([]);
+                setTotalPages(1);
+            }
         } catch (err: any) {
             console.error("Error fetching reports:", err);
             setError(err.message || "Failed to load reports data from the server");
             setReports([]);
+            setTotalPages(1);
             toast.error("Unable to load reports. Please try again later.");
         } finally {
             setLoading(false);
@@ -143,7 +153,10 @@ export default function ReportsPage() {
                     </div>
                     <div className="flex flex-wrap gap-3">
                         <button
-                            onClick={() => setActiveType("all")}
+                            onClick={() => {
+                                setActiveType("all");
+                                setCurrentPage(1);
+                            }}
                             className={`px-4 py-2 rounded-lg font-semibold transition-all ${activeType === "all"
                                 ? 'bg-gradient-to-r from-[#0A2342] to-[#1a3a75] text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -152,7 +165,10 @@ export default function ReportsPage() {
                             All Reports
                         </button>
                         <button
-                            onClick={() => setActiveType("case-statistics")}
+                            onClick={() => {
+                                setActiveType("case-statistics");
+                                setCurrentPage(1);
+                            }}
                             className={`px-4 py-2 rounded-lg font-semibold transition-all ${activeType === "case-statistics"
                                 ? 'bg-gradient-to-r from-[#0A2342] to-[#1a3a75] text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -161,7 +177,10 @@ export default function ReportsPage() {
                             Case Statistics
                         </button>
                         <button
-                            onClick={() => setActiveType("judgment-analysis")}
+                            onClick={() => {
+                                setActiveType("judgment-analysis");
+                                setCurrentPage(1);
+                            }}
                             className={`px-4 py-2 rounded-lg font-semibold transition-all ${activeType === "judgment-analysis"
                                 ? 'bg-gradient-to-r from-[#0A2342] to-[#1a3a75] text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -170,7 +189,10 @@ export default function ReportsPage() {
                             Judgment Analysis
                         </button>
                         <button
-                            onClick={() => setActiveType("custom")}
+                            onClick={() => {
+                                setActiveType("custom");
+                                setCurrentPage(1);
+                            }}
                             className={`px-4 py-2 rounded-lg font-semibold transition-all ${activeType === "custom"
                                 ? 'bg-gradient-to-r from-[#0A2342] to-[#1a3a75] text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -196,7 +218,7 @@ export default function ReportsPage() {
                                 </div>
                             </div>
                             <button
-                                onClick={fetchReports}
+                                onClick={() => fetchReports(currentPage)}
                                 className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
                                 title="Refresh"
                             >
@@ -226,7 +248,7 @@ export default function ReportsPage() {
                                     The reports data could not be retrieved from the server. Please check your connection and try again.
                                 </p>
                                 <button
-                                    onClick={fetchReports}
+                                    onClick={() => fetchReports(currentPage)}
                                     className="px-6 py-3 bg-[#0A2342] text-white rounded-lg hover:bg-[#1a3a75] transition-colors font-semibold"
                                 >
                                     Retry
@@ -292,6 +314,16 @@ export default function ReportsPage() {
                         )}
                     </div>
                 </div>
+
+                {totalPages > 1 && (
+                    <div className="mt-8 flex justify-center">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={(page) => setCurrentPage(page)}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Footer Info */}

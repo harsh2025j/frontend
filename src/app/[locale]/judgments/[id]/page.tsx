@@ -25,7 +25,17 @@ export default function JudgmentDetailPage() {
     const fetchJudgmentDetails = async (id: string) => {
         try {
             const response = await judgmentsService.getById(id);
-            setJudgment(response.data.data);
+            const data = response.data.data;
+            setJudgment(data);
+
+            // Auto-print if 'print' query param is present
+            const searchParams = new URLSearchParams(window.location.search);
+            if (searchParams.get("print") === "true") {
+                // Short timeout to ensure data is rendered
+                setTimeout(() => {
+                    window.print();
+                }, 800);
+            }
         } catch (error) {
             console.error("Error fetching judgment details:", error);
         } finally {
@@ -46,8 +56,61 @@ export default function JudgmentDetailPage() {
 
     return (
         <div className="min-h-screen bg-gray-100 pb-16 font-serif text-gray-900">
+            {/* Print Styles */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @media print {
+                    @page {
+                        size: A4;
+                        margin: 10mm 15mm 20mm 15mm;
+                    }
+                    body {
+                        background-color: white !important;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    /* Hide everything by default when printing */
+                    header, footer, nav, .print-hidden, .bg-white.border-b, .sticky {
+                        display: none !important;
+                    }
+                    /* Ensure only the document container and its parents are visible */
+                    .min-h-screen {
+                        background-color: white !important;
+                        padding: 0 !important;
+                    }
+                    .max-w-4xl {
+                        max-width: none !important;
+                        width: 100% !important;
+                        margin: 0 !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                        padding-top: 0 !important; /* Remove top padding for print */
+                    }
+                    
+                    /* Sticky Footer for every page */
+                    .print-footer {
+                        display: block !important;
+                        position: fixed;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        text-align: center;
+                        font-size: 10pt;
+                        font-family: serif;
+                        color: #666;
+                        border-top: 1px solid #ccc;
+                        padding-top: 5mm;
+                        background: white;
+                    }
+                }
+                /* Hide print footer on screen */
+                .print-footer {
+                    display: none;
+                }
+            `}} />
+
             {/* Action Bar (Hidden when printing) */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-20 flex justify-between items-center shadow-sm print:hidden">
+            <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-20 flex justify-between items-center shadow-sm print-hidden">
                 <button
                     onClick={() => router.back()}
                     className="group flex items-center gap-2 text-gray-600 hover:text-black transition-colors font-medium text-sm font-sans"
@@ -191,6 +254,11 @@ export default function JudgmentDetailPage() {
                 </div>
 
             </div>
+
+            {/* Print Footer - Only visible when printing */}
+            {/* <div className="print-footer">
+                Downloaded from: {typeof window !== 'undefined' ? window.location.origin : 'Sajjad Husain Law Associates'}
+            </div> */}
         </div>
     );
 }

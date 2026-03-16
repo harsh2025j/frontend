@@ -9,6 +9,7 @@ import { Trash2, Edit, Plus, Search, Scale } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import Pagination from "@/components/Pagination";
 
 export default function AdminJudgesPage() {
     useDocTitle("Judges  | Sajjad Husain Law Associates");
@@ -16,32 +17,45 @@ export default function AdminJudgesPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearchTerm = useDebounce(searchTerm, 600);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
+    // Reset page when search term changes
     useEffect(() => {
-        if (debouncedSearchTerm) {
-            handleSearch(debouncedSearchTerm);
-        } else {
-            fetchJudges();
-        }
+        setCurrentPage(1);
     }, [debouncedSearchTerm]);
 
-    const handleSearch = async (query: string) => {
-        setLoading(true);
-        try {
-            const response = await judgesService.searchJudges(query);
-            setJudges(response.data.data?.data || response.data.data || []);
-        } catch (error: any) {
-            toast.error(error.message || "Failed to search judges");
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => {
+        fetchData();
+    }, [debouncedSearchTerm, currentPage]);
 
-    const fetchJudges = async () => {
+    const fetchData = async () => {
         setLoading(true);
         try {
-            const response = await judgesService.getAll();
-            setJudges(response.data.data.data || response.data.data); // Handle both response formats
+            let response;
+            if (debouncedSearchTerm) {
+                response = await judgesService.searchJudges(debouncedSearchTerm, currentPage, 12);
+            } else {
+                response = await judgesService.getAll({ page: currentPage, limit: 12 });
+            }
+
+            // Handle different data formats
+            const responseData = response.data?.data ?? response.data;
+            const items = Array.isArray(responseData)
+                ? responseData
+                : (responseData?.data ?? []);
+            setJudges(items);
+
+            // Extract pagination metadata
+            const meta = response.data?.meta ?? response.data?.data?.meta;
+            if (meta?.totalPages) {
+                setTotalPages(meta.totalPages);
+            } else {
+                // Fallback: calculate from total + limit
+                const total = response.data?.data?.total ?? response.data?.total ?? 0;
+                const limit = response.data?.data?.limit ?? response.data?.limit ?? 10;
+                setTotalPages(total > 0 ? Math.ceil(total / limit) : 1);
+            }
         } catch (error: any) {
             toast.error(error.message || "Failed to fetch judges");
         } finally {
@@ -54,9 +68,8 @@ export default function AdminJudgesPage() {
         try {
             await judgesService.delete(id);
             toast.success("Judge deleted successfully");
-            fetchJudges();
+            fetchData();
         } catch (error: any) {
-            // console.error("Error deleting judge:", error);
             toast.error(error.message || "Failed to delete judge");
         }
     };
@@ -154,6 +167,16 @@ export default function AdminJudgesPage() {
                         </tbody>
                     </table>
                 </div>
+
+                {totalPages > 1 && (
+                    <div className="p-4 border-t border-gray-200">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );

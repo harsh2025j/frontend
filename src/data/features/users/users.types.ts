@@ -63,12 +63,19 @@ export interface UserFilter {
     officeId?: string;
     practiceAreaId?: string;
     clearanceLevel?: number | string;
+    page?: number;
+    limit?: number;
 }
 
 export interface UserListResponse {
     success: boolean;
     message: string;
-    data: User[];
+    data: {
+        data: User[];
+        total: number;
+        page: number;
+        limit: number;
+    };
 }
 
 export interface UserVerificationResponse {
@@ -87,6 +94,9 @@ export interface UserVerificationResponse {
 
 export interface UsersState {
     users: User[];
+    total: number;
+    page: number;
+    limit: number;
     loading: boolean;
     error: string | null;
     message: string | null;

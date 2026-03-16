@@ -177,7 +177,7 @@ export default function OfficesManagementPage() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
                 <div className="flex items-center gap-3 mb-4 md:mb-0">
                     <div className="p-3 bg-blue-100 rounded-lg">
-                        <Building2 className="w-6 h-6 text-blue-600" />
+                        <Building2 className="w-6 h-6 text-[#0B2149]" />
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Office Management</h1>
@@ -186,7 +186,7 @@ export default function OfficesManagementPage() {
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#0B2149] text-white rounded-lg hover:bg-[#1a3a75] transition-colors"
                 >
                     <Plus className="w-5 h-5" />
                     Add Office
@@ -202,7 +202,7 @@ export default function OfficesManagementPage() {
                             placeholder="Search by name, code, city, or state..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-transparent"
                         />
                     </div>
                     <div className="flex gap-2">
@@ -210,7 +210,7 @@ export default function OfficesManagementPage() {
                             onClick={() => setFilterActive("all")}
                             className={`px-4 py-2 rounded-lg transition-colors ${
                                 filterActive === "all"
-                                    ? "bg-blue-600 text-white"
+                                    ? "bg-[#0B2149] text-white"
                                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}
                         >
@@ -320,7 +320,7 @@ export default function OfficesManagementPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-[#0B2149]">
                                                     {office.code}
                                                 </span>
                                             </td>
@@ -363,7 +363,7 @@ export default function OfficesManagementPage() {
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
                                                         onClick={() => handleOpenModal(office)}
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        className="p-2 text-[#0B2149] hover:bg-blue-50 rounded-lg transition-colors"
                                                         title="Edit"
                                                     >
                                                         <Edit className="w-4 h-4" />
@@ -412,7 +412,7 @@ export default function OfficesManagementPage() {
                                         required
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-transparent"
                                         placeholder="Mumbai Headquarters"
                                     />
                                 </div>
@@ -428,7 +428,7 @@ export default function OfficesManagementPage() {
                                         onChange={(e) =>
                                             setFormData({ ...formData, code: e.target.value.toUpperCase() })
                                         }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-transparent"
                                         placeholder="MUM"
                                         maxLength={10}
                                     />
@@ -440,7 +440,7 @@ export default function OfficesManagementPage() {
                                         type="text"
                                         value={formData.city}
                                         onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-transparent"
                                         placeholder="Mumbai"
                                     />
                                 </div>
@@ -451,7 +451,7 @@ export default function OfficesManagementPage() {
                                         type="text"
                                         value={formData.state}
                                         onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-transparent"
                                         placeholder="Maharashtra"
                                     />
                                 </div>
@@ -462,7 +462,7 @@ export default function OfficesManagementPage() {
                                         value={formData.address}
                                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                         rows={2}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-transparent"
                                         placeholder="Full address"
                                     />
                                 </div>
@@ -477,7 +477,7 @@ export default function OfficesManagementPage() {
                                         onChange={(e) =>
                                             setFormData({ ...formData, phoneNumber: e.target.value })
                                         }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-transparent"
                                         placeholder="+91-22-12345678"
                                     />
                                 </div>
@@ -488,7 +488,7 @@ export default function OfficesManagementPage() {
                                         type="email"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-transparent"
                                         placeholder="office@example.com"
                                     />
                                 </div>
@@ -501,7 +501,7 @@ export default function OfficesManagementPage() {
                                             onChange={(e) =>
                                                 setFormData({ ...formData, isActive: e.target.checked })
                                             }
-                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            className="w-4 h-4 text-[#0B2149] border-gray-300 rounded focus:ring-blue-500/20"
                                         />
                                         <span className="ml-2 text-sm text-gray-700">Active</span>
                                     </label>
@@ -519,7 +519,7 @@ export default function OfficesManagementPage() {
                                 <button
                                     type="submit"
                                     disabled={isActionLoading}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="px-4 py-2 bg-[#0B2149] text-white rounded-lg hover:bg-[#1a3a75] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {isActionLoading && <RefreshCw className="w-4 h-4 animate-spin" />}
                                     {editingOffice ? "Update Office" : "Create Office"}

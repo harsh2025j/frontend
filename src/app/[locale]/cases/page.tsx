@@ -59,7 +59,7 @@ export default function CasesPage() {
 
         try {
             // console.log("Inputs:", inputs);
-            const results = await performCaseSearch(searchType, inputs);
+            const { results } = await performCaseSearch(searchType, inputs);
             if (results && results.length > 0) {
                 toast.success("Cases found successfully!");
                 const queryParams = new URLSearchParams();

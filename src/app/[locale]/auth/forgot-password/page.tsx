@@ -168,7 +168,7 @@ export default function ForgotPasswordPage() {
                   disabled={loading}
                   className="w-full bg-[#C9A227] text-white py-3 rounded-md font-medium hover:bg-[#b39022] transition disabled:opacity-50 uppercase tracking-wide"
                 >
-                  {loading ? "Sending..." : "Request a reset link"}
+                  {loading ? "Sending..." : "Request an OTP"}
                 </button>
 
                 <div className="text-center">

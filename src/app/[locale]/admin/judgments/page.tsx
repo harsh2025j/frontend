@@ -11,38 +11,72 @@ import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useSearchParams, useRouter } from "next/navigation";
+import Pagination from "@/components/Pagination";
 
 export default function AdminJudgmentsPage() {
     useDocTitle("Judgments  | Sajjad Husain Law Associates");
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
     const [judgments, setJudgments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
     const debouncedSearchTerm = useDebounce(searchTerm, 600);
     const [judgesMap, setJudgesMap] = useState<Record<string, string>>({});
     const [casesMap, setCasesMap] = useState<Record<string, string>>({});
 
+    const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get("page") || "1"));
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalRecords, setTotalRecords] = useState(0);
+    const limit = 12;
+
     useEffect(() => {
-        if (debouncedSearchTerm) {
-            handleSearch(debouncedSearchTerm);
+        const page = parseInt(searchParams.get("page") || "1");
+        const term = searchParams.get("q") || "";
+        setCurrentPage(page);
+
+        if (term) {
+            handleSearch(term, page);
         } else {
-            fetchJudgments();
+            fetchJudgments(page);
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        const currentQ = searchParams.get("q") || "";
+        if (debouncedSearchTerm !== currentQ) {
+            updateUrl({ q: debouncedSearchTerm, page: 1 });
         }
     }, [debouncedSearchTerm]);
 
-    const handleSearch = async (query: string) => {
+    const updateUrl = (updates: any) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value) {
+                params.set(key, value.toString());
+            } else {
+                params.delete(key);
+            }
+        });
+        router.push(`/admin/judgments?${params.toString()}`);
+    };
+
+    const handlePageChange = (page: number) => {
+        updateUrl({ page });
+    };
+
+    const handleSearch = async (query: string, page: number = 1) => {
         setLoading(true);
         try {
-            const res = await judgmentsService.search({ q: query });
-            const rawData = res.data;
-            let results = [];
-            if (Array.isArray(rawData)) {
-                results = rawData;
-            } else if (rawData?.data && Array.isArray(rawData.data)) {
-                results = rawData.data;
-            } else if (rawData?.data?.data && Array.isArray(rawData.data.data)) {
-                results = rawData.data.data;
-            }
+            const res = await judgmentsService.search({ q: query, page, limit });
+            const data = res.data?.data || res.data || {};
+            const results = Array.isArray(data) ? data : (data.data || []);
+            const total = data.total || data.meta?.totalItems || (Array.isArray(data) ? data.length : 0);
+
             setJudgments(results);
+            setTotalRecords(total);
+            setTotalPages(Math.ceil(total / limit) || 1);
         } catch (error: any) {
             console.error("Error searching judgments:", error);
             toast.error("Failed to search judgments");
@@ -51,25 +85,23 @@ export default function AdminJudgmentsPage() {
         }
     };
 
-    const fetchJudgments = async () => {
+    const fetchJudgments = async (page: number = 1) => {
+        setLoading(true);
         try {
             const [judgmentsRes, judgesRes, casesRes] = await Promise.all([
-                judgmentsService.getAll(),
-                judgesService.getAll(),
-                casesService.getAll()
+                judgmentsService.getAll({ page, limit }),
+                judgesService.getAll({ limit: 25 }), // Fetch more to build maps
+                casesService.getAll({ limit: 25 })
             ]);
 
             // Process Judgments
-            const rawData = judgmentsRes.data;
-            let results = [];
-            if (Array.isArray(rawData)) {
-                results = rawData;
-            } else if (rawData?.data && Array.isArray(rawData.data)) {
-                results = rawData.data;
-            } else if (rawData?.data?.data && Array.isArray(rawData.data.data)) {
-                results = rawData.data.data;
-            }
+            const data = judgmentsRes.data?.data || judgmentsRes.data || {};
+            const results = Array.isArray(data) ? data : (data.data || []);
+            const total = data.total || data.meta?.totalItems || (Array.isArray(data) ? data.length : 0);
+
             setJudgments(results);
+            setTotalRecords(total);
+            setTotalPages(Math.ceil(total / limit) || 1);
 
             // Process Judges Map
             const judgesData = judgesRes.data?.data?.data || judgesRes.data?.data || judgesRes.data || [];
@@ -202,6 +234,20 @@ export default function AdminJudgmentsPage() {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                {!loading && totalPages > 1 && (
+                    <div className="p-4 border-t border-gray-200 bg-gray-50/50 flex flex-col items-center gap-4">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                        />
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                            Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords} records
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );

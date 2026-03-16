@@ -1,49 +1,67 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense, useCallback } from "react";
 import { Link } from "@/i18n/routing";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { performCaseSearch, SearchInputs, SearchType } from "../searchLogic";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
+import Pagination from "@/components/Pagination";
 
 function ResultPageContent() {
     useDocTitle("Cases | Sajjad Husain Law Associates");
     const searchParams = useSearchParams();
+    const router = useRouter();
     const [cases, setCases] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const limit = 10;
+
+    const fetchResults = useCallback(async (page: number) => {
+        setLoading(true);
+        try {
+            // Reconstruct inputs from search params
+            const searchType = (searchParams.get("searchType") as SearchType) || "caseNumber";
+
+            const inputs: SearchInputs = {
+                filingNumber: searchParams.get("filingNumber") || "",
+                crimeNumber: searchParams.get("crimeNumber") || "",
+                caseNumber: searchParams.get("caseNumber") || "",
+                partyName: searchParams.get("partyName") || "",
+                partyType: searchParams.get("partyType") || "",
+                advocateName: searchParams.get("advocateName") || "",
+                court: searchParams.get("court") || "",
+                caseType: searchParams.get("caseType") || "",
+                year: searchParams.get("year") || ""
+            };
+
+            const { results, total, totalPages: totalP } = await performCaseSearch(searchType, inputs, page, limit);
+            setCases(results);
+            setTotalRecords(total);
+            setTotalPages(totalP);
+        } catch (error) {
+            console.error("Error fetching results:", error);
+            setCases([]);
+            setTotalRecords(0);
+            setTotalPages(0);
+        } finally {
+            setLoading(false);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
-        const fetchResults = async () => {
-            setLoading(true);
-            try {
-                // Reconstruct inputs from search params
-                const searchType = (searchParams.get("searchType") as SearchType) || "caseNumber";
+        const pageFromQuery = parseInt(searchParams.get("page") || "1");
+        setCurrentPage(pageFromQuery);
+        fetchResults(pageFromQuery);
+    }, [searchParams, fetchResults]);
 
-                const inputs: SearchInputs = {
-                    filingNumber: searchParams.get("filingNumber") || "",
-                    crimeNumber: searchParams.get("crimeNumber") || "",
-                    caseNumber: searchParams.get("caseNumber") || "",
-                    partyName: searchParams.get("partyName") || "",
-                    partyType: searchParams.get("partyType") || "",
-                    advocateName: searchParams.get("advocateName") || "",
-                    court: searchParams.get("court") || "",
-                    caseType: searchParams.get("caseType") || "",
-                    year: searchParams.get("year") || ""
-                };
-
-                const results = await performCaseSearch(searchType, inputs);
-                setCases(results);
-            } catch (error) {
-                console.error("Error fetching results:", error);
-                setCases([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchResults();
-    }, [searchParams]);
+    const handlePageChange = (page: number) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("page", page.toString());
+        router.push(`/cases/result?${params.toString()}`);
+    };
 
     if (loading) {
         return (
@@ -55,7 +73,6 @@ function ResultPageContent() {
     }
 
     return (
-        console.log(cases),
         <div className="min-h-screen bg-gray-50/50 p-6">
             <div className="max-w-7xl mx-auto space-y-6">
 
@@ -81,7 +98,7 @@ function ResultPageContent() {
                     <div className="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
                             <h2 className="font-semibold text-gray-800">Cases Found</h2>
-                            <span className="text-xs font-medium text-gray-500 bg-white border px-2 py-1 rounded-full text-nowrap">{cases.length} records</span>
+                            <span className="text-xs font-medium text-gray-500 bg-white border px-2 py-1 rounded-full text-nowrap">{totalRecords} records</span>
                         </div>
                         <div className="p-6 bg-gray-50/30">
                             <div className="space-y-6">
@@ -93,9 +110,9 @@ function ResultPageContent() {
                                             <div className="flex-1">
                                                 <div className="flex flex-wrap items-center gap-2 mb-3">
                                                     <span className={`px-2.5 py-0.5 inline-flex text-xs font-bold rounded-md capitalize border ${c.status === "pending" ? "bg-yellow-50 text-yellow-800 border-yellow-200" :
-                                                            c.status === "closed" ? "bg-gray-50 text-gray-800 border-gray-200" :
-                                                                c.status === "filed" ? "bg-blue-50 text-blue-800 border-blue-200" :
-                                                                    "bg-green-50 text-green-800 border-green-200"
+                                                        c.status === "closed" ? "bg-gray-50 text-gray-800 border-gray-200" :
+                                                            c.status === "filed" ? "bg-blue-50 text-blue-800 border-blue-200" :
+                                                                "bg-green-50 text-green-800 border-green-200"
                                                         }`}>
                                                         {c.status}
                                                     </span>
@@ -138,6 +155,18 @@ function ResultPageContent() {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+
+                            {/* Pagination Component */}
+                            <div className="mt-8 border-t border-gray-100 pt-6">
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={handlePageChange}
+                                />
+                                <div className="text-center mt-4 text-xs text-gray-400">
+                                    Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords} records
+                                </div>
                             </div>
                         </div>
                     </div>

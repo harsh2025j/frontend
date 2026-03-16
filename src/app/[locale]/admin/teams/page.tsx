@@ -2,17 +2,26 @@
 import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Loader from "@/components/ui/Loader";
-import { fetchUsers } from "@/data/features/users/usersThunks";
-import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { useDocTitle } from "@/hooks/useDocTitle";
-
+import { teamsApi } from "@/data/services/teams-service/teamsService";
+import { User } from "@/data/features/users/users.types";
+import Pagination from "@/components/Pagination";
+import toast from "react-hot-toast";
+import { Search } from "lucide-react";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const TeamManagementPage: React.FC = () => {
-  useDocTitle("Team Management  | Sajjad Husain Law Associates");
-  const dispatch = useAppDispatch();
-  const { users, loading } = useAppSelector((state) => state.users);
+  useDocTitle("Team Management | Sajjad Husain Law Associates");
+  const [teamMembers, setTeamMembers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 600);
+  const limit = 15;
 
   const router = useRouter();
   const { user: reduxUser } = useProfileActions();
@@ -39,18 +48,36 @@ const TeamManagementPage: React.FC = () => {
     }
   }, [user, router]);
 
+  const fetchTeamData = useCallback(async () => {
+    if (!isAuthorized) return;
+    setLoading(true);
+    try {
+      const response = await teamsApi.fetchTeams({
+        page: currentPage,
+        limit,
+        name: debouncedSearchTerm,
+      });
+      // response is UserListResponse, which has a nested data object containing { data: User[], total, page, limit }
+      const paginatedData = response.data;
+      setTeamMembers(paginatedData.data || []);
+      setTotal(paginatedData.total || 0);
+      setTotalPages(Math.ceil((paginatedData.total || 0) / limit));
+    } catch (error: any) {
+      toast.error(error.message || "Failed to fetch team members");
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthorized, currentPage, debouncedSearchTerm]);
+
   useEffect(() => {
-    if (isAuthorized) dispatch(fetchUsers());
-  }, [isAuthorized, dispatch]);
+    fetchTeamData();
+  }, [fetchTeamData]);
 
-  // 3) Filter users (must be BEFORE any return)
-  const filteredUsers = useMemo(() => {
-    if (!reduxUser || !reduxUser._id) return null;
-    if (!users || users.length === 0) return null;
-    return users.filter((u) => u.createdBy?._id === reduxUser._id);
-  }, [users, reduxUser]);
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm]);
 
-  // 4) Render loader until authorization + user ready
   if (!isAuthorized || !user) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
@@ -59,159 +86,146 @@ const TeamManagementPage: React.FC = () => {
     );
   }
 
-  const addNewMember = () => {
-    router.push("/admin/teams/add-new-member");
-  };
-
   return (
-    <div>
-      <h1 className="text-xl font-poppins text-black font-medium">
-        Team Management
-      </h1>
+    <div className="p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[#0A2342]">Team Management</h1>
+          <p className="text-gray-500 text-sm mt-1">Manage users created by you</p>
+        </div>
+        <button
+          onClick={() => router.push('/admin/teams/add-new-member')}
+          className="bg-[#0B2149] text-white px-5 py-2.5 rounded-lg font-medium hover:bg-[#1a3a75] transition-colors flex items-center gap-2 shadow-sm"
+        >
+          <span>+</span> Invite New Member
+        </button>
+      </div>
 
-      <div className="flex min-h-screen bg-gray-50 text-gray-800">
-        <main className="flex-1 pt-4">
-          <div className="mx-auto bg-white rounded-2xl shadow p-4">
-            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-gray rounded-xl px-6 py-3">
-              <div className="text-sm md:text-base">
-                <strong>Total Team:</strong> {filteredUsers?.length || 0}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="relative w-full md:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search team members..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="text-sm font-medium text-gray-600">
+            Total Team Members: <span className="text-[#0A2342] font-bold">{total}</span>
+          </div>
+        </div>
+
+        {/* Mobile View */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden p-4">
+          {loading ? (
+            [...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 animate-pulse flex flex-col gap-4">
+                <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-8 bg-gray-200 rounded w-full mt-auto"></div>
               </div>
-              <button
-                onClick={() => router.push('/admin/teams/add-new-member')}
-                className="bg-[#0B2149] text-white px-5 py-2 rounded-md font-medium hover:bg-[#1a3a75] transition-colors flex items-center gap-2"
-              >
-                <span>+</span> Invite New Member
-              </button>
+            ))
+          ) : teamMembers.length === 0 ? (
+            <div className="col-span-full text-center py-10 text-gray-500">
+              No team members found.
             </div>
-
-            {/* Mobile/Tablet Card View */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden mb-6">
-              {loading || !filteredUsers ? (
-                // Skeleton
-                [...Array(4)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-xl shadow p-5 animate-pulse flex flex-col gap-4">
-                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                    <div className="h-8 bg-gray-200 rounded w-full mt-auto"></div>
+          ) : (
+            teamMembers.map((member) => (
+              <div key={member._id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4 hover:shadow-md transition-shadow">
+                <div className="border-b border-gray-100 pb-3 flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-bold text-[#0A2342]">{member.name}</h3>
+                    <p className="text-sm text-gray-500">{member.email}</p>
                   </div>
-                ))
-              ) : filteredUsers.length === 0 ? (
-                <div className="col-span-full text-center py-10 text-gray-500 bg-white rounded-xl shadow">
-                  No team members found.
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${member.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                    {member.isActive ? "Active" : "Inactive"}
+                  </span>
                 </div>
+
+                <div className="space-y-3 text-sm">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-semibold text-gray-700 uppercase text-[10px] tracking-wider">Roles</span>
+                    <TruncatedList items={member.roles || []} />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => router.push(`/admin/teams/edit/${member._id}`)}
+                  className="mt-auto w-full border border-[#0B2149] text-[#0B2149] py-2 rounded-lg text-sm font-medium hover:bg-[#0B2149] hover:text-white transition-all flex items-center justify-center gap-2"
+                >
+                  Manage Member
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop View */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50 text-gray-500 border-b border-gray-200">
+              <tr>
+                <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">User</th>
+                <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Email</th>
+                <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Roles</th>
+                <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Status</th>
+                <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-right">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-100 bg-white">
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-12">
+                    <Loader size="md" text="Loading Team..." />
+                  </td>
+                </tr>
+              ) : teamMembers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-12 text-gray-500">
+                    No team members found.
+                  </td>
+                </tr>
               ) : (
-                filteredUsers.map((member) => (
-                  <div key={member._id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4">
-                    <div className="border-b border-gray-100 pb-3 flex justify-between items-start">
-                      <div>
-                        <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">User</span>
-                        <h3 className="text-lg font-bold text-[#0A2342]">{member.name}</h3>
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${member.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                teamMembers.map((member) => (
+                  <tr key={member._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-4 px-6 font-medium text-gray-900">{member.name}</td>
+                    <td className="py-4 px-6 text-gray-600">{member.email}</td>
+                    <td className="py-4 px-6">
+                      <TruncatedList items={member.roles || []} />
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${member.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                         {member.isActive ? "Active" : "Inactive"}
                       </span>
-                    </div>
-
-                    <div className="space-y-3 text-sm text-gray-600">
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium text-gray-900">Email:</span>
-                        <span className="truncate">{member.email}</span>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium text-gray-900">Roles:</span>
-                        <div className="flex flex-wrap gap-1">
-                          <TruncatedList items={member.roles || []} />
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium text-gray-900">Permissions:</span>
-                        <div className="flex flex-wrap gap-1">
-                          <TruncatedList items={member.permissions || []} />
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => router.push(`/admin/teams/edit/${member._id}`)}
-                      className="mt-auto w-full bg-[#0B2149] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#1a3a75] transition-colors flex items-center justify-center gap-2"
-                    >
-                      Manage Member
-                    </button>
-                  </div>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <button
+                        onClick={() => router.push(`/admin/teams/edit/${member._id}`)}
+                        className="text-[#0B2149] hover:text-[#C9A227] font-medium text-sm transition-colors"
+                      >
+                        Manage
+                      </button>
+                    </td>
+                  </tr>
                 ))
               )}
-            </div>
+            </tbody>
+          </table>
+        </div>
 
-            {/* Table */}
-            <div className="hidden lg:block overflow-x-auto rounded-xl bg-lightgray">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-gray-100 text-gray-700 border-b border-bordercolor">
-                  <tr>
-                    <th className="py-3 px-4 text-sm font-medium">#</th>
-                    <th className="py-3 px-4 text-sm font-medium">User</th>
-                    <th className="py-3 px-4 text-sm font-medium">Email</th>
-                    <th className="py-3 px-4 text-sm font-medium">Role</th>
-                    <th className="py-3 px-4 text-sm font-medium">Permissions</th>
-                    <th className="py-3 px-4 text-sm font-medium">Status</th>
-                    <th className="py-3 px-4 text-sm font-medium">Action</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {loading || !filteredUsers ? (
-                    <tr>
-                      <td colSpan={7} className="text-center py-10">
-                        <Loader size="lg" text="Loading Team..." />
-                      </td>
-                    </tr>
-                  ) : filteredUsers.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="text-center py-10 text-gray-500 text-sm"
-                      >
-                        No team members found.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredUsers.map((member, index) => (
-                      <tr
-                        key={member._id}
-                        className="border-b border-bordercolor hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="py-3 px-4 text-sm">{index + 1}</td>
-                        <td className="py-3 px-4 text-sm">{member.name}</td>
-                        <td className="py-3 px-4 text-sm">{member.email}</td>
-                        <td className="py-3 px-4 text-sm">
-                          <TruncatedList items={member.roles || []} />
-                        </td>
-                        <td className="py-3 px-4 text-sm">
-                          <TruncatedList items={member.permissions || []} />
-                        </td>
-                        <td className="py-3 px-4 text-sm">
-                          <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-medium">
-                            {member.isActive ? "Active" : "Inactive"}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 flex gap-2 ">
-                          <button onClick={() => router.push(`/admin/teams/edit/${member._id}`)} className="bg-[#0B2149] text-white px-4 py-1 rounded-md text-sm hover:bg-gray-400">
-                            Manage
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex justify-center items-center mt-4 space-x-2 text-gray-600 text-sm">
-              <button className="px-2 py-1 hover:text-[#0B2149]">&lt;</button>
-              <span className="px-3 py-1 border rounded-md bg-gray-100">1</span>
-              <button className="px-2 py-1 hover:text-[#0B2149]">&gt;</button>
-            </div>
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-gray-200 bg-gray-50/30">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
-        </main>
+        )}
       </div>
     </div>
   );
@@ -237,21 +251,18 @@ function TruncatedList({ items }: { items: { _id?: string; id?: string; name: st
       zIndex: 9999,
     };
 
-    // Flip up if space below is tight (<200px)
     if (spaceBelow < 200) {
       newStyle.bottom = window.innerHeight - rect.top + 4;
-      newStyle.maxHeight = rect.top - 20; // prevent overflow top
+      newStyle.maxHeight = rect.top - 20;
     } else {
       newStyle.top = rect.bottom + 4;
-      newStyle.maxHeight = window.innerHeight - rect.bottom - 20; // prevent overflow bottom
+      newStyle.maxHeight = window.innerHeight - rect.bottom - 20;
     }
 
     setStyle(newStyle);
   };
 
-  // Close on click outside or Scroll
   useEffect(() => {
-    // Generic click listener for outside clicks
     const handleClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
@@ -305,7 +316,6 @@ function TruncatedList({ items }: { items: { _id?: string; id?: string; name: st
             +{remainingCount}
           </button>
 
-          {/* Fixed Tooltip (Z-Axis Independent) */}
           {isOpen && (
             <div
               className="fixed bg-white border border-gray-100 rounded-lg shadow-xl p-3 flex flex-col gap-1.5 w-max min-w-[120px] max-w-[200px]"

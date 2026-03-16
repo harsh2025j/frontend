@@ -7,6 +7,9 @@ import { Trash2, Plus, Monitor, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import Pagination from "@/components/Pagination";
+
+const LIMIT = 12;
 
 export default function AdminDisplayBoardsPage() {
     useDocTitle("Display Boards  | Sajjad Husain Law Associates");
@@ -15,15 +18,32 @@ export default function AdminDisplayBoardsPage() {
     const [showGenerateModal, setShowGenerateModal] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [generateData, setGenerateData] = useState({ court: "", date: "" });
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
 
     useEffect(() => {
-        fetchBoards();
-    }, []);
+        fetchBoards(currentPage);
+    }, [currentPage]);
 
-    const fetchBoards = async () => {
+    const fetchBoards = async (page: number) => {
+        setLoading(true);
         try {
-            const response = await displayBoardsService.getAll();
-            setBoards(response.data.data.data);
+            const response = await displayBoardsService.getAll({ page, limit: LIMIT });
+            const payload = response.data;
+            
+            // With standardized backend response:
+            // payload.data is the array
+            // payload.meta contains total, page, etc.
+            if (payload.success && Array.isArray(payload.data)) {
+                setBoards(payload.data);
+                setTotalPages(payload.meta?.totalPages || Math.ceil((payload.meta?.total || 0) / LIMIT) || 1);
+                setTotalItems(payload.meta?.total || 0);
+            } else {
+                setBoards([]);
+                setTotalPages(1);
+                setTotalItems(0);
+            }
         } catch (error: any) {
             // console.error("Error fetching display boards:", error);
             toast.error(error.message || "Failed to fetch display boards");
@@ -37,7 +57,7 @@ export default function AdminDisplayBoardsPage() {
         try {
             await displayBoardsService.delete(id);
             toast.success("Display board deleted successfully");
-            fetchBoards();
+            fetchBoards(currentPage);
         } catch (error: any) {
             // console.error("Error deleting display board:", error);
             toast.error(error.message || "Failed to delete display board");
@@ -51,7 +71,8 @@ export default function AdminDisplayBoardsPage() {
             await displayBoardsService.generateCauseList(generateData);
             toast.success("Cause list generated successfully");
             setShowGenerateModal(false);
-            fetchBoards();
+            setCurrentPage(1);
+            fetchBoards(1);
         } catch (error: any) {
             // console.error("Error generating cause list:", error);
             toast.error(error.message || "Failed to generate cause list");
@@ -133,6 +154,16 @@ export default function AdminDisplayBoardsPage() {
                             <p className="text-gray-500 mt-1">Generate a cause list to get started.</p>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {boards.length > 0 && totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={(page) => setCurrentPage(page)}
+                    />
                 </div>
             )}
 

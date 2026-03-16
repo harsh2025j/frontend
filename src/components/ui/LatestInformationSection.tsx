@@ -1,12 +1,40 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Link } from "@/i18n/routing";
+import { judgmentsService } from "@/data/services/judgments-service/judgmentsService";
+import Loader from "./Loader";
 
 export default function LatestInformationSection() {
     const [activeTab, setActiveTab] = useState<'updates' | 'judgments' | 'orders' | 'notices'>('updates');
+    const [latestJudgments, setLatestJudgments] = useState<any[]>([]);
+    const [loadingJudgments, setLoadingJudgments] = useState(false);
+
+    useEffect(() => {
+        fetchJudgments();
+    }, []);
+
+    const fetchJudgments = async () => {
+        setLoadingJudgments(true);
+        try {
+            const response = await judgmentsService.getAll({ page: 1, limit: 10 });
+            const data = response.data?.data || response.data || {};
+            const results = Array.isArray(data) ? data : (data.data || []);
+            setLatestJudgments(results);
+        } catch (error) {
+            console.error("Error fetching judgments for home section:", error);
+        } finally {
+            setLoadingJudgments(false);
+        }
+    };
+
+    const handleDownload = (id: string) => {
+        // Open judgment detail in new tab with print flag
+        window.open(`/judgments/${id}?print=true`, "_blank");
+    };
 
     // Helper function to get content based on active tab
     const getTabContent = (tab: string) => {
-        const contentMap: Record<string, Array<{ type: string; text: string; download?: boolean }>> = {
+        const contentMap: Record<string, Array<{ type: string; text: string; download?: boolean; id?: string }>> = {
             updates: [
                 { type: 'Latest Update', text: 'Helpline numbers of Court Masters and Moderators for 22.12.2025', download: true },
                 { type: 'Latest Update', text: 'Notice regarding sitting of Chief Justice\'s Court at 10.30 A.M. on 22.12.2025 (Monday)' },
@@ -15,13 +43,12 @@ export default function LatestInformationSection() {
                 { type: 'Latest Update', text: 'New e-filing guidelines effective from January 2025' },
                 { type: 'Latest Update', text: 'Court holiday list for 2025 published' },
             ],
-            judgments: [
-                { type: 'Judgment', text: 'KOUSIK PAL VS. BM BIRLA HEART RESEARCH CENTRE - C.A. No. 15066/2025', download: true },
-                { type: 'Judgment', text: 'AMIT ARYA VS. KAMLESH KUMARI - C.A. No. 15069/2025', download: true },
-                { type: 'Judgment', text: 'SYED SHAHNAWAZ ALI VS. THE STATE OF MADHYA PRADESH - Crl.A. No. 5589-5590/2025', download: true },
-                { type: 'Judgment', text: 'MAHESH KUMAR AGARWAL VS. UNION OF INDIA - C.A. No. 15096/2025', download: true },
-                { type: 'Judgment', text: 'RAJESH KUMAR VS. STATE OF BIHAR - Criminal Appeal No. 1234/2025', download: true },
-            ],
+            judgments: latestJudgments.map(j => ({
+                id: j.id || j._id,
+                type: 'Judgment',
+                text: `${j.caseTitle || j.case?.title || j.title || 'Judgment'} - ${j.case?.caseNumber || ''}`,
+                download: true
+            })),
             orders: [
                 { type: 'Order', text: 'Order in Civil Appeal No. 12345/2025 dated 20.12.2025', download: true },
                 { type: 'Order', text: 'Interim order in Writ Petition No. 6789/2025', download: true },
@@ -101,27 +128,55 @@ export default function LatestInformationSection() {
                 </div>
 
                 {/* Information List - Fixed Height with Scroll */}
-                <div className="overflow-y-auto p-5 md:p-6 max-h-[400px]">
-                    <div className="space-y-3.5">
-                        {getTabContent(activeTab).map((notice, index) => (
-                            <div key={index} className="flex items-start gap-2.5 pb-3.5 border-b border-gray-200 last:border-0">
-                                <span className="text-[#C9A227] mt-0.5">▸</span>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                        <span className="px-2.5 py-1 bg-[#C9A227] text-white text-xs font-semibold rounded whitespace-nowrap">
-                                            {notice.type}
-                                        </span>
-                                        {notice.download && (
-                                            <button className="px-3 py-1 bg-[#0A2342] text-white text-xs font-medium rounded hover:bg-[#1a3a75] transition-colors">
-                                                download
-                                            </button>
-                                        )}
+                <div className="overflow-y-auto p-5 md:p-6 max-h-[400px] flex-1">
+                    {activeTab === 'judgments' && loadingJudgments ? (
+                        <div className="flex justify-center items-center h-full py-10">
+                            <Loader size="md" text="Loading Judgments..." />
+                        </div>
+                    ) : (
+                        <div className="space-y-3.5">
+                            {getTabContent(activeTab).map((notice: any, index: number) => {
+                                const isJudgment = activeTab === 'judgments' && notice.id;
+                                const content = (
+                                    <div key={index} className={`flex items-start gap-2.5 pb-3.5 border-b border-gray-200 last:border-0 ${isJudgment ? 'cursor-pointer hover:bg-gray-50/50 transition-colors group/item' : ''}`}>
+                                        <span className="text-[#C9A227] mt-0.5">▸</span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                                <span className="px-2.5 py-1 bg-[#C9A227] text-white text-xs font-semibold rounded whitespace-nowrap">
+                                                    {notice.type}
+                                                </span>
+                                                {notice.download && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            e.preventDefault();
+                                                            notice.id && handleDownload(notice.id);
+                                                        }}
+                                                        className="px-3 py-1 bg-[#0A2342] text-white text-xs font-medium rounded hover:bg-[#1a3a75] transition-colors relative z-10"
+                                                    >
+                                                        download
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <p className={`text-sm text-gray-700 leading-relaxed truncate ${isJudgment ? 'group-hover/item:text-[#0A2342] font-medium' : ''}`}>
+                                                {notice.text}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <p className="text-sm text-gray-700 leading-relaxed">{notice.text}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                                );
+
+                                if (isJudgment) {
+                                    return (
+                                        <Link key={index} href={`/judgments/${notice.id}`}>
+                                            {content}
+                                        </Link>
+                                    );
+                                }
+
+                                return content;
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

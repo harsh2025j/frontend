@@ -20,6 +20,8 @@ export const usersApi = {
             if (filters.practiceAreaId) params.append("practiceAreaId", filters.practiceAreaId);
             if (filters.clearanceLevel !== undefined && filters.clearanceLevel !== "")
                 params.append("clearanceLevel", String(filters.clearanceLevel));
+            if (filters.page) params.append("page", String(filters.page));
+            if (filters.limit) params.append("limit", String(filters.limit));
         }
 
         try {

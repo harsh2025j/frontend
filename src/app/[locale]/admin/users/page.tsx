@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Filter, RefreshCw, CheckCircle, XCircle, Shield, Building2, Scale } from "lucide-react";
 
@@ -17,6 +17,7 @@ import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { User, UserFilter } from "@/data/features/users/users.types";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import Pagination from "@/components/Pagination";
 
 export default function UserManagementPage() {
     useDocTitle("User Management  | Sajjad Husain Law Associates");
@@ -29,7 +30,7 @@ export default function UserManagementPage() {
     const [isAuthorized, setIsAuthorized] = useState(false);
 
     // --- Redux Data ---
-    const { users, loading, error } = useAppSelector((state) => state.users);
+    const { users, total, page, limit, loading, error } = useAppSelector((state) => state.users);
     const { offices } = useAppSelector((state) => state.offices);
     const { practiceAreas } = useAppSelector((state) => state.practiceAreas);
 
@@ -42,6 +43,8 @@ export default function UserManagementPage() {
         officeId: "",
         practiceAreaId: "",
         clearanceLevel: "",
+        page: 1,
+        limit: 15
     });
 
     // --- Modal State ---
@@ -70,29 +73,40 @@ export default function UserManagementPage() {
     }, [user, router]);
 
     // --- Fetch Users ---
-    const loadUsers = () => {
-        if (isAuthorized) {
-            // Clean up filters before sending
-            const activeFilters: UserFilter = {};
-            if (filters.name) activeFilters.name = filters.name;
-            if (filters.email) activeFilters.email = filters.email;
-            if (filters.isActive !== "") activeFilters.isActive = filters.isActive === "true";
-            if (filters.isVerified !== "") activeFilters.isVerified = filters.isVerified === "true";
-            if (filters.officeId) activeFilters.officeId = filters.officeId;
-            if (filters.practiceAreaId) activeFilters.practiceAreaId = filters.practiceAreaId;
-            if (filters.clearanceLevel !== "") activeFilters.clearanceLevel = parseInt(filters.clearanceLevel as string);
+    const loadUsers = useCallback(() => {
+        if (!isAuthorized) return;
 
-            dispatch(fetchUsers(activeFilters));
-        }
-    };
+        // Clean up filters before sending
+        const activeFilters: UserFilter = {};
+        if (filters.name) activeFilters.name = filters.name;
+        if (filters.email) activeFilters.email = filters.email;
+        if (filters.isActive !== "") activeFilters.isActive = filters.isActive === "true";
+        if (filters.isVerified !== "") activeFilters.isVerified = filters.isVerified === "true";
+        if (filters.officeId) activeFilters.officeId = filters.officeId;
+        if (filters.practiceAreaId) activeFilters.practiceAreaId = filters.practiceAreaId;
+        if (filters.clearanceLevel !== "") activeFilters.clearanceLevel = parseInt(filters.clearanceLevel as string);
+        
+        activeFilters.page = filters.page || 1;
+        activeFilters.limit = filters.limit || 15;
+
+        dispatch(fetchUsers(activeFilters));
+    }, [isAuthorized, filters, dispatch]);
 
     useEffect(() => {
         if (isAuthorized) {
             loadUsers();
+        }
+    }, [isAuthorized, filters.page, dispatch]);
+
+    // For other filters, we only want to load when "Filter" or "Search" is clicked
+    // But page changes should trigger instantly.
+
+    useEffect(() => {
+        if (isAuthorized) {
             dispatch(fetchOffices());
             dispatch(fetchPracticeAreas());
         }
-    }, [dispatch, isAuthorized]); // Initial load
+    }, [dispatch, isAuthorized]);
 
     // --- Handlers ---
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -102,11 +116,13 @@ export default function UserManagementPage() {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        loadUsers();
+        // Reset to page 1 on search
+        setFilters(prev => ({ ...prev, page: 1 }));
+        loadUsers(); 
     };
 
     const handleReset = () => {
-        setFilters({
+        const resetFilters = {
             name: "",
             email: "",
             isActive: "",
@@ -114,11 +130,17 @@ export default function UserManagementPage() {
             officeId: "",
             practiceAreaId: "",
             clearanceLevel: "",
-        });
-        // We need to trigger a fetch with empty filters, but state update is async.
-        // So we dispatch directly with empty object or use a timeout/effect.
-        // Simplest here is to dispatch immediately with empty filters.
-        dispatch(fetchUsers({}));
+            page: 1,
+            limit: 15
+        };
+        setFilters(resetFilters);
+        // Dispatch directly with reset filters to be immediate
+        dispatch(fetchUsers({ page: 1, limit: 15 }));
+    };
+
+    const handlePageChange = (newPage: number) => {
+        setFilters(prev => ({ ...prev, page: newPage }));
+        // The useEffect watching filters.page will trigger loadUsers()
     };
 
     // --- Verification Handlers ---
@@ -138,6 +160,8 @@ export default function UserManagementPage() {
             await dispatch(verifyUser({ userId: userToVerify.id, isVerified: newStatus }));
             setVerifyModalOpen(false);
             setUserToVerify(null);
+            // Reload to get fresh data
+            loadUsers();
         }
     };
 
@@ -473,12 +497,18 @@ export default function UserManagementPage() {
                     )
                     }
 
-                    {/* Footer / Pagination (Placeholder for now) */}
+                    {/* Footer / Pagination */}
                     {
                         !loading && !error && users.length > 0 && (
-                            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between text-sm text-gray-500">
-                                <span>Showing {users.length} users</span>
-                                {/* Add pagination controls here if API supports it */}
+                            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+                                <span>Showing {users.length} of {total} users</span>
+                                <div className="w-full sm:w-auto">
+                                    <Pagination
+                                        currentPage={page}
+                                        totalPages={Math.ceil(total / limit)}
+                                        onPageChange={handlePageChange}
+                                    />
+                                </div>
                             </div>
                         )
                     }

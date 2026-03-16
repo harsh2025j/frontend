@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { performJudgmentSearch, JudgmentSearchType, JudgmentSearchInputs } from "../searchLogic";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
+import Pagination from "@/components/Pagination";
 
 export default function JudgmentResultPage() {
     useDocTitle("Judgments | Sajjad Husain Law Associates");
@@ -17,6 +18,8 @@ export default function JudgmentResultPage() {
     const [loading, setLoading] = useState(true);
     const [searchType, setSearchType] = useState<JudgmentSearchType>("caseNumber");
     const [currentPage, setCurrentPage] = useState(1);
+
+    const totalPages = Math.ceil(resultsData.total / resultsData.limit) || 1;
 
     useEffect(() => {
         const type = searchParams.get("searchType") as JudgmentSearchType;
@@ -175,25 +178,14 @@ export default function JudgmentResultPage() {
 
                             {/* Pagination Controls */}
                             {resultsData.total > resultsData.limit && (
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                                    <div className="text-sm text-gray-500">
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-6 py-4 flex flex-col items-center justify-between gap-4">
+                                    <Pagination
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
+                                        onPageChange={handlePageChange}
+                                    />
+                                    <div className="text-xs font-bold text-gray-400 uppercase tracking-widest pb-2">
                                         Showing <span className="font-medium">{(currentPage - 1) * resultsData.limit + 1}</span> to <span className="font-medium">{Math.min(currentPage * resultsData.limit, resultsData.total)}</span> of <span className="font-medium">{resultsData.total}</span> results
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handlePageChange(currentPage - 1)}
-                                            disabled={currentPage === 1}
-                                            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[#0A2342] disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:ring-2 focus:ring-[#C9A227] outline-none"
-                                        >
-                                            Previous
-                                        </button>
-                                        <button
-                                            onClick={() => handlePageChange(currentPage + 1)}
-                                            disabled={currentPage * resultsData.limit >= resultsData.total}
-                                            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[#0A2342] disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:ring-2 focus:ring-[#C9A227] outline-none"
-                                        >
-                                            Next
-                                        </button>
                                     </div>
                                 </div>
                             )}

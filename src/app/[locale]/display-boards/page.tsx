@@ -5,6 +5,9 @@ import { Calendar, Bell, FileText, Download, Eye, Search, Filter, ChevronRight, 
 import { displayBoardsService } from "@/data/services/display-boards-service/displayBoardsService";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate, formatDateTime } from "@/utils/dateUtils";
+import Pagination from "@/components/Pagination";
+
+const LIMIT = 12;
 
 type BoardType = "daily-orders" | "cause-list" | "notices" | "announcements";
 
@@ -24,6 +27,8 @@ export default function DisplayBoardsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [loading, setLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
 
 
@@ -32,47 +37,49 @@ export default function DisplayBoardsPage() {
 
     // Fetch data from API
     useEffect(() => {
-        const fetchBoards = async () => {
+        const fetchBoards = async (page: number) => {
             setLoading(true);
             setError(null);
             try {
-                // Pass activeBoard (as type) and selectedDate as params
                 const params = {
                     type: activeBoard,
-                    date: selectedDate
+                    date: selectedDate,
+                    page,
+                    limit: LIMIT
                 };
 
                 const response = await displayBoardsService.getAll(params);
-                const rawData = response.data?.data || response.data || [];
-                console.log("Display Boards data:", rawData);
+                const payload = response.data;
 
-                // Handle pagination structure: if rawData is an object with a 'data' array, use that
-                const itemsArray = Array.isArray(rawData) ? rawData : (Array.isArray(rawData.data) ? rawData.data : []);
+                if (payload.success && Array.isArray(payload.data)) {
+                    const mappedItems: DisplayItem[] = payload.data.map((item: any) => ({
+                        id: item.id || Math.random().toString(36).substr(2, 9),
+                        title: item.title || "Untitled Item",
+                        date: item.date || item.createdAt || new Date().toISOString(),
+                        type: item.type || "General",
+                        description: item.description || "",
+                        fileUrl: item.fileUrl || item.url || null,
+                        isNew: item.isNew || (new Date(item.date || item.createdAt) > new Date(Date.now() - 86400000))
+                    }));
 
-                // Map and validate data
-                const mappedItems: DisplayItem[] = itemsArray.map((item: any) => ({
-                    id: item.id || Math.random().toString(36).substr(2, 9),
-                    title: item.title || "Untitled Item",
-                    date: item.date || item.createdAt || new Date().toISOString(),
-                    type: item.type || "General",
-                    description: item.description || "",
-                    fileUrl: item.fileUrl || item.url || null,
-                    isNew: item.isNew || (new Date(item.date || item.createdAt) > new Date(Date.now() - 86400000)) // Mark as new if within last 24h
-                }));
-
-                setDisplayItems(mappedItems);
+                    setDisplayItems(mappedItems);
+                    setTotalPages(payload.meta?.totalPages || 1);
+                } else {
+                    setDisplayItems([]);
+                    setTotalPages(1);
+                }
             } catch (err: any) {
                 console.error("Error fetching display boards:", err);
                 setError(err.message || "Failed to load data");
                 setDisplayItems([]);
-                // toast.error("Unable to load display board data.");
+                setTotalPages(1);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchBoards();
-    }, [activeBoard, selectedDate]);
+        fetchBoards(currentPage);
+    }, [activeBoard, selectedDate, currentPage]);
 
     const filteredItems = displayItems.filter(item =>
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -156,7 +163,10 @@ export default function DisplayBoardsPage() {
                 {/* Board Selection Tabs */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <button
-                        onClick={() => setActiveBoard("daily-orders")}
+                        onClick={() => {
+                            setActiveBoard("daily-orders");
+                            setCurrentPage(1);
+                        }}
                         className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "daily-orders"
                             ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
                             : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
@@ -177,7 +187,10 @@ export default function DisplayBoardsPage() {
                     </button>
 
                     <button
-                        onClick={() => setActiveBoard("cause-list")}
+                        onClick={() => {
+                            setActiveBoard("cause-list");
+                            setCurrentPage(1);
+                        }}
                         className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "cause-list"
                             ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
                             : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
@@ -198,7 +211,10 @@ export default function DisplayBoardsPage() {
                     </button>
 
                     <button
-                        onClick={() => setActiveBoard("notices")}
+                        onClick={() => {
+                            setActiveBoard("notices");
+                            setCurrentPage(1);
+                        }}
                         className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "notices"
                             ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
                             : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
@@ -219,7 +235,10 @@ export default function DisplayBoardsPage() {
                     </button>
 
                     <button
-                        onClick={() => setActiveBoard("announcements")}
+                        onClick={() => {
+                            setActiveBoard("announcements");
+                            setCurrentPage(1);
+                        }}
                         className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "announcements"
                             ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
                             : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
@@ -260,7 +279,10 @@ export default function DisplayBoardsPage() {
                                     type="date"
                                     className="pl-11 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
                                     value={selectedDate}
-                                    onChange={(e) => setSelectedDate(e.target.value)}
+                                    onChange={(e) => {
+                                        setSelectedDate(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
                                 />
                             </div>
                         </div>
@@ -345,6 +367,16 @@ export default function DisplayBoardsPage() {
                         )}
                     </div>
                 </div>
+
+                {totalPages > 1 && (
+                    <div className="mt-8 flex justify-center">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={(page) => setCurrentPage(page)}
+                        />
+                    </div>
+                )}
 
                 {/* Help Section */}
                 <div className="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4">

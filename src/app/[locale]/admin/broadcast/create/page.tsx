@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { BroadcastPayload, postBroadcastService } from "@/data/services/broadcast-service/broadcastService";
 import toast from "react-hot-toast";
-import { Send, Bell, AlertTriangle, Users, Search, Loader, ArrowLeft } from "lucide-react";
+import { Send, Bell, AlertTriangle, Users, Loader, ArrowLeft } from "lucide-react";
 import { usersApi } from "@/data/services/users-service/users-service";
-import { User } from "@/data/features/users/users.types";
 import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import InfiniteSearchableMultiSelect, { SearchableOption } from "@/components/ui/InfiniteSearchableMultiSelect";
 
 export default function CreateBroadcastPage() {
     useDocTitle("Create Broadcast | Sajjad Husain Law Associates");
@@ -18,13 +18,6 @@ export default function CreateBroadcastPage() {
     const user = reduxUser as UserData;
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [loading, setLoading] = useState(false);
-
-    // User Selection State
-    const [users, setUsers] = useState<User[]>([]);
-    const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-    const [searchUser, setSearchUser] = useState("");
-    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-    const [usersFetched, setUsersFetched] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState<BroadcastPayload>({
@@ -57,6 +50,35 @@ export default function CreateBroadcastPage() {
         }
     }, [user, router]);
 
+    const handleUserSearch = useCallback(async (query: string, page: number) => {
+        try {
+            const data = await usersApi.fetchUsers({ 
+                isActive: true, // Only fetch active users for broadcast
+                name: query, 
+                page,
+                limit: 15
+            });
+            
+            if (data.success && data.data) {
+                const options: SearchableOption[] = data.data.data.map((u: any) => ({
+                    value: u._id,
+                    label: u.name,
+                    subLabel: u.email
+                }));
+                const totalPages = Math.ceil(data.data.total / 15);
+                return { options, totalPages };
+            }
+            return { options: [], totalPages: 0 };
+        } catch (error) {
+            toast.error("Failed to load users");
+            return { options: [], totalPages: 0 };
+        }
+    }, []);
+
+    const handleUserSelectionChange = (userIds: string[]) => {
+        setFormData((prev) => ({ ...prev, userIds }));
+    };
+
     if (!isAuthorized) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -66,54 +88,23 @@ export default function CreateBroadcastPage() {
     }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
     const handleChannelChange = (channel: string) => {
-        const currentChannels = formData.channels;
-        if (currentChannels.includes(channel)) {
-            setFormData({ ...formData, channels: currentChannels.filter(c => c !== channel) });
-        } else {
-            setFormData({ ...formData, channels: [...currentChannels, channel] });
-        }
-    };
-
-    const fetchUsers = async () => {
-        if (usersFetched) return;
-        setIsLoadingUsers(true);
-        try {
-            const data = await usersApi.fetchUsers({ isActive: true });
-            if (data.success) {
-                setUsers(data.data);
-                setUsersFetched(true);
+        setFormData((prev) => {
+            const currentChannels = prev.channels;
+            if (currentChannels.includes(channel)) {
+                return { ...prev, channels: currentChannels.filter(c => c !== channel) };
+            } else {
+                return { ...prev, channels: [...currentChannels, channel] };
             }
-        } catch (error) {
-            // console.error("Failed to fetch users", error);
-            toast.error("Failed to load users list");
-        } finally {
-            setIsLoadingUsers(false);
-        }
+        });
     };
 
     const handleRecipientTypeChange = (sendToAll: boolean) => {
-        setFormData({ ...formData, sendToAll });
-        if (!sendToAll) {
-            fetchUsers();
-        }
+        setFormData((prev) => ({ ...prev, sendToAll }));
     };
-
-    const toggleUserSelection = (userId: string) => {
-        setSelectedUserIds(prev =>
-            prev.includes(userId)
-                ? prev.filter(id => id !== userId)
-                : [...prev, userId]
-        );
-    };
-
-    const filteredUsers = users.filter(u =>
-        u.name.toLowerCase().includes(searchUser.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchUser.toLowerCase())
-    );
 
     const handleSendClick = (e: React.FormEvent) => {
         e.preventDefault();
@@ -127,7 +118,7 @@ export default function CreateBroadcastPage() {
             return;
         }
 
-        if (!formData.sendToAll && selectedUserIds.length === 0) {
+        if (!formData.sendToAll && (!formData.userIds || formData.userIds.length === 0)) {
             toast.error("Please select at least one user");
             return;
         }
@@ -140,7 +131,7 @@ export default function CreateBroadcastPage() {
         try {
             await postBroadcastService.sendBroadcast({
                 ...formData,
-                userIds: formData.sendToAll ? [] : selectedUserIds
+                userIds: formData.sendToAll ? [] : (formData.userIds || [])
             });
             toast.success("Broadcast sent successfully!");
             router.push("/admin/broadcast");
@@ -229,44 +220,23 @@ export default function CreateBroadcastPage() {
                         </div>
 
                         {!formData.sendToAll && (
-                            <div className="border border-gray-200 rounded-lg p-3 md:p-4 bg-gray-50">
-                                <div className="relative mb-4">
-                                    <Search className="absolute left-3 top-2.5 text-gray-400 w-5 h-5" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search users by name or email..."
-                                        value={searchUser}
-                                        onChange={(e) => setSearchUser(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#0A2342] text-sm"
-                                    />
-                                </div>
-
-                                <div className="max-h-60 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                                    {isLoadingUsers ? (
-                                        <div className="flex justify-center py-8 text-gray-400">
-                                            <Loader className="w-6 h-6 animate-spin" />
-                                        </div>
-                                    ) : filteredUsers.length === 0 ? (
-                                        <p className="text-center text-sm text-gray-500 py-4">No users found</p>
-                                    ) : (
-                                        filteredUsers.map(u => (
-                                            <label key={u._id} className="flex items-center gap-3 p-3 hover:bg-white rounded-lg cursor-pointer transition-colors border border-transparent hover:border-gray-200">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedUserIds.includes(u._id)}
-                                                    onChange={() => toggleUserSelection(u._id)}
-                                                    className="w-5 h-5 rounded border-gray-300 text-[#0A2342] focus:ring-[#0A2342]"
-                                                />
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold text-gray-800 truncate">{u.name}</p>
-                                                    <p className="text-xs text-gray-500 truncate">{u.email}</p>
-                                                </div>
-                                            </label>
-                                        ))
-                                    )}
-                                </div>
-                                <div className="mt-3 text-sm text-gray-500 text-right font-medium">
-                                    {selectedUserIds.length} users selected
+                            <div className="space-y-2">
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Select Target Personnel
+                                </label>
+                                <InfiniteSearchableMultiSelect 
+                                    selectedValues={formData.userIds || []}
+                                    onChange={handleUserSelectionChange}
+                                    onSearch={handleUserSearch}
+                                    placeholder="Search and select users..."
+                                />
+                                <div className="flex justify-between items-center px-1">
+                                    <p className="text-[11px] text-gray-400">
+                                        Search by name or email. Scroll down for more results.
+                                    </p>
+                                    <p className="text-xs font-bold text-[#0A2342]">
+                                        {formData.userIds?.length || 0} users selected
+                                    </p>
                                 </div>
                             </div>
                         )}
@@ -298,7 +268,7 @@ export default function CreateBroadcastPage() {
 
                     <div className="bg-blue-50 p-4 rounded-lg flex gap-3 text-sm text-blue-800">
                         <AlertTriangle size={20} className="shrink-0 mt-0.5" />
-                        <p className="leading-relaxed">This message will be sent to <strong>{formData.sendToAll ? "ALL" : selectedUserIds.length}</strong> {formData.sendToAll ? "" : "selected"} registered users.</p>
+                        <p className="leading-relaxed">This message will be sent to <strong>{formData.sendToAll ? "ALL" : formData.userIds?.length || 0}</strong> {formData.sendToAll ? "" : "selected"} registered users.</p>
                     </div>
 
                     <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-4 border-t border-gray-100">
@@ -328,7 +298,7 @@ export default function CreateBroadcastPage() {
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">Confirm Broadcast?</h3>
                         <p className="text-gray-600 mb-6">
-                            Are you sure you want to send this notification to {formData.sendToAll ? "all users" : <strong>{selectedUserIds.length} specific users</strong>}?
+                            Are you sure you want to send this notification to {formData.sendToAll ? "all users" : <strong>{formData.userIds?.length || 0} specific users</strong>}?
                         </p>
 
                         <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left border border-gray-200 overflow-hidden">

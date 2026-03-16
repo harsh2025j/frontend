@@ -10,6 +10,7 @@ import Loader from "@/components/ui/Loader";
 
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import Pagination from "@/components/Pagination";
 
 export default function AdminCasesPage() {
     useDocTitle("Cases | Sajjad Husain Law Associates");
@@ -18,32 +19,45 @@ export default function AdminCasesPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, caseId: "", newStatus: "" });
     const debouncedSearchTerm = useDebounce(searchTerm, 600);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
+    // Reset page when search term changes
     useEffect(() => {
-        if (debouncedSearchTerm) {
-            handleSearch(debouncedSearchTerm);
-        } else {
-            fetchCases();
-        }
+        setCurrentPage(1);
     }, [debouncedSearchTerm]);
 
-    const handleSearch = async (query: string) => {
-        setLoading(true);
-        try {
-            const response = await casesService.searchCases(query);
-            setCases(response.data.data?.data || response.data.data || []);
-        } catch (error: any) {
-            toast.error(error.message || "Failed to search cases");
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => {
+        fetchData();
+    }, [debouncedSearchTerm, currentPage]);
 
-    const fetchCases = async () => {
+    const fetchData = async () => {
         setLoading(true);
         try {
-            const response = await casesService.getAll();
-            setCases(response.data.data.data || response.data.data); // Handle both formats
+            let response;
+            if (debouncedSearchTerm) {
+                response = await casesService.searchCases(debouncedSearchTerm, currentPage, 12);
+            } else {
+                response = await casesService.getAll({ page: currentPage, limit: 12 });
+            }
+            
+            // Handle different data formats
+            const responseData = response.data?.data ?? response.data;
+            const items = Array.isArray(responseData)
+                ? responseData
+                : (responseData?.data ?? []);
+            setCases(items);
+
+            // /search/cases returns a `meta` object; /cases returns total+limit directly
+            const meta = response.data?.meta ?? response.data?.data?.meta;
+            if (meta?.totalPages) {
+                setTotalPages(meta.totalPages);
+            } else {
+                // Fallback: calculate from total + limit at the top level
+                const total = response.data?.data?.total ?? response.data?.total ?? 0;
+                const limit = response.data?.data?.limit ?? response.data?.limit ?? 12;
+                setTotalPages(total > 0 ? Math.ceil(total / limit) : 1);
+            }
         } catch (error: any) {
             toast.error(error.message || "Failed to fetch cases");
         } finally {
@@ -56,7 +70,7 @@ export default function AdminCasesPage() {
         try {
             await casesService.delete(id);
             toast.success("Case deleted successfully");
-            fetchCases();
+            fetchData();
         } catch (error: any) {
             // console.error("Error deleting case:", error);
             toast.error(error.message || "Failed to delete case");
@@ -78,11 +92,11 @@ export default function AdminCasesPage() {
 
             await casesService.updateStatus(caseId, newStatus);
             toast.success("Status updated successfully");
-            fetchCases(); // Ensure sync
+            fetchData(); // Ensure sync
         } catch (error) {
             // console.error("Error updating status:", error);
             toast.error("Failed to update status");
-            fetchCases(); // Revert on error
+            fetchData(); // Revert on error
             setConfirmModal({ isOpen: false, caseId: "", newStatus: "" });
         }
     };
@@ -197,6 +211,16 @@ export default function AdminCasesPage() {
                         </tbody>
                     </table>
                 </div>
+                
+                {totalPages > 1 && (
+                    <div className="p-4 border-t border-gray-200">
+                        <Pagination 
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                )}
             </div>
 
             <ConfirmationModal

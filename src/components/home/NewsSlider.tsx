@@ -13,6 +13,7 @@ import img3 from '../../assets/slider/maskgroup.svg';
 import headerBg from '../../assets/svgimage/header.png';
 import { StaticImageData } from "next/image";
 import { getSafeImageUrl } from "@/utils/imageUtils";
+import PageLoader from "next/dist/client/page-loader";
 
 interface Slide {
   image: string | StaticImageData;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { Scale, Gavel, Home, ChevronRight, Mail, Phone, Award, Calendar, BookOpen, User, Building2, Info, Search, Loader2 } from 'lucide-react';
 import Image from "next/image";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -8,6 +8,8 @@ import toast from "react-hot-toast";
 import { judgesService } from "@/data/services/judges-service/judgesService";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
+import { useSearchParams, useRouter } from "next/navigation";
+import Pagination from "@/components/Pagination";
 
 type JudgeCategory = "chief-justice" | "senior-judges" | "judges" | "retired";
 
@@ -28,100 +30,135 @@ interface Judge {
     bio?: string;
 }
 
-export default function JudgesPage() {
+function JudgesPageContent() {
     useDocTitle("Judges | Sajjad Husain Law Associates");
-    const [activeCategory, setActiveCategory] = useState<JudgeCategory>("chief-justice");
-    const [searchQuery, setSearchQuery] = useState("");
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
+    const [activeCategory, setActiveCategory] = useState<JudgeCategory>((searchParams.get("category") as JudgeCategory) || "chief-justice");
+    const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
     const debouncedSearchTerm = useDebounce(searchQuery, 600);
-    const [selectedCourt, setSelectedCourt] = useState("");
-    const [selectedYear, setSelectedYear] = useState("");
-    const [selectedCourtType, setSelectedCourtType] = useState("");
+    const [selectedCourt, setSelectedCourt] = useState(searchParams.get("court") || "");
+    const [selectedYear, setSelectedYear] = useState(searchParams.get("year") || "");
+    const [selectedCourtType, setSelectedCourtType] = useState(searchParams.get("courtType") || "");
+
     const [judges, setJudges] = useState<Judge[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Fetch judges data
-    useEffect(() => {
-        const fetchJudges = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                let response;
-                if (debouncedSearchTerm) {
-                    response = await judgesService.searchJudges(debouncedSearchTerm);
-                } else {
-                    response = await judgesService.getActive();
-                }
+    const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get("page") || "1"));
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalRecords, setTotalRecords] = useState(0);
+    const limit = 12;
 
-                const rawData = response.data?.data?.data || response.data?.data || response.data || [];
+    const fetchJudges = useCallback(async (page: number, category: JudgeCategory, term: string, court: string, courtType: string, year: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            let response;
+            const params: any = {
+                page,
+                limit,
+                category
+            };
 
-                const mappedData = Array.isArray(rawData) ? rawData.map((j: any) => {
-                    // Derive category from designation since backend doesn't provide it
-                    let category: JudgeCategory = "judges";
-                    const des = (j.designation || "").toLowerCase();
+            if (court) params.court = court;
+            if (courtType) params.courtType = courtType;
+            if (year) params.year = year;
 
-                    // improved logic: check for retired first, then designation
-                    if (j.isActive === false || (j.retirementDate && new Date(j.retirementDate) <= new Date())) {
-                        category = "retired";
-                    } else if (des.includes("chief justice")) {
-                        category = "chief-justice";
-                    } else if (des.includes("senior")) {
-                        category = "senior-judges";
-                    }
-
-                    return {
-                        ...j,
-                        category,
-                        // Ensure arrays exist to prevent render crashes
-                        education: Array.isArray(j.education) ? j.education : [],
-                        specialization: Array.isArray(j.specialization) ? j.specialization : [],
-                        // Map 'court' from API to 'courtNumber' if 'courtNumber' is missing
-                        courtNumber: j.courtNumber || j.court || "Unknown Court",
-                        courtType: j.courtType || "High Court" // Default fallback
-                    };
-                }) : [];
-
-                setJudges(mappedData);
-            } catch (err: any) {
-                console.error("Error fetching judges:", err);
-                setError(err.message || "Failed to load judges data from the server");
-                setJudges([]);
-                toast.error("Unable to load judges data. Please try again later.");
-            } finally {
-                setLoading(false);
+            if (term) {
+                // Pass all filters to searchJudges to ensure results are filtered!
+                response = await judgesService.searchJudges(term, page, limit, category, courtType, year);
+            } else {
+                response = await judgesService.getAll(params);
             }
-        };
 
-        fetchJudges();
+            const rawResponse = response.data?.data || response.data || {};
+            const rawData = rawResponse.data || [];
+            const total = rawResponse.total || 0;
+
+            const mappedData = Array.isArray(rawData) ? rawData.map((j: any) => {
+                return {
+                    ...j,
+                    category,
+                    education: Array.isArray(j.education) ? j.education : [],
+                    specialization: Array.isArray(j.specialization) ? j.specialization : [],
+                    courtNumber: j.courtNumber || j.court || "Unknown Court",
+                    courtType: j.courtType || "High Court"
+                };
+            }) : [];
+
+            setJudges(mappedData);
+            setTotalRecords(total);
+            setTotalPages(Math.ceil(total / limit) || 1);
+        } catch (err: any) {
+            console.error("Error fetching judges:", err);
+            setError(err.message || "Failed to load judges data from the server");
+            setJudges([]);
+            setTotalRecords(0);
+            setTotalPages(1);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        const category = (searchParams.get("category") as JudgeCategory) || "chief-justice";
+        const page = parseInt(searchParams.get("page") || "1");
+        const term = searchParams.get("q") || "";
+        const court = searchParams.get("court") || "";
+        const courtType = searchParams.get("courtType") || "";
+        const year = searchParams.get("year") || "";
+
+        setActiveCategory(category);
+        setCurrentPage(page);
+        
+        // Sync search query state with URL ONLY if they are different from current debounced value
+        // This allows clearing the input when the filter badge is clicked (URL changed externally)
+        if (term !== debouncedSearchTerm) {
+            setSearchQuery(term);
+        }
+
+        setSelectedCourt(court);
+        setSelectedCourtType(courtType);
+        setSelectedYear(year);
+
+        fetchJudges(page, category, term, court, courtType, year);
+    }, [searchParams, fetchJudges]);
+
+    // Update URL when debounced search term changes
+    useEffect(() => {
+        const currentQ = searchParams.get("q") || "";
+        if (debouncedSearchTerm !== currentQ) {
+            updateUrl({ q: debouncedSearchTerm });
+        }
     }, [debouncedSearchTerm]);
 
-    // Get unique courts, years, and court types for filters
-    // Safely access properties even if they might still be missing (though mappedData should fix it)
-    const availableCourts = Array.from(new Set(judges.filter(j => j.courtNumber).map(j => j.courtNumber))).filter(Boolean).sort();
-    const availableYears = Array.from(new Set(judges.map(j => new Date(j.appointmentDate).getFullYear()))).filter(Boolean).sort((a, b) => b - a);
-    const availableCourtTypes = Array.from(new Set(judges.filter(j => j.courtType).map(j => j.courtType!))).filter(Boolean).sort();
+    const updateUrl = (updates: any) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value) {
+                params.set(key, value.toString());
+            } else {
+                params.delete(key);
+            }
+        });
 
-    const filteredJudges = judges.filter(judge => {
-        // Category filter
-        if (judge.category !== activeCategory) return false;
+        // Reset page if category or search or filters change
+        if (updates.category || updates.q || updates.court || updates.courtType || updates.year) {
+            params.set("page", "1");
+        }
 
-        // Name/Specialization search (handled partially by backend now but preserved for frontend specialization filtering if any remain)
-        if (searchQuery && !(
-            judge.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            judge.specialization.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()))
-        )) return false;
+        router.push(`/judges?${params.toString()}`);
+    };
 
-        // Court filter
-        if (selectedCourt && judge.courtNumber !== selectedCourt) return false;
+    const handleCategoryChange = (category: JudgeCategory) => {
+        updateUrl({ category });
+    };
 
-        // Year filter
-        if (selectedYear && new Date(judge.appointmentDate).getFullYear().toString() !== selectedYear) return false;
-
-        // Court Type filter
-        if (selectedCourtType && judge.courtType !== selectedCourtType) return false;
-
-        return true;
-    });
+    const handlePageChange = (page: number) => {
+        updateUrl({ page });
+    };
 
     const getCategoryTitle = (category: JudgeCategory) => {
         switch (category) {
@@ -132,9 +169,11 @@ export default function JudgesPage() {
         }
     };
 
-    const getCategoryCount = (category: JudgeCategory) => {
-        return judges.filter(j => j.category === category).length;
-    };
+    // Note: availableCourts and availableYears would ideally come from a meta API
+    // For now, we'll keep them empty or derived from current page (which is partial)
+    const availableYears: string[] = Array.from({ length: 30 }, (_, i) => (new Date().getFullYear() - i).toString());
+    const availableCourts: string[] = ["Supreme Court of India", "Delhi High Court", "Bombay High Court", "Allahabad High Court"]; // Placeholder lists
+    const availableCourtTypes: string[] = ["High Court", "Supreme Court", "District Court"];
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/20 to-gray-100">
@@ -194,89 +233,31 @@ export default function JudgesPage() {
 
                 {/* Category Tabs */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    <button
-                        onClick={() => setActiveCategory("chief-justice")}
-                        className={`p-6 rounded-xl border-2 transition-all ${activeCategory === "chief-justice"
-                            ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
-                            }`}
-                    >
-                        <div className="flex flex-col items-center gap-3">
-                            <div className={`p-3 rounded-full ${activeCategory === "chief-justice" ? 'bg-[#C9A227]' : 'bg-gray-100'
-                                }`}>
-                                <Award size={24} className={activeCategory === "chief-justice" ? 'text-white' : 'text-gray-600'} />
+                    {(["chief-justice", "senior-judges", "judges", "retired"] as JudgeCategory[]).map((cat) => (
+                        <button
+                            key={cat}
+                            onClick={() => handleCategoryChange(cat)}
+                            className={`p-6 rounded-xl border-2 transition-all ${activeCategory === cat
+                                ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
+                                : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
+                                }`}
+                        >
+                            <div className="flex flex-col items-center gap-3">
+                                <div className={`p-3 rounded-full ${activeCategory === cat ? 'bg-[#C9A227]' : 'bg-gray-100'}`}>
+                                    {cat === "chief-justice" && <Award size={24} className={activeCategory === cat ? 'text-white' : 'text-gray-600'} />}
+                                    {cat === "senior-judges" && <Gavel size={24} className={activeCategory === cat ? 'text-white' : 'text-gray-600'} />}
+                                    {cat === "judges" && <Scale size={24} className={activeCategory === cat ? 'text-white' : 'text-gray-600'} />}
+                                    {cat === "retired" && <BookOpen size={24} className={activeCategory === cat ? 'text-white' : 'text-gray-600'} />}
+                                </div>
+                                <div className="text-center">
+                                    <h3 className="font-bold text-lg">{getCategoryTitle(cat)}</h3>
+                                    {activeCategory === cat && (
+                                        <p className="text-xs mt-1 text-blue-200">{totalRecords} total</p>
+                                    )}
+                                </div>
                             </div>
-                            <div className="text-center">
-                                <h3 className="font-bold text-lg">Chief Justice</h3>
-                                <p className={`text-sm mt-1 ${activeCategory === "chief-justice" ? 'text-blue-200' : 'text-gray-500'}`}>
-                                    {getCategoryCount("chief-justice")} member
-                                </p>
-                            </div>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => setActiveCategory("senior-judges")}
-                        className={`p-6 rounded-xl border-2 transition-all ${activeCategory === "senior-judges"
-                            ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
-                            }`}
-                    >
-                        <div className="flex flex-col items-center gap-3">
-                            <div className={`p-3 rounded-full ${activeCategory === "senior-judges" ? 'bg-[#C9A227]' : 'bg-gray-100'
-                                }`}>
-                                <Gavel size={24} className={activeCategory === "senior-judges" ? 'text-white' : 'text-gray-600'} />
-                            </div>
-                            <div className="text-center">
-                                <h3 className="font-bold text-lg">Senior Judges</h3>
-                                <p className={`text-sm mt-1 ${activeCategory === "senior-judges" ? 'text-blue-200' : 'text-gray-500'}`}>
-                                    {getCategoryCount("senior-judges")} members
-                                </p>
-                            </div>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => setActiveCategory("judges")}
-                        className={`p-6 rounded-xl border-2 transition-all ${activeCategory === "judges"
-                            ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
-                            }`}
-                    >
-                        <div className="flex flex-col items-center gap-3">
-                            <div className={`p-3 rounded-full ${activeCategory === "judges" ? 'bg-[#C9A227]' : 'bg-gray-100'
-                                }`}>
-                                <Scale size={24} className={activeCategory === "judges" ? 'text-white' : 'text-gray-600'} />
-                            </div>
-                            <div className="text-center">
-                                <h3 className="font-bold text-lg">Judges</h3>
-                                <p className={`text-sm mt-1 ${activeCategory === "judges" ? 'text-blue-200' : 'text-gray-500'}`}>
-                                    {getCategoryCount("judges")} members
-                                </p>
-                            </div>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => setActiveCategory("retired")}
-                        className={`p-6 rounded-xl border-2 transition-all ${activeCategory === "retired"
-                            ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
-                            }`}
-                    >
-                        <div className="flex flex-col items-center gap-3">
-                            <div className={`p-3 rounded-full ${activeCategory === "retired" ? 'bg-[#C9A227]' : 'bg-gray-100'
-                                }`}>
-                                <BookOpen size={24} className={activeCategory === "retired" ? 'text-white' : 'text-gray-600'} />
-                            </div>
-                            <div className="text-center">
-                                <h3 className="font-bold text-lg">Retired</h3>
-                                <p className={`text-sm mt-1 ${activeCategory === "retired" ? 'text-blue-200' : 'text-gray-500'}`}>
-                                    {getCategoryCount("retired")} members
-                                </p>
-                            </div>
-                        </div>
-                    </button>
+                        </button>
+                    ))}
                 </div>
 
                 {/* Advanced Search Panel */}
@@ -288,35 +269,31 @@ export default function JudgesPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Court Type Filter */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <div className="flex-1">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                <Building2 size={16} className="text-[#C9A227]" />
                                 Court Type
                             </label>
-                            <div className="relative">
-                                <Scale className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                                <select
-                                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all appearance-none bg-white"
-                                    value={selectedCourtType}
-                                    onChange={(e) => setSelectedCourtType(e.target.value)}
-                                >
-                                    <option value="">All Court Types</option>
-                                    {availableCourtTypes.map((courtType) => (
-                                        <option key={courtType} value={courtType}>
-                                            {courtType}
-                                        </option>
-                                    ))}
-                                </select>
-                                <ChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" size={18} />
-                            </div>
+                            <select
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all appearance-none bg-white font-medium"
+                                value={selectedCourtType}
+                                onChange={(e) => updateUrl({ courtType: e.target.value })}
+                            >
+                                <option value="">Select Court Type</option>
+                                {availableCourtTypes.map(type => (
+                                    <option key={type} value={type}>{type}</option>
+                                ))}
+                            </select>
                         </div>
 
-                        {/* Name Search */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        {/* Search Input */}
+                        <div className="flex-[1.5]">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                <User size={16} className="text-[#C9A227]" />
                                 Search by Name
                             </label>
                             <div className="relative">
-                                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                                 <input
                                     type="text"
                                     placeholder="Enter judge name..."
@@ -327,50 +304,22 @@ export default function JudgesPage() {
                             </div>
                         </div>
 
-                        {/* Court Number Filter */}
-                        {/* <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Filter by Court
-                            </label>
-                            <div className="relative">
-                                <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                                <select
-                                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all appearance-none bg-white"
-                                    value={selectedCourt}
-                                    onChange={(e) => setSelectedCourt(e.target.value)}
-                                >
-                                    <option value="">All Courts</option>
-                                    {availableCourts.map((court) => (
-                                        <option key={court} value={court}>
-                                            {court}
-                                        </option>
-                                    ))}
-                                </select>
-                                <ChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" size={18} />
-                            </div>
-                        </div> */}
-
-                        {/* Appointment Year Filter */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        {/* Appointment Year */}
+                        <div className="flex-1">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                <Calendar size={16} className="text-[#C9A227]" />
                                 Appointment Year
                             </label>
-                            <div className="relative">
-                                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                                <select
-                                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all appearance-none bg-white"
-                                    value={selectedYear}
-                                    onChange={(e) => setSelectedYear(e.target.value)}
-                                >
-                                    <option value="">All Years</option>
-                                    {availableYears.map((year) => (
-                                        <option key={year} value={year.toString()}>
-                                            {year}
-                                        </option>
-                                    ))}
-                                </select>
-                                <ChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" size={18} />
-                            </div>
+                            <select
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all appearance-none bg-white font-medium"
+                                value={selectedYear}
+                                onChange={(e) => updateUrl({ year: e.target.value })}
+                            >
+                                <option value="">All Years</option>
+                                {availableYears.map(year => (
+                                    <option key={year} value={year}>{year}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 
@@ -381,35 +330,30 @@ export default function JudgesPage() {
                                 {selectedCourtType && (
                                     <span className="px-3 py-1 bg-amber-100 text-amber-700 text-sm rounded-full flex items-center gap-2">
                                         Court Type: {selectedCourtType}
-                                        <button onClick={() => setSelectedCourtType("")} className="hover:text-amber-900">×</button>
+                                        <button onClick={() => updateUrl({ courtType: "" })} className="hover:text-amber-900">×</button>
                                     </span>
                                 )}
                                 {searchQuery && (
                                     <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full flex items-center gap-2">
                                         Name: "{searchQuery}"
-                                        <button onClick={() => setSearchQuery("")} className="hover:text-blue-900">×</button>
+                                        <button onClick={() => updateUrl({ q: "" })} className="hover:text-blue-900">×</button>
                                     </span>
                                 )}
                                 {selectedCourt && (
                                     <span className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full flex items-center gap-2">
                                         Court: {selectedCourt}
-                                        <button onClick={() => setSelectedCourt("")} className="hover:text-green-900">×</button>
+                                        <button onClick={() => updateUrl({ court: "" })} className="hover:text-green-900">×</button>
                                     </span>
                                 )}
                                 {selectedYear && (
                                     <span className="px-3 py-1 bg-purple-100 text-purple-700 text-sm rounded-full flex items-center gap-2">
                                         Year: {selectedYear}
-                                        <button onClick={() => setSelectedYear("")} className="hover:text-purple-900">×</button>
+                                        <button onClick={() => updateUrl({ year: "" })} className="hover:text-purple-900">×</button>
                                     </span>
                                 )}
                             </div>
                             <button
-                                onClick={() => {
-                                    setSearchQuery("");
-                                    setSelectedCourt("");
-                                    setSelectedYear("");
-                                    setSelectedCourtType("");
-                                }}
+                                onClick={() => updateUrl({ q: "", court: "", year: "", courtType: "" })}
                                 className="px-4 py-2 text-sm font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                             >
                                 Clear All Filters
@@ -438,11 +382,8 @@ export default function JudgesPage() {
                                 </div>
                                 <p className="text-red-600 text-lg font-semibold mb-2">Unable to Load Judges Data</p>
                                 <p className="text-gray-600 text-sm mb-4">{error}</p>
-                                <p className="text-gray-500 text-sm mb-6">
-                                    The judges data could not be retrieved from the server. Please check your connection and try again.
-                                </p>
                                 <button
-                                    onClick={() => window.location.reload()}
+                                    onClick={() => fetchJudges(currentPage, activeCategory, searchQuery, selectedCourt, selectedCourtType, selectedYear)}
                                     className="px-6 py-3 bg-[#0A2342] text-white rounded-lg hover:bg-[#1a3a75] transition-colors font-semibold"
                                 >
                                     Retry
@@ -456,11 +397,11 @@ export default function JudgesPage() {
                                     {getCategoryTitle(activeCategory)}
                                 </h3>
                                 <span className="text-sm text-gray-600">
-                                    {filteredJudges.length} judge{filteredJudges.length !== 1 ? 's' : ''}
+                                    {totalRecords} judge{totalRecords !== 1 ? 's' : ''} found
                                 </span>
                             </div>
 
-                            {filteredJudges.length === 0 ? (
+                            {judges.length === 0 ? (
                                 <div className="bg-white rounded-xl border border-gray-200 p-12">
                                     <div className="text-center">
                                         <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -470,24 +411,11 @@ export default function JudgesPage() {
                                                 ? "No judges match your current filters. Try adjusting your search criteria."
                                                 : `No ${getCategoryTitle(activeCategory).toLowerCase()} available at this time.`}
                                         </p>
-                                        {(searchQuery || selectedCourt || selectedYear || selectedCourtType) && (
-                                            <button
-                                                onClick={() => {
-                                                    setSearchQuery("");
-                                                    setSelectedCourt("");
-                                                    setSelectedYear("");
-                                                    setSelectedCourtType("");
-                                                }}
-                                                className="mt-4 px-6 py-2 bg-[#0A2342] text-white rounded-lg hover:bg-[#1a3a75] transition-colors font-semibold"
-                                            >
-                                                Clear All Filters
-                                            </button>
-                                        )}
                                     </div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {filteredJudges.map((judge) => (
+                                    {judges.map((judge) => (
                                         <div key={judge.id} className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden hover:border-[#C9A227] transition-all hover:shadow-lg">
                                             {/* Judge Photo */}
                                             <div className="bg-gradient-to-br from-[#0A2342] to-[#1a3a75] p-8">
@@ -523,12 +451,6 @@ export default function JudgesPage() {
                                                     )}
                                                 </div>
 
-                                                {judge.bio && (
-                                                    <p className="text-sm text-gray-600 mb-4 text-center">
-                                                        {judge.bio}
-                                                    </p>
-                                                )}
-
                                                 {/* Appointment Info */}
                                                 <div className="space-y-2 mb-4 pb-4 border-b border-gray-200">
                                                     <div className="flex items-center gap-2 text-sm">
@@ -550,37 +472,41 @@ export default function JudgesPage() {
                                                 </div>
 
                                                 {/* Education */}
-                                                <div className="mb-4">
-                                                    <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                                                        <BookOpen size={16} className="text-[#C9A227]" />
-                                                        Education
-                                                    </h5>
-                                                    <ul className="text-sm text-gray-600 space-y-1">
-                                                        {judge.education.map((edu, index) => (
-                                                            <li key={index} className="pl-4 border-l-2 border-gray-200">
-                                                                {edu}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
+                                                {judge.education?.length > 0 && (
+                                                    <div className="mb-4">
+                                                        <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                                                            <BookOpen size={16} className="text-[#C9A227]" />
+                                                            Education
+                                                        </h5>
+                                                        <ul className="text-sm text-gray-600 space-y-1">
+                                                            {judge.education.map((edu, index) => (
+                                                                <li key={index} className="pl-4 border-l-2 border-gray-200">
+                                                                    {edu}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
 
                                                 {/* Specialization */}
-                                                <div className="mb-4">
-                                                    <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                                                        <Award size={16} className="text-[#C9A227]" />
-                                                        Specialization
-                                                    </h5>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {judge.specialization.map((spec, index) => (
-                                                            <span
-                                                                key={index}
-                                                                className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-200"
-                                                            >
-                                                                {spec}
-                                                            </span>
-                                                        ))}
+                                                {judge.specialization?.length > 0 && (
+                                                    <div className="mb-4">
+                                                        <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                                                            <Award size={16} className="text-[#C9A227]" />
+                                                            Specialization
+                                                        </h5>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {judge.specialization.map((spec, index) => (
+                                                                <span
+                                                                    key={index}
+                                                                    className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-200"
+                                                                >
+                                                                    {spec}
+                                                                </span>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
 
                                                 {/* Contact Info */}
                                                 {(judge.email || judge.phone) && (
@@ -606,6 +532,20 @@ export default function JudgesPage() {
                                     ))}
                                 </div>
                             )}
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="mt-12 flex flex-col items-center gap-4">
+                                    <Pagination
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
+                                        onPageChange={handlePageChange}
+                                    />
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                        Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords} records
+                                    </p>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
@@ -626,5 +566,17 @@ export default function JudgesPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function JudgesPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="w-12 h-12 text-[#C9A227] animate-spin" />
+            </div>
+        }>
+            <JudgesPageContent />
+        </Suspense>
     );
 }

@@ -17,6 +17,9 @@ export const PERMISSIONS = {
         TAGS: "manage:tags",
         PLANS: "manage:plans",
     },
+    BROADCAST: {
+        CREATE: "create:broadcast",
+    },
 } as const;
 
 export const ROLES = {
@@ -24,7 +27,7 @@ export const ROLES = {
     EDITOR: "editor",
     ADMIN: "admin",
     SUPERADMIN: "superadmin",
-    CREATOR:"creator",
+    CREATOR: "creator",
 } as const;
 
 export type PermissionType =
@@ -39,7 +42,8 @@ export type PermissionType =
     | typeof PERMISSIONS.SUBSCRIPTION.DELETE
     | typeof PERMISSIONS.MANAGE.CATEGORIES
     | typeof PERMISSIONS.MANAGE.TAGS
-    | typeof PERMISSIONS.MANAGE.PLANS;
+    | typeof PERMISSIONS.MANAGE.PLANS
+    | typeof PERMISSIONS.BROADCAST.CREATE;
 
 export type RoleType =
     | typeof ROLES.USER

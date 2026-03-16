@@ -10,7 +10,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import CustomSelect from "@/components/ui/CustomSelect";
 import { caseTypeOptions } from "@/constants/caseOptions";
-import SearchableSelect, { SearchableOption } from "@/components/ui/SearchableSelect";
+import InfiniteSearchableSelect from "@/components/ui/InfiniteSearchableSelect";
 
 export default function CreateCasePage() {
     useDocTitle("Create Case  | Sajjad Husain Law Associates");
@@ -43,53 +43,14 @@ export default function CreateCasePage() {
         opposingParties: "", // visual state as string
     });
 
-    const [judges, setJudges] = useState<any[]>([]);
-
-    useEffect(() => {
-        const fetchJudges = async () => {
-            try {
-                const response = await judgesService.getAll();
-                // Check if response.data.data is an array (direct) or object with data property (paginated)
-                const judgesData = response.data.data;
-                if (Array.isArray(judgesData)) {
-                    setJudges(judgesData);
-                } else if (judgesData && Array.isArray(judgesData.data)) {
-                    setJudges(judgesData.data);
-                } else {
-                    setJudges([]);
-                }
-            } catch (error) {
-                console.error("Failed to fetch judges", error);
-            }
-        };
-        fetchJudges();
-    }, []);
-
-    const loadJudgesOptions = async (query: string): Promise<SearchableOption[]> => {
-        try {
-            const response = await judgesService.searchJudges(query, 1, 20);
-            let items: any[] = [];
-            if (Array.isArray(response.data.data)) {
-                items = response.data.data;
-            } else if (response.data && Array.isArray(response.data.data?.data)) {
-                items = response.data.data.data;
-            } else if (Array.isArray(response.data)) {
-                items = response.data;
-            }
-            return items.map((judge: any) => ({
-                value: judge.id,
-                label: `${judge.name} (${judge.designation})`,
-            }));
-        } catch (error) {
-            console.error("Failed to search judges", error);
-            return [];
-        }
+    const extractTotalPages = (response: any) => {
+        const meta = response.data?.meta ?? response.data?.data?.meta;
+        if (meta?.totalPages) return meta.totalPages;
+        
+        const total = response.data?.data?.total ?? response.data?.total ?? 0;
+        const limit = response.data?.data?.limit ?? response.data?.limit ?? 12;
+        return total > 0 ? Math.ceil(total / limit) : 1;
     };
-
-    const judgeOptions: SearchableOption[] = judges.map(j => ({
-        value: j.id,
-        label: `${j.name} (${j.designation})`
-    }));
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -244,13 +205,26 @@ export default function CreateCasePage() {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Presiding Judge</label>
-                            <SearchableSelect
-                                options={judgeOptions}
+                            <InfiniteSearchableSelect
+                                name="judgeId"
                                 value={formData.judgeId}
                                 onChange={(value) => setFormData({ ...formData, judgeId: value })}
-                                onSearch={loadJudgesOptions}
+                                onSearch={async (query, page) => {
+                                    const res = query.trim()
+                                        ? await judgesService.searchJudges(query, page, 10)
+                                        : await judgesService.getAll({ page, limit: 10 });
+
+                                    const items = res.data?.data?.data || res.data?.data || [];
+                                    return {
+                                        options: items.map((j: any) => ({
+                                            value: j.id,
+                                            label: j.name,
+                                            subLabel: j.email ? `${j.designation} (${j.email})` : j.designation
+                                        })),
+                                        totalPages: extractTotalPages(res)
+                                    };
+                                }}
                                 placeholder="Select Judge"
-                                name="judgeId"
                             />
                         </div>
                         <div>

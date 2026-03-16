@@ -30,7 +30,7 @@ export const casesService = {
     updateStatus: async (id: string, status: string) => {
         return await apiClient.patch(`${API_ENDPOINTS.CASES.BASE}/${id}/status`, { status });
     },
-    searchCases: async (q: string, page: number = 1, limit: number = 10) => {
+    searchCases: async (q: string, page: number = 1, limit: number = 12) => {
         return await apiClient.get(API_ENDPOINTS.SEARCH.CASES, {
             params: { q, page, limit }
         });

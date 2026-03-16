@@ -8,20 +8,40 @@ import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate, formatDateTime } from "@/utils/dateUtils";
+import Pagination from "@/components/Pagination";
+
+const LIMIT = 12;
 
 export default function AdminReportsPage() {
     useDocTitle("Reports | Sajjad Husain Law Associates");
     const [reports, setReports] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
 
     useEffect(() => {
-        fetchReports();
-    }, []);
+        fetchReports(currentPage);
+    }, [currentPage]);
 
-    const fetchReports = async () => {
+    const fetchReports = async (page: number) => {
+        setLoading(true);
         try {
-            const response = await reportsService.getAll();
-            setReports(response.data.data.data);
+            const response = await reportsService.getAll({ page, limit: LIMIT });
+            const payload = response.data;
+            
+            // With standardized backend response:
+            // payload.data is the array
+            // payload.meta contains total, page, etc.
+            if (payload.success && Array.isArray(payload.data)) {
+                setReports(payload.data);
+                setTotalPages(payload.meta?.totalPages || Math.ceil((payload.meta?.total || 0) / LIMIT) || 1);
+                setTotalItems(payload.meta?.total || 0);
+            } else {
+                setReports([]);
+                setTotalPages(1);
+                setTotalItems(0);
+            }
         } catch (error) {
             console.error("Error fetching reports:", error);
             toast.error("Failed to fetch reports");
@@ -35,7 +55,7 @@ export default function AdminReportsPage() {
         try {
             await reportsService.delete(id);
             toast.success("Report deleted successfully");
-            fetchReports();
+            fetchReports(currentPage);
         } catch (error) {
             console.error("Error deleting report:", error);
             toast.error("Failed to delete report");
@@ -157,6 +177,16 @@ export default function AdminReportsPage() {
                     </table>
                 </div>
             </div>
+
+            {reports.length > 0 && totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={(page) => setCurrentPage(page)}
+                    />
+                </div>
+            )}
         </div>
     );
 }

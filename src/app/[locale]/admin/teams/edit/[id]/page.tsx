@@ -13,6 +13,8 @@ import { ArrowLeft, Save, CheckCircle, Building2, Scale, Shield, Calendar, Users
 import { Toaster, toast } from "react-hot-toast";
 import { createRole, fetchRoles } from "@/data/features/roles/rolesThunks";
 import { createPermission, fetchPermissions } from "@/data/features/permissions/permissionsThunks";
+import InfiniteSearchableSelect from "@/components/ui/InfiniteSearchableSelect";
+import { usersApi } from "@/data/services/users-service/users-service";
 
 
 type RoleOption = {
@@ -72,6 +74,15 @@ const EditTeamMemberPage: React.FC = () => {
     const availableManagers = users.filter(u => u._id !== userId && u.isActive);
 
     // Helper to extract an array from potentially nested response structures
+    const extractTotalPages = (response: any) => {
+        const meta = response.data?.meta ?? response.data?.data?.meta;
+        if (meta?.totalPages) return meta.totalPages;
+
+        const total = response.data?.data?.total ?? response.data?.total ?? 0;
+        const limit = response.data?.data?.limit ?? response.data?.limit ?? 12;
+        return total > 0 ? Math.ceil(total / limit) : 1;
+    };
+
     const extractArray = (data: any): any[] => {
         if (Array.isArray(data)) return data;
         if (data && typeof data === 'object') {
@@ -532,18 +543,41 @@ const EditTeamMemberPage: React.FC = () => {
                                 <Users size={16} className="text-green-600" />
                                 Reporting Manager
                             </h3>
-                            <select
+                            <InfiniteSearchableSelect
+                                name="reportingTo"
                                 value={reportingTo}
-                                onChange={(e) => setReportingTo(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                            >
-                                <option value="">No Manager Assigned</option>
-                                {availableManagers.map((manager) => (
-                                    <option key={manager._id} value={manager._id}>
-                                        {manager.name} ({manager.email})
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={(value) => setReportingTo(value)}
+                                placeholder="Select Reporting Manager"
+                                onSearch={async (query, page) => {
+                                    const res = await usersApi.fetchUsers({
+                                        name: query,
+                                        page,
+                                        limit: 10,
+                                        isActive: true
+                                    });
+
+                                    const items = res.data?.data || res.data || [];
+                                    const filteredItems = items.filter((u: any) => u._id !== userId);
+
+                                    return {
+                                        options: filteredItems.map((u: any) => ({
+                                            value: u._id,
+                                            label: u.name,
+                                            subLabel: u.email
+                                        })),
+                                        totalPages: extractTotalPages({ data: res })
+                                    };
+                                }}
+                                initialOption={user?.reportingManager ? {
+                                    value: user.reportingManager._id,
+                                    label: user.reportingManager.name,
+                                    subLabel: user.reportingManager.email
+                                } : availableManagers.find(m => m._id === reportingTo) ? {
+                                    value: reportingTo,
+                                    label: availableManagers.find(m => m._id === reportingTo)?.name || "",
+                                    subLabel: availableManagers.find(m => m._id === reportingTo)?.email || ""
+                                } : null}
+                            />
                             <p className="text-xs text-gray-500 mt-2">Senior user for hierarchy and oversight</p>
                         </div>
 

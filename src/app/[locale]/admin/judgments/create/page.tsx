@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { ArrowLeft, Save, Plus, X } from "lucide-react";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import SearchableSelect from "@/components/ui/SearchableSelect";
+import InfiniteSearchableSelect from "@/components/ui/InfiniteSearchableSelect";
 import RichTextEditor from "@/components/ui/RichTextEditor";
 
 export default function CreateJudgmentPage() {
@@ -114,6 +114,15 @@ export default function CreateJudgmentPage() {
         }
     };
 
+    const extractTotalPages = (response: any) => {
+        const meta = response.data?.meta ?? response.data?.data?.meta;
+        if (meta?.totalPages) return meta.totalPages;
+        
+        const total = response.data?.data?.total ?? response.data?.total ?? 0;
+        const limit = response.data?.data?.limit ?? response.data?.limit ?? 12;
+        return total > 0 ? Math.ceil(total / limit) : 1;
+    };
+
     if (loadingData) return <div className="flex justify-center items-center min-h-screen"><Loader size="lg" text="Loading Data..." /></div>;
 
     return (
@@ -152,7 +161,7 @@ export default function CreateJudgmentPage() {
                         </div>
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Select Case <span className="text-red-500">*</span></label>
-                            <SearchableSelect
+                            <InfiniteSearchableSelect
                                 name="caseId"
                                 value={formData.caseId}
                                 onChange={(val) => setFormData(prev => ({ ...prev, caseId: val }))}
@@ -164,16 +173,20 @@ export default function CreateJudgmentPage() {
                                     label: `${c.caseNumber} - ${c.title}`,
                                     subLabel: c.court
                                 }))}
-                                onSearch={async (query) => {
-                                    const res = await casesService.searchCases(query, 1, 20);
-                                    if (res?.data?.data?.data) {
-                                        return res.data.data.data.map((c: any) => ({
+                                onSearch={async (query, page) => {
+                                    const res = query.trim() 
+                                        ? await casesService.searchCases(query, page, 10)
+                                        : await casesService.getAll({ page, limit: 10 });
+                                    
+                                    const items = res.data?.data?.data || res.data?.data || [];
+                                    return {
+                                        options: items.map((c: any) => ({
                                             value: c.id,
                                             label: `${c.caseNumber} - ${c.title}`,
                                             subLabel: c.court
-                                        }));
-                                    }
-                                    return [];
+                                        })),
+                                        totalPages: extractTotalPages(res)
+                                    };
                                 }}
                             />
                         </div>
@@ -192,7 +205,7 @@ export default function CreateJudgmentPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Select Judge</label>
-                            <SearchableSelect
+                            <InfiniteSearchableSelect
                                 name="judgeId"
                                 value={formData.judgeId}
                                 onChange={(val) => setFormData(prev => ({ ...prev, judgeId: val }))}
@@ -203,16 +216,20 @@ export default function CreateJudgmentPage() {
                                     label: j.name,
                                     subLabel: j.email ? `${j.designation} (${j.email})` : j.designation
                                 }))}
-                                onSearch={async (query) => {
-                                    const res = await judgesService.searchJudges(query, 1, 20);
-                                    if (res?.data?.data?.data) {
-                                        return res.data.data.data.map((j: any) => ({
+                                onSearch={async (query, page) => {
+                                    const res = query.trim()
+                                        ? await judgesService.searchJudges(query, page, 10)
+                                        : await judgesService.getAll({ page, limit: 10 });
+
+                                    const items = res.data?.data?.data || res.data?.data || [];
+                                    return {
+                                        options: items.map((j: any) => ({
                                             value: j.id,
                                             label: j.name,
                                             subLabel: j.email ? `${j.designation} (${j.email})` : j.designation
-                                        }));
-                                    }
-                                    return [];
+                                        })),
+                                        totalPages: extractTotalPages(res)
+                                    };
                                 }}
                             />
                         </div>

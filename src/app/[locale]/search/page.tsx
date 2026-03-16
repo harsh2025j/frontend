@@ -7,6 +7,7 @@ import { SearchResult } from '@/data/features/search/search.types';
 import { Search, Loader2, ChevronLeft, ChevronRight, FileText, Gavel, Scale } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { useDocTitle } from '@/hooks/useDocTitle';
+import Pagination from '@/components/Pagination';
 
 const SearchResultsContent = () => {
     const searchParams = useSearchParams();
@@ -29,7 +30,7 @@ const SearchResultsContent = () => {
 
             setIsLoading(true);
             try {
-                const response = await searchService.searchContentWithPagination(query, currentPage);
+                const response = await searchService.searchContentWithPagination(query, currentPage, 12);
                 setResults(response.data);
                 setMeta(response.meta);
             } catch (error) {
@@ -142,44 +143,12 @@ const SearchResultsContent = () => {
 
                     {/* Pagination */}
                     {meta && meta.totalPages > 1 && (
-                        <div className="mt-12 py-8 border-t border-gray-100 flex items-center justify-center gap-2">
-                            <button
-                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                                disabled={currentPage <= 1}
-                                className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
-                            >
-                                <ChevronLeft size={20} />
-                            </button>
-
-                            <div className="flex items-center gap-1">
-                                {Array.from({ length: Math.min(5, meta.totalPages) }, (_, i) => {
-                                    let p = i + 1;
-                                    if (meta.totalPages > 5) {
-                                        if (currentPage > 3) p = currentPage - 2 + i;
-                                        if (p > meta.totalPages) return null;
-                                    }
-                                    return (
-                                        <button
-                                            key={p}
-                                            onClick={() => handlePageChange(p)}
-                                            className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${currentPage === p
-                                                ? 'bg-[#C9A227] text-white'
-                                                : 'text-gray-700 hover:bg-gray-300'
-                                                }`}
-                                        >
-                                            {p}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <button
-                                onClick={() => handlePageChange(Math.min(meta.totalPages, currentPage + 1))}
-                                disabled={currentPage >= meta.totalPages}
-                                className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
-                            >
-                                <ChevronRight size={20} />
-                            </button>
+                        <div className="mt-12 py-8 border-t border-gray-100">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={meta.totalPages}
+                                onPageChange={handlePageChange}
+                            />
                         </div>
                     )}
                 </div>

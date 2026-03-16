@@ -4,6 +4,9 @@ import { UsersState, User } from "./users.types";
 
 const initialState: UsersState = {
     users: [],
+    total: 0,
+    page: 1,
+    limit: 15,
     loading: false,
     error: null,
     message: null,
@@ -27,7 +30,11 @@ const usersSlice = createSlice({
             })
             .addCase(fetchUsers.fulfilled, (state, action) => {
                 state.loading = false;
-                state.users = action.payload.data || [];
+                const paginatedData = action.payload.data;
+                state.users = paginatedData.data || [];
+                state.total = paginatedData.total || 0;
+                state.page = paginatedData.page || 1;
+                state.limit = paginatedData.limit || 15;
             })
             .addCase(fetchUsers.rejected, (state, action) => {
                 state.loading = false;

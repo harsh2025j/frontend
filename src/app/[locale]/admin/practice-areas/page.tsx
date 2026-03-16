@@ -154,8 +154,8 @@ export default function PracticeAreasManagementPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
                 <div className="flex items-center gap-3 mb-4 md:mb-0">
-                    <div className="p-3 bg-purple-100 rounded-lg">
-                        <Scale className="w-6 h-6 text-purple-600" />
+                    <div className="p-3 bg-blue-100 rounded-lg">
+                        <Scale className="w-6 h-6 text-[#0B2149]" />
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Practice Areas Management</h1>
@@ -164,7 +164,7 @@ export default function PracticeAreasManagementPage() {
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#0B2149] text-white rounded-lg hover:bg-[#1a3a75] transition-colors"
                 >
                     <Plus className="w-5 h-5" />
                     Add Practice Area
@@ -180,7 +180,7 @@ export default function PracticeAreasManagementPage() {
                             placeholder="Search by name or description..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-transparent"
                         />
                     </div>
                     <div className="flex gap-2">
@@ -188,7 +188,7 @@ export default function PracticeAreasManagementPage() {
                             onClick={() => setFilterActive("all")}
                             className={`px-4 py-2 rounded-lg transition-colors ${
                                 filterActive === "all"
-                                    ? "bg-purple-600 text-white"
+                                    ? "bg-[#0B2149] text-white"
                                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}
                         >
@@ -262,8 +262,8 @@ export default function PracticeAreasManagementPage() {
                             >
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-purple-100 rounded-lg">
-                                            <Scale className="w-5 h-5 text-purple-600" />
+                                        <div className="p-2 bg-blue-100 rounded-lg">
+                                            <Scale className="w-5 h-5 text-[#0B2149]" />
                                         </div>
                                         <div>
                                             <h3 className="text-lg font-semibold text-gray-900">{area.name}</h3>
@@ -292,7 +292,7 @@ export default function PracticeAreasManagementPage() {
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleOpenModal(area)}
-                                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                            className="p-2 text-[#0B2149] hover:bg-blue-50 rounded-lg transition-colors"
                                             title="Edit"
                                         >
                                             <Edit className="w-4 h-4" />
@@ -338,7 +338,7 @@ export default function PracticeAreasManagementPage() {
                                         required
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-transparent"
                                         placeholder="Intellectual Property"
                                     />
                                 </div>
@@ -351,7 +351,7 @@ export default function PracticeAreasManagementPage() {
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                         rows={3}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-transparent"
                                         placeholder="Patents, trademarks, copyrights, and IP litigation"
                                     />
                                 </div>
@@ -364,7 +364,7 @@ export default function PracticeAreasManagementPage() {
                                             onChange={(e) =>
                                                 setFormData({ ...formData, isActive: e.target.checked })
                                             }
-                                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                            className="w-4 h-4 text-[#0B2149] border-gray-300 rounded focus:ring-blue-500/20"
                                         />
                                         <span className="ml-2 text-sm text-gray-700">Active</span>
                                     </label>
@@ -382,7 +382,7 @@ export default function PracticeAreasManagementPage() {
                                 <button
                                     type="submit"
                                     disabled={isActionLoading}
-                                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="px-4 py-2 bg-[#0B2149] text-white rounded-lg hover:bg-[#1a3a75] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {isActionLoading && <RefreshCw className="w-4 h-4 animate-spin" />}
                                     {editingPracticeArea ? "Update" : "Create"}

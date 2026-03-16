@@ -58,7 +58,7 @@ const authSlice = createSlice({
           payload?.refreshToken ??
           payload?.data?.refreshToken ??
           null;
-
+        // console.log("token", accessToken)
         state.user = user;
         state.token = accessToken;
         state.refreshToken = refreshToken;
@@ -207,6 +207,7 @@ const authSlice = createSlice({
           if (typeof window !== "undefined") {
             if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
             if (data.accessToken) localStorage.setItem("token", data.accessToken);
+
           }
         } catch { }
       })
