@@ -2,15 +2,22 @@ import apiClient from "@/data/services/apiConfig/apiClient";
 
 export interface CreatePermissionRequestPayload {
     requestedPermissionIds: string[];
+    requestedRoleIds?: string[];
     dob: string;
     phoneNumber: string;
     state: string;
     city: string;
+    designation: string;
+    yearsOfExperience?: number;
+    specialization: string;
+    barRegistrationNumber?: string;
 }
 
 export interface UpdatePermissionRequestStatusPayload {
     status: 'accepted' | 'rejected';
     adminNote?: string;
+    grantedRoleIds?: string[];
+    grantedPermissionIds?: string[];
 }
 
 export const permissionRequestService = {

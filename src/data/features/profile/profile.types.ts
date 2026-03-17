@@ -46,6 +46,12 @@ export interface UserData {
   __v?: number;
   phone?: string;
   dob?: string;
+  city?: string;
+  state?: string;
+  designation?: string;
+  yearsOfExperience?: number;
+  specialization?: string;
+  barRegistrationNumber?: string;
   savedPosts?: string[];
 }
 

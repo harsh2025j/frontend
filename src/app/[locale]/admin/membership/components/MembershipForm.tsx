@@ -21,12 +21,18 @@ export default function MembershipForm() {
         phoneNumber: "",
         state: "",
         city: "",
+        designation: "",
+        yearsOfExperience: "",
+        specialization: "",
+        barRegistrationNumber: "",
     });
 
     const [selectedPermissions, setSelectedPermissions] = useState<string[]>([
         PERMISSIONS.ARTICLE.CREATE,
         PERMISSIONS.ARTICLE.EDIT,
     ]);
+
+    const [requestedRoleIds, setRequestedRoleIds] = useState<string[]>([]);
 
     const fetchMyRequests = async () => {
         try {
@@ -51,8 +57,38 @@ export default function MembershipForm() {
         p.name === PERMISSIONS.ARTICLE.CREATE || p.name === PERMISSIONS.ARTICLE.EDIT
     ) || user.roles?.some(r => r.name === 'admin' || r.name === 'superadmin' || r.name === 'editor' || r.name === 'creator');
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+
+        if (name === 'designation') {
+            // Mapping Designation to Role names
+            const roleMap: Record<string, string> = {
+                'Advocate': 'advocate',
+                'Lawyer': 'lawyer',
+                'Legal Advisor': 'legal_advisor',
+                'Law Student': 'law_student',
+                'Paralegal': 'paralegal',
+                'Judges': 'judge'
+            };
+            const roleName = roleMap[value];
+            if (roleName) {
+                setRequestedRoleIds([roleName]);
+            }
+
+            // Mapping Designation to Permission arrays as requested
+            const permissionMap: Record<string, string[]> = {
+                'Advocate': [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT],
+                'Lawyer': [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT],
+                'Judges': [PERMISSIONS.ARTICLE.READ, PERMISSIONS.ARTICLE.READ_PREMIUM],
+                'Law Student': [PERMISSIONS.ARTICLE.READ],
+                'Legal Advisor': [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT],
+                'Paralegal': [PERMISSIONS.ARTICLE.READ],
+            };
+
+            const perms = permissionMap[value] || [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT];
+            setSelectedPermissions(perms);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -62,7 +98,9 @@ export default function MembershipForm() {
         try {
             await permissionRequestService.create({
                 ...formData,
+                yearsOfExperience: formData.yearsOfExperience ? Number(formData.yearsOfExperience) : 0,
                 requestedPermissionIds: selectedPermissions,
+                requestedRoleIds: requestedRoleIds,
             });
             toast.success("Membership request submitted successfully!");
             fetchMyRequests(); // Refresh state
@@ -161,7 +199,7 @@ export default function MembershipForm() {
                                 type="text"
                                 name="state"
                                 required
-                                placeholder="e.g. California"
+                                placeholder="e.g. Uttar Pradesh"
                                 value={formData.state}
                                 onChange={handleChange}
                                 className="w-full p-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
@@ -173,13 +211,74 @@ export default function MembershipForm() {
                                 type="text"
                                 name="city"
                                 required
-                                placeholder="e.g. Los Angeles"
+                                placeholder="e.g. Lucknow"
                                 value={formData.city}
                                 onChange={handleChange}
                                 className="w-full p-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
                             />
                         </div>
                     </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Designation</label>
+                        <select
+                            name="designation"
+                            required
+                            value={formData.designation}
+                            onChange={handleChange}
+                            className="w-full p-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                        >
+                            <option value="">Select Designation</option>
+                            <option value="Advocate">Advocate</option>
+                            <option value="Lawyer">Lawyer</option>
+                            <option value="Legal Advisor">Legal Advisor</option>
+                            <option value="Law Student">Law Student</option>
+                            <option value="Paralegal">Paralegal</option>
+                            <option value="Judges">Judges</option>
+                        </select>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Years of Experience</label>
+                            <input
+                                type="number"
+                                name="yearsOfExperience"
+                                required
+                                placeholder="e.g. 5"
+                                value={formData.yearsOfExperience}
+                                onChange={handleChange}
+                                className="w-full p-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                            <input
+                                type="text"
+                                name="specialization"
+                                required
+                                placeholder="e.g. Criminal Law"
+                                value={formData.specialization}
+                                onChange={handleChange}
+                                className="w-full p-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    {(formData.designation === 'Advocate' || formData.designation === 'Lawyer') && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Bar Council Registration Number</label>
+                            <input
+                                type="text"
+                                name="barRegistrationNumber"
+                                required
+                                placeholder="e.g. BC/1234/2020"
+                                value={formData.barRegistrationNumber}
+                                onChange={handleChange}
+                                className="w-full p-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                            />
+                        </div>
+                    )}
 
                     <div className="pt-4">
                         <button

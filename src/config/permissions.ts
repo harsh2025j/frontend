@@ -28,6 +28,12 @@ export const ROLES = {
     ADMIN: "admin",
     SUPERADMIN: "superadmin",
     CREATOR: "creator",
+    ADVOCATE: "advocate",
+    LAWYER: "lawyer",
+    LEGAL_ADVISOR: "legal_advisor",
+    LAW_STUDENT: "law_student",
+    PARALEGAL: "paralegal",
+    JUDGE: "judge",
 } as const;
 
 export type PermissionType =
@@ -51,3 +57,9 @@ export type RoleType =
     | typeof ROLES.ADMIN
     | typeof ROLES.SUPERADMIN
     | typeof ROLES.CREATOR
+    | typeof ROLES.ADVOCATE
+    | typeof ROLES.LAWYER
+    | typeof ROLES.LEGAL_ADVISOR
+    | typeof ROLES.LAW_STUDENT
+    | typeof ROLES.PARALEGAL
+    | typeof ROLES.JUDGE;
