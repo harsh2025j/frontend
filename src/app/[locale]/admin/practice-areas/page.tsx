@@ -20,30 +20,8 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 export default function PracticeAreasManagementPage() {
     useDocTitle("Practice Areas Management | Sajjad Husain Law Associates");
     const router = useRouter();
-    const { user: reduxUser } = useProfileActions();
-    const user = reduxUser as UserData;
-    const [isAuthorized, setIsAuthorized] = useState(false);
+    const { user } = useProfileActions();
 
-    useEffect(() => {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-        if (!token) {
-            router.replace("/auth/login");
-            return;
-        }
-
-        if (user?.roles && user.roles.length > 0) {
-            const userRoles = user.roles.map((r) => r.name);
-            const allowedRoles = ["admin", "superadmin"];
-            const hasAccess = userRoles.some((role) => allowedRoles.includes(role));
-
-            if (!hasAccess) {
-                router.replace("/auth/login");
-            } else {
-                setIsAuthorized(true);
-            }
-        }
-    }, [user, router]);
 
     const dispatch = useAppDispatch();
     const { practiceAreas, loading, error, message } = useAppSelector((state) => state.practiceAreas);
@@ -141,13 +119,6 @@ export default function PracticeAreasManagementPage() {
         return matchesSearch && matchesFilter;
     });
 
-    if (!isAuthorized) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <Loader />
-            </div>
-        );
-    }
 
     return (
         <div className="container mx-auto px-4 py-8">

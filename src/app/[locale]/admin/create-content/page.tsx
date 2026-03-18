@@ -51,34 +51,7 @@ const CreateUpdatePage: React.FC = () => {
   };
 
   const router = useRouter();
-  const { user: reduxUser } = useProfileActions();
-  const user = reduxUser as UserData;
-  useEffect(() => {
-    // if (loading) return;
-
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-    // 1. No Token? -> Go to Login
-    if (!token) {
-      router.replace("/auth/login");
-      return;
-    }
-
-    // 2. Role and Permission Check
-    if (user) {
-      const allowedRoles = ["admin", "superadmin", "creator"];
-      const hasRoleAccess = user.roles?.some((r) => allowedRoles.includes(r.name));
-
-      // Also check for article creation permissions
-      const hasPermissionAccess = user.permissions?.some((p) =>
-        p.name === "create:article" || p.name === "edit:article"
-      );
-
-      if (!hasRoleAccess && !hasPermissionAccess) {
-        router.replace("/auth/login");
-      }
-    }
-  }, [user, router]);
+    const { user } = useProfileActions();
 
 
   const dispatch = useAppDispatch();

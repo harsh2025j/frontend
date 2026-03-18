@@ -24,32 +24,10 @@ const TeamManagementPage: React.FC = () => {
   const limit = 15;
 
   const router = useRouter();
-  const { user: reduxUser } = useProfileActions();
-  const user = reduxUser as UserData;
+    const { user } = useProfileActions();
 
-  const [isAuthorized, setIsAuthorized] = useState(false);
-
-  // 1) Validate token + role
-  useEffect(() => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-    if (!token) {
-      router.replace("/auth/login");
-      return;
-    }
-
-    if (user) {
-      const allowedRoles = ["admin", "superadmin"];
-      const hasAccess = user.roles?.some((r) => allowedRoles.includes(r.name));
-
-      if (!hasAccess) router.replace("/auth/login");
-      else setIsAuthorized(true);
-    }
-  }, [user, router]);
 
   const fetchTeamData = useCallback(async () => {
-    if (!isAuthorized) return;
     setLoading(true);
     try {
       const response = await teamsApi.fetchTeams({
@@ -67,7 +45,7 @@ const TeamManagementPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAuthorized, currentPage, debouncedSearchTerm]);
+  }, [currentPage, debouncedSearchTerm]);
 
   useEffect(() => {
     fetchTeamData();
@@ -78,13 +56,6 @@ const TeamManagementPage: React.FC = () => {
     setCurrentPage(1);
   }, [debouncedSearchTerm]);
 
-  if (!isAuthorized || !user) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
-        <Loader size="lg" text="Checking Permissions..." />
-      </div>
-    );
-  }
 
   return (
     <div className="p-6 space-y-6">

@@ -14,9 +14,7 @@ import InfiniteSearchableMultiSelect, { SearchableOption } from "@/components/ui
 export default function CreateBroadcastPage() {
     useDocTitle("Create Broadcast | Sajjad Husain Law Associates");
     const router = useRouter();
-    const { user: reduxUser } = useProfileActions();
-    const user = reduxUser as UserData;
-    const [isAuthorized, setIsAuthorized] = useState(false);
+    const { user } = useProfileActions();
     const [loading, setLoading] = useState(false);
 
     // Form State
@@ -30,25 +28,6 @@ export default function CreateBroadcastPage() {
 
     const [showConfirm, setShowConfirm] = useState(false);
 
-    // --- EFFECTS ---
-    React.useEffect(() => {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-        if (!token) {
-            router.replace("/auth/login");
-            return;
-        }
-
-        if (user?.roles?.length) {
-            const allowedRoles = ["admin", "superadmin"];
-            const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
-            if (!hasAccess) {
-                router.replace("/auth/login");
-            } else {
-                setIsAuthorized(true);
-            }
-        }
-    }, [user, router]);
 
     const handleUserSearch = useCallback(async (query: string, page: number) => {
         try {
@@ -79,13 +58,6 @@ export default function CreateBroadcastPage() {
         setFormData((prev) => ({ ...prev, userIds }));
     };
 
-    if (!isAuthorized) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <Loader className="animate-spin text-[#0A2342]" size={48} />
-            </div>
-        );
-    }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));

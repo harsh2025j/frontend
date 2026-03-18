@@ -9,7 +9,6 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import { PERMISSIONS } from "@/config/permissions";
 import { articleApi } from "@/data/services/article-service/article-service";
 import Pagination from "@/components/Pagination";
 
@@ -122,22 +121,9 @@ const ContentManagementPage: React.FC = () => {
   useDocTitle("Content Management | Sajjad Husain Law Associates");
 
   const router = useRouter();
-  const { user: reduxUser } = useProfileActions();
-  const user = reduxUser as UserData;
+  const { user } = useProfileActions();
 
-  // Auth guard
-  useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) { router.replace("/auth/login"); return; }
-    if (user) {
-      const allowedRoles = ["admin", "superadmin", "creator", "editor"];
-      const hasRole = user.roles?.some((r) => allowedRoles.includes(r.name));
-      const hasPerm = user.permissions?.some((p) =>
-        p.name === PERMISSIONS.ARTICLE.CREATE || p.name === PERMISSIONS.ARTICLE.EDIT || p.name === PERMISSIONS.ARTICLE.PUBLISH
-      );
-      if (!hasRole && !hasPerm) router.replace("/auth/login");
-    }
-  }, [user, router]);
+
 
   // ── State ──
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");

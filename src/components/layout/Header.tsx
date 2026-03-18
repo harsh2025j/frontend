@@ -21,6 +21,7 @@ import { logoutUser } from "@/data/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { fetchCategories } from "@/data/features/category/categoryThunks";
 import { Category } from "@/data/features/category/category.types";
+import { canAccessAdminDashboardPage } from "@/utils/permissions";
 
 const SubCategoryItem = ({ item, closeMenu }: { item: NavItem; closeMenu: () => void }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -121,10 +122,7 @@ export default function Header() {
     router.replace("/");
   };
 
-  const hasDashboardAccess = useMemo(() => {
-    if (!user?.roles) return false;
-    return user.roles.some((r: any) => ["admin", "superadmin", "creator", "editor", "manager"].includes(r.name));
-  }, [user]);
+  const dashboardAccess = canAccessAdminDashboardPage(user);
 
   const t = useTranslations('Navigation');
 
@@ -363,7 +361,7 @@ export default function Header() {
                 <div className={`absolute right-0 top-full w-48 bg-white border border-gray-200 rounded-xl shadow-lg transition-all duration-200 transform origin-top-right z-50 ${isProfileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
                   <div className="py-2">
                     <Link href="/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227]"><UserIcon size={16} /> {t('profile')}</Link>
-                    {hasDashboardAccess && <Link href="/admin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227]"><LayoutDashboard size={16} /> {t('dashboard')}</Link>}
+                    {dashboardAccess && <Link href="/admin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227]"><LayoutDashboard size={16} /> {t('dashboard')}</Link>}
                     <div className="h-px bg-gray-100 my-1 mx-2" />
                     <button onClick={() => { setIsProfileOpen(false); setShowLogoutConfirm(true); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"><LogOut size={16} /> {t('logout')}</button>
                   </div>
@@ -393,7 +391,7 @@ export default function Header() {
                       <div><p className="font-medium text-gray-800">{user?.name}</p><p className="text-xs text-gray-500">{user?.email}</p></div>
                     </div>
                     <Link href="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><UserIcon size={16} /> Profile</Link>
-                    {hasDashboardAccess && <Link href="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><LayoutDashboard size={16} /> Dashboard</Link>}
+                    {dashboardAccess && <Link href="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><LayoutDashboard size={16} /> Dashboard</Link>}
                     <button onClick={() => { setMenuOpen(false); setShowLogoutConfirm(true); }} className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg text-left"><LogOut size={16} /> Logout</button>
                   </div>
                 ) : (

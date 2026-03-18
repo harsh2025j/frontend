@@ -15,27 +15,8 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 export default function CategoryManagement() {
     useDocTitle("Category Management | Sajjad Husain Law Associates");
     const router = useRouter();
-    const { user: reduxUser } = useProfileActions();
-    const user = reduxUser as UserData;
-    const [isAuthorized, setIsAuthorized] = useState(false);
+    const { user } = useProfileActions();
 
-    useEffect(() => {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        if (!token) {
-            router.replace("/auth/login");
-            return;
-        }
-
-        if (user?.roles?.length) {
-            const allowedRoles = ["admin", "superadmin", "editor", "creator"];
-            const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
-            if (!hasAccess) {
-                router.replace("/auth/login");
-            } else {
-                setIsAuthorized(true);
-            }
-        }
-    }, [user, router]);
 
     const [openCategoryPopup, setOpenCategoryPopup] = useState(false);
     const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
@@ -45,10 +26,8 @@ export default function CategoryManagement() {
     const { categories, loading } = useAppSelector((state) => state.category);
 
     useEffect(() => {
-        if (isAuthorized) {
-            dispatch(fetchCategories());
-        }
-    }, [dispatch, isAuthorized]);
+        dispatch(fetchCategories());
+    }, [dispatch]);
 
     const handleAddCategory = (parentId: string | null = null) => {
         setSelectedParentId(parentId);
@@ -80,13 +59,6 @@ export default function CategoryManagement() {
         }
     };
 
-    if (!isAuthorized) {
-        return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
-                <Loader size="lg" text="Checking Permissions..." />
-            </div>
-        );
-    }
 
     // Recursive function to render categories as a visual tree
     const renderCategoryTree = (category: Category, isLast: boolean, level: number = 0) => {

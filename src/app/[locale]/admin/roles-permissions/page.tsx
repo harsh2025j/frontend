@@ -30,35 +30,7 @@ import { resetPermissionsState } from "@/data/features/permissions/permissionsSl
 export default function RolesPermissionsPage() {
     useDocTitle("Roles & Permissions Management | Sajjad Husain Law Associates");
     const router = useRouter();
-    const { user: reduxUser } = useProfileActions();
-    const user = reduxUser as UserData;
-    const [isAuthorized, setIsAuthorized] = useState(false);
-    useEffect(() => {
-        // if (loading) return;
-
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-        // 1. No Token? -> Go to Login
-        if (!token) {
-            router.replace("/auth/login");
-            return;
-        }
-
-        // 2. Role Check
-        if (user?.roles && user.roles.length > 0) {
-            const userRoles = Array.isArray(user?.roles) ? user.roles.map((r) => r.name) : [];
-            const allowedRoles = ["admin", "superadmin"];
-            const hasAccess = userRoles.some((role) => allowedRoles.includes(role));
-
-            if (!hasAccess) {
-                router.replace("/auth/login");
-            }
-            else {
-                setIsAuthorized(true)
-            }
-        }
-
-    }, [user, router]);
+    const { user } = useProfileActions();
 
 
     const dispatch = useAppDispatch();
@@ -197,13 +169,6 @@ export default function RolesPermissionsPage() {
         setEditingPermission(null);
     };
 
-    if (!isAuthorized) {
-        return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
-                <Loader size="lg" text="Checking Permissions..." />
-            </div>
-        );
-    }
 
     return (
         <div className="p-6 min-h-screen bg-gray-50">

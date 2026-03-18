@@ -35,8 +35,33 @@ import { useAppDispatch } from "@/data/redux/hooks";
 import { logoutUser } from "@/data/features/auth/authSlice";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { PERMISSIONS, ROLES } from "@/config/permissions";
-import { getUserType, hasDashboardAccess as hasAccess, isAdmin as checkIsAdmin } from "@/utils/permissions";
+import {
+  getUserType,
+  canAccessAdminDashboardPage,
+  canAccessManageUserPage,
+  canAccessTeamsPage,
+  canAccessRolePermissionPage,
+  canAccessPermissionMatrixPage,
+  canAccessOfficeManagementPage,
+  canAccessPracticeAreaManagementPage,
+  canSeeAccessControlSection,
+  canAccessMembershipApplicationPage,
+  canAccessPermissionRequestPage,
+  canSeeContentSection,
+  canAccessContentManagementPage,
+  canAccessCategoryManagementPage,
+  canAccessContentApprovalPage,
+  canAccessPlanManagementPage,
+  canAccessCasesPage,
+  canAccessJudgmentsPage,
+  canAccessJudgesPage,
+  canAccessReportsPage,
+  canAccessDisplayBoardPage,
+  canAccessBroadcastPage,
+  canAccessProfilePage,
+  canAccessSavedPostsPage,
+  isAdmin as checkIsAdmin
+} from "@/utils/permissions";
 
 const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const dispatch = useAppDispatch();
@@ -47,22 +72,39 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
   const user = reduxProfileUser as UserData;
 
-  // Use unified permission helper
+  // Extreme Granular Access Checks
   const userType = getUserType(user);
-  const hasDashboardAccess = hasAccess(user);
-  const hasAdminPrivileges = checkIsAdmin(user);
-
-  // Keep granular permission checks for specific features
-  const permission = user?.permissions?.map((r) => r.name) || [];
-  const roles = user?.roles?.map((r) => r.name) || [];
-  const isCreator = roles.includes(ROLES.CREATOR);
-  const isEditor = roles.includes(ROLES.EDITOR);
-  const hasPermissionsForContenEdit = permission.includes(PERMISSIONS.ARTICLE.EDIT);
-  const hasPermissionsForCategories = permission.includes(PERMISSIONS.MANAGE.CATEGORIES);
-  const hasPermissionsForApproval = permission.includes(PERMISSIONS.ARTICLE.PUBLISH);
-  const hasPermissionsForCreate = permission.includes(PERMISSIONS.ARTICLE.CREATE);
-  const hasPermissionsForDelete = permission.includes(PERMISSIONS.ARTICLE.DELETE);
-  const hasPermissionsForContentManagement = hasPermissionsForCreate || hasPermissionsForContenEdit || hasPermissionsForDelete;
+  const isAdmin = checkIsAdmin(user);
+  
+  // Sections
+  const showDashboard = canAccessAdminDashboardPage(user);
+  const showAccessControlSection = canSeeAccessControlSection(user);
+  const showContentSection = canSeeContentSection(user);
+  
+  // Individual Pages
+  const showManageUsers = canAccessManageUserPage(user);
+  const showTeams = canAccessTeamsPage(user);
+  const showRolesPermissions = canAccessRolePermissionPage(user);
+  const showPermissionMatrix = canAccessPermissionMatrixPage(user);
+  const showOffices = canAccessOfficeManagementPage(user);
+  const showPracticeAreas = canAccessPracticeAreaManagementPage(user);
+  
+  const showMembership = canAccessMembershipApplicationPage(user);
+  const showPermissionRequests = canAccessPermissionRequestPage(user);
+  
+  const showContentManagement = canAccessContentManagementPage(user);
+  const showCategoryManagement = canAccessCategoryManagementPage(user);
+  const showContentApproval = canAccessContentApprovalPage(user);
+  
+  const showPlanManagement = canAccessPlanManagementPage(user);
+  const showLegalCases = canAccessCasesPage(user);
+  const showJudgments = canAccessJudgmentsPage(user);
+  const showJudges = canAccessJudgesPage(user);
+  const showReports = canAccessReportsPage(user);
+  const showDisplayBoards = canAccessDisplayBoardPage(user);
+  const showBroadcast = canAccessBroadcastPage(user);
+  const showProfile = canAccessProfilePage(user);
+  const showSavedPosts = canAccessSavedPostsPage(user);
 
   const handleLogout = () => {
     dispatch(logoutUser());
@@ -79,7 +121,7 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       name: "Dashboard",
       icon: <Home size={18} />,
       href: "/admin",
-      show: hasDashboardAccess // Only show to staff users
+      show: showDashboard
     },
 
     // 🔽 ACCESS CONTROL SECTION
@@ -87,46 +129,43 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       name: "Access Control",
       icon: <Shield size={18} />,
       isDropdown: true,
-      show: hasAdminPrivileges,
+      show: showAccessControlSection,
       children: [
         {
           name: "Users",
           icon: <Users size={18} />,
           href: "/admin/users",
-          show: hasAdminPrivileges
+          show: showManageUsers
         },
         {
           name: "Teams",
           icon: <Users size={18} />,
           href: "/admin/teams",
-          show: hasAdminPrivileges
+          show: showTeams
         },
         {
           name: "Roles & Permissions",
           icon: <UserCog size={18} />,
           href: "/admin/roles-permissions",
-          show: hasAdminPrivileges
+          show: showRolesPermissions
         },
         {
           name: "Permission Matrix",
           icon: <Grid3x3 size={18} />,
           href: "/admin/permission-matrix",
-          show: hasAdminPrivileges
+          show: showPermissionMatrix
         },
         {
           name: "Offices",
           icon: <Building2 size={18} />,
           href: "/admin/offices",
-          show: hasAdminPrivileges
+          show: showOffices
         },
         {
           name: "Practice Areas",
           icon: <Briefcase size={18} />,
           href: "/admin/practice-areas",
-          show: hasAdminPrivileges
-        },
-        {
-          show: hasAdminPrivileges
+          show: showPracticeAreas
         }
       ]
     },
@@ -135,25 +174,25 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       name: "Membership",
       icon: <BriefcaseMedical size={18} />,
       href: "/admin/membership",
-      show: userType === 'user' // Only show to normal users
+      show: showMembership
     },
     {
       name: "Permission Requests",
       icon: <ClipboardCheck size={18} />,
       href: "/admin/requests",
-      show: hasAdminPrivileges
+      show: showPermissionRequests
     },
     {
       name: "My Profile",
       icon: <UserCircle size={18} />,
       href: "/admin/profile",
-      show: true
+      show: showProfile
     },
     {
       name: "Saved Posts",
       icon: <Bookmark size={18} />,
       href: "/admin/saved-posts",
-      show: true
+      show: showSavedPosts
     },
 
     // 🔽 CONTENT SECTION
@@ -161,25 +200,25 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       name: "Content",
       icon: <ShieldCheck size={18} />,
       isDropdown: true,
-      show: hasDashboardAccess, // If they have any related permission, show the section
+      show: showContentSection,
       children: [
         {
           name: "Content Management",
           icon: <FolderOpen size={18} />,
           href: "/admin/content-management",
-          show: hasAdminPrivileges || isCreator || hasPermissionsForContentManagement
+          show: showContentManagement
         },
         {
           name: "Category Management",
           icon: <FolderOpen size={18} />,
           href: "/admin/categories",
-          show: hasAdminPrivileges || hasPermissionsForCategories
+          show: showCategoryManagement
         },
         {
           name: "Content Approval",
           icon: <GitPullRequestArrow size={18} />,
           href: "/admin/content-approval",
-          show: hasAdminPrivileges || hasPermissionsForApproval
+          show: showContentApproval
         }
       ]
     },
@@ -188,43 +227,43 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       name: "Plan Management",
       icon: <Crown size={18} />,
       href: "/admin/plans",
-      show: hasAdminPrivileges
+      show: showPlanManagement
     },
     {
       name: "Legal Cases",
       icon: <FileText size={18} />,
       href: "/admin/cases",
-      show: hasAdminPrivileges
+      show: showLegalCases
     },
     {
       name: "Judgments",
       icon: <Gavel size={18} />,
       href: "/admin/judgments",
-      show: hasAdminPrivileges
+      show: showJudgments
     },
     {
       name: "Judges",
       icon: <Scale size={18} />,
       href: "/admin/judges",
-      show: hasAdminPrivileges
+      show: showJudges
     },
     {
       name: "Reports",
       icon: <BarChart size={18} />,
       href: "/admin/reports",
-      show: hasAdminPrivileges
+      show: showReports
     },
     {
       name: "Display Boards",
       icon: <Monitor size={18} />,
       href: "/admin/display-boards",
-      show: hasAdminPrivileges
+      show: showDisplayBoards 
     },
     {
       name: "Notification",
       icon: <Bell size={18} />,
       href: "/admin/broadcast",
-      show: hasAdminPrivileges
+      show: showBroadcast
     },
     // {
     //   name: "Settings",

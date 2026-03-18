@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "@/i18n/routing";
 import AdminNavbar from "./components/AdminNavbar";
 import AdminSidebar from "./components/AdminSidebar";
 import Loader from "@/components/ui/Loader";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
-import { PERMISSIONS } from "@/config/permissions";
+import { ROUTE_PROTECTION_MAP, canAccessAdminPanelPage, isAdmin } from "@/utils/permissions";
 
 export default function DashboardLayout({
   children,
@@ -15,6 +15,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const { user: reduxUser, loading } = useProfileActions();
@@ -22,8 +23,10 @@ export default function DashboardLayout({
 
   const [isAuthorized, setIsAuthorized] = useState(false);
 
+
   useEffect(() => {
-    // if (loading) return;
+    // Reset authorization when path changes to re-verify
+    setIsAuthorized(false);
 
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
@@ -33,24 +36,44 @@ export default function DashboardLayout({
       return;
     }
 
-    // 2. Authorization Check
-    if (user && !loading) {
-      // const userRoles = user.roles.map(r => r.name);
-      // // Check if user has any of the allowed roles
-      // const hasAccess = userRoles.some(role =>
-      //   ["admin", "superadmin", "editor", "creator"].includes(role)
-      // );
+    // 2. Wait for profile to load
+    if (loading) return;
 
-      // if (hasAccess) {
-      //     setIsAuthorized(true);
-      // } else {
-      //   // Redirect to home if not authorized
-      //   router.replace("/");
-      // }
+    // 3. Authorization Check
+    if (user) {
+      // Normalize path to match map (remove locale prefix)
+      const cleanPath = pathname.replace(/^\/[a-z]{2}(\/|$)/, '$1').replace(/\/$/, '') || "/";
+      const adminPath = cleanPath.startsWith('/admin') ? cleanPath : `/admin${cleanPath === '/' ? '' : cleanPath}`;
 
-       setIsAuthorized(true);
+      // Find the best match (longest prefix)
+      const sortedProtections = Object.keys(ROUTE_PROTECTION_MAP).sort((a, b) => b.length - a.length);
+      const matchedKey = sortedProtections.find(key => adminPath === key || adminPath.startsWith(key + '/'));
+
+      //If it can't find a rule for a page, it defaults to isAdmin .This means if you forget to add a rule, the page is locked for everyone except Admins.
+      const permissionCheck = matchedKey ? ROUTE_PROTECTION_MAP[matchedKey] : isAdmin;
+
+      if (permissionCheck(user)) {
+        setIsAuthorized(true);
+      } else {
+        setIsAuthorized(false);
+        // Redirection based on user type and current path
+        if (adminPath === "/admin") {
+          // Normal users go to membership, staff go to admin (infinite loop prevention)
+          router.replace("/admin/membership");
+        } else {
+          // If accessing a restricted page, kick back to dashboard/root
+          router.replace("/admin");
+        }
+      }
+    } else if (!loading) {
+      // Token exists but no user data? Force refresh or re-login
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      if (token && !user) {
+        // This might happen if API failed. 
+        // Optional: router.replace("/auth/login");
+      }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, pathname]);
 
   useEffect(() => {
     const handleResize = () => {

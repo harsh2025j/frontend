@@ -110,18 +110,8 @@ const ApproveModal = ({
 const ContentApprovalPanel = () => {
   useDocTitle("Content Approval | Sajjad Husain Law Associates");
   const router = useRouter();
-  const { user: reduxUser } = useProfileActions();
-  const user = reduxUser as UserData;
+  const { user } = useProfileActions();
 
-  // Auth guard
-  useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) { router.replace("/auth/login"); return; }
-    if (user?.roles?.length) {
-      const allowed = ["admin", "superadmin", "editor"];
-      if (!user.roles.some((r) => allowed.includes(r.name))) router.replace("/auth/login");
-    }
-  }, [user, router]);
 
   // ── State ──
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("pending");

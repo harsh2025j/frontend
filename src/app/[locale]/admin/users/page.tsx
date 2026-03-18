@@ -17,17 +17,17 @@ import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { User, UserFilter } from "@/data/features/users/users.types";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useDocTitle } from "@/hooks/useDocTitle";
+
 import Pagination from "@/components/Pagination";
+
 
 export default function UserManagementPage() {
     useDocTitle("User Management  | Sajjad Husain Law Associates");
     const router = useRouter();
     const dispatch = useAppDispatch();
 
-    // --- Auth & Profile ---
-    const { user: reduxUser } = useProfileActions();
-    const user = reduxUser as UserData;
-    const [isAuthorized, setIsAuthorized] = useState(false);
+    // --- Profile ---
+    const { user } = useProfileActions();
 
     // --- Redux Data ---
     const { users, total, page, limit, loading, error } = useAppSelector((state) => state.users);
@@ -51,30 +51,9 @@ export default function UserManagementPage() {
     const [verifyModalOpen, setVerifyModalOpen] = useState(false);
     const [userToVerify, setUserToVerify] = useState<{ id: string; name: string; currentStatus: boolean } | null>(null);
 
-    // --- Authorization Check ---
-    useEffect(() => {
-        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-        if (!token) {
-            router.replace("/auth/login");
-            return;
-        }
-
-        if (user) {
-            if (user.roles?.length) {
-                const allowedRoles = ["admin", "superadmin"];
-                const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
-                if (!hasAccess) router.replace("/auth/login");
-                else setIsAuthorized(true);
-            } else {
-                // User exists but has no roles -> Redirect or Deny
-                router.replace("/auth/login");
-            }
-        }
-    }, [user, router]);
 
     // --- Fetch Users ---
     const loadUsers = useCallback(() => {
-        if (!isAuthorized) return;
 
         // Clean up filters before sending
         const activeFilters: UserFilter = {};
@@ -85,28 +64,24 @@ export default function UserManagementPage() {
         if (filters.officeId) activeFilters.officeId = filters.officeId;
         if (filters.practiceAreaId) activeFilters.practiceAreaId = filters.practiceAreaId;
         if (filters.clearanceLevel !== "") activeFilters.clearanceLevel = parseInt(filters.clearanceLevel as string);
-        
+
         activeFilters.page = filters.page || 1;
         activeFilters.limit = filters.limit || 15;
 
         dispatch(fetchUsers(activeFilters));
-    }, [isAuthorized, filters, dispatch]);
+    }, [filters, dispatch]);
 
     useEffect(() => {
-        if (isAuthorized) {
-            loadUsers();
-        }
-    }, [isAuthorized, filters.page, dispatch]);
+        loadUsers();
+    }, [filters.page, dispatch, loadUsers]);
 
     // For other filters, we only want to load when "Filter" or "Search" is clicked
     // But page changes should trigger instantly.
 
     useEffect(() => {
-        if (isAuthorized) {
-            dispatch(fetchOffices());
-            dispatch(fetchPracticeAreas());
-        }
-    }, [dispatch, isAuthorized]);
+        dispatch(fetchOffices());
+        dispatch(fetchPracticeAreas());
+    }, [dispatch]);
 
     // --- Handlers ---
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -118,7 +93,7 @@ export default function UserManagementPage() {
         e.preventDefault();
         // Reset to page 1 on search
         setFilters(prev => ({ ...prev, page: 1 }));
-        loadUsers(); 
+        loadUsers();
     };
 
     const handleReset = () => {
@@ -165,13 +140,6 @@ export default function UserManagementPage() {
         }
     };
 
-    if (!isAuthorized) {
-        return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
-                <Loader size="lg" text="Checking Permissions..." />
-            </div>
-        );
-    }
 
     return (
         <div className="min-h-screen bg-gray-50 p-6 md:p-8">
@@ -434,10 +402,10 @@ export default function UserManagementPage() {
                                                                             "text-gray-600"
                                                         } />
                                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tableUser.clearanceLevel === 5 ? "bg-red-50 text-red-700 border border-red-100" :
-                                                                tableUser.clearanceLevel === 4 ? "bg-orange-50 text-orange-700 border border-orange-100" :
-                                                                    tableUser.clearanceLevel === 3 ? "bg-yellow-50 text-yellow-700 border border-yellow-100" :
-                                                                        tableUser.clearanceLevel === 2 ? "bg-blue-50 text-blue-700 border border-blue-100" :
-                                                                            "bg-gray-50 text-gray-700 border border-gray-100"
+                                                            tableUser.clearanceLevel === 4 ? "bg-orange-50 text-orange-700 border border-orange-100" :
+                                                                tableUser.clearanceLevel === 3 ? "bg-yellow-50 text-yellow-700 border border-yellow-100" :
+                                                                    tableUser.clearanceLevel === 2 ? "bg-blue-50 text-blue-700 border border-blue-100" :
+                                                                        "bg-gray-50 text-gray-700 border border-gray-100"
                                                             }`}>
                                                             Level {tableUser.clearanceLevel}
                                                         </span>

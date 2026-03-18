@@ -21,36 +21,14 @@ export default function Settings() {
     const router = useRouter();
     const dispatch = useAppDispatch();
 
-    const { user: reduxUser } = useProfileActions();
-    const user = reduxUser as UserData;
+    const { user } = useProfileActions();
 
     const { users, loading: usersLoading } = useAppSelector((state) => state.users);
-    const [isAuthorized, setIsAuthorized] = useState(false);
+
 
     useEffect(() => {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-        if (!token) {
-            router.replace("/auth/login");
-            return;
-        }
-
-        if (user?.roles?.length) {
-            const allowedRoles = ["admin", "superadmin"];
-            const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
-            if (!hasAccess) {
-                router.replace("/auth/login");
-            } else {
-                setIsAuthorized(true);
-            }
-        }
-    }, [user, router]);
-
-    useEffect(() => {
-        if (isAuthorized) {
-            dispatch(fetchUsers());
-        }
-    }, [dispatch, isAuthorized]);
+        dispatch(fetchUsers());
+    }, [dispatch]);
 
     // Filter users to only show those created by the current admin (same logic as team management page)
     const filteredUsers = useMemo(() => {
@@ -58,13 +36,6 @@ export default function Settings() {
         return users.filter((u) => u.createdBy?._id === user._id);
     }, [users, user]);
 
-    if (!isAuthorized) {
-        return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50">
-                <Loader size="lg" text="Checking Permissions..." />
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-8 pb-12">

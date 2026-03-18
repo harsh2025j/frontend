@@ -24,19 +24,8 @@ export default function BroadcastPage() {
     const [totalItems, setTotalItems] = useState(0);
 
     const router = useRouter();
-    const { user: reduxUser } = useProfileActions();
-    const user = reduxUser as UserData;
-    const [isAuthorized, setIsAuthorized] = useState(false);
+    const { user } = useProfileActions();
 
-    React.useEffect(() => {
-        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-        if (!token) { router.replace("/auth/login"); return; }
-        if (user?.roles?.length) {
-            const hasAccess = user.roles.some((r) => ["admin", "superadmin"].includes(r.name));
-            if (!hasAccess) router.replace("/auth/login");
-            else setIsAuthorized(true);
-        }
-    }, [user, router]);
 
     const fetchBroadcasts = async (page: number) => {
         setLoading(true);
@@ -54,8 +43,8 @@ export default function BroadcastPage() {
     };
 
     React.useEffect(() => {
-        if (isAuthorized) fetchBroadcasts(currentPage);
-    }, [isAuthorized, currentPage]);
+        fetchBroadcasts(currentPage);
+    }, [currentPage]);
 
     const handlePageChange = (page: number) => {
         if (page >= 1 && page <= totalPages) setCurrentPage(page);
@@ -74,13 +63,6 @@ export default function BroadcastPage() {
         }
     };
 
-    if (!isAuthorized) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <Loader className="animate-spin text-[#0A2342]" size={48} />
-            </div>
-        );
-    }
 
     return (
         <div className="md:p-6 max-w-7xl mx-auto">

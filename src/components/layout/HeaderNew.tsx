@@ -26,8 +26,7 @@ import { fetchCategories } from "@/data/features/category/categoryThunks";
 import { Category } from "@/data/features/category/category.types";
 import SearchWithDropdown from "../ui/SearchWithDropdown";
 import NotificationDropdown from "./NotificationDropdown";
-import { ROLES, PERMISSIONS } from "@/config/permissions";
-import { hasDashboardAccess } from "@/utils/permissions";
+import { ROLES, PERMISSIONS, canAccessAdminDashboardPage } from "@/utils/permissions";
 
 const SubCategoryItem = ({ item, closeMenu }: { item: NavItem; closeMenu: () => void }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -146,7 +145,7 @@ export default function HeaderNew() {
         setSearchOpen(false);
     };
 
-    const dashboardAccess = hasDashboardAccess(user);
+    const dashboardAccess = canAccessAdminDashboardPage(user);
 
     const t = useTranslations('Navigation');
 

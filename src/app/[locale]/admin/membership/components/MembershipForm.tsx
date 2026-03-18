@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import { permissionRequestService } from "@/data/features/permission-requests/permissionRequestService";
-import { PERMISSIONS } from "@/config/permissions";
+import { PERMISSIONS, canAccessContentManagementPage } from "@/utils/permissions";
 import Loader from "@/components/ui/Loader";
 import { toast } from "react-hot-toast";
 import { Check, Clock } from "lucide-react";
@@ -27,10 +27,12 @@ export default function MembershipForm() {
         barRegistrationNumber: "",
     });
 
-    const [selectedPermissions, setSelectedPermissions] = useState<string[]>([
-        PERMISSIONS.ARTICLE.CREATE,
-        PERMISSIONS.ARTICLE.EDIT,
-    ]);
+    // const [selectedPermissions, setSelectedPermissions] = useState<string[]>([
+    //     PERMISSIONS.ARTICLE.CREATE,
+    //     PERMISSIONS.ARTICLE.EDIT,
+    // ]);
+
+    const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
     const [requestedRoleIds, setRequestedRoleIds] = useState<string[]>([]);
 
@@ -53,9 +55,7 @@ export default function MembershipForm() {
 
     const pendingRequest = existingRequests.find(r => r.status === 'pending');
 
-    const hasAlreadySpecialPermissions = user.permissions?.some(p =>
-        p.name === PERMISSIONS.ARTICLE.CREATE || p.name === PERMISSIONS.ARTICLE.EDIT
-    ) || user.roles?.some(r => r.name === 'admin' || r.name === 'superadmin' || r.name === 'editor' || r.name === 'creator');
+    const hasAlreadySpecialPermissions = canAccessContentManagementPage(user);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -69,7 +69,7 @@ export default function MembershipForm() {
                 'Legal Advisor': 'legal_advisor',
                 'Law Student': 'law_student',
                 'Paralegal': 'paralegal',
-                'Judges': 'judge'
+                // 'Judges': 'judge'
             };
             const roleName = roleMap[value];
             if (roleName) {
@@ -78,15 +78,15 @@ export default function MembershipForm() {
 
             // Mapping Designation to Permission arrays as requested
             const permissionMap: Record<string, string[]> = {
-                'Advocate': [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT],
-                'Lawyer': [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT],
-                'Judges': [PERMISSIONS.ARTICLE.READ, PERMISSIONS.ARTICLE.READ_PREMIUM],
-                'Law Student': [PERMISSIONS.ARTICLE.READ],
-                'Legal Advisor': [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT],
-                'Paralegal': [PERMISSIONS.ARTICLE.READ],
+                'Advocate': [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT, PERMISSIONS.ARTICLE.DELETE, PERMISSIONS.ARTICLE.READ, PERMISSIONS.MANAGE.BROADCAST, PERMISSIONS.MANAGE.CASES],
+                'Lawyer': [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT, PERMISSIONS.ARTICLE.DELETE, PERMISSIONS.ARTICLE.READ, PERMISSIONS.MANAGE.BROADCAST, PERMISSIONS.MANAGE.CASES],
+                // 'Judges': [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT, PERMISSIONS.ARTICLE.DELETE, PERMISSIONS.ARTICLE.READ, PERMISSIONS.MANAGE.BROADCAST, PERMISSIONS.MANAGE.CASES],
+                'Law Student': [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT, PERMISSIONS.ARTICLE.DELETE, PERMISSIONS.ARTICLE.READ, PERMISSIONS.MANAGE.BROADCAST, PERMISSIONS.MANAGE.CASES],
+                'Legal Advisor': [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT, PERMISSIONS.ARTICLE.DELETE, PERMISSIONS.ARTICLE.READ, PERMISSIONS.MANAGE.BROADCAST, PERMISSIONS.MANAGE.CASES],
+                'Paralegal': [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT, PERMISSIONS.ARTICLE.DELETE, PERMISSIONS.ARTICLE.READ, PERMISSIONS.MANAGE.BROADCAST, PERMISSIONS.MANAGE.CASES],
             };
 
-            const perms = permissionMap[value] || [PERMISSIONS.ARTICLE.CREATE, PERMISSIONS.ARTICLE.EDIT];
+            const perms = permissionMap[value];
             setSelectedPermissions(perms);
         }
     };
@@ -234,7 +234,7 @@ export default function MembershipForm() {
                             <option value="Legal Advisor">Legal Advisor</option>
                             <option value="Law Student">Law Student</option>
                             <option value="Paralegal">Paralegal</option>
-                            <option value="Judges">Judges</option>
+                            {/* <option value="Judges">Judges</option> */}
                         </select>
                     </div>
 

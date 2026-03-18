@@ -89,20 +89,6 @@ export default function AdminProfilePage() {
         router.push(`/auth/forgot-password?Step=reset&email=${email}`);
     };
     useDocTitle(`${name} 's Profile`);
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                router.replace("/auth/login");
-                return;
-            }
-            else if (!user) {
-                router.replace("/auth/login")
-                return;
-            }
-
-        }
-    }, [user, router]);
 
     const handleLogout = () => {
         localStorage.clear();

@@ -55,30 +55,9 @@ const EditArticlePage: React.FC = () => {
     };
 
     const router = useRouter();
-    const { user: reduxUser } = useProfileActions();
-    const user = reduxUser as UserData;
+    const { user } = useProfileActions();
 
     // --- Authentication Check ---
-    useEffect(() => {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        if (!token) {
-            router.replace("/auth/login");
-            return;
-        }
-        if (user) {
-            const allowedRoles = ["admin", "superadmin", "creator"];
-            const hasRoleAccess = user.roles?.some((r) => allowedRoles.includes(r.name));
-
-            // Also check for article creation/editing permissions
-            const hasPermissionAccess = user.permissions?.some((p) =>
-                p.name === "create:article" || p.name === "edit:article"
-            );
-
-            if (!hasRoleAccess && !hasPermissionAccess) {
-                router.replace("/auth/login");
-            }
-        }
-    }, [user, router]);
 
     const dispatch = useAppDispatch();
     const { categories } = useAppSelector((state) => state.category);

@@ -27,8 +27,15 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { fetchArticles } from "@/data/features/article/articleThunks";
 import { fetchUsers } from "@/data/features/users/usersThunks";
-import { PERMISSIONS, ROLES } from "@/config/permissions";
-import { getUserType, hasDashboardAccess } from "@/utils/permissions";
+import {
+  canAccessAdminDashboardPage,
+  getUserType,
+  canAccessManageUserPage,
+  canAccessPlanManagementPage,
+  canAccessContentManagementPage,
+  canAccessCategoryManagementPage,
+  isAdmin
+} from "@/utils/permissions";
 import apiClient from "@/data/services/apiConfig/apiClient";
 
 
@@ -63,90 +70,100 @@ const Page = () => {
     fetchDashboard();
   }, [dispatch]);
 
-  // --- Chart Data: Passed directly to component for processing ---
-
-  const stats = dashboardStats ? [
-    {
-      label: "Total Articles",
-      value: dashboardStats.totalArticles?.value?.toLocaleString() ?? "N/A",
-      icon: <TrendingUp className="w-5 h-5" />,
-      trend: dashboardStats.totalArticles?.trend ?? null,
-      trendUp: dashboardStats.totalArticles?.trendUp ?? true,
-      sparklineData: dashboardStats.totalArticles?.sparklineData ?? [],
-    },
-    {
-      label: "Published Articles",
-      value: dashboardStats.publishedArticles?.value?.toLocaleString() ?? "N/A",
-      icon: <Star className="w-5 h-5" />,
-      trend: dashboardStats.publishedArticles?.trend ?? null,
-      trendUp: dashboardStats.publishedArticles?.trendUp ?? true,
-      sparklineData: dashboardStats.publishedArticles?.sparklineData ?? [],
-    },
-    {
-      label: "Pending Articles",
-      value: dashboardStats.pendingArticles?.value?.toLocaleString() ?? "N/A",
-      icon: <Clock className="w-5 h-5" />,
-      trend: dashboardStats.pendingArticles?.trend ?? null,
-      trendUp: dashboardStats.pendingArticles?.trendUp ?? false,
-      sparklineData: dashboardStats.pendingArticles?.sparklineData ?? [],
-    },
-    {
-      label: "Active Users",
-      value: dashboardStats.activeUsers?.value?.toLocaleString() ?? "N/A",
-      icon: <UserCheck className="w-5 h-5" />,
-      trend: dashboardStats.activeUsers?.trend ?? null,
-      trendUp: dashboardStats.activeUsers?.trendUp ?? true,
-      sparklineData: dashboardStats.activeUsers?.sparklineData ?? [],
-    },
-    {
-      label: "Total Users",
-      value: dashboardStats.totalUsers?.value?.toLocaleString() ?? "N/A",
-      path: "/admin/users",
-      icon: <Users className="w-5 h-5" />,
-      trend: dashboardStats.totalUsers?.trend ?? null,
-      trendUp: dashboardStats.totalUsers?.trendUp ?? true,
-      sparklineData: dashboardStats.totalUsers?.sparklineData ?? [],
-    },
-    {
-      label: "Most Active Category",
-      value: dashboardStats.mostActiveCategory?.value ?? "—",
-      icon: <Eye className="w-5 h-5" />,
-      trend: dashboardStats.mostActiveCategory?.trend ?? null,
-      trendUp: dashboardStats.mostActiveCategory?.trendUp ?? true,
-      sparklineData: dashboardStats.mostActiveCategory?.sparklineData ?? [],
-    },
-    {
-      label: "Premium Subscribers",
-      value: dashboardStats.premiumSubscribers?.value?.toLocaleString() ?? "N/A",
-      icon: <CircleDollarSign className="w-5 h-5" />,
-      trend: dashboardStats.premiumSubscribers?.trend ?? null,
-      trendUp: dashboardStats.premiumSubscribers?.trendUp ?? true,
-      sparklineData: dashboardStats.premiumSubscribers?.sparklineData ?? [],
-    },
-    {
-      label: "Free Users",
-      value: dashboardStats.freeUsers?.value?.toLocaleString() ?? "N/A",
-      icon: <Users className="w-5 h-5" />,
-      trend: dashboardStats.freeUsers?.trend ?? null,
-      trendUp: dashboardStats.freeUsers?.trendUp ?? true,
-      sparklineData: dashboardStats.freeUsers?.sparklineData ?? [],
-    },
-  ] : [];
-
   // --- Authorization Check for View ---
   const { user: reduxUser, loading: profileLoading } = useProfileActions();
   const userData = reduxUser as UserData;
 
   const userType = getUserType(userData);
-  const hasStaffAccess = hasDashboardAccess(userData);
+  const canAccessDashboard = canAccessAdminDashboardPage(userData);
+  const canManageUsers = canAccessManageUserPage(userData);
+  const canManagePlans = canAccessPlanManagementPage(userData);
+  const canManageContent = canAccessContentManagementPage(userData);
+  const canManageCategories = canAccessCategoryManagementPage(userData);
 
-  if (profileLoading) return <Loader />;
+  // --- Chart Data: Passed directly to component for processing ---
 
-  // Redirect normal users with no privileges to the membership page immediately
-  if (userType === 'user' && typeof window !== "undefined") {
-    router.replace("/admin/membership");
-    return <Loader />;
-  }
+  const stats = useMemo(() => {
+    if (!dashboardStats) return [];
+
+    const allStats = [
+      {
+        label: "Total Articles",
+        value: dashboardStats.totalArticles?.value?.toLocaleString() ?? "N/A",
+        icon: <TrendingUp className="w-5 h-5" />,
+        trend: dashboardStats.totalArticles?.trend ?? null,
+        trendUp: dashboardStats.totalArticles?.trendUp ?? true,
+        sparklineData: dashboardStats.totalArticles?.sparklineData ?? [],
+        show: canManageContent
+      },
+      {
+        label: "Published Articles",
+        value: dashboardStats.publishedArticles?.value?.toLocaleString() ?? "N/A",
+        icon: <Star className="w-5 h-5" />,
+        trend: dashboardStats.publishedArticles?.trend ?? null,
+        trendUp: dashboardStats.publishedArticles?.trendUp ?? true,
+        sparklineData: dashboardStats.publishedArticles?.sparklineData ?? [],
+        show: canManageContent
+      },
+      {
+        label: "Pending Articles",
+        value: dashboardStats.pendingArticles?.value?.toLocaleString() ?? "N/A",
+        icon: <Clock className="w-5 h-5" />,
+        trend: dashboardStats.pendingArticles?.trend ?? null,
+        trendUp: dashboardStats.pendingArticles?.trendUp ?? false,
+        sparklineData: dashboardStats.pendingArticles?.sparklineData ?? [],
+        show: canManageContent
+      },
+      {
+        label: "Active Users",
+        value: dashboardStats.activeUsers?.value?.toLocaleString() ?? "N/A",
+        icon: <UserCheck className="w-5 h-5" />,
+        trend: dashboardStats.activeUsers?.trend ?? null,
+        trendUp: dashboardStats.activeUsers?.trendUp ?? true,
+        sparklineData: dashboardStats.activeUsers?.sparklineData ?? [],
+        show: canManageUsers
+      },
+      {
+        label: "Total Users",
+        value: dashboardStats.totalUsers?.value?.toLocaleString() ?? "N/A",
+        path: "/admin/users",
+        icon: <Users className="w-5 h-5" />,
+        trend: dashboardStats.totalUsers?.trend ?? null,
+        trendUp: dashboardStats.totalUsers?.trendUp ?? true,
+        sparklineData: dashboardStats.totalUsers?.sparklineData ?? [],
+        show: canManageUsers
+      },
+      {
+        label: "Most Active Category",
+        value: dashboardStats.mostActiveCategory?.value ?? "—",
+        icon: <Eye className="w-5 h-5" />,
+        trend: dashboardStats.mostActiveCategory?.trend ?? null,
+        trendUp: dashboardStats.mostActiveCategory?.trendUp ?? true,
+        sparklineData: dashboardStats.mostActiveCategory?.sparklineData ?? [],
+        show: canManageCategories
+      },
+      {
+        label: "Premium Subscribers",
+        value: dashboardStats.premiumSubscribers?.value?.toLocaleString() ?? "N/A",
+        icon: <CircleDollarSign className="w-5 h-5" />,
+        trend: dashboardStats.premiumSubscribers?.trend ?? null,
+        trendUp: dashboardStats.premiumSubscribers?.trendUp ?? true,
+        sparklineData: dashboardStats.premiumSubscribers?.sparklineData ?? [],
+        show: canManagePlans
+      },
+      {
+        label: "Free Users",
+        value: dashboardStats.freeUsers?.value?.toLocaleString() ?? "N/A",
+        icon: <Users className="w-5 h-5" />,
+        trend: dashboardStats.freeUsers?.trend ?? null,
+        trendUp: dashboardStats.freeUsers?.trendUp ?? true,
+        sparklineData: dashboardStats.freeUsers?.sparklineData ?? [],
+        show: canManagePlans
+      },
+    ];
+
+    return allStats.filter(s => s.show);
+  }, [dashboardStats, canManageUsers, canManagePlans, canManageContent, canManageCategories]);
 
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -192,12 +209,16 @@ const Page = () => {
 
       {/* Main Content Grid Layers */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2">
-          <DummyChart articles={articles} />
-        </div>
-        <div className="lg:col-span-1">
-          <RevenueChart />
-        </div>
+        {canManageContent && (
+          <div className="lg:col-span-2">
+            <DummyChart articles={articles} />
+          </div>
+        )}
+        {(canManagePlans || isAdmin(userData)) && (
+          <div className="lg:col-span-1">
+            <RevenueChart />
+          </div>
+        )}
       </div>
 
       {/* Bottom Section */}

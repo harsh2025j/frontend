@@ -24,8 +24,7 @@ export default function PlansManagement() {
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
     const [showPlanModal, setShowPlanModal] = useState(false);
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
-    const { user: reduxUser } = useProfileActions();
-    const user = reduxUser as UserData;
+    const { user } = useProfileActions();
 
     // Fetch plans ONLY ONCE using module-level flag
     useEffect(() => {
@@ -38,27 +37,6 @@ export default function PlansManagement() {
     const filteredPlans = plans.filter((plan: Plan) =>
         plan.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-    useEffect(() => {
-        // if (loading) return;
-
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-        // 1. No Token? -> Go to Login
-        if (!token) {
-            router.replace("/auth/login");
-            return;
-        }
-
-        // 2. Role Check
-        if (user?.roles?.length) {
-            const allowedRoles = ["admin", "superadmin"];
-            const hasAccess = user.roles.some((r) => allowedRoles.includes(r.name));
-            if (!hasAccess) {
-                router.replace("/auth/login");
-            }
-
-        }
-    }, [user, router]);
 
     const handleDelete = async () => {
         if (selectedPlan) {
