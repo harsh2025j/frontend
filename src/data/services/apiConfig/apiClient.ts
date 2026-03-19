@@ -1,5 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
-import { API_BASE_URL } from "./apiContants";
+import { API_BASE_URL, API_ENDPOINTS } from "./apiContants";
+import { isTokenExpiredSoon } from "@/lib/utils/jwtUtils";
+
 import { handleApiError } from "@/lib/utils/errorHandler";
 import toast from "react-hot-toast";
 import { startLoading, stopLoading } from "@/data/features/ui/uiSlice";
@@ -75,16 +77,100 @@ const apiClient = axios.create({
   timeout: 30000,
 });
 
+let isRefreshing = false;
+let failedQueue: { resolve: (value: string) => void; reject: (reason?: any) => void }[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token as string);
+    }
+  });
+  failedQueue = [];
+};
+
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
     if (store) {
       // store.dispatch(startLoading());
     }
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+    let token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const url = config.url || '';
+    
+    // Check if it's an auth endpoint to avoid looping
+    const isAuthCall = url.includes(API_ENDPOINTS.AUTH.REFRESH) || 
+                       url.includes('/auth/login') || 
+                       url.includes('/auth/social-login');
+
+    if (!isAuthCall && token && typeof window !== "undefined") {
+      // Check expiration proactively (buffer: 30 seconds)
+      if (isTokenExpiredSoon(token, 0.5)) {
+        if (!isRefreshing) {
+          isRefreshing = true;
+          try {
+            const refreshToken = localStorage.getItem("refreshToken");
+            const userStr = localStorage.getItem("user");
+            const user = userStr ? JSON.parse(userStr) : null;
+            const userId = user?.id || user?._id || user?.sub;
+
+            if (refreshToken && userId) {
+              const refreshResponse = await axios.post(`${API_BASE_URL}${API_ENDPOINTS.AUTH.REFRESH}`, {
+                userId,
+                refreshToken
+              });
+
+              const payload = refreshResponse.data?.data || refreshResponse.data;
+              const newToken = payload?.accessToken;
+              const newRefreshToken = payload?.refreshToken;
+
+              if (newToken) {
+                localStorage.setItem("token", newToken);
+                if (newRefreshToken) localStorage.setItem("refreshToken", newRefreshToken);
+                
+                if (store) {
+                  store.dispatch({
+                    type: 'auth/refreshToken/fulfilled',
+                    payload: refreshResponse.data
+                  });
+                }
+
+                token = newToken;
+                processQueue(null, newToken);
+              } else {
+                throw new Error("Invalid token response");
+              }
+            } else {
+              throw new Error("No refresh token or user id available");
+            }
+          } catch (error: any) {
+            processQueue(error, null);
+            localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("user");
+            window.location.href = "/";
+            return Promise.reject(error);
+          } finally {
+            isRefreshing = false;
+          }
+        }
+ else {
+          // Wait for the ongoing refresh to complete
+          try {
+            token = await new Promise<string>((resolve, reject) => {
+              failedQueue.push({ resolve, reject });
+            });
+          } catch (error) {
+            return Promise.reject(error);
+          }
+        }
+      }
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      console.warn(`Request to ${config.url} has no token`);
     }
     return config;
   },

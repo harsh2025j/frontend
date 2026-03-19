@@ -10,6 +10,8 @@ import {
   ResetPasswordResponse,
   VerifyOtpRequest,
   VerifyOtpResponse,
+  RefreshTokenRequest,
+  RefreshTokenResponse,
 } from "./auth.types";
 import { authApi } from "@/data/services/auth-service/auth-service";
 import { MESSAGES } from "@/lib/constants/messageConstants";
@@ -139,6 +141,19 @@ export const loginWithGoogle = createAsyncThunk<LoginResponse, void>(
     } catch (err: unknown) {
       const apiError = err as ApiError;
       return thunkAPI.rejectWithValue(apiError.message || "Google Login Failed");
+    }
+  }
+);
+
+export const refreshToken = createAsyncThunk<RefreshTokenResponse, RefreshTokenRequest>(
+  "auth/refreshToken",
+  async (data, thunkAPI) => {
+    try {
+      const res = await authApi.refreshToken(data);
+      return res.data;
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      return thunkAPI.rejectWithValue(apiError.message || "Token Refresh Failed");
     }
   }
 );

@@ -13,6 +13,8 @@ import {
   ResetPasswordResponse,
   VerifyOtpRequest,
   VerifyOtpResponse,
+  RefreshTokenRequest,
+  RefreshTokenResponse,
 } from "@/data/features/auth/auth.types";
 import apiClient from "../apiConfig/apiClient";
 import { API_BASE_URL, API_ENDPOINTS } from "../apiConfig/apiContants";
@@ -79,6 +81,14 @@ export const authApi = {
   socialLogin: async (data: SocialLoginRequest) => {
     const response = await apiClient.post<LoginResponse>(
       API_ENDPOINTS.AUTH.SOCIAL_LOGIN,
+      data
+    );
+    return response;
+  },
+
+  refreshToken: async (data: RefreshTokenRequest) => {
+    const response = await apiClient.post<RefreshTokenResponse>(
+      API_ENDPOINTS.AUTH.REFRESH,
       data
     );
     return response;

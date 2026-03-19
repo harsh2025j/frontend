@@ -13,7 +13,8 @@ export const API_ENDPOINTS = {
     VERIFY_OTP: "/auth/verify",
     LOGIN: "/auth/login",
     RESEND_OTP: "/auth/resend-otp",
-    SOCIAL_LOGIN: "/auth/social-login"
+    SOCIAL_LOGIN: "/auth/social-login",
+    REFRESH: "/auth/refresh"
   },
   PROFILE: {
     FETCH: "/profile",

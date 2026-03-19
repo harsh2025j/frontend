@@ -123,6 +123,16 @@ export interface ResendOtpResponse {
   message: string;
 }
 
+export interface RefreshTokenRequest {
+  userId: string;
+  refreshToken: string;
+}
+
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
 export interface AuthState {
   loading: boolean;
   error: string | null;

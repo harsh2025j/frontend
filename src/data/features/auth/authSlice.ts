@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { loginUser, registerUser, verifyOtp, forgotPassword, resetPassword, ResendOtp, loginWithGoogle } from "./authThunks";
+import { loginUser, registerUser, verifyOtp, forgotPassword, resetPassword, ResendOtp, loginWithGoogle, refreshToken } from "./authThunks";
 import { AuthState } from "./auth.types";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 
@@ -30,6 +30,7 @@ const authSlice = createSlice({
     },
     restoreSession: (state, action) => {
       state.token = action.payload.token;
+      state.refreshToken = action.payload.refreshToken;
       state.user = action.payload.user;
       // state.message = "Session restored";
     },
@@ -68,6 +69,7 @@ const authSlice = createSlice({
           if (typeof window !== "undefined") {
             if (user) localStorage.setItem("user", JSON.stringify(user));
             if (accessToken) localStorage.setItem("token", accessToken || "");
+            if (refreshToken) localStorage.setItem("refreshToken", refreshToken || "");
           }
         } catch { }
       })
@@ -118,13 +120,20 @@ const authSlice = createSlice({
           payload?.data?.user ??
           null;
 
+        const refreshToken =
+          payload?.refreshToken ??
+          payload?.data?.refreshToken ??
+          null;
+
         state.token = token;
+        state.refreshToken = refreshToken;
         state.user = user || null;
         state.message = MESSAGES.VERIFY_SUCCESS;
         try {
           if (typeof window !== "undefined") {
             if (user) localStorage.setItem("user", JSON.stringify(user));
             if (token) localStorage.setItem("token", token);
+            if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
           }
         } catch { }
       })
@@ -207,13 +216,27 @@ const authSlice = createSlice({
           if (typeof window !== "undefined") {
             if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
             if (data.accessToken) localStorage.setItem("token", data.accessToken);
-
+            if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
           }
         } catch { }
       })
       .addCase(loginWithGoogle.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(refreshToken.fulfilled, (state, action) => {
+        const payload = action.payload as any;
+        const data = payload.data || payload;
+
+        state.token = data.accessToken;
+        state.refreshToken = data.refreshToken;
+
+        try {
+          if (typeof window !== "undefined") {
+            if (data.accessToken) localStorage.setItem("token", data.accessToken);
+            if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+          }
+        } catch { }
       });
 
 
