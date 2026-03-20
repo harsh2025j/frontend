@@ -2,6 +2,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useCreateArticleActions, useArticleListActions } from "@/data/features/article/useArticleActions";
+import { Advocate } from "@/data/features/article/article.types";
+import MultiSelectAdvocate from "@/components/ui/MultiSelectAdvocate";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { fetchCategories } from "@/data/features/category/categoryThunks";
 import { Category } from "@/data/features/category/category.types";
@@ -96,6 +98,7 @@ const EditArticlePage: React.FC = () => {
                         documents: [],
                         status: article.status === 'published' ? 'pending' : 'draft',
                         isPaywalled: article.isPaywalled || false,
+                        advocates: article.advocates || [],
                     });
 
                     if (article.thumbnail) {
@@ -229,13 +232,10 @@ const EditArticlePage: React.FC = () => {
 
                             <div>
                                 <label className="block text-sm font-medium mb-1.5">Advocate Name</label>
-                                <input type="text"
-                                    name="advocateName"
-                                    placeholder="Enter Advocate Name"
-                                    value={formData.advocateName}
-                                    onChange={handleChange}
-                                    className="w-full border rounded-lg px-3 py-2.5 bg-gray-50 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    required
+                                <MultiSelectAdvocate
+                                    selectedAdvocates={formData.advocates || []}
+                                    onChange={(advocates: Advocate[]) => setFormData(prev => ({ ...prev, advocates }))}
+                                    placeholder="Search or type advocate name..."
                                 />
                             </div>
                         </div>
@@ -368,7 +368,7 @@ const EditArticlePage: React.FC = () => {
                                 </select>
                             </div>
 
-                            <div>
+                            <div className="hidden">
                                 <label className="block text-sm font-medium mb-1.5">Authors</label>
                                 <input
                                     type="text"

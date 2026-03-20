@@ -40,4 +40,10 @@ export const profileApi = {
       `/profile/save-post/${postId}`
     );
   },
+
+  fetchPublicProfile: async (id: string) => {
+    return await apiClient.get<ProfileResponse>(
+      API_ENDPOINTS.PROFILE.PUBLIC.replace(":id", id)
+    );
+  },
 };

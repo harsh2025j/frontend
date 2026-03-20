@@ -23,6 +23,9 @@ export const articleApi = {
       });
     }
     formData.append("advocateName", data.advocateName);
+    if (data.advocates && data.advocates.length > 0) {
+      formData.append("advocates", JSON.stringify(data.advocates));
+    }
     formData.append("categoryId", data.category);
     formData.append("status", data.status || "draft");
     if (Array.isArray(data.tags)) {
@@ -140,6 +143,10 @@ export const articleApi = {
       formData.append("removedDocumentIds", data.removedDocumentIds.join(","));
     }
 
+    if (data.advocates && data.advocates.length > 0) {
+      formData.append("advocates", JSON.stringify(data.advocates));
+    }
+
     // console.log(formData.get("tags"));
     // console.log(formData.get("isPaywalled"));
 
@@ -152,6 +159,17 @@ export const articleApi = {
         },
       }
     );
+    return response;
+  },
+
+  searchAdvocates: async (query: string, page: number = 1, limit: number = 12) => {
+    const response = await apiClient.get<any>(`${API_ENDPOINTS.PROFILE.ADVOCATES}`, {
+      params: {
+        name: query,
+        page,
+        limit
+      }
+    });
     return response;
   },
 };

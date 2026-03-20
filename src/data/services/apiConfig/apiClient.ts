@@ -99,11 +99,11 @@ apiClient.interceptors.request.use(
 
     let token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     const url = config.url || '';
-    
+
     // Check if it's an auth endpoint to avoid looping
-    const isAuthCall = url.includes(API_ENDPOINTS.AUTH.REFRESH) || 
-                       url.includes('/auth/login') || 
-                       url.includes('/auth/social-login');
+    const isAuthCall = url.includes(API_ENDPOINTS.AUTH.REFRESH) ||
+      url.includes('/auth/login') ||
+      url.includes('/auth/social-login');
 
     if (!isAuthCall && token && typeof window !== "undefined") {
       // Check expiration proactively (buffer: 30 seconds)
@@ -129,7 +129,7 @@ apiClient.interceptors.request.use(
               if (newToken) {
                 localStorage.setItem("token", newToken);
                 if (newRefreshToken) localStorage.setItem("refreshToken", newRefreshToken);
-                
+
                 if (store) {
                   store.dispatch({
                     type: 'auth/refreshToken/fulfilled',
@@ -143,7 +143,7 @@ apiClient.interceptors.request.use(
                 throw new Error("Invalid token response");
               }
             } else {
-              throw new Error("No refresh token or user id available");
+              throw new Error("No refresh token or user id available, Please Login again");
             }
           } catch (error: any) {
             processQueue(error, null);
@@ -156,7 +156,7 @@ apiClient.interceptors.request.use(
             isRefreshing = false;
           }
         }
- else {
+        else {
           // Wait for the ongoing refresh to complete
           try {
             token = await new Promise<string>((resolve, reject) => {

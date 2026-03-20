@@ -234,8 +234,8 @@ const ContentApprovalPanel = () => {
               key={tab.value}
               onClick={() => setStatusFilter(tab.value)}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors border ${statusFilter === tab.value
-                  ? "bg-[#0B2149] text-white border-[#0B2149]"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-[#0B2149] hover:text-[#0B2149]"
+                ? "bg-[#0B2149] text-white border-[#0B2149]"
+                : "bg-white text-gray-600 border-gray-200 hover:border-[#0B2149] hover:text-[#0B2149]"
                 }`}
             >
               {tab.label}
@@ -385,6 +385,18 @@ const ContentApprovalPanel = () => {
                 <div className="flex items-center gap-2"><span className="font-semibold">Category:</span><span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">{previewArticle.category?.name || "No Category"}</span></div>
                 <div className="flex items-center gap-2"><span className="font-semibold">Status:</span><StatusBadge status={previewArticle.status} /></div>
                 {previewArticle.authors && <div className="flex items-center gap-2"><span className="font-semibold">Author:</span><span>{previewArticle.authors}</span></div>}
+                {previewArticle.advocates && previewArticle.advocates.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Advocates:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {previewArticle.advocates.map((adv, i) => (
+                        <span key={i} className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs border border-blue-100">
+                          {adv.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               {previewArticle.status === "rejected" && previewArticle.rejectionReason && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">

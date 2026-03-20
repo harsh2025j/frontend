@@ -33,6 +33,12 @@ export interface TimelineUpdate {
   content: string;
 }
 
+export interface Advocate {
+  userId?: string;
+  name: string;
+  email?: string;
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -43,6 +49,7 @@ export interface Article {
   authorId: string;
   authorRole?: string | null;
   advocateName: string | null;
+  advocates?: Advocate[];
   location: string | null;
   authors: string | null;
   thumbnail: string | null;
@@ -129,6 +136,7 @@ export interface CreateArticleRequest {
   isPaywalled: boolean;
   content: string;
   advocateName: string;
+  advocates: Advocate[];
   thumbnail: File | null;
   documents?: File[];
   removedDocumentIds?: string[];

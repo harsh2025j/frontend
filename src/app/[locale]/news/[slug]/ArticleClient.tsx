@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Article } from "@/data/features/article/article.types";
+import { Advocate, Article } from "@/data/features/article/article.types";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { Share2, Facebook, Linkedin, Link2, Check, Printer, Sparkles, X, ChevronDown } from "lucide-react";
@@ -15,6 +15,7 @@ import { formatDate } from "@/utils/dateUtils";
 import { getSafeImageUrl } from "@/utils/imageUtils";
 import SavePostButton from "@/components/ui/SavePostButton";
 import { articleApi } from "@/data/services/article-service/article-service";
+import { profileApi } from "@/data/services/profie-service/profile-service";
 
 interface ArticleClientProps {
     initialArticle: Article;
@@ -28,6 +29,44 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
     const [summary, setSummary] = useState<string | null>(article.aiSummary || null);
     const [isFetchingSummary, setIsFetchingSummary] = useState(false);
     const [translatedData, setTranslatedData] = useState<{ title: string; content: string } | null>(null);
+    const [authorPhoto, setAuthorPhoto] = useState<string | null>(null);
+    const [advocatePhotos, setAdvocatePhotos] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        const fetchPhotos = async () => {
+            // Fetch Author Photo
+            if (article.authorId && article.authorId !== 'anonymous') {
+                try {
+                    const res = await profileApi.fetchPublicProfile(article.authorId);
+                    if (res.data.success && res.data.data.profilePicture) {
+                        setAuthorPhoto(res.data.data.profilePicture);
+                    }
+                } catch (err) {
+                    // Fail silently for photos
+                }
+            }
+
+            // Fetch Advocate Photos
+            if (article.advocates && article.advocates.length > 0) {
+                const photos: Record<string, string> = {};
+                await Promise.all(article.advocates.map(async (adv) => {
+                    if (adv.userId) {
+                        try {
+                            const res = await profileApi.fetchPublicProfile(adv.userId);
+                            if (res.data.success && res.data.data.profilePicture) {
+                                photos[adv.userId] = res.data.data.profilePicture;
+                            }
+                        } catch (err) {
+                            // Fail silently
+                        }
+                    }
+                }));
+                setAdvocatePhotos(photos);
+            }
+        };
+
+        fetchPhotos();
+    }, [article.authorId, article.advocates]);
     const [isTranslating, setIsTranslating] = useState(false);
 
     // AI summary
@@ -101,8 +140,12 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
 
                 {/* Author metadata */}
                 <div className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
-                    <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0">
-                        {article.authors?.charAt(0).toUpperCase() || "A"}
+                    <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative">
+                        {authorPhoto ? (
+                            <Image src={authorPhoto} alt={article.authors || "Author"} fill className="object-cover" />
+                        ) : (
+                            article.authors?.charAt(0).toUpperCase() || "A"
+                        )}
                     </div>
                     <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -273,17 +316,37 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
             )}
 
             {/* Advocate info */}
-            <div className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
-                <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0">
-                    {article.advocateName?.charAt(0).toUpperCase() || "A"}
+            {((article.advocates && article.advocates.length > 0) || article.advocateName) && (
+                <div className="space-y-4 mb-8">
+                    {(article.advocates && article.advocates.length > 0 ? article.advocates : ([{ name: article.advocateName }] as Advocate[])).map((adv, idx) => {
+                        if (!adv?.name && !article.advocateName) return null;
+                        return (
+                            <div key={idx} className="flex items-center gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
+                                <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative">
+                                    {adv?.userId && advocatePhotos[adv.userId] ? (
+                                        <Image src={advocatePhotos[adv.userId]} alt={adv.name || "Advocate"} fill className="object-cover" />
+                                    ) : (
+                                        (adv?.name || article.advocateName)?.charAt(0).toUpperCase() || "A"
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        {adv?.userId ? (
+                                            <Link href={`/advocate/${adv.userId}`} className="hover:text-[#C9A227] transition-colors">
+                                                <h3 className="font-bold text-gray-900 text-lg leading-none m-0">{adv.name}</h3>
+                                            </Link>
+                                        ) : (
+                                            <h3 className="font-bold text-gray-900 text-lg leading-none m-0">{adv?.name || article.advocateName || "Unknown Advocate"}</h3>
+                                        )}
+                                        <span className="px-2 py-0.5 bg-[#0A2342]/10 text-[#0A2342] text-[10px] uppercase font-bold tracking-wider rounded-md">Advocate</span>
+                                    </div>
+                                    {adv?.email && <p className="text-sm text-gray-500">{adv.email}</p>}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
-                <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold text-gray-900 text-lg leading-none m-0">{article.advocateName || "Unknown Advocate"}</h3>
-                        <span className="px-2 py-0.5 bg-[#0A2342]/10 text-[#0A2342] text-[10px] uppercase font-bold tracking-wider rounded-md">Advocate</span>
-                    </div>
-                </div>
-            </div>
+            )}
         </div>
     );
 }

@@ -19,6 +19,8 @@ export const API_ENDPOINTS = {
   PROFILE: {
     FETCH: "/profile",
     UPDATE: "/profile",
+    ADVOCATES: "/profile/advocates",
+    PUBLIC: "/profile/public/:id",
   },
   ARTICLE: {
     CREATE: "/articles",

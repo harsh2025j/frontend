@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 import toast from "react-hot-toast";
-import { CreateArticleRequest } from "./article.types";
+import { CreateArticleRequest, Advocate } from "./article.types";
 import { resetArticleState } from "./articleSlice";
 import { fetchArticles, createArticle } from "./articleThunks";
 // test
@@ -26,6 +26,7 @@ export const useCreateArticleActions = () => {
     category: "",
     slug: "",
     advocateName: "",
+    advocates: [],
     language: "English/हिन्दी",
     author: "",
     content: "",
@@ -194,6 +195,7 @@ export const useCreateArticleActions = () => {
         subHeadline: "",
         updates: [],
         advocateName: "",
+        advocates: [],
         language: "English/हिन्दी",
         author: "",
         content: "",
@@ -221,6 +223,12 @@ export const useCreateArticleActions = () => {
     handleAddTimelineUpdate,
     handleUpdateTimelineUpdate,
     handleRemoveTimelineUpdate,
+    setAdvocates: (advocates: Advocate[]) => {
+      setFormData((prev: CreateArticleRequest) => ({
+        ...prev,
+        advocates,
+      }));
+    },
     handleRemoveExistingDocument: (id: string) => {
       setFormData((prev: CreateArticleRequest) => ({
         ...prev,
