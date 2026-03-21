@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { fetchRoles } from "@/data/features/roles/rolesThunks";
 import { fetchPermissions } from "@/data/features/permissions/permissionsThunks";
 import { RootState } from "@/data/redux/store";
+import Pagination from "@/components/Pagination";
 
 export default function AdminRequestsPage() {
     const dispatch = useAppDispatch();
@@ -19,6 +20,12 @@ export default function AdminRequestsPage() {
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<string | null>(null);
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [total, setTotal] = useState(0);
+    const limit = 12;
+
     // Modal State
     const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
@@ -27,10 +34,18 @@ export default function AdminRequestsPage() {
     // Reject Modal State
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
 
-    const fetchRequests = async () => {
+    const fetchRequests = async (page: number) => {
+        setLoading(true);
         try {
-            const data = await permissionRequestService.getAllRequests();
-            setRequests(Array.isArray(data) ? data : []);
+            const response = await permissionRequestService.getAllRequests(page, limit);
+            // Handle both array and paginated object response
+            if (response && response.data) {
+                setRequests(response.data);
+                setTotalPages(response.totalPages);
+                setTotal(response.total);
+            } else {
+                setRequests(Array.isArray(response) ? response : []);
+            }
         } catch (error) {
             toast.error("Failed to fetch requests.");
         } finally {
@@ -39,7 +54,10 @@ export default function AdminRequestsPage() {
     };
 
     useEffect(() => {
-        fetchRequests();
+        fetchRequests(currentPage);
+    }, [currentPage]);
+
+    useEffect(() => {
         dispatch(fetchRoles());
         dispatch(fetchPermissions());
     }, [dispatch]);
@@ -65,7 +83,7 @@ export default function AdminRequestsPage() {
             });
             toast.success(`Request ${status} successfully!`);
             setIsApproveModalOpen(false);
-            fetchRequests(); // Refresh list
+            fetchRequests(currentPage); // Refresh current page
         } catch (error: any) {
             toast.error(error.response?.data?.message || `Failed to ${status} request.`);
         } finally {
@@ -195,6 +213,20 @@ export default function AdminRequestsPage() {
                     ))
                 )}
             </div>
+
+            {/* Pagination Controls */}
+            {!loading && requests.length > 0 && totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4 text-sm text-gray-500 bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <p>Showing <span className="font-medium text-gray-900">{requests.length}</span> of <span className="font-medium text-gray-900">{total}</span> requests</p>
+                    <div className="w-full sm:w-auto">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={(page) => setCurrentPage(page)}
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* Approve Modal */}
             {isApproveModalOpen && selectedRequest && (

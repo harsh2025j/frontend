@@ -153,8 +153,30 @@ const EditArticlePage: React.FC = () => {
 
     // --- Handler: Update Article ---
     const handleUpdate = async (status: "draft" | "pending") => {
-        if (!formData.title || !formData.content) {
-            toast.error("Please fill in the Title and Main Content.");
+        // Manual validation
+        const requiredFields = [
+            { key: 'category', label: 'Category' },
+            { key: 'title', label: 'Headline' },
+            { key: 'location', label: 'Location' },
+            { key: 'content', label: 'Main Content' }
+        ];
+
+        for (const field of requiredFields) {
+            const value = formData[field.key as keyof typeof formData];
+            if (!value || (typeof value === 'string' && value.trim() === '')) {
+                toast.error(`${field.label} is required`);
+                return;
+            }
+        }
+
+        // Additional check for RichTextEditor
+        const stripHtml = (html: string) => {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            return doc.body.textContent || "";
+        };
+
+        if (stripHtml(formData.content).trim() === '') {
+            toast.error("Main Content cannot be empty");
             return;
         }
 
@@ -221,7 +243,7 @@ const EditArticlePage: React.FC = () => {
                         {/* Category + Advocate Name */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                             <div>
-                                <label className="block text-sm font-medium mb-1.5">Category</label>
+                                <label className="block text-sm font-medium mb-1.5">Category <span className="text-red-500">*</span></label>
                                 <CategorySelect
                                     value={formData.category}
                                     onChange={(id) => setFormData((prev) => ({ ...prev, category: id }))}
@@ -242,7 +264,7 @@ const EditArticlePage: React.FC = () => {
 
                         {/* Headline */}
                         <div>
-                            <label className="block text-sm font-medium mb-1.5">Headline</label>
+                            <label className="block text-sm font-medium mb-1.5">Headline <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 name="title"
@@ -339,7 +361,7 @@ const EditArticlePage: React.FC = () => {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1.5">Location</label>
+                                <label className="block text-sm font-medium mb-1.5">Location <span className="text-red-500">*</span></label>
                                 <input type="text"
                                     name="location"
                                     placeholder="Enter Location"
@@ -445,7 +467,7 @@ const EditArticlePage: React.FC = () => {
 
                         {/* Content Editor */}
                         <div>
-                            <label className="block text-sm font-medium mb-2">Main Content Editor</label>
+                            <label className="block text-sm font-medium mb-2">Main Content Editor <span className="text-red-500">*</span></label>
                             <div className="border rounded-lg overflow-hidden">
                                 <RichTextEditor
                                     value={formData.content}

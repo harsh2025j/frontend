@@ -58,6 +58,31 @@ export default function CreateCasePage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Manual validation
+        const requiredFields = [
+            { key: 'caseNumber', label: 'Case Number' },
+            { key: 'cnrNumber', label: 'CNR Number' }, // Added
+            { key: 'title', label: 'Title' },
+            { key: 'caseType', label: 'Case Type' },
+            { key: 'filingDate', label: 'Filing Date' },
+            { key: 'court', label: 'Court' },
+            { key: 'firstHearingDate', label: 'First Hearing Date' }, // Added
+            { key: 'nextHearingDate', label: 'Next Hearing Date' }, // Added
+            { key: 'petitioner', label: 'Petitioner' },
+            { key: 'respondent', label: 'Respondent' },
+            { key: 'petitionerAdvocate', label: 'Petitioner Advocate' }, // Added
+            { key: 'respondentAdvocate', label: 'Respondent Advocate' }, // Added
+            { key: 'opposingParties', label: 'Opposing Parties' } // Added
+        ];
+
+        for (const field of requiredFields) {
+            if (!formData[field.key as keyof typeof formData]) {
+                toast.error(`${field.label} is required`);
+                return;
+            }
+        }
+
         setSubmitting(true);
         try {
             const dataToSubmit: any = {
@@ -120,7 +145,7 @@ export default function CreateCasePage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">CNR Number</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">CNR Number <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 name="cnrNumber"
@@ -159,7 +184,7 @@ export default function CreateCasePage() {
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Case Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Case Type</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Case Type <span className="text-red-500">*</span></label>
                             <CustomSelect
                                 options={caseTypeOptions}
                                 value={formData.caseType}
@@ -228,7 +253,7 @@ export default function CreateCasePage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">First Hearing Date</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">First Hearing Date <span className="text-red-500">*</span></label>
                             <input
                                 type="date"
                                 name="firstHearingDate"
@@ -237,7 +262,7 @@ export default function CreateCasePage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Next Hearing Date</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Next Hearing Date <span className="text-red-500">*</span></label>
                             <input
                                 type="date"
                                 name="nextHearingDate"
@@ -336,7 +361,7 @@ export default function CreateCasePage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Petitioner Advocate</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Petitioner Advocate <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 name="petitionerAdvocate"
@@ -345,7 +370,7 @@ export default function CreateCasePage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Respondent Advocate</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Respondent Advocate <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 name="respondentAdvocate"
@@ -396,7 +421,7 @@ export default function CreateCasePage() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Opposing Parties</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Opposing Parties <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 name="opposingParties"

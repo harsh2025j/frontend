@@ -186,6 +186,42 @@ export default function EditJudgmentPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Manual validation
+        const requiredFields = [
+            { key: 'title', label: 'Title' },
+            { key: 'caseId', label: 'Case Selection' },
+            { key: 'judgeId', label: 'Select Judge' }, // Added
+            { key: 'judgmentDate', label: 'Judgment Date' },
+            { key: 'outcome', label: 'Outcome' },
+            { key: 'petitioner', label: 'Petitioner / Appellant' }, // Added
+            { key: 'respondent', label: 'Respondent / Defendant' }, // Added
+            { key: 'petitionerCounsel', label: "Petitioner's Counsel" }, // Added
+            { key: 'respondentCounsel', label: "Respondent's Counsel" }, // Added
+            { key: 'bench', label: 'Coram / Bench' }, // Added
+            { key: 'summary', label: 'Summary' },
+            { key: 'fullText', label: 'Full Judgment Text' }
+        ];
+
+        for (const field of requiredFields) {
+            const value = formData[field.key as keyof typeof formData];
+            if (!value || (typeof value === 'string' && value.trim() === '')) {
+                toast.error(`${field.label} is required`);
+                return;
+            }
+        }
+
+        // Additional check for RichTextEditor to remove HTML tags and check if empty
+        const stripHtml = (html: string) => {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            return doc.body.textContent || "";
+        };
+
+        if (stripHtml(formData.fullText).trim() === '') {
+            toast.error("Full Judgment Text cannot be empty");
+            return;
+        }
+
         setSubmitting(true);
         try {
             // Exclude read-only and relational fields from payload as needed. Title is now editable.
@@ -292,7 +328,7 @@ export default function EditJudgmentPage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Select Judge</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Select Judge <span className="text-red-500">*</span></label>
                             <InfiniteSearchableSelect
                                 name="judgeId"
                                 value={formData.judgeId}
@@ -338,7 +374,7 @@ export default function EditJudgmentPage() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Outcome</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Outcome <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 name="outcome"
@@ -351,7 +387,7 @@ export default function EditJudgmentPage() {
 
                         {/* NEW LITIGATION PARTIES FIELDS */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Petitioner / Appellant</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Petitioner / Appellant <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 name="petitioner"
@@ -362,7 +398,7 @@ export default function EditJudgmentPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Respondent / Defendant</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Respondent / Defendant <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 name="respondent"
@@ -373,7 +409,7 @@ export default function EditJudgmentPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Petitioner's Counsel</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Petitioner's Counsel <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 name="petitionerCounsel"
@@ -384,7 +420,7 @@ export default function EditJudgmentPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Respondent's Counsel</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Respondent's Counsel <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 name="respondentCounsel"
@@ -395,7 +431,7 @@ export default function EditJudgmentPage() {
                             />
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Coram / Bench</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Coram / Bench <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 name="bench"
@@ -474,7 +510,7 @@ export default function EditJudgmentPage() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Summary</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Summary <span className="text-red-500">*</span></label>
                         <textarea
                             name="summary"
                             value={formData.summary}

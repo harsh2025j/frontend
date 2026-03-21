@@ -38,6 +38,30 @@ export default function CreateJudgePage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Manual validation
+        const requiredFields = [
+            { key: 'name', label: 'Name' },
+            { key: 'email', label: 'Official Email' },
+            { key: 'designation', label: 'Designation' },
+            { key: 'court', label: 'Court' },
+            { key: 'appointmentDate', label: 'Appointment Date' }
+        ];
+
+        for (const field of requiredFields) {
+            if (!formData[field.key as keyof typeof formData]) {
+                toast.error(`${field.label} is required`);
+                return;
+            }
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            toast.error("Please enter a valid email address");
+            return;
+        }
+
         setSubmitting(true);
         try {
             const dataToSend = {

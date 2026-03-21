@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useAppSelector } from "@/data/redux/hooks";
 import { casesService } from "@/data/services/cases-service/casesService";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Link } from "@/i18n/routing";
@@ -14,6 +15,8 @@ import Pagination from "@/components/Pagination";
 
 export default function AdminCasesPage() {
     useDocTitle("Cases | Sajjad Husain Law Associates");
+    const { user } = useAppSelector((state) => state.auth);
+
     const [cases, setCases] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -34,13 +37,17 @@ export default function AdminCasesPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
+            // Check if user is restricted
+            const isAdmin = user?.roles?.some(role => role.name.toLowerCase().includes("admin"));
+            const createdBy = !isAdmin ? user?._id : undefined;
+
             let response;
             if (debouncedSearchTerm) {
-                response = await casesService.searchCases(debouncedSearchTerm, currentPage, 12);
+                response = await casesService.searchCases(debouncedSearchTerm, currentPage, 12, createdBy);
             } else {
-                response = await casesService.getAll({ page: currentPage, limit: 12 });
+                response = await casesService.getAll({ page: currentPage, limit: 12, createdBy });
             }
-            
+
             // Handle different data formats
             const responseData = response.data?.data ?? response.data;
             const items = Array.isArray(responseData)
@@ -211,10 +218,10 @@ export default function AdminCasesPage() {
                         </tbody>
                     </table>
                 </div>
-                
+
                 {totalPages > 1 && (
                     <div className="p-4 border-t border-gray-200">
-                        <Pagination 
+                        <Pagination
                             currentPage={currentPage}
                             totalPages={totalPages}
                             onPageChange={setCurrentPage}

@@ -31,8 +31,10 @@ export const permissionRequestService = {
         return response.data?.data || response.data;
     },
 
-    getAllRequests: async () => {
-        const response = await apiClient.get('/permission-requests');
+    getAllRequests: async (page: number = 1, limit: number = 12) => {
+        const response = await apiClient.get('/permission-requests', {
+            params: { page, limit }
+        });
         return response.data?.data || response.data;
     },
 

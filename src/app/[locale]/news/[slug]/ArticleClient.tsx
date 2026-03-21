@@ -366,6 +366,13 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
 
     const loadNextArticle = useCallback(async () => {
         if (loadingNext || !hasMore || !initialArticle.category?.slug) return;
+        
+        // Limit to max 12 articles total (1 initial + 11 fetched)
+        if (articles.length >= 12) {
+            setHasMore(false);
+            return;
+        }
+
         setLoadingNext(true);
         try {
             const res = await articleApi.fetchArticles({
