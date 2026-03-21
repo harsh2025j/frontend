@@ -46,4 +46,10 @@ export const profileApi = {
       API_ENDPOINTS.PROFILE.PUBLIC.replace(":id", id)
     );
   },
+
+  fetchProfileByUsername: async (username: string) => {
+    return await apiClient.get<ProfileResponse>(
+      API_ENDPOINTS.PROFILE.BY_USERNAME.replace(":username", username)
+    );
+  },
 };

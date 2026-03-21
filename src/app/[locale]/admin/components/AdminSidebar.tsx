@@ -185,7 +185,7 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
     {
       name: "My Profile",
       icon: <UserCircle size={18} />,
-      href: "/admin/profile",
+      href: user?.username ? `/admin/profile/${user.username}` : "#",
       show: showProfile
     },
     {

@@ -34,6 +34,7 @@ export interface UserData {
   _id: string;
   name: string;
   email: string;
+  username: string;
   profilePicture?: string | null;
   roles: Role[];
   permissions: Permission[]; // only here

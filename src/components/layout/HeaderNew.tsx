@@ -429,15 +429,15 @@ export default function HeaderNew() {
                                                 <p className="text-xs text-gray-500">{user?.email}</p>
                                             </div>
                                             <div className="py-2">
-                                                {dashboardAccess ? (
-                                                    <Link href="/admin/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
-                                                        <UserIcon size={16} /> {t('profile')}
+                                                 {dashboardAccess && (
+                                                    <Link href={user?.username ? `/admin/profile/${user.username}` : "#"} onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors border-b border-gray-50">
+                                                        <UserCog size={16} /> Admin Profile
                                                     </Link>
-                                                ) : (
-                                                    <Link href="/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
-                                                        <UserIcon size={16} /> {t('profile')}
-                                                    </Link>
-                                                )}
+                                                 )}
+                                                 <Link href={user?.username ? `/profile/${user.username}` : "#"} onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
+                                                     <UserIcon size={16} /> {t('profile')}
+                                                 </Link>
+
                                                 {dashboardAccess ? (
                                                     <Link href="/admin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
                                                         <LayoutDashboard size={16} /> {t('dashboard')}
@@ -537,9 +537,15 @@ export default function HeaderNew() {
                                                 <p className="text-xs text-gray-500">{user?.email}</p>
                                             </div>
                                         </div>
-                                        <Link href="/admin/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                                            <UserIcon size={16} /> {t('profile')}
-                                        </Link>
+                                        {dashboardAccess ? (
+                                            <Link href={user?.username ? `/profile/${user.username}` : "#"} onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
+                                                <UserIcon size={16} /> {t('profile')}
+                                            </Link>
+                                        ) : (
+                                            <Link href={user?.username ? `/profile/${user.username}` : "#"} onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
+                                                <UserIcon size={16} /> {t('profile')}
+                                            </Link>
+                                        )}
                                         {dashboardAccess ? (
                                             <Link href="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
                                                 <LayoutDashboard size={16} /> {t('dashboard')}

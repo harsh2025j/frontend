@@ -346,6 +346,7 @@ export const ROUTE_PROTECTION_MAP: Record<string, PermissionCheckFn> = {
     // 1. Core & Support Pages
     "/admin": canAccessAdminDashboardPage,
     "/admin/profile": canAccessProfilePage,
+    "/admin/profile/[username]": canAccessProfilePage,
     "/admin/membership": canAccessMembershipApplicationPage,
     "/admin/saved-posts": canAccessSavedPostsPage,
     "/admin/requests": canAccessPermissionRequestPage,

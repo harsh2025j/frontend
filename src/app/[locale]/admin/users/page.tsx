@@ -450,12 +450,20 @@ export default function UserManagementPage() {
                                                 )}
                                             </td>
                                             <td className="py-4 px-6">
-                                                <button
-                                                    onClick={() => router.push(`/admin/teams/edit/${tableUser._id}`)}
-                                                    className="bg-blue-100 text-blue-600 px-3 py-1 rounded flex items-center gap-1 hover:bg-blue-200 transition-colors"
-                                                >
-                                                    <span className="text-xs font-medium">Edit</span>
-                                                </button>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => router.push(`/admin/profile/${tableUser.username}`)}
+                                                        className="bg-emerald-100 text-emerald-600 px-3 py-1 rounded flex items-center gap-1 hover:bg-emerald-200 transition-colors"
+                                                    >
+                                                        <span className="text-xs font-medium">Profile</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => router.push(`/admin/teams/edit/${tableUser._id}`)}
+                                                        className="bg-blue-100 text-blue-600 px-3 py-1 rounded flex items-center gap-1 hover:bg-blue-200 transition-colors"
+                                                    >
+                                                        <span className="text-xs font-medium">Edit</span>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}

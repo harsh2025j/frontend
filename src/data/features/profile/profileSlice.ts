@@ -101,6 +101,7 @@ const profileSlice = createSlice({
             __v: 0,
             phone: "",
             dob: "",
+            username: googleUser.username || "",
           };
           state.message = "Profile synced with Google Login";
         }

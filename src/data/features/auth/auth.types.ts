@@ -80,6 +80,7 @@ export interface AuthUser {
   _id: string;
   name: string;
   email: string;
+  username?: string;
   profilePicture?: string | null;
   roles: Role[];
   permissions: Permission[];

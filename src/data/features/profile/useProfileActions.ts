@@ -58,6 +58,7 @@ export const useProfileActions = () => {
                 __v: 0,
                 phone: "",
                 dob: "",
+                username: storedUser.username || "",
               };
             } else {
               userData = storedUser as UserData;

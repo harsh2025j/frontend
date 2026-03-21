@@ -360,7 +360,7 @@ export default function Header() {
                 </button>
                 <div className={`absolute right-0 top-full w-48 bg-white border border-gray-200 rounded-xl shadow-lg transition-all duration-200 transform origin-top-right z-50 ${isProfileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
                   <div className="py-2">
-                    <Link href="/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227]"><UserIcon size={16} /> {t('profile')}</Link>
+                    <Link href={user?.username ? `/profile/${user.username}` : "/profile"} onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227]"><UserIcon size={16} /> {t('profile')}</Link>
                     {dashboardAccess && <Link href="/admin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227]"><LayoutDashboard size={16} /> {t('dashboard')}</Link>}
                     <div className="h-px bg-gray-100 my-1 mx-2" />
                     <button onClick={() => { setIsProfileOpen(false); setShowLogoutConfirm(true); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"><LogOut size={16} /> {t('logout')}</button>
@@ -390,7 +390,7 @@ export default function Header() {
                       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700 overflow-hidden">{(user?.name?.[0] || "U").toUpperCase()}</div>
                       <div><p className="font-medium text-gray-800">{user?.name}</p><p className="text-xs text-gray-500">{user?.email}</p></div>
                     </div>
-                    <Link href="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><UserIcon size={16} /> Profile</Link>
+                    <Link href={user?.username ? `/profile/${user.username}` : "/profile"} onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><UserIcon size={16} /> Profile</Link>
                     {dashboardAccess && <Link href="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"><LayoutDashboard size={16} /> Dashboard</Link>}
                     <button onClick={() => { setMenuOpen(false); setShowLogoutConfirm(true); }} className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg text-left"><LogOut size={16} /> Logout</button>
                   </div>

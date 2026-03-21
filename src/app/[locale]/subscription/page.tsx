@@ -23,6 +23,7 @@ import Link from "next/link";
 import { subscriptionApi } from "@/data/services/subscription-service/subscription-service";
 import { Plans, UserSubscription } from "@/data/features/subscription/subscription.types";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { formatDate } from "@/utils/dateUtils";
 
 // test
@@ -35,6 +36,7 @@ declare global {
 export default function SubscriptionPage() {
   useDocTitle("Subscription | Sajjad Husain Law Associates");
   const router = useRouter();
+  const { user } = useProfileActions();
   const [plans, setPlans] = useState<Plans[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<Plans | null>(null);
@@ -166,7 +168,7 @@ export default function SubscriptionPage() {
 
             if (verifyResponse.data?.success) {
               toast.success("Payment verified and subscription activated!");
-              router.push("/profile");
+              router.push(user?.username ? `/profile/${user.username}` : "/profile");
             } else {
               throw new Error(verifyResponse.data?.message || "Payment verification failed");
             }
@@ -284,7 +286,7 @@ export default function SubscriptionPage() {
               </div>
               <div className="flex flex-col gap-3">
                 <Link
-                  href="/profile"
+                  href={user?.username ? `/profile/${user.username}` : "#"}
                   className="px-6 py-3 bg-white text-emerald-600 rounded-lg font-semibold hover:bg-white/90 transition text-center"
                 >
                   Manage Subscription

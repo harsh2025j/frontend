@@ -21,6 +21,7 @@ export const API_ENDPOINTS = {
     UPDATE: "/profile",
     ADVOCATES: "/profile/advocates",
     PUBLIC: "/profile/public/:id",
+    BY_USERNAME: "/profile/username/:username",
   },
   ARTICLE: {
     CREATE: "/articles",
