@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
   const dispatch = useAppDispatch();
 
   // Global loading state (still used for Send OTP and Reset Password steps)
-  const { loading, error, message } = useAppSelector((s) => s.auth);
+  const { loading, error, message, user } = useAppSelector((s) => s.auth);
 
   // Specific loading state for Resend OTP
   const { handleReSendOtp, loading: resendLoading } = useResendOtp();
@@ -124,7 +124,7 @@ export default function ForgotPasswordPage() {
     if (message === MESSAGES.RESET_SUCCESS) {
       const params = new URLSearchParams(window.location.search);
       const emailParam = params.get("email") || "";
-      if (emailParam !== "") router.push("/profile");
+      if (emailParam !== "") router.push(user?.username ? `/profile/${user.username}` : "/profile");
       else router.push("/auth/login");
 
       dispatch(resetAuthState());

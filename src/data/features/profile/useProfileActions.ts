@@ -38,6 +38,7 @@ export const useProfileActions = () => {
                 _id: storedUser.id,
                 name: storedUser.name,
                 email: storedUser.email,
+                username: storedUser.username || storedUser.email.split('@')[0],
                 profilePicture: storedUser.avatar || "",
                 roles: [{
                   _id: "google-role",

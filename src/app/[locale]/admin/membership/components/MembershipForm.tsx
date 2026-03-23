@@ -10,7 +10,7 @@ import { toast } from "react-hot-toast";
 import { Check, Clock } from "lucide-react";
 
 export default function MembershipForm() {
-    const { user: reduxUser } = useProfileActions();
+    const { user: reduxUser, updateProfile } = useProfileActions();
     const user = reduxUser as UserData;
 
     const [loading, setLoading] = useState(false);
@@ -95,6 +95,28 @@ export default function MembershipForm() {
         e.preventDefault();
         setLoading(true);
 
+        // Validation
+        if (!formData.dob) {
+            toast.error("Date of Birth is required");
+            setLoading(false);
+            return;
+        }
+        if (!formData.phoneNumber) {
+            toast.error("Phone Number is required");
+            setLoading(false);
+            return;
+        }
+        if (formData.yearsOfExperience !== "" && (isNaN(Number(formData.yearsOfExperience)) || Number(formData.yearsOfExperience) < 0 || Number(formData.yearsOfExperience) > 100)) {
+            toast.error("Please enter a valid number for Years of Experience (0-100)");
+            setLoading(false);
+            return;
+        }
+        if (!formData.designation) {
+            toast.error("Designation is required");
+            setLoading(false);
+            return;
+        }
+
         try {
             await permissionRequestService.create({
                 ...formData,
@@ -102,6 +124,19 @@ export default function MembershipForm() {
                 requestedPermissionIds: selectedPermissions,
                 requestedRoleIds: requestedRoleIds,
             });
+
+            // Sync with profile data
+            await updateProfile({
+                phone: formData.phoneNumber,
+                dob: formData.dob,
+                city: formData.city,
+                state: formData.state,
+                designation: formData.designation,
+                yearsOfExperience: formData.yearsOfExperience ? Number(formData.yearsOfExperience) : 0,
+                specialization: formData.specialization,
+                barRegistrationNumber: formData.barRegistrationNumber,
+            });
+
             toast.success("Membership request submitted successfully!");
             fetchMyRequests(); // Refresh state
         } catch (error: any) {

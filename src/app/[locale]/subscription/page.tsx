@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAppSelector } from "@/data/redux/hooks";
 import {
   Ban,
   FolderOpen,
@@ -35,6 +36,7 @@ declare global {
 export default function SubscriptionPage() {
   useDocTitle("Subscription | Sajjad Husain Law Associates");
   const router = useRouter();
+  const user = useAppSelector((state) => state.auth.user);
   const [plans, setPlans] = useState<Plans[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<Plans | null>(null);
@@ -166,7 +168,7 @@ export default function SubscriptionPage() {
 
             if (verifyResponse.data?.success) {
               toast.success("Payment verified and subscription activated!");
-              router.push("/profile");
+              router.push(user?.username ? `/profile/${user.username}` : "/profile");
             } else {
               throw new Error(verifyResponse.data?.message || "Payment verification failed");
             }

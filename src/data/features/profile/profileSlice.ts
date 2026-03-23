@@ -82,6 +82,7 @@ const profileSlice = createSlice({
             _id: googleUser._id,
             name: googleUser.name,
             email: googleUser.email,
+            username: googleUser.username || googleUser.email.split('@')[0],
             profilePicture: googleUser.profilePicture || "",
             roles: [{
               _id: "google-role",

@@ -15,7 +15,7 @@ import { formatDate } from "@/utils/dateUtils";
 import { getSafeImageUrl } from "@/utils/imageUtils";
 import SavePostButton from "@/components/ui/SavePostButton";
 import { articleApi } from "@/data/services/article-service/article-service";
-import { profileApi } from "@/data/services/profie-service/profile-service";
+import { profileApi } from "@/data/services/profile-service/profile-service";
 
 interface ArticleClientProps {
     initialArticle: Article;
@@ -30,7 +30,9 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
     const [isFetchingSummary, setIsFetchingSummary] = useState(false);
     const [translatedData, setTranslatedData] = useState<{ title: string; content: string } | null>(null);
     const [authorPhoto, setAuthorPhoto] = useState<string | null>(null);
+    const [authorUsername, setAuthorUsername] = useState<string | null>(null);
     const [advocatePhotos, setAdvocatePhotos] = useState<Record<string, string>>({});
+    const [advocateUsernames, setAdvocateUsernames] = useState<Record<string, string>>({});
 
     useEffect(() => {
         const fetchPhotos = async () => {
@@ -38,8 +40,9 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
             if (article.authorId && article.authorId !== 'anonymous') {
                 try {
                     const res = await profileApi.fetchPublicProfile(article.authorId);
-                    if (res.data.success && res.data.data.profilePicture) {
-                        setAuthorPhoto(res.data.data.profilePicture);
+                    if (res.data.success) {
+                        if (res.data.data.profilePicture) setAuthorPhoto(res.data.data.profilePicture);
+                        if (res.data.data.username) setAuthorUsername(res.data.data.username);
                     }
                 } catch (err) {
                     // Fail silently for photos
@@ -49,12 +52,14 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
             // Fetch Advocate Photos
             if (article.advocates && article.advocates.length > 0) {
                 const photos: Record<string, string> = {};
+                const usernames: Record<string, string> = {};
                 await Promise.all(article.advocates.map(async (adv) => {
                     if (adv.userId) {
                         try {
                             const res = await profileApi.fetchPublicProfile(adv.userId);
-                            if (res.data.success && res.data.data.profilePicture) {
-                                photos[adv.userId] = res.data.data.profilePicture;
+                            if (res.data.success) {
+                                if (res.data.data.profilePicture) photos[adv.userId] = res.data.data.profilePicture;
+                                if (res.data.data.username) usernames[adv.userId] = res.data.data.username;
                             }
                         } catch (err) {
                             // Fail silently
@@ -62,6 +67,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                     }
                 }));
                 setAdvocatePhotos(photos);
+                setAdvocateUsernames(usernames);
             }
         };
 
@@ -139,37 +145,65 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                 <h2 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight">{displayTitle}</h2>
 
                 {/* Author metadata */}
-                <div className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
-                    <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative">
-                        {authorPhoto ? (
-                            <Image src={authorPhoto} alt={article.authors || "Author"} fill className="object-cover" />
-                        ) : (
-                            article.authors?.charAt(0).toUpperCase() || "A"
-                        )}
-                    </div>
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-bold text-gray-900 text-lg leading-none m-0">{article.authors || "Unknown Author"}</h3>
-                            <span className="px-2 py-0.5 bg-[#0A2342]/10 text-[#0A2342] text-[10px] uppercase font-bold tracking-wider rounded-md">Author</span>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
-                            <div className="flex items-center gap-1.5">
-                                <svg className="w-4 h-4 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                <span className="font-medium">{formatDate(article.createdAt)}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <svg className="w-4 h-4 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                <span className="font-medium">{readTime} {t("minsRead")}</span>
-                            </div>
-                            {isTranslating && (
-                                <div className="flex items-center gap-1.5 text-[#C9A227] animate-pulse">
-                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
-                                    <span className="text-xs font-bold">Translating...</span>
-                                </div>
+                {authorUsername ? (
+                    <Link href={`/profile/${authorUsername}`} className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/author">
+                        <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative group-hover/author:ring-[#C9A227]/40 transition-all">
+                            {authorPhoto ? (
+                                <Image src={authorPhoto} alt={article.authors || "Author"} fill className="object-cover" />
+                            ) : (
+                                article.authors?.charAt(0).toUpperCase() || "A"
                             )}
                         </div>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold text-gray-900 text-lg leading-none m-0 group-hover/author:text-[#C9A227] transition-colors">{article.authors || "Unknown Author"}</h3>
+                                <span className="px-2 py-0.5 bg-[#0A2342]/10 text-[#0A2342] text-[10px] uppercase font-bold tracking-wider rounded-md">Author</span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+                                <div className="flex items-center gap-1.5">
+                                    <svg className="w-4 h-4 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" /></svg>
+                                    <span className="font-medium">{formatDate(article.createdAt)}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <svg className="w-4 h-4 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <span className="font-medium">{readTime} {t("minsRead")}</span>
+                                </div>
+                                {isTranslating && (
+                                    <div className="flex items-center gap-1.5 text-[#C9A227] animate-pulse">
+                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
+                                        <span className="text-xs font-bold">Translating...</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </Link>
+                ) : (
+                    <div className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative">
+                            {authorPhoto ? (
+                                <Image src={authorPhoto} alt={article.authors || "Author"} fill className="object-cover" />
+                            ) : (
+                                article.authors?.charAt(0).toUpperCase() || "A"
+                            )}
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold text-gray-900 text-lg leading-none m-0">{article.authors || "Unknown Author"}</h3>
+                                <span className="px-2 py-0.5 bg-[#0A2342]/10 text-[#0A2342] text-[10px] uppercase font-bold tracking-wider rounded-md">Author</span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+                                <div className="flex items-center gap-1.5">
+                                    <svg className="w-4 h-4 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" /></svg>
+                                    <span className="font-medium">{formatDate(article.createdAt)}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <svg className="w-4 h-4 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <span className="font-medium">{readTime} {t("minsRead")}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* Thumbnail */}
@@ -320,8 +354,27 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                 <div className="space-y-4 mb-8">
                     {(article.advocates && article.advocates.length > 0 ? article.advocates : ([{ name: article.advocateName }] as Advocate[])).map((adv, idx) => {
                         if (!adv?.name && !article.advocateName) return null;
-                        return (
-                            <div key={idx} className="flex items-center gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
+                        const username = adv.userId ? advocateUsernames[adv.userId] : null;
+
+                        return username ? (
+                            <Link key={idx} href={`/profile/${username}`} className="flex items-center gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/advocate">
+                                <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative group-hover/advocate:ring-[#C9A227]/40 transition-all">
+                                    {adv?.userId && advocatePhotos[adv.userId] ? (
+                                        <Image src={advocatePhotos[adv.userId]} alt={adv.name || "Advocate"} fill className="object-cover" />
+                                    ) : (
+                                        (adv?.name || article.advocateName)?.charAt(0).toUpperCase() || "A"
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h3 className="font-bold text-gray-900 text-lg leading-none m-0 group-hover/advocate:text-[#C9A227] transition-colors">{adv.name}</h3>
+                                        <span className="px-2 py-0.5 bg-[#0A2342]/10 text-[#0A2342] text-[10px] uppercase font-bold tracking-wider rounded-md">Advocate</span>
+                                    </div>
+                                    {adv?.email && <p className="text-sm text-gray-500">{adv.email}</p>}
+                                </div>
+                            </Link>
+                        ) : (
+                            <div key={idx} className="flex items-center gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100">
                                 <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative">
                                     {adv?.userId && advocatePhotos[adv.userId] ? (
                                         <Image src={advocatePhotos[adv.userId]} alt={adv.name || "Advocate"} fill className="object-cover" />
@@ -331,13 +384,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
-                                        {adv?.userId ? (
-                                            <Link href={`/advocate/${adv.userId}`} className="hover:text-[#C9A227] transition-colors">
-                                                <h3 className="font-bold text-gray-900 text-lg leading-none m-0">{adv.name}</h3>
-                                            </Link>
-                                        ) : (
-                                            <h3 className="font-bold text-gray-900 text-lg leading-none m-0">{adv?.name || article.advocateName || "Unknown Advocate"}</h3>
-                                        )}
+                                        <h3 className="font-bold text-gray-900 text-lg leading-none m-0">{adv?.name || article.advocateName || "Unknown Advocate"}</h3>
                                         <span className="px-2 py-0.5 bg-[#0A2342]/10 text-[#0A2342] text-[10px] uppercase font-bold tracking-wider rounded-md">Advocate</span>
                                     </div>
                                     {adv?.email && <p className="text-sm text-gray-500">{adv.email}</p>}

@@ -1,4 +1,4 @@
-// src/data/services/profie-service/profile-service.ts
+// src/data/services/profile-service/profile-service.ts
 
 import apiClient from "@/data/services/apiConfig/apiClient";
 import { API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
@@ -25,6 +25,12 @@ export const profileApi = {
     if (data.name !== undefined) formData.append("name", data.name);
     if (data.phone !== undefined) formData.append("phone", data.phone);
     if (data.dob !== undefined) formData.append("dob", data.dob);
+    if (data.city !== undefined) formData.append("city", data.city);
+    if (data.state !== undefined) formData.append("state", data.state);
+    if (data.designation !== undefined) formData.append("designation", data.designation);
+    if (data.yearsOfExperience !== undefined) formData.append("yearsOfExperience", String(data.yearsOfExperience));
+    if (data.specialization !== undefined) formData.append("specialization", data.specialization);
+    if (data.barRegistrationNumber !== undefined) formData.append("barRegistrationNumber", data.barRegistrationNumber);
     if (data.avatar) formData.append("file", data.avatar);
 
     return await apiClient.post<ProfileResponse>(API_ENDPOINTS.PROFILE.UPDATE, formData,
@@ -44,6 +50,12 @@ export const profileApi = {
   fetchPublicProfile: async (id: string) => {
     return await apiClient.get<ProfileResponse>(
       API_ENDPOINTS.PROFILE.PUBLIC.replace(":id", id)
+    );
+  },
+
+  fetchProfileByUsername: async (username: string) => {
+    return await apiClient.get<ProfileResponse>(
+      API_ENDPOINTS.PROFILE.BY_USERNAME.replace(":username", username)
     );
   },
 };

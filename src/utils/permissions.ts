@@ -336,6 +336,11 @@ export const isAdmin = (user: UserData | null): boolean => {
     return hasAnyRole(user, [ROLES.ADMIN, ROLES.SUPERADMIN]);
 };
 
+export const isAdvocate = (user: UserData | null): boolean => {
+    if (!user) return false;
+    return hasAnyRole(user, [ROLES.ADVOCATE, ROLES.LAWYER]);
+};
+
 /**
  * ============================================================================
  * ROUTE PROTECTION MAP
@@ -346,6 +351,8 @@ export const ROUTE_PROTECTION_MAP: Record<string, PermissionCheckFn> = {
     // 1. Core & Support Pages
     "/admin": canAccessAdminDashboardPage,
     "/admin/profile": canAccessProfilePage,
+    "/admin/profile/[username]": canAccessProfilePage,
+    "/profile/[username]": canAccessProfilePage,
     "/admin/membership": canAccessMembershipApplicationPage,
     "/admin/saved-posts": canAccessSavedPostsPage,
     "/admin/requests": canAccessPermissionRequestPage,

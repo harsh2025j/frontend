@@ -34,6 +34,7 @@ export interface UserData {
   _id: string;
   name: string;
   email: string;
+  username: string;
   profilePicture?: string | null;
   roles: Role[];
   permissions: Permission[]; // only here
@@ -61,6 +62,12 @@ export interface UpdateProfileRequest {
   phone?: string;
   dob?: string;
   avatar?: File | null;
+  city?: string;
+  state?: string;
+  designation?: string;
+  yearsOfExperience?: number;
+  specialization?: string;
+  barRegistrationNumber?: string;
 }
 
 // ================= API Response =================

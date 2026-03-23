@@ -1,7 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { UpdateProfileRequest, ProfileResponse } from "./profile.types";
 import { ApiError } from "@/lib/utils/errorHandler";
-import { profileApi } from "@/data/services/profie-service/profile-service";
+import { profileApi } from '@/data/services/profile-service/profile-service';
 import { RootState } from "@/data/redux/store";
 
 export const fetchProfile = createAsyncThunk<

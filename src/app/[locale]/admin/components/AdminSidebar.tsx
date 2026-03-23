@@ -75,12 +75,12 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
   // Extreme Granular Access Checks
   const userType = getUserType(user);
   const isAdmin = checkIsAdmin(user);
-  
+
   // Sections
   const showDashboard = canAccessAdminDashboardPage(user);
   const showAccessControlSection = canSeeAccessControlSection(user);
   const showContentSection = canSeeContentSection(user);
-  
+
   // Individual Pages
   const showManageUsers = canAccessManageUserPage(user);
   const showTeams = canAccessTeamsPage(user);
@@ -88,14 +88,14 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
   const showPermissionMatrix = canAccessPermissionMatrixPage(user);
   const showOffices = canAccessOfficeManagementPage(user);
   const showPracticeAreas = canAccessPracticeAreaManagementPage(user);
-  
+
   const showMembership = canAccessMembershipApplicationPage(user);
   const showPermissionRequests = canAccessPermissionRequestPage(user);
-  
+
   const showContentManagement = canAccessContentManagementPage(user);
   const showCategoryManagement = canAccessCategoryManagementPage(user);
   const showContentApproval = canAccessContentApprovalPage(user);
-  
+
   const showPlanManagement = canAccessPlanManagementPage(user);
   const showLegalCases = canAccessCasesPage(user);
   const showJudgments = canAccessJudgmentsPage(user);
@@ -182,18 +182,18 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       href: "/admin/requests",
       show: showPermissionRequests
     },
-    {
-      name: "My Profile",
-      icon: <UserCircle size={18} />,
-      href: "/admin/profile",
-      show: showProfile
-    },
-    {
-      name: "Saved Posts",
-      icon: <Bookmark size={18} />,
-      href: "/admin/saved-posts",
-      show: showSavedPosts
-    },
+    // {
+    //   name: "My Profile",
+    //   icon: <UserCircle size={18} />,
+    //   href: user?.username ? `/admin/profile/${user.username}` : "#",
+    //   show: showProfile
+    // },
+    // {
+    //   name: "Saved Posts",
+    //   icon: <Bookmark size={18} />,
+    //   href: "/admin/saved-posts",
+    //   show: showSavedPosts
+    // },
 
     // 🔽 CONTENT SECTION
     {
@@ -257,7 +257,7 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       name: "Display Boards",
       icon: <Monitor size={18} />,
       href: "/admin/display-boards",
-      show: showDisplayBoards 
+      show: showDisplayBoards
     },
     {
       name: "Notification",
