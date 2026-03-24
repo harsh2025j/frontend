@@ -29,8 +29,11 @@ export const profileApi = {
     if (data.state !== undefined) formData.append("state", data.state);
     if (data.designation !== undefined) formData.append("designation", data.designation);
     if (data.yearsOfExperience !== undefined) formData.append("yearsOfExperience", String(data.yearsOfExperience));
-    if (data.specialization !== undefined) formData.append("specialization", data.specialization);
+    if (data.specialization !== undefined && Array.isArray(data.specialization)) {
+      data.specialization.forEach(spec => formData.append("specialization", spec));
+    }
     if (data.barRegistrationNumber !== undefined) formData.append("barRegistrationNumber", data.barRegistrationNumber);
+    if (data.bio !== undefined) formData.append("bio", data.bio);
     if (data.avatar) formData.append("file", data.avatar);
 
     return await apiClient.post<ProfileResponse>(API_ENDPOINTS.PROFILE.UPDATE, formData,

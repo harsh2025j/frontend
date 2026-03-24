@@ -88,10 +88,10 @@ export const useProfileActions = () => {
   const handleUpdateProfile = (formData: UpdateProfileRequest) => {
     if (!user) {
       toast.error("Cannot update profile: User data missing.");
-      return;
+      return Promise.reject("User missing");
     }
 
-    dispatch(updateProfile(formData));
+    return dispatch(updateProfile(formData)).unwrap();
   };
 
   return useMemo(() => ({

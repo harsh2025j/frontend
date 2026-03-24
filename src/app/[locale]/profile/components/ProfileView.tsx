@@ -1,27 +1,39 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { useRouter, usePathname } from "@/i18n/routing";
+import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useLocale } from "next-intl";
 import Loader from "@/components/ui/Loader";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { profileApi } from "@/data/services/profile-service/profile-service";
+import { casesService } from "@/data/services/cases-service/casesService";
+import { articleApi } from "@/data/services/article-service/article-service";
 import { UserData } from "@/data/features/profile/profile.types";
-import { X, Camera, ChevronDown, ArrowLeft } from "lucide-react";
+import logo from "@/assets/logo.png"
+import {
+  X, Camera, ChevronDown, ArrowLeft,
+  Briefcase, FileText, Settings, User,
+  Heart, Calendar, MapPin, Award,
+  MessageSquare, ExternalLink, Clock, BookOpen, Plus
+} from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { getUserSubscription } from "@/data/features/subscription/subscriptionThunks";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
 import { isAdmin as checkIsAdmin, isAdvocate as checkIsAdvocate } from "@/utils/permissions";
 import SavedPostsModal from "./SavedPostsModal";
+import SavedPostsList from "./SavedPostsList";
 import toast from "react-hot-toast";
 
 interface ProfileViewProps {
   viewContext: "public" | "admin";
 }
+
+// Dummy data removed. Real data fetched from backend.
+
+type TabType = "personal" | "saved" | "cases" | "articles" | "settings";
 
 export default function ProfileView({ viewContext }: ProfileViewProps) {
   const params = useParams();
@@ -30,6 +42,8 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   const pathname = usePathname();
   const currentLocale = useLocale();
   const dispatch = useAppDispatch();
+
+  const [activeTab, setActiveTab] = useState<TabType>("personal");
 
   // Logged in user state (from Redux)
   const {
@@ -51,7 +65,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   const isAdvocate = checkIsAdvocate(loggedInUser);
   const canSeeFullData = isOwner || (viewContext === "admin" && isAdmin);
 
-  useDocTitle(profileUser ? `${profileUser.name} 's Profile` : "Profile");
+  useDocTitle(profileUser ? `${profileUser.name}'s Profile` : "Profile");
 
   useEffect(() => {
     async function fetchProfile() {
@@ -59,7 +73,34 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
         setLoading(true);
         const response = await profileApi.fetchProfileByUsername(username);
         if (response.data.success) {
-          setProfileUser(response.data.data);
+          const fetchedUser = response.data.data;
+
+          try {
+            // Fetch recent cases and articles concurrently
+            const userId = fetchedUser._id || fetchedUser.id;
+            const [casesRes, articlesRes] = await Promise.all([
+              casesService.getAll({ page: 1, limit: 12, createdBy: userId }).catch(e => { console.error("Cases Error:", e); return { data: null }; }),
+              articleApi.fetchArticles({ page: 1, limit: 12, authorId: userId }).catch(e => { console.error("Articles Error:", e); return { data: null }; })
+            ]);
+
+            const casesRespData = casesRes.data as any;
+            const casesData = casesRespData?.data?.data ?? casesRespData?.data ?? [];
+            const casesTotal = casesRespData?.data?.total ?? casesRespData?.total ?? 0;
+
+            const articlesRespData = articlesRes.data as any;
+            const articlesData = articlesRespData?.data?.data ?? articlesRespData?.data ?? [];
+            const articlesTotal = articlesRespData?.meta?.total_items ?? articlesRespData?.meta?.totalItems ?? articlesRespData?.data?.meta?.totalItems ?? articlesRespData?.data?.total ?? articlesRespData?.total ?? 0;
+
+            fetchedUser.cases = Array.isArray(casesData) ? casesData : [];
+            fetchedUser.totalCases = casesTotal;
+
+            fetchedUser.articles = Array.isArray(articlesData) ? articlesData : [];
+            fetchedUser.totalArticles = articlesTotal;
+          } catch (e) {
+            console.error("Failed to load extra profile data", e);
+          }
+
+          setProfileUser(fetchedUser);
         } else {
           setError(response.data.message || "Failed to load profile");
         }
@@ -76,7 +117,6 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
     }
   }, [username]);
 
-  // Fetch subscription if owner or admin viewing in admin context
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token && (isOwner || (viewContext === "admin" && isAdmin))) {
@@ -114,7 +154,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#fdfdfd]">
         <Loader text="Loading Profile..." size="lg" />
       </div>
     );
@@ -136,8 +176,6 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
 
   const name = profileUser.name || "";
   const email = profileUser.email || "";
-  const phone = profileUser.phone || "";
-  const dob = profileUser.dob || "";
   const avatar = profileUser.profilePicture || null;
 
   const handleLogout = () => {
@@ -204,175 +242,321 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {!isOwner && (
-          <button
-            onClick={() => router.back()}
-            className="mb-6 flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors w-fit group"
-          >
-            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100 group-hover:border-gray-300 transition-all">
-              <ArrowLeft size={16} />
-            </div>
-            <span className="text-sm font-medium">Back</span>
-          </button>
-        )}
+    <div className="min-h-screen bg-[#fdfdfd] font-sans">
+      {/* 1. HERO HEADER AREA */}
+      <section className="relative pt-12 pb-16 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center text-center">
+          {/* Back Button */}
+          {!isOwner && (
+            <button
+              onClick={() => router.back()}
+              className="absolute left-4 top-4 sm:left-8 sm:top-8 flex items-center gap-2 text-gray-400 hover:text-gray-900 transition-colors group"
+            >
+              <ArrowLeft size={20} />
+              <span className="text-sm font-medium">Back</span>
+            </button>
+          )}
 
-        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={onFileSelect} />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-1">{canSeeFullData ? "Personal Details" : "Profile Details"}</h2>
-            <p className="text-sm text-gray-500 mb-6">Manage how personal information appears on this profile.</p>
-
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-              <div className="w-28 h-28 shrink-0 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center border-[3px] border-[#C9A227] relative group">
-                {avatar ? (
-                  <Image src={avatar} alt="Avatar" width={112} height={112} className="object-cover w-full h-full" />
-                ) : (
-                  <span className="text-2xl text-gray-400">{name ? name[0].toUpperCase() : "U"}</span>
-                )}
-                {isOwner && (
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white cursor-pointer" onClick={triggerFileUpload}>
-                    <Camera size={20} />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <EditableField label="Full Name" value={name} readOnly={true} />
-                <EditableField label="Email" value={canSeeFullData ? email : email.replace(/(.{3})(.*)(?=@)/, '$1***')} readOnly={true} />
-
-                {profileUser.phone && <EditableField label="Phone" value={canSeeFullData ? profileUser.phone : profileUser.phone.replace(/.(?=.{4})/g, '*')} readOnly={true} />}
-                {profileUser.dob && <EditableField label="Date of Birth" value={formatDate(profileUser.dob)} readOnly={true} />}
-                {profileUser.city && <EditableField label="City" value={profileUser.city} readOnly={true} />}
-                {profileUser.state && <EditableField label="State" value={profileUser.state} readOnly={true} />}
-                {profileUser.designation && <EditableField label="Designation" value={profileUser.designation} readOnly={true} />}
-                {profileUser.specialization && <EditableField label="Specialization" value={profileUser.specialization} readOnly={true} />}
-                {profileUser.yearsOfExperience && <EditableField label="Experience (Years)" value={String(profileUser.yearsOfExperience)} readOnly={true} />}
-                {profileUser.barRegistrationNumber && <EditableField label="Bar Registration #" value={profileUser.barRegistrationNumber} readOnly={true} />}
-
-                {isOwner && (
-                  <div className="flex flex-wrap gap-2 mt-4 sm:col-span-2">
-                    <button className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm w-full sm:w-auto" onClick={triggerFileUpload}>Upload New Picture</button>
-                    <button className="px-4 py-2 rounded-md border text-sm border-[#1d4ed8] w-full sm:w-auto" onClick={() => setIsEditModalOpen(true)}>Edit Info</button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">{canSeeFullData ? "Quick Action" : "Contact Information"}</h3>
-            <div className="space-y-3">
-              {isOwner ? (
-                <>
-                  <button onClick={() => setShowLogoutConfirm(true)} className="block w-full text-center border rounded-md py-2 mb-3 hover:bg-gray-700 text-sm bg-primary text-white">Logout</button>
-                  <button className="block w-full text-center border hover:bg-gray-50 rounded-md py-2 mb-3 text-sm" onClick={() => router.push(`/auth/forgot-password?Step=reset&email=${email}`)}>Reset Password</button>
-                  <button className="block w-full text-center border border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium rounded-md py-2 mb-3 text-sm flex items-center justify-center gap-2 transition-colors" onClick={() => setIsSavedPostsModalOpen(true)}>View Saved Posts</button>
-                </>
-              ) : viewContext === "admin" && isAdmin ? (
-                <>
-                  {/* Admin specific actions for this user */}
-                  {/* <button className="w-full bg-[#0A2342] text-white rounded-md py-3 text-sm font-semibold hover:bg-[#153a66] transition mb-3">Message User</button>
-                  <button className="w-full border border-red-200 text-red-600 rounded-md py-2 text-sm hover:bg-red-50 transition" onClick={() => {}}>Block User</button> */}
-                </>
+          {/* Profile Picture with Gold Border */}
+          <div className="relative mb-8 pt-8">
+            <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl overflow-hidden border-[6px] border-[#C9A227]/20 shadow-xl relative group">
+              <div className="absolute inset-0 border-[2px] border-[#C9A227] rounded-2xl z-10 pointer-events-none" />
+              {avatar ? (
+                <Image src={avatar} alt="Avatar" fill className="object-cover" />
               ) : (
-                <div className="space-y-4">
-                  <div className="text-sm text-gray-600">Email: {email.replace(/(.{3})(.*)(?=@)/, '$1***')}</div>
-                  {phone && <div className="text-sm text-gray-600">Phone: {phone.replace(/.(?=.{4})/g, '*')}</div>}
-                  {/* <button className="w-full bg-[#0A2342] text-white rounded-md py-3 text-sm font-semibold hover:bg-[#153a66] transition">Message User</button> */}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {canSeeFullData && (
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-white rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-2">Current Plan</h3>
-              {subscriptionLoading ? (
-                <Loader text="Loading subscription..." size="sm" />
-              ) : subscription ? (
-                <div className="grid gap-4 text-sm text-gray-700">
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-gray-600">Status</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${subscription.status === "active" ? "bg-emerald-400 text-emerald-900" : "bg-red-400 text-red-900"}`}>{subscription.status.toUpperCase()}</span>
-                  </div>
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-gray-600">Plan Name</span>
-                    <span className="font-medium">{subscription.planName || "Premium Plan"}</span>
-                  </div>
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-gray-600">Valid Until</span>
-                    <span>{formatDate(subscription.endDate)}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">No active subscription</p>
+                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                  <span className="text-5xl text-gray-300 ">{name ? name[0].toUpperCase() : "U"}</span>
                 </div>
               )}
               {isOwner && (
-                <div className="mt-6">
-                  <Link className="px-4 py-2 rounded-md bg-[#C9A227] text-white text-sm inline-block w-full sm:w-auto text-center hover:bg-[#b39022] transition" href="/subscription">
-                    {subscription ? "Upgrade Plan" : "Subscribe Now"}
-                  </Link>
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white cursor-pointer z-20" onClick={triggerFileUpload}>
+                  <Camera size={24} />
                 </div>
               )}
             </div>
+            {/* Status Badge */}
+            {/* <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-[#C9A227] text-white text-[10px] font-bold tracking-widest px-4 py-1.5 rounded-full shadow-lg z-30 flex items-center gap-1.5">
+              <Award size={12} className="shrink-0" />
+              BOARD CERTIFIED
+            </div> */}
+          </div>
 
-            <div className="bg-white rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Preferences</h3>
-              <div className="space-y-6">
+          {/* User Details */}
+          <h1 className="text-4xl sm:text-5xl  text-[#0A2342] mb-3 tracking-tight">{name}</h1>
+          <p className="text-sm sm:text-base font-medium text-[#C9A227] tracking-[0.2em] uppercase mb-8">
+            {profileUser.designation || "LEGAL COUNSEL"} &bull; {profileUser.specialization && Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0 ? profileUser.specialization.join(", ") : (typeof profileUser.specialization === 'string' ? profileUser.specialization : "JURISPRUDENCE")}
+          </p>
+
+          {/* Badges Row */}
+          <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+            {profileUser.barRegistrationNumber && (
+              <div className="flex items-center gap-2 bg-[#0A2342] text-white px-4 py-2.5 rounded-md text-xs font-semibold shadow-md">
+                <FileText size={14} className="text-[#C9A227]" />
+                Bar Registration #{profileUser.barRegistrationNumber}
+              </div>
+            )}
+            {profileUser.yearsOfExperience !== undefined && (
+              <div className="flex items-center gap-2 bg-[#0A2342] text-white px-4 py-2.5 rounded-md text-xs font-semibold shadow-md">
+                <Clock size={14} className="text-[#C9A227]" />
+                {profileUser.yearsOfExperience}+ Years of Experience
+              </div>
+            )}
+          </div>
+
+          {/* Bio/Quote */}
+          <blockquote className="max-w-2xl text-lg  text-gray-500  mb-10 leading-relaxed italic">
+            "{profileUser.bio || "Advocacy is not merely the interpretation of statutes, but the guardianship of fundamental liberties. Every case is a testament to the pursuit of absolute justice."}"
+          </blockquote>
+
+          {/* Header Action */}
+          <button className="bg-[#0A2342] text-white px-10 py-4 rounded-md text-sm font-bold tracking-widest hover:bg-[#153a66] transition-all shadow-xl hover:shadow-[#0A2342]/20 flex items-center gap-3">
+            Book Private Consultation
+            <ArrowLeft size={16} className="rotate-180" />
+          </button>
+        </div>
+      </section>
+
+      {/* 2. TAB NAVIGATION */}
+      <section className="sticky top-0 z-10 bg-white border-y border-gray-100 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 overflow-x-auto">
+          <div className="flex items-center justify-center whitespace-nowrap py-4 gap-2 sm:gap-8 min-w-max">
+            <TabButton active={activeTab === "personal"} onClick={() => setActiveTab("personal")} label="Personal Info" icon={<User size={18} />} />
+            {isOwner && <TabButton active={activeTab === "saved"} onClick={() => setActiveTab("saved")} label="Saved Content" icon={<Heart size={18} />} />}
+            <TabButton active={activeTab === "cases"} onClick={() => setActiveTab("cases")} label="Legal Portfolio" icon={<Briefcase size={18} />} />
+            <TabButton active={activeTab === "articles"} onClick={() => setActiveTab("articles")} label="Articles" icon={<FileText size={18} />} />
+            {isOwner && <TabButton active={activeTab === "settings"} onClick={() => setActiveTab("settings")} label="Settings" icon={<Settings size={18} />} />}
+          </div>
+        </div>
+      </section>
+
+      {/* 3. MODULAR CONTENT AREA */}
+      <main className="max-w-6xl mx-auto px-4 py-16">
+        {/* PERSONAL INFO TAB */}
+        {activeTab === "personal" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div className="space-y-8">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-2">Language & Region</label>
-                  <CustomSelect value={prefs.language} onChange={(v: string) => { setPrefs(p => ({ ...p, language: v })); setDirty(true); }} options={[{ value: "en", label: "English" }, { value: "hi", label: "हिन्दी (Hindi)" }, { value: "zh", label: "中文 (Chinese)" }, { value: "mr", label: "मराठी (Marathi)" }]} />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-gray-700 block">Notifications</label>
-                  <div className="flex items-center justify-between bg-gray-100 rounded-full px-4 py-2">
-                    <div className="text-sm text-gray-700">Do not disturb</div>
-                    <ToggleSwitch checked={prefs.doNotDisturb} onChange={(val: boolean) => { setPrefs(p => ({ ...p, doNotDisturb: val })); setDirty(true); }} />
+                  <h2 className="text-2xl  text-[#0A2342] mb-6">Biographical details</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <DataField label="Full Name" value={name} />
+                    <DataField label="Email Address" value={canSeeFullData ? email : email.replace(/(.{3})(.*)(?=@)/, '$1***')} />
+                    {profileUser.phone && <DataField label="Contact Phone" value={canSeeFullData ? profileUser.phone : profileUser.phone.replace(/.(?=.{4})/g, '*')} />}
+                    {profileUser.dob && <DataField label="Date of Birth" value={formatDate(profileUser.dob)} />}
                   </div>
-                  <div className="flex items-center justify-between bg-gray-100 rounded-full px-4 py-2">
-                    <div className="text-sm text-gray-700">Case Status Alerts</div>
-                    <ToggleSwitch checked={prefs.caseStatusAlerts} onChange={(val: boolean) => { setPrefs(p => ({ ...p, caseStatusAlerts: val })); setDirty(true); }} />
+                </div>
+
+                <div>
+                  <h2 className="text-2xl  text-[#0A2342] mb-6">Geographic Reach</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <DataField label="Primary City" value={profileUser.city || "Not Specified"} />
+                    <DataField label="Jurisdiction State" value={profileUser.state || "Not Specified"} />
                   </div>
                 </div>
               </div>
 
-              {dirty && isOwner && (
-                <div className="flex justify-end gap-3 mt-4">
-                  <button onClick={handleCancelPreferences} className="px-3 py-1 text-xs border rounded-md hover:bg-gray-50">Cancel</button>
-                  <button onClick={handleSavePreferences} disabled={saving} className="px-3 py-1 text-xs bg-[#C9A227] text-white rounded-md">{saving ? "..." : "Save"}</button>
+              <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xl  text-[#0A2342] mb-4">Professional Overview</h3>
+                  <div className="space-y-6 mb-8">
+                    <DataField label="Official Designation" value={profileUser.designation} />
+                    <DataField label="Core Specialization" value={profileUser.specialization} />
+                    <DataField label="Cumulative Experience" value={profileUser.yearsOfExperience ? `${profileUser.yearsOfExperience} Years` : null} />
+                  </div>
+                </div>
+                {isOwner && (
+                  <button
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="w-full py-4 border-2 border-[#1d4ed8] text-[#1d4ed8] font-bold rounded-xl hover:bg-white transition-all text-sm tracking-widest uppercase"
+                  >
+                    Edit Professional Profile
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SAVED CONTENT TAB */}
+        {activeTab === "saved" && isOwner && (
+          <SavedPostsList />
+        )}
+
+        {/* CASES TAB */}
+        {activeTab === "cases" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="mb-12">
+              <h4 className="text-[#C9A227] text-xs font-bold tracking-widest uppercase mb-2">Legal Portfolio</h4>
+              <div className="flex items-end justify-between">
+                <h2 className="text-4xl  text-[#0A2342]">Significant Jurisprudence & Case Resolutions</h2>
+                {profileUser.totalCases !== undefined && (
+                  <div className="text-right">
+                    <div className="text-2xl font-serif text-[#C9A227]">{profileUser.totalCases}</div>
+                    <div className="text-[10px] font-bold tracking-widest uppercase text-gray-400">Total Matters</div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {profileUser.cases && profileUser.cases.length > 0 ? (
+                profileUser.cases.map(item => (
+                  <CaseCard
+                    key={item.id}
+                    id={item.id}
+                    category={item.caseType?.toUpperCase() || "MATTER"}
+                    title={item.title}
+                    court={`${item.court} • No: ${item.caseNumber}`}
+                    icon={<Briefcase size={16} />}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full py-20 text-center border-2 border-dashed border-gray-100 rounded-3xl">
+                  <Briefcase size={40} className="mx-auto text-gray-200 mb-4" />
+                  <p className="text-gray-400 text-sm italic">No litigation records found in the current portfolio.</p>
                 </div>
               )}
             </div>
           </div>
         )}
-      </div>
 
-      {showLogoutConfirm && <LogoutModal onCancel={() => setShowLogoutConfirm(false)} onConfirm={handleLogout} />}
-      {isImageModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden">
-            <div className="flex justify-between items-center px-5 py-4 border-b">
-              <h3 className="text-lg font-semibold text-gray-800">Preview Image</h3>
-              <button onClick={handleCloseImageModal} className="text-gray-500 hover:text-red-500 transition"><X size={20} /></button>
+        {/* ARTICLES TAB */}
+        {activeTab === "articles" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex items-end justify-between mb-12">
+              <h2 className="text-4xl  text-[#0A2342]">Editorial Insights & Legal Analysis</h2>
+              {profileUser.totalArticles !== undefined && (
+                <div className="text-right">
+                  <div className="text-2xl font-serif text-[#C9A227]">{profileUser.totalArticles}</div>
+                  <div className="text-[10px] font-bold tracking-widest uppercase text-gray-400">Publications</div>
+                </div>
+              )}
             </div>
-            <div className="p-6 flex flex-col items-center">
-              <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-gray-100 shadow-inner mb-6 relative">
-                {previewUrl && <Image src={previewUrl} alt="Preview" fill className="object-cover" />}
-              </div>
-              <div className="flex gap-3 w-full">
-                <button onClick={triggerFileUpload} className="flex-1 px-4 py-2.5 border rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition text-sm">Change</button>
-                <button onClick={handleConfirmImageUpload} className="flex-1 px-4 py-2.5 bg-[#C9A227] text-white rounded-lg font-medium hover:bg-[#b08d21] transition text-sm">Save</button>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {profileUser.articles && profileUser.articles.length > 0 ? (
+                profileUser.articles.map(item => (
+                  <ArticleCard
+                    key={item.id}
+                    slug={item.slug}
+                    category={item.category?.name?.toUpperCase() || "ARTICLE"}
+                    readTime={`${item.readTime || 5} min read`}
+                    title={item.title}
+                    image={item.thumbnail || logo}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full py-20 text-center border-2 border-dashed border-gray-100 rounded-3xl">
+                  <FileText size={40} className="mx-auto text-gray-200 mb-4" />
+                  <p className="text-gray-400 text-sm italic">No editorial insights have been published yet.</p>
+                </div>
+              )}
             </div>
           </div>
+        )}
+
+        {/* SETTINGS TAB */}
+        {activeTab === "settings" && isOwner && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <SettingsCard
+                title="Notifications"
+                icon={<MessageSquare size={20} />}
+                description="Manage case alerts and communication preferences"
+              >
+                <div className="space-y-4 pt-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Do not disturb</span>
+                    <ToggleSwitch checked={prefs.doNotDisturb} onChange={(val) => { setPrefs(p => ({ ...p, doNotDisturb: val })); setDirty(true); }} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Case Status Alerts</span>
+                    <ToggleSwitch checked={prefs.caseStatusAlerts} onChange={(val) => { setPrefs(p => ({ ...p, caseStatusAlerts: val })); setDirty(true); }} />
+                  </div>
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
+                title="Languages"
+                icon={<BookOpen size={20} />}
+                description="Choose your preferred interface language"
+              >
+                <div className="pt-4">
+                  <CustomSelect
+                    value={prefs.language}
+                    onChange={(v) => { setPrefs(p => ({ ...p, language: v })); setDirty(true); }}
+                    options={[{ value: "en", label: "English" }, { value: "hi", label: "हिन्दी (Hindi)" }, { value: "mr", label: "मराठी (Marathi)" }]}
+                  />
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
+                title="Subscription Plans"
+                icon={<Award size={20} />}
+                description="Manage your current membership and upgrades"
+              >
+                <div className="pt-4 flex items-center justify-between">
+                  <div className="text-xs font-bold px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full">ACTIVE PREMIUM</div>
+                  <Link href="/subscription" className="text-xs font-bold text-[#C9A227] hover:underline">UPGRADE</Link>
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
+                title="Security & Auth"
+                icon={<Settings size={20} />}
+                description="Reset password or sign out of your account"
+              >
+                <div className="space-y-3 pt-4">
+                  <button
+                    onClick={() => router.push(`/auth/forgot-password?Step=reset&email=${email}`)}
+                    className="w-full flex items-center justify-between text-sm text-gray-600 hover:text-gray-900 group"
+                  >
+                    Reset Password
+                    <ArrowLeft size={16} className="rotate-180 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  <button
+                    onClick={() => setShowLogoutConfirm(true)}
+                    className="w-full flex items-center justify-between text-sm text-red-500 font-medium hover:text-red-700 group"
+                  >
+                    Sign Out
+                    <ArrowLeft size={16} className="rotate-180 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+              </SettingsCard>
+            </div>
+
+            {dirty && (
+              <div className="mt-12 flex justify-center gap-4">
+                <button onClick={handleCancelPreferences} className="px-8 py-3 rounded-full border border-gray-200 text-sm font-bold tracking-widest uppercase hover:bg-white transition-all">Revert</button>
+                <button onClick={handleSavePreferences} disabled={saving} className="px-8 py-3 rounded-full bg-[#C9A227] text-white text-sm font-bold tracking-widest uppercase shadow-lg hover:shadow-[#C9A227]/20 transition-all">{saving ? "Applying..." : "Save Preferences"}</button>
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* 4. FOOTER CTA SECTION */}
+      {/* <section className="bg-[#0A2342] py-24 mt-20 text-center relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]" />
+        <div className="max-w-4xl mx-auto px-4 relative z-10">
+          <h2 className="text-4xl sm:text-5xl  text-white mb-6 tracking-tight">Experience Matters. Excellence Prevails.</h2>
+          <p className="text-gray-400 text-lg mb-10 leading-relaxed   max-w-2xl mx-auto">
+            Retain the counsel of one of the most distinguished legal minds in the sector for your corporate or private legal requirements.
+          </p>
+          <button className="bg-[#C9A227] text-[#0A2342] px-12 py-5 rounded-md text-sm font-bold tracking-[0.2em] uppercase hover:bg-[#b08d21] transition-all shadow-2xl flex items-center gap-3 mx-auto">
+            Secure Legal Consultation
+            <Calendar size={18} />
+          </button>
         </div>
+      </section> */}
+
+      {/* MODALS */}
+      {showLogoutConfirm && <LogoutModal onCancel={() => setShowLogoutConfirm(false)} onConfirm={handleLogout} />}
+      {isImageModalOpen && (
+        <ImagePreviewModal
+          url={previewUrl}
+          onClose={handleCloseImageModal}
+          onChange={triggerFileUpload}
+          onSave={handleConfirmImageUpload}
+        />
       )}
       {isEditModalOpen && (
         <EditProfileModal
@@ -383,17 +567,109 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
           isAdvocate={isAdvocate}
         />
       )}
-      {isSavedPostsModalOpen && <SavedPostsModal onClose={() => setIsSavedPostsModalOpen(false)} />}
+      {/* Redundant modal removed as per user request for inline view */}
+
     </div>
   );
 }
 
-function EditableField({ label, value }: { label: string; value: string | undefined | null; readOnly?: boolean }) {
+// SUB-COMPONENTS
+
+function TabButton({ active, onClick, label, icon }: { active: boolean; onClick: () => void; label: string; icon: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2.5 px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${active
+        ? "bg-[#0A2342] text-[#C9A227] shadow-lg shadow-[#0A2342]/10"
+        : "text-gray-400 hover:text-gray-900 hover:bg-gray-50"
+        }`}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function DataField({ label, value }: { label: string; value: string | string[] | undefined | null }) {
+  const displayValue = Array.isArray(value) ? value.join(", ") : value;
   return (
     <div className="space-y-1">
-      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label}</label>
-      <div className="w-full border border-gray-100 rounded-lg px-3 py-2.5 text-sm bg-gray-50 text-gray-700 font-medium">
-        {value || "Not provided"}
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{label}</label>
+      <div className="text-base text-[#0A2342] font-medium border-b border-gray-100 pb-2">
+        {displayValue || <span className="text-gray-300 ">Not Disclosed</span>}
+      </div>
+    </div>
+  );
+}
+
+function CaseCard({ id, category, title, court, icon }: { id: string; category: string; title: string; court: string; icon: React.ReactNode }) {
+  return (
+    <Link href={`/cases/${id}`}>
+      <div className="bg-white border border-gray-100 p-6 rounded-xl hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer h-full">
+        <div className="flex justify-between items-start mb-6">
+          <span className="text-[9px] font-bold tracking-widest text-[#C9A227] uppercase">{category}</span>
+          <div className="text-gray-300 group-hover:text-[#0A2342] transition-colors">{icon}</div>
+        </div>
+        <h3 className="text-lg  text-[#0A2342] mb-3 leading-tight font-serif group-hover:text-[#C9A227] transition-colors">{title}</h3>
+        <p className="text-xs text-gray-500 leading-relaxed font-sans">{court}</p>
+      </div>
+    </Link>
+  );
+}
+
+function ArticleCard({ slug, category, readTime, title, image }: { slug: string; category: string; readTime: string; title: string; image: string }) {
+  return (
+    <Link href={`/news/${slug}`} className="group">
+      <div className="cursor-pointer">
+        <div className="aspect-[4/3] rounded-2xl overflow-hidden mb-4 relative shadow-md">
+          <Image src={image} alt={title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+          <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+        </div>
+        <div className="flex items-center gap-3 mb-2.5">
+          <span className="text-[9px] font-bold tracking-widest text-[#C9A227] uppercase">{category}</span>
+          <span className="w-1 h-1 rounded-full bg-gray-300" />
+          <span className="text-[9px] font-bold tracking-widest text-gray-400 uppercase">{readTime}</span>
+        </div>
+        <h3 className="text-sm  text-[#0A2342] leading-snug group-hover:text-[#C9A227] transition-colors font-serif">{title}</h3>
+      </div>
+    </Link>
+  );
+}
+
+function SettingsCard({ title, icon, description, children }: { title: string; icon: React.ReactNode; description: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
+      <div className="flex items-center gap-4 mb-2">
+        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-[#0A2342]">
+          {icon}
+        </div>
+        <div>
+          <h4 className="text-sm font-bold text-[#0A2342]">{title}</h4>
+          <p className="text-[10px] text-gray-400">{description}</p>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function ImagePreviewModal({ url, onClose, onChange, onSave }: { url: string | null; onClose: () => void; onChange: () => void; onSave: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A2342]/80 backdrop-blur-md">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100">
+          <h3 className="text-lg  text-[#0A2342]">Portrait Preview</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-red-500 transition-colors"><X size={24} /></button>
+        </div>
+        <div className="p-8 flex flex-col items-center">
+          <div className="w-56 h-56 rounded-3xl overflow-hidden border-[6px] border-gray-50 shadow-inner mb-8 relative">
+            {url && <Image src={url} alt="Preview" fill className="object-cover" />}
+          </div>
+          <div className="flex gap-4 w-full">
+            <button onClick={onChange} className="flex-1 px-4 py-3.5 border border-gray-200 rounded-xl text-gray-600 font-bold text-xs tracking-widest uppercase hover:bg-gray-50 transition-all">Change</button>
+            <button onClick={onSave} className="flex-1 px-4 py-3.5 bg-[#C9A227] text-white rounded-xl font-bold text-xs tracking-widest uppercase shadow-lg hover:shadow-[#C9A227]/20 transition-all">Set Portrait</button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -402,102 +678,164 @@ function EditableField({ label, value }: { label: string; value: string | undefi
 function EditProfileModal({ isOpen, onClose, currentUser, onSave, isAdvocate }: { isOpen: boolean; onClose: () => void; currentUser: UserData; onSave: (data: any) => Promise<void>; isAdvocate: boolean }) {
   const [formData, setFormData] = useState<Partial<UserData>>(currentUser);
   const handleSave = () => {
-    // Validation
     if (!formData.name?.trim()) {
       toast.error("Full Name is required");
       return;
     }
     if (isAdvocate) {
       if (formData.yearsOfExperience !== undefined && (isNaN(Number(formData.yearsOfExperience)) || Number(formData.yearsOfExperience) < 0 || Number(formData.yearsOfExperience) > 100)) {
-        toast.error("Please enter a valid number for Years of Experience (0-100)");
+        toast.error("Please enter a valid number for Experience (0-100)");
         return;
       }
       if (!formData.designation) {
-        toast.error("Designation is required for advocates");
+        toast.error("Professional Designation is required");
         return;
       }
-      if (!formData.specialization) {
-        toast.error("Specialization is required for advocates");
+      if (!formData.specialization || (Array.isArray(formData.specialization) && formData.specialization.length === 0)) {
+        toast.error("At least one Core Specialization is required");
         return;
       }
     }
-
     onSave(formData);
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
-        <div className="flex justify-between items-center px-6 py-4 border-b">
-          <h3 className="text-lg font-semibold text-gray-800">Edit Profile</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition"><X size={20} /></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A2342]/60 backdrop-blur-sm">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full animate-in slide-in-from-bottom-8 duration-500 overflow-hidden">
+        <div className="flex justify-between items-center px-8 py-6 border-b border-gray-100 bg-gray-50/50">
+          <h3 className="text-xl  text-[#0A2342]">Administrative Profile Update</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-800 transition-colors"><X size={24} /></button>
         </div>
-        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-              <input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-              <input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-              <input type="date" value={formData.dob || ""} onChange={(e) => setFormData({ ...formData, dob: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-              <input value={formData.city || ""} onChange={(e) => setFormData({ ...formData, city: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-              <input value={formData.state || ""} onChange={(e) => setFormData({ ...formData, state: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
+        <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <InputField label="Full Legal Name" value={formData.name} onChange={(val) => setFormData({ ...formData, name: val })} />
+            <InputField label="Primary Contact Number" value={formData.phone} onChange={(val) => setFormData({ ...formData, phone: val })} />
+            <InputField label="Date of Birth" type="date" value={formData.dob} onChange={(val) => setFormData({ ...formData, dob: val })} />
+            <InputField label="Resident City" value={formData.city} onChange={(val) => setFormData({ ...formData, city: val })} />
+            <InputField label="Jurisdiction State" value={formData.state} onChange={(val) => setFormData({ ...formData, state: val })} />
+            <div className="md:col-span-2">
+              <TextAreaField label="Professional Biography (Bio)" value={formData.bio} onChange={(val) => setFormData({ ...formData, bio: val })} />
             </div>
 
             {isAdvocate && (
               <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Designation</label>
-                  <input value={formData.designation || ""} onChange={(e) => setFormData({ ...formData, designation: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Experience (Years)</label>
-                  <input type="number" min="0" max="100" value={formData.yearsOfExperience || ""} onChange={(e) => setFormData({ ...formData, yearsOfExperience: e.target.value ? Number(e.target.value) : undefined })} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
-                  <input value={formData.specialization || ""} onChange={(e) => setFormData({ ...formData, specialization: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                <InputField label="Professional Designation" value={formData.designation} onChange={(val) => setFormData({ ...formData, designation: val })} />
+                <InputField label="Experience (Years)" type="number" value={formData.yearsOfExperience} onChange={(val) => setFormData({ ...formData, yearsOfExperience: val ? Number(val) : undefined })} />
+                <InputField label="Bar Registration Number" value={formData.barRegistrationNumber} onChange={(val) => setFormData({ ...formData, barRegistrationNumber: val })} />
+                <div className="md:col-span-2 space-y-2">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Core Specialization</label>
+                  <div className="flex flex-wrap gap-2 min-h-[40px] p-2 bg-gray-50/30 border-2 border-gray-50 rounded-xl">
+                    {Array.isArray(formData.specialization) ? formData.specialization?.map((spec, idx) => (
+                      <span key={idx} className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white text-[#C9A227] border border-gray-100 shadow-sm">
+                        {spec}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newSpecs = [...(formData.specialization || [])];
+                            newSpecs.splice(idx, 1);
+                            setFormData({ ...formData, specialization: newSpecs });
+                          }}
+                          className="ml-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <X size={10} />
+                        </button>
+                      </span>
+                    )) : (typeof formData.specialization === 'string' && formData.specialization ? (
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white text-[#C9A227] border border-gray-100 shadow-sm">
+                        {formData.specialization}
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, specialization: [] })}
+                          className="ml-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <X size={10} />
+                        </button>
+                      </span>
+                    ) : null)}
+                    <input
+                      type="text"
+                      placeholder="Add specialization and press Enter..."
+                      className="flex-1 bg-transparent border-none outline-none text-xs font-medium min-w-[120px]"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const val = (e.target as HTMLInputElement).value.trim();
+                          if (val && (!Array.isArray(formData.specialization) || !formData.specialization.includes(val))) {
+                            const currentSpecs = Array.isArray(formData.specialization) ? formData.specialization : (formData.specialization ? [formData.specialization] : []);
+                            setFormData({
+                              ...formData,
+                              specialization: [...currentSpecs, val]
+                            });
+                            (e.target as HTMLInputElement).value = "";
+                          }
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
               </>
             )}
           </div>
         </div>
-        <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-xl">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg border text-sm">Cancel</button>
-          <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-[#0A2342] text-white text-sm">Save Changes</button>
+        <div className="px-8 py-6 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-4">
+          <button onClick={onClose} className="px-6 py-2.5 rounded-lg border border-gray-200 text-sm font-bold tracking-widest uppercase hover:bg-white transition-all">Cancel</button>
+          <button onClick={handleSave} className="px-8 py-2.5 rounded-lg bg-[#0A2342] text-white text-sm font-bold tracking-widest uppercase shadow-lg hover:bg-[#153a66] transition-all">Commit Changes</button>
         </div>
       </div>
     </div>
   );
 }
 
+function InputField({ label, value, onChange, type = "text" }: { label: string; value: any; onChange: (val: string) => void; type?: string }) {
+  return (
+    <div className="space-y-1.5 focus-within:text-[#C9A227] transition-colors">
+      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+      <input
+        type={type}
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-5 py-3 border-2 border-gray-50 bg-gray-50/30 rounded-xl text-sm text-[#0A2342] font-medium focus:border-[#C9A227] focus:bg-white outline-none transition-all placeholder:text-gray-300"
+        placeholder={`Enter ${label.toLowerCase()}...`}
+      />
+    </div>
+  );
+}
+
+function TextAreaField({ label, value, onChange }: { label: string; value: any; onChange: (val: string) => void }) {
+  return (
+    <div className="space-y-1.5 focus-within:text-[#C9A227] transition-colors">
+      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+      <textarea
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-5 py-3 border-2 border-gray-50 bg-gray-50/30 rounded-xl text-sm text-[#0A2342] font-medium focus:border-[#C9A227] focus:bg-white outline-none transition-all placeholder:text-gray-300 min-h-[120px] resize-none"
+        placeholder={`Write your ${label.toLowerCase()} here...`}
+      />
+    </div>
+  );
+}
+
 function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (val: boolean) => void }) {
   return (
-    <button onClick={() => onChange(!checked)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? "bg-[#C9A227]" : "bg-gray-300"}`}>
-      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? "translate-x-5" : "translate-x-1"}`} />
+    <button
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-300 ${checked ? "bg-[#C9A227]" : "bg-gray-200"}`}
+    >
+      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-300 ${checked ? "translate-x-5" : "translate-x-1"}`} />
     </button>
   );
 }
 
 function CustomSelect({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
   return (
-    <div className="relative">
-      <select value={value} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm appearance-none bg-white">
+    <div className="relative group">
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full border-2 border-gray-50 bg-gray-50/50 rounded-xl px-4 py-2.5 text-xs font-bold text-gray-700 appearance-none focus:border-[#C9A227] focus:bg-white outline-none transition-all">
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
-      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-        <ChevronDown size={14} className="text-gray-400" />
+      <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400 group-focus-within:text-[#C9A227] transition-colors">
+        <ChevronDown size={14} />
       </div>
     </div>
   );
@@ -505,14 +843,16 @@ function CustomSelect({ value, onChange, options }: { value: string; onChange: (
 
 function LogoutModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
-      <div className="relative z-10 bg-white rounded-xl shadow-xl p-6 max-w-sm w-full">
-        <h3 className="text-base font-semibold">Log out?</h3>
-        <p className="text-sm text-gray-600 mt-1">Are you sure you want to log out?</p>
-        <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onCancel} className="px-4 py-2 text-sm rounded-md border">Cancel</button>
-          <button onClick={onConfirm} className="px-4 py-2 text-sm rounded-md bg-black text-white">Logout</button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0A2342]/40 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="relative z-10 bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full animate-in zoom-in-95 duration-300 text-center">
+        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <X size={32} />
+        </div>
+        <h3 className="text-xl  text-[#0A2342] mb-2 tracking-tight">Security Sign-out</h3>
+        <p className="text-sm text-gray-500 mb-8 leading-relaxed">Are you certain you wish to conclude your current session? You will need to re-authenticate to regain access.</p>
+        <div className="flex gap-4">
+          <button onClick={onCancel} className="flex-1 px-4 py-3 text-xs font-bold tracking-widest uppercase border border-gray-100 rounded-xl hover:bg-gray-50 transition-all">Cancel</button>
+          <button onClick={onConfirm} className="flex-1 px-4 py-3 text-xs font-bold tracking-widest uppercase bg-red-500 text-white rounded-xl shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all">Sign Out</button>
         </div>
       </div>
     </div>

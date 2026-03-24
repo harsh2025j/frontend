@@ -32,6 +32,7 @@ export interface Role {
 // ================= User Data =================
 export interface UserData {
   _id: string;
+  id?: string;
   name: string;
   email: string;
   username: string;
@@ -51,9 +52,14 @@ export interface UserData {
   state?: string;
   designation?: string;
   yearsOfExperience?: number;
-  specialization?: string;
+  specialization?: string[];
   barRegistrationNumber?: string;
+  bio?: string;
   savedPosts?: string[];
+  articles?: any[];
+  cases?: any[];
+  totalArticles?: number;
+  totalCases?: number;
 }
 
 // ================= Update Profile =================
@@ -66,8 +72,9 @@ export interface UpdateProfileRequest {
   state?: string;
   designation?: string;
   yearsOfExperience?: number;
-  specialization?: string;
+  specialization?: string[];
   barRegistrationNumber?: string;
+  bio?: string;
 }
 
 // ================= API Response =================

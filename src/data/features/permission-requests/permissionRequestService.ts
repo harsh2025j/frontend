@@ -9,7 +9,7 @@ export interface CreatePermissionRequestPayload {
     city: string;
     designation: string;
     yearsOfExperience?: number;
-    specialization: string;
+    specialization: string[];
     barRegistrationNumber?: string;
 }
 

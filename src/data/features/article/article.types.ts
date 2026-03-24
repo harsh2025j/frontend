@@ -66,6 +66,7 @@ export interface Article {
   subcategory: Subcategory | null;
 
   tags: Tag[];
+
 }
 
 export interface Tag {

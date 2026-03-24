@@ -7,7 +7,7 @@ import { permissionRequestService } from "@/data/features/permission-requests/pe
 import { PERMISSIONS, canAccessContentManagementPage } from "@/utils/permissions";
 import Loader from "@/components/ui/Loader";
 import { toast } from "react-hot-toast";
-import { Check, Clock } from "lucide-react";
+import { Check, Clock, X, Plus } from "lucide-react";
 
 export default function MembershipForm() {
     const { user: reduxUser, updateProfile } = useProfileActions();
@@ -23,7 +23,7 @@ export default function MembershipForm() {
         city: "",
         designation: "",
         yearsOfExperience: "",
-        specialization: "",
+        specialization: [] as string[],
         barRegistrationNumber: "",
     });
 
@@ -35,6 +35,7 @@ export default function MembershipForm() {
     const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
     const [requestedRoleIds, setRequestedRoleIds] = useState<string[]>([]);
+    const [specInput, setSpecInput] = useState("");
 
     const fetchMyRequests = async () => {
         try {
@@ -113,6 +114,11 @@ export default function MembershipForm() {
         }
         if (!formData.designation) {
             toast.error("Designation is required");
+            setLoading(false);
+            return;
+        }
+        if (formData.specialization.length === 0) {
+            toast.error("At least one Specialization is required");
             setLoading(false);
             return;
         }
@@ -288,15 +294,63 @@ export default function MembershipForm() {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
-                            <input
-                                type="text"
-                                name="specialization"
-                                required
-                                placeholder="e.g. Criminal Law"
-                                value={formData.specialization}
-                                onChange={handleChange}
-                                className="w-full p-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                            />
+                            <div className="flex flex-wrap gap-2 mb-2 min-h-[32px]">
+                                {formData.specialization.map((spec, index) => (
+                                    <span key={index} className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                                        {spec}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newSpecs = [...formData.specialization];
+                                                newSpecs.splice(index, 1);
+                                                setFormData({ ...formData, specialization: newSpecs });
+                                            }}
+                                            className="ml-1.5 text-blue-400 hover:text-blue-600 focus:outline-none"
+                                        >
+                                            <X size={12} />
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                            <div className="relative group">
+                                <input
+                                    type="text"
+                                    placeholder="Add specialization and press Enter"
+                                    value={specInput}
+                                    onChange={(e) => setSpecInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            const trimmed = specInput.trim();
+                                            if (trimmed && !formData.specialization.includes(trimmed)) {
+                                                setFormData({ 
+                                                    ...formData, 
+                                                    specialization: [...formData.specialization, trimmed] 
+                                                });
+                                                setSpecInput("");
+                                            }
+                                        }
+                                    }}
+                                    className="w-full p-2.5 pr-12 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const trimmed = specInput.trim();
+                                        if (trimmed && !formData.specialization.includes(trimmed)) {
+                                            setFormData({ 
+                                                ...formData, 
+                                                specialization: [...formData.specialization, trimmed] 
+                                            });
+                                            setSpecInput("");
+                                        }
+                                    }}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors"
+                                    title="Add specialization"
+                                >
+                                    <Plus size={18} />
+                                </button>
+                            </div>
                         </div>
                     </div>
 

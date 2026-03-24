@@ -50,6 +50,7 @@ export default function AdminCasesPage() {
 
             // Handle different data formats
             const responseData = response.data?.data ?? response.data;
+            // console.table("response cases", responseData);
             const items = Array.isArray(responseData)
                 ? responseData
                 : (responseData?.data ?? []);
