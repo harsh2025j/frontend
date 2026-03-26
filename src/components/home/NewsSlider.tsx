@@ -7,6 +7,8 @@ import { useArticleListActions } from "@/data/features/article/useArticleActions
 // import Link from "next/link";
 import { Link } from "@/i18n/routing";
 import Loader from "../ui/Loader";
+import { useHomeData } from "@/context/HomeDataContext";
+
 import img1 from '../../assets/slider/image.svg';
 import img2 from '../../assets/slider/mask.svg';
 import img3 from '../../assets/slider/maskgroup.svg';
@@ -23,8 +25,17 @@ interface Slide {
 }
 
 export default function NewsSlider() {
-  const { articles: allArticles, loading } = useArticleListActions();
-  const articles = useMemo(() => allArticles.filter((a: { status: string; }) => a.status === 'published'), [allArticles]);
+  const homeData = useHomeData();
+  const { articles: reduxArticles, loading: reduxLoading } = useArticleListActions();
+  
+  // Use server articles if available, otherwise fallback to Redux or empty
+  const articles = useMemo(() => {
+    const base = reduxArticles.length > 0 ? reduxArticles : (homeData?.latestArticles || []);
+    return base.filter((a: { status: string; }) => a.status === 'published');
+  }, [reduxArticles, homeData?.latestArticles]);
+
+  const loading = reduxLoading && reduxArticles.length === 0 && (!homeData || homeData.latestArticles.length === 0);
+
 
   const [current, setCurrent] = useState(0);
   const [fade, setFade] = useState(true);

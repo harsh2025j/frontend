@@ -18,7 +18,9 @@ import CustomInput from "../ui/CustomInput"
 import StateJudgement from "../ui/stateJudgement";
 import HighCourtsModal from "../ui/HighCourtsModal";
 import Loader from "../ui/Loader";
+import { useHomeData } from "@/context/HomeDataContext";
 import SearchWithDropdown from "../ui/SearchWithDropdown";
+
 import icon2 from '../../assets/icon2.png';
 import icon3 from '../../assets/icon3.png';
 import icon4 from '../../assets/icon4.png';
@@ -77,8 +79,12 @@ export default function Stores() {
   };
 
 
+  const homeData = useHomeData();
   const { articles: allArticles, loading: mainLoading, error } = useArticleListActions();
-  const articles = useMemo(() => allArticles.filter((a: { status: string; }) => a.status === 'published'), [allArticles]);
+  const articles = useMemo(() => {
+    const base = allArticles.length > 0 ? allArticles : (homeData?.latestArticles || []);
+    return base.filter((a: { status: string; }) => a.status === 'published');
+  }, [allArticles, homeData?.latestArticles]);
 
   const { articles: latestRaw, loading: loadingLatest } = useCategoryArticles("latest-news", 4);
   const { articles: judgmentsRaw, loading: loadingJudgements } = useCategoryArticles("judgments", 3);
@@ -86,13 +92,27 @@ export default function Stores() {
   const { articles: financeRaw, loading: loadingFinance } = useCategoryArticles("finance-articles", 10);
   const { articles: legalRaw, loading: loadingLegal } = useCategoryArticles("legal-articles", 10);
 
+  const displayFinanceArticles = useMemo(() => {
+    const base = financeRaw.length > 0 ? financeRaw : (homeData?.financeArticles || []);
+    return base.filter(a => a.status === 'published');
+  }, [financeRaw, homeData?.financeArticles]);
+
+  const displayLegalArticles = useMemo(() => {
+    const base = legalRaw.length > 0 ? legalRaw : (homeData?.legalArticles || []);
+    return base.filter(a => a.status === 'published');
+  }, [legalRaw, homeData?.legalArticles]);
+
   const LatestNewsData = useMemo(() => latestRaw.filter(a => a.status === 'published'), [latestRaw]);
   const JudgementNewsData = useMemo(() => judgmentsRaw.filter(a => a.status === 'published'), [judgmentsRaw]);
   const HindiNewsData = useMemo(() => hindiRaw.filter(a => a.status === 'published'), [hindiRaw]);
-  const FinanceArticleData = useMemo(() => financeRaw.filter(a => a.status === 'published'), [financeRaw]);
-  const LegalArticleData = useMemo(() => legalRaw.filter(a => a.status === 'published'), [legalRaw]);
 
-  const loading = mainLoading || loadingLatest || loadingJudgements || loadingHindi || loadingFinance || loadingLegal;
+
+  const isFinanceLoading = loadingFinance && financeRaw.length === 0 && (!homeData || homeData.financeArticles.length === 0);
+  const isLegalLoading = loadingLegal && legalRaw.length === 0 && (!homeData || homeData.legalArticles.length === 0);
+  const isHindiLoading = loadingHindi && HindiNewsData.length === 0 && (!homeData || homeData.hindiArticles.length === 0);
+  const loading = mainLoading || loadingLatest || loadingJudgements || isHindiLoading || isFinanceLoading || isLegalLoading;
+
+
 
   // ... inside Stores component ...
   const locale = useLocale();
@@ -188,8 +208,9 @@ export default function Stores() {
   }, [JudgementNewsData, translatedText, counts, locale]);
 
   const displayHindiNews = useMemo(() => {
-    const base = HindiNewsData.slice(0, 3);
-    if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return base;
+    const base = HindiNewsData.length > 0 ? HindiNewsData : (homeData?.hindiArticles || []);
+    if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return base.slice(0, 3);
+
 
     const start = counts.headlines + counts.latest + counts.judgments;
     return base.map((item, i) => ({
@@ -442,9 +463,10 @@ export default function Stores() {
           <div className="flex justify-center">
             <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {loading ? (
-                <ArticleSkeleton count={3} />
+                <ArticleSkeleton count={4} type="latest" noWrapper={true} />
               ) : (
                 displayLatestNews.map((data: any) => (
+
                   <LatestNews
                     key={data.id}
                     img={data.thumbnail}
@@ -465,9 +487,10 @@ export default function Stores() {
         <div className="flex justify-center px-4 my-6 md:my-12">
           <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {loading ? (
-              <ArticleSkeleton count={3} />
+              <ArticleSkeleton count={3} type="judgement" noWrapper={true} />
             ) : (
               displayJudgments.map((data: any) => (
+
                 <Judgement
                   key={data.id}
                   img={data.thumbnail}
@@ -501,11 +524,14 @@ export default function Stores() {
           </div>
 
           <div className="flex justify-center">
-            <div className="container flex flex-col gap-4 sm:gap-6">
-              {loading ? (
-                <ArticleSkeleton count={3} />
+            <div className="container flex flex-col">
+              {isHindiLoading ? (
+                <ArticleSkeleton count={3} type="hindi" noWrapper={true} />
               ) : (
                 displayHindiNews.map((data: any) => (
+
+
+
                   <HindiNews
                     key={data.id}
                     img={data.thumbnail}
@@ -538,34 +564,30 @@ export default function Stores() {
 
           {/* Finance Articles ContentSlider */}
           {/* Note: ContentSlider links need to handle navigation internally or accept an onClick prop if we want loader there too. For now, handled main page buttons. */}
-          {loading ? (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-3">Finance Articles</h3>
-              <ArticleSkeleton count={4} isWide={true} />
-            </div>
+          {isFinanceLoading ? (
+            <ArticleSkeleton type="slider" name="Finance Articles" />
           ) : (
-            <ContentSlider name="Finance Articles" slug={"finance-articles"} FilteredData={FinanceArticleData.map((article) => ({
+            <ContentSlider name="Finance Articles" slug={"finance-articles"} FilteredData={displayFinanceArticles.map((article) => ({
               ...article,
               img: article.thumbnail || "",
             }))} />
           )}
 
           {/* Legal Articles ContentSlider */}
-          {loading ? (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-3">Legal Articles</h3>
-              <ArticleSkeleton count={4} isWide={true} />
-            </div>
+          {isLegalLoading ? (
+            <ArticleSkeleton type="slider" name="Legal Articles" />
           ) : (
             <ContentSlider
               name="Legal Articles"
               slug={"legal-articles"}
-              FilteredData={LegalArticleData.map((article) => ({
+              FilteredData={displayLegalArticles.map((article) => ({
                 ...article,
                 img: article.thumbnail || "",
               }))}
             />
           )}
+
+
         </div>
       </div>
     </div>

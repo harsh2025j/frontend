@@ -48,6 +48,8 @@ import officesReducer from "../features/offices/officesSlice"
 import practiceAreasReducer from "../features/practiceAreas/practiceAreasSlice"
 import matterTeamReducer from "../features/matter-team/matterTeamSlice"
 import auditLogsReducer from "../features/audit-logs/auditLogsSlice"
+import dashboardReducer from "../features/dashboard/dashboardSlice"
+
 
 export const store = configureStore({
   reducer: {
@@ -65,6 +67,8 @@ export const store = configureStore({
     practiceAreas: practiceAreasReducer,
     matterTeam: matterTeamReducer,
     auditLogs: auditLogsReducer,
+    dashboard: dashboardReducer,
+
   },
 
 },

@@ -29,6 +29,46 @@ export const metadata: Metadata = {
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 
+import { API_BASE_URL, API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
+
+async function getCategories() {
+  try {
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CATEGORIES.FETCH_ALL_CATEGORY}`, {
+      headers: {
+        "ngrok-skip-browser-warning": "true",
+      },
+      next: { revalidate: 3600 }
+    });
+    const data = await res.json();
+    return data.data || [];
+  } catch (e) {
+    console.error("Failed to fetch categories on server:", e);
+    return [];
+  }
+}
+
+async function getArticles(params: any = {}) {
+  try {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) queryParams.append(key, String(value));
+    });
+
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ARTICLE.FETCH_ALL}?${queryParams.toString()}`, {
+      headers: {
+        "ngrok-skip-browser-warning": "true",
+      },
+      next: { revalidate: 3600 }
+    });
+    const data = await res.json();
+    return data.data || [];
+  } catch (e) {
+    console.error("Failed to fetch articles on server:", e);
+    return [];
+  }
+}
+
+
 export default async function RootLayout({
   children,
   params
@@ -38,6 +78,23 @@ export default async function RootLayout({
 }) {
   const { locale } = await params;
   const messages = await getMessages();
+  
+  // Parallel fetch for speed
+  const [categories, latestArticles, financeArticles, legalArticles, hindiArticles] = await Promise.all([
+    getCategories(),
+    getArticles({ limit: 6 }), // For NewsSlider
+    getArticles({ category: "finance-articles", limit: 10 }),
+    getArticles({ category: "legal-articles", limit: 10 }),
+    getArticles({ category: "hindi-news", limit: 3 }),
+  ]);
+
+  const initialHomeData = {
+    latestArticles,
+    financeArticles,
+    legalArticles,
+    hindiArticles
+  };
+
 
   return (
     <html lang={locale}>
@@ -46,7 +103,14 @@ export default async function RootLayout({
           <ErrorBoundary>
             <ReduxProvider>
               <AdProvider>
-                <ClientLayout>{children}</ClientLayout>
+                <ClientLayout 
+                  initialCategories={categories}
+                  initialHomeData={initialHomeData}
+                >
+                  {children}
+                </ClientLayout>
+
+
                 {/* <GlobalLoader /> */}
                 <Toaster
                   position="top-right"

@@ -1,14 +1,30 @@
 "use client";
 
 import { usePathname } from "@/i18n/routing";
+import { HomeDataProvider } from "@/context/HomeDataContext";
 import HeaderNew from "@/components/layout/HeaderNew";
+
 // import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { restoreSession } from "@/data/features/auth/authSlice";
 
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
+export default function ClientLayout({ 
+  children, 
+  initialCategories = [],
+  initialHomeData = {
+    latestArticles: [],
+    financeArticles: [],
+    legalArticles: [],
+  }
+}: { 
+  children: React.ReactNode; 
+  initialCategories?: any[];
+  initialHomeData?: any;
+}) {
+
+
   const pathname = usePathname();
   const dispatch = useDispatch();
 
@@ -41,12 +57,14 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     pathname.startsWith("/profile");
 
   return (
-    <>
-      <HeaderNew />
+    <HomeDataProvider data={initialHomeData}>
+      <HeaderNew initialCategories={initialCategories} />
+
       <div className="mt-[100px] lg:mt-[176px]">
         {children}
       </div>
       {!hiddenFooter && <Footer />}
-    </>
+    </HomeDataProvider>
+
   );
 }

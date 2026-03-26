@@ -94,7 +94,8 @@ const SubCategoryItem = ({ item, closeMenu }: { item: NavItem; closeMenu: () => 
     );
 };
 
-export default function HeaderNew() {
+export default function HeaderNew({ initialCategories = [] }: { initialCategories?: any[] }) {
+
     const [menuOpen, setMenuOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -123,13 +124,20 @@ export default function HeaderNew() {
     const avatar = user?.profilePicture || null;
 
     const dispatch = useAppDispatch();
-    const { categories } = useAppSelector((state) => state.category);
+    const { categories: reduxCategories } = useAppSelector((state) => state.category);
+    
+    const [isMounted, setIsMounted] = useState(false);
+
+    // Use redux categories if available (fresh), otherwise fallback to initialCategories (SSR/Cache)
+    const categories = reduxCategories.length > 0 ? reduxCategories : (initialCategories as unknown as Category[]);
 
     useEffect(() => {
-        if (categories.length === 0) {
+        setIsMounted(true);
+        if (reduxCategories.length === 0) {
             dispatch(fetchCategories());
         }
-    }, [dispatch, categories.length]);
+    }, [dispatch, reduxCategories.length]);
+
 
     const confirmLogout = () => {
         localStorage.clear();

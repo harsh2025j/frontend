@@ -37,6 +37,8 @@ import {
   isAdmin
 } from "@/utils/permissions";
 import apiClient from "@/data/services/apiConfig/apiClient";
+import { fetchDashboardStats } from "@/data/features/dashboard/dashboardThunks";
+
 
 
 
@@ -48,31 +50,19 @@ const Page = () => {
   const { articles } = useAppSelector((state) => state.article);
   const { users } = useAppSelector((state) => state.users);
 
-  const [dashboardStats, setDashboardStats] = useState<any>(null);
-  const [loadingStats, setLoadingStats] = useState(true);
+  const { stats: dashboardStats, loading: loadingStats } = useAppSelector((state) => state.dashboard);
+  const { user: reduxUser } = useProfileActions();
 
   useEffect(() => {
     dispatch(fetchArticles({}));
     dispatch(fetchUsers({}));
-
-    const fetchDashboard = async () => {
-      try {
-        setLoadingStats(true);
-        const { data } = await apiClient.get('/users/dashboard-stats');
-        setDashboardStats(data?.data || data);
-        console.log(data?.data || data);
-      } catch (error) {
-        console.error('Failed to fetch dynamic dashboard stats', error);
-      } finally {
-        setLoadingStats(false);
-      }
-    };
-    fetchDashboard();
+    dispatch(fetchDashboardStats());
   }, [dispatch]);
 
+
   // --- Authorization Check for View ---
-  const { user: reduxUser, loading: profileLoading } = useProfileActions();
   const userData = reduxUser as UserData;
+
 
   const userType = getUserType(userData);
   const canAccessDashboard = canAccessAdminDashboardPage(userData);
@@ -84,86 +74,88 @@ const Page = () => {
   // --- Chart Data: Passed directly to component for processing ---
 
   const stats = useMemo(() => {
-    if (!dashboardStats) return [];
+    // We remove the !dashboardStats guard to allow rendering initial state (Fetching...)
 
     const allStats = [
       {
         label: "Total Articles",
-        value: dashboardStats.totalArticles?.value?.toLocaleString() ?? "N/A",
+        value: dashboardStats?.totalArticles?.value?.toLocaleString() ?? "Fetching...",
         icon: <TrendingUp className="w-5 h-5" />,
-        trend: dashboardStats.totalArticles?.trend ?? null,
-        trendUp: dashboardStats.totalArticles?.trendUp ?? true,
-        sparklineData: dashboardStats.totalArticles?.sparklineData ?? [],
+        trend: dashboardStats?.totalArticles?.trend ?? null,
+        trendUp: dashboardStats?.totalArticles?.trendUp ?? true,
+        sparklineData: dashboardStats?.totalArticles?.sparklineData ?? [],
         show: canManageContent
       },
       {
         label: "Published Articles",
-        value: dashboardStats.publishedArticles?.value?.toLocaleString() ?? "N/A",
+        value: dashboardStats?.publishedArticles?.value?.toLocaleString() ?? "Fetching...",
         icon: <Star className="w-5 h-5" />,
-        trend: dashboardStats.publishedArticles?.trend ?? null,
-        trendUp: dashboardStats.publishedArticles?.trendUp ?? true,
-        sparklineData: dashboardStats.publishedArticles?.sparklineData ?? [],
+        trend: dashboardStats?.publishedArticles?.trend ?? null,
+        trendUp: dashboardStats?.publishedArticles?.trendUp ?? true,
+        sparklineData: dashboardStats?.publishedArticles?.sparklineData ?? [],
         show: canManageContent
       },
       {
         label: "Pending Articles",
-        value: dashboardStats.pendingArticles?.value?.toLocaleString() ?? "N/A",
+        value: dashboardStats?.pendingArticles?.value?.toLocaleString() ?? "Fetching...",
         icon: <Clock className="w-5 h-5" />,
-        trend: dashboardStats.pendingArticles?.trend ?? null,
-        trendUp: dashboardStats.pendingArticles?.trendUp ?? false,
-        sparklineData: dashboardStats.pendingArticles?.sparklineData ?? [],
+        trend: dashboardStats?.pendingArticles?.trend ?? null,
+        trendUp: dashboardStats?.pendingArticles?.trendUp ?? false,
+        sparklineData: dashboardStats?.pendingArticles?.sparklineData ?? [],
         show: canManageContent
       },
       {
         label: "Active Users",
-        value: dashboardStats.activeUsers?.value?.toLocaleString() ?? "N/A",
+        value: dashboardStats?.activeUsers?.value?.toLocaleString() ?? "Fetching...",
         icon: <UserCheck className="w-5 h-5" />,
-        trend: dashboardStats.activeUsers?.trend ?? null,
-        trendUp: dashboardStats.activeUsers?.trendUp ?? true,
-        sparklineData: dashboardStats.activeUsers?.sparklineData ?? [],
+        trend: dashboardStats?.activeUsers?.trend ?? null,
+        trendUp: dashboardStats?.activeUsers?.trendUp ?? true,
+        sparklineData: dashboardStats?.activeUsers?.sparklineData ?? [],
         show: canManageUsers
       },
       {
         label: "Total Users",
-        value: dashboardStats.totalUsers?.value?.toLocaleString() ?? "N/A",
+        value: dashboardStats?.totalUsers?.value?.toLocaleString() ?? "Fetching...",
         path: "/admin/users",
         icon: <Users className="w-5 h-5" />,
-        trend: dashboardStats.totalUsers?.trend ?? null,
-        trendUp: dashboardStats.totalUsers?.trendUp ?? true,
-        sparklineData: dashboardStats.totalUsers?.sparklineData ?? [],
+        trend: dashboardStats?.totalUsers?.trend ?? null,
+        trendUp: dashboardStats?.totalUsers?.trendUp ?? true,
+        sparklineData: dashboardStats?.totalUsers?.sparklineData ?? [],
         show: canManageUsers
       },
       {
         label: "Most Active Category",
-        value: dashboardStats.mostActiveCategory?.value ?? "—",
+        value: dashboardStats?.mostActiveCategory?.value ?? "Fetching...",
         icon: <Eye className="w-5 h-5" />,
-        trend: dashboardStats.mostActiveCategory?.trend ?? null,
-        trendUp: dashboardStats.mostActiveCategory?.trendUp ?? true,
-        sparklineData: dashboardStats.mostActiveCategory?.sparklineData ?? [],
+        trend: dashboardStats?.mostActiveCategory?.trend ?? null,
+        trendUp: dashboardStats?.mostActiveCategory?.trendUp ?? true,
+        sparklineData: dashboardStats?.mostActiveCategory?.sparklineData ?? [],
         show: canManageCategories
       },
       {
         label: "Premium Subscribers",
-        value: dashboardStats.premiumSubscribers?.value?.toLocaleString() ?? "N/A",
+        value: dashboardStats?.premiumSubscribers?.value?.toLocaleString() ?? "Fetching...",
         icon: <CircleDollarSign className="w-5 h-5" />,
-        trend: dashboardStats.premiumSubscribers?.trend ?? null,
-        trendUp: dashboardStats.premiumSubscribers?.trendUp ?? true,
-        sparklineData: dashboardStats.premiumSubscribers?.sparklineData ?? [],
+        trend: dashboardStats?.premiumSubscribers?.trend ?? null,
+        trendUp: dashboardStats?.premiumSubscribers?.trendUp ?? true,
+        sparklineData: dashboardStats?.premiumSubscribers?.sparklineData ?? [],
         show: canManagePlans
       },
       {
         label: "Free Users",
-        value: dashboardStats.freeUsers?.value?.toLocaleString() ?? "N/A",
+        value: dashboardStats?.freeUsers?.value?.toLocaleString() ?? "Fetching...",
         icon: <Users className="w-5 h-5" />,
-        trend: dashboardStats.freeUsers?.trend ?? null,
-        trendUp: dashboardStats.freeUsers?.trendUp ?? true,
-        sparklineData: dashboardStats.freeUsers?.sparklineData ?? [],
+        trend: dashboardStats?.freeUsers?.trend ?? null,
+        trendUp: dashboardStats?.freeUsers?.trendUp ?? true,
+        sparklineData: dashboardStats?.freeUsers?.sparklineData ?? [],
         show: canManagePlans
       },
     ];
 
     return allStats.filter(s => s.show);
   }, [dashboardStats, canManageUsers, canManagePlans, canManageContent, canManageCategories]);
+
+
 
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 

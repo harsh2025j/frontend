@@ -4,8 +4,8 @@ import Sparkline from "./charts/Sparkline";
 interface StatCardProps {
   icon: ReactNode;
   title: string;
-  value: string;
-  trend?: string;
+  value: string | number;
+  trend?: string | null;
   trendUp?: boolean;
   sparklineData?: { value: number }[];
 }

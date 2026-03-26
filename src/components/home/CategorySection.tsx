@@ -9,6 +9,8 @@ import Loader from "../ui/Loader";
 import { useMemo } from "react";
 import { getSafeImageUrl } from "@/utils/imageUtils";
 import { formatDate } from "@/utils/dateUtils";
+import { useHomeData } from "@/context/HomeDataContext";
+
 
 interface CategorySectionProps {
   title: string;
@@ -18,12 +20,27 @@ interface CategorySectionProps {
 }
 
 export default function CategorySection({ title, slug, layout, limit = 6 }: CategorySectionProps) {
-  const { articles: allArticles, loading } = useCategoryArticles(slug, limit);
+  const homeData = useHomeData();
+  const { articles: reduxArticles, loading: reduxLoading } = useCategoryArticles(slug, limit);
 
-  // Memoize the filtered articles to prevent unnecessary re-renders
+  // Use server articles if available for this specific category
+  const initialArticles = useMemo(() => {
+    if (!homeData) return [];
+    if (slug === 'finance-articles') return homeData.financeArticles;
+    if (slug === 'legal-articles') return homeData.legalArticles;
+    if (slug === 'hindi-news') return homeData.hindiArticles;
+    if (slug === 'latest-news') return homeData.latestArticles;
+    return [];
+  }, [homeData, slug]);
+
+
   const articles = useMemo(() => {
-    return allArticles?.filter(a => a.status === 'published') || [];
-  }, [allArticles]);
+    const base = reduxArticles.length > 0 ? reduxArticles : initialArticles;
+    return base?.filter((a: any) => a.status === 'published') || [];
+  }, [reduxArticles, initialArticles]);
+
+  const loading = reduxLoading && reduxArticles.length === 0 && initialArticles.length === 0;
+
 
   if (loading) return <div className="py-10 flex justify-center"><Loader /></div>;
 

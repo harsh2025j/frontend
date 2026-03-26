@@ -3,12 +3,28 @@ import { createArticle, fetchArticles } from "./articleThunks";
 import { ArticleState } from "./article.types";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 
+const getInitialArticles = () => {
+  if (typeof window !== "undefined") {
+    const cached = localStorage.getItem("articles_cache");
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        console.error("Failed to parse articles cache", e);
+        return [];
+      }
+    }
+  }
+  return [];
+};
+
 const initialState: ArticleState = {
   loading: false,
   error: null,
   message: null,
-  articles: [],
+  articles: getInitialArticles(),
 };
+
 
 const articleSlice = createSlice({
   name: "article",
@@ -44,10 +60,13 @@ const articleSlice = createSlice({
       })
       .addCase(fetchArticles.fulfilled, (state, action) => {
         state.loading = false;
-        // FIX: Correctly access the articles array from the 'data' property
-        const payload: any = action.payload as any;
-        state.articles = payload.data || [];
+        const data = (action.payload as any).data || [];
+        state.articles = data;
+        if (typeof window !== "undefined") {
+          localStorage.setItem("articles_cache", JSON.stringify(data));
+        }
       })
+
       .addCase(fetchArticles.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
