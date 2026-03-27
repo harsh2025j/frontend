@@ -7,8 +7,9 @@ import HeaderNew from "@/components/layout/HeaderNew";
 // import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useAppDispatch } from "@/data/redux/hooks";
 import { restoreSession } from "@/data/features/auth/authSlice";
+import { getUserSubscription } from "@/data/features/subscription/subscriptionThunks";
 
 export default function ClientLayout({ 
   children, 
@@ -26,15 +27,17 @@ export default function ClientLayout({
 
 
   const pathname = usePathname();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const refreshToken = localStorage.getItem("refreshToken");
     const userStr = localStorage.getItem("user");
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr);
-        dispatch(restoreSession({ token, user }));
+        dispatch(restoreSession({ token, refreshToken, user }));
+        (dispatch as any)(getUserSubscription());
       } catch (e) {
         console.error("Failed to parse user from localStorage", e);
         localStorage.removeItem("user");

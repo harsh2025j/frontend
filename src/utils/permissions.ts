@@ -338,7 +338,12 @@ export const isAdmin = (user: UserData | null): boolean => {
 
 export const isAdvocate = (user: UserData | null): boolean => {
     if (!user) return false;
-    return hasAnyRole(user, [ROLES.ADVOCATE, ROLES.LAWYER]);
+    return hasAnyRole(user, [
+        ROLES.ADVOCATE,
+        ROLES.LAWYER,
+        ROLES.LEGAL_ADVISOR,
+        ROLES.LAW_STUDENT
+    ]);
 };
 
 /**

@@ -63,6 +63,9 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   const isOwner = loggedInUser?.username === username;
   const isAdmin = checkIsAdmin(loggedInUser);
   const isAdvocate = checkIsAdvocate(loggedInUser);
+  const profileIsAdvocate = checkIsAdvocate(profileUser);
+  const profileIsAdmin = checkIsAdmin(profileUser);
+  const showLegalSections = profileIsAdvocate || profileIsAdmin;
   const canSeeFullData = isOwner || (viewContext === "admin" && isAdmin);
 
   useDocTitle(profileUser ? `${profileUser.name}'s Profile` : "Profile");
@@ -178,6 +181,38 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   const email = profileUser.email || "";
   const avatar = profileUser.profilePicture || null;
 
+  const getDisplayRoles = () => {
+    if (!profileUser?.roles || profileUser.roles.length === 0) return "User";
+    const roleNames = profileUser.roles.map(r => r.name.toLowerCase());
+
+    const categories: string[] = [];
+    if (roleNames.some(r => ["admin", "superadmin", "creator", "editor"].includes(r))) {
+      categories.push("Admin");
+    }
+
+    const legalRolesMap: Record<string, string> = {
+      "advocate": "Advocate",
+      "lawyer": "Lawyer",
+      "legal_advisor": "Legal Advisor",
+      "law_student": "Law Student"
+    };
+
+    let legalRoleLabel = "";
+    for (const r of roleNames) {
+      if (legalRolesMap[r]) {
+        legalRoleLabel = legalRolesMap[r];
+        break;
+      }
+    }
+
+    if (legalRoleLabel) {
+      categories.push(legalRoleLabel);
+    }
+
+    if (categories.length === 0) return "User";
+    return categories.join(" + ");
+  };
+
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = "/";
@@ -284,18 +319,29 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
           {/* User Details */}
           <h1 className="text-4xl sm:text-5xl  text-[#0A2342] mb-3 tracking-tight">{name}</h1>
           <p className="text-sm sm:text-base font-medium text-[#C9A227] tracking-[0.2em] uppercase mb-8">
-            {profileUser.designation || "LEGAL COUNSEL"} &bull; {profileUser.specialization && Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0 ? profileUser.specialization.join(", ") : (typeof profileUser.specialization === 'string' ? profileUser.specialization : "JURISPRUDENCE")}
+            {getDisplayRoles()}
+            {profileIsAdvocate && (
+              <>
+                {profileUser.designation && !getDisplayRoles().toLowerCase().includes(profileUser.designation.toLowerCase()) && (
+                  <> &bull; {profileUser.designation}</>
+                )}
+                {!profileUser.designation && (
+                  <> &bull; LEGAL COUNSEL</>
+                )}
+                {" "} &bull; {profileUser.specialization && Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0 ? profileUser.specialization.join(", ") : (typeof profileUser.specialization === 'string' ? profileUser.specialization : "JURISPRUDENCE")}
+              </>
+            )}
           </p>
 
           {/* Badges Row */}
           <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
-            {profileUser.barRegistrationNumber && (
+            {profileIsAdvocate && profileUser.barRegistrationNumber && (
               <div className="flex items-center gap-2 bg-[#0A2342] text-white px-4 py-2.5 rounded-md text-xs font-semibold shadow-md">
                 <FileText size={14} className="text-[#C9A227]" />
                 Bar Registration #{profileUser.barRegistrationNumber}
               </div>
             )}
-            {profileUser.yearsOfExperience !== undefined && (
+            {profileIsAdvocate && profileUser.yearsOfExperience !== undefined && (
               <div className="flex items-center gap-2 bg-[#0A2342] text-white px-4 py-2.5 rounded-md text-xs font-semibold shadow-md">
                 <Clock size={14} className="text-[#C9A227]" />
                 {profileUser.yearsOfExperience}+ Years of Experience
@@ -304,15 +350,15 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
           </div>
 
           {/* Bio/Quote */}
-          <blockquote className="max-w-2xl text-lg  text-gray-500  mb-10 leading-relaxed italic">
-            "{profileUser.bio || "Advocacy is not merely the interpretation of statutes, but the guardianship of fundamental liberties. Every case is a testament to the pursuit of absolute justice."}"
-          </blockquote>
-
-          {/* Header Action */}
-          <button className="bg-[#0A2342] text-white px-10 py-4 rounded-md text-sm font-bold tracking-widest hover:bg-[#153a66] transition-all shadow-xl hover:shadow-[#0A2342]/20 flex items-center gap-3">
-            Book Private Consultation
-            <ArrowLeft size={16} className="rotate-180" />
-          </button>
+          {profileUser.bio ? (
+            <blockquote className="max-w-2xl text-lg  text-gray-500  mb-10 leading-relaxed italic">
+              "{profileUser.bio}"
+            </blockquote>
+          ) : profileIsAdvocate ? (
+            <blockquote className="max-w-2xl text-lg  text-gray-500  mb-10 leading-relaxed italic">
+              "Advocacy is not merely the interpretation of statutes, but the guardianship of fundamental liberties. Every case is a testament to the pursuit of absolute justice."
+            </blockquote>
+          ) : null}
         </div>
       </section>
 
@@ -322,8 +368,8 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
           <div className="flex items-center justify-center whitespace-nowrap py-4 gap-2 sm:gap-8 min-w-max">
             <TabButton active={activeTab === "personal"} onClick={() => setActiveTab("personal")} label="Personal Info" icon={<User size={18} />} />
             {isOwner && <TabButton active={activeTab === "saved"} onClick={() => setActiveTab("saved")} label="Saved Content" icon={<Heart size={18} />} />}
-            <TabButton active={activeTab === "cases"} onClick={() => setActiveTab("cases")} label="Legal Portfolio" icon={<Briefcase size={18} />} />
-            <TabButton active={activeTab === "articles"} onClick={() => setActiveTab("articles")} label="Articles" icon={<FileText size={18} />} />
+            {showLegalSections && <TabButton active={activeTab === "cases"} onClick={() => setActiveTab("cases")} label="Legal Portfolio" icon={<Briefcase size={18} />} />}
+            {showLegalSections && <TabButton active={activeTab === "articles"} onClick={() => setActiveTab("articles")} label="Articles" icon={<FileText size={18} />} />}
             {isOwner && <TabButton active={activeTab === "settings"} onClick={() => setActiveTab("settings")} label="Settings" icon={<Settings size={18} />} />}
           </div>
         </div>
@@ -348,31 +394,41 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
 
                 <div>
                   <h2 className="text-2xl  text-[#0A2342] mb-6">Geographic Reach</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <DataField label="Primary City" value={profileUser.city || "Not Specified"} />
-                    <DataField label="Jurisdiction State" value={profileUser.state || "Not Specified"} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-6">
+                    <DataField label={profileIsAdvocate ? "Primary City" : "City"} value={profileUser.city || "Not Specified"} />
+                    <DataField label={profileIsAdvocate ? "Jurisdiction State" : "State"} value={profileUser.state || "Not Specified"} />
                   </div>
+                  {isOwner && !profileIsAdvocate && (
+                    <button
+                      onClick={() => setIsEditModalOpen(true)}
+                      className="mt-6 w-full py-4 border-2 border-[#1d4ed8] text-[#1d4ed8] font-bold rounded-xl hover:bg-white transition-all text-sm tracking-widest uppercase"
+                    >
+                      Update Profile Info
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-xl  text-[#0A2342] mb-4">Professional Overview</h3>
-                  <div className="space-y-6 mb-8">
-                    <DataField label="Official Designation" value={profileUser.designation} />
-                    <DataField label="Core Specialization" value={profileUser.specialization} />
-                    <DataField label="Cumulative Experience" value={profileUser.yearsOfExperience ? `${profileUser.yearsOfExperience} Years` : null} />
+              {profileIsAdvocate && (
+                <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-xl  text-[#0A2342] mb-4">Professional Overview</h3>
+                    <div className="space-y-6 mb-8">
+                      <DataField label="Official Designation" value={profileUser.designation} />
+                      <DataField label="Core Specialization" value={profileUser.specialization} />
+                      <DataField label="Cumulative Experience" value={profileUser.yearsOfExperience ? `${profileUser.yearsOfExperience} Years` : null} />
+                    </div>
                   </div>
+                  {isOwner && (
+                    <button
+                      onClick={() => setIsEditModalOpen(true)}
+                      className="w-full py-4 border-2 border-[#1d4ed8] text-[#1d4ed8] font-bold rounded-xl hover:bg-white transition-all text-sm tracking-widest uppercase"
+                    >
+                      Edit Professional Profile
+                    </button>
+                  )}
                 </div>
-                {isOwner && (
-                  <button
-                    onClick={() => setIsEditModalOpen(true)}
-                    className="w-full py-4 border-2 border-[#1d4ed8] text-[#1d4ed8] font-bold rounded-xl hover:bg-white transition-all text-sm tracking-widest uppercase"
-                  >
-                    Edit Professional Profile
-                  </button>
-                )}
-              </div>
+              )}
             </div>
           </div>
         )}
@@ -383,7 +439,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
         )}
 
         {/* CASES TAB */}
-        {activeTab === "cases" && (
+        {activeTab === "cases" && showLegalSections && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="mb-12">
               <h4 className="text-[#C9A227] text-xs font-bold tracking-widest uppercase mb-2">Legal Portfolio</h4>
@@ -420,7 +476,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
         )}
 
         {/* ARTICLES TAB */}
-        {activeTab === "articles" && (
+        {activeTab === "articles" && showLegalSections && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-end justify-between mb-12">
               <h2 className="text-4xl  text-[#0A2342]">Editorial Insights & Legal Analysis</h2>
@@ -492,10 +548,46 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                 title="Subscription Plans"
                 icon={<Award size={20} />}
                 description="Manage your current membership and upgrades"
+                badge={subscription ? (
+                  <div className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${subscription.status === 'active' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+                    {subscription.status}
+                  </div>
+                ) : null}
               >
-                <div className="pt-4 flex items-center justify-between">
-                  <div className="text-xs font-bold px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full">ACTIVE PREMIUM</div>
-                  <Link href="/subscription" className="text-xs font-bold text-[#C9A227] hover:underline">UPGRADE</Link>
+                <div className="pt-4">
+                  {subscriptionLoading ? (
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <div className="w-3 h-3 border-2 border-gray-200 border-t-[#C9A227] rounded-full animate-spin" />
+                      Loading details...
+                    </div>
+                  ) : subscription ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Plan name :</div>
+                        <div className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${subscription.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                          {subscription.planName || "PREMIUM PLAN"}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Starting date:</div>
+                        <div className="text-sm text-[#0A2342] font-semibold">{formatDate(subscription.startDate)}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Ending date:</div>
+                        <div className="text-sm text-[#0A2342] font-semibold">{formatDate(subscription.endDate)}</div>
+                      </div>
+                      <div className="flex justify-end pt-2">
+                        <Link href="/subscription" className="text-xs font-bold text-[#C9A227] !no-underline bg-[#C9A227]/10 px-4 py-2 rounded-lg hover:bg-[#C9A227]/20 transition-all">Upgrade</Link>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <div className="text-[10px] font-bold px-3 py-1 bg-gray-100 text-gray-500 rounded-full uppercase tracking-widest">
+                        FREE TIER — NO ACTIVE PLAN
+                      </div>
+                      <Link href="/subscription" className="text-xs font-bold text-[#C9A227] !no-underline">UPGRADE</Link>
+                    </div>
+                  )}
                 </div>
               </SettingsCard>
 
@@ -569,6 +661,13 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
       )}
       {/* Redundant modal removed as per user request for inline view */}
 
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={onFileSelect}
+        accept="image/*"
+        className="hidden"
+      />
     </div>
   );
 }
@@ -636,10 +735,15 @@ function ArticleCard({ slug, category, readTime, title, image }: { slug: string;
   );
 }
 
-function SettingsCard({ title, icon, description, children }: { title: string; icon: React.ReactNode; description: string; children: React.ReactNode }) {
+function SettingsCard({ title, icon, description, children, badge }: { title: string; icon: React.ReactNode; description: string; children: React.ReactNode; badge?: React.ReactNode }) {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
-      <div className="flex items-center gap-4 mb-2">
+    <div className="bg-white p-8 rounded-2xl border-2 border-gray-50 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+      {badge && (
+        <div className="absolute top-4 right-4 z-10">
+          {badge}
+        </div>
+      )}
+      <div className="flex items-start gap-4 mb-4">
         <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-[#0A2342]">
           {icon}
         </div>
@@ -713,8 +817,8 @@ function EditProfileModal({ isOpen, onClose, currentUser, onSave, isAdvocate }: 
             <InputField label="Full Legal Name" value={formData.name} onChange={(val) => setFormData({ ...formData, name: val })} />
             <InputField label="Primary Contact Number" value={formData.phone} onChange={(val) => setFormData({ ...formData, phone: val })} />
             <InputField label="Date of Birth" type="date" value={formData.dob} onChange={(val) => setFormData({ ...formData, dob: val })} />
-            <InputField label="Resident City" value={formData.city} onChange={(val) => setFormData({ ...formData, city: val })} />
-            <InputField label="Jurisdiction State" value={formData.state} onChange={(val) => setFormData({ ...formData, state: val })} />
+            <InputField label={checkIsAdvocate(currentUser) ? "Resident City" : "City"} value={formData.city} onChange={(val) => setFormData({ ...formData, city: val })} />
+            <InputField label={checkIsAdvocate(currentUser) ? "Jurisdiction State" : "State"} value={formData.state} onChange={(val) => setFormData({ ...formData, state: val })} />
             <div className="md:col-span-2">
               <TextAreaField label="Professional Biography (Bio)" value={formData.bio} onChange={(val) => setFormData({ ...formData, bio: val })} />
             </div>

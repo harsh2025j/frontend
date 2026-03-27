@@ -16,6 +16,9 @@ import { getSafeImageUrl } from "@/utils/imageUtils";
 import SavePostButton from "@/components/ui/SavePostButton";
 import { articleApi } from "@/data/services/article-service/article-service";
 import { profileApi } from "@/data/services/profile-service/profile-service";
+import { useSelector } from "react-redux";
+import { RootState } from "@/data/redux/store";
+import PaywallOverlay from "@/components/ui/PaywallOverlay";
 
 interface ArticleClientProps {
     initialArticle: Article;
@@ -115,6 +118,23 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
         };
         run();
     }, [article, locale]);
+
+    const user = useSelector((state: RootState) => state.auth.user);
+    const subscription = useSelector((state: RootState) => state.subscription.currentSubscription);
+
+    const isPremium = useMemo(() => {
+        if (!user) return false;
+        if (subscription?.status === 'active') return true;
+
+        // Admin/Editor bypass
+        const roles = user.roles || [];
+        return roles.some((r: any) => {
+            const name = typeof r === 'string' ? r : r.name;
+            return ['admin', 'superadmin', 'editor'].includes(name.toLowerCase());
+        });
+    }, [user, subscription]);
+
+    const hasFullAccess = !article.isPaywalled || isPremium;
 
     const readTime = Math.ceil(article.content.replace(/<[^>]*>/g, "").split(/\s+/).length / 200);
     const displayTitle = translatedData?.title || article.title;
@@ -277,12 +297,13 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
             </div>
 
             {/* Article Content */}
-            <div className="article-content mb-12">
+            <div className="article-content relative">
                 <div dangerouslySetInnerHTML={{ __html: displayContent }} />
+                {!hasFullAccess && <PaywallOverlay isLoggedIn={!!user} t={t} />}
             </div>
 
             {/* Related Documents */}
-            {article.documents && article.documents.length > 0 && (
+            {hasFullAccess && article.documents && article.documents.length > 0 && (
                 <div className="mb-12 p-6 bg-gray-50 rounded-2xl border border-gray-100">
                     <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                         <svg className="w-5 h-5 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
@@ -321,7 +342,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
             )}
 
             {/* Developing Story Timeline */}
-            {article.updates && article.updates.length > 0 && (
+            {hasFullAccess && article.updates && article.updates.length > 0 && (
                 <div className="mb-16 mt-12 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
                     <h3 className="text-3xl font-bold text-gray-900 mb-10 pb-4 border-b">Developing Story Timeline</h3>
                     <div className="space-y-12 relative pl-8 border-l-[3px] border-[#2A65A4] ml-2">
@@ -411,9 +432,40 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
     const [loadedSlugs] = useState(() => new Set([slug]));
     const sentinelRef = useRef<HTMLDivElement>(null);
 
+    const user = useSelector((state: RootState) => state.auth.user);
+    const subscription = useSelector((state: RootState) => state.subscription.currentSubscription);
+
+    // Re-fetch initial article if it was truncated by server-side fetch (which lacks JWT)
+    useEffect(() => {
+        const checkAndRefetch = async () => {
+            const firstArticle = articles[0];
+            if (!firstArticle) return;
+
+            const isPremium = subscription?.status === 'active' ||
+                user?.roles?.some((r: any) => {
+                    const name = typeof r === 'string' ? r : r.name;
+                    return ['admin', 'superadmin', 'editor'].includes(name.toLowerCase());
+                });
+
+            if (firstArticle.isTruncated && isPremium) {
+                try {
+                    const res = await articleApi.fetchArticleById(firstArticle.slug);
+                    const fullArticle = res.data.data || res.data;
+                    if (fullArticle && !fullArticle.isTruncated) {
+                        setArticles(prev => [fullArticle, ...prev.slice(1)]);
+                    }
+                } catch (err) {
+                    console.error("Failed to re-fetch full article content", err);
+                }
+            }
+        };
+
+        checkAndRefetch();
+    }, [subscription, user, articles[0]?.id, articles[0]?.isTruncated]);
+
     const loadNextArticle = useCallback(async () => {
         if (loadingNext || !hasMore || !initialArticle.category?.slug) return;
-        
+
         // Limit to max 12 articles total (1 initial + 11 fetched)
         if (articles.length >= 12) {
             setHasMore(false);

@@ -59,6 +59,7 @@ export interface Article {
   rejectionReason: string | null;
   language: string | null;
   isPaywalled: boolean;
+  isTruncated?: boolean;
   createdAt: string;
   updatedAt: string;
 

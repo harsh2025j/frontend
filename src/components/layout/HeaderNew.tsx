@@ -125,7 +125,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
 
     const dispatch = useAppDispatch();
     const { categories: reduxCategories } = useAppSelector((state) => state.category);
-    
+
     const [isMounted, setIsMounted] = useState(false);
 
     // Use redux categories if available (fresh), otherwise fallback to initialCategories (SSR/Cache)

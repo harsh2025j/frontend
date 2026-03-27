@@ -168,7 +168,8 @@ export default function SubscriptionPage() {
 
             if (verifyResponse.data?.success) {
               toast.success("Payment verified and subscription activated!");
-              router.push(user?.username ? `/profile/${user.username}` : "/profile");
+
+              router.back();
             } else {
               throw new Error(verifyResponse.data?.message || "Payment verification failed");
             }
