@@ -10,9 +10,9 @@ export interface BroadcastPayload {
 }
 
 export const getBroadcastService = {
-    getBroadcast: async (page = 1, limit = 16) => {
+    getBroadcast: async (page = 1, limit = 16, isPublic?: boolean) => {
         return await apiClient.get(API_ENDPOINTS.NOTIFICATIONS.GET_BROADCAST, {
-            params: { page, limit },
+            params: { page, limit, isPublic },
         });
     },
 };

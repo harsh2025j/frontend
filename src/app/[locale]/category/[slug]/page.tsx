@@ -137,18 +137,19 @@ export default function CategoryPage() {
                 </div>
             ) : (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
                         {(loading ? Array(ITEMS_PER_PAGE).fill(null) : displayArticles).map((article, i) =>
                             loading ? (
                                 <div key={i} className="bg-gray-100 rounded-xl animate-pulse h-64" />
                             ) : (
-                                <Link href={`/news/${article.slug}`} key={article.id}>
+                                <Link href={`/news/${article.slug}`} key={article.id} className="flex">
                                     <NewsCard
                                         title={article.title}
                                         content={article.content}
                                         src={article.thumbnail || undefined}
                                         court={article.location || undefined}
                                         time={timeAgo(article.createdAt)}
+                                        author={article.authors || article.advocateName || undefined}
                                     />
                                 </Link>
                             )

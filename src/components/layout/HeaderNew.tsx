@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import {
     Menu, X, ChevronDown, ChevronRight, LogOut, LayoutDashboard,
@@ -115,6 +116,16 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    // Lock body scroll when mobile menu is open
+    useEffect(() => {
+        if (menuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [menuOpen]);
 
     const switchLocale = (newLocale: string) => {
         router.replace(pathname, { locale: newLocale });
@@ -344,10 +355,14 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
         );
     };
 
+    const isHomePage = pathname === "/" || pathname === "/hi" || pathname === "";
+    const isNewsPage = pathname.includes("/news");
+    const showTopBar = isHomePage || isNewsPage;
+
     return (
         <>
-            <header className={`w-full bg-white z-50 fixed top-0 left-0 transition-shadow duration-300 ${scrolled ? "shadow-md" : "border-b border-gray-200"}`}>
-                {/* Top Bar - Premium Gradient */}
+            {/* Top Bar - Scrolls away naturally with the page, 1:1 scroll tracking */}
+            {showTopBar && (
                 <div className="bg-gradient-to-br from-[#112240] via-[#1a365d] to-[#112240] text-white relative overflow-hidden">
                     {/* Subtle animated background pattern */}
                     <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDE2YzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00em0wIDI0YzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00ek0xMiAxNmMwLTIuMjEgMS43OS00IDQtNHM0IDEuNzkgNCA0LTEuNzkgNC00IDQtNC0xLjc5LTQtNHptMCAyNGMwLTIuMjEgMS43OS00IDQtNHM0IDEuNzkgNCA0LTEuNzkgNC00IDQtNC0xLjc5LTQtNHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-50"></div>
@@ -370,7 +385,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                             {/* Right - Social & Language */}
                             <div className="flex items-center gap-4 ml-auto">
                                 <div className="hidden sm:flex items-center gap-2">
-                                    <a target="_blank" href="https://www.facebook.com/advocatesajjadofficial" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Facebook size={14} /></a>
+                                    <a target="_blank" href="https://www.facebook.com/advocatesajjofficial" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Facebook size={14} /></a>
                                     <a target="_blank" href="https://x.com/advocatesajjad" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><FaXTwitter size={14} /></a>
                                     <a target="_blank" href="https://www.linkedin.com/in/sajjad-husain-associates-law-31715675/" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Linkedin size={14} /></a>
                                     <a target="_blank" href="https://www.instagram.com/sajjad_husain_law_associates/?hl=en" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Instagram size={14} /></a>
@@ -386,8 +401,11 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                         </div>
                     </div>
                 </div>
+            )}
 
-                {/* Main Header */}
+            {/* Sticky Main Header - Handles its own stickiness after Top Bar scrolls away */}
+            <header className={`w-full bg-white z-50 sticky top-0 left-0 transition-shadow duration-500 ease-[0.22,1,0.36,1] ${scrolled ? "shadow-lg" : "shadow-none"}`}>
+                {/* Main Header Container */}
                 <div className="border-b border-gray-100">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-20">
@@ -498,11 +516,27 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                 <button
                                     onClick={() => {
                                         setMenuOpen(!menuOpen);
-                                        if (!menuOpen) setSearchOpen(false); // Close search when opening menu
+                                        if (!menuOpen) setSearchOpen(false);
                                     }}
-                                    className="text-gray-700 hover:text-[#C9A227] p-2 transition-colors"
+                                    className="text-gray-700 hover:text-[#C9A227] p-2 transition-colors relative w-10 h-10 flex items-center justify-center overflow-hidden"
                                 >
-                                    {menuOpen ? <X size={28} /> : <Menu size={28} />}
+                                    <div className="relative w-6 h-5 flex flex-col justify-between items-center z-10 transition-all duration-300">
+                                        <motion.span
+                                            animate={menuOpen ? { rotate: 45, y: 9.5, width: "105%" } : { rotate: 0, y: 0, width: "100%" }}
+                                            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                                            className="block h-[2px] w-full bg-current rounded-full origin-center"
+                                        />
+                                        <motion.span
+                                            animate={menuOpen ? { opacity: 0, x: -20 } : { opacity: 1, x: 0 }}
+                                            transition={{ duration: 0.3 }}
+                                            className="block h-[2px] w-full bg-current rounded-full"
+                                        />
+                                        <motion.span
+                                            animate={menuOpen ? { rotate: -45, y: -9.5, width: "105%" } : { rotate: 0, y: 0, width: "100%" }}
+                                            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                                            className="block h-[2px] w-full bg-current rounded-full origin-center"
+                                        />
+                                    </div>
                                 </button>
                             </div>
                         </div>
@@ -530,72 +564,109 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                 </div>
 
                 {/* Mobile Menu */}
-                {menuOpen && (
-                    <div className="lg:hidden bg-white border-t border-gray-200 w-full h-[calc(100vh-130px)] overflow-y-auto shadow-xl absolute top-[120px] left-0 z-40">
-                        <nav className="flex flex-col p-5 gap-2">
-                            {/* Mobile User Section */}
-                            <div className="mb-4 border-b border-gray-200 pb-4">
-                                {user ? (
-                                    <div className="flex flex-col gap-3">
-                                        <div className="flex items-center gap-3 bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border border-gray-100">
-                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#C9A227] to-[#b39022] flex items-center justify-center text-sm font-semibold text-white overflow-hidden shadow-md">
-                                                {avatar ? <Image src={avatar} alt="Avatar" width={48} height={48} className="object-cover w-full h-full" /> : (user?.name?.[0] || "U").toUpperCase()}
+                <AnimatePresence>
+                    {menuOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "calc(100vh - 120px)" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                            className="lg:hidden bg-white border-t border-gray-200 w-full overflow-y-auto shadow-xl fixed top-[120px] left-0 z-[100] origin-top scrollbar-hide"
+                        >
+                            <nav className="flex flex-col p-5 gap-2">
+                                {/* Mobile User Section */}
+                                <div className="mb-4 border-b border-gray-200 pb-4">
+                                    {user ? (
+                                        <div className="flex flex-col gap-3">
+                                            <div className="flex items-center gap-3 bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border border-gray-100">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#C9A227] to-[#b39022] flex items-center justify-center text-sm font-semibold text-white overflow-hidden shadow-md">
+                                                    {avatar ? (
+                                                        <Image src={avatar} alt="Avatar" width={48} height={48} className="object-cover w-full h-full" />
+                                                    ) : (
+                                                        (user?.name?.[0] || "U").toUpperCase()
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold text-gray-900">{user?.name}</p>
+                                                    <p className="text-xs text-gray-500">{user?.email}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="font-semibold text-gray-900">{user?.name}</p>
-                                                <p className="text-xs text-gray-500">{user?.email}</p>
-                                            </div>
+                                            {dashboardAccess ? (
+                                                <Link
+                                                    href={user?.username ? `/admin/profile/${user.username}` : "#"}
+                                                    onClick={() => {
+                                                        setIsProfileOpen(false);
+                                                        setMenuOpen(false);
+                                                    }}
+                                                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors"
+                                                >
+                                                    <UserIcon size={16} /> {t("profile")}
+                                                </Link>
+                                            ) : (
+                                                <Link
+                                                    href={user?.username ? `/profile/${user.username}` : "#"}
+                                                    onClick={() => {
+                                                        setIsProfileOpen(false);
+                                                        setMenuOpen(false);
+                                                    }}
+                                                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors"
+                                                >
+                                                    <UserIcon size={16} /> {t("profile")}
+                                                </Link>
+                                            )}
+                                            {dashboardAccess ? (
+                                                <Link
+                                                    href="/admin"
+                                                    onClick={() => setMenuOpen(false)}
+                                                    className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                                                >
+                                                    <LayoutDashboard size={16} /> {t("dashboard")}
+                                                </Link>
+                                            ) : (
+                                                <Link
+                                                    href="/admin/membership"
+                                                    onClick={() => setMenuOpen(false)}
+                                                    className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                                                >
+                                                    <PlusCircle size={16} /> {t("submit_post")}
+                                                </Link>
+                                            )}
+                                            <button
+                                                onClick={() => {
+                                                    setMenuOpen(false);
+                                                    setShowLogoutConfirm(true);
+                                                }}
+                                                className="flex items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg text-left transition-colors"
+                                            >
+                                                <LogOut size={16} /> Logout
+                                            </button>
                                         </div>
-                                        {dashboardAccess ? (
-                                            <Link href={user?.username ? `/admin/profile/${user.username}` : "#"} onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
-                                                <UserIcon size={16} /> {t('profile')}
+                                    ) : (
+                                        <div className="flex flex-col gap-3">
+                                            <Link href="/auth/login" onClick={() => setMenuOpen(false)}>
+                                                <button className="w-full px-5 py-2.5 text-sm font-medium text-[#C9A227] border-2 border-[#C9A227] rounded-full hover:bg-[#C9A227] hover:text-white transition-all">
+                                                    Login
+                                                </button>
                                             </Link>
-                                        ) : (
-                                            <Link href={user?.username ? `/profile/${user.username}` : "#"} onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
-                                                <UserIcon size={16} /> {t('profile')}
+                                            <Link href="/subscription" onClick={() => setMenuOpen(false)}>
+                                                <button className="w-full px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-[#C9A227] to-[#b39022] rounded-full hover:shadow-lg transition-all">
+                                                    Subscribe Premium
+                                                </button>
                                             </Link>
-                                        )}
-                                        {dashboardAccess ? (
-                                            <Link href="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                                                <LayoutDashboard size={16} /> {t('dashboard')}
-                                            </Link>
-                                        ) : (
-                                            <Link href="/admin/membership" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                                                <PlusCircle size={16} /> {t('submit_post')}
-                                            </Link>
-                                        )}
-                                        <button onClick={() => { setMenuOpen(false); setShowLogoutConfirm(true); }} className="flex items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg text-left transition-colors">
-                                            <LogOut size={16} /> Logout
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col gap-3">
-                                        <Link href="/auth/login" onClick={() => setMenuOpen(false)}>
-                                            <button className="w-full px-5 py-2.5 text-sm font-medium text-[#C9A227] border-2 border-[#C9A227] rounded-full hover:bg-[#C9A227] hover:text-white transition-all">
-                                                Login
-                                            </button>
-                                        </Link>
-                                        <Link href="/subscription" onClick={() => setMenuOpen(false)}>
-                                            <button className="w-full px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-[#C9A227] to-[#b39022] rounded-full hover:shadow-lg transition-all">
-                                                Subscribe Premium
-                                            </button>
-                                        </Link>
-                                    </div>
-                                )}
-                            </div>
+                                        </div>
+                                    )}
+                                </div>
 
-                            {/* Mobile Search */}
-                            {/* <div className="mb-4">
-                                <SearchWithDropdown placeholder="Search..." />
-                            </div> */}
-
-                            {/* Mobile Navigation Items */}
-                            <div className="border-t border-gray-100 pt-4">
-                                {navItems.map((item, i) => <MobileMenuItem key={i} item={item} />)}
-                            </div>
-                        </nav>
-                    </div>
-                )}
+                                {/* Mobile Navigation Items */}
+                                <div className="border-t border-gray-100 pt-4">
+                                    {navItems.map((item, i) => (
+                                        <MobileMenuItem key={i} item={item} />
+                                    ))}
+                                </div>
+                            </nav>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </header>
 
             {/* Logout Confirmation Modal */}

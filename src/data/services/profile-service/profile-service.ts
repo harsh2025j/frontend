@@ -33,6 +33,7 @@ export const profileApi = {
       data.specialization.forEach(spec => formData.append("specialization", spec));
     }
     if (data.barRegistrationNumber !== undefined) formData.append("barRegistrationNumber", data.barRegistrationNumber);
+    if (data.court !== undefined) formData.append("court", data.court);
     if (data.bio !== undefined) formData.append("bio", data.bio);
     if (data.avatar) formData.append("file", data.avatar);
 

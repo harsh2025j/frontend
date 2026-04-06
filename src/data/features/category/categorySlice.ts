@@ -2,23 +2,8 @@ import { createSlice } from "@reduxjs/toolkit";
 import { fetchCategories, createCategory, updateCategory, deleteCategory } from "./categoryThunks";
 import { CategoryState } from "./category.types";
 
-const getInitialCategories = () => {
-    if (typeof window !== 'undefined') {
-        const cached = localStorage.getItem("categories");
-        if (cached) {
-            try {
-                return JSON.parse(cached);
-            } catch (e) {
-                console.error("Failed to parse categories from localStorage", e);
-                return [];
-            }
-        }
-    }
-    return [];
-};
-
 const initialState: CategoryState = {
-    categories: getInitialCategories(),
+    categories: [],
     loading: false,
     error: null,
     message: null,
@@ -29,6 +14,9 @@ const categorySlice = createSlice({
     name: "category",
     initialState,
     reducers: {
+        setCategories: (state, action) => {
+            state.categories = action.payload;
+        },
         resetCategoryState: (state) => {
             state.error = null;
             state.message = null;
@@ -97,5 +85,5 @@ const categorySlice = createSlice({
     },
 });
 
-export const { resetCategoryState } = categorySlice.actions;
+export const { resetCategoryState, setCategories } = categorySlice.actions;
 export default categorySlice.reducer;

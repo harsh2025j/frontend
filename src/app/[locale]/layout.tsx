@@ -35,7 +35,7 @@ async function getCategories() {
   try {
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CATEGORIES.FETCH_ALL_CATEGORY}`, {
       headers: {
-        // "ngrok-skip-browser-warning": "true",
+        "ngrok-skip-browser-warning": "true",
       },
       next: { revalidate: 3600 }
     });
@@ -56,7 +56,7 @@ async function getArticles(params: any = {}) {
 
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ARTICLE.FETCH_ALL}?${queryParams.toString()}`, {
       headers: {
-        // "ngrok-skip-browser-warning": "true",
+        "ngrok-skip-browser-warning": "true",
       },
       next: { revalidate: 3600 }
     });
@@ -78,7 +78,7 @@ export default async function RootLayout({
 }) {
   const { locale } = await params;
   const messages = await getMessages();
-  
+
   // Parallel fetch for speed
   const [categories, latestArticles, financeArticles, legalArticles, hindiArticles] = await Promise.all([
     getCategories(),
@@ -103,7 +103,7 @@ export default async function RootLayout({
           <ErrorBoundary>
             <ReduxProvider>
               <AdProvider>
-                <ClientLayout 
+                <ClientLayout
                   initialCategories={categories}
                   initialHomeData={initialHomeData}
                 >

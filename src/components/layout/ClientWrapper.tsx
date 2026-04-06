@@ -9,18 +9,20 @@ import Footer from "@/components/layout/Footer";
 import { useEffect } from "react";
 import { useAppDispatch } from "@/data/redux/hooks";
 import { restoreSession } from "@/data/features/auth/authSlice";
+import { setArticles } from "@/data/features/article/articleSlice";
+import { setCategories } from "@/data/features/category/categorySlice";
 import { getUserSubscription } from "@/data/features/subscription/subscriptionThunks";
 
-export default function ClientLayout({ 
-  children, 
+export default function ClientLayout({
+  children,
   initialCategories = [],
   initialHomeData = {
     latestArticles: [],
     financeArticles: [],
     legalArticles: [],
   }
-}: { 
-  children: React.ReactNode; 
+}: {
+  children: React.ReactNode;
   initialCategories?: any[];
   initialHomeData?: any;
 }) {
@@ -30,6 +32,26 @@ export default function ClientLayout({
   const dispatch = useAppDispatch();
 
   useEffect(() => {
+    // Restore Categories from SSR or Cache
+    if (initialCategories && initialCategories.length > 0) {
+      dispatch(setCategories(initialCategories));
+    } else {
+      const cached = localStorage.getItem("categories");
+      if (cached) {
+        try {
+          dispatch(setCategories(JSON.parse(cached)));
+        } catch (e) { }
+      }
+    }
+
+    // Restore Articles from Cache
+    const cachedArticles = localStorage.getItem("articles_cache");
+    if (cachedArticles) {
+      try {
+        dispatch(setArticles(JSON.parse(cachedArticles)));
+      } catch (e) { }
+    }
+
     const token = localStorage.getItem("token");
     const refreshToken = localStorage.getItem("refreshToken");
     const userStr = localStorage.getItem("user");
@@ -44,7 +66,7 @@ export default function ClientLayout({
         localStorage.removeItem("token");
       }
     }
-  }, [dispatch]);
+  }, [dispatch, initialCategories]);
 
   const isHiddenLayout =
     pathname.startsWith("/auth") ||
@@ -63,7 +85,7 @@ export default function ClientLayout({
     <HomeDataProvider data={initialHomeData}>
       <HeaderNew initialCategories={initialCategories} />
 
-      <div className="mt-[100px] lg:mt-[176px]">
+      <div>
         {children}
       </div>
       {!hiddenFooter && <Footer />}

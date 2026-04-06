@@ -10,6 +10,7 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import { articleApi } from "@/data/services/article-service/article-service";
 import Pagination from "@/components/Pagination";
 import { getSafeImageUrl } from "@/utils/imageUtils";
+import { motion } from "framer-motion";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -366,121 +367,255 @@ const ContentApprovalPanel = () => {
         isProcessing={!!actionLoading}
       />
 
-      {/* PREVIEW MODAL */}
+      {/* PREVIEW MODAL: THE INTELLIGENCE BRIEF */}
       {showPreview && previewArticle && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-[#0B2149]">Article Preview</h2>
-              <button onClick={() => { setShowPreview(false); setPreviewArticle(null); }} className="text-gray-400 hover:text-gray-700 text-2xl font-bold">×</button>
-            </div>
-            <div className="p-6 space-y-6">
-              {previewArticle.thumbnail && (
-                <div className="w-full h-64 sm:h-80 rounded-lg overflow-hidden border border-gray-100 bg-gray-50">
-                  <img src={getSafeImageUrl(previewArticle.thumbnail)} alt={previewArticle.title} className="w-full h-full object-cover" />
+        <div className="fixed inset-0 bg-[#0A2342]/40 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-fadeIn">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white rounded-[40px] shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-white/50"
+          >
+            {/* STICKY HEADER BRIDGE */}
+            {/* STICKY HEADER BRIDGE */}
+            <div className="sticky top-0 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-10 py-6 flex justify-between items-center z-10">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-[#C9A227]/10 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#C9A227] animate-pulse" />
                 </div>
-              )}
-              <h1 className="text-3xl font-bold text-gray-900">{previewArticle.title}</h1>
-              {previewArticle.subHeadline && <p className="text-xl text-gray-600 italic">{previewArticle.subHeadline}</p>}
-              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-2"><span className="font-semibold">Category:</span><span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">{previewArticle.category?.name || "No Category"}</span></div>
-                <div className="flex items-center gap-2"><span className="font-semibold">Status:</span><StatusBadge status={previewArticle.status} /></div>
-                {previewArticle.authors && <div className="flex items-center gap-2"><span className="font-semibold">Author:</span><span>{previewArticle.authors}</span></div>}
-                {previewArticle.advocates && previewArticle.advocates.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">Advocates:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {previewArticle.advocates.map((adv, i) => (
-                        <span key={i} className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs border border-blue-100">
-                          {adv.name}
-                        </span>
+                <div>
+                  <p className="text-[10px] font-black tracking-[0.3em] text-[#C9A227] uppercase leading-none mb-1">Intelligence Preview</p>
+                  <h2 className="text-xl font-bold text-[#0A2342] leading-none tracking-tight">Preview Article</h2>
+                </div>
+              </div>
+              <button
+                onClick={() => { setShowPreview(false); setPreviewArticle(null); }}
+                className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-[#0A2342] transition-all group active:scale-95"
+              >
+                <span className="text-2xl leading-none">&times;</span>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-10 py-12 scrollbar-hide">
+              <div className="max-w-4xl mx-auto space-y-12">
+
+                {/* 1. EDITORIAL HEADER & IMAGE */}
+                <div className="space-y-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 rounded-full bg-[#0A2342] text-white text-[9px] font-black uppercase tracking-widest leading-none">
+                        {previewArticle.category?.name || "Uncategorized"}
+                      </span>
+                      <span className="w-1 h-1 rounded-full bg-[#C9A227]" />
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        By {previewArticle.authors || "Staff Expert"}
+                      </span>
+                    </div>
+                    <h1 className="text-4xl font-black text-[#0A2342] leading-tight tracking-tight">
+                      {previewArticle.title}
+                    </h1>
+                    {previewArticle.subHeadline && (
+                      <p className="text-xl text-gray-500 font-medium leading-snug">
+                        {previewArticle.subHeadline}
+                      </p>
+                    )}
+                  </div>
+
+                  {previewArticle.thumbnail && (
+                    <div className="relative group rounded-[32px] overflow-hidden border-4 border-gray-50 shadow-xl aspect-video bg-gray-100">
+                      <img
+                        src={getSafeImageUrl(previewArticle.thumbnail)}
+                        alt={previewArticle.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. METADATA BRIEFING GRID */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-gray-50/50 rounded-[32px] p-8 border border-gray-100">
+                  <div className="space-y-2">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Article Status</p>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <StatusBadge status={previewArticle.status} />
+                      </div>
+                      {previewArticle.status === "pending" && <span className="text-[10px] font-bold text-[#C9A227] italic">Awaiting Registry Approval</span>}
+                      {previewArticle.status === "rejected" && previewArticle.rejectionReason && (
+                        <p className="text-[10px] text-rose-500 font-medium leading-tight line-clamp-2" title={previewArticle.rejectionReason}>
+                          REASON: {previewArticle.rejectionReason}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Market Integrity</p>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1.5 text-[10px] font-black text-[#0A2342]">
+                          <span className="opacity-30">TAGS:</span> {previewArticle.tags?.length || 0}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[10px] font-black text-[#0A2342]">
+                          <span className="opacity-30">DOCS:</span> {previewArticle.documents?.length || 0}
+                        </div>
+                      </div>
+                      {previewArticle.tags && previewArticle.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {previewArticle.tags.map((tag, i) => (
+                            <span key={i} className="px-2 py-0.5 rounded-md bg-white border border-gray-100 text-[9px] font-bold text-gray-500 uppercase tracking-tighter">
+                              #{tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Collaborators</p>
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black text-[#0A2342]">
+                        {previewArticle.advocates?.length || 0} Professional{previewArticle.advocates?.length !== 1 ? "s" : ""} Assigned
+                      </p>
+                      {previewArticle.advocates && previewArticle.advocates.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {previewArticle.advocates.map((adv, i) => (
+                            <div key={i} className="flex items-center gap-2 px-2 py-1 bg-[#C9A227]/5 border border-[#C9A227]/10 rounded-lg">
+                              <div className="w-4 h-4 rounded-full bg-[#C9A227] flex items-center justify-center text-[8px] text-white font-black">
+                                {adv.name?.[0].toUpperCase()}
+                              </div>
+                              <span className="text-[9px] font-bold text-[#0A2342] uppercase tracking-tight">{adv.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. CORE INTELLIGENCE CONTENT */}
+                <div className="prose prose-xl prose-slate max-w-none text-[#0A2342]/80 font-inter">
+                  {/* Custom Prose Overrides - NO SERIF */}
+                  <style dangerouslySetInnerHTML={{
+                    __html: `
+                      .prose h2, .prose h3 { font-weight: 800; color: #0A2342; }
+                      .prose p { line-height: 1.7; color: #334155; }
+                      .prose blockquote { border-left-color: #C9A227; font-style: italic; color: #0A2342; font-weight: 500; }
+                   `}} />
+                  <div dangerouslySetInnerHTML={{ __html: previewArticle.content }} />
+                </div>
+
+                {/* 4. STORY TIMELINE */}
+                {previewArticle.updates && previewArticle.updates.length > 0 && (
+                  <div className="pt-12 border-t border-gray-100">
+                    <div className="flex items-center gap-3 mb-8">
+                      <div className="w-8 h-8 rounded-xl bg-[#C9A227]/10 flex items-center justify-center text-[#C9A227]">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      </div>
+                      <h3 className="text-2xl font-bold text-[#0A2342]">Intelligence Timeline</h3>
+                    </div>
+                    <div className="space-y-6 relative ml-4 pl-8 border-l-2 border-gray-50">
+                      {previewArticle.updates.map((update, i) => (
+                        <div key={i} className="relative group">
+                          <div className="absolute -left-[41px] top-4 w-5 h-5 rounded-full border-4 border-white bg-[#C9A227] shadow-sm group-hover:scale-125 transition-transform" />
+                          <div className="bg-white border border-gray-100 rounded-[24px] p-6 shadow-sm hover:shadow-md transition-all">
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="text-sm font-black text-[#0A2342] uppercase tracking-wider">{update.title || "Update Entry"}</h4>
+                              <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                                {new Date(update.updateDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                              </span>
+                            </div>
+                            <div className="prose prose-sm text-gray-500" dangerouslySetInnerHTML={{ __html: update.content }} />
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
                 )}
-              </div>
-              {previewArticle.status === "rejected" && previewArticle.rejectionReason && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
-                  <span className="font-semibold block mb-1">Rejection Reason:</span>
-                  <p>{previewArticle.rejectionReason}</p>
-                </div>
-              )}
-              {previewArticle.tags && previewArticle.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  <span className="font-semibold text-sm text-gray-600">Tags:</span>
-                  {previewArticle.tags.map((tag, i) => <span key={i} className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm">{tag.name}</span>)}
-                </div>
-              )}
-              <div className="border-t pt-6">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800">Content</h3>
-                <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: previewArticle.content }} />
-              </div>
-              {previewArticle.updates && previewArticle.updates.length > 0 && (
-                <div className="border-t pt-6">
-                  <h3 className="text-xl font-semibold mb-4 text-gray-800">Developing Story Timeline</h3>
-                  <div className="space-y-4">
-                    {previewArticle.updates.map((update, i) => (
-                      <div key={i} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <h4 className="font-semibold text-gray-900">{update.title || "Update"}</h4>
-                          <span className="text-sm text-gray-500">{new Date(update.updateDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
-                        </div>
-                        <div className="prose prose-sm max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: update.content }} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
-              {/* Related Documents */}
-              {previewArticle.documents && previewArticle.documents.length > 0 && (
-                <div className="border-t pt-6">
-                  <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                    Related Documents
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {previewArticle.documents.map((doc) => {
-                      const isImage = doc.fileType?.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(doc.fileUrl);
-                      return (
-                        <a key={doc.id} href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-4 p-3 bg-white border border-gray-200 rounded-xl hover:border-[#C9A227] hover:shadow-md transition-all duration-300">
-                          {isImage ? (
-                            <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100 bg-gray-50">
-                              <img src={getSafeImageUrl(doc.fileUrl)} alt={doc.fileName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                {/* 5. RELATED DOCUMENTATION */}
+                {previewArticle.documents && previewArticle.documents.length > 0 && (
+                  <div className="pt-12 border-t border-gray-100">
+                    <div className="flex items-center gap-3 mb-8">
+                      <div className="w-8 h-8 rounded-xl bg-[#0A2342]/5 flex items-center justify-center text-[#0A2342]">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                      </div>
+                      <h3 className="text-2xl font-bold text-[#0A2342]">Documentary Evidence</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {previewArticle.documents.map((doc) => {
+                        const isImage = doc.fileType?.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(doc.fileUrl);
+                        return (
+                          <a
+                            key={doc.id}
+                            href={doc.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-[28px] hover:border-[#C9A227] hover:shadow-xl hover:shadow-[#C9A227]/5 transition-all duration-500"
+                          >
+                            {isImage ? (
+                              <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gray-50 border border-gray-50 shrink-0">
+                                <img src={getSafeImageUrl(doc.fileUrl)} alt={doc.fileName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                              </div>
+                            ) : (
+                              <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0 group-hover:bg-[#C9A227]/10 transition-colors">
+                                <svg className="w-6 h-6 text-gray-400 group-hover:text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-black text-[#0A2342] truncate group-hover:text-[#C9A227] transition-colors">{doc.fileName}</p>
+                              <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">
+                                <span className="text-[#C9A227]">{doc.fileType?.split("/")[1]?.toUpperCase() || "FILE"}</span>
+                                <span className="mx-1 opacity-20">•</span>
+                                <span>{(doc.fileSize ? (doc.fileSize / 1024 / 1024).toFixed(2) : "0.00")} MB</span>
+                              </p>
                             </div>
-                          ) : (
-                            <div className="w-16 h-16 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 group-hover:bg-[#C9A227]/10 transition-colors">
-                              <svg className="w-8 h-8 text-gray-400 group-hover:text-[#C9A227] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                            <div className="w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center text-gray-300 group-hover:bg-[#C9A227] group-hover:text-white group-hover:border-[#C9A227] transition-all transform group-hover:scale-110 shrink-0">
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                             </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-gray-900 truncate group-hover:text-[#C9A227] transition-colors">{doc.fileName}</p>
-                            <p className="text-xs text-gray-500 uppercase flex items-center gap-1.5 mt-0.5">
-                              <span className="font-semibold text-[#C9A227]">{doc.fileType?.split("/")[1]?.toUpperCase() || "FILE"}</span>
-                              <span className="inline-block w-1 h-1 rounded-full bg-gray-300" />
-                              <span>{doc.fileSize ? (doc.fileSize / 1024 / 1024).toFixed(2) : "0.00"} MB</span>
-                            </p>
-                          </div>
-                          <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#C9A227] group-hover:text-white transition-all transform group-hover:translate-x-1 shrink-0">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                          </div>
-                        </a>
-                      );
-                    })}
+                          </a>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-            <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4 flex flex-col sm:flex-row justify-end gap-3">
-              <button onClick={() => { setShowPreview(false); setPreviewArticle(null); }} className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Close</button>
-              {previewArticle.status === "pending" && (
-                <>
-                  <button onClick={() => { setShowPreview(false); handleRejectClick(previewArticle.id); }} className="px-6 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700">Decline</button>
-                  <button onClick={() => { setShowPreview(false); handleApproveClick(previewArticle.id); }} className="px-6 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700">Approve</button>
-                </>
-              )}
+
+            {/* ACTION FOOTER BAR */}
+            <div className="sticky bottom-0 bg-gray-50/80 backdrop-blur-md border-t border-gray-100 px-10 py-8 flex flex-col sm:flex-row justify-between items-center gap-4 z-10">
+              <div className="hidden sm:block">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 italic">Decision Mandatory</p>
+                <p className="text-[11px] font-bold text-[#0A2342]">Verify all documentary evidence before confirming.</p>
+              </div>
+
+              <div className="flex gap-4 w-full sm:w-auto">
+                <button
+                  onClick={() => { setShowPreview(false); setPreviewArticle(null); }}
+                  className="flex-1 sm:flex-none px-8 py-3 text-[10px] font-black uppercase tracking-widest text-[#0A2342] bg-white border border-gray-200 rounded-2xl hover:bg-gray-100 transition-all active:scale-95 shadow-sm"
+                >
+                  Close View
+                </button>
+                {previewArticle.status === "pending" && (
+                  <>
+                    <button
+                      onClick={() => { setShowPreview(false); handleRejectClick(previewArticle.id); }}
+                      className="flex-1 sm:flex-none px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-rose-500 rounded-2xl hover:bg-rose-600 shadow-xl shadow-rose-500/20 transition-all active:scale-95"
+                    >
+                      Decline Registry
+                    </button>
+                    <button
+                      onClick={() => { setShowPreview(false); handleApproveClick(previewArticle.id); }}
+                      className="flex-1 sm:flex-none px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-[#0A2342] rounded-2xl hover:bg-[#0A2342]/90 shadow-xl shadow-[#0A2342]/20 transition-all active:scale-95"
+                    >
+                      Confirm & Publish
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

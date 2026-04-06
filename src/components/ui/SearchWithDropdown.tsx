@@ -38,8 +38,8 @@ export default function SearchWithDropdown({
 
 
     useEffect(() => {
-        // 1. Reset if query is empty
-        if (query.trim().length < 1) {
+        // 1. Reset if query is less than 3 characters
+        if (query.trim().length < 3) {
             setResults([]);
             setIsOpen(false);
             return;
@@ -125,7 +125,7 @@ export default function SearchWithDropdown({
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    onFocus={() => query.trim().length >= 2 && results.length > 0 && setIsOpen(true)}
+                    onFocus={() => query.trim().length >= 3 && results.length > 0 && setIsOpen(true)}
                     placeholder={placeholder}
                     className="w-full pl-5 pr-12 py-1.5 text-sm md:text-base border-2 border-[#C9A227] rounded-full focus:outline-none focus:border-[#C9A227] focus:ring-2 focus:ring-[#C9A227]/20 transition-all placeholder:text-gray-400"
                 />
@@ -156,9 +156,7 @@ export default function SearchWithDropdown({
                                     <div className="flex items-start gap-3">
                                         <div className="mt-1 flex-shrink-0">{getIcon(result.type)}</div>
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="text-sm md:text-base font-medium text-gray-900 group-hover:text-[#C9A227] transition-colors line-clamp-2">{result.title}</h4>
-                                            {result.description && <p className="text-xs text-gray-500 mt-1 line-clamp-1">{result.description}</p>}
-                                            {result.date && <p className="text-xs text-gray-400 mt-1">{result.date}</p>}
+                                            <h4 className="text-sm md:text-base font-semibold text-gray-900 group-hover:text-[#C9A227] transition-colors line-clamp-2">{result.title}</h4>
                                         </div>
                                     </div>
                                 </button>

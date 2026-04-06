@@ -47,9 +47,9 @@ const LatestNews: React.FC<LatestNewsProps> = ({
           </h2>
         </Link>
 
-        <div className="text-gray-500 text-xs sm:text-sm  flex items-center gap-2 mb-3">
-          {author && <span>Author: {author}</span>}
-          {author && date && <span>•</span>}
+        <div className="text-gray-500 text-xs sm:text-sm flex items-center gap-2 mb-3">
+          <span>Author: {author || "Anonymous"}</span>
+          {date && <span>•</span>}
           <Clock size={14} />
           {date && <span>{date}</span>}
         </div>

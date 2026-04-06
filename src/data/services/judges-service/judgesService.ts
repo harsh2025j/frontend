@@ -29,5 +29,13 @@ export const judgesService = {
         return await apiClient.get(API_ENDPOINTS.JUDGES.BASE, {
             params: { q, page, limit, category, courtType, year }
         });
+    },
+    getTopJudges: async (page = 1, limit = 5, court?: string) => {
+        return await apiClient.get(API_ENDPOINTS.JUDGES.TOP, {
+            params: { page, limit, court }
+        });
+    },
+    getUniqueCourts: async () => {
+        return await apiClient.get(API_ENDPOINTS.JUDGES.UNIQUE_COURTS);
     }
 };

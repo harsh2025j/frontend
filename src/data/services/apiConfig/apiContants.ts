@@ -1,5 +1,5 @@
-// export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev";
-export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
+export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev";
+// export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
 export const API_ENDPOINTS = {
   SEARCH: {
     JUDGES: "/search/judges",
@@ -69,6 +69,13 @@ export const API_ENDPOINTS = {
     BASE: "/judges",
     ACTIVE: "/judges/active",
     BY_COURT: "/judges/court",
+    TOP: "/judges/top",
+    UNIQUE_COURTS: "/judges/unique-courts",
+  },
+  ADVOCATES: {
+    BASE: "/advocates",
+    TOP: "/advocates/top",
+    UNIQUE_COURTS: "/advocates/unique-courts",
   },
   USERS: {
     BROADCAST: "/users/broadcast",

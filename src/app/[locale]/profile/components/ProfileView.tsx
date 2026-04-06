@@ -5,35 +5,91 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useLocale } from "next-intl";
-import Loader from "@/components/ui/Loader";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  X, Camera, ChevronDown, ArrowLeft,
+  Briefcase, FileText, Settings, User,
+  Heart, Calendar, MapPin, Award,
+  MessageSquare, ExternalLink, Clock, BookOpen, Plus,
+  Shield, Globe, Bell, LogOut, ChevronRight, Check, ShieldCheck, Key, Languages, Phone,
+  Gavel
+} from "lucide-react";
+
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { profileApi } from "@/data/services/profile-service/profile-service";
 import { casesService } from "@/data/services/cases-service/casesService";
 import { articleApi } from "@/data/services/article-service/article-service";
 import { UserData } from "@/data/features/profile/profile.types";
-import logo from "@/assets/logo.png"
-import {
-  X, Camera, ChevronDown, ArrowLeft,
-  Briefcase, FileText, Settings, User,
-  Heart, Calendar, MapPin, Award,
-  MessageSquare, ExternalLink, Clock, BookOpen, Plus
-} from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { getUserSubscription } from "@/data/features/subscription/subscriptionThunks";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
 import { isAdmin as checkIsAdmin, isAdvocate as checkIsAdvocate } from "@/utils/permissions";
-import SavedPostsModal from "./SavedPostsModal";
+
+import logo from "@/assets/logo.png";
 import SavedPostsList from "./SavedPostsList";
-import toast from "react-hot-toast";
+import Loader from "@/components/ui/Loader";
+import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
 
 interface ProfileViewProps {
   viewContext: "public" | "admin";
 }
 
-// Dummy data removed. Real data fetched from backend.
-
 type TabType = "personal" | "saved" | "cases" | "articles" | "settings";
+
+// --- REUSABLE BENTO COMPONENTS ---
+
+const BentoStatCard = ({ label, value, icon: Icon, description, delay = 0 }: any) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5, delay }}
+    whileHover={{ y: -5 }}
+    className="relative overflow-hidden group bg-white/70 dark:bg-[#0A2342]/10 backdrop-blur-xl rounded-[32px] p-8 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.05)]"
+  >
+    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+      <Icon size={72} strokeWidth={1} />
+    </div>
+    <div className="relative z-10">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 rounded-xl bg-[#0A2342]/5 text-[#C9A227]">
+          <Icon size={18} />
+        </div>
+        <span className="text-[9px] font-bold tracking-[0.2em] text-[#C9A227] uppercase">{label}</span>
+      </div>
+      <div className="flex items-baseline gap-1 mb-2">
+        <h3 className="text-4xl font-serif text-[#0A2342] dark:text-white leading-none">{value}</h3>
+      </div>
+      <p className="text-[10px] text-gray-400 font-medium leading-relaxed max-w-[180px]">
+        {description}
+      </p>
+    </div>
+  </motion.div>
+);
+
+const BentoCard = ({ title, subtitle, children, className = "", delay = 0 }: any) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.98 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.5, delay }}
+    className={`group relative overflow-hidden bg-white/70 dark:bg-[#0A2342]/10 backdrop-blur-xl rounded-[40px] p-8 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.05)] ${className}`}
+  >
+    <div className="flex flex-col h-full relative z-10">
+      <div className="mb-6">
+        {subtitle && (
+          <span className="text-[9px] font-bold tracking-[0.2em] text-[#C9A227] uppercase mb-1.5 block leading-none">
+            {subtitle}
+          </span>
+        )}
+        <h4 className="text-2xl font-serif text-[#0A2342] dark:text-white tracking-tight">{title}</h4>
+      </div>
+      <div className="flex-grow">{children}</div>
+    </div>
+    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent dark:from-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+  </motion.div>
+);
+
+// --- MAIN PROFILE VIEW ---
 
 export default function ProfileView({ viewContext }: ProfileViewProps) {
   const params = useParams();
@@ -42,922 +98,702 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   const pathname = usePathname();
   const currentLocale = useLocale();
   const dispatch = useAppDispatch();
-
   const [activeTab, setActiveTab] = useState<TabType>("personal");
 
-  // Logged in user state (from Redux)
-  const {
-    user: loggedInUser,
-    loading: loggedInLoading,
-    updateProfile: handleUpdateProfile,
-  } = useProfileActions();
-
+  // Authentication & Global State
+  const { user: loggedInUser, loading: loggedInLoading, updateProfile: handleUpdateProfile } = useProfileActions();
   const subscription = useAppSelector((state) => state.subscription.currentSubscription);
-  const subscriptionLoading = useAppSelector((state) => state.subscription.loading);
 
-  // Target profile state (from API by username)
+  // Profile Specific State
   const [profileUser, setProfileUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // --- ROLE BASED LOGIC ---
   const isOwner = loggedInUser?.username === username;
   const isAdmin = checkIsAdmin(loggedInUser);
-  const isAdvocate = checkIsAdvocate(loggedInUser);
   const profileIsAdvocate = checkIsAdvocate(profileUser);
   const profileIsAdmin = checkIsAdmin(profileUser);
-  const showLegalSections = profileIsAdvocate || profileIsAdmin;
+
+  // Professional Check
+  const isProfessional = profileIsAdvocate || profileIsAdmin ||
+    (profileUser?.roles?.some(r =>
+      ['lawyer', 'law_student', 'legal_professional', 'advocate'].includes(r.slug?.toLowerCase() || r.name.toLowerCase())
+    ));
+
+  const showLegalSections = isProfessional;
   const canSeeFullData = isOwner || (viewContext === "admin" && isAdmin);
 
   useDocTitle(profileUser ? `${profileUser.name}'s Profile` : "Profile");
 
+  // Fetch Logic
   useEffect(() => {
     async function fetchProfile() {
       try {
         setLoading(true);
         const response = await profileApi.fetchProfileByUsername(username);
         if (response.data.success) {
-          const fetchedUser = response.data.data;
-
+          const fetchedUser = response.data.data as any;
           try {
-            // Fetch recent cases and articles concurrently
             const userId = fetchedUser._id || fetchedUser.id;
             const [casesRes, articlesRes] = await Promise.all([
-              casesService.getAll({ page: 1, limit: 12, createdBy: userId }).catch(e => { console.error("Cases Error:", e); return { data: null }; }),
-              articleApi.fetchArticles({ page: 1, limit: 12, authorId: userId }).catch(e => { console.error("Articles Error:", e); return { data: null }; })
+              casesService.getAll({ page: 1, limit: 12, createdBy: userId }).catch(() => ({ data: null })),
+              articleApi.fetchArticles({ page: 1, limit: 12, authorId: userId }).catch(() => ({ data: null }))
             ]);
 
-            const casesRespData = casesRes.data as any;
-            const casesData = casesRespData?.data?.data ?? casesRespData?.data ?? [];
-            const casesTotal = casesRespData?.data?.total ?? casesRespData?.total ?? 0;
+            const casesData = (casesRes?.data as any);
+            fetchedUser.cases = casesData?.data?.data ?? casesData?.data ?? [];
+            fetchedUser.totalCases = casesData?.data?.total_items ?? casesData?.total ?? fetchedUser.cases.length;
 
-            const articlesRespData = articlesRes.data as any;
-            const articlesData = articlesRespData?.data?.data ?? articlesRespData?.data ?? [];
-            const articlesTotal = articlesRespData?.meta?.total_items ?? articlesRespData?.meta?.totalItems ?? articlesRespData?.data?.meta?.totalItems ?? articlesRespData?.data?.total ?? articlesRespData?.total ?? 0;
-
-            fetchedUser.cases = Array.isArray(casesData) ? casesData : [];
-            fetchedUser.totalCases = casesTotal;
-
-            fetchedUser.articles = Array.isArray(articlesData) ? articlesData : [];
-            fetchedUser.totalArticles = articlesTotal;
-          } catch (e) {
-            console.error("Failed to load extra profile data", e);
-          }
-
+            const articlesData = (articlesRes?.data as any);
+            fetchedUser.articles = articlesData?.data ?? [];
+            fetchedUser.totalArticles = articlesData?.total ?? fetchedUser.articles.length;
+          } catch (e) { console.error("Mapping error:", e); }
           setProfileUser(fetchedUser);
-        } else {
-          setError(response.data.message || "Failed to load profile");
-        }
-      } catch (err: any) {
-        console.error("Error fetching profile by username:", err);
-        setError("Failed to load profile. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
+          setFormData(fetchedUser);
+        } else { setError(response.data.message || "User not found."); }
+      } catch (err) { setError("Connectivity lost."); } finally { setLoading(false); }
     }
-
-    if (username) {
-      fetchProfile();
-    }
+    if (username) fetchProfile();
   }, [username]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token && (isOwner || (viewContext === "admin" && isAdmin))) {
+    if (isOwner || (viewContext === "admin" && isAdmin)) {
       dispatch(getUserSubscription());
     }
   }, [dispatch, isOwner, viewContext, isAdmin]);
 
-  // UI State
+  // Modals & Forms State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const openEditModal = () => {
+    // Convert specialization array to a comma-separated string for editing
+    const editData = { ...profileUser };
+    if (Array.isArray(editData.specialization)) {
+      editData.specialization = editData.specialization.join(", ") as any;
+    }
+    setFormData(editData);
+    setIsModalOpen(true);
+  };
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState<any>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isSavedPostsModalOpen, setIsSavedPostsModalOpen] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [dirty, setDirty] = useState(false);
+  const [prefs, setPrefs] = useState({ language: currentLocale, doNotDisturb: false, caseStatusAlerts: true });
 
-  const [prefs, setPrefs] = useState({
-    language: currentLocale,
-    doNotDisturb: false,
-    caseStatusAlerts: true,
-  });
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const raw = localStorage.getItem("profile_prefs");
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        setPrefs((p) => ({ ...p, ...parsed }));
-      } catch { }
-    }
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fdfdfd]">
-        <Loader text="Loading Profile..." size="lg" />
-      </div>
-    );
-  }
-
-  if (error || !profileUser) {
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center p-4">
-        <div className="bg-red-50 text-red-600 p-6 rounded-xl border border-red-100 max-w-md text-center">
-          <h2 className="text-xl font-bold mb-2">Oops!</h2>
-          <p>{error || "Profile not found."}</p>
-          <button onClick={() => router.push(viewContext === "admin" ? "/admin" : "/")} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-            {viewContext === "admin" ? "Go to Dashboard" : "Go Home"}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const name = profileUser.name || "";
-  const email = profileUser.email || "";
-  const avatar = profileUser.profilePicture || null;
-
-  const getDisplayRoles = () => {
-    if (!profileUser?.roles || profileUser.roles.length === 0) return "User";
-    const roleNames = profileUser.roles.map(r => r.name.toLowerCase());
-
-    const categories: string[] = [];
-    if (roleNames.some(r => ["admin", "superadmin", "creator", "editor"].includes(r))) {
-      categories.push("Admin");
-    }
-
-    const legalRolesMap: Record<string, string> = {
-      "advocate": "Advocate",
-      "lawyer": "Lawyer",
-      "legal_advisor": "Legal Advisor",
-      "law_student": "Law Student"
-    };
-
-    let legalRoleLabel = "";
-    for (const r of roleNames) {
-      if (legalRolesMap[r]) {
-        legalRoleLabel = legalRolesMap[r];
-        break;
-      }
-    }
-
-    if (legalRoleLabel) {
-      categories.push(legalRoleLabel);
-    }
-
-    if (categories.length === 0) return "User";
-    return categories.join(" + ");
+  const handleLanguageChange = (nextLocale: string) => {
+    router.push(pathname, { locale: nextLocale as any });
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = "/";
-  };
-
-  const handleSavePreferences = () => {
+  const handleUpdate = async () => {
     setSaving(true);
     try {
-      localStorage.setItem("profile_prefs", JSON.stringify(prefs));
-      if (prefs.language !== currentLocale) {
-        router.replace(pathname, { locale: prefs.language });
+      // Final sanitization: convert specialization string back to a clean array
+      let finalSpecialization = formData.specialization;
+      if (typeof finalSpecialization === "string") {
+        finalSpecialization = finalSpecialization.split(",").map((s: string) => s.trim()).filter((s: string) => s !== "");
       }
-    } catch (err) {
-      console.error("Saving prefs failed", err);
-    }
-    setDirty(false);
-    setTimeout(() => setSaving(false), 600);
+
+      const sanitizedData = {
+        ...formData,
+        specialization: finalSpecialization,
+        yearsOfExperience: formData.yearsOfExperience ? Number(formData.yearsOfExperience) : 0
+      };
+      const res = await handleUpdateProfile(sanitizedData);
+      if (res.success) {
+        setProfileUser({ ...profileUser, ...sanitizedData } as any);
+        setIsModalOpen(false);
+      }
+    } finally { setSaving(false); }
   };
 
-  const handleCancelPreferences = () => {
-    const raw = localStorage.getItem("profile_prefs");
-    if (raw) {
-      try {
-        setPrefs(JSON.parse(raw));
-      } catch { }
-    }
-    setDirty(false);
+  const handleImageUpload = async () => {
+    if (!selectedFile) return;
+    setSaving(true);
+    try {
+      const response = await profileApi.updateProfile({ avatar: selectedFile });
+      if (response.data.success) {
+        setProfileUser({ ...profileUser!, profilePicture: response.data.data.profilePicture });
+        setIsImageModalOpen(false);
+      }
+    } finally { setSaving(false); }
   };
 
-  const triggerFileUpload = () => {
-    fileInputRef.current?.click();
-  };
+  const handleLogout = () => { localStorage.clear(); window.location.href = "/"; };
 
-  const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-      setIsImageModalOpen(true);
-    }
-  };
-
-  const handleConfirmImageUpload = async () => {
-    if (selectedFile) {
-      await handleUpdateProfile({ avatar: selectedFile });
-      handleCloseImageModal();
-      setProfileUser(prev => prev ? { ...prev, profilePicture: URL.createObjectURL(selectedFile) } : null);
-    }
-  };
-
-  const handleCloseImageModal = () => {
-    setIsImageModalOpen(false);
-    setPreviewUrl(null);
-    setSelectedFile(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleSaveProfileData = async (data: any) => {
-    await handleUpdateProfile(data);
-    setIsEditModalOpen(false);
-    setProfileUser(prev => prev ? { ...prev, ...data } : null);
-  };
+  if (loading) return <BentoSkeleton />;
+  if (error || !profileUser) return <BentoErrorView error={error} context={viewContext} router={router} />;
 
   return (
-    <div className="min-h-screen bg-[#fdfdfd] font-sans">
-      {/* 1. HERO HEADER AREA */}
-      <section className="relative pt-12 pb-16 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center text-center">
-          {/* Back Button */}
-          {!isOwner && (
-            <button
-              onClick={() => router.back()}
-              className="absolute left-4 top-4 sm:left-8 sm:top-8 flex items-center gap-2 text-gray-400 hover:text-gray-900 transition-colors group"
-            >
-              <ArrowLeft size={20} />
-              <span className="text-sm font-medium">Back</span>
-            </button>
-          )}
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-[#000d22] pb-32 text-[#0A2342] dark:text-white">
+      <div className="absolute top-0 inset-x-0 h-[60vh] bg-gradient-to-b from-[#0A2342]/10 to-transparent pointer-events-none" />
 
-          {/* Profile Picture with Gold Border */}
-          <div className="relative mb-8 pt-8">
-            <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl overflow-hidden border-[6px] border-[#C9A227]/20 shadow-xl relative group">
-              <div className="absolute inset-0 border-[2px] border-[#C9A227] rounded-2xl z-10 pointer-events-none" />
-              {avatar ? (
-                <Image src={avatar} alt="Avatar" fill className="object-cover" />
+      {/* 0. FLOATING BACK BUTTON - Only show if not viewing own profile */}
+      {!isOwner && (
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => router.back()}
+          className="absolute top-8 left-8 z-[60] flex items-center gap-3 px-5 py-3 bg-white/70 dark:bg-[#081b31]/60 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl hover:shadow-[#C9A227]/10 group transition-all ring-1 ring-black/5"
+        >
+          <ArrowLeft size={16} className="text-[#0A2342] dark:text-[#C9A227] group-hover:-translate-x-1 transition-transform" />
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#0A2342] dark:text-white hidden sm:inline">Return</span>
+        </motion.button>
+      )}
+
+      {/* 1. HERO */}
+      <section className="relative pt-24 pb-24 overflow-hidden text-center z-10">
+        <div className="max-w-6xl mx-auto px-4 relative">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative inline-block mb-12">
+            <div className="absolute inset-[-10px] bg-gradient-to-tr from-[#C9A227] via-[#0A2342]/10 to-[#C9A227] opacity-30 rounded-[50px] animate-[spin_12s_linear_infinite]" />
+            <div className="w-56 h-56 rounded-[40px] overflow-hidden border-4 border-white dark:border-[#0A2342] shadow-2xl relative group cursor-pointer" onClick={() => isOwner && fileInputRef.current?.click()}>
+              {profileUser.profilePicture ? (
+                <Image src={profileUser.profilePicture} alt="Avatar" fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
               ) : (
-                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                  <span className="text-5xl text-gray-300 ">{name ? name[0].toUpperCase() : "U"}</span>
-                </div>
+                <div className="w-full h-full bg-zinc-50 flex items-center justify-center text-6xl text-gray-300 font-serif">{profileUser.name?.[0].toUpperCase()}</div>
               )}
               {isOwner && (
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white cursor-pointer z-20" onClick={triggerFileUpload}>
-                  <Camera size={24} />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
+                  <Camera size={32} strokeWidth={1} className="mb-2" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Update Portrait</span>
                 </div>
               )}
             </div>
-            {/* Status Badge */}
-            {/* <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-[#C9A227] text-white text-[10px] font-bold tracking-widest px-4 py-1.5 rounded-full shadow-lg z-30 flex items-center gap-1.5">
-              <Award size={12} className="shrink-0" />
-              BOARD CERTIFIED
-            </div> */}
-          </div>
-
-          {/* User Details */}
-          <h1 className="text-4xl sm:text-5xl  text-[#0A2342] mb-3 tracking-tight">{name}</h1>
-          <p className="text-sm sm:text-base font-medium text-[#C9A227] tracking-[0.2em] uppercase mb-8">
-            {getDisplayRoles()}
             {profileIsAdvocate && (
-              <>
-                {profileUser.designation && !getDisplayRoles().toLowerCase().includes(profileUser.designation.toLowerCase()) && (
-                  <> &bull; {profileUser.designation}</>
-                )}
-                {!profileUser.designation && (
-                  <> &bull; LEGAL COUNSEL</>
-                )}
-                {" "} &bull; {profileUser.specialization && Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0 ? profileUser.specialization.join(", ") : (typeof profileUser.specialization === 'string' ? profileUser.specialization : "JURISPRUDENCE")}
-              </>
+              <motion.div initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1, transition: { delay: 0.6 } }} className="absolute -right-12 top-10 p-4 bg-white/80 dark:bg-[#0A2342]/40 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20">
+                <ShieldCheck size={24} className="text-[#C9A227]" />
+                <div className="absolute top-14 -right-2 bg-[#0A2342] text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-full">Verified</div>
+              </motion.div>
             )}
-          </p>
+          </motion.div>
 
-          {/* Badges Row */}
-          <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
-            {profileIsAdvocate && profileUser.barRegistrationNumber && (
-              <div className="flex items-center gap-2 bg-[#0A2342] text-white px-4 py-2.5 rounded-md text-xs font-semibold shadow-md">
-                <FileText size={14} className="text-[#C9A227]" />
-                Bar Registration #{profileUser.barRegistrationNumber}
-              </div>
-            )}
-            {profileIsAdvocate && profileUser.yearsOfExperience !== undefined && (
-              <div className="flex items-center gap-2 bg-[#0A2342] text-white px-4 py-2.5 rounded-md text-xs font-semibold shadow-md">
-                <Clock size={14} className="text-[#C9A227]" />
-                {profileUser.yearsOfExperience}+ Years of Experience
-              </div>
-            )}
-          </div>
+          <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-6xl sm:text-8xl font-serif text-[#0A2342] dark:text-white mb-4">
+            {profileUser.name}
+          </motion.h1>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs font-bold text-[#C9A227] tracking-[0.4em] uppercase mb-12">
+            <span className="text-[#0A2342] dark:text-white">
+              {(() => {
+                const d = profileUser.designation;
+                const r = profileUser.roles?.[0]?.name || "Member";
+                const displayRole = r.charAt(0).toUpperCase() + r.slice(1);
+                return (d && d.toUpperCase() !== "NULL" && d.trim() !== "") ? d : displayRole;
+              })()} | </span>
+            {Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0
+              ? profileUser.specialization.join(" • ")
+              : (isProfessional ? "Jurisdiction Pending" : "Community Registry")}
+          </motion.p>
 
-          {/* Bio/Quote */}
-          {profileUser.bio ? (
-            <blockquote className="max-w-2xl text-lg  text-gray-500  mb-10 leading-relaxed italic">
-              "{profileUser.bio}"
-            </blockquote>
-          ) : profileIsAdvocate ? (
-            <blockquote className="max-w-2xl text-lg  text-gray-500  mb-10 leading-relaxed italic">
-              "Advocacy is not merely the interpretation of statutes, but the guardianship of fundamental liberties. Every case is a testament to the pursuit of absolute justice."
-            </blockquote>
-          ) : null}
+          {/* Professional Narrative / Bio */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="max-w-2xl mx-auto mt-2 text-[13px] md:text-sm text-gray-500 dark:text-gray-400 font-medium italic leading-relaxed px-6"
+          >
+            {profileUser.bio || "Professional narrative pending registry update."}
+          </motion.div>
         </div>
       </section>
 
-      {/* 2. TAB NAVIGATION */}
-      <section className="sticky top-0 z-10 bg-white border-y border-gray-100 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 overflow-x-auto">
-          <div className="flex items-center justify-center whitespace-nowrap py-4 gap-2 sm:gap-8 min-w-max">
-            <TabButton active={activeTab === "personal"} onClick={() => setActiveTab("personal")} label="Personal Info" icon={<User size={18} />} />
-            {isOwner && <TabButton active={activeTab === "saved"} onClick={() => setActiveTab("saved")} label="Saved Content" icon={<Heart size={18} />} />}
-            {showLegalSections && <TabButton active={activeTab === "cases"} onClick={() => setActiveTab("cases")} label="Legal Portfolio" icon={<Briefcase size={18} />} />}
-            {showLegalSections && <TabButton active={activeTab === "articles"} onClick={() => setActiveTab("articles")} label="Articles" icon={<FileText size={18} />} />}
-            {isOwner && <TabButton active={activeTab === "settings"} onClick={() => setActiveTab("settings")} label="Settings" icon={<Settings size={18} />} />}
-          </div>
-        </div>
-      </section>
+      {/* 2. BENTO CONTENT */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 
-      {/* 3. MODULAR CONTENT AREA */}
-      <main className="max-w-6xl mx-auto px-4 py-16">
-        {/* PERSONAL INFO TAB */}
-        {activeTab === "personal" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-2xl  text-[#0A2342] mb-6">Biographical details</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <DataField label="Full Name" value={name} />
-                    <DataField label="Email Address" value={canSeeFullData ? email : email.replace(/(.{3})(.*)(?=@)/, '$1***')} />
-                    {profileUser.phone && <DataField label="Contact Phone" value={canSeeFullData ? profileUser.phone : profileUser.phone.replace(/.(?=.{4})/g, '*')} />}
-                    {profileUser.dob && <DataField label="Date of Birth" value={formatDate(profileUser.dob)} />}
-                  </div>
-                </div>
-
-                <div>
-                  <h2 className="text-2xl  text-[#0A2342] mb-6">Geographic Reach</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-6">
-                    <DataField label={profileIsAdvocate ? "Primary City" : "City"} value={profileUser.city || "Not Specified"} />
-                    <DataField label={profileIsAdvocate ? "Jurisdiction State" : "State"} value={profileUser.state || "Not Specified"} />
-                  </div>
-                  {isOwner && !profileIsAdvocate && (
-                    <button
-                      onClick={() => setIsEditModalOpen(true)}
-                      className="mt-6 w-full py-4 border-2 border-[#1d4ed8] text-[#1d4ed8] font-bold rounded-xl hover:bg-white transition-all text-sm tracking-widest uppercase"
-                    >
-                      Update Profile Info
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {profileIsAdvocate && (
-                <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-xl  text-[#0A2342] mb-4">Professional Overview</h3>
-                    <div className="space-y-6 mb-8">
-                      <DataField label="Official Designation" value={profileUser.designation} />
-                      <DataField label="Core Specialization" value={profileUser.specialization} />
-                      <DataField label="Cumulative Experience" value={profileUser.yearsOfExperience ? `${profileUser.yearsOfExperience} Years` : null} />
-                    </div>
-                  </div>
-                  {isOwner && (
-                    <button
-                      onClick={() => setIsEditModalOpen(true)}
-                      className="w-full py-4 border-2 border-[#1d4ed8] text-[#1d4ed8] font-bold rounded-xl hover:bg-white transition-all text-sm tracking-widest uppercase"
-                    >
-                      Edit Professional Profile
-                    </button>
-                  )}
-                </div>
-              )}
+          <aside className="lg:col-span-3 sticky top-24 z-20">
+            <div className="flex flex-col gap-2 p-2 bg-white/50 dark:bg-[#0A2342]/10 backdrop-blur-xl rounded-[32px] border border-white/20 shadow-xl shadow-black/5">
+              {[
+                { id: "personal", label: "Identity", icon: User, show: true },
+                { id: "saved", label: "Vault", icon: Heart, show: isOwner },
+                { id: "cases", label: "Portfolio", icon: Briefcase, show: showLegalSections },
+                { id: "articles", label: "Insights", icon: FileText, show: showLegalSections },
+                { id: "settings", label: "Account", icon: Settings, show: isOwner },
+              ].filter(t => t.show).map(tab => (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id as TabType)} className={`relative flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${activeTab === tab.id ? "bg-white dark:bg-[#0A2342]/40 text-[#0A2342] shadow-sm" : "text-gray-400 hover:text-gray-600"}`}>
+                  <div className={`p-1.5 rounded-xl ${activeTab === tab.id ? "bg-[#C9A227] text-white" : "bg-transparent"}`}><tab.icon size={16} /></div>
+                  <span className="text-[11px] font-bold uppercase tracking-widest">{tab.label}</span>
+                </button>
+              ))}
             </div>
-          </div>
-        )}
+          </aside>
 
-        {/* SAVED CONTENT TAB */}
-        {activeTab === "saved" && isOwner && (
-          <SavedPostsList />
-        )}
+          <div className="lg:col-span-9 pb-20">
+            <AnimatePresence mode="wait">
+              <motion.div key={activeTab} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
 
-        {/* CASES TAB */}
-        {activeTab === "cases" && showLegalSections && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="mb-12">
-              <h4 className="text-[#C9A227] text-xs font-bold tracking-widest uppercase mb-2">Legal Portfolio</h4>
-              <div className="flex items-end justify-between">
-                <h2 className="text-4xl  text-[#0A2342]">Significant Jurisprudence & Case Resolutions</h2>
-                {profileUser.totalCases !== undefined && (
-                  <div className="text-right">
-                    <div className="text-2xl font-serif text-[#C9A227]">{profileUser.totalCases}</div>
-                    <div className="text-[10px] font-bold tracking-widest uppercase text-gray-400">Total Matters</div>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {profileUser.cases && profileUser.cases.length > 0 ? (
-                profileUser.cases.map(item => (
-                  <CaseCard
-                    key={item.id}
-                    id={item.id}
-                    category={item.caseType?.toUpperCase() || "MATTER"}
-                    title={item.title}
-                    court={`${item.court} • No: ${item.caseNumber}`}
-                    icon={<Briefcase size={16} />}
-                  />
-                ))
-              ) : (
-                <div className="col-span-full py-20 text-center border-2 border-dashed border-gray-100 rounded-3xl">
-                  <Briefcase size={40} className="mx-auto text-gray-200 mb-4" />
-                  <p className="text-gray-400 text-sm italic">No litigation records found in the current portfolio.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+                {activeTab === "personal" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-        {/* ARTICLES TAB */}
-        {activeTab === "articles" && showLegalSections && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-end justify-between mb-12">
-              <h2 className="text-4xl  text-[#0A2342]">Editorial Insights & Legal Analysis</h2>
-              {profileUser.totalArticles !== undefined && (
-                <div className="text-right">
-                  <div className="text-2xl font-serif text-[#C9A227]">{profileUser.totalArticles}</div>
-                  <div className="text-[10px] font-bold tracking-widest uppercase text-gray-400">Publications</div>
-                </div>
-              )}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {profileUser.articles && profileUser.articles.length > 0 ? (
-                profileUser.articles.map(item => (
-                  <ArticleCard
-                    key={item.id}
-                    slug={item.slug}
-                    category={item.category?.name?.toUpperCase() || "ARTICLE"}
-                    readTime={`${item.readTime || 5} min read`}
-                    title={item.title}
-                    image={item.thumbnail || logo}
-                  />
-                ))
-              ) : (
-                <div className="col-span-full py-20 text-center border-2 border-dashed border-gray-100 rounded-3xl">
-                  <FileText size={40} className="mx-auto text-gray-200 mb-4" />
-                  <p className="text-gray-400 text-sm italic">No editorial insights have been published yet.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+                    {/* STATS: Professionals only */}
+                    {isProfessional && (
+                      <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-6 mb-4">
+                        <BentoStatCard label={profileIsAdvocate ? "Litigation" : "Contributions"} value={profileUser.totalCases || 0} icon={Briefcase} description="Resolution metrics." delay={0.1} />
+                        <BentoStatCard label="Insights" value={profileUser.totalArticles || 0} icon={FileText} description="Published research." delay={0.2} />
+                        <BentoStatCard label="Tenure" value={profileUser.yearsOfExperience || "Admin"} icon={Clock} description="Registry time." delay={0.3} />
+                      </div>
+                    )}
 
-        {/* SETTINGS TAB */}
-        {activeTab === "settings" && isOwner && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <SettingsCard
-                title="Notifications"
-                icon={<MessageSquare size={20} />}
-                description="Manage case alerts and communication preferences"
-              >
-                <div className="space-y-4 pt-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Do not disturb</span>
-                    <ToggleSwitch checked={prefs.doNotDisturb} onChange={(val) => { setPrefs(p => ({ ...p, doNotDisturb: val })); setDirty(true); }} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Case Status Alerts</span>
-                    <ToggleSwitch checked={prefs.caseStatusAlerts} onChange={(val) => { setPrefs(p => ({ ...p, caseStatusAlerts: val })); setDirty(true); }} />
-                  </div>
-                </div>
-              </SettingsCard>
+                    <BentoCard title="Identity & Access" subtitle="Personal" className="md:col-span-1">
+                      <div className="space-y-6 mt-6">
+                        <TonalField label="Full Legal Name" value={profileUser.name} />
+                        <TonalField
+                          label="Professional Title"
+                          value={(profileUser.designation && profileUser.designation !== "null" && profileUser.designation !== "NULL")
+                            ? profileUser.designation
+                            : (profileUser.roles?.[0]?.name || "Affiliate Member")}
+                          icon={Award}
+                        />
+                        <TonalField label="Mobile Contact" value={profileUser.phone || "Not Set"} icon={Phone} />
+                        {/* Only show Expertise Network for professionals or if data exists */}
+                        {(isProfessional || (Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0)) && (
+                          <div className="space-y-2">
+                            <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest block mb-4">Expertise Network</span>
+                            <div className="flex flex-wrap gap-2">
+                              {Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0 ? (
+                                profileUser.specialization.map((s: string) => (
+                                  <span key={s} className="px-3 py-1.5 bg-[#C9A227]/10 text-[#C9A227] text-[8px] font-black uppercase rounded-xl border border-[#C9A227]/10 shadow-sm">
+                                    {s}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-xs italic text-gray-400">Jurisdiction Pending</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
 
-              <SettingsCard
-                title="Languages"
-                icon={<BookOpen size={20} />}
-                description="Choose your preferred interface language"
-              >
-                <div className="pt-4">
-                  <CustomSelect
-                    value={prefs.language}
-                    onChange={(v) => { setPrefs(p => ({ ...p, language: v })); setDirty(true); }}
-                    options={[{ value: "en", label: "English" }, { value: "hi", label: "हिन्दी (Hindi)" }, { value: "mr", label: "मराठी (Marathi)" }]}
-                  />
-                </div>
-              </SettingsCard>
+                        <TonalField label="Location" value={profileUser.city && profileUser.state ? `${profileUser.city}, ${profileUser.state}` : (profileUser.state || profileUser.city || "Registry Pending")} icon={MapPin} />
 
-              <SettingsCard
-                title="Subscription Plans"
-                icon={<Award size={20} />}
-                description="Manage your current membership and upgrades"
-                badge={subscription ? (
-                  <div className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${subscription.status === 'active' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
-                    {subscription.status}
-                  </div>
-                ) : null}
-              >
-                <div className="pt-4">
-                  {subscriptionLoading ? (
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <div className="w-3 h-3 border-2 border-gray-200 border-t-[#C9A227] rounded-full animate-spin" />
-                      Loading details...
-                    </div>
-                  ) : subscription ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Plan name :</div>
-                        <div className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${subscription.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                          {subscription.planName || "PREMIUM PLAN"}
+                        {/* Private DOB - Owner Only */}
+                        {isOwner && profileUser.dob && (
+                          <div className="p-4 bg-[#C9A227]/5 border border-[#C9A227]/20 rounded-2xl">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Shield size={12} className="text-[#C9A227]" />
+                                <span className="text-[10px] text-[#C9A227] uppercase font-black tracking-widest">DOB</span>
+                              </div>
+                              <span className="text-xs font-bold text-[#0A2342] dark:text-white">
+                                {!isNaN(new Date(profileUser.dob).getTime())
+                                  ? new Date(profileUser.dob).toLocaleDateString()
+                                  : "Registry Pending"}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </BentoCard>
+
+                    {isProfessional && (
+                      <BentoCard title="Professional Reach" subtitle="Jurisdictions">
+                        <div className="space-y-8 mt-6">
+                          {/* {!profileIsAdvocate && <TonalField label="Associated Court" value={profileUser.court} icon={Gavel} />} */}
+                          <TonalField label="Active Registry" value={`${profileUser.city ?? ''}, ${profileUser.state ?? ''}`} icon={MapPin} />
+                          {profileIsAdvocate && <TonalField label="Bar Membership" value={`Ref #${profileUser.barRegistrationNumber}`} icon={ShieldCheck} />}
                         </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Starting date:</div>
-                        <div className="text-sm text-[#0A2342] font-semibold">{formatDate(subscription.startDate)}</div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Ending date:</div>
-                        <div className="text-sm text-[#0A2342] font-semibold">{formatDate(subscription.endDate)}</div>
-                      </div>
-                      <div className="flex justify-end pt-2">
-                        <Link href="/subscription" className="text-xs font-bold text-[#C9A227] !no-underline bg-[#C9A227]/10 px-4 py-2 rounded-lg hover:bg-[#C9A227]/20 transition-all">Upgrade</Link>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <div className="text-[10px] font-bold px-3 py-1 bg-gray-100 text-gray-500 rounded-full uppercase tracking-widest">
-                        FREE TIER — NO ACTIVE PLAN
-                      </div>
-                      <Link href="/subscription" className="text-xs font-bold text-[#C9A227] !no-underline">UPGRADE</Link>
-                    </div>
-                  )}
-                </div>
-              </SettingsCard>
+                      </BentoCard>
+                    )}
 
-              <SettingsCard
-                title="Security & Auth"
-                icon={<Settings size={20} />}
-                description="Reset password or sign out of your account"
-              >
-                <div className="space-y-3 pt-4">
-                  <button
-                    onClick={() => router.push(`/auth/forgot-password?Step=reset&email=${email}`)}
-                    className="w-full flex items-center justify-between text-sm text-gray-600 hover:text-gray-900 group"
-                  >
-                    Reset Password
-                    <ArrowLeft size={16} className="rotate-180 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                  <button
-                    onClick={() => setShowLogoutConfirm(true)}
-                    className="w-full flex items-center justify-between text-sm text-red-500 font-medium hover:text-red-700 group"
-                  >
-                    Sign Out
-                    <ArrowLeft size={16} className="rotate-180 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
-              </SettingsCard>
-            </div>
+                    {isOwner && (
+                      <div className="md:col-span-2">
+                        <button onClick={openEditModal} className="w-full py-8 bg-[#0A2342] text-white rounded-[32px] shadow-2xl text-[11px] font-bold tracking-widest uppercase flex items-center justify-center gap-4 hover:bg-[#153a66] transition-all">
+                          Update Credentials <ChevronRight size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-            {dirty && (
-              <div className="mt-12 flex justify-center gap-4">
-                <button onClick={handleCancelPreferences} className="px-8 py-3 rounded-full border border-gray-200 text-sm font-bold tracking-widest uppercase hover:bg-white transition-all">Revert</button>
-                <button onClick={handleSavePreferences} disabled={saving} className="px-8 py-3 rounded-full bg-[#C9A227] text-white text-sm font-bold tracking-widest uppercase shadow-lg hover:shadow-[#C9A227]/20 transition-all">{saving ? "Applying..." : "Save Preferences"}</button>
-              </div>
-            )}
+                {activeTab === "saved" && isOwner && <SavedPostsList />}
+
+                {activeTab === "cases" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {profileUser.cases?.map((c: any, i: number) => (
+                      <CaseBentoLink key={c.id} caseData={c} delay={i * 0.1} />
+                    ))}
+                    {(!profileUser.cases || profileUser.cases.length === 0) && <EmptyState icon={Briefcase} message="No case records found." />}
+                  </div>
+                )}
+
+                {activeTab === "articles" && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {profileUser.articles?.map((a: any, i: number) => (
+                      <ArticleBentoLink key={a.id} articleData={a} delay={i * 0.1} logo={logo} />
+                    ))}
+                    {(!profileUser.articles || profileUser.articles.length === 0) && <EmptyState icon={FileText} message="No published insights." />}
+                  </div>
+                )}
+
+                {/* 2.5 ACCOUNT SETTINGS (NEW REDESIGN) */}
+                {activeTab === "settings" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                    {/* A. Notifications */}
+                    <BentoCard title="Notifications" subtitle="Communication Prefs">
+                      <p className="text-[10px] text-gray-400 mb-6 font-serif italic">Manage case alerts and communication preferences.</p>
+                      <div className="space-y-4">
+                        <ToggleItem
+                          label="Do not disturb"
+                          checked={prefs.doNotDisturb}
+                          onChange={(v: any) => setPrefs({ ...prefs, doNotDisturb: v })}
+                          icon={Shield}
+                        />
+                        <ToggleItem
+                          label="Case Status Alerts"
+                          checked={prefs.caseStatusAlerts}
+                          onChange={(v: any) => setPrefs({ ...prefs, caseStatusAlerts: v })}
+                          icon={Bell}
+                        />
+                      </div>
+                    </BentoCard>
+
+                    {/* B. Languages */}
+                    <BentoCard title="Languages" subtitle="Localization">
+                      <p className="text-[10px] text-gray-400 mb-6 font-serif italic">Choose your preferred interface language.</p>
+                      <div className="space-y-3">
+                        {/* English Selector */}
+                        <button
+                          onClick={() => handleLanguageChange("en")}
+                          className={`w-full p-5 rounded-[24px] flex items-center justify-between border transition-all ${currentLocale === "en" ? "bg-[#C9A227]/5 border-[#C9A227]/20 shadow-sm" : "bg-transparent border-gray-100 hover:border-gray-200"
+                            }`}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`p-2 rounded-xl transition-colors ${currentLocale === "en" ? "bg-[#C9A227] text-white" : "bg-gray-100 text-gray-400"}`}>
+                              <Languages size={18} />
+                            </div>
+                            <span className="text-xs font-bold text-[#0A2342] dark:text-white">English</span>
+                          </div>
+                          {currentLocale === "en" && (
+                            <span className="px-3 py-1 bg-[#C9A227] text-white text-[8px] font-black rounded-full uppercase tracking-tighter">Active</span>
+                          )}
+                        </button>
+
+                        {/* Hindi Selector */}
+                        <button
+                          onClick={() => handleLanguageChange("hi")}
+                          className={`w-full p-5 rounded-[24px] flex items-center justify-between border transition-all ${currentLocale === "hi" ? "bg-[#C9A227]/5 border-[#C9A227]/20 shadow-sm" : "bg-transparent border-gray-100 hover:border-gray-200"
+                            }`}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`p-2 rounded-xl transition-colors ${currentLocale === "hi" ? "bg-[#C9A227] text-white" : "bg-gray-100 text-gray-400"}`}>
+                              <Languages size={18} />
+                            </div>
+                            <span className="text-xs font-bold text-[#0A2342] dark:text-white">Hindi</span>
+                          </div>
+                          {currentLocale === "hi" && (
+                            <span className="px-3 py-1 bg-[#C9A227] text-white text-[8px] font-black rounded-full uppercase tracking-tighter">Active</span>
+                          )}
+                        </button>
+                      </div>
+                    </BentoCard>
+
+                    {/* C. Subscription Plans */}
+                    <BentoCard title="Subscription Plans" subtitle="Membership Status">
+                      <p className="text-[10px] text-gray-400 mb-6 font-serif italic">Manage your current membership and upgrades.</p>
+                      <div className="space-y-4 p-6 bg-gray-50 dark:bg-white/5 rounded-[24px]">
+                        <div className="flex justify-between items-center group">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Plan Name</span>
+                          <span className="text-xs font-black text-[#0A2342]">{subscription?.planName || "Basic Plan"}</span>
+                        </div>
+                        <div className="flex justify-between items-center group">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Starting Date</span>
+                          <span className="text-xs font-semibold">{formatDate(subscription?.startDate || "2026-03-14")}</span>
+                        </div>
+                        <div className="flex justify-between items-center pb-2">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ending Date</span>
+                          <span className="text-xs font-semibold">{formatDate(subscription?.endDate || "2026-04-13")}</span>
+                        </div>
+                        <Link href="/subscription" className="block w-full py-4 bg-[#0A2342] text-white text-center rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#0A2342]/10 hover:bg-[#1a3a5f] transition-all">
+                          Upgrade
+                        </Link>
+                      </div>
+                    </BentoCard>
+
+                    {/* D. Security & Auth */}
+                    <BentoCard title="Security & Auth" subtitle="Access Control">
+                      <p className="text-[10px] text-gray-400 mb-6 font-serif italic">Reset password or sign out of your account.</p>
+                      <div className="space-y-3">
+                        <Link
+                          href="/auth/forgot-password"
+                          className="w-full flex items-center justify-between p-4 bg-white dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-2xl group hover:border-[#C9A227]/30 transition-all"
+                        >
+                          <div className="flex items-center gap-4">
+                            <Key size={18} className="text-[#0A2342] dark:text-[#C9A227]" />
+                            <span className="text-xs font-bold text-[#0A2342] dark:text-white">Reset Password</span>
+                          </div>
+                          <ChevronRight size={16} className="text-gray-300 group-hover:text-[#C9A227] transition-colors" />
+                        </Link>
+                        <button onClick={() => setShowLogoutConfirm(true)} className="w-full flex items-center justify-between p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-all">
+                          <div className="flex items-center gap-4">
+                            <LogOut size={18} />
+                            <span className="text-xs font-bold">Sign Out</span>
+                          </div>
+                        </button>
+                      </div>
+                    </BentoCard>
+
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
-        )}
+        </div>
       </main>
 
-      {/* 4. FOOTER CTA SECTION */}
-      {/* <section className="bg-[#0A2342] py-24 mt-20 text-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]" />
-        <div className="max-w-4xl mx-auto px-4 relative z-10">
-          <h2 className="text-4xl sm:text-5xl  text-white mb-6 tracking-tight">Experience Matters. Excellence Prevails.</h2>
-          <p className="text-gray-400 text-lg mb-10 leading-relaxed   max-w-2xl mx-auto">
-            Retain the counsel of one of the most distinguished legal minds in the sector for your corporate or private legal requirements.
-          </p>
-          <button className="bg-[#C9A227] text-[#0A2342] px-12 py-5 rounded-md text-sm font-bold tracking-[0.2em] uppercase hover:bg-[#b08d21] transition-all shadow-2xl flex items-center gap-3 mx-auto">
-            Secure Legal Consultation
-            <Calendar size={18} />
-          </button>
-        </div>
-      </section> */}
-
-      {/* MODALS */}
-      {showLogoutConfirm && <LogoutModal onCancel={() => setShowLogoutConfirm(false)} onConfirm={handleLogout} />}
-      {isImageModalOpen && (
-        <ImagePreviewModal
-          url={previewUrl}
-          onClose={handleCloseImageModal}
-          onChange={triggerFileUpload}
-          onSave={handleConfirmImageUpload}
-        />
-      )}
-      {isEditModalOpen && (
-        <EditProfileModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          currentUser={profileUser}
-          onSave={handleSaveProfileData}
-          isAdvocate={isAdvocate}
-        />
-      )}
-      {/* Redundant modal removed as per user request for inline view */}
-
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={onFileSelect}
-        accept="image/*"
-        className="hidden"
-      />
+      {/* 3. MODALS */}
+      <input type="file" ref={fileInputRef} onChange={(e) => { if (e.target.files?.[0]) { const file = e.target.files[0]; setSelectedFile(file); setPreviewUrl(URL.createObjectURL(file)); setIsImageModalOpen(true); } }} accept="image/*" className="hidden" />
+      <AnimatePresence>
+        {isModalOpen && (
+          <EditProfileModal onClose={() => setIsModalOpen(false)} formData={formData} setFormData={setFormData} onSave={handleUpdate} saving={saving} isProfessional={isProfessional} />
+        )}
+        {isImageModalOpen && (
+          <ImagePreviewModal url={previewUrl!} onClose={() => setIsImageModalOpen(false)} onConfirm={handleImageUpload} saving={saving} />
+        )}
+        {showLogoutConfirm && (
+          <LogoutOverlay onCancel={() => setShowLogoutConfirm(false)} onConfirm={handleLogout} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-// SUB-COMPONENTS
+// --- SUB-COMPONENTS ---
 
-function TabButton({ active, onClick, label, icon }: { active: boolean; onClick: () => void; label: string; icon: React.ReactNode }) {
+function TonalField({ label, value, icon: Icon }: any) {
+  const display = Array.isArray(value) ? value.join(", ") : value;
   return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-2.5 px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${active
-        ? "bg-[#0A2342] text-[#C9A227] shadow-lg shadow-[#0A2342]/10"
-        : "text-gray-400 hover:text-gray-900 hover:bg-gray-50"
-        }`}
-    >
-      {icon}
-      <span>{label}</span>
-    </button>
-  );
-}
-
-function DataField({ label, value }: { label: string; value: string | string[] | undefined | null }) {
-  const displayValue = Array.isArray(value) ? value.join(", ") : value;
-  return (
-    <div className="space-y-1">
-      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{label}</label>
-      <div className="text-base text-[#0A2342] font-medium border-b border-gray-100 pb-2">
-        {displayValue || <span className="text-gray-300 ">Not Disclosed</span>}
+    <div className="group">
+      <div className="flex items-center gap-2 mb-2 opacity-50">
+        {Icon && <Icon size={12} className="text-[#C9A227]" />}
+        <label className="text-[9px] font-extrabold uppercase tracking-widest">{label}</label>
       </div>
+      <div className="text-sm font-semibold border-b border-gray-100 dark:border-white/5 pb-3 group-hover:border-[#C9A227]/30 transition-all">{display || "---"}</div>
     </div>
   );
 }
 
-function CaseCard({ id, category, title, court, icon }: { id: string; category: string; title: string; court: string; icon: React.ReactNode }) {
+function CaseBentoLink({ caseData, delay }: any) {
   return (
-    <Link href={`/cases/${id}`}>
-      <div className="bg-white border border-gray-100 p-6 rounded-xl hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer h-full">
+    <Link href={`/cases/${caseData.id}`}>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }} className="h-full bg-white/70 dark:bg-[#0A2342]/10 p-8 rounded-[40px] border border-white/20 group hover:shadow-2xl transition-all">
         <div className="flex justify-between items-start mb-6">
-          <span className="text-[9px] font-bold tracking-widest text-[#C9A227] uppercase">{category}</span>
-          <div className="text-gray-300 group-hover:text-[#0A2342] transition-colors">{icon}</div>
+          <span className="text-[10px] font-black text-[#C9A227] uppercase tracking-widest">{caseData.caseType || "Case"}</span>
+          <div className="p-2 rounded-xl bg-gray-50 dark:bg-white/5"><Briefcase size={16} /></div>
         </div>
-        <h3 className="text-lg  text-[#0A2342] mb-3 leading-tight font-serif group-hover:text-[#C9A227] transition-colors">{title}</h3>
-        <p className="text-xs text-gray-500 leading-relaxed font-sans">{court}</p>
-      </div>
+        <h3 className="text-2xl font-serif mb-4 line-clamp-2">{caseData.title}</h3>
+        <p className="text-xs text-black/40 line-clamp-2 italic">Registry: {caseData.court}</p>
+      </motion.div>
     </Link>
   );
 }
 
-function ArticleCard({ slug, category, readTime, title, image }: { slug: string; category: string; readTime: string; title: string; image: string }) {
+function ArticleBentoLink({ articleData, delay, logo }: any) {
   return (
-    <Link href={`/news/${slug}`} className="group">
-      <div className="cursor-pointer">
-        <div className="aspect-[4/3] rounded-2xl overflow-hidden mb-4 relative shadow-md">
-          <Image src={image} alt={title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-          <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+    <Link href={`/news/${articleData.slug}`}>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }} className="group">
+        <div className="aspect-[4/5] rounded-[40px] overflow-hidden relative mb-6 shadow-xl group-hover:shadow-2xl transition-all duration-700">
+          <Image src={articleData.thumbnail || logo} alt="Insight" fill className="object-cover group-hover:scale-110 transition-transform duration-1000" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A2342]/90 to-transparent p-8 flex flex-col justify-end">
+            <span className="text-[10px] font-black text-[#C9A227] uppercase tracking-widest mb-3">{articleData.category?.name || "Editorial"}</span>
+            <h3 className="text-xl font-serif text-white leading-snug line-clamp-3">{articleData.title}</h3>
+          </div>
         </div>
-        <div className="flex items-center gap-3 mb-2.5">
-          <span className="text-[9px] font-bold tracking-widest text-[#C9A227] uppercase">{category}</span>
-          <span className="w-1 h-1 rounded-full bg-gray-300" />
-          <span className="text-[9px] font-bold tracking-widest text-gray-400 uppercase">{readTime}</span>
-        </div>
-        <h3 className="text-sm  text-[#0A2342] leading-snug group-hover:text-[#C9A227] transition-colors font-serif">{title}</h3>
-      </div>
+      </motion.div>
     </Link>
   );
 }
 
-function SettingsCard({ title, icon, description, children, badge }: { title: string; icon: React.ReactNode; description: string; children: React.ReactNode; badge?: React.ReactNode }) {
+function ToggleItem({ label, checked, onChange, icon: Icon }: any) {
   return (
-    <div className="bg-white p-8 rounded-2xl border-2 border-gray-50 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
-      {badge && (
-        <div className="absolute top-4 right-4 z-10">
-          {badge}
-        </div>
-      )}
-      <div className="flex items-start gap-4 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-[#0A2342]">
-          {icon}
-        </div>
-        <div>
-          <h4 className="text-sm font-bold text-[#0A2342]">{title}</h4>
-          <p className="text-[10px] text-gray-400">{description}</p>
-        </div>
+    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-2xl">
+      <div className="flex items-center gap-4">
+        <Icon size={18} className="text-[#0A2342] dark:text-[#C9A227]" />
+        <span className="text-xs font-bold">{label}</span>
       </div>
-      {children}
+      <button onClick={() => onChange(!checked)} className={`relative w-12 h-6 rounded-full transition-colors ${checked ? 'bg-[#C9A227]' : 'bg-gray-200'}`}>
+        <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-all ${checked ? 'translate-x-6' : 'translate-x-0'}`} />
+      </button>
     </div>
   );
 }
 
-function ImagePreviewModal({ url, onClose, onChange, onSave }: { url: string | null; onClose: () => void; onChange: () => void; onSave: () => void }) {
+function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isProfessional }: any) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A2342]/80 backdrop-blur-md">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden animate-in zoom-in-95 duration-300">
-        <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100">
-          <h3 className="text-lg  text-[#0A2342]">Portrait Preview</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-red-500 transition-colors"><X size={24} /></button>
-        </div>
-        <div className="p-8 flex flex-col items-center">
-          <div className="w-56 h-56 rounded-3xl overflow-hidden border-[6px] border-gray-50 shadow-inner mb-8 relative">
-            {url && <Image src={url} alt="Preview" fill className="object-cover" />}
-          </div>
-          <div className="flex gap-4 w-full">
-            <button onClick={onChange} className="flex-1 px-4 py-3.5 border border-gray-200 rounded-xl text-gray-600 font-bold text-xs tracking-widest uppercase hover:bg-gray-50 transition-all">Change</button>
-            <button onClick={onSave} className="flex-1 px-4 py-3.5 bg-[#C9A227] text-white rounded-xl font-bold text-xs tracking-widest uppercase shadow-lg hover:shadow-[#C9A227]/20 transition-all">Set Portrait</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EditProfileModal({ isOpen, onClose, currentUser, onSave, isAdvocate }: { isOpen: boolean; onClose: () => void; currentUser: UserData; onSave: (data: any) => Promise<void>; isAdvocate: boolean }) {
-  const [formData, setFormData] = useState<Partial<UserData>>(currentUser);
-  const handleSave = () => {
-    if (!formData.name?.trim()) {
-      toast.error("Full Name is required");
-      return;
-    }
-    if (isAdvocate) {
-      if (formData.yearsOfExperience !== undefined && (isNaN(Number(formData.yearsOfExperience)) || Number(formData.yearsOfExperience) < 0 || Number(formData.yearsOfExperience) > 100)) {
-        toast.error("Please enter a valid number for Experience (0-100)");
-        return;
-      }
-      if (!formData.designation) {
-        toast.error("Professional Designation is required");
-        return;
-      }
-      if (!formData.specialization || (Array.isArray(formData.specialization) && formData.specialization.length === 0)) {
-        toast.error("At least one Core Specialization is required");
-        return;
-      }
-    }
-    onSave(formData);
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A2342]/60 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full animate-in slide-in-from-bottom-8 duration-500 overflow-hidden">
-        <div className="flex justify-between items-center px-8 py-6 border-b border-gray-100 bg-gray-50/50">
-          <h3 className="text-xl  text-[#0A2342]">Administrative Profile Update</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-800 transition-colors"><X size={24} /></button>
-        </div>
-        <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <InputField label="Full Legal Name" value={formData.name} onChange={(val) => setFormData({ ...formData, name: val })} />
-            <InputField label="Primary Contact Number" value={formData.phone} onChange={(val) => setFormData({ ...formData, phone: val })} />
-            <InputField label="Date of Birth" type="date" value={formData.dob} onChange={(val) => setFormData({ ...formData, dob: val })} />
-            <InputField label={checkIsAdvocate(currentUser) ? "Resident City" : "City"} value={formData.city} onChange={(val) => setFormData({ ...formData, city: val })} />
-            <InputField label={checkIsAdvocate(currentUser) ? "Jurisdiction State" : "State"} value={formData.state} onChange={(val) => setFormData({ ...formData, state: val })} />
-            <div className="md:col-span-2">
-              <TextAreaField label="Professional Biography (Bio)" value={formData.bio} onChange={(val) => setFormData({ ...formData, bio: val })} />
-            </div>
-
-            {isAdvocate && (
-              <>
-                <InputField label="Professional Designation" value={formData.designation} onChange={(val) => setFormData({ ...formData, designation: val })} />
-                <InputField label="Experience (Years)" type="number" value={formData.yearsOfExperience} onChange={(val) => setFormData({ ...formData, yearsOfExperience: val ? Number(val) : undefined })} />
-                <InputField label="Bar Registration Number" value={formData.barRegistrationNumber} onChange={(val) => setFormData({ ...formData, barRegistrationNumber: val })} />
-                <div className="md:col-span-2 space-y-2">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Core Specialization</label>
-                  <div className="flex flex-wrap gap-2 min-h-[40px] p-2 bg-gray-50/30 border-2 border-gray-50 rounded-xl">
-                    {Array.isArray(formData.specialization) ? formData.specialization?.map((spec, idx) => (
-                      <span key={idx} className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white text-[#C9A227] border border-gray-100 shadow-sm">
-                        {spec}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newSpecs = [...(formData.specialization || [])];
-                            newSpecs.splice(idx, 1);
-                            setFormData({ ...formData, specialization: newSpecs });
-                          }}
-                          className="ml-1.5 text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <X size={10} />
-                        </button>
-                      </span>
-                    )) : (typeof formData.specialization === 'string' && formData.specialization ? (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white text-[#C9A227] border border-gray-100 shadow-sm">
-                        {formData.specialization}
-                        <button
-                          type="button"
-                          onClick={() => setFormData({ ...formData, specialization: [] })}
-                          className="ml-1.5 text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <X size={10} />
-                        </button>
-                      </span>
-                    ) : null)}
-                    <input
-                      type="text"
-                      placeholder="Add specialization and press Enter..."
-                      className="flex-1 bg-transparent border-none outline-none text-xs font-medium min-w-[120px]"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const val = (e.target as HTMLInputElement).value.trim();
-                          if (val && (!Array.isArray(formData.specialization) || !formData.specialization.includes(val))) {
-                            const currentSpecs = Array.isArray(formData.specialization) ? formData.specialization : (formData.specialization ? [formData.specialization] : []);
-                            setFormData({
-                              ...formData,
-                              specialization: [...currentSpecs, val]
-                            });
-                            (e.target as HTMLInputElement).value = "";
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-              </>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#0A2342]/60 backdrop-blur-md">
+      <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-white dark:bg-[#0A2342] rounded-[48px] w-full max-w-2xl overflow-hidden shadow-2xl relative">
+        <button onClick={onClose} className="absolute top-8 right-8 p-3 rounded-2xl hover:bg-gray-50"><X size={24} /></button>
+        <div className="p-12 pb-4">
+          <h2 className="text-4xl font-serif text-[#0A2342] dark:text-white mb-2">Edit Credentials</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto px-1 pr-6 custom-scrollbar">
+            <InputField label={isProfessional ? "Full Legal Name" : "Full Name"} value={formData.name} onChange={(v: any) => setFormData({ ...formData, name: v })} />
+            <InputField label="Professional Designation" value={formData.designation} onChange={(v: any) => setFormData({ ...formData, designation: v })} />
+            <InputField label="Mobile Number" value={formData.phone} onChange={(v: any) => setFormData({ ...formData, phone: v })} />
+            <InputField label="Date of Birth" type="date" value={formData.dob} onChange={(v: any) => setFormData({ ...formData, dob: v })} />
+            <InputField label={isProfessional ? "Registry State" : "State"} value={formData.state} onChange={(v: any) => setFormData({ ...formData, state: v })} />
+            <InputField label="City" value={formData.city} onChange={(v: any) => setFormData({ ...formData, city: v })} />
+            {isProfessional && (
+              <InputField
+                label="Years of Professional Experience"
+                type="number"
+                value={formData.yearsOfExperience}
+                onChange={(v: any) => setFormData({ ...formData, yearsOfExperience: v })}
+              />
+            )}
+            {/* {isProfessional && !checkIsAdvocate({ designation: formData.designation, roles: [] }) && (
+              <div className="md:col-span-1 space-y-1.5 flex flex-col">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Associated Court</label>
+                <CourtSearchableDropdown
+                  value={formData.court}
+                  onChange={(v) => setFormData({ ...formData, court: v })}
+                />
+              </div>
+            )} */}
+            {isProfessional && (
+              <InputField
+                label="Expertise Area (Comma separated)"
+                value={formData.specialization}
+                onChange={(v: any) => setFormData({ ...formData, specialization: v })}
+              />
+            )}
+            <TextAreaField label="Professional Bio" value={formData.bio} onChange={(v: any) => setFormData({ ...formData, bio: v })} className="md:col-span-2" />
+            {isProfessional && formData.barRegistrationNumber && (
+              <InputField label="Bar Registration #" value={formData.barRegistrationNumber} onChange={(v: any) => setFormData({ ...formData, barRegistrationNumber: v })} className="md:col-span-2" />
             )}
           </div>
         </div>
-        <div className="px-8 py-6 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-4">
-          <button onClick={onClose} className="px-6 py-2.5 rounded-lg border border-gray-200 text-sm font-bold tracking-widest uppercase hover:bg-white transition-all">Cancel</button>
-          <button onClick={handleSave} className="px-8 py-2.5 rounded-lg bg-[#0A2342] text-white text-sm font-bold tracking-widest uppercase shadow-lg hover:bg-[#153a66] transition-all">Commit Changes</button>
+        <div className="p-12 flex gap-4 bg-gray-50/50">
+          <button onClick={onClose} className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest border border-gray-100 rounded-2xl">Cancel</button>
+          <button onClick={onSave} disabled={saving} className="flex-[2] py-4 bg-[#0A2342] dark:bg-[#C9A227] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:opacity-90 transition-all flex items-center justify-center gap-4">
+            {saving ? "Updating..." : "Commit Update"} <Check size={16} />
+          </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
 
-function InputField({ label, value, onChange, type = "text" }: { label: string; value: any; onChange: (val: string) => void; type?: string }) {
+function ImagePreviewModal({ url, onClose, onConfirm, saving }: any) {
   return (
-    <div className="space-y-1.5 focus-within:text-[#C9A227] transition-colors">
-      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{label}</label>
-      <input
-        type={type}
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-5 py-3 border-2 border-gray-50 bg-gray-50/30 rounded-xl text-sm text-[#0A2342] font-medium focus:border-[#C9A227] focus:bg-white outline-none transition-all placeholder:text-gray-300"
-        placeholder={`Enter ${label.toLowerCase()}...`}
-      />
-    </div>
-  );
-}
-
-function TextAreaField({ label, value, onChange }: { label: string; value: any; onChange: (val: string) => void }) {
-  return (
-    <div className="space-y-1.5 focus-within:text-[#C9A227] transition-colors">
-      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{label}</label>
-      <textarea
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-5 py-3 border-2 border-gray-50 bg-gray-50/30 rounded-xl text-sm text-[#0A2342] font-medium focus:border-[#C9A227] focus:bg-white outline-none transition-all placeholder:text-gray-300 min-h-[120px] resize-none"
-        placeholder={`Write your ${label.toLowerCase()} here...`}
-      />
-    </div>
-  );
-}
-
-function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (val: boolean) => void }) {
-  return (
-    <button
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-300 ${checked ? "bg-[#C9A227]" : "bg-gray-200"}`}
-    >
-      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-300 ${checked ? "translate-x-5" : "translate-x-1"}`} />
-    </button>
-  );
-}
-
-function CustomSelect({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
-  return (
-    <div className="relative group">
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full border-2 border-gray-50 bg-gray-50/50 rounded-xl px-4 py-2.5 text-xs font-bold text-gray-700 appearance-none focus:border-[#C9A227] focus:bg-white outline-none transition-all">
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-      <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400 group-focus-within:text-[#C9A227] transition-colors">
-        <ChevronDown size={14} />
-      </div>
-    </div>
-  );
-}
-
-function LogoutModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0A2342]/40 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="relative z-10 bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full animate-in zoom-in-95 duration-300 text-center">
-        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <X size={32} />
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
+      <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="max-w-xl w-full text-center text-white">
+        <div className="w-80 h-80 rounded-[48px] overflow-hidden mx-auto mb-10 border-4 border-[#C9A227]">
+          <Image src={url} alt="Preview" width={320} height={320} className="object-cover" />
         </div>
-        <h3 className="text-xl  text-[#0A2342] mb-2 tracking-tight">Security Sign-out</h3>
-        <p className="text-sm text-gray-500 mb-8 leading-relaxed">Are you certain you wish to conclude your current session? You will need to re-authenticate to regain access.</p>
+        <h3 className="text-3xl font-serif mb-10">Confirm Visual Identity</h3>
         <div className="flex gap-4">
-          <button onClick={onCancel} className="flex-1 px-4 py-3 text-xs font-bold tracking-widest uppercase border border-gray-100 rounded-xl hover:bg-gray-50 transition-all">Cancel</button>
-          <button onClick={onConfirm} className="flex-1 px-4 py-3 text-xs font-bold tracking-widest uppercase bg-red-500 text-white rounded-xl shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all">Sign Out</button>
+          <button onClick={onClose} className="flex-1 py-4 text-[10px] font-black uppercase text-white/40">Reject</button>
+          <button onClick={onConfirm} disabled={saving} className="flex-[2] py-4 bg-[#C9A227] rounded-2xl text-white text-[10px] font-black uppercase">{saving ? "Syncing..." : "Apply Portrait"}</button>
         </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function LogoutOverlay({ onCancel, onConfirm }: any) {
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-[#0A2342]/80 backdrop-blur-md">
+      <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className="bg-white rounded-[40px] p-12 max-w-md w-full text-center">
+        <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8"><LogOut size={40} /></div>
+        <h3 className="text-3xl font-serif text-[#0A2342] mb-4">Security Exit</h3>
+        <div className="flex gap-4">
+          <button onClick={onCancel} className="flex-1 py-4 text-[10px] font-black uppercase border border-gray-100 rounded-2xl">Cancel</button>
+          <button onClick={onConfirm} className="flex-1 py-4 bg-red-500 text-white rounded-2xl shadow-xl shadow-red-500/20">Sign Out</button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function InputField({ label, value, onChange, className = "", type = "text" }: any) {
+  return (
+    <div className={`space-y-1.5 ${className}`}>
+      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+      <input type={type} value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full px-6 py-4 bg-gray-50 dark:bg-black/20 border-2 border-transparent focus:border-[#C9A227] rounded-2xl outline-none transition-all text-sm font-semibold" />
+    </div>
+  );
+}
+
+function TextAreaField({ label, value, onChange, className = "" }: any) {
+  return (
+    <div className={`space-y-1.5 ${className}`}>
+      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+      <textarea value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full px-6 py-4 bg-gray-50 dark:bg-black/20 border-2 border-transparent focus:border-[#C9A227] rounded-2xl outline-none transition-all text-sm font-semibold min-h-[120px] resize-none" />
+    </div>
+  );
+}
+
+function EmptyState({ icon: Icon, message }: any) {
+  return (
+    <div className="col-span-full py-32 flex flex-col items-center justify-center bg-white/50 rounded-[48px] border-2 border-dashed border-gray-200">
+      <div className="w-20 h-20 rounded-3xl bg-gray-50 flex items-center justify-center text-gray-200 mb-8"><Icon size={40} /></div>
+      <p className="text-gray-400 font-serif italic text-lg">{message}</p>
+    </div>
+  );
+}
+
+function BentoSkeleton() {
+  return (
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-[#000d22] pb-32 animate-pulse">
+      {/* 1. HERO SKELETON */}
+      <section className="relative pt-24 pb-24 overflow-hidden text-center z-10">
+        <div className="max-w-6xl mx-auto px-4 relative">
+          {/* Avatar Circle */}
+          <div className="relative inline-block mb-12">
+            <div className="w-56 h-56 rounded-[40px] bg-gray-200 dark:bg-[#0A2342]/20" />
+          </div>
+
+          {/* Name Pulse */}
+          <div className="h-20 w-3/4 max-w-2xl bg-gray-200 dark:bg-[#0A2342]/20 mx-auto mb-6 rounded-3xl" />
+
+          {/* Role/Spec Pulse */}
+          <div className="h-4 w-1/2 max-w-md bg-gray-200 dark:bg-[#0A2342]/20 mx-auto mb-12 rounded-lg" />
+
+          {/* Bio Pulse */}
+          <div className="h-16 w-full max-w-2xl bg-gray-100 dark:bg-[#0A2342]/10 mx-auto rounded-3xl" />
+        </div>
+      </section>
+
+      {/* 2. BENTO CONTENT SKELETON */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+
+          {/* Sidebar Skeleton */}
+          <aside className="lg:col-span-3">
+            <div className="flex flex-col gap-2 p-2 bg-gray-100 dark:bg-[#0A2342]/10 rounded-[32px]">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-14 w-full bg-gray-200 dark:bg-[#0A2342]/20 rounded-2xl" />
+              ))}
+            </div>
+          </aside>
+
+          {/* Main Content Area Skeleton */}
+          <div className="lg:col-span-9 pb-20">
+            {/* Stats Row Pulse */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-44 bg-gray-100 dark:bg-[#0A2342]/10 rounded-[32px]" />
+              ))}
+            </div>
+
+            {/* Content Grid Pulse */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="h-[500px] bg-gray-100 dark:bg-[#0A2342]/10 rounded-[40px]" />
+              <div className="h-[500px] bg-gray-100 dark:bg-[#0A2342]/10 rounded-[40px]" />
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function BentoErrorView({ error, context, router }: any) {
+  return (
+    <div className="min-h-screen flex items-center justify-center p-8 bg-[#F8F9FA] text-center">
+      <div className="max-w-md w-full bg-white p-12 rounded-[56px] shadow-2xl">
+        <h2 className="text-3xl font-serif text-[#0A2342] mb-4">Registry Error</h2>
+        <p className="text-gray-500 mb-12 text-sm">{error || "Access restricted."}</p>
+        <button onClick={() => router.push(context === "admin" ? "/admin" : "/")} className="w-full py-5 bg-[#0A2342] text-white rounded-2xl font-black uppercase text-xs">Return Home</button>
       </div>
     </div>
   );

@@ -54,6 +54,7 @@ export interface UserData {
   yearsOfExperience?: number;
   specialization?: string[];
   barRegistrationNumber?: string;
+  court?: string;
   bio?: string;
   savedPosts?: string[];
   articles?: any[];
@@ -74,6 +75,7 @@ export interface UpdateProfileRequest {
   yearsOfExperience?: number;
   specialization?: string[];
   barRegistrationNumber?: string;
+  court?: string;
   bio?: string;
 }
 

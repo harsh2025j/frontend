@@ -33,7 +33,7 @@ const Judgement: React.FC<JudgementProps> = ({ img, description, slug, author, d
             dangerouslySetInnerHTML={{ __html: description }}
           />
           <div className="text-gray-500 text-xs sm:text-sm ">
-            {author && <span className="mr-3 ml-1">Author: {author}</span>}
+            <span className="mr-3 ml-1">Author: {author || "Anonymous"}</span>
             <div className="flex ml-1 items-center gap-1 text-gray-600">
               <Clock size={14} />
               {date && <span>{date}</span>}

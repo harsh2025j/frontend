@@ -3,33 +3,20 @@ import { createArticle, fetchArticles } from "./articleThunks";
 import { ArticleState } from "./article.types";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 
-const getInitialArticles = () => {
-  if (typeof window !== "undefined") {
-    const cached = localStorage.getItem("articles_cache");
-    if (cached) {
-      try {
-        return JSON.parse(cached);
-      } catch (e) {
-        console.error("Failed to parse articles cache", e);
-        return [];
-      }
-    }
-  }
-  return [];
-};
-
 const initialState: ArticleState = {
   loading: false,
   error: null,
   message: null,
-  articles: getInitialArticles(),
+  articles: [],
 };
-
 
 const articleSlice = createSlice({
   name: "article",
   initialState,
   reducers: {
+    setArticles: (state, action) => {
+      state.articles = action.payload;
+    },
     resetArticleState: (state) => {
       state.error = null;
       state.message = null;
@@ -74,5 +61,5 @@ const articleSlice = createSlice({
   },
 });
 
-export const { resetArticleState } = articleSlice.actions;
+export const { resetArticleState, setArticles } = articleSlice.actions;
 export default articleSlice.reducer;

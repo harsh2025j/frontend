@@ -2,15 +2,19 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "@/i18n/routing";
 import { judgmentsService } from "@/data/services/judgments-service/judgmentsService";
+import { getBroadcastService } from "@/data/services/broadcast-service/broadcastService";
 import Loader from "./Loader";
 
 export default function LatestInformationSection() {
     const [activeTab, setActiveTab] = useState<'updates' | 'judgments' | 'orders' | 'notices'>('updates');
     const [latestJudgments, setLatestJudgments] = useState<any[]>([]);
+    const [latestBroadcasts, setLatestBroadcasts] = useState<any[]>([]);
     const [loadingJudgments, setLoadingJudgments] = useState(false);
+    const [loadingBroadcasts, setLoadingBroadcasts] = useState(false);
 
     useEffect(() => {
         fetchJudgments();
+        fetchBroadcasts();
     }, []);
 
     const fetchJudgments = async () => {
@@ -24,6 +28,19 @@ export default function LatestInformationSection() {
             console.error("Error fetching judgments for home section:", error);
         } finally {
             setLoadingJudgments(false);
+        }
+    };
+
+    const fetchBroadcasts = async () => {
+        setLoadingBroadcasts(true);
+        try {
+            const response = await getBroadcastService.getBroadcast(1, 10, true);
+            const data = response.data?.data || response.data || [];
+            setLatestBroadcasts(data);
+        } catch (error) {
+            console.error("Error fetching broadcasts for home section:", error);
+        } finally {
+            setLoadingBroadcasts(false);
         }
     };
 
@@ -56,14 +73,13 @@ export default function LatestInformationSection() {
                 { type: 'Order', text: 'Stay order in Transfer Petition No. 5432/2025', download: true },
                 { type: 'Order', text: 'Direction order in Contempt Petition No. 3210/2025' },
             ],
-            notices: [
-                { type: 'Listing Notice', text: 'Notice regarding cancellation of Court No.10 on 19.12.2025 (Friday)' },
-                { type: 'Listing Notice', text: 'List of oral mentioning matters before Hon\'ble Courts on 19.12.25.' },
-                { type: 'Listing Notice', text: 'Notice regarding deletion of Chamber matter listed in Court no. 6 on 19.12.2025 (Friday)' },
-                { type: 'Listing Notice', text: 'Special sitting notice for urgent matters on 23.12.2025' },
-                { type: 'Listing Notice', text: 'Revised cause list for Court No. 1 dated 22.12.2025' },
-                { type: 'Listing Notice', text: 'Notice for video conferencing hearing on 24.12.2025' },
-            ],
+            notices: latestBroadcasts.map(b => ({
+                id: b._id || b.id,
+                type: 'Listing Notice',
+                text: b.content?.title || b.title || 'Notification',
+                body: b.content?.body || b.body,
+                download: false
+            })),
         };
         return contentMap[tab] || contentMap.updates;
     };
@@ -129,9 +145,9 @@ export default function LatestInformationSection() {
 
                 {/* Information List - Fixed Height with Scroll */}
                 <div className="overflow-y-auto p-5 md:p-6 max-h-[400px] flex-1">
-                    {activeTab === 'judgments' && loadingJudgments ? (
+                    {((activeTab === 'judgments' && loadingJudgments) || (activeTab === 'notices' && loadingBroadcasts)) ? (
                         <div className="flex justify-center items-center h-full py-10">
-                            <Loader size="md" text="Loading Judgments..." />
+                            <Loader size="md" text={`Loading ${activeTab === 'notices' ? 'Notices' : 'Judgments'}...`} />
                         </div>
                     ) : (
                         <div className="space-y-3.5">

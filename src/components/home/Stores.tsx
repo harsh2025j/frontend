@@ -11,8 +11,8 @@ import ContentSlider from "@/components/home/ContentSlider";
 import LatestNews from "../ui/LatestNews";
 import Judgement from "../ui/judgement";
 
-import TopJudges from "../ui/TopJudgesSection";
-import TopAdvocateSection from "../ui/TopAdvocateSection";
+import TopJudges from "./TopJudges";
+import TopAdvocateSection from "./TopAdvocateSection";
 import HindiNews from "../ui/HindiNews";
 import CustomInput from "../ui/CustomInput"
 import StateJudgement from "../ui/stateJudgement";
@@ -290,7 +290,7 @@ export default function Stores() {
             </button>
 
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/cases')}
               className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg shadow-md hover:border-[#C9A227] hover:shadow-xl transition-all group"
             >
               <div className="w-12 h-12 md:w-14 md:h-14 mb-3 bg-[#0A2342] rounded-full flex items-center justify-center group-hover:bg-[#C9A227] transition-colors">
@@ -472,7 +472,7 @@ export default function Stores() {
                     img={data.thumbnail}
                     title={data.title}
                     slug={data.slug}
-                    author={data.authors}
+                    author={data.authors || data.advocateName}
                     date={formatDate(data.createdAt)}
                     button1Text="Read Full Case"
                     button2Text="AI Summary"
@@ -496,7 +496,7 @@ export default function Stores() {
                   img={data.thumbnail}
                   description={data.content}
                   date={formatDate(data.createdAt)}
-                  author={data.authors}
+                  author={data.authors || data.advocateName}
                   slug={data.slug}
                 />
               ))
@@ -538,6 +538,7 @@ export default function Stores() {
                     title={data.title}
                     description={data.content}
                     slug={data.slug}
+                    author={data.authors || data.advocateName}
                   />
                 ))
               )}

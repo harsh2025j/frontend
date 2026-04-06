@@ -1,5 +1,5 @@
 import Image, { StaticImageData } from "next/image";
-import { Eye, Heart, Clock } from "lucide-react"; // 👈 Lucide icons
+import { Clock, User } from "lucide-react";
 import logo from "../../../public/logo.png";
 import { getSafeImageUrl } from "@/utils/imageUtils";
 
@@ -11,6 +11,7 @@ interface NewsCardProps {
   views?: string;
   likes?: string;
   content?: string;
+  author?: string | null;
 }
 
 export default function NewsCard({
@@ -18,72 +19,66 @@ export default function NewsCard({
   title,
   court,
   time,
-  views,
-  likes,
-  content,
+  author,
 }: NewsCardProps) {
   const validSrc = getSafeImageUrl(src as string);
 
   return (
-    <div className="w-full max-w-[600px] rounded-[4px] bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition">
-      {/* Image */}
-      <div className="relative h-[200px] w-full">
+    <div className="w-full rounded-[4px] bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition flex flex-col h-full">
+      {/* Image — fixed height */}
+      <div className="relative h-[180px] w-full flex-shrink-0">
         <Image
           src={validSrc}
           width={600}
-          height={200}
+          height={180}
           alt={title}
           unoptimized
           className="object-cover w-full h-full"
         />
       </div>
 
-      {/* Content */}
-      <div className="p-4 flex flex-col gap-3">
+      {/* Content — grows to fill remaining card space */}
+      <div className="p-4 flex flex-col gap-2 flex-1">
 
         {/* Court + Time */}
-        <div className="flex flex-wrap gap-3 items-center text-xs">
-
+        <div className="flex flex-wrap gap-2 items-center text-xs">
           {court ? (
-            <span className="bg-gray-200 text-gray-900 px-3 py-1 rounded-full font-medium">
+            <span className="bg-gray-200 text-gray-900 px-3 py-1 rounded-full font-medium truncate max-w-[140px]">
               {court}
             </span>
           ) : (
-            <span className="text-gray-400 italic">Court not available</span>
+            <span className="text-gray-400 italic">—</span>
           )}
 
-          <div className="flex items-center gap-1 text-gray-600">
-            <Clock size={14} />
-            {time !== undefined ? (
-              <span>{time}</span>
-            ) : (
-              <span className="text-gray-400 italic">No time</span>
-            )}
+          <div className="flex items-center gap-1 text-gray-500 ml-auto">
+            <Clock size={12} />
+            <span>{time ?? "—"}</span>
           </div>
         </div>
 
-        {/* Title */}
-        <p className="text-sm font-semibold text-gray-900 leading-snug truncate">
+        {/* Title — max 2 lines, then ellipsis */}
+        <p
+          className="text-sm font-semibold text-gray-900 leading-snug"
+          style={{
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}
+        >
           {title}
         </p>
 
+        {/* Spacer pushes author to bottom */}
+        <div className="flex-1" />
 
-
-
-
-        {/* Views + Likes */}
-        {/* <div className="flex items-center gap-6 text-xs text-gray-700"> */}
-
-        {/* <div className="flex items-center gap-1">
-            <Eye size={14} />
-            {views ? <span>{views}</span> : <span className="text-gray-400 italic">0</span>}
-          </div> */}
-
-        {/* <div className="flex items-center gap-1">
-            <Heart size={14} />
-            {likes ? <span>{likes}</span> : <span className="text-gray-400 italic">0</span>}
-          </div> */}
-        {/* </div> */}
+        {/* Author */}
+        <div className="flex items-center gap-1 text-xs text-gray-500 pt-2 border-t border-gray-100">
+          <User size={12} className="flex-shrink-0" />
+          <span className="truncate">
+            {author && author.trim() ? author : "Anonymous"}
+          </span>
+        </div>
       </div>
     </div>
   );

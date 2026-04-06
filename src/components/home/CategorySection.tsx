@@ -96,14 +96,21 @@ const ArticleCard = ({ article, compact = false }: { article: any; compact?: boo
             {formatDate(article.createdAt)}
           </span>
         </div>
+
         <h3 className={`font-bold text-gray-900 group-hover:text-[#C9A227] transition-colors line-clamp-2 ${compact ? "text-base" : "text-lg"}`}>
           {article.title}
         </h3>
+
         {!compact && (
           <p className="text-sm text-gray-500 mt-2 line-clamp-2">
             {article.subHeadline || article.content.replace(/<[^>]*>/g, "").substring(0, 100)}...
           </p>
         )}
+        <div className="flex items-center gap-2 mt-1">
+          <span className="text-xs text-gray-500">
+            Author: {article.authors || article.advocateName || "Anonymous"}
+          </span>
+        </div>
       </div>
     </div>
   </Link>
@@ -139,9 +146,14 @@ const ListLayout = ({ articles }: { articles: any[] }) => (
           <p className="text-xs text-gray-500 line-clamp-1">
             {article.subHeadline || article.content.replace(/<[^>]*>/g, "").substring(0, 80)}...
           </p>
-          <span className="text-xs text-gray-400 mt-2 block">
-            {formatDate(article.createdAt)}
-          </span>
+          <div className="flex flex-col gap-0.5 mt-2">
+            <span className="text-[10px] text-gray-500">
+              Author: {article.authors || article.advocateName || "Anonymous"}
+            </span>
+            <span className="text-[10px] text-gray-400">
+              {formatDate(article.createdAt)}
+            </span>
+          </div>
         </div>
       </Link>
     ))}
@@ -174,9 +186,12 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
             <h3 className="text-2xl md:text-4xl font-bold text-white mb-3 leading-tight group-hover:text-[#C9A227] transition-colors">
               {featured.title}
             </h3>
-            <p className="text-gray-300 text-sm md:text-base line-clamp-2 max-w-2xl">
+            <p className="text-gray-300 text-sm md:text-base line-clamp-2 max-w-2xl mb-2">
               {featured.subHeadline || featured.content.replace(/<[^>]*>/g, "").substring(0, 150)}...
             </p>
+            <span className="text-xs text-gray-400 font-medium tracking-wide">
+              Author: {featured.authors || featured.advocateName || "Anonymous"}
+            </span>
           </div>
         </Link>
       </div>
@@ -199,9 +214,14 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
               <h3 className="font-semibold text-gray-900 text-sm group-hover:text-[#C9A227] transition-colors line-clamp-2">
                 {article.title}
               </h3>
-              <span className="text-xs text-gray-400 mt-1 block">
-                {formatDate(article.createdAt)}
-              </span>
+              <div className="flex flex-col gap-0.5 mt-1">
+                <span className="text-[10px] text-gray-500">
+                  Author: {article.authors || article.advocateName || "Anonymous"}
+                </span>
+                <span className="text-[10px] text-gray-400">
+                  {formatDate(article.createdAt)}
+                </span>
+              </div>
             </div>
           </Link>
         ))}

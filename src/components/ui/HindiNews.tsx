@@ -10,6 +10,7 @@ interface HindiNews {
   title: string;
   description: string;
   slug: string;
+  author?: string | null;
 }
 
 const HindiNews: React.FC<HindiNews> = ({
@@ -17,6 +18,7 @@ const HindiNews: React.FC<HindiNews> = ({
   title,
   description,
   slug,
+  author,
 }) => {
   return (
     <div className="bg-white rounded-md  flex flex-row gap-6 justify-between w-full h-auto transition-all duration-300 hover:border-blue-300 border-1 my-5">
@@ -40,9 +42,12 @@ const HindiNews: React.FC<HindiNews> = ({
             {title}
           </h1>
         </Link>
+        <div className="mt-1 text-xs text-gray-500">
+          Author: {author || "Anonymous"}
+        </div>
         <Link href={`/news/${slug}`}>
           <div
-            className="font-merriweather text-gray-700 text-xs line-clamp-3 sm:line-clamp-5 mt-4"
+            className="font-merriweather text-gray-700 text-xs line-clamp-3 sm:line-clamp-5 mt-2"
             dangerouslySetInnerHTML={{ __html: description }}
           />
         </Link>

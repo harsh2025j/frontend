@@ -7,7 +7,8 @@ import { permissionRequestService } from "@/data/features/permission-requests/pe
 import { PERMISSIONS, canAccessContentManagementPage } from "@/utils/permissions";
 import Loader from "@/components/ui/Loader";
 import { toast } from "react-hot-toast";
-import { Check, Clock, X, Plus } from "lucide-react";
+import { Check, Clock, X, Plus, Gavel } from "lucide-react";
+import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
 
 export default function MembershipForm() {
     const { user: reduxUser, updateProfile } = useProfileActions();
@@ -25,6 +26,7 @@ export default function MembershipForm() {
         yearsOfExperience: "",
         specialization: [] as string[],
         barRegistrationNumber: "",
+        court: "",
     });
 
     // const [selectedPermissions, setSelectedPermissions] = useState<string[]>([
@@ -141,6 +143,7 @@ export default function MembershipForm() {
                 yearsOfExperience: formData.yearsOfExperience ? Number(formData.yearsOfExperience) : 0,
                 specialization: formData.specialization,
                 barRegistrationNumber: formData.barRegistrationNumber,
+                // court: formData.court,
             });
 
             toast.success("Membership request submitted successfully!");
@@ -323,9 +326,9 @@ export default function MembershipForm() {
                                             e.preventDefault();
                                             const trimmed = specInput.trim();
                                             if (trimmed && !formData.specialization.includes(trimmed)) {
-                                                setFormData({ 
-                                                    ...formData, 
-                                                    specialization: [...formData.specialization, trimmed] 
+                                                setFormData({
+                                                    ...formData,
+                                                    specialization: [...formData.specialization, trimmed]
                                                 });
                                                 setSpecInput("");
                                             }
@@ -338,9 +341,9 @@ export default function MembershipForm() {
                                     onClick={() => {
                                         const trimmed = specInput.trim();
                                         if (trimmed && !formData.specialization.includes(trimmed)) {
-                                            setFormData({ 
-                                                ...formData, 
-                                                specialization: [...formData.specialization, trimmed] 
+                                            setFormData({
+                                                ...formData,
+                                                specialization: [...formData.specialization, trimmed]
                                             });
                                             setSpecInput("");
                                         }
@@ -355,17 +358,19 @@ export default function MembershipForm() {
                     </div>
 
                     {(formData.designation === 'Advocate' || formData.designation === 'Lawyer') && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Bar Council Registration Number</label>
-                            <input
-                                type="text"
-                                name="barRegistrationNumber"
-                                required
-                                placeholder="e.g. BC/1234/2020"
-                                value={formData.barRegistrationNumber}
-                                onChange={handleChange}
-                                className="w-full p-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                            />
+                        <div className="grid grid-cols-1 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Bar Registration Number</label>
+                                <input
+                                    type="text"
+                                    name="barRegistrationNumber"
+                                    required
+                                    placeholder="e.g. BC/1234/2020"
+                                    value={formData.barRegistrationNumber}
+                                    onChange={handleChange}
+                                    className="w-full p-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                                />
+                            </div>
                         </div>
                     )}
 
