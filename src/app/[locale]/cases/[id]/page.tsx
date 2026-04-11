@@ -8,18 +8,19 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
 import Loader from "@/components/ui/Loader";
 
-export default function CaseDetailPage() {
+export default function CaseDetailPage({ caseId: propId, isModal = false }: { caseId?: string; isModal?: boolean }) {
     useDocTitle("Case Details | Sajjad Husain Law Associates");
     const params = useParams();
     const router = useRouter();
+    const finalCaseId = propId || (params?.id as string);
     const [caseData, setCaseData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (params.id) {
-            fetchCaseDetails(params.id as string);
+        if (finalCaseId) {
+            fetchCaseDetails(finalCaseId);
         }
-    }, [params.id]);
+    }, [finalCaseId]);
 
     const fetchCaseDetails = async (id: string) => {
         try {
@@ -50,13 +51,17 @@ export default function CaseDetailPage() {
         <div className="min-h-screen bg-[#F8F9FA] pb-12 font-sans text-gray-800">
             {/* Top Navigation Bar */}
             <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-20 flex justify-between items-center shadow-sm">
-                <button
-                    onClick={() => router.back()}
-                    className="group flex items-center gap-2 text-gray-600 hover:text-[#0A2342] transition-colors font-medium text-sm"
-                >
-                    <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                    Back
-                </button>
+                {!isModal ? (
+                    <button
+                        onClick={() => router.back()}
+                        className="group flex items-center gap-2 text-gray-600 hover:text-[#0A2342] transition-colors font-medium text-sm"
+                    >
+                        <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+                        Back
+                    </button>
+                ) : (
+                    <div />
+                )}
                 <div className="flex items-center gap-3">
                     <button className="flex items-center gap-2 px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-md transition text-sm">
                         <Share2 size={16} />

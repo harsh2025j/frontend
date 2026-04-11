@@ -11,6 +11,8 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import CustomSelect from "@/components/ui/CustomSelect";
 import { caseTypeOptions } from "@/constants/caseOptions";
 import InfiniteSearchableSelect from "@/components/ui/InfiniteSearchableSelect";
+import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
+import FormField from "@/components/ui/FormField";
 
 export default function CreateCasePage() {
     useDocTitle("Create Case  | Sajjad Husain Law Associates");
@@ -43,18 +45,35 @@ export default function CreateCasePage() {
         opposingParties: "", // visual state as string
     });
 
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
     const extractTotalPages = (response: any) => {
         const meta = response.data?.meta ?? response.data?.data?.meta;
         if (meta?.totalPages) return meta.totalPages;
-        
+
         const total = response.data?.data?.total ?? response.data?.total ?? 0;
         const limit = response.data?.data?.limit ?? response.data?.limit ?? 12;
         return total > 0 ? Math.ceil(total / limit) : 1;
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        // Clear error when user types
+        if (errors[name]) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
     };
+
+    const inputClasses = (name: string) => `w-full px-4 py-2 border rounded-lg outline-none transition-all ${
+        errors[name] 
+            ? "border-red-500 ring-2 ring-red-500/10 bg-red-50/5 placeholder:text-red-300" 
+            : "border-gray-300 focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] bg-white"
+    }`;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -67,20 +86,39 @@ export default function CreateCasePage() {
             { key: 'caseType', label: 'Case Type' },
             { key: 'filingDate', label: 'Filing Date' },
             { key: 'court', label: 'Court' },
-            { key: 'firstHearingDate', label: 'First Hearing Date' }, // Added
-            { key: 'nextHearingDate', label: 'Next Hearing Date' }, // Added
             { key: 'petitioner', label: 'Petitioner' },
             { key: 'respondent', label: 'Respondent' },
             { key: 'petitionerAdvocate', label: 'Petitioner Advocate' }, // Added
             { key: 'respondentAdvocate', label: 'Respondent Advocate' }, // Added
-            { key: 'opposingParties', label: 'Opposing Parties' } // Added
         ];
 
+        const newErrors: Record<string, string> = {};
         for (const field of requiredFields) {
             if (!formData[field.key as keyof typeof formData]) {
-                toast.error(`${field.label} is required`);
-                return;
+                newErrors[field.key] = `${field.label} is required`;
             }
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            
+            // Scroll to the first error
+            const firstErrorKey = Object.keys(newErrors)[0];
+            const element = document.getElementsByName(firstErrorKey)[0];
+            if (element) {
+                // Scroll to the parent FormField (the .group div) for better visibility
+                const container = element.closest('.group');
+                if (container) {
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                // If it's a focusable element, focus it
+                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') {
+                    element.focus();
+                }
+            }
+            return;
         }
 
         setSubmitting(true);
@@ -93,10 +131,14 @@ export default function CreateCasePage() {
 
             if (formData.opposingParties) {
                 dataToSubmit.opposingParties = formData.opposingParties.split(',').map(s => s.trim()).filter(Boolean);
+            } else {
+                delete dataToSubmit.opposingParties;
             }
             if (formData.confidentialityLevel) {
                 dataToSubmit.confidentialityLevel = parseInt(formData.confidentialityLevel);
             }
+            if (!formData.firstHearingDate) delete dataToSubmit.firstHearingDate;
+            if (!formData.nextHearingDate) delete dataToSubmit.nextHearingDate;
             if (!formData.officeId) delete dataToSubmit.officeId;
             if (!formData.practiceAreaId) delete dataToSubmit.practiceAreaId;
 
@@ -133,71 +175,72 @@ export default function CreateCasePage() {
                 <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Basic Information</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Case Number <span className="text-red-500">*</span></label>
+                        <FormField label="Case Number" error={errors.caseNumber} required>
                             <input
                                 type="text"
                                 name="caseNumber"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('caseNumber')}
                                 placeholder="e.g. WP/1234/2024"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">CNR Number <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="CNR Number" error={errors.cnrNumber} required>
                             <input
                                 type="text"
                                 name="cnrNumber"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('cnrNumber')}
                                 placeholder="16-digit unique number"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Title <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Title" error={errors.title} required>
                             <input
                                 type="text"
                                 name="title"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('title')}
                                 placeholder="e.g. State vs John Doe"
                                 onChange={handleChange}
                             />
-                        </div>
+                        </FormField>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <FormField label="Description" error={errors.description}>
                         <textarea
                             name="description"
                             rows={4}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                            className={inputClasses('description')}
                             placeholder="Brief description of the case..."
                             onChange={handleChange}
                         />
-                    </div>
+                    </FormField>
                 </div>
 
                 {/* Case Details */}
                 <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Case Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Case Type <span className="text-red-500">*</span></label>
+                        <FormField label="Case Type" error={errors.caseType} required>
                             <CustomSelect
+                                name="caseType"
                                 options={caseTypeOptions}
                                 value={formData.caseType}
-                                onChange={(value) => setFormData({ ...formData, caseType: value })}
+                                onChange={(value) => {
+                                    setFormData({ ...formData, caseType: value });
+                                    if (errors.caseType) {
+                                        setErrors(prev => {
+                                            const next = { ...prev };
+                                            delete next.caseType;
+                                            return next;
+                                        });
+                                    }
+                                }}
                                 placeholder="Select Case Type"
-                                required
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        </FormField>
+                        <FormField label="Status" error={errors.status}>
                             <select
                                 name="status"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                                className={inputClasses('status')}
                                 onChange={handleChange}
                             >
                                 <option value="filed">Filed</option>
@@ -206,35 +249,48 @@ export default function CreateCasePage() {
                                 <option value="judgment">Judgment</option>
                                 <option value="closed">Closed</option>
                             </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Filing Date <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Filing Date" error={errors.filingDate} required>
                             <input
                                 type="date"
                                 name="filingDate"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('filingDate')}
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Court <span className="text-red-500">*</span></label>
-                            <input
-                                type="text"
+                        </FormField>
+                        <FormField label="Court" error={errors.court} required>
+                            <CourtSearchableDropdown
                                 name="court"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
-                                placeholder="e.g. High Court of Delhi"
-                                onChange={handleChange}
+                                value={formData.court}
+                                error={errors.court}
+                                onChange={(value) => {
+                                    setFormData({ ...formData, court: value });
+                                    if (errors.court) {
+                                        setErrors(prev => {
+                                            const next = { ...prev };
+                                            delete next.court;
+                                            return next;
+                                        });
+                                    }
+                                }}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Presiding Judge</label>
+                        </FormField>
+                        <FormField label="Presiding Judge" error={errors.judgeId}>
                             <InfiniteSearchableSelect
                                 name="judgeId"
                                 value={formData.judgeId}
-                                onChange={(value) => setFormData({ ...formData, judgeId: value })}
-                                onSearch={async (query, page) => {
+                                error={errors.judgeId}
+                                onChange={(value) => {
+                                    setFormData({ ...formData, judgeId: value });
+                                    if (errors.judgeId) {
+                                        setErrors(prev => {
+                                            const next = { ...prev };
+                                            delete next.judgeId;
+                                            return next;
+                                        });
+                                    }
+                                }}
+                                onSearch={async (query: string, page: number) => {
                                     const res = query.trim()
                                         ? await judgesService.searchJudges(query, page, 10)
                                         : await judgesService.getAll({ page, limit: 10 });
@@ -251,25 +307,23 @@ export default function CreateCasePage() {
                                 }}
                                 placeholder="Select Judge"
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">First Hearing Date <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="First Hearing Date" error={errors.firstHearingDate}>
                             <input
                                 type="date"
                                 name="firstHearingDate"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('firstHearingDate')}
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Next Hearing Date <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Next Hearing Date" error={errors.nextHearingDate}>
                             <input
                                 type="date"
                                 name="nextHearingDate"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('nextHearingDate')}
                                 onChange={handleChange}
                             />
-                        </div>
+                        </FormField>
                     </div>
                 </div>
 
@@ -277,26 +331,24 @@ export default function CreateCasePage() {
                 <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Legal Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Under Acts</label>
+                        <FormField label="Under Acts" error={errors.acts}>
                             <input
                                 type="text"
                                 name="acts"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('acts')}
                                 placeholder="Comma separated e.g. IPC, CrPC"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Under Sections</label>
+                        </FormField>
+                        <FormField label="Under Sections" error={errors.underSections}>
                             <input
                                 type="text"
                                 name="underSections"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('underSections')}
                                 placeholder="Comma separated e.g. 420, 302"
                                 onChange={handleChange}
                             />
-                        </div>
+                        </FormField>
                     </div>
                 </div>
 
@@ -305,33 +357,30 @@ export default function CreateCasePage() {
                     <div className="space-y-6">
                         <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Police & FIR Details</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Police Station</label>
+                            <FormField label="Police Station" error={errors.policeStation}>
                                 <input
                                     type="text"
                                     name="policeStation"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                    className={inputClasses('policeStation')}
                                     onChange={handleChange}
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">FIR Number</label>
+                            </FormField>
+                            <FormField label="FIR Number" error={errors.firNumber}>
                                 <input
                                     type="text"
                                     name="firNumber"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                    className={inputClasses('firNumber')}
                                     onChange={handleChange}
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">FIR Year</label>
+                            </FormField>
+                            <FormField label="FIR Year" error={errors.firYear}>
                                 <input
                                     type="text"
                                     name="firYear"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                    className={inputClasses('firYear')}
                                     onChange={handleChange}
                                 />
-                            </div>
+                            </FormField>
                         </div>
                     </div>
                 )}
@@ -340,44 +389,38 @@ export default function CreateCasePage() {
                 <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Parties & Advocates</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Petitioner <span className="text-red-500">*</span></label>
+                        <FormField label="Petitioner" error={errors.petitioner} required>
                             <input
                                 type="text"
                                 name="petitioner"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('petitioner')}
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Respondent <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Respondent" error={errors.respondent} required>
                             <input
                                 type="text"
                                 name="respondent"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('respondent')}
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Petitioner Advocate <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Petitioner Advocate" error={errors.petitionerAdvocate} required>
                             <input
                                 type="text"
                                 name="petitionerAdvocate"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('petitionerAdvocate')}
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Respondent Advocate <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Respondent Advocate" error={errors.respondentAdvocate} required>
                             <input
                                 type="text"
                                 name="respondentAdvocate"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('respondentAdvocate')}
                                 onChange={handleChange}
                             />
-                        </div>
+                        </FormField>
                     </div>
                 </div>
 
@@ -385,31 +428,28 @@ export default function CreateCasePage() {
                 <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Law Firm specific Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Office ID</label>
+                        <FormField label="Office ID" error={errors.officeId}>
                             <input
                                 type="text"
                                 name="officeId"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('officeId')}
                                 placeholder="Enter Office ID"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Practice Area ID</label>
+                        </FormField>
+                        <FormField label="Practice Area ID" error={errors.practiceAreaId}>
                             <input
                                 type="text"
                                 name="practiceAreaId"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('practiceAreaId')}
                                 placeholder="Enter Practice Area ID"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Confidentiality Level (1-5)</label>
+                        </FormField>
+                        <FormField label="Confidentiality Level" error={errors.confidentialityLevel}>
                             <select
                                 name="confidentialityLevel"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all bg-white"
+                                className={inputClasses('confidentialityLevel')}
                                 value={formData.confidentialityLevel}
                                 onChange={handleChange}
                             >
@@ -419,17 +459,16 @@ export default function CreateCasePage() {
                                 <option value="4">4 - Highly Confidential</option>
                                 <option value="5">5 - Top Secret</option>
                             </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Opposing Parties <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Opposing Parties" error={errors.opposingParties}>
                             <input
                                 type="text"
                                 name="opposingParties"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('opposingParties')}
                                 placeholder="Comma separated for conflicts check"
                                 onChange={handleChange}
                             />
-                        </div>
+                        </FormField>
                     </div>
                 </div>
 

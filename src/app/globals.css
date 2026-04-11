@@ -60,6 +60,8 @@
 
 
 
+
+
 /* Hide scrollbar */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
@@ -393,5 +395,91 @@ textarea,
   body {
     @apply bg-background text-foreground;
   }
+}
 
+/* Professional Printing Styles */
+@media print {
+
+  /* Aggressively hide non-essential elements */
+  header,
+  footer,
+  nav,
+  aside,
+  [role="banner"],
+  [role="navigation"],
+  .no-print,
+  button,
+  .share-buttons,
+  .lg\:col-span-4,
+  /* Related articles sidebar */
+  .sentinel,
+  .next-news-divider,
+  .relative.flex.items-center.my-16 {
+    display: none !important;
+  }
+
+  /* Disable sticky/fixed positioning to prevent overlapping in print preview */
+  .sticky,
+  .fixed:not(.print-footer) {
+    position: static !important;
+  }
+
+  body,
+  html {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    width: 100% !important;
+  }
+
+  /* Targeted isolation for infinite scroll pages */
+  body.is-printing .article-wrapper:not(.print-this) {
+    display: none !important;
+  }
+
+  .article-wrapper.print-this {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Branded Footer for every printed page */
+  .print-footer {
+    display: block !important;
+    position: fixed;
+    bottom: 0px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 10px;
+    color: #666;
+    padding: 8px 0;
+    border-top: 1px solid #eee;
+    background: white !important;
+    z-index: 9999;
+  }
+
+  /* Link styling */
+  a {
+    color: black !important;
+    text-decoration: underline !important;
+  }
+
+  /* Prevent elements from breaking mid-page */
+  img,
+  h1,
+  h2,
+  h3,
+  .article-meta,
+  .advocate-card {
+    page-break-inside: avoid;
+  }
+}
+
+.print-footer {
+  display: none;
 }

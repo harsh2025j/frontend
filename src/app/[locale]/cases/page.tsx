@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import toast from "react-hot-toast";
 import { Search, FileText, User, Gavel, Calendar, Home, ChevronRight, Scale, Building2, FileCheck, Info, AlertCircle } from 'lucide-react';
 import { performCaseSearch, SearchInputs, SearchType } from "./searchLogic";
@@ -136,7 +136,9 @@ export default function CasesPage() {
             <div className="bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 py-3">
                     <div className="flex items-center gap-2 text-sm">
-                        <Home className="w-4 h-4 text-gray-500" />
+                        <Link href="/">
+                            <Home className="w-4 h-4 text-gray-500 hover:text-[#C9A227]" />
+                        </Link>
                         <ChevronRight className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-600">Case Status</span>
                     </div>

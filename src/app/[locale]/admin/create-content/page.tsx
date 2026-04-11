@@ -14,6 +14,8 @@ import { UserData } from "@/data/features/profile/profile.types";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import CategorySelect from "@/components/ui/CategorySelect";
+import FormField from "@/components/ui/FormField";
+import { useState } from "react";
 
 
 
@@ -40,6 +42,7 @@ const CreateUpdatePage: React.FC = () => {
 
   const [tagInput, setTagInput] = React.useState("");
   const [expandedUpdates, setExpandedUpdates] = React.useState<string[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const toggleUpdateExpansion = (id: string) => {
     setExpandedUpdates(prev =>
@@ -53,7 +56,36 @@ const CreateUpdatePage: React.FC = () => {
   };
 
   const router = useRouter();
-    const { user } = useProfileActions();
+  const { user } = useProfileActions();
+
+  const handleLocalChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    handleChange(e);
+    const { name } = e.target;
+    if (errors[name]) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
+  };
+
+  const handleLocalContentChange = (content: string) => {
+    handleContentChange(content);
+    if (errors.content) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.content;
+        return next;
+      });
+    }
+  };
+
+  const inputClasses = (name: string) => `w-full border rounded-lg px-3 py-2.5 bg-gray-50 text-sm sm:text-base outline-none transition-all ${
+    errors[name] 
+      ? "border-red-500 ring-2 ring-red-500/10 bg-red-50/5 placeholder:text-red-300" 
+      : "border-gray-200 focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
+  }`;
 
 
   const dispatch = useAppDispatch();
@@ -80,7 +112,6 @@ const CreateUpdatePage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Manual validation
     const requiredFields = [
       { key: 'category', label: 'Category' },
       { key: 'title', label: 'Headline' },
@@ -88,11 +119,11 @@ const CreateUpdatePage: React.FC = () => {
       { key: 'content', label: 'Main Content' }
     ];
 
+    const newErrors: Record<string, string> = {};
     for (const field of requiredFields) {
       const value = formData[field.key as keyof typeof formData];
       if (!value || (typeof value === 'string' && value.trim() === '')) {
-        toast.error(`${field.label} is required`);
-        return;
+        newErrors[field.key] = `${field.label} is required`;
       }
     }
 
@@ -102,8 +133,27 @@ const CreateUpdatePage: React.FC = () => {
       return doc.body.textContent || "";
     };
 
-    if (stripHtml(formData.content).trim() === '') {
-      toast.error("Main Content cannot be empty");
+    if (!newErrors.content && stripHtml(formData.content).trim() === '') {
+      newErrors.content = "Main Content cannot be empty";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      
+      // Scroll to the first error
+      const firstErrorKey = Object.keys(newErrors)[0];
+      const element = document.getElementsByName(firstErrorKey)[0];
+      if (element) {
+        const container = element.closest('.group');
+        if (container) {
+          container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') {
+          element.focus();
+        }
+      }
       return;
     }
 
@@ -147,52 +197,66 @@ const CreateUpdatePage: React.FC = () => {
 
             {/* Category + Advocate Name */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Category <span className="text-red-500">*</span></label>
+              <FormField label="Category" error={errors.category} required>
+                <input type="hidden" name="category" value={formData.category} />
                 <CategorySelect
                   value={formData.category}
-                  onChange={(id) => setFormData((prev) => ({ ...prev, category: id }))}
+                  onChange={(id) => {
+                    setFormData((prev) => ({ ...prev, category: id }));
+                    if (errors.category) {
+                      setErrors((prev: Record<string, string>) => {
+                        const next = { ...prev };
+                        delete next.category;
+                        return next;
+                      });
+                    }
+                  }}
                   options={categoryOptions}
-                  required
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Advocate Name</label>
+              <FormField label="Advocate Name" error={errors.advocates}>
+                <input type="hidden" name="advocates" value={JSON.stringify(formData.advocates)} />
                 <MultiSelectAdvocate
                   selectedAdvocates={formData.advocates}
-                  onChange={(advocates: Advocate[]) => setFormData(prev => ({ ...prev, advocates }))}
+                  onChange={(advocates: Advocate[]) => {
+                    setFormData(prev => ({ ...prev, advocates }));
+                    if (errors.advocates) {
+                      setErrors((prev: Record<string, string>) => {
+                        const next = { ...prev };
+                        delete next.advocates;
+                        return next;
+                      });
+                    }
+                  }}
                   placeholder="Search or type advocate name..."
                 />
-              </div>
+              </FormField>
             </div>
 
             {/* Headline */}
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Headline <span className="text-red-500">*</span></label>
+            <FormField label="Headline" error={errors.title} required>
               <input
                 type="text"
                 name="title"
                 placeholder="Enter article headline..."
                 value={formData.title}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2.5 bg-gray-50 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
+                onChange={handleLocalChange}
+                className={inputClasses('title')}
               />
-            </div>
+            </FormField>
 
             {/* Sub Headline */}
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Sub Headline</label>
+            <FormField label="Sub Headline" error={errors.subHeadline}>
               <input
                 type="text"
                 name="subHeadline"
                 placeholder="Enter article sub headline..."
                 value={formData.subHeadline}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2.5 bg-gray-50 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={handleLocalChange}
+                className={inputClasses('subHeadline')}
               />
-            </div>
+            </FormField>
 
 
 
@@ -253,35 +317,31 @@ const CreateUpdatePage: React.FC = () => {
                   )}
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Location <span className="text-red-500">*</span></label>
+              <FormField label="Location" error={errors.location} required>
                 <input type="text"
                   name="location"
                   placeholder="Enter Location"
                   value={formData.location}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2.5 bg-gray-50 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
+                  onChange={handleLocalChange}
+                  className={inputClasses('location')}
                 />
-              </div>
+              </FormField>
             </div>
 
             {/* Language + Author + Paywalled */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Language</label>
+              <FormField label="Language" error={errors.language}>
                 <select
                   name="language"
                   value={formData.language}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2.5 bg-gray-50 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
+                  onChange={handleLocalChange}
+                  className={inputClasses('language')}
                 >
                   <option value="English/हिन्दी">English/हिन्दी</option>
                   <option value="English">English</option>
                   <option value="Hindi">Hindi</option>
                 </select>
-              </div>
+              </FormField>
 
               <div className="hidden">
                 <label className="block text-sm font-medium mb-1.5">Authors</label>
@@ -358,16 +418,18 @@ const CreateUpdatePage: React.FC = () => {
             </div>
 
             {/* Content Editor */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Main Content Editor <span className="text-red-500">*</span></label>
-              <div className="border rounded-lg overflow-hidden">
+            <FormField label="Main Content" error={errors.content} required>
+              <div className={`border rounded-lg overflow-hidden transition-all ${
+                errors.content ? "border-red-500 ring-2 ring-red-500/10" : "border-gray-200"
+              }`}>
                 <RichTextEditor
                   value={formData.content}
-                  onChange={handleContentChange}
+                  onChange={handleLocalContentChange}
                   placeholder="Write your content here..."
                 />
               </div>
-            </div>
+              <input type="text" name="content" className="sr-only" readOnly />
+            </FormField>
 
             {/* Document Uploader */}
             <div>

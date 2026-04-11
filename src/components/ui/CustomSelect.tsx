@@ -15,6 +15,7 @@ interface CustomSelectProps {
     placeholder?: string;
     className?: string;
     required?: boolean;
+    name?: string;
 }
 
 export default function CustomSelect({
@@ -24,6 +25,7 @@ export default function CustomSelect({
     placeholder = "Select an option",
     className = "",
     required = false,
+    name,
 }: CustomSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -71,6 +73,7 @@ export default function CustomSelect({
             <input
                 type="text"
                 className="sr-only"
+                name={name}
                 value={value}
                 required={required}
                 onChange={() => { }}

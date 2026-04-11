@@ -11,6 +11,8 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import CustomSelect from "@/components/ui/CustomSelect";
 import { caseTypeOptions } from "@/constants/caseOptions";
 import InfiniteSearchableSelect from "@/components/ui/InfiniteSearchableSelect";
+import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
+import FormField from "@/components/ui/FormField";
 
 export default function EditCasePage() {
     useDocTitle("Edit Case  | Sajjad Husain Law Associates");
@@ -45,12 +47,14 @@ export default function EditCasePage() {
         opposingParties: "", // visual string state
     });
 
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
     const [initialJudge, setInitialJudge] = useState<any>(null);
 
     const extractTotalPages = (response: any) => {
         const meta = response.data?.meta ?? response.data?.data?.meta;
         if (meta?.totalPages) return meta.totalPages;
-        
+
         const total = response.data?.data?.total ?? response.data?.total ?? 0;
         const limit = response.data?.data?.limit ?? response.data?.limit ?? 12;
         return total > 0 ? Math.ceil(total / limit) : 1;
@@ -68,28 +72,52 @@ export default function EditCasePage() {
             const data = response.data.data;
             // Format date for input field
             // Format date for input field
+            // Format dates
             const formatDate = (dateString: string | null) => dateString ? new Date(dateString).toISOString().split('T')[0] : "";
 
-            if (data.filingDate) data.filingDate = formatDate(data.filingDate);
-            if (data.firstHearingDate) data.firstHearingDate = formatDate(data.firstHearingDate);
-            if (data.nextHearingDate) data.nextHearingDate = formatDate(data.nextHearingDate);
-
-            // Handle arrays for visual state
-            if (Array.isArray(data.acts)) data.acts = data.acts.join(', ');
-            if (Array.isArray(data.underSections)) data.underSections = data.underSections.join(', ');
-            if (Array.isArray(data.opposingParties)) data.opposingParties = data.opposingParties.join(', ');
-
-            // Handle judge relation
+            // 1. Process relational fields and format them as initial options
+            let judgeId = "";
             if (data.judge) {
-                data.judgeId = data.judge.id;
+                judgeId = String(data.judge.id);
                 setInitialJudge({
-                    value: data.judge.id,
+                    value: judgeId,
                     label: data.judge.name,
-                    subLabel: data.judge.designation
+                    subLabel: data.judge.email
+                        ? `${data.judge.designation} (${data.judge.email})`
+                        : data.judge.designation
                 });
+            } else {
+                setInitialJudge(null);
             }
 
-            setFormData(data);
+            // 2. Explicitly map all fields from the API data to match the form state
+            // This mirrors the pattern used in the working EditJudgmentPage
+            setFormData({
+                caseNumber: data.caseNumber || "",
+                cnrNumber: data.cnrNumber || "",
+                title: data.title || "",
+                description: data.description || "",
+                caseType: data.caseType || "civil",
+                status: data.status || "filed",
+                filingDate: formatDate(data.filingDate),
+                firstHearingDate: formatDate(data.firstHearingDate),
+                nextHearingDate: formatDate(data.nextHearingDate),
+                court: data.court || "",
+                judgeId: judgeId,
+                acts: Array.isArray(data.acts) ? data.acts.join(', ') : (data.acts || ""),
+                underSections: Array.isArray(data.underSections) ? data.underSections.join(', ') : (data.underSections || ""),
+                policeStation: data.policeStation || "",
+                firNumber: data.firNumber || "",
+                firYear: data.firYear || "",
+                petitioner: data.petitioner || "",
+                respondent: data.respondent || "",
+                petitionerAdvocate: data.petitionerAdvocate || "",
+                respondentAdvocate: data.respondentAdvocate || "",
+                officeId: data.officeId || "",
+                practiceAreaId: data.practiceAreaId || "",
+                confidentialityLevel: String(data.confidentialityLevel || "3"),
+                opposingParties: Array.isArray(data.opposingParties) ? data.opposingParties.join(', ') : (data.opposingParties || ""),
+            });
         } catch (error: any) {
             // console.error("Error fetching case details:", error);
             toast.error(error.message || "Failed to fetch case details");
@@ -99,8 +127,23 @@ export default function EditCasePage() {
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        // Clear error when user types
+        if (errors[name]) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
     };
+
+    const inputClasses = (name: string) => `w-full px-4 py-2 border rounded-lg outline-none transition-all ${
+        errors[name] 
+            ? "border-red-500 ring-2 ring-red-500/10 bg-red-50/5 placeholder:text-red-300" 
+            : "border-gray-300 focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] bg-white"
+    }`;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -113,20 +156,39 @@ export default function EditCasePage() {
             { key: 'caseType', label: 'Case Type' },
             { key: 'filingDate', label: 'Filing Date' },
             { key: 'court', label: 'Court' },
-            { key: 'firstHearingDate', label: 'First Hearing Date' }, // Added
-            { key: 'nextHearingDate', label: 'Next Hearing Date' }, // Added
             { key: 'petitioner', label: 'Petitioner' },
             { key: 'respondent', label: 'Respondent' },
             { key: 'petitionerAdvocate', label: 'Petitioner Advocate' }, // Added
             { key: 'respondentAdvocate', label: 'Respondent Advocate' }, // Added
-            { key: 'opposingParties', label: 'Opposing Parties' } // Added
         ];
 
+        const newErrors: Record<string, string> = {};
         for (const field of requiredFields) {
             if (!formData[field.key as keyof typeof formData]) {
-                toast.error(`${field.label} is required`);
-                return;
+                newErrors[field.key] = `${field.label} is required`;
             }
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            
+            // Scroll to the first error
+            const firstErrorKey = Object.keys(newErrors)[0];
+            const element = document.getElementsByName(firstErrorKey)[0];
+            if (element) {
+                // Scroll to the parent FormField (the .group div) for better visibility
+                const container = element.closest('.group');
+                if (container) {
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                // If it's a focusable element, focus it
+                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') {
+                    element.focus();
+                }
+            }
+            return;
         }
 
         setSubmitting(true);
@@ -136,16 +198,20 @@ export default function EditCasePage() {
                 acts: typeof formData.acts === 'string' ? formData.acts.split(',').map(s => s.trim()).filter(Boolean) : formData.acts,
                 underSections: typeof formData.underSections === 'string' ? formData.underSections.split(',').map(s => s.trim()).filter(Boolean) : formData.underSections,
             };
-            if (typeof formData.opposingParties === 'string') {
+            if (typeof formData.opposingParties === 'string' && formData.opposingParties.trim()) {
                 dataToSubmit.opposingParties = formData.opposingParties.split(',').map(s => s.trim()).filter(Boolean);
+            } else {
+                delete dataToSubmit.opposingParties;
             }
             if (formData.confidentialityLevel) {
                 dataToSubmit.confidentialityLevel = parseInt(String(formData.confidentialityLevel));
             }
+            if (!formData.firstHearingDate) delete dataToSubmit.firstHearingDate;
+            if (!formData.nextHearingDate) delete dataToSubmit.nextHearingDate;
             if (!formData.officeId) delete dataToSubmit.officeId;
             if (!formData.practiceAreaId) delete dataToSubmit.practiceAreaId;
 
-            const { id, createdAt, updatedAt, isDeleted, judge, judgments, displayBoards, ...dataToSend } = dataToSubmit as any;
+            const { id, createdAt, updatedAt, isDeleted, judge, judgments, displayBoards, createdBy, ...dataToSend } = dataToSubmit as any;
             await casesService.update(params.id as string, dataToSend);
             toast.success("Case updated successfully");
             router.push("/admin/cases");
@@ -181,75 +247,86 @@ export default function EditCasePage() {
                 <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Basic Information</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Case Number <span className="text-red-500">*</span></label>
+                        <FormField label="Case Number" error={errors.caseNumber} required>
                             <input
                                 type="text"
                                 name="caseNumber"
                                 value={formData.caseNumber}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('caseNumber')}
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">CNR Number <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="CNR Number" error={errors.cnrNumber} required>
                             <input
                                 type="text"
                                 name="cnrNumber"
                                 value={formData.cnrNumber || ""}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('cnrNumber')}
                                 placeholder="16-digit unique number"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Title <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Title" error={errors.title} required>
                             <input
                                 type="text"
                                 name="title"
                                 value={formData.title}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('title')}
                                 onChange={handleChange}
                             />
-                        </div>
+                        </FormField>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <FormField label="Description" error={errors.description}>
                         <textarea
                             name="description"
                             value={formData.description}
                             rows={4}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                            className={inputClasses('description')}
                             onChange={handleChange}
                         />
-                    </div>
+                    </FormField>
                 </div>
 
                 {/* Case Details */}
                 <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Case Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Case Type <span className="text-red-500">*</span></label>
+                        <FormField label="Case Type" error={errors.caseType} required>
                             <CustomSelect
+                                name="caseType"
                                 options={caseTypeOptions}
                                 value={formData.caseType}
-                                onChange={(value) => setFormData({ ...formData, caseType: value })}
+                                onChange={(value) => {
+                                    setFormData({ ...formData, caseType: value });
+                                    if (errors.caseType) {
+                                        setErrors(prev => {
+                                            const next = { ...prev };
+                                            delete next.caseType;
+                                            return next;
+                                        });
+                                    }
+                                }}
                                 placeholder="Select Case Type"
-                                required
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Presiding Judge</label>
+                        </FormField>
+                        <FormField label="Presiding Judge" error={errors.judgeId}>
                             <InfiniteSearchableSelect
                                 name="judgeId"
                                 value={formData.judgeId}
                                 initialOption={initialJudge}
-                                onChange={(value) => setFormData({ ...formData, judgeId: value })}
-                                onSearch={async (query, page) => {
+                                error={errors.judgeId}
+                                onChange={(value) => {
+                                    setFormData({ ...formData, judgeId: value });
+                                    if (errors.judgeId) {
+                                        setErrors(prev => {
+                                            const next = { ...prev };
+                                            delete next.judgeId;
+                                            return next;
+                                        });
+                                    }
+                                }}
+                                onSearch={async (query: string, page: number) => {
                                     const res = query.trim()
                                         ? await judgesService.searchJudges(query, page, 10)
                                         : await judgesService.getAll({ page, limit: 10 });
@@ -266,13 +343,12 @@ export default function EditCasePage() {
                                 }}
                                 placeholder="Select Judge"
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        </FormField>
+                        <FormField label="Status" error={errors.status}>
                             <select
                                 name="status"
                                 value={formData.status}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                                className={inputClasses('status')}
                                 onChange={handleChange}
                             >
                                 <option value="filed">Filed</option>
@@ -281,29 +357,51 @@ export default function EditCasePage() {
                                 <option value="judgment">Judgment</option>
                                 <option value="closed">Closed</option>
                             </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Filing Date <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Filing Date" error={errors.filingDate} required>
                             <input
                                 type="date"
                                 name="filingDate"
                                 value={formData.filingDate}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('filingDate')}
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Court <span className="text-red-500">*</span></label>
-                            <input
-                                type="text"
+                        </FormField>
+                        <FormField label="Court" error={errors.court} required>
+                            <CourtSearchableDropdown
                                 name="court"
                                 value={formData.court}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                error={errors.court}
+                                onChange={(value) => {
+                                    setFormData({ ...formData, court: value });
+                                    if (errors.court) {
+                                        setErrors(prev => {
+                                            const next = { ...prev };
+                                            delete next.court;
+                                            return next;
+                                        });
+                                    }
+                                }}
+                            />
+                        </FormField>
+                        <FormField label="First Hearing Date" error={errors.firstHearingDate}>
+                            <input
+                                type="date"
+                                name="firstHearingDate"
+                                value={formData.firstHearingDate}
+                                className={inputClasses('firstHearingDate')}
                                 onChange={handleChange}
                             />
-                        </div>
+                        </FormField>
+                        <FormField label="Next Hearing Date" error={errors.nextHearingDate}>
+                            <input
+                                type="date"
+                                name="nextHearingDate"
+                                value={formData.nextHearingDate}
+                                className={inputClasses('nextHearingDate')}
+                                onChange={handleChange}
+                            />
+                        </FormField>
                     </div>
                 </div>
 
@@ -311,28 +409,26 @@ export default function EditCasePage() {
                 <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Legal Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Under Acts</label>
+                        <FormField label="Under Acts" error={errors.acts}>
                             <input
                                 type="text"
                                 name="acts"
                                 value={formData.acts || ""}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('acts')}
                                 placeholder="Comma separated e.g. IPC, CrPC"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Under Sections</label>
+                        </FormField>
+                        <FormField label="Under Sections" error={errors.underSections}>
                             <input
                                 type="text"
                                 name="underSections"
                                 value={formData.underSections || ""}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('underSections')}
                                 placeholder="Comma separated e.g. 420, 302"
                                 onChange={handleChange}
                             />
-                        </div>
+                        </FormField>
                     </div>
                 </div>
 
@@ -341,36 +437,33 @@ export default function EditCasePage() {
                     <div className="space-y-6">
                         <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Police & FIR Details</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Police Station</label>
+                            <FormField label="Police Station" error={errors.policeStation}>
                                 <input
                                     type="text"
                                     name="policeStation"
                                     value={formData.policeStation || ""}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                    className={inputClasses('policeStation')}
                                     onChange={handleChange}
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">FIR Number</label>
+                            </FormField>
+                            <FormField label="FIR Number" error={errors.firNumber}>
                                 <input
                                     type="text"
                                     name="firNumber"
                                     value={formData.firNumber || ""}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                    className={inputClasses('firNumber')}
                                     onChange={handleChange}
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">FIR Year</label>
+                            </FormField>
+                            <FormField label="FIR Year" error={errors.firYear}>
                                 <input
                                     type="text"
                                     name="firYear"
                                     value={formData.firYear || ""}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                    className={inputClasses('firYear')}
                                     onChange={handleChange}
                                 />
-                            </div>
+                            </FormField>
                         </div>
                     </div>
                 )}
@@ -379,48 +472,42 @@ export default function EditCasePage() {
                 <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Parties & Advocates</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Petitioner <span className="text-red-500">*</span></label>
+                        <FormField label="Petitioner" error={errors.petitioner} required>
                             <input
                                 type="text"
                                 name="petitioner"
                                 value={formData.petitioner}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('petitioner')}
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Respondent <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Respondent" error={errors.respondent} required>
                             <input
                                 type="text"
                                 name="respondent"
                                 value={formData.respondent}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('respondent')}
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Petitioner Advocate <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Petitioner Advocate" error={errors.petitionerAdvocate} required>
                             <input
                                 type="text"
                                 name="petitionerAdvocate"
                                 value={formData.petitionerAdvocate || ""}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('petitionerAdvocate')}
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Respondent Advocate <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Respondent Advocate" error={errors.respondentAdvocate} required>
                             <input
                                 type="text"
                                 name="respondentAdvocate"
                                 value={formData.respondentAdvocate || ""}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('respondentAdvocate')}
                                 onChange={handleChange}
                             />
-                        </div>
+                        </FormField>
                     </div>
                 </div>
 
@@ -428,33 +515,30 @@ export default function EditCasePage() {
                 <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Law Firm specific Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Office ID</label>
+                        <FormField label="Office ID" error={errors.officeId}>
                             <input
                                 type="text"
                                 name="officeId"
                                 value={formData.officeId || ""}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('officeId')}
                                 placeholder="Enter Office ID"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Practice Area ID</label>
+                        </FormField>
+                        <FormField label="Practice Area ID" error={errors.practiceAreaId}>
                             <input
                                 type="text"
                                 name="practiceAreaId"
                                 value={formData.practiceAreaId || ""}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('practiceAreaId')}
                                 placeholder="Enter Practice Area ID"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Confidentiality Level (1-5)</label>
+                        </FormField>
+                        <FormField label="Confidentiality Level" error={errors.confidentialityLevel}>
                             <select
                                 name="confidentialityLevel"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all bg-white"
+                                className={inputClasses('confidentialityLevel')}
                                 value={formData.confidentialityLevel || "3"}
                                 onChange={handleChange}
                             >
@@ -464,18 +548,17 @@ export default function EditCasePage() {
                                 <option value="4">4 - Highly Confidential</option>
                                 <option value="5">5 - Top Secret</option>
                             </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Opposing Parties <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Opposing Parties" error={errors.opposingParties}>
                             <input
                                 type="text"
                                 name="opposingParties"
                                 value={formData.opposingParties || ""}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('opposingParties')}
                                 placeholder="Comma separated for conflicts check"
                                 onChange={handleChange}
                             />
-                        </div>
+                        </FormField>
                     </div>
                 </div>
 

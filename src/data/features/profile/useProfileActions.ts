@@ -91,6 +91,11 @@ export const useProfileActions = () => {
       return Promise.reject("User missing");
     }
 
+    if (formData.avatar && formData.avatar.size > 5 * 1024 * 1024) {
+      toast.error("Profile picture must be less than 5MB");
+      return Promise.reject("File too large");
+    }
+
     return dispatch(updateProfile(formData)).unwrap();
   };
 

@@ -14,8 +14,8 @@ export interface Notification {
 }
 
 export const notificationService = {
-    getNotifications: async (userId: string) => {
-        return apiClient.get<Notification[]>(`${API_ENDPOINTS.NOTIFICATIONS.FETCH_BY_ID}?userId=${userId}`);
+    getNotifications: async (userId: string, page = 1, limit = 15) => {
+        return apiClient.get(`${API_ENDPOINTS.NOTIFICATIONS.FETCH_BY_ID}?userId=${userId}&page=${page}&limit=${limit}`);
     },
 
     markAllRead: async (userId: string) => {

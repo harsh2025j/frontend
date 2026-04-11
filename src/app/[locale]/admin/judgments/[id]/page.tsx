@@ -11,6 +11,7 @@ import { ArrowLeft, Save, Plus, X } from "lucide-react";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import InfiniteSearchableSelect from "@/components/ui/InfiniteSearchableSelect";
 import RichTextEditor from "@/components/ui/RichTextEditor";
+import FormField from "@/components/ui/FormField";
 
 export default function EditJudgmentPage() {
     useDocTitle("Edit Judgment  | Sajjad Husain Law Associates");
@@ -42,6 +43,8 @@ export default function EditJudgmentPage() {
         respondentCounsel: "",
         bench: "",
     });
+
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [newCitation, setNewCitation] = useState("");
     const [newKeyPoint, setNewKeyPoint] = useState("");
@@ -156,10 +159,32 @@ export default function EditJudgmentPage() {
             ...prev,
             [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
         }));
+
+        // Clear error when user types
+        if (errors[name]) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
     };
+
+    const inputClasses = (name: string) => `w-full px-4 py-2 border rounded-lg outline-none transition-all ${
+        errors[name] 
+            ? "border-red-500 ring-2 ring-red-500/10 bg-red-50/5 placeholder:text-red-300" 
+            : "border-gray-300 focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] bg-white"
+    }`;
 
     const handleFullTextChange = (value: string) => {
         setFormData(prev => ({ ...prev, fullText: value }));
+        if (errors.fullText) {
+            setErrors(prev => {
+                const next = { ...prev };
+                delete next.fullText;
+                return next;
+            });
+        }
     };
 
     const addCitation = () => {
@@ -203,11 +228,11 @@ export default function EditJudgmentPage() {
             { key: 'fullText', label: 'Full Judgment Text' }
         ];
 
+        const newErrors: Record<string, string> = {};
         for (const field of requiredFields) {
             const value = formData[field.key as keyof typeof formData];
             if (!value || (typeof value === 'string' && value.trim() === '')) {
-                toast.error(`${field.label} is required`);
-                return;
+                newErrors[field.key] = `${field.label} is required`;
             }
         }
 
@@ -217,8 +242,27 @@ export default function EditJudgmentPage() {
             return doc.body.textContent || "";
         };
 
-        if (stripHtml(formData.fullText).trim() === '') {
-            toast.error("Full Judgment Text cannot be empty");
+        if (!newErrors.fullText && stripHtml(formData.fullText).trim() === '') {
+            newErrors.fullText = "Full Judgment Text cannot be empty";
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            
+            // Scroll to the first error
+            const firstErrorKey = Object.keys(newErrors)[0];
+            const element = document.getElementsByName(firstErrorKey)[0];
+            if (element) {
+                const container = element.closest('.group');
+                if (container) {
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') {
+                    element.focus();
+                }
+            }
             return;
         }
 
@@ -271,69 +315,86 @@ export default function EditJudgmentPage() {
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Judgment Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Title <span className="text-red-500">*</span></label>
-                            <input
-                                type="text"
-                                name="title"
-                                value={formData.title}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
-                                placeholder="Enter an appropriate title for the judgment"
-                                onChange={handleChange}
-                            />
+                            <FormField label="Title" error={errors.title} required>
+                                <input
+                                    type="text"
+                                    name="title"
+                                    value={formData.title}
+                                    className={inputClasses('title')}
+                                    placeholder="Enter an appropriate title for the judgment"
+                                    onChange={handleChange}
+                                />
+                            </FormField>
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Select Case <span className="text-red-500">*</span></label>
-                            <InfiniteSearchableSelect
-                                name="caseId"
-                                value={formData.caseId}
-                                initialOption={initialCase}
-                                onChange={(val) => setFormData(prev => ({ ...prev, caseId: val }))}
-                                required
-                                placeholder="Search and select a case..."
-                                className="w-full"
-                                options={cases.map((c: any) => ({
-                                    value: c.id,
-                                    label: `${c.caseNumber} - ${c.title}`,
-                                    subLabel: c.court
-                                }))}
-                                onSearch={async (query, page) => {
-                                    const res = query.trim()
-                                        ? await casesService.searchCases(query, page, 10)
-                                        : await casesService.getAll({ page, limit: 10 });
+                            <FormField label="Select Case" error={errors.caseId} required>
+                                <InfiniteSearchableSelect
+                                    name="caseId"
+                                    value={formData.caseId}
+                                    error={errors.caseId}
+                                    initialOption={initialCase}
+                                    onChange={(val) => {
+                                        setFormData(prev => ({ ...prev, caseId: val }));
+                                        if (errors.caseId) {
+                                            setErrors(prev => {
+                                                const next = { ...prev };
+                                                delete next.caseId;
+                                                return next;
+                                            });
+                                        }
+                                    }}
+                                    placeholder="Search and select a case..."
+                                    className="w-full"
+                                    options={cases.map((c: any) => ({
+                                        value: c.id,
+                                        label: `${c.caseNumber} - ${c.title}`,
+                                        subLabel: c.court
+                                    }))}
+                                    onSearch={async (query, page) => {
+                                        const res = query.trim()
+                                            ? await casesService.searchCases(query, page, 10)
+                                            : await casesService.getAll({ page, limit: 10 });
 
-                                    const items = res.data?.data?.data || res.data?.data || [];
-                                    return {
-                                        options: items.map((c: any) => ({
-                                            value: c.id,
-                                            label: `${c.caseNumber} - ${c.title}`,
-                                            subLabel: c.court
-                                        })),
-                                        totalPages: extractTotalPages(res)
-                                    };
-                                }}
-                            />
+                                        const items = res.data?.data?.data || res.data?.data || [];
+                                        return {
+                                            options: items.map((c: any) => ({
+                                                value: c.id,
+                                                label: `${c.caseNumber} - ${c.title}`,
+                                                subLabel: c.court
+                                            })),
+                                            totalPages: extractTotalPages(res)
+                                        };
+                                    }}
+                                />
+                            </FormField>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Judgment Date <span className="text-red-500">*</span></label>
+                        <FormField label="Judgment Date" error={errors.judgmentDate} required>
                             <input
                                 type="date"
                                 name="judgmentDate"
                                 value={formData.judgmentDate}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('judgmentDate')}
                                 onChange={handleChange}
                             />
-                        </div>
+                        </FormField>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Select Judge <span className="text-red-500">*</span></label>
+                        <FormField label="Select Judge" error={errors.judgeId} required>
                             <InfiniteSearchableSelect
                                 name="judgeId"
                                 value={formData.judgeId}
                                 initialOption={initialJudge}
-                                onChange={(val) => setFormData(prev => ({ ...prev, judgeId: val }))}
+                                error={errors.judgeId}
+                                onChange={(val) => {
+                                    setFormData(prev => ({ ...prev, judgeId: val }));
+                                    if (errors.judgeId) {
+                                        setErrors(prev => {
+                                            const next = { ...prev };
+                                            delete next.judgeId;
+                                            return next;
+                                        });
+                                    }
+                                }}
                                 placeholder="Search and select a judge..."
                                 className="w-full"
                                 options={judges.map((j: any) => ({
@@ -357,89 +418,84 @@ export default function EditJudgmentPage() {
                                     };
                                 }}
                             />
-                        </div>
+                        </FormField>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Judgment Type</label>
+                        <FormField label="Judgment Type" error={errors.judgmentType}>
                             <select
                                 name="judgmentType"
                                 value={formData.judgmentType}
                                 onChange={handleChange}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all bg-white"
+                                className={inputClasses('judgmentType')}
                             >
                                 <option value="final">Final</option>
                                 <option value="interim">Interim</option>
                                 <option value="order">Order</option>
                                 <option value="directive">Directive</option>
                             </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Outcome <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Outcome" error={errors.outcome} required>
                             <input
                                 type="text"
                                 name="outcome"
                                 value={formData.outcome}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('outcome')}
                                 placeholder="e.g. Dismissed, Allowed"
                                 onChange={handleChange}
                             />
-                        </div>
+                        </FormField>
 
                         {/* NEW LITIGATION PARTIES FIELDS */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Petitioner / Appellant <span className="text-red-500">*</span></label>
+                        <FormField label="Petitioner / Appellant" error={errors.petitioner} required>
                             <input
                                 type="text"
                                 name="petitioner"
                                 value={formData.petitioner}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('petitioner')}
                                 placeholder="e.g. State of Maharashtra"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Respondent / Defendant <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Respondent / Defendant" error={errors.respondent} required>
                             <input
                                 type="text"
                                 name="respondent"
                                 value={formData.respondent}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('respondent')}
                                 placeholder="e.g. Union of India"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Petitioner's Counsel <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Petitioner's Counsel" error={errors.petitionerCounsel} required>
                             <input
                                 type="text"
                                 name="petitionerCounsel"
                                 value={formData.petitionerCounsel}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('petitionerCounsel')}
                                 placeholder="Advocates for the petitioner..."
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Respondent's Counsel <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Respondent's Counsel" error={errors.respondentCounsel} required>
                             <input
                                 type="text"
                                 name="respondentCounsel"
                                 value={formData.respondentCounsel}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                className={inputClasses('respondentCounsel')}
                                 placeholder="Advocates for the respondent..."
                                 onChange={handleChange}
                             />
-                        </div>
+                        </FormField>
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Coram / Bench <span className="text-red-500">*</span></label>
-                            <input
-                                type="text"
-                                name="bench"
-                                value={formData.bench}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
-                                placeholder="e.g. Hon'ble Mr. Justice D.Y. Chandrachud, Hon'ble Mr. Justice J.B. Pardiwala"
-                                onChange={handleChange}
-                            />
+                            <FormField label="Coram / Bench" error={errors.bench} required>
+                                <input
+                                    type="text"
+                                    name="bench"
+                                    value={formData.bench}
+                                    className={inputClasses('bench')}
+                                    placeholder="e.g. Hon'ble Mr. Justice D.Y. Chandrachud, Hon'ble Mr. Justice J.B. Pardiwala"
+                                    onChange={handleChange}
+                                />
+                            </FormField>
                         </div>
 
                         <div className="flex items-end pb-3">
@@ -509,27 +565,30 @@ export default function EditJudgmentPage() {
                         </ul>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Summary <span className="text-red-500">*</span></label>
+                    <FormField label="Summary" error={errors.summary} required>
                         <textarea
                             name="summary"
                             value={formData.summary}
                             rows={3}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                            className={inputClasses('summary')}
+                            placeholder="Brief summary of the judgment..."
                             onChange={handleChange}
                         />
-                    </div>
+                    </FormField>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Judgment Text <span className="text-red-500">*</span></label>
-                        <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+                    <FormField label="Full Judgment Text" error={errors.fullText} required>
+                        <div className={`border rounded-lg overflow-hidden bg-white transition-all ${
+                            errors.fullText ? "border-red-500 ring-2 ring-red-500/10" : "border-gray-300"
+                        }`}>
                             <RichTextEditor
                                 value={formData.fullText}
                                 onChange={handleFullTextChange}
                                 placeholder="Full text of the judgment..."
                             />
                         </div>
-                    </div>
+                        {/* Hidden input for scrolling to RichTextEditor */}
+                        <input type="text" name="fullText" className="sr-only" readOnly />
+                    </FormField>
                 </div>
 
                 <div className="flex justify-end gap-4 pt-4 border-t border-gray-100">

@@ -52,6 +52,29 @@ export default function ForgotPasswordPage() {
   const [newPassword, setNewPassword] = useState("");
   const [conformPassword, setConformPassword] = useState("");
 
+  // --- NEW LOGIC: Countdown Timer for Resend OTP ---
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [countdown]);
+
+  const handleResendWithTimer = async () => {
+    if (countdown > 0) return;
+    try {
+      await handleReSendOtp();
+      setCountdown(60);
+    } catch (error) {
+      console.error("Failed to resend OTP:", error);
+    }
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const stepParam = params.get("Step");
@@ -233,11 +256,11 @@ export default function ForgotPasswordPage() {
 
               <div className="text-center mb-6">
                 <button
-                  onClick={handleReSendOtp}
-                  disabled={resendLoading || verifyLoading}
-                  className="text-sm text-blue-600 hover:underline disabled:text-gray-400"
+                  onClick={handleResendWithTimer}
+                  disabled={resendLoading || verifyLoading || countdown > 0}
+                  className="text-sm text-blue-600 hover:underline disabled:text-gray-400 font-medium"
                 >
-                  {resendLoading ? "Sending..." : "Resend OTP"}
+                  {resendLoading ? "Sending..." : countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
                 </button>
               </div>
 

@@ -3,196 +3,294 @@ import React, { useState, useEffect } from "react";
 import { Link } from "@/i18n/routing";
 import { judgmentsService } from "@/data/services/judgments-service/judgmentsService";
 import { getBroadcastService } from "@/data/services/broadcast-service/broadcastService";
+import { casesService } from "@/data/services/cases-service/casesService";
+import { articleApi } from "@/data/services/article-service/article-service";
 import Loader from "./Loader";
+import Image from "next/image";
+import { getSafeImageUrl } from "@/utils/imageUtils";
+import { formatDate } from "@/utils/dateUtils";
+
+type TabType = 'cases' | 'judgments' | 'articles' | 'notices';
 
 export default function LatestInformationSection() {
-    const [activeTab, setActiveTab] = useState<'updates' | 'judgments' | 'orders' | 'notices'>('updates');
-    const [latestJudgments, setLatestJudgments] = useState<any[]>([]);
-    const [latestBroadcasts, setLatestBroadcasts] = useState<any[]>([]);
-    const [loadingJudgments, setLoadingJudgments] = useState(false);
-    const [loadingBroadcasts, setLoadingBroadcasts] = useState(false);
+    const [activeTab, setActiveTab] = useState<TabType>('cases');
+    const [dataState, setDataState] = useState<{
+        cases: any[],
+        judgments: any[],
+        articles: any[],
+        notices: any[]
+    }>({
+        cases: [],
+        judgments: [],
+        articles: [],
+        notices: []
+    });
+    const [loading, setLoading] = useState<Record<TabType, boolean>>({
+        cases: false,
+        judgments: false,
+        articles: false,
+        notices: false
+    });
 
     useEffect(() => {
-        fetchJudgments();
-        fetchBroadcasts();
+        fetchAllData();
     }, []);
 
-    const fetchJudgments = async () => {
-        setLoadingJudgments(true);
-        try {
-            const response = await judgmentsService.getAll({ page: 1, limit: 10 });
-            const data = response.data?.data || response.data || {};
-            const results = Array.isArray(data) ? data : (data.data || []);
-            setLatestJudgments(results);
-        } catch (error) {
-            console.error("Error fetching judgments for home section:", error);
-        } finally {
-            setLoadingJudgments(false);
-        }
-    };
+    const fetchAllData = async () => {
+        setLoading({ cases: true, judgments: true, articles: true, notices: true });
 
-    const fetchBroadcasts = async () => {
-        setLoadingBroadcasts(true);
         try {
-            const response = await getBroadcastService.getBroadcast(1, 10, true);
-            const data = response.data?.data || response.data || [];
-            setLatestBroadcasts(data);
+            // 1. Fetch Cases
+            const casesRes = await casesService.getAll({ limit: 6 });
+            const casesData = casesRes?.data;
+            const cases = casesData?.data?.data || casesData?.data || (Array.isArray(casesData) ? casesData : []);
+
+            // 2. Fetch Judgments
+            const judgmentsRes = await judgmentsService.getAll({ page: 1, limit: 6 });
+            const jData = judgmentsRes?.data;
+            const judgments = jData?.data?.data || jData?.data || (Array.isArray(jData) ? jData : []);
+
+            // 3. Fetch Articles
+            const articlesRes = await articleApi.fetchArticles({ limit: 6 });
+            const aData = articlesRes?.data;
+            // Robust check for article array: could be in .data.data or .data or the response itself
+            const articles = aData?.data || (Array.isArray(aData) ? aData : []);
+
+            // 4. Fetch Notices
+            const noticesRes = await getBroadcastService.getBroadcast(1, 6, true);
+            const nData = noticesRes?.data;
+            const notices = nData?.data || (Array.isArray(nData) ? nData : []);
+
+            setDataState({
+                cases: Array.isArray(cases) ? cases : [],
+                judgments: Array.isArray(judgments) ? judgments : [],
+                articles: Array.isArray(articles) ? articles : [],
+                notices: Array.isArray(notices) ? notices : []
+            });
         } catch (error) {
-            console.error("Error fetching broadcasts for home section:", error);
+            console.error("Error fetching latest information:", error);
         } finally {
-            setLoadingBroadcasts(false);
+            setLoading({ cases: false, judgments: false, articles: false, notices: false });
         }
     };
 
     const handleDownload = (id: string) => {
-        // Open judgment detail in new tab with print flag
         window.open(`/judgments/${id}?print=true`, "_blank");
     };
 
-    // Helper function to get content based on active tab
-    const getTabContent = (tab: string) => {
-        const contentMap: Record<string, Array<{ type: string; text: string; download?: boolean; id?: string }>> = {
-            updates: [
-                { type: 'Latest Update', text: 'Helpline numbers of Court Masters and Moderators for 22.12.2025', download: true },
-                { type: 'Latest Update', text: 'Notice regarding sitting of Chief Justice\'s Court at 10.30 A.M. on 22.12.2025 (Monday)' },
-                { type: 'Latest Update', text: 'Helpline numbers of Court Masters and Moderators for 19.12.2025' },
-                { type: 'Latest Update', text: 'Updated court timings for winter session 2025' },
-                { type: 'Latest Update', text: 'New e-filing guidelines effective from January 2025' },
-                { type: 'Latest Update', text: 'Court holiday list for 2025 published' },
-            ],
-            judgments: latestJudgments.map(j => ({
-                id: j.id || j._id,
-                type: 'Judgment',
-                text: `${j.caseTitle || j.case?.title || j.title || 'Judgment'} - ${j.case?.caseNumber || ''}`,
-                download: true
-            })),
-            orders: [
-                { type: 'Order', text: 'Order in Civil Appeal No. 12345/2025 dated 20.12.2025', download: true },
-                { type: 'Order', text: 'Interim order in Writ Petition No. 6789/2025', download: true },
-                { type: 'Order', text: 'Order regarding adjournment in SLP No. 9876/2025' },
-                { type: 'Order', text: 'Stay order in Transfer Petition No. 5432/2025', download: true },
-                { type: 'Order', text: 'Direction order in Contempt Petition No. 3210/2025' },
-            ],
-            notices: latestBroadcasts.map(b => ({
-                id: b._id || b.id,
-                type: 'Listing Notice',
-                text: b.content?.title || b.title || 'Notification',
-                body: b.content?.body || b.body,
-                download: false
-            })),
-        };
-        return contentMap[tab] || contentMap.updates;
+    const renderListItems = (tab: TabType) => {
+        const items = dataState[tab];
+        if (loading[tab]) {
+            return (
+                <div className="space-y-4 animate-pulse">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="flex items-start gap-3 pb-4 border-b border-gray-200 last:border-0 last:pb-0 p-2">
+                            <div className="w-3 h-3 bg-gray-200 rounded-full mt-1 shrink-0" />
+                            
+                            {tab === 'articles' && (
+                                <div className="w-14 h-14 bg-gray-200 rounded shrink-0" />
+                            )}
+                            
+                            <div className="flex-1 space-y-2">
+                                <div className="flex gap-2">
+                                    <div className="h-4 bg-gray-200 w-20 rounded" />
+                                    <div className="h-4 bg-gray-100 w-12 rounded" />
+                                </div>
+                                <div className="h-3 bg-gray-200 w-full rounded" />
+                                <div className="h-2 bg-gray-100 w-1/3 rounded" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        if (!items || items.length === 0) {
+            return (
+                <div className="py-10 text-center text-gray-500 italic">
+                    No recent {tab} found.
+                </div>
+            );
+        }
+
+        return items.map((item: any, index: number) => {
+            const id = item.id || item._id;
+
+            // Layout logic based on tab
+            if (tab === 'articles') {
+                return (
+                    <Link
+                        key={id || index}
+                        href={`/news/${item.slug}`}
+                        className="flex items-start gap-3 pb-4 border-b border-gray-200 last:border-0 last:pb-0 hover:bg-gray-50/50 transition-all rounded p-2 group"
+                    >
+                        <span className="text-[#C9A227] mt-1 shrink-0">▸</span>
+
+                        {/* Article Thumbnail */}
+                        <div className="relative w-14 h-14 flex-shrink-0 rounded overflow-hidden border border-gray-100 shadow-sm">
+                            <Image
+                                src={getSafeImageUrl(item.thumbnail)}
+                                alt={item.title}
+                                fill
+                                sizes="56px"
+                                quality={80}
+                                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <span className="px-2 py-0.5 bg-[#C9A227] text-white text-[10px] font-bold rounded uppercase tracking-wider">
+                                    Recent News
+                                </span>
+                            </div>
+                            <p className="text-sm font-bold text-gray-900 group-hover:text-[#0A2342] leading-tight line-clamp-1">
+                                {item.title}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-1 font-medium italic">
+                                By {item.authors || item.advocateName || "Sajjad Husain Law Associates"}
+                            </p>
+                        </div>
+                    </Link>
+                );
+            }
+
+            if (tab === 'cases') {
+                return (
+                    <Link
+                        key={id || index}
+                        href={`/cases/${id}`}
+                        className="flex items-start gap-2.5 pb-3.5 border-b border-gray-200 last:border-0 hover:bg-gray-50/50 transition-colors p-2"
+                    >
+                        <span className="text-[#C9A227] mt-0.5">▸</span>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                <span className="px-2.5 py-1 bg-[#C9A227] text-white text-[10px] font-bold rounded whitespace-nowrap uppercase tracking-wider">
+                                    {item.caseNumber || 'Case'}
+                                </span>
+                                <span className="px-2 py-0.5 text-[9px] font-bold text-[#0A2342] bg-gray-100 rounded uppercase">
+                                    {item.status}
+                                </span>
+                            </div>
+                            <p className="text-sm text-gray-700 leading-relaxed truncate font-medium group-hover:text-[#0A2342]">
+                                {item.title}
+                            </p>
+                        </div>
+                    </Link>
+                );
+            }
+
+            if (tab === 'judgments') {
+                const title = `${item.caseTitle || item.case?.title || item.title || 'Judgment'} - ${item.case?.caseNumber || ''}`;
+                return (
+                    <div key={id || index} className="flex items-start gap-2.5 pb-3.5 border-b border-gray-200 last:border-0 cursor-pointer hover:bg-gray-50/50 transition-colors group/item p-2">
+                        <span className="text-[#C9A227] mt-0.5">▸</span>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                <span className="px-2.5 py-1 bg-[#C9A227] text-white text-[10px] font-bold rounded whitespace-nowrap uppercase tracking-wider">
+                                    Judgment
+                                </span>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDownload(id);
+                                    }}
+                                    className="px-3 py-1 bg-[#0A2342] text-white text-[10px] font-medium rounded hover:bg-[#1a3a75] transition-colors"
+                                >
+                                    download
+                                </button>
+                            </div>
+                            <Link href={`/judgments/${id}`}>
+                                <p className="text-sm text-gray-700 leading-relaxed truncate group-hover/item:text-[#0A2342] font-medium">
+                                    {title}
+                                </p>
+                            </Link>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Notices
+            const title = item.content?.title || item.title || 'Notification';
+            return (
+                <div key={id || index} className="flex items-start gap-2.5 pb-3.5 border-b border-gray-200 last:border-0 hover:bg-gray-50/50 transition-colors p-2">
+                    <span className="text-[#C9A227] mt-0.5">▸</span>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                            <span className="px-2.5 py-1 bg-[#C9A227] text-white text-[10px] font-bold rounded whitespace-nowrap uppercase tracking-wider">
+                                Notice
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-medium">{formatDate(item.createdAt)}</span>
+                        </div>
+                        <p className="text-sm text-gray-700 leading-relaxed truncate">
+                            {title}
+                        </p>
+                    </div>
+                </div>
+            );
+        });
     };
 
     return (
         <div className="flex flex-col">
             <h2 className="text-2xl md:text-3xl font-bold text-[#0A2342] mb-6">Latest Information</h2>
 
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col min-h-[550px]">
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col min-h-[550px] shadow-sm">
                 {/* Tab Buttons */}
                 <div className="flex flex-wrap gap-2 p-4 bg-gray-50 border-b-2 border-gray-200">
                     <button
-                        onClick={() => setActiveTab('updates')}
-                        className={`px-3 py-2 rounded text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'updates'
+                        onClick={() => setActiveTab('cases')}
+                        className={`px-3 py-2 rounded text-xs md:text-sm font-bold transition-colors flex items-center gap-1.5 uppercase tracking-wide ${activeTab === 'cases'
                             ? 'bg-[#0A2342] text-white'
                             : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-[#C9A227] hover:text-[#C9A227]'
                             }`}
                     >
-                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-                        </svg>
-                        Updates
+                        Cases
                     </button>
                     <button
                         onClick={() => setActiveTab('judgments')}
-                        className={`px-3 py-2 rounded text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'judgments'
+                        className={`px-3 py-2 rounded text-xs md:text-sm font-bold transition-colors flex items-center gap-1.5 uppercase tracking-wide ${activeTab === 'judgments'
                             ? 'bg-[#C9A227] text-white'
                             : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-[#C9A227] hover:text-[#C9A227]'
                             }`}
                     >
-                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                            <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                        </svg>
                         Judgments
                     </button>
                     <button
-                        onClick={() => setActiveTab('orders')}
-                        className={`px-3 py-2 rounded text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'orders'
+                        onClick={() => setActiveTab('articles')}
+                        className={`px-3 py-2 rounded text-xs md:text-sm font-bold transition-colors flex items-center gap-1.5 uppercase tracking-wide ${activeTab === 'articles'
                             ? 'bg-[#0A2342] text-white'
                             : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-[#C9A227] hover:text-[#C9A227]'
                             }`}
                     >
-                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                            <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        Orders
+                        Recent Articles
                     </button>
                     <button
                         onClick={() => setActiveTab('notices')}
-                        className={`px-3 py-2 rounded text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'notices'
+                        className={`px-3 py-2 rounded text-xs md:text-sm font-bold transition-colors flex items-center gap-1.5 uppercase tracking-wide ${activeTab === 'notices'
                             ? 'bg-[#0A2342] text-white'
                             : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-[#C9A227] hover:text-[#C9A227]'
                             }`}
                     >
-                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                        </svg>
-                        Listing Notices
+                        Notices
                     </button>
                 </div>
 
                 {/* Information List - Fixed Height with Scroll */}
                 <div className="overflow-y-auto p-5 md:p-6 max-h-[400px] flex-1">
-                    {((activeTab === 'judgments' && loadingJudgments) || (activeTab === 'notices' && loadingBroadcasts)) ? (
-                        <div className="flex justify-center items-center h-full py-10">
-                            <Loader size="md" text={`Loading ${activeTab === 'notices' ? 'Notices' : 'Judgments'}...`} />
-                        </div>
-                    ) : (
-                        <div className="space-y-3.5">
-                            {getTabContent(activeTab).map((notice: any, index: number) => {
-                                const isJudgment = activeTab === 'judgments' && notice.id;
-                                const content = (
-                                    <div key={index} className={`flex items-start gap-2.5 pb-3.5 border-b border-gray-200 last:border-0 ${isJudgment ? 'cursor-pointer hover:bg-gray-50/50 transition-colors group/item' : ''}`}>
-                                        <span className="text-[#C9A227] mt-0.5">▸</span>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                                <span className="px-2.5 py-1 bg-[#C9A227] text-white text-xs font-semibold rounded whitespace-nowrap">
-                                                    {notice.type}
-                                                </span>
-                                                {notice.download && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            e.preventDefault();
-                                                            notice.id && handleDownload(notice.id);
-                                                        }}
-                                                        className="px-3 py-1 bg-[#0A2342] text-white text-xs font-medium rounded hover:bg-[#1a3a75] transition-colors relative z-10"
-                                                    >
-                                                        download
-                                                    </button>
-                                                )}
-                                            </div>
-                                            <p className={`text-sm text-gray-700 leading-relaxed truncate ${isJudgment ? 'group-hover/item:text-[#0A2342] font-medium' : ''}`}>
-                                                {notice.text}
-                                            </p>
-                                        </div>
-                                    </div>
-                                );
+                    <div className="space-y-2">
+                        {renderListItems(activeTab)}
+                    </div>
+                </div>
 
-                                if (isJudgment) {
-                                    return (
-                                        <Link key={index} href={`/judgments/${notice.id}`}>
-                                            {content}
-                                        </Link>
-                                    );
-                                }
-
-                                return content;
-                            })}
-                        </div>
-                    )}
+                {/* Footer Section */}
+                <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-center">
+                    {/* <Link 
+                        href={`/${activeTab === 'articles' ? 'articles' : activeTab}`}
+                        className="text-xs font-bold text-[#C9A227] uppercase tracking-widest hover:text-[#0A2342] transition-colors"
+                    >
+                        View all {activeTab}
+                    </Link> */}
                 </div>
             </div>
         </div>

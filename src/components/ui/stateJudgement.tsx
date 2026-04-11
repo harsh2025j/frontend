@@ -23,6 +23,7 @@ const StateJudgement: React.FC<State> = ({ img, state }) => {
           className="object-cover w-full h-full"
           width={100}
           height={100}
+          quality={90}
         />
       </div>
 

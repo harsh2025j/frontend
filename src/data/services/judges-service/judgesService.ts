@@ -23,11 +23,11 @@ export const judgesService = {
     getByCourt: async (court: string) => {
         return await apiClient.get(`${API_ENDPOINTS.JUDGES.BY_COURT}/${court}`);
     },
-    searchJudges: async (q: string, page: number = 1, limit: number = 10, category?: string, courtType?: string, year?: string) => {
+    searchJudges: async (q: string, page: number = 1, limit: number = 10, category?: string, courtType?: string, year?: string, court?: string) => {
         // Redirection: use the same /judges endpoint but with search params
         // This ensures category filtering works during search!
         return await apiClient.get(API_ENDPOINTS.JUDGES.BASE, {
-            params: { q, page, limit, category, courtType, year }
+            params: { q, page, limit, category, courtType, year, court }
         });
     },
     getTopJudges: async (page = 1, limit = 5, court?: string) => {

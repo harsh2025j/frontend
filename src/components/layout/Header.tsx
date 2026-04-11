@@ -353,7 +353,7 @@ export default function Header() {
               <div className="relative pb-4 -mb-4" onMouseEnter={() => setIsProfileOpen(true)} onMouseLeave={() => setIsProfileOpen(false)}>
                 <button className="flex items-center gap-2 focus:outline-none py-2">
                   <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700 overflow-hidden border-2 border-[#C9A227]">
-                    {avatar ? <Image src={avatar} alt="Avatar" width={40} height={40} className="object-cover w-full h-full" /> : (user?.name?.[0] || "U").toUpperCase()}
+                    {avatar ? <Image src={avatar} alt="Avatar" width={40} height={40} className="object-cover w-full h-full" quality={90} sizes="100px" /> : (user?.name?.[0] || "U").toUpperCase()}
                   </div>
                   <span className="text-sm font-medium text-gray-800 hover:text-[#C9A227] transition-colors">{user?.name}</span>
                   <ChevronDown size={14} className="text-gray-500" />

@@ -7,6 +7,8 @@ import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { ArrowLeft, Save } from "lucide-react";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import FormField from "@/components/ui/FormField";
+import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
 
 export default function CreateJudgePage() {
     useDocTitle("Create Judge  | Sajjad Husain Law Associates");
@@ -26,15 +28,32 @@ export default function CreateJudgePage() {
         isPublished: true,
     });
 
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
         }));
+
+        // Clear error when user types
+        if (errors[name]) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
     };
+
+    const inputClasses = (name: string) => `w-full px-4 py-2 border rounded-lg outline-none transition-all ${
+        errors[name] 
+            ? "border-red-500 ring-2 ring-red-500/10 bg-red-50/5 placeholder:text-red-300" 
+            : "border-gray-300 focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] bg-white"
+    }`;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -48,26 +67,48 @@ export default function CreateJudgePage() {
             { key: 'appointmentDate', label: 'Appointment Date' }
         ];
 
+        const newErrors: Record<string, string> = {};
         for (const field of requiredFields) {
             if (!formData[field.key as keyof typeof formData]) {
-                toast.error(`${field.label} is required`);
-                return;
+                newErrors[field.key] = `${field.label} is required`;
             }
         }
 
         // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData.email)) {
-            toast.error("Please enter a valid email address");
+        if (!newErrors.email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email)) {
+                newErrors.email = "Please enter a valid email address";
+            }
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            
+            // Scroll to the first error
+            const firstErrorKey = Object.keys(newErrors)[0];
+            const element = document.getElementsByName(firstErrorKey)[0];
+            if (element) {
+                const container = element.closest('.group');
+                if (container) {
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') {
+                    element.focus();
+                }
+            }
             return;
         }
 
         setSubmitting(true);
         try {
-            const dataToSend = {
+            const dataToSend: any = {
                 ...formData,
                 specialization: formData.specialization.split(",").map(s => s.trim()).filter(Boolean),
             };
+            if (!formData.retirementDate) delete dataToSend.retirementDate;
             await judgesService.create(dataToSend);
             toast.success("Judge profile created successfully");
             router.push("/admin/judges");
@@ -100,123 +141,131 @@ export default function CreateJudgePage() {
                 <div className="space-y-6">
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Profile Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
+                        <FormField label="Name" error={errors.name} required>
                             <input
                                 type="text"
                                 name="name"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                value={formData.name}
+                                className={inputClasses('name')}
                                 placeholder="e.g. Justice John Smith"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Official Email <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Official Email" error={errors.email} required>
                             <input
                                 type="email"
                                 name="email"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                value={formData.email}
+                                className={inputClasses('email')}
                                 placeholder="judge@court.gov.in"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Designation <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Designation" error={errors.designation} required>
                             <input
                                 type="text"
                                 name="designation"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                value={formData.designation}
+                                className={inputClasses('designation')}
                                 placeholder="e.g. Chief Justice"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Court <span className="text-red-500">*</span></label>
-                            <input
-                                type="text"
+                        </FormField>
+                        <FormField label="Court" error={errors.court} required>
+                            <CourtSearchableDropdown
                                 name="court"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
-                                placeholder="e.g. Supreme Court"
-                                onChange={handleChange}
+                                value={formData.court}
+                                error={errors.court}
+                                onChange={(value) => {
+                                    setFormData({ ...formData, court: value });
+                                    if (errors.court) {
+                                        setErrors(prev => {
+                                            const next = { ...prev };
+                                            delete next.court;
+                                            return next;
+                                        });
+                                    }
+                                }}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Photo URL</label>
+                        </FormField>
+                        <FormField label="Photo URL" error={errors.photoUrl}>
                             <input
                                 type="text"
                                 name="photoUrl"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                value={formData.photoUrl}
+                                className={inputClasses('photoUrl')}
                                 placeholder="https://example.com/image.jpg"
                                 onChange={handleChange}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Appointment Date <span className="text-red-500">*</span></label>
+                        </FormField>
+                        <FormField label="Appointment Date" error={errors.appointmentDate} required>
                             <input
                                 type="date"
                                 name="appointmentDate"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                value={formData.appointmentDate}
+                                className={inputClasses('appointmentDate')}
                                 onChange={handleChange}
                             />
+                        </FormField>
+                        <div className="flex items-center pt-8">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <input
+                                    type="checkbox"
+                                    name="isServing"
+                                    checked={formData.isServing}
+                                    onChange={handleChange}
+                                    className="w-4 h-4 text-[#0A2342] border-gray-300 rounded focus:ring-[#C9A227]"
+                                />
+                                <span className="text-sm font-medium text-gray-700 group-hover:text-[#C9A227] transition-colors">Currently Serving</span>
+                            </label>
                         </div>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                name="isServing"
-                                checked={formData.isServing}
-                                onChange={handleChange}
-                                className="w-4 h-4 text-[#0A2342] border-gray-300 rounded focus:ring-[#C9A227]"
-                            />
-                            <span className="text-sm font-medium text-gray-700">Currently Serving</span>
-                        </label>
 
-                        {/* {!formData.isServing && ( */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Retirement Date</label>
+                        <FormField label="Retirement Date" error={errors.retirementDate}>
                             <input
                                 type="date"
                                 name="retirementDate"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                value={formData.retirementDate}
+                                className={inputClasses('retirementDate')}
                                 onChange={handleChange}
                             />
-                        </div>
-                        {/* )} */}
+                        </FormField>
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
-                            <input
-                                type="text"
-                                name="specialization"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
-                                placeholder="Constitutional Law, Criminal Law (comma separated)"
-                                onChange={handleChange}
-                            />
+                            <FormField label="Specialization" error={errors.specialization}>
+                                <input
+                                    type="text"
+                                    name="specialization"
+                                    value={formData.specialization}
+                                    className={inputClasses('specialization')}
+                                    placeholder="Constitutional Law, Criminal Law (comma separated)"
+                                    onChange={handleChange}
+                                />
+                            </FormField>
                         </div>
 
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Biography</label>
-                            <textarea
-                                name="biography"
-                                rows={4}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
-                                placeholder="Distinguished jurist..."
-                                onChange={handleChange}
-                            />
+                            <FormField label="Biography" error={errors.biography}>
+                                <textarea
+                                    name="biography"
+                                    value={formData.biography}
+                                    rows={4}
+                                    className={inputClasses('biography')}
+                                    placeholder="Distinguished jurist..."
+                                    onChange={handleChange}
+                                />
+                            </FormField>
                         </div>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                name="isPublished"
-                                checked={formData.isPublished}
-                                onChange={handleChange}
-                                className="w-4 h-4 text-[#0A2342] border-gray-300 rounded focus:ring-[#C9A227]"
-                            />
-                            <span className="text-sm font-medium text-gray-700">Published</span>
-                        </label>
+                        <div className="flex items-center">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <input
+                                    type="checkbox"
+                                    name="isPublished"
+                                    checked={formData.isPublished}
+                                    onChange={handleChange}
+                                    className="w-4 h-4 text-[#0A2342] border-gray-300 rounded focus:ring-[#C9A227]"
+                                />
+                                <span className="text-sm font-medium text-gray-700 group-hover:text-[#C9A227] transition-colors">Published</span>
+                            </label>
+                        </div>
                     </div>
 
 

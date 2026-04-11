@@ -389,7 +389,7 @@ export default function Stores() {
             <div className="flex justify-center">
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="group relative px-10 py-4 bg-[#0A2342] text-white text-sm md:text-base rounded-full hover:bg-[#1a3a75] transition-all duration-300 font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 overflow-hidden"
+                className="group relative px-10 py-4 bg-[#0A2342] text-white text-sm md:text-base rounded-full hover:bg-[#1a3a75] transition-all duration-300 font-semibold shadow-xl hover:shadow-2xl transform overflow-hidden"
               >
                 <span className="relative z-10 flex items-center gap-2">
                   View All High Courts

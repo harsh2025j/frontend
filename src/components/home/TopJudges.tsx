@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { judgesService } from "@/data/services/judges-service/judgesService";
 import Loader from "../ui/Loader";
+import Image from "next/image";
 
 export default function TopJudges() {
     const [judges, setJudges] = useState<any[]>([]);
@@ -23,10 +24,10 @@ export default function TopJudges() {
         try {
             const response = await judgesService.getUniqueCourts();
             const data = response.data;
-            
+
             // Extreme resilience: traverse through potential wrappers
             let courtsArray: string[] = [];
-            
+
             if (data && data.success && data.data && Array.isArray(data.data.data)) {
                 // Case: { success: true, data: { data: [...] } }
                 courtsArray = data.data.data;
@@ -147,8 +148,28 @@ export default function TopJudges() {
             {/* List */}
             <div className="flex-1 p-5 overflow-y-auto">
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center h-full py-10">
-                        <Loader size="md" text="Analyzing rankings..." />
+                    <div className="space-y-4 animate-pulse">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className="flex items-center gap-4 p-2 border-b border-gray-50 last:border-0">
+                                {/* Rank */}
+                                <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0" />
+                                
+                                {/* Avatar */}
+                                <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />
+                                
+                                {/* Info */}
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-3 bg-gray-200 w-3/4 rounded" />
+                                    <div className="h-2 bg-gray-100 w-1/2 rounded" />
+                                </div>
+                                
+                                {/* Score */}
+                                <div className="text-right space-y-1">
+                                    <div className="h-4 bg-gray-200 w-8 ml-auto rounded" />
+                                    <div className="h-2 bg-gray-100 w-10 ml-auto rounded" />
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ) : judges.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full py-10 opacity-60">
@@ -168,9 +189,16 @@ export default function TopJudges() {
                                 </div>
 
                                 {/* Avatar */}
-                                <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 border-2 border-white shadow-sm">
+                                <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 border-2 border-white shadow-sm relative">
                                     {judge.photoUrl ? (
-                                        <img src={judge.photoUrl} alt={judge.name} className="w-full h-full object-cover" />
+                                        <Image
+                                            src={judge.photoUrl}
+                                            alt={judge.name}
+                                            fill
+                                            sizes="100px"
+                                            quality={90}
+                                            className="object-cover"
+                                        />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-400">
                                             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">

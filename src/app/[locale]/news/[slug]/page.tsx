@@ -58,16 +58,8 @@ export async function generateMetadata(
         openGraph: {
             title: article.title,
             description: description,
-            url: `https://www.sajjadhusainlawassociates.com/news/${slug}`, // Ideally base URL should be env var
+            url: `https://www.sajjadhusainlawassociates.com/news/${slug}`,
             siteName: "Sajjad Husain Law Associates",
-            images: [
-                {
-                    url: article.thumbnail || "https://ibb.co/LD3XGttL", // Fallback image
-                    width: 200, // Setting small width to encourage summary card
-                    height: 200, // Setting small height
-                    alt: article.title,
-                },
-            ],
             locale: locale,
             type: "article",
             publishedTime: article.createdAt,
@@ -76,10 +68,9 @@ export async function generateMetadata(
             tags: article.tags?.map(t => t.name),
         },
         twitter: {
-            card: "summary",
+            card: "summary_large_image",
             title: article.title,
             description: description,
-            images: [article.thumbnail || "https://ibb.co/LD3XGttL"],
         },
         alternates: {
             canonical: `https://www.sajjadhusainlawassociates.com/news/${slug}`,

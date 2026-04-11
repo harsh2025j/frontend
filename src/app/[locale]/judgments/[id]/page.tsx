@@ -9,18 +9,19 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import SavePostButton from "@/components/ui/SavePostButton";
 import { formatDate } from "@/utils/dateUtils";
 
-export default function JudgmentDetailPage() {
+export default function JudgmentDetailPage({ judgmentId: propId, isModal = false }: { judgmentId?: string; isModal?: boolean }) {
     useDocTitle("Judgment | Sajjad Husain Law Associates");
     const params = useParams();
     const router = useRouter();
+    const finalJudgmentId = propId || (params?.id as string);
     const [judgment, setJudgment] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (params.id) {
-            fetchJudgmentDetails(params.id as string);
+        if (finalJudgmentId) {
+            fetchJudgmentDetails(finalJudgmentId);
         }
-    }, [params.id]);
+    }, [finalJudgmentId]);
 
     const fetchJudgmentDetails = async (id: string) => {
         try {
@@ -111,13 +112,17 @@ export default function JudgmentDetailPage() {
 
             {/* Action Bar (Hidden when printing) */}
             <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-20 flex justify-between items-center shadow-sm print-hidden">
-                <button
-                    onClick={() => router.back()}
-                    className="group flex items-center gap-2 text-gray-600 hover:text-black transition-colors font-medium text-sm font-sans"
-                >
-                    <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                    Back
-                </button>
+                {!isModal ? (
+                    <button
+                        onClick={() => router.back()}
+                        className="group flex items-center gap-2 text-gray-600 hover:text-black transition-colors font-medium text-sm font-sans"
+                    >
+                        <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+                        Back
+                    </button>
+                ) : (
+                    <div />
+                )}
                 <div className="flex items-center gap-3 font-sans">
                     <SavePostButton postId={judgment.id || judgment._id} className="bg-gray-50 border border-gray-200" iconSize={18} />
                     <button className="flex items-center gap-2 px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-md transition text-sm">

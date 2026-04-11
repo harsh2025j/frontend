@@ -68,7 +68,7 @@ export default function ContentSlider({ name, FilteredData, slug }: ContentSlide
       <div className="w-full container bg-white rounded-md  p-3 flex gap-4 relative group">
 
         {/* Left Label (Category Name) */}
-        <Link href={`/category/${slug}`} className="bg-[#1b3550] rounded-lg w-12 sm:w-24 md:w-40 flex items-center justify-center flex-shrink-0 transition-all duration-300">
+        <Link href={`/category/${slug}`} className="bg-[#1b3550] rounded-lg w-12 md:w-20 p-2 flex items-center justify-center flex-shrink-0 transition-all duration-300">
 
           <span
             className="text-white text-lg sm:text-xl md:text-2xl font-medium tracking-wider whitespace-nowrap"
@@ -116,7 +116,8 @@ export default function ContentSlider({ name, FilteredData, slug }: ContentSlide
                     src={item.img}
                     alt={item.title || "Article Image"}
                     fill
-                    sizes="260px"
+                    sizes="300px"
+                    quality={90}
                     className="object-cover hover:scale-105 transition-transform duration-500"
                   />
                 </Link>

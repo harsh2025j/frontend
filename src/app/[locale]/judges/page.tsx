@@ -8,8 +8,11 @@ import toast from "react-hot-toast";
 import { judgesService } from "@/data/services/judges-service/judgesService";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter, Link } from "@/i18n/routing";
 import Pagination from "@/components/Pagination";
+import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 type JudgeCategory = "chief-justice" | "senior-judges" | "judges" | "retired";
 
@@ -29,6 +32,24 @@ interface Judge {
     imageUrl?: string;
     bio?: string;
 }
+
+const JudgeSkeleton = () => (
+    <div className="bg-white rounded-xl border-2 border-gray-100 overflow-hidden animate-pulse">
+        <div className="bg-gray-100 h-48 flex items-center justify-center">
+            <div className="w-32 h-32 bg-gray-200 rounded-full"></div>
+        </div>
+        <div className="p-6 space-y-4">
+            <div className="space-y-2">
+                <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                <div className="h-4 bg-gray-100 rounded w-1/2 mx-auto"></div>
+            </div>
+            <div className="pt-4 border-t border-gray-100 space-y-2">
+                <div className="h-4 bg-gray-100 rounded w-full"></div>
+                <div className="h-4 bg-gray-100 rounded w-full"></div>
+            </div>
+        </div>
+    </div>
+);
 
 function JudgesPageContent() {
     useDocTitle("Judges | Sajjad Husain Law Associates");
@@ -68,7 +89,7 @@ function JudgesPageContent() {
 
             if (term) {
                 // Pass all filters to searchJudges to ensure results are filtered!
-                response = await judgesService.searchJudges(term, page, limit, category, courtType, year);
+                response = await judgesService.searchJudges(term, page, limit, category, courtType, year, court);
             } else {
                 response = await judgesService.getAll(params);
             }
@@ -112,7 +133,7 @@ function JudgesPageContent() {
 
         setActiveCategory(category);
         setCurrentPage(page);
-        
+
         // Sync search query state with URL ONLY if they are different from current debounced value
         // This allows clearing the input when the filter badge is clicked (URL changed externally)
         if (term !== debouncedSearchTerm) {
@@ -149,7 +170,7 @@ function JudgesPageContent() {
             params.set("page", "1");
         }
 
-        router.push(`/judges?${params.toString()}`);
+        router.push(`/judges?${params.toString()}`, { scroll: false });
     };
 
     const handleCategoryChange = (category: JudgeCategory) => {
@@ -171,7 +192,7 @@ function JudgesPageContent() {
 
     // Note: availableCourts and availableYears would ideally come from a meta API
     // For now, we'll keep them empty or derived from current page (which is partial)
-    const availableYears: string[] = Array.from({ length: 30 }, (_, i) => (new Date().getFullYear() - i).toString());
+    const availableYears: string[] = Array.from({ length: 100 }, (_, i) => (new Date().getFullYear() + 1 - i).toString());
     const availableCourts: string[] = ["Supreme Court of India", "Delhi High Court", "Bombay High Court", "Allahabad High Court"]; // Placeholder lists
     const availableCourtTypes: string[] = ["High Court", "Supreme Court", "District Court"];
 
@@ -199,7 +220,9 @@ function JudgesPageContent() {
             <div className="bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 py-3">
                     <div className="flex items-center gap-2 text-sm">
-                        <Home className="w-4 h-4 text-gray-500" />
+                        <Link href="/">
+                            <Home className="w-4 h-4 text-gray-500 hover:text-[#C9A227]" />
+                        </Link>
                         <ChevronRight className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-600">Judges</span>
                     </div>
@@ -268,22 +291,18 @@ function JudgesPageContent() {
                     </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {/* Court Type Filter */}
+                        {/* Searchable Court Filter */}
                         <div className="flex-1">
                             <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                                 <Building2 size={16} className="text-[#C9A227]" />
-                                Court Type
+                                Filter by Court
                             </label>
-                            <select
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all appearance-none bg-white font-medium"
-                                value={selectedCourtType}
-                                onChange={(e) => updateUrl({ courtType: e.target.value })}
-                            >
-                                <option value="">Select Court Type</option>
-                                {availableCourtTypes.map(type => (
-                                    <option key={type} value={type}>{type}</option>
-                                ))}
-                            </select>
+                            <CourtSearchableDropdown
+                                value={selectedCourt}
+                                onChange={(val) => updateUrl({ court: val })}
+                                placeholder="Select or type court name"
+                                className="w-full"
+                            />
                         </div>
 
                         {/* Search Input */}
@@ -310,16 +329,16 @@ function JudgesPageContent() {
                                 <Calendar size={16} className="text-[#C9A227]" />
                                 Appointment Year
                             </label>
-                            <select
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all appearance-none bg-white font-medium"
+                            <SearchableSelect
+                                options={[
+                                    { value: "", label: "All Years" },
+                                    ...availableYears.map(year => ({ value: year, label: year }))
+                                ]}
                                 value={selectedYear}
-                                onChange={(e) => updateUrl({ year: e.target.value })}
-                            >
-                                <option value="">All Years</option>
-                                {availableYears.map(year => (
-                                    <option key={year} value={year}>{year}</option>
-                                ))}
-                            </select>
+                                onChange={(val) => updateUrl({ year: val })}
+                                placeholder="Select Year"
+                                className="w-full"
+                            />
                         </div>
                     </div>
 
@@ -362,18 +381,9 @@ function JudgesPageContent() {
                     )}
                 </div>
 
-                {/* Judges Grid */}
-                <div className="mb-6">
-                    {/* Loading State */}
-                    {loading ? (
-                        <div className="bg-white rounded-xl border border-gray-200 p-12">
-                            <div className="text-center">
-                                <Loader2 className="w-16 h-16 text-[#C9A227] mx-auto mb-4 animate-spin" />
-                                <p className="text-gray-600 text-lg font-semibold">Loading judges data...</p>
-                                <p className="text-gray-500 text-sm mt-2">Please wait while we fetch the information</p>
-                            </div>
-                        </div>
-                    ) : error ? (
+                {/* Judges Grid with Smooth Transition */}
+                <div className={`mb-6 transition-all duration-300 ${loading ? 'opacity-70 grayscale-[0.5]' : 'opacity-100'}`}>
+                    {error ? (
                         /* Error State */
                         <div className="bg-white rounded-xl border border-red-200 p-12">
                             <div className="text-center">
@@ -396,12 +406,16 @@ function JudgesPageContent() {
                                 <h3 className="text-2xl font-bold text-[#0A2342]">
                                     {getCategoryTitle(activeCategory)}
                                 </h3>
-                                <span className="text-sm text-gray-600">
+                                <span className={`text-sm text-gray-600 transition-opacity duration-300 ${loading ? 'opacity-0' : 'opacity-100'}`}>
                                     {totalRecords} judge{totalRecords !== 1 ? 's' : ''} found
                                 </span>
                             </div>
 
-                            {judges.length === 0 ? (
+                            {loading && judges.length === 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {[...Array(6)].map((_, i) => <JudgeSkeleton key={i} />)}
+                                </div>
+                            ) : judges.length === 0 && !loading ? (
                                 <div className="bg-white rounded-xl border border-gray-200 p-12">
                                     <div className="text-center">
                                         <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />

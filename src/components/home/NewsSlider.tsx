@@ -113,33 +113,33 @@ export default function NewsSlider() {
     >
       {/* ─── ATMOSPHERE LAYER ─── */}
       <div className="absolute inset-0 z-0">
-        <AnimatePresence mode="wait">
+        {/* <AnimatePresence mode="wait">
           <motion.div
             key={current}
             initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 0.15, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.5 }}
-            className="absolute inset-0 bg-cover bg-center blur-3xl scale-110"
+            className="absolute inset-0 bg-cover bg-center blur-2xl scale-110"
             style={{ backgroundImage: `url(${typeof slides[current].image === 'string' ? slides[current].image : (slides[current].image as any).src})` }}
           />
-        </AnimatePresence>
+        </AnimatePresence> */}
         <Image
           src={headerBg}
           alt=""
-          className="absolute bottom-0 right-0 w-full opacity-30 object-cover mix-blend-overlay pointer-events-none"
+          className="absolute bottom-1 right-1 opacity-40 object-cover mix-blend-overlay pointer-events-none"
         />
       </div>
 
       {/* ─── MAIN CONTENT CONTAINER ─── */}
-      <div className="container relative z-10 mx-auto h-full px-4 md:px-6 flex items-center py-10 lg:py-0">
+      <div className="container relative z-10 mx-auto h-full px-2 md:px-6 flex items-center py-6 md:py-10 lg:py-0">
         <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-24 items-center">
 
           {/* IMAGE BLOCK */}
           <div className="order-1 lg:order-1 relative flex justify-center lg:justify-start transition-all duration-700">
             <motion.div
               style={{ rotateX, rotateY, backfaceVisibility: "hidden" }}
-              className="relative w-full max-w-[90vw] md:max-w-[80vw] lg:max-w-[600px] aspect-[16/11] rounded-[24px] md:rounded-[40px] lg:rounded-[48px] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.5)] border border-white/10 group/card isolation-isolate transform-gpu [mask-image:linear-gradient(white,white)]"
+              className="relative w-full max-w-[100vw] md:max-w-[90vw] lg:max-w-[600px] aspect-[16/11] rounded-[15px] md:rounded-[20px] lg:rounded-[20px] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.5)] border border-white/10 group/card isolation-isolate transform-gpu [mask-image:linear-gradient(white,white)]"
             >
               <AnimatePresence mode="wait" custom={direction}>
                 <motion.div
@@ -150,21 +150,37 @@ export default function NewsSlider() {
                   transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                   className="absolute inset-0"
                 >
+
                   <Image
                     src={slides[current].image}
                     alt={slides[current].title}
                     fill
-                    className="object-cover transition-transform duration-[10s] group-hover/card:scale-110 grayscale-[30%] lg:grayscale-[30%] group-hover/card:grayscale-0"
-                    priority
-                    unoptimized
+                    className="relative z-10 object-cover transition-transform duration-[10s] group-hover/card:scale-110"
+                    priority={true}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 900px"
+                    quality={100}
                   />
+
+                  {/* ─── Background Preloading (Ensures 'Next' image is ready) ─── */}
+                  {slides[(current + 1) % slides.length] && (
+                    <div className="hidden" aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
+                      <Image
+                        src={slides[(current + 1) % slides.length].image}
+                        alt=""
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 900px"
+                        priority={false}
+                        quality={100}
+                      />
+                    </div>
+                  )}
 
                   <motion.div
                     style={{ left: shimmerX }}
-                    className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-25deg] pointer-events-none"
+                    className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-25deg] pointer-events-none z-20"
                   />
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A2342]/60 via-transparent to-transparent opacity-80" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A2342]/60 via-transparent to-transparent opacity-80 z-20" />
                 </motion.div>
               </AnimatePresence>
             </motion.div>
@@ -209,7 +225,7 @@ export default function NewsSlider() {
                 <div className="mt-2 lg:mt-auto pt-6 lg:pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-center lg:justify-between gap-6">
                   <Link
                     href={slides[current].link}
-                    className="group/btn relative inline-flex items-center gap-3 bg-[#C9A227] text-[#0A2342] px-8 lg:px-10 py-4 lg:py-5 rounded-full font-black text-[10px] lg:text-xs tracking-widest overflow-hidden transition-all hover:pr-12 shadow-[0_20px_50px_rgba(201,162,39,0.2)]"
+                    className="group/btn relative inline-flex items-center gap-3 bg-gradient-to-r from-[#C9A227] to-[#b39022]  text-[#0A2342] px-8 lg:px-10 py-4 lg:py-5 rounded-full font-black text-[10px] lg:text-xs tracking-widest overflow-hidden transition-all hover:pr-12 shadow-[0_20px_50px_rgba(201,162,39,0.2)]"
                   >
                     <span className="relative z-10">READ PERSPECTIVE</span>
                     <ArrowRight className="w-4 h-4 relative z-10 transition-transform group-hover/btn:translate-x-1" />

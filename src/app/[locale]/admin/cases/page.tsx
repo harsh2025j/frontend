@@ -5,9 +5,10 @@ import { useAppSelector } from "@/data/redux/hooks";
 import { casesService } from "@/data/services/cases-service/casesService";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Link } from "@/i18n/routing";
-import { Trash2, Edit, Plus, Search, FileText } from "lucide-react";
+import { Trash2, Edit, Plus, Search, FileText, Eye, X } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
+import CaseDetailPage from "@/app/[locale]/cases/[id]/page";
 
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useDocTitle } from "@/hooks/useDocTitle";
@@ -21,6 +22,7 @@ export default function AdminCasesPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, caseId: "", newStatus: "" });
+    const [viewCaseId, setViewCaseId] = useState<string | null>(null);
     const debouncedSearchTerm = useDebounce(searchTerm, 600);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -188,6 +190,13 @@ export default function AdminCasesPage() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{c.court}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end gap-3">
+                                                <button
+                                                    onClick={() => setViewCaseId(c.id)}
+                                                    className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
+                                                    title="View"
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
                                                 <Link
                                                     href={`/admin/cases/${c.id}`}
                                                     className="text-[#0A2342] hover:text-[#C9A227] p-1 hover:bg-[#0A2342]/5 rounded transition-colors"
@@ -241,6 +250,35 @@ export default function AdminCasesPage() {
                 cancelText="Cancel"
                 variant="warning"
             />
+
+            {/* View Case Modal Overlay */}
+            {viewCaseId && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setViewCaseId(null)}></div>
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-10">
+                            <h3 className="text-xl font-bold text-gray-900">Case Preview</h3>
+                            <button
+                                onClick={() => setViewCaseId(null)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                            <CaseDetailPage caseId={viewCaseId} isModal={true} />
+                        </div>
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+                            <button
+                                onClick={() => setViewCaseId(null)}
+                                className="px-6 py-2 bg-[#0A2342] text-white rounded-lg hover:bg-[#1a3a75] transition-colors font-medium shadow-sm"
+                            >
+                                Close Preview
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

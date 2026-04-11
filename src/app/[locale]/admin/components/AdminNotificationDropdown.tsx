@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Bell, CheckCheck, Trash2, X } from "lucide-react";
 import { notificationService, Notification } from "@/data/services/notification-service/notification.service";
 import toast from "react-hot-toast";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 interface AdminNotificationDropdownProps {
     userId: string;
@@ -13,22 +14,60 @@ export default function AdminNotificationDropdown({ userId }: AdminNotificationD
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const fetchNotifications = async () => {
+    const LIMIT = 15;
+
+    const fetchNotifications = async (isLoadMore = false) => {
         if (!userId) return;
-        setLoading(true);
+        
+        if (isLoadMore) {
+            setIsFetchingMore(true);
+        } else {
+            setLoading(true);
+        }
+
         try {
-            const response = await notificationService.getNotifications(userId);
-            // Ensure we have an array
-            const data = Array.isArray(response.data) ? response.data : [];
-            setNotifications(data);
+            const currentPage = isLoadMore ? page + 1 : 1;
+            const response = await notificationService.getNotifications(userId, currentPage, LIMIT);
+            const data = Array.isArray(response.data?.data) ? response.data.data : [];
+            const meta = response.data?.meta;
+
+            if (isLoadMore) {
+                setNotifications(prev => [...prev, ...data]);
+                setPage(currentPage);
+            } else {
+                setNotifications(data);
+                setPage(1);
+            }
+
+            if (meta) {
+                setHasMore(meta.current_page < meta.total_pages);
+            } else {
+                setHasMore(false);
+            }
         } catch (error) {
             // console.error("Failed to fetch notifications", error);
         } finally {
             setLoading(false);
+            setIsFetchingMore(false);
         }
     };
+
+    const loadMore = () => {
+        if (!loading && !isFetchingMore && hasMore) {
+            fetchNotifications(true);
+        }
+    };
+
+    const { lastElementRef } = useInfiniteScroll({
+        isLoading: loading || isFetchingMore,
+        hasMore,
+        onLoadMore: loadMore,
+    });
 
     useEffect(() => {
         fetchNotifications();
@@ -206,6 +245,12 @@ export default function AdminNotificationDropdown({ userId }: AdminNotificationD
                                         )}
                                     </div>
                                 ))}
+                                {isFetchingMore && (
+                                    <div className="p-4 text-center text-xs text-gray-500 animate-pulse">
+                                        Loading more...
+                                    </div>
+                                )}
+                                <div ref={lastElementRef} className="h-1" />
                             </div>
                         )}
                     </div>

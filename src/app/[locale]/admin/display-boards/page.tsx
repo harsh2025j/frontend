@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import Pagination from "@/components/Pagination";
+import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
 
 const LIMIT = 12;
 
@@ -174,13 +175,12 @@ export default function AdminDisplayBoardsPage() {
                         <form onSubmit={handleGenerate} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Court</label>
-                                <input
-                                    type="text"
-                                    required
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
-                                    placeholder="e.g. High Court of Delhi"
+                                <CourtSearchableDropdown
+                                    name="court"
                                     value={generateData.court}
-                                    onChange={(e) => setGenerateData({ ...generateData, court: e.target.value })}
+                                    placeholder="e.g. High Court of Delhi"
+                                    onChange={(value) => setGenerateData({ ...generateData, court: value })}
+                                    required
                                 />
                             </div>
                             <div>

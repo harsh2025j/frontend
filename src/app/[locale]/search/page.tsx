@@ -4,6 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { searchService } from '@/data/features/search/searchService';
 import { SearchResult } from '@/data/features/search/search.types';
+import Image from 'next/image';
 import { Search, Loader2, ChevronLeft, ChevronRight, FileText, Gavel, Scale } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { useDocTitle } from '@/hooks/useDocTitle';
@@ -97,10 +98,13 @@ const SearchResultsContent = () => {
                                     {/* Thumbnail Image */}
                                     <div className="w-full md:w-48 h-48 md:h-32 rounded-lg overflow-hidden flex-shrink-0 relative bg-gray-100 shadow-sm">
                                         {result.thumbnail ? (
-                                            <img
+                                            <Image
                                                 src={result.thumbnail}
                                                 alt={result.title}
-                                                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                                                fill
+                                                sizes="(max-width: 768px) 100vw, 400px"
+                                                quality={90}
+                                                className="object-cover transform group-hover:scale-105 transition-transform duration-500"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-50">

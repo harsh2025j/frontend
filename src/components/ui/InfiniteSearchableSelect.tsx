@@ -21,6 +21,7 @@ interface InfiniteSearchableSelectProps {
     className?: string;
     required?: boolean;
     name?: string;
+    error?: string;
 }
 
 export default function InfiniteSearchableSelect({
@@ -32,7 +33,8 @@ export default function InfiniteSearchableSelect({
     required = false,
     name,
     onSearch,
-    initialOption
+    initialOption,
+    error,
 }: InfiniteSearchableSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -48,12 +50,12 @@ export default function InfiniteSearchableSelect({
 
     // Prefer async options if they exist, otherwise use initial options
     const displayOptions = asyncOptions.length > 0 || (isOpen && debouncedSearchQuery.length >= 0) ? asyncOptions : options;
-    
+
     // Calculate display label: check props options, current async results, local cache, or initialOption fallback
-    const selectedOption = options?.find((opt) => opt.value === value) || 
-                          asyncOptions.find((opt) => opt.value === value) ||
-                          (localSelectedOption?.value === value ? localSelectedOption : null) ||
-                          (value && initialOption?.value === value ? initialOption : null);
+    const selectedOption = options?.find((opt) => opt.value === value) ||
+        asyncOptions.find((opt) => opt.value === value) ||
+        (localSelectedOption?.value === value ? localSelectedOption : null) ||
+        (value && initialOption?.value === value ? initialOption : null);
 
     // Sync local cache when value changes
     useEffect(() => {
@@ -98,7 +100,7 @@ export default function InfiniteSearchableSelect({
             const { options: newOptions, totalPages: total } = await onSearch(query, pageNum);
             setAsyncOptions(prev => append ? [...prev, ...newOptions] : newOptions);
             setTotalPages(total);
-            
+
             // If the current value is in the new results, cache its metadata
             if (value) {
                 const found = newOptions.find(o => o.value === value);
@@ -143,7 +145,7 @@ export default function InfiniteSearchableSelect({
             <button
                 type="button"
                 className={`w-full px-4 py-2 border rounded-lg text-left flex justify-between items-center transition-all bg-white
-          ${isOpen ? "border-[#C9A227] ring-2 ring-[#C9A227]/20" : "border-gray-300 hover:border-gray-400"}
+          ${isOpen ? "border-[#C9A227] ring-2 ring-[#C9A227]/20" : error ? "border-red-500 ring-2 ring-red-500/10" : "border-gray-300 hover:border-gray-400"}
           ${!value ? "text-gray-500" : "text-gray-900"}
         `}
                 onClick={() => setIsOpen(!isOpen)}

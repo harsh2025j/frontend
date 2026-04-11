@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  // title: "Sajjad Husain Law Associates",
+  metadataBase: new URL('https://www.sajjadhusainlawassociates.com'),
   description: "Next-Gen Legal Tech",
   icons: {
     icon: "/logo.png",

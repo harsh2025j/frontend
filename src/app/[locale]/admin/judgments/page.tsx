@@ -6,9 +6,10 @@ import { judgesService } from "@/data/services/judges-service/judgesService";
 import { casesService } from "@/data/services/cases-service/casesService";
 import { Link } from "@/i18n/routing";
 import { formatDate } from "@/utils/dateUtils";
-import { Trash2, Edit, Plus, Search, Gavel } from "lucide-react";
+import { Trash2, Edit, Plus, Search, Gavel, Eye, X } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
+import JudgmentDetailPage from "@/app/[locale]/judgments/[id]/page";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -25,6 +26,7 @@ export default function AdminJudgmentsPage() {
     const debouncedSearchTerm = useDebounce(searchTerm, 600);
     const [judgesMap, setJudgesMap] = useState<Record<string, string>>({});
     const [casesMap, setCasesMap] = useState<Record<string, string>>({});
+    const [viewJudgmentId, setViewJudgmentId] = useState<string | null>(null);
 
     const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get("page") || "1"));
     const [totalPages, setTotalPages] = useState(1);
@@ -203,6 +205,13 @@ export default function AdminJudgmentsPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end gap-3">
+                                                <button
+                                                    onClick={() => setViewJudgmentId(j.id)}
+                                                    className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
+                                                    title="View"
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
                                                 <Link
                                                     href={`/admin/judgments/${j.id}`}
                                                     className="text-[#0A2342] hover:text-[#C9A227] p-1 hover:bg-[#0A2342]/5 rounded transition-colors"
@@ -249,6 +258,35 @@ export default function AdminJudgmentsPage() {
                     </div>
                 )}
             </div>
+
+            {/* View Judgment Modal Overlay */}
+            {viewJudgmentId && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setViewJudgmentId(null)}></div>
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-10">
+                            <h3 className="text-xl font-bold text-gray-900 font-sans">Judgment Preview</h3>
+                            <button
+                                onClick={() => setViewJudgmentId(null)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                            <JudgmentDetailPage judgmentId={viewJudgmentId} isModal={true} />
+                        </div>
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 font-sans">
+                            <button
+                                onClick={() => setViewJudgmentId(null)}
+                                className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium shadow-sm"
+                            >
+                                Close Preview
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

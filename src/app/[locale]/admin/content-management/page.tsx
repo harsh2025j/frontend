@@ -275,7 +275,8 @@ const ContentManagementPage: React.FC = () => {
                         <Image
                           src={(item.thumbnail && (item.thumbnail.startsWith("http") || item.thumbnail.startsWith("/"))) ? item.thumbnail : logo}
                           alt={item.title || "Article"}
-                          fill sizes="(max-width: 768px) 100vw, 50vw"
+                          fill sizes="(max-width: 768px) 100vw, 500px"
+                          quality={90}
                           className="object-cover"
                         />
                         <div className="absolute top-2 right-2"><StatusBadge status={item.status} /></div>
@@ -332,7 +333,9 @@ const ContentManagementPage: React.FC = () => {
                           <div className="relative w-12 h-12 rounded-md overflow-hidden">
                             <Image
                               src={(item.thumbnail && (item.thumbnail.startsWith("http") || item.thumbnail.startsWith("/"))) ? item.thumbnail : logo}
-                              alt="thumbnail" fill sizes="48px" className="object-cover"
+                              alt="thumbnail" fill sizes="100px" 
+                              quality={90}
+                              className="object-cover"
                             />
                           </div>
                         </td>

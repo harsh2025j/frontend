@@ -17,6 +17,34 @@ export default function VerifyPage() {
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(""));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  // --- NEW LOGIC: Countdown Timer for Resend OTP ---
+  const [countdown, setCountdown] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      timerRef.current = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [countdown]);
+
+  const handleResendWithTimer = async () => {
+    if (countdown > 0) return;
+    try {
+      await handleReSendOtp();
+      setCountdown(60);
+    } catch (error) {
+      console.error("Failed to resend OTP:", error);
+    }
+  };
+
   // Toast notifications
   useEffect(() => {
     if (error) toast.error(error);
@@ -126,11 +154,11 @@ export default function VerifyPage() {
             <div className="text-right">
               <button
                 type="button"
-                onClick={handleReSendOtp}
-                disabled={resendLoading || verifyLoading}
+                onClick={handleResendWithTimer}
+                disabled={resendLoading || verifyLoading || countdown > 0}
                 className="text-sm text-blue-600 hover:underline disabled:text-gray-400 font-medium"
               >
-                {resendLoading ? "Sending..." : "Resend OTP"}
+                {resendLoading ? "Sending..." : countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
               </button>
             </div>
 

@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { FiSearch } from "react-icons/fi";
 import { Article } from "@/data/features/article/article.types";
+import Image from "next/image";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
@@ -265,10 +266,13 @@ const ContentApprovalPanel = () => {
             articles.map((item) => (
               <div key={item.id} className="bg-white rounded-xl shadow overflow-hidden flex flex-col border border-gray-100">
                 <div className="relative h-40 w-full bg-gray-100">
-                  <img
+                  <Image
                     src={(item.thumbnail && (item.thumbnail.startsWith("http") || item.thumbnail.startsWith("/"))) ? item.thumbnail : "/placeholder.png"}
-                    alt={item.title}
-                    className="object-cover w-full h-full"
+                    alt={item.title || "Article"}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    quality={90}
+                    className="object-cover"
                   />
                   <div className="absolute top-2 right-2"><StatusBadge status={item.status} /></div>
                 </div>
@@ -422,10 +426,13 @@ const ContentApprovalPanel = () => {
 
                   {previewArticle.thumbnail && (
                     <div className="relative group rounded-[32px] overflow-hidden border-4 border-gray-50 shadow-xl aspect-video bg-gray-100">
-                      <img
+                      <Image
                         src={getSafeImageUrl(previewArticle.thumbnail)}
                         alt={previewArticle.title}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        fill
+                        sizes="900px"
+                        quality={90}
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
@@ -555,8 +562,15 @@ const ContentApprovalPanel = () => {
                             className="group flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-[28px] hover:border-[#C9A227] hover:shadow-xl hover:shadow-[#C9A227]/5 transition-all duration-500"
                           >
                             {isImage ? (
-                              <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gray-50 border border-gray-50 shrink-0">
-                                <img src={getSafeImageUrl(doc.fileUrl)} alt={doc.fileName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                              <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gray-50 border border-gray-50 shrink-0 relative">
+                                <Image 
+                                  src={getSafeImageUrl(doc.fileUrl)} 
+                                  alt={doc.fileName} 
+                                  fill
+                                  sizes="112px"
+                                  quality={90}
+                                  className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                                />
                               </div>
                             ) : (
                               <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0 group-hover:bg-[#C9A227]/10 transition-colors">

@@ -115,14 +115,35 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   const profileIsAdvocate = checkIsAdvocate(profileUser);
   const profileIsAdmin = checkIsAdmin(profileUser);
 
-  // Professional Check
-  const isProfessional = profileIsAdvocate || profileIsAdmin ||
-    (profileUser?.roles?.some(r =>
-      ['lawyer', 'law_student', 'legal_professional', 'advocate'].includes(r.slug?.toLowerCase() || r.name.toLowerCase())
-    ));
+  // Professional Check: Strictly legal professionals (excludes pure admins)
+  const isLegalProfessional = profileIsAdvocate || (profileUser?.roles?.some(r =>
+    ['lawyer', 'law_student', 'legal_professional', 'advocate'].includes(r.slug?.toLowerCase() || r.name.toLowerCase())
+  ));
 
-  const showLegalSections = isProfessional;
+  const isProfessional = isLegalProfessional;
+  const showLegalSections = isProfessional || profileIsAdmin;
   const canSeeFullData = isOwner || (viewContext === "admin" && isAdmin);
+
+  // Consolidated Role Label Logic
+  const getRoleLabel = () => {
+    if (!profileUser?.roles || profileUser.roles.length === 0) return "User";
+
+    const roleNames = profileUser.roles.map(r => r.name.toLowerCase());
+
+    const hasLegal = roleNames.some(r => ['lawyer', 'law_student', 'legal_professional', 'advocate'].includes(r));
+    const hasAdmin = roleNames.includes('admin');
+
+    if (hasLegal) {
+      const legalNames = profileUser.roles
+        .filter(r => ['lawyer', 'law_student', 'legal_professional', 'advocate'].includes(r.name.toLowerCase()))
+        .map(r => r.name);
+      if (hasAdmin) return `${legalNames[0]} | Admin`;
+      return legalNames[0];
+    }
+
+    if (hasAdmin) return "Admin";
+    return "User";
+  };
 
   useDocTitle(profileUser ? `${profileUser.name}'s Profile` : "Profile");
 
@@ -235,8 +256,14 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          onClick={() => router.back()}
-          className="absolute top-8 left-8 z-[60] flex items-center gap-3 px-5 py-3 bg-white/70 dark:bg-[#081b31]/60 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl hover:shadow-[#C9A227]/10 group transition-all ring-1 ring-black/5"
+          onClick={() => {
+            if (window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/");
+            }
+          }}
+          className="absolute top-22 md:top-38 left-4 md:left-14 z-[45] flex items-center gap-3 px-5 py-3 bg-white/70 dark:bg-[#081b31]/60 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl hover:shadow-[#C9A227]/10 group transition-all ring-1 ring-black/5 cursor-pointer"
         >
           <ArrowLeft size={16} className="text-[#0A2342] dark:text-[#C9A227] group-hover:-translate-x-1 transition-transform" />
           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#0A2342] dark:text-white hidden sm:inline">Return</span>
@@ -250,7 +277,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
             <div className="absolute inset-[-10px] bg-gradient-to-tr from-[#C9A227] via-[#0A2342]/10 to-[#C9A227] opacity-30 rounded-[50px] animate-[spin_12s_linear_infinite]" />
             <div className="w-56 h-56 rounded-[40px] overflow-hidden border-4 border-white dark:border-[#0A2342] shadow-2xl relative group cursor-pointer" onClick={() => isOwner && fileInputRef.current?.click()}>
               {profileUser.profilePicture ? (
-                <Image src={profileUser.profilePicture} alt="Avatar" fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                <Image src={profileUser.profilePicture} alt="Avatar" fill className="object-cover group-hover:scale-110 transition-transform duration-700" quality={100} sizes="500px" />
               ) : (
                 <div className="w-full h-full bg-zinc-50 flex items-center justify-center text-6xl text-gray-300 font-serif">{profileUser.name?.[0].toUpperCase()}</div>
               )}
@@ -274,12 +301,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
           </motion.h1>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs font-bold text-[#C9A227] tracking-[0.4em] uppercase mb-12">
             <span className="text-[#0A2342] dark:text-white">
-              {(() => {
-                const d = profileUser.designation;
-                const r = profileUser.roles?.[0]?.name || "Member";
-                const displayRole = r.charAt(0).toUpperCase() + r.slice(1);
-                return (d && d.toUpperCase() !== "NULL" && d.trim() !== "") ? d : displayRole;
-              })()} | </span>
+              {getRoleLabel()} | </span>
             {Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0
               ? profileUser.specialization.join(" • ")
               : (isProfessional ? "Jurisdiction Pending" : "Community Registry")}
@@ -301,8 +323,8 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 
-          <aside className="lg:col-span-3 sticky top-24 z-20">
-            <div className="flex flex-col gap-2 p-2 bg-white/50 dark:bg-[#0A2342]/10 backdrop-blur-xl rounded-[32px] border border-white/20 shadow-xl shadow-black/5">
+          <aside className="lg:col-span-3 sticky top-20 md:top-24 z-20 -mx-4 sm:mx-0 px-4 sm:px-0">
+            <div className="flex flex-row lg:flex-col gap-1 md:gap-2 p-1.5 bg-white/60 dark:bg-[#0A2342]/20 backdrop-blur-2xl rounded-full lg:rounded-[32px] border border-white/20 shadow-2xl shadow-black/5 overflow-x-auto scrollbar-hide">
               {[
                 { id: "personal", label: "Identity", icon: User, show: true },
                 { id: "saved", label: "Vault", icon: Heart, show: isOwner },
@@ -310,9 +332,23 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                 { id: "articles", label: "Insights", icon: FileText, show: showLegalSections },
                 { id: "settings", label: "Account", icon: Settings, show: isOwner },
               ].filter(t => t.show).map(tab => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id as TabType)} className={`relative flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${activeTab === tab.id ? "bg-white dark:bg-[#0A2342]/40 text-[#0A2342] shadow-sm" : "text-gray-400 hover:text-gray-600"}`}>
-                  <div className={`p-1.5 rounded-xl ${activeTab === tab.id ? "bg-[#C9A227] text-white" : "bg-transparent"}`}><tab.icon size={16} /></div>
-                  <span className="text-[11px] font-bold uppercase tracking-widest">{tab.label}</span>
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as TabType)}
+                  className={`relative flex items-center gap-2 md:gap-4 px-4 md:px-6 py-2.5 md:py-4 rounded-full lg:rounded-2xl transition-all duration-500 whitespace-nowrap flex-shrink-0 group ${activeTab === tab.id ? "text-[#0A2342] dark:text-[#C9A227]" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    }`}
+                >
+                  {activeTab === tab.id && (
+                    <motion.div
+                      layoutId="activeTabIndicator"
+                      className="absolute inset-0 bg-white dark:bg-[#122b4d] rounded-full lg:rounded-2xl shadow-sm z-0"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <div className={`relative z-10 p-1.5 rounded-xl transition-colors duration-500 ${activeTab === tab.id ? "bg-[#C9A227] text-white" : "bg-transparent group-hover:bg-gray-100 dark:group-hover:bg-white/5"}`}>
+                    <tab.icon size={14} className="md:w-4 md:h-4" />
+                  </div>
+                  <span className="relative z-10 text-[10px] md:text-[11px] font-bold uppercase tracking-widest">{tab.label}</span>
                 </button>
               ))}
             </div>
@@ -341,7 +377,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                           label="Professional Title"
                           value={(profileUser.designation && profileUser.designation !== "null" && profileUser.designation !== "NULL")
                             ? profileUser.designation
-                            : (profileUser.roles?.[0]?.name || "Affiliate Member")}
+                            : getRoleLabel()}
                           icon={Award}
                         />
                         <TonalField label="Mobile Contact" value={profileUser.phone || "Not Set"} icon={Phone} />
@@ -592,7 +628,7 @@ function ArticleBentoLink({ articleData, delay, logo }: any) {
     <Link href={`/news/${articleData.slug}`}>
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }} className="group">
         <div className="aspect-[4/5] rounded-[40px] overflow-hidden relative mb-6 shadow-xl group-hover:shadow-2xl transition-all duration-700">
-          <Image src={articleData.thumbnail || logo} alt="Insight" fill className="object-cover group-hover:scale-110 transition-transform duration-1000" />
+          <Image src={articleData.thumbnail || logo} alt="Insight" fill className="object-cover group-hover:scale-110 transition-transform duration-1000" quality={90} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 500px" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0A2342]/90 to-transparent p-8 flex flex-col justify-end">
             <span className="text-[10px] font-black text-[#C9A227] uppercase tracking-widest mb-3">{articleData.category?.name || "Editorial"}</span>
             <h3 className="text-xl font-serif text-white leading-snug line-clamp-3">{articleData.title}</h3>
@@ -677,7 +713,7 @@ function ImagePreviewModal({ url, onClose, onConfirm, saving }: any) {
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
       <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="max-w-xl w-full text-center text-white">
         <div className="w-80 h-80 rounded-[48px] overflow-hidden mx-auto mb-10 border-4 border-[#C9A227]">
-          <Image src={url} alt="Preview" width={320} height={320} className="object-cover" />
+          <Image src={url} alt="Preview" width={320} height={320} className="object-cover" quality={100} sizes="740px" />
         </div>
         <h3 className="text-3xl font-serif mb-10">Confirm Visual Identity</h3>
         <div className="flex gap-4">

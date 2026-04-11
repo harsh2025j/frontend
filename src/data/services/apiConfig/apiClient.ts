@@ -226,6 +226,11 @@ apiClient.interceptors.response.use(
         !url.includes('/subscription') &&
         !url.includes('/permission-requests/my') &&
         !url.includes('/auth/login') &&
+        !url.includes('/auth/register') &&
+        !url.includes('/auth/forgot-password') &&
+        !url.includes('/auth/reset-password') &&
+        !url.includes('/auth/verify') &&
+        !url.includes('/auth/resend-otp') &&
         !url.includes('/auth/social-login');
 
       if (isAuthFailure && shouldShowError('auth-error')) {

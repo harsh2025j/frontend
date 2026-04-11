@@ -32,7 +32,8 @@ export default function NewsCard({
           width={600}
           height={180}
           alt={title}
-          unoptimized
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
+          quality={85}
           className="object-cover w-full h-full"
         />
       </div>

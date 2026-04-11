@@ -34,7 +34,8 @@ const LatestNews: React.FC<LatestNewsProps> = ({
             src={getSafeImageUrl(typeof img === 'string' ? img : (img as StaticImageData)?.src || '')}
             alt={title}
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            sizes="(max-width: 768px) 100vw, 500px"
+            quality={90}
             className="object-cover rounded-t-md"
           />
         </Link>

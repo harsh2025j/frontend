@@ -9,6 +9,8 @@ interface CourtSearchableDropdownProps {
   placeholder?: string;
   className?: string;
   required?: boolean;
+  error?: string;
+  name?: string;
 }
 
 const INDIAN_HIGH_COURTS = [
@@ -50,6 +52,8 @@ export default function CourtSearchableDropdown({
   placeholder = "Select or type court name",
   className = "",
   required = false,
+  error,
+  name,
 }: CourtSearchableDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,9 +93,9 @@ export default function CourtSearchableDropdown({
 
   return (
     <div className={`relative ${className}`} ref={containerRef}>
-      <div 
+      <div
         className={`w-full px-4 py-2.5 border rounded-xl text-left flex justify-between items-center transition-all bg-white/50 backdrop-blur-sm cursor-pointer
-          ${isOpen ? "border-[#C9A227] ring-2 ring-[#C9A227]/10" : "border-gray-200 hover:border-[#C9A227]/50 shadow-sm"}
+          ${isOpen ? "border-[#C9A227] ring-2 ring-[#C9A227]/10" : error ? "border-red-500 ring-4 ring-red-500/5 bg-red-50/10" : "border-gray-200 hover:border-[#C9A227]/50 shadow-sm"}
           ${!value ? "text-gray-400" : "text-gray-900"}
         `}
         onClick={() => setIsOpen(!isOpen)}
@@ -205,6 +209,7 @@ export default function CourtSearchableDropdown({
       <input
         type="text"
         className="sr-only"
+        name={name}
         value={value}
         required={required}
         readOnly

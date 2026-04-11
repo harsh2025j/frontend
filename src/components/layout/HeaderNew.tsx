@@ -444,7 +444,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                     <div className="relative pb-4 -mb-4" onMouseEnter={() => setIsProfileOpen(true)} onMouseLeave={() => setIsProfileOpen(false)}>
                                         <button className="flex items-center gap-2 focus:outline-none py-2 px-3 hover:bg-gray-50 rounded-full transition-colors">
                                             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#C9A227] to-[#b39022] flex items-center justify-center text-sm font-semibold text-white overflow-hidden border-2 border-white shadow-md">
-                                                {avatar ? <Image src={avatar} alt="Avatar" width={40} height={40} className="object-cover w-full h-full" /> : (user?.name?.[0] || "U").toUpperCase()}
+                                                {avatar ? <Image src={avatar} alt="Avatar" width={40} height={40} className="object-cover w-full h-full" quality={90} sizes="100px" /> : (user?.name?.[0] || "U").toUpperCase()}
                                             </div>
                                             <span className="text-sm font-medium text-gray-800 hidden xl:block">{user?.name}</span>
                                             <ChevronDown size={14} className="text-gray-500 hidden xl:block" />
@@ -581,7 +581,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                             <div className="flex items-center gap-3 bg-gradient-to-r from-gray-50 to-white p-3 rounded-lg border border-gray-100">
                                                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#C9A227] to-[#b39022] flex items-center justify-center text-sm font-semibold text-white overflow-hidden shadow-md">
                                                     {avatar ? (
-                                                        <Image src={avatar} alt="Avatar" width={48} height={48} className="object-cover w-full h-full" />
+                                                        <Image src={avatar} alt="Avatar" width={48} height={48} className="object-cover w-full h-full" quality={90} sizes="100px" />
                                                     ) : (
                                                         (user?.name?.[0] || "U").toUpperCase()
                                                     )}
