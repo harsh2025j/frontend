@@ -7,8 +7,7 @@ import { Search, FileText, User, Gavel, Calendar, Home, ChevronRight, Scale, Bui
 import { performCaseSearch, SearchInputs, SearchType } from "./searchLogic";
 import Captcha from "@/components/ui/Captcha";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import CustomSelect from "@/components/ui/CustomSelect";
-import { caseTypeOptions } from "@/constants/caseOptions";
+import CaseTypeSearchableDropdown from "@/components/ui/CaseTypeSearchableDropdown";
 
 export default function CasesPage() {
     useDocTitle("Cases | Sajjad Husain Law Associates");
@@ -342,9 +341,8 @@ export default function CasesPage() {
                                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                                                     Case Type <span className="text-red-500">*</span>
                                                 </label>
-                                                <CustomSelect
+                                                <CaseTypeSearchableDropdown
                                                     required
-                                                    options={caseTypeOptions}
                                                     value={inputs.caseType}
                                                     onChange={(value) => setInputs({ ...inputs, caseType: value })}
                                                     placeholder="-- Select Case Type --"

@@ -8,8 +8,7 @@ import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import { ArrowLeft, Save } from "lucide-react";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import CustomSelect from "@/components/ui/CustomSelect";
-import { caseTypeOptions } from "@/constants/caseOptions";
+import CaseTypeSearchableDropdown from "@/components/ui/CaseTypeSearchableDropdown";
 import InfiniteSearchableSelect from "@/components/ui/InfiniteSearchableSelect";
 import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
 import FormField from "@/components/ui/FormField";
@@ -23,7 +22,7 @@ export default function CreateCasePage() {
         cnrNumber: "",
         title: "",
         description: "",
-        caseType: "civil",
+        caseType: "",
         status: "filed",
         filingDate: "",
         firstHearingDate: "",
@@ -220,10 +219,10 @@ export default function CreateCasePage() {
                     <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Case Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField label="Case Type" error={errors.caseType} required>
-                            <CustomSelect
+                            <CaseTypeSearchableDropdown
                                 name="caseType"
-                                options={caseTypeOptions}
                                 value={formData.caseType}
+                                error={errors.caseType}
                                 onChange={(value) => {
                                     setFormData({ ...formData, caseType: value });
                                     if (errors.caseType) {

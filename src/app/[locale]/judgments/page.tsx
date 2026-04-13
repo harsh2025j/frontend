@@ -6,8 +6,7 @@ import toast from "react-hot-toast";
 import { Search, FileText, Gavel, Calendar, Home, ChevronRight, Scale, BookOpen, Info, AlertCircle } from 'lucide-react';
 import Captcha from "@/components/ui/Captcha";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import CustomSelect from "@/components/ui/CustomSelect";
-import { caseTypeOptions } from "@/constants/caseOptions";
+import CaseTypeSearchableDropdown from "@/components/ui/CaseTypeSearchableDropdown";
 import { performJudgmentSearch, JudgmentSearchType } from "./searchLogic";
 
 type SearchType = "caseNumber" | "diaryNumber" | "freeText" | "judgeName";
@@ -292,9 +291,8 @@ export default function JudgmentsPage() {
                                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                                                     Case Type <span className="text-red-500">*</span>
                                                 </label>
-                                                <CustomSelect
+                                                <CaseTypeSearchableDropdown
                                                     required
-                                                    options={caseTypeOptions}
                                                     value={inputs.caseType}
                                                     onChange={(value) => setInputs({ ...inputs, caseType: value })}
                                                     placeholder="-- Select Case Type --"
