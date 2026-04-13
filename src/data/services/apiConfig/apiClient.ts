@@ -72,7 +72,7 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
-    // "ngrok-skip-browser-warning": "true",  //only in local development with ngrok, can be removed in production
+    "ngrok-skip-browser-warning": "true",  //only in local development with ngrok, can be removed in production
   },
   timeout: 30000,
 });
@@ -147,6 +147,12 @@ apiClient.interceptors.request.use(
             }
           } catch (error: any) {
             processQueue(error, null);
+
+            // ONLY hide the toast if it's the specific refresh token error
+            if (error.response?.data?.message?.includes("Invalid refresh token")) {
+              toast.dismiss();
+            }
+
             localStorage.removeItem("token");
             localStorage.removeItem("refreshToken");
             localStorage.removeItem("user");

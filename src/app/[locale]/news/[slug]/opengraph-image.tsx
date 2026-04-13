@@ -23,7 +23,7 @@ export default async function Image({ params }: { params: { slug: string; locale
 
   // Load logo as fallback
   const logoData = await logoDataPromise;
-  
+
   // Fetch article data for the OG image
   let articleTitle = "Legal News";
   let thumbnailUrl: string | ArrayBuffer | null = logoData;
@@ -32,21 +32,21 @@ export default async function Image({ params }: { params: { slug: string; locale
   try {
     const res = await fetch(`${API_BASE_URL}/articles/${slug}`, {
       headers: {
-        // "ngrok-skip-browser-warning": "true",
+        "ngrok-skip-browser-warning": "true",
       },
     });
     if (res.ok) {
-        const responseData = await res.json();
-        const article = responseData.data;
-        if (article) {
-            articleTitle = article.title;
-            // Use article thumbnail if present, fallback to local logo
-            // For OG images, usually raw S3 is fine if we are within the Edge Runtime
-            thumbnailUrl = article.thumbnail || logoData;
-            if (article.category?.name) {
-                categoryName = article.category.name;
-            }
+      const responseData = await res.json();
+      const article = responseData.data;
+      if (article) {
+        articleTitle = article.title;
+        // Use article thumbnail if present, fallback to local logo
+        // For OG images, usually raw S3 is fine if we are within the Edge Runtime
+        thumbnailUrl = article.thumbnail || logoData;
+        if (article.category?.name) {
+          categoryName = article.category.name;
         }
+      }
     }
   } catch (error) {
     console.error("Error fetching article for OG image:", error);
@@ -82,7 +82,7 @@ export default async function Image({ params }: { params: { slug: string; locale
             padding: thumbnailUrl === logoData ? '100px' : '0',
           }}
         />
-        
+
         {/* Darkened Overlay for Text Readability */}
         <div
           style={{

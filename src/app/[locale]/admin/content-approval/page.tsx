@@ -563,13 +563,13 @@ const ContentApprovalPanel = () => {
                           >
                             {isImage ? (
                               <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gray-50 border border-gray-50 shrink-0 relative">
-                                <Image 
-                                  src={getSafeImageUrl(doc.fileUrl)} 
-                                  alt={doc.fileName} 
+                                <Image
+                                  src={getSafeImageUrl(doc.fileUrl)}
+                                  alt={doc.fileName}
                                   fill
                                   sizes="112px"
                                   quality={90}
-                                  className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                                  className="object-cover group-hover:scale-110 transition-transform duration-500"
                                 />
                               </div>
                             ) : (
