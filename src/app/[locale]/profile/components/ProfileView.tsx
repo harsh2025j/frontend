@@ -655,7 +655,7 @@ function ToggleItem({ label, checked, onChange, icon: Icon }: any) {
 
 function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isProfessional }: any) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#0A2342]/60 backdrop-blur-md">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center p-6 bg-[#0A2342]/60 backdrop-blur-md">
       <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-white dark:bg-[#0A2342] rounded-[48px] w-full max-w-2xl overflow-hidden shadow-2xl relative">
         <button onClick={onClose} className="absolute top-8 right-8 p-3 rounded-2xl hover:bg-gray-50"><X size={24} /></button>
         <div className="p-12 pb-4">
@@ -710,7 +710,7 @@ function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isPr
 
 function ImagePreviewModal({ url, onClose, onConfirm, saving }: any) {
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
       <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="max-w-xl w-full text-center text-white">
         <div className="w-80 h-80 rounded-[48px] overflow-hidden mx-auto mb-10 border-4 border-[#C9A227]">
           <Image src={url} alt="Preview" width={320} height={320} className="object-cover" quality={100} sizes="740px" />
@@ -727,7 +727,7 @@ function ImagePreviewModal({ url, onClose, onConfirm, saving }: any) {
 
 function LogoutOverlay({ onCancel, onConfirm }: any) {
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-[#0A2342]/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-[#0A2342]/80 backdrop-blur-md">
       <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className="bg-white rounded-[40px] p-12 max-w-md w-full text-center">
         <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8"><LogOut size={40} /></div>
         <h3 className="text-3xl font-serif text-[#0A2342] mb-4">Security Exit</h3>

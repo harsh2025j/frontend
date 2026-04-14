@@ -114,13 +114,38 @@ export default function JudgeForm({ initialData }: JudgeFormProps) {
         }
 
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        return { 
+            isValid: Object.keys(newErrors).length === 0, 
+            firstErrorKey: Object.keys(newErrors)[0] 
+        };
+    };
+
+    const scrollToError = (fieldKey: string) => {
+        setTimeout(() => {
+            const element = document.getElementById(`field-${fieldKey}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const input = element.querySelector('input, select, textarea, button') as HTMLElement;
+                if (input) input.focus();
+            }
+        }, 150); // Slightly longer delay for tab transitions
     };
 
     const handlePublish = async () => {
-        // Final validation before API call
-        if (!validateTab("identity") || !validateTab("position")) {
-            toast.error("Please fill all required fields");
+        // Final validation across critical tabs
+        const identityVal = validateTab("identity");
+        if (!identityVal.isValid) {
+            setActiveTab("identity");
+            toast.error("Required fields missing in Identity");
+            scrollToError(identityVal.firstErrorKey!);
+            return;
+        }
+
+        const positionVal = validateTab("position");
+        if (!positionVal.isValid) {
+            setActiveTab("position");
+            toast.error("Required fields missing in Position & Service");
+            scrollToError(positionVal.firstErrorKey!);
             return;
         }
 
@@ -186,10 +211,11 @@ export default function JudgeForm({ initialData }: JudgeFormProps) {
     const isLastTab = currentTabIndex === tabs.length - 1;
 
     const navToNext = () => {
-        if (validateTab(activeTab)) {
+        const validation = validateTab(activeTab);
+        if (validation.isValid) {
             if (!isLastTab) setActiveTab(tabs[currentTabIndex + 1].id);
         } else {
-            // toast.error("Please fill all required fields before proceeding");
+            scrollToError(validation.firstErrorKey!);
         }
     };
 
@@ -202,8 +228,13 @@ export default function JudgeForm({ initialData }: JudgeFormProps) {
         const targetIndex = tabs.findIndex(t => t.id === tabId);
         if (targetIndex < currentTabIndex) {
             setActiveTab(tabId);
-        } else if (validateTab(activeTab)) {
-            setActiveTab(tabId);
+        } else {
+            const validation = validateTab(activeTab);
+            if (validation.isValid) {
+                setActiveTab(tabId);
+            } else {
+                scrollToError(validation.firstErrorKey!);
+            }
         }
     };
 
@@ -271,7 +302,7 @@ export default function JudgeForm({ initialData }: JudgeFormProps) {
 
                             <div className="w-full md:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="md:col-span-2">
-                                    <FormField label="Full Name" required error={errors.name}>
+                                    <FormField id="field-name" label="Full Name" required error={errors.name}>
                                         <input
                                             name="name"
                                             value={formData.name}
@@ -340,7 +371,7 @@ export default function JudgeForm({ initialData }: JudgeFormProps) {
                         <section>
                             <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-5 border-l-4 border-blue-500 pl-3">Current Assignment</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <FormField label="Designation" required error={errors.designation}>
+                                <FormField id="field-designation" label="Designation" required error={errors.designation}>
                                     <input
                                         name="designation"
                                         value={formData.designation}
@@ -349,7 +380,7 @@ export default function JudgeForm({ initialData }: JudgeFormProps) {
                                         className={`w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-all outline-none ${errors.designation ? 'border-red-500' : 'border-gray-200'}`}
                                     />
                                 </FormField>
-                                <FormField label="Court Name" required error={errors.court}>
+                                <FormField id="field-court" label="Court Name" required error={errors.court}>
                                     <CourtSearchableDropdown
                                         value={formData.court}
                                         onChange={(val) => {
@@ -365,7 +396,7 @@ export default function JudgeForm({ initialData }: JudgeFormProps) {
                                         error={errors.court}
                                     />
                                 </FormField>
-                                <FormField label="Court Type" required error={errors.courtType}>
+                                <FormField id="field-courtType" label="Court Type" required error={errors.courtType}>
                                     <select
                                         name="courtType"
                                         value={formData.courtType}

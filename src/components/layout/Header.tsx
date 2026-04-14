@@ -331,7 +331,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="w-full border-b border-gray-200 bg-white z-50 fixed top-0 left-0">
+      <header className="w-full border-b border-gray-200 bg-white z-[100] fixed top-0 left-0">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
           <Link href="/" className="flex items-center">
             <Image src={logo} alt="Logo" className="object-contain" width={140} height={40} priority />

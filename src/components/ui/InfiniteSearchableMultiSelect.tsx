@@ -19,6 +19,7 @@ interface InfiniteSearchableMultiSelectProps {
     className?: string;
     required?: boolean;
     name?: string;
+    initialOptions?: SearchableOption[];
 }
 
 export default function InfiniteSearchableMultiSelect({
@@ -29,6 +30,7 @@ export default function InfiniteSearchableMultiSelect({
     required = false,
     name,
     onSearch,
+    initialOptions = [],
 }: InfiniteSearchableMultiSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -37,7 +39,7 @@ export default function InfiniteSearchableMultiSelect({
     const [asyncOptions, setAsyncOptions] = useState<SearchableOption[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [selectedOptions, setSelectedOptions] = useState<SearchableOption[]>([]);
+    const [selectedOptions, setSelectedOptions] = useState<SearchableOption[]>(initialOptions);
 
     const containerRef = useRef<HTMLDivElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -59,8 +61,8 @@ export default function InfiniteSearchableMultiSelect({
     }, []);
 
     useEffect(() => {
-        if (isOpen && searchInputRef.current) {
-            searchInputRef.current.focus();
+        if (isOpen) {
+            setTimeout(() => searchInputRef.current?.focus(), 10);
         } else if (!isOpen) {
             setSearchQuery("");
             setAsyncOptions([]);
@@ -68,6 +70,12 @@ export default function InfiniteSearchableMultiSelect({
             setTotalPages(1);
         }
     }, [isOpen]);
+
+    useEffect(() => {
+        if (initialOptions.length > 0) {
+            setSelectedOptions(initialOptions);
+        }
+    }, [initialOptions]);
 
     const performSearch = useCallback(async (query: string, pageNum: number, append = false) => {
         setIsLoading(true);
@@ -107,7 +115,6 @@ export default function InfiniteSearchableMultiSelect({
         if (selectedValues.includes(option.value)) {
             const newValues = selectedValues.filter(v => v !== option.value);
             onChange(newValues);
-            // No need to manually update selectedOptions here, the effect below will sync it
         } else {
             const newValues = [...selectedValues, option.value];
             onChange(newValues);
@@ -116,23 +123,19 @@ export default function InfiniteSearchableMultiSelect({
                 return [...prev, option];
             });
         }
+        setSearchQuery("");
+        // Maintain focus for consecutive searches
+        setTimeout(() => searchInputRef.current?.focus(), 0);
     };
 
-    // Effect to prune selectedOptions if selectedValues changes externally or options are removed
     useEffect(() => {
         setSelectedOptions(prev => prev.filter(opt => selectedValues.includes(opt.value)));
     }, [selectedValues]);
 
-    // Cleanup: we don't clear selectedOptions on close if we want them to persist across re-opens
-    // But we DO need them to persist across component remounts. 
-    // Since this component is inside a conditional block in page.tsx, it unmounts when sendToAll is true.
-    // To fix this properly, we should ideally lift selectedOptions state to the parent,
-    // or just accept that searching/scrolling will be needed to re-add them if they aren't in current results.
-    // COMPROMISE: We check asyncOptions for any missing selected labels.
     useEffect(() => {
         if (asyncOptions.length > 0) {
-            const newlyFound = asyncOptions.filter(opt => 
-                selectedValues.includes(opt.value) && 
+            const newlyFound = asyncOptions.filter(opt =>
+                selectedValues.includes(opt.value) &&
                 !selectedOptions.find(so => so.value === opt.value)
             );
             if (newlyFound.length > 0) {
@@ -149,7 +152,7 @@ export default function InfiniteSearchableMultiSelect({
 
     return (
         <div className={`relative ${className}`} ref={containerRef}>
-            <div 
+            <div
                 className={`min-h-[42px] w-full px-3 py-1.5 border rounded-lg text-left flex flex-wrap gap-2 items-center transition-all bg-white cursor-pointer
                     ${isOpen ? "border-[#0A2342] ring-2 ring-[#0A2342]/10" : "border-gray-300 hover:border-gray-400"}
                 `}
@@ -158,9 +161,9 @@ export default function InfiniteSearchableMultiSelect({
                 {selectedOptions.length === 0 && !isOpen && (
                     <span className="text-gray-500 text-sm ml-1">{placeholder}</span>
                 )}
-                
+
                 {selectedOptions.map((option) => (
-                    <span 
+                    <span
                         key={option.value}
                         className="inline-flex items-center gap-1 bg-[#0A2342]/5 text-[#0A2342] px-2 py-1 rounded-md text-xs font-medium border border-[#0A2342]/10 group"
                         onClick={(e) => e.stopPropagation()}
@@ -175,9 +178,9 @@ export default function InfiniteSearchableMultiSelect({
                         </button>
                     </span>
                 ))}
-                
+
                 <div className="flex-1 min-w-[60px]">
-                   {isOpen && (
+                    {isOpen && (
                         <input
                             ref={searchInputRef}
                             type="text"
@@ -187,7 +190,7 @@ export default function InfiniteSearchableMultiSelect({
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onClick={(e) => e.stopPropagation()}
                         />
-                   )}
+                    )}
                 </div>
 
                 <ChevronDown
@@ -207,7 +210,7 @@ export default function InfiniteSearchableMultiSelect({
             />
 
             {isOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="absolute z-[30] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl animate-in fade-in slide-in-from-top-1 duration-200">
                     <div className="max-h-[280px] overflow-y-auto w-full py-1 custom-scrollbar">
                         {displayOptions.length > 0 ? (
                             <>
@@ -262,13 +265,13 @@ export default function InfiniteSearchableMultiSelect({
                             </div>
                         )}
                     </div>
-                    
+
                     {selectedValues.length > 0 && (
                         <div className="p-2 border-t border-gray-100 bg-gray-50 flex justify-between items-center rounded-b-lg">
                             <span className="text-xs text-gray-500 font-medium ml-2">
                                 {selectedValues.length} selected
                             </span>
-                            <button 
+                            <button
                                 type="button"
                                 onClick={(e) => {
                                     e.stopPropagation();

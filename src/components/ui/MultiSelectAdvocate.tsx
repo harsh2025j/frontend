@@ -161,7 +161,7 @@ const MultiSelectAdvocate: React.FC<MultiSelectAdvocateProps> = ({
       {open && (
         <div
           ref={dropdownRef}
-          className="absolute z-[9999] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col"
+          className="absolute z-[30] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col"
           style={{ maxHeight: "300px" }}
         >
           <div className="overflow-y-auto flex-1 p-1" onScroll={handleScroll}>

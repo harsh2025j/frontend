@@ -46,7 +46,7 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
 
   return (
     <>
-      <header className="w-full h-16 bg-white dark:bg-[#0A2342] text-gray-800 dark:text-white flex items-center justify-between px-4 fixed top-0 left-0 z-40 shadow-sm border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
+      <header className="w-full h-16 bg-white dark:bg-[#0A2342] text-gray-800 dark:text-white flex items-center justify-between px-4 fixed top-0 left-0 z-[500] shadow-sm border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
 
         {/* Left section: Logo + Menu + Search */}
         <div className="flex items-center gap-4 w-full max-w-xl">

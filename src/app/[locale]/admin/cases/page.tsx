@@ -13,6 +13,14 @@ import CaseDetailPage from "@/app/[locale]/cases/[id]/page";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import Pagination from "@/components/Pagination";
+import CustomSelect from "@/components/ui/CustomSelect";
+
+const STATUS_OPTIONS = [
+    "Fresh", "Registered", "Defective", "Defect Removed", "Pending", "Listed", "Part Heard",
+    "Adjourned", "Stayed", "Remanded", "Disposed", "Decreed", "Dismissed", "Allowed",
+    "Partially Allowed", "Withdrawn", "Compromised", "Settled", "Abated", "Transferred",
+    "Recalled", "Restored", "Null and Void"
+].map(s => ({ value: s, label: s }));
 
 export default function AdminCasesPage() {
     useDocTitle("Cases | Sajjad Husain Law Associates");
@@ -115,7 +123,8 @@ export default function AdminCasesPage() {
 
     return (
         <div className="p-6 space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className={viewCaseId ? "no-print" : ""}>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Manage Cases</h1>
                     <p className="text-gray-500 text-sm mt-1">View and manage all legal cases</p>
@@ -146,7 +155,7 @@ export default function AdminCasesPage() {
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case Number</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case / Diary Number</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[200px]">Title</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Court</th>
@@ -165,27 +174,26 @@ export default function AdminCasesPage() {
                             ) : cases && cases.length > 0 ? (
                                 cases.map((c) => (
                                     <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{c.caseNumber}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {c.caseNumber || c.diaryNumber || "N/A"}
+                                        </td>
                                         <td className="px-6 py-4 max-w-[200px] text-sm text-gray-600">{c.title}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <select
-                                                className={`block w-full px-2 py-1 text-xs font-medium border-gray-300 rounded-full capitalize focus:ring-2 focus:ring-offset-1 focus:outline-none cursor-pointer ${(confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status) === "pending"
-                                                    ? "bg-yellow-100 text-yellow-800 border-yellow-200 focus:ring-yellow-500"
-                                                    : (confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status) === "closed"
-                                                        ? "bg-gray-100 text-gray-800 border-gray-200 focus:ring-gray-500"
-                                                        : (confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status) === "filed"
-                                                            ? "bg-blue-100 text-blue-800 border-blue-200 focus:ring-blue-500"
-                                                            : "bg-green-100 text-green-800 border-green-200 focus:ring-green-500"
-                                                    }`}
+                                        <td className="px-6 py-4 whitespace-nowrap min-w-[160px]">
+                                            <CustomSelect
+                                                options={STATUS_OPTIONS}
                                                 value={confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status}
-                                                onChange={(e) => handleStatusChange(c.id, e.target.value)}
-                                            >
-                                                <option value="filed">Filed</option>
-                                                <option value="pending">Pending</option>
-                                                <option value="hearing">Hearing</option>
-                                                <option value="judgment">Judgment</option>
-                                                <option value="closed">Closed</option>
-                                            </select>
+                                                onChange={(val) => handleStatusChange(c.id, val)}
+                                                buttonClassName={`flex items-center justify-between w-full px-3 py-1.5 text-xs font-semibold border rounded-full capitalize transition-all ${(confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status)?.toLowerCase() === "pending"
+                                                    ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                                    : (confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status)?.toLowerCase() === "closed" || (confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status)?.toLowerCase() === "disposed"
+                                                        ? "bg-gray-100 text-gray-800 border-gray-200"
+                                                        : (confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status)?.toLowerCase() === "filed" || (confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status)?.toLowerCase() === "fresh"
+                                                            ? "bg-blue-100 text-blue-800 border-blue-200"
+                                                            : (confirmModal.isOpen && confirmModal.caseId === c.id ? confirmModal.newStatus : c.status)?.toLowerCase() === "defective"
+                                                                ? "bg-red-100 text-red-800 border-red-200"
+                                                                : "bg-green-100 text-green-800 border-green-200"
+                                                    }`}
+                                            />
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{c.court}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -239,8 +247,9 @@ export default function AdminCasesPage() {
                     </div>
                 )}
             </div>
+        </div>
 
-            <ConfirmationModal
+        <ConfirmationModal
                 isOpen={confirmModal.isOpen}
                 onClose={() => setConfirmModal({ isOpen: false, caseId: "", newStatus: "" })}
                 onConfirm={handleConfirmUpdate}
@@ -253,10 +262,10 @@ export default function AdminCasesPage() {
 
             {/* View Case Modal Overlay */}
             {viewCaseId && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setViewCaseId(null)}></div>
-                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-10">
+                <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 print:p-0">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm no-print" onClick={() => setViewCaseId(null)}></div>
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200 print:max-h-none print:h-auto print:rounded-none print:shadow-none print:static">
+                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-10 no-print">
                             <h3 className="text-xl font-bold text-gray-900">Case Preview</h3>
                             <button
                                 onClick={() => setViewCaseId(null)}
@@ -265,10 +274,10 @@ export default function AdminCasesPage() {
                                 <X size={24} />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto">
+                        <div className="flex-1 overflow-y-auto print:overflow-visible">
                             <CaseDetailPage caseId={viewCaseId} isModal={true} />
                         </div>
-                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end no-print">
                             <button
                                 onClick={() => setViewCaseId(null)}
                                 className="px-6 py-2 bg-[#0A2342] text-white rounded-lg hover:bg-[#1a3a75] transition-colors font-medium shadow-sm"

@@ -113,7 +113,7 @@ export default function CourtSearchableDropdown({
       </div>
 
       {isOpen && (
-        <div className="absolute z-[100] w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 origin-top">
+        <div className="absolute z-[30] w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 origin-top">
           {/* Search Input Area */}
           <div className="p-3 border-b border-gray-50 flex items-center gap-2 bg-gray-50/50">
             <Search size={16} className="text-gray-400 ml-1 flex-shrink-0" />

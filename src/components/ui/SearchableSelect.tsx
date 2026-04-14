@@ -153,7 +153,7 @@ export default function SearchableSelect({
             />
 
             {isOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+                <div className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
                     {/* Search Bar */}
                     <div className="p-2 border-b border-gray-100 flex items-center gap-2">
                         <Search size={16} className="text-gray-400 ml-2 flex-shrink-0" />

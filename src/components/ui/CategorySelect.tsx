@@ -89,7 +89,7 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
 
             {/* Dropdown */}
             {open && (
-                <div className="absolute z-[9999] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col"
+                <div className="absolute z-[30] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col"
                     style={{ maxHeight: "260px" }}
                 >
                     {/* Search */}

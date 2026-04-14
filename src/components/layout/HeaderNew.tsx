@@ -404,7 +404,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
             )}
 
             {/* Sticky Main Header - Handles its own stickiness after Top Bar scrolls away */}
-            <header className={`w-full bg-white z-50 sticky top-0 left-0 transition-shadow duration-500 ease-[0.22,1,0.36,1] ${scrolled ? "shadow-lg" : "shadow-none"}`}>
+            <header className={`w-full bg-white z-[100] sticky top-0 left-0 transition-shadow duration-500 ease-[0.22,1,0.36,1] ${scrolled ? "shadow-lg" : "shadow-none"}`}>
                 {/* Main Header Container */}
                 <div className="border-b border-gray-100">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8">

@@ -16,16 +16,20 @@ interface CustomSelectProps {
     className?: string;
     required?: boolean;
     name?: string;
+    error?: boolean;
+    buttonClassName?: string;
 }
 
 export default function CustomSelect({
     options,
     value,
     onChange,
-    placeholder = "Select an option",
+    placeholder = "Select option",
     className = "",
     required = false,
     name,
+    error = false,
+    buttonClassName,
 }: CustomSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -54,18 +58,22 @@ export default function CustomSelect({
         <div className={`relative ${className}`} ref={containerRef}>
             <button
                 type="button"
-                className={`w-full px-4 py-3 border-2 rounded-lg text-left flex justify-between items-center transition-all bg-white
-          ${isOpen ? "border-[#C9A227] ring-2 ring-[#C9A227]" : "border-gray-300 hover:border-gray-400"}
-          ${!value ? "text-gray-500" : "text-gray-900"}
+                className={buttonClassName || `w-full px-4 py-2 border rounded-lg text-left flex justify-between items-center transition-all bg-white
+          ${error
+                        ? "border-red-500 ring-2 ring-red-500/10 bg-red-50/5 text-red-900"
+                        : isOpen
+                            ? "border-[#C9A227] ring-2 ring-[#C9A227]/20"
+                            : "border-gray-300 hover:border-gray-400"}
+          ${!value && !error ? "text-gray-400" : ""}
         `}
                 onClick={() => setIsOpen(!isOpen)}
             >
-                <span className="block truncate">
+                <span className="block truncate font-medium">
                     {selectedOption ? selectedOption.label : placeholder}
                 </span>
                 <ChevronDown
-                    size={20}
-                    className={`transition-transform duration-200 text-gray-500 ${isOpen ? "rotate-180" : ""}`}
+                    size={18}
+                    className={`transition-transform duration-200 text-gray-400 ${isOpen ? "rotate-180" : ""}`}
                 />
             </button>
 
@@ -81,20 +89,22 @@ export default function CustomSelect({
             />
 
             {isOpen && (
-                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    {options.map((option) => (
-                        <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => handleSelect(option.value)}
-                            className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-gray-50 transition-colors
-                ${value === option.value ? "bg-blue-50 text-[#0A2342] font-semibold" : "text-gray-700"}
-              `}
-                        >
-                            <span>{option.label}</span>
-                            {value === option.value && <Check size={16} className="text-[#C9A227]" />}
-                        </button>
-                    ))}
+                <div className="absolute z-30 w-full mt-1.5 bg-white border border-gray-200 rounded-xl shadow-2xl shadow-gray-200/50 max-h-72 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
+                    <div className="py-1">
+                        {options.map((option) => (
+                            <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => handleSelect(option.value)}
+                                className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-gray-50 transition-colors
+                    ${value === option.value ? "bg-[#C9A227]/5 text-[#C9A227] font-bold" : "text-gray-700"}
+                  `}
+                            >
+                                <span>{option.label}</span>
+                                {value === option.value && <Check size={16} className="text-[#C9A227]" />}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

@@ -82,8 +82,9 @@ export default function CaseTypeSearchableDropdown({
       </div>
 
       {/* Dropdown panel */}
+
       {isOpen && (
-        <div className="absolute z-[100] w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 origin-top">
+        <div className="absolute z-[30] w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 origin-top">
           {/* Search bar */}
           <div className="p-3 border-b border-gray-100 flex items-center gap-2 bg-gray-50/60 sticky top-0">
             <Search size={15} className="text-gray-400 shrink-0" />
