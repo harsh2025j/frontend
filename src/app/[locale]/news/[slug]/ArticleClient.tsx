@@ -20,6 +20,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/data/redux/store";
 import PaywallOverlay from "@/components/ui/PaywallOverlay";
 
+import SpeechPlayer from "@/components/ui/SpeechPlayer";
+
 interface ArticleClientProps {
     initialArticle: Article;
     slug: string;
@@ -315,6 +317,11 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                         <button onClick={() => handleShare("print")} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:-translate-y-1 transition-all duration-300"><Printer size={18} /></button>
                     </div>
                 </div>
+
+                {/* if not need then remove this  and also SpeechPlayer.tsx  which is in sre/components/ui/SpeechPlayer.tsx*/}
+                {/* Speech Player */}
+                <SpeechPlayer article={article} />
+
 
                 {/* Article Content */}
                 <div className="article-content relative">

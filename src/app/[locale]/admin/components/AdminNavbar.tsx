@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Search, Menu, LogOut, User as UserIcon, Home, LayoutDashboard, PlusCircle } from "lucide-react";
 import logo from "../../../../assets/logo.png";
@@ -27,7 +27,9 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
 
   // State for dropdown & modal
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   const user = reduxProfileUser as UserData;
   const avatar = user?.profilePicture || null;
@@ -36,13 +38,24 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
   const dashboardAccess = canAccessAdminDashboardPage(user);
 
   const confirmLogout = () => {
-
     dispatch(logoutUser());
     localStorage.clear();
     setIsProfileOpen(false);
+    setIsPinned(false);
     setShowLogoutConfirm(false);
     window.location.href = "/"; // Force full page reload
   };
+
+  // Click outside to close fixed dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isPinned && profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsPinned(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isPinned]);
 
   return (
     <>
@@ -86,9 +99,11 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
 
           {/* User Dropdown */}
           <div
+            ref={profileRef}
             className="relative pl-2 border-l border-gray-200 dark:border-gray-700"
             onMouseEnter={() => setIsProfileOpen(true)}
             onMouseLeave={() => setIsProfileOpen(false)}
+            onClick={() => setIsPinned(!isPinned)}
           >
             <button className="flex items-center gap-3 focus:outline-none py-2 mr-5">
               <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center 
@@ -115,12 +130,13 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
 
             {/* Dropdown Menu */}
             <div
-              className={`absolute right-0 top-full w-48 bg-white dark:bg-[#0d2b4f] border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg transition-all duration-200 transform origin-top-right z-50 ${isProfileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}
+              className={`absolute right-0 top-full w-48 bg-white dark:bg-[#0d2b4f] border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg transition-all duration-200 transform origin-top-right z-50 ${isProfileOpen || isPinned ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}
+              onClick={(e) => isPinned && e.stopPropagation()}
             >
               <div className="py-2">
                 <Link
                   href={user?.username ? `/admin/profile/${user.username}` : "#"}
-                  onClick={() => setIsProfileOpen(false)}
+                  onClick={() => { setIsProfileOpen(false); setIsPinned(false); }}
                   className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   <UserIcon size={16} /> Profile
@@ -129,7 +145,7 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
                 {dashboardAccess ? (
                   <Link
                     href="/admin"
-                    onClick={() => setIsProfileOpen(false)}
+                    onClick={() => { setIsProfileOpen(false); setIsPinned(false); }}
                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     <LayoutDashboard size={16} /> Dashboard
@@ -137,7 +153,7 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
                 ) : (
                   <Link
                     href="/admin/membership"
-                    onClick={() => setIsProfileOpen(false)}
+                    onClick={() => { setIsProfileOpen(false); setIsPinned(false); }}
                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     <PlusCircle size={16} /> Submit Post
@@ -149,6 +165,7 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
                 <button
                   onClick={() => {
                     setIsProfileOpen(false);
+                    setIsPinned(false);
                     setShowLogoutConfirm(true);
                   }}
                   className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"

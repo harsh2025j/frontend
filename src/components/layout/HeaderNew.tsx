@@ -29,7 +29,7 @@ import SearchWithDropdown from "../ui/SearchWithDropdown";
 import NotificationDropdown from "./NotificationDropdown";
 import { ROLES, PERMISSIONS, canAccessAdminDashboardPage } from "@/utils/permissions";
 
-const SubCategoryItem = ({ item, closeMenu }: { item: NavItem; closeMenu: () => void }) => {
+const SubCategoryItem = ({ item, closeMenu, isPinned }: { item: NavItem; closeMenu: () => void; isPinned?: boolean }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const pathname = usePathname();
     const hasSubItems = item.children && item.children.length > 0;
@@ -103,6 +103,9 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
     const [mobileExpanded, setMobileExpanded] = useState<Record<string, boolean>>({});
     const [searchOpen, setSearchOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+    const navRef = useRef<HTMLDivElement>(null);
 
     const pathname = usePathname();
     const router = useRouter();
@@ -126,6 +129,17 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
         }
         return () => { document.body.style.overflow = ''; };
     }, [menuOpen]);
+
+    // Click outside to close fixed dropdowns
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (activeDropdown && navRef.current && !navRef.current.contains(event.target as Node)) {
+                setActiveDropdown(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [activeDropdown]);
 
     const switchLocale = (newLocale: string) => {
         router.replace(pathname, { locale: newLocale });
@@ -240,6 +254,14 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
 
     }, [categories, t]);
 
+    const togglePin = (label: string | null) => {
+        if (activeDropdown === label) {
+            setActiveDropdown(null);
+        } else {
+            setActiveDropdown(label);
+        }
+    };
+
     const isLinkActive = (href?: string) => {
         if (!href) return false;
         if (href === "/" && pathname !== "/") return false;
@@ -287,10 +309,11 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
         );
     };
 
-    const DesktopMenuItem = ({ item }: { item: NavItem }) => {
+    const DesktopMenuItem = ({ item, isPinned, onToggle }: { item: NavItem; isPinned: boolean; onToggle: (label: string | null) => void }) => {
         const hasChildren = item.children && item.children.length > 0;
         const [isOpen, setIsOpen] = useState(false);
         const active = isItemOrChildActive(item);
+        const showDropdown = isOpen || isPinned;
 
         const itemRef = useRef<HTMLDivElement>(null);
         const dropdownRef = useRef<HTMLDivElement>(null);
@@ -298,7 +321,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
         const [isVisible, setIsVisible] = useState(false);
 
         useEffect(() => {
-            if (isOpen && itemRef.current && dropdownRef.current) {
+            if (showDropdown && itemRef.current && dropdownRef.current) {
                 const itemRect = itemRef.current.getBoundingClientRect();
                 const dropdownRect = dropdownRef.current.getBoundingClientRect();
                 const windowWidth = window.innerWidth;
@@ -312,7 +335,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
             } else {
                 setIsVisible(false);
             }
-        }, [isOpen]);
+        }, [showDropdown]);
 
         if (!hasChildren) {
             return (
@@ -332,21 +355,23 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                 className="group h-full flex items-center"
                 onMouseEnter={() => setIsOpen(true)}
                 onMouseLeave={() => setIsOpen(false)}
+                onClick={() => hasChildren && onToggle(item.label)}
             >
-                <button className={`flex items-center gap-1 px-1 hover:text-[#C9A227] whitespace-nowrap transition-colors relative ${active ? "text-[#C9A227] font-semibold" : "text-gray-800"}`}>
+                <button className={`flex items-center gap-1 px-1 hover:text-[#C9A227] whitespace-nowrap transition-colors relative ${active || showDropdown ? "text-[#C9A227] font-semibold" : "text-gray-800"}`}>
                     {item.label}
-                    <ChevronDown size={14} className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-                    <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A227] transform origin-left transition-transform duration-300 ${active || isOpen ? "scale-x-100" : "scale-x-0"}`}></span>
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${showDropdown ? "rotate-180" : ""}`} />
+                    <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A227] transform origin-left transition-transform duration-300 ${active || showDropdown ? "scale-x-100" : "scale-x-0"}`}></span>
                 </button>
-                {isOpen && (
+                {showDropdown && (
                     <div
                         ref={dropdownRef}
                         className={`absolute top-full mt-0 bg-white border border-gray-200 shadow-xl rounded-lg z-50 max-h-[70vh] overflow-auto w-max max-w-[calc(100vw-200px)] transition-opacity duration-200 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
                         style={{ left: `${leftPos}px` }}
+                        onClick={(e) => isPinned && e.stopPropagation()} 
                     >
                         <div className="p-6 grid grid-cols-2 md:grid-cols-3 gap-6">
                             {item.children!.map((child, i) => (
-                                <SubCategoryItem key={i} item={child} closeMenu={() => setIsOpen(false)} />
+                                <SubCategoryItem key={i} item={child} closeMenu={() => { setIsOpen(false); onToggle(null); }} />
                             ))}
                         </div>
                     </div>
@@ -441,41 +466,49 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
 
                                 {/* User Profile or Auth Buttons */}
                                 {user ? (
-                                    <div className="relative pb-4 -mb-4" onMouseEnter={() => setIsProfileOpen(true)} onMouseLeave={() => setIsProfileOpen(false)}>
+                                    <div 
+                                        className="relative pb-4 -mb-4" 
+                                        onMouseEnter={() => setIsProfileOpen(true)} 
+                                        onMouseLeave={() => setIsProfileOpen(false)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            togglePin("profile");
+                                        }}
+                                    >
                                         <button className="flex items-center gap-2 focus:outline-none py-2 px-3 hover:bg-gray-50 rounded-full transition-colors">
                                             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#C9A227] to-[#b39022] flex items-center justify-center text-sm font-semibold text-white overflow-hidden border-2 border-white shadow-md">
                                                 {avatar ? <Image src={avatar} alt="Avatar" width={40} height={40} className="object-cover w-full h-full" quality={90} sizes="100px" /> : (user?.name?.[0] || "U").toUpperCase()}
                                             </div>
                                             <span className="text-sm font-medium text-gray-800 hidden xl:block">{user?.name}</span>
-                                            <ChevronDown size={14} className="text-gray-500 hidden xl:block" />
+                                            <ChevronDown size={14} className={`text-gray-500 hidden xl:block transition-transform duration-200 ${(isProfileOpen || activeDropdown === "profile") ? "rotate-180" : ""}`} />
                                         </button>
-                                        <div className={`absolute right-0 top-full w-56 bg-white border border-gray-200 rounded-xl shadow-xl transition-all duration-200 transform origin-top-right z-50 ${isProfileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
+                                        <div className={`absolute right-0 top-full w-56 bg-white border border-gray-200 rounded-xl shadow-xl transition-all duration-200 transform origin-top-right z-50 ${(isProfileOpen || activeDropdown === "profile") ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
                                             <div className="p-3 border-b border-gray-100">
                                                 <p className="font-semibold text-gray-900">{user?.name}</p>
                                                 <p className="text-xs text-gray-500">{user?.email}</p>
                                             </div>
                                             <div className="py-2">
                                                 {dashboardAccess ? (
-                                                    <Link href={user?.username ? `/admin/profile/${user.username}` : "#"} onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
+                                                    <Link href={user?.username ? `/admin/profile/${user.username}` : "#"} onClick={() => { setIsProfileOpen(false); setActiveDropdown(null); }} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
                                                         <UserIcon size={16} /> {t('profile')}
                                                     </Link>
                                                 ) : (
-                                                    <Link href={user?.username ? `/profile/${user.username}` : "#"} onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
+                                                    <Link href={user?.username ? `/profile/${user.username}` : "#"} onClick={() => { setIsProfileOpen(false); setActiveDropdown(null); }} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
                                                         <UserIcon size={16} /> {t('profile')}
                                                     </Link>
                                                 )}
 
                                                 {dashboardAccess ? (
-                                                    <Link href="/admin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
+                                                    <Link href="/admin" onClick={() => { setIsProfileOpen(false); setActiveDropdown(null); }} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
                                                         <LayoutDashboard size={16} /> {t('dashboard')}
                                                     </Link>
                                                 ) : (
-                                                    <Link href="/admin/membership" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
+                                                    <Link href="/admin/membership" onClick={() => { setIsProfileOpen(false); setActiveDropdown(null); }} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
                                                         <PlusCircle size={16} /> {t('submit_post')}
                                                     </Link>
                                                 )}
                                                 <div className="h-px bg-gray-100 my-1 mx-2" />
-                                                <button onClick={() => { setIsProfileOpen(false); setShowLogoutConfirm(true); }} className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                <button onClick={() => { setIsProfileOpen(false); setActiveDropdown(null); setShowLogoutConfirm(true); }} className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                                     <LogOut size={16} /> {t('logout')}
                                                 </button>
                                             </div>
@@ -555,10 +588,17 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                 </div>
 
                 {/* Navigation Bar */}
-                <div className="hidden lg:block bg-white border-b border-gray-100">
+                <div className="hidden lg:block bg-white border-b border-gray-100" ref={navRef}>
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8 overflow-hidden">
                         <nav className="flex items-center gap-8 h-14 text-sm font-medium overflow-hidden">
-                            {navItems.map((item, i) => <DesktopMenuItem key={i} item={item} />)}
+                            {navItems.map((item, i) => (
+                                <DesktopMenuItem
+                                    key={i}
+                                    item={item}
+                                    isPinned={activeDropdown === item.label}
+                                    onToggle={togglePin}
+                                />
+                            ))}
                         </nav>
                     </div>
                 </div>
@@ -568,12 +608,12 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                     {menuOpen && (
                         <motion.div
                             initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "calc(100vh - 120px)" }}
+                            animate={{ opacity: 1, height: "calc(100vh - 80px)" }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                            className="lg:hidden bg-white border-t border-gray-200 w-full overflow-y-auto shadow-xl fixed top-[120px] left-0 z-[100] origin-top scrollbar-hide"
+                            className="lg:hidden bg-white w-full overflow-y-auto shadow-xl absolute top-full left-0 z-[100] origin-top scrollbar-hide"
                         >
-                            <nav className="flex flex-col p-5 gap-2">
+                            <nav className="flex flex-col pt-2 pb-10 px-5 gap-2">
                                 {/* Mobile User Section */}
                                 <div className="mb-4 border-b border-gray-200 pb-4">
                                     {user ? (
