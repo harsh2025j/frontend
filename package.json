@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "dev:ngrok": "./scripts/dev-with-ngrok.sh"
+
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.9.0",
