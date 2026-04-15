@@ -8,6 +8,9 @@ import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
 // Force dynamic rendering as we depend on the slug param
 export const dynamic = "force-dynamic";
 
+const SITE_URL = "https://www.sajjadhusainlawassociates.com"; // production
+// const SITE_URL = "https://unimpeded-sprung-banter.ngrok-free.dev"; // dev (url)
+// ---------------------------------------------------------------------
 type Props = {
     params: Promise<{ slug: string; locale: string }>;
 };
@@ -17,6 +20,9 @@ async function getArticle(slug: string): Promise<Article | null> {
     try {
         const res = await fetch(`${API_BASE_URL}/articles/${slug}`, {
             cache: "no-store", // Ensure fresh data
+            headers: {
+                "ngrok-skip-browser-warning": "true",
+            },
         });
 
         if (!res.ok) {
@@ -45,6 +51,7 @@ export async function generateMetadata(
 
     if (!article) {
         return {
+            metadataBase: new URL(SITE_URL),
             title: "Article Not Found",
         };
     }
@@ -53,12 +60,13 @@ export async function generateMetadata(
     const description = article.subHeadline || article.content.replace(/<[^>]*>?/gm, "").slice(0, 160) + "...";
 
     return {
+        metadataBase: new URL(SITE_URL),
         title: article.title,
         description: description,
         openGraph: {
             title: article.title,
             description: description,
-            url: `https://www.sajjadhusainlawassociates.com/news/${slug}`,
+            url: `${SITE_URL}/${locale}/news/${slug}`,
             siteName: "Sajjad Husain Law Associates",
             locale: locale,
             type: "article",
@@ -66,14 +74,24 @@ export async function generateMetadata(
             authors: article.authors ? [article.authors] : undefined,
             section: article.category?.name,
             tags: article.tags?.map(t => t.name),
+            images: [
+                {
+                    url: `${SITE_URL}/${locale}/news/${slug}/opengraph-image?format=.jpg`,
+                    width: 1200,
+                    height: 630,
+                    alt: "News Article Preview",
+                    type: "image/jpeg"
+                }
+            ]
         },
         twitter: {
             card: "summary_large_image",
             title: article.title,
             description: description,
+            images: [`${SITE_URL}/${locale}/news/${slug}/opengraph-image`]
         },
         alternates: {
-            canonical: `https://www.sajjadhusainlawassociates.com/news/${slug}`,
+            canonical: `${SITE_URL}/${locale}/news/${slug}`,
         }
     };
 }

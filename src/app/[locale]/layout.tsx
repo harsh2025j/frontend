@@ -18,8 +18,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const METADATA_BASE = new URL('https://www.sajjadhusainlawassociates.com'); // production
+// const METADATA_BASE = new URL('https://unimpeded-sprung-banter.ngrok-free.dev'); // dev (url)
+
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.sajjadhusainlawassociates.com'),
+  metadataBase: METADATA_BASE,
   description: "Next-Gen Legal Tech",
   icons: {
     icon: "/logo.png",
