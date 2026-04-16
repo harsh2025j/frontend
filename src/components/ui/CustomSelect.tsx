@@ -58,7 +58,7 @@ export default function CustomSelect({
         <div className={`relative ${className}`} ref={containerRef}>
             <button
                 type="button"
-                className={buttonClassName || `w-full px-4 py-2 border rounded-lg text-left flex justify-between items-center transition-all bg-white
+                className={buttonClassName || `w-full px-4 py-1.5 border rounded-lg text-left flex justify-between items-center transition-all bg-white
           ${error
                         ? "border-red-500 ring-2 ring-red-500/10 bg-red-50/5 text-red-900"
                         : isOpen
@@ -89,14 +89,14 @@ export default function CustomSelect({
             />
 
             {isOpen && (
-                <div className="absolute z-30 w-full mt-1.5 bg-white border border-gray-200 rounded-xl shadow-2xl shadow-gray-200/50 max-h-72 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute z-30 w-full mt-1.5 bg-white border border-gray-200 rounded-xl shadow-2xl shadow-gray-200/50 max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
                     <div className="py-1">
                         {options.map((option) => (
                             <button
                                 key={option.value}
                                 type="button"
                                 onClick={() => handleSelect(option.value)}
-                                className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-gray-50 transition-colors
+                                className={`w-full px-4 py-2 text-left text-sm flex items-center justify-between hover:bg-gray-50 transition-colors
                     ${value === option.value ? "bg-[#C9A227]/5 text-[#C9A227] font-bold" : "text-gray-700"}
                   `}
                             >

@@ -1,266 +1,342 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { judgmentsService } from "@/data/services/judgments-service/judgmentsService";
 import { casesService } from "@/data/services/cases-service/casesService";
 import { judgesService } from "@/data/services/judges-service/judgesService";
+import { usersApi } from "@/data/services/users-service/users-service";
 import { useRouter, useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
-import { ArrowLeft, Save, Plus, X } from "lucide-react";
+import { ArrowLeft, Save, Plus, X, Landmark, Gavel, Scale, Users, Info, FileText, Image as ImageIcon, Link as LinkIcon, History } from "lucide-react";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import InfiniteSearchableSelect from "@/components/ui/InfiniteSearchableSelect";
+import InfiniteSearchableMultiSelect from "@/components/ui/InfiniteSearchableMultiSelect";
 import RichTextEditor from "@/components/ui/RichTextEditor";
 import FormField from "@/components/ui/FormField";
+import CustomSelect from "@/components/ui/CustomSelect";
+
+const DISPOSAL_NATURES = [
+    "Allowed", "Partially Allowed", "Dismissed", "Dismissed in Default", "Withdrawn",
+    "Compromised", "Settled Out of Court", "Abated", "Transferred", "Decreed",
+    "Decree on Compromise", "Remanded", "Null and Void", "Recalled and Restored",
+    "Acquitted", "Convicted", "Compounded"
+];
+
+const JUDGMENT_TYPES = [
+    "Final Judgment", "Interim Order", "Judgment", "Order", "Decree", "Direction / Directive",
+    "Stay Order", "Injunction Order", "Bail Order", "Anticipatory Bail", "Remand Order",
+    "Execution Order", "Transfer Order", "Reference Order", "Review Order", "Revision Order",
+    "Appeal Decision", "Contempt Order", "Suo Motu Order", "Quashing Order",
+    "Settlement / Compromise Order", "Withdrawal Order"
+];
 
 export default function EditJudgmentPage() {
-    useDocTitle("Edit Judgment  | Sajjad Husain Law Associates");
+    useDocTitle("Edit Judgment | Sajjad Husain Law Associates");
     const router = useRouter();
     const params = useParams();
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [cases, setCases] = useState<any[]>([]);
     const [judges, setJudges] = useState<any[]>([]);
-    const [initialCase, setInitialCase] = useState<any>(null);
-    const [initialJudge, setInitialJudge] = useState<any>(null);
+    const [selectedCaseData, setSelectedCaseData] = useState<any>(null);
 
-    const [formData, setFormData] = useState({
-        title: "",
+    const [formData, setFormData] = useState<any>({
+        // Section 1: Basic
         caseId: "",
-        judgeId: "",
+        // Section 2: Judgment Details
+        title: "",
         judgmentDate: "",
-        judgmentType: "final",
+        judgmentType: "Final Judgment",
         outcome: "",
         isLandmark: false,
-        citations: [] as string[],
-        keyPoints: [] as string[],
-        summary: "",
-        fullText: "",
-        pdfUrl: "",
+        neutralCitationHC: "",
+        neutralCitationSC: "",
+        legalPhrases: [] as string[],
+        relevantSections: [] as string[],
+        implementationDelivery: "",
+        judgmentLink: "",
+        // Section 3: SC (Conditional)
+        benchStrength: "",
+        judgeRole: "",
+        petitionInfo: "",
+        administrativeDetails: "",
+        proceedingDetail: "",
+        // Section 4: HC (Conditional)
         petitioner: "",
+        petitionerPartyType: "",
         respondent: "",
-        petitionerCounsel: "",
-        respondentCounsel: "",
-        bench: "",
+        respondentPartyType: "",
+        intervenors: "",
+        amicusCuriae: "",
+        natureOfCompliance: "",
+        // Section 5: Counsel
+        judgeIds: [] as string[], // Lead Judges
+        coramIds: [] as string[], // Bench Judges
+        counselDetails: {
+            petitionerCounsel: "",
+            respondentCounsel: "",
+            intervenorCounsel: "",
+            stateCounsel: "",
+        },
+
+        reporterCitation: "",
+        citations: [] as string[],
+        caseNotes: "",
+        historyLink: "",
+        citationManagementSite: "",
+        keyPoints: [] as string[],
+
+        articleCreator: "",
+        discoverySocialInfo: "",
+        isReserved: false,
+        reservedDateFrom: "",
+        reservedDuration: "",
+        nextListDate: "",
+        additionalNotes: "",
+
+        relatedNewsIds: [] as string[],
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
 
+    // Temporary inputs for array fields
+    const [newLegalPhrase, setNewLegalPhrase] = useState("");
+    const [newSection, setNewSection] = useState("");
     const [newCitation, setNewCitation] = useState("");
     const [newKeyPoint, setNewKeyPoint] = useState("");
+
+    const [initialCaseOption, setInitialCaseOption] = useState<any>(null);
+    const [initialLeadJudgeOptions, setInitialLeadJudgeOptions] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const [judgmentRes, casesRes, judgesRes] = await Promise.all([
                     judgmentsService.getById(params.id as string),
-                    casesService.getAll(),
-                    judgesService.getAll()
+                    casesService.getAll({ limit: 10 }),
+                    judgesService.getAll({ limit: 10 })
                 ]);
 
-                // Process Cases and Judges
-                const casesData = casesRes.data?.data?.data || casesRes.data?.data || casesRes.data || [];
-                const judgesData = judgesRes.data?.data?.data || judgesRes.data?.data || judgesRes.data || [];
+                const casesData = casesRes.data?.data?.data || casesRes.data?.data || [];
+                const judgesData = judgesRes.data?.data?.data || judgesRes.data?.data || [];
+                setCases(casesData);
+                setJudges(judgesData);
 
-                setCases(Array.isArray(casesData) ? casesData : []);
-                setJudges(Array.isArray(judgesData) ? judgesData : []);
+                const jData = judgmentRes.data?.data || judgmentRes.data;
 
-                // Process Judgment Data
-                let data = judgmentRes.data;
-                if (data.data) {
-                    data = data.data;
-                }
+                // transform data for form
+                const caseId = jData.case?.id || jData.caseId;
+                const judgeId = jData.judge?.id || jData.judgeId;
+                const coramIds = jData.coram?.map((c: any) => c.id) || [];
 
-                // Ensure arrays are initialized
-                if (!data.citations) data.citations = [];
-                if (!data.keyPoints) data.keyPoints = [];
-
-                // Map fields if necessary
-                let judgeId = "";
-                if (data.judge && data.judge.id) {
-                    judgeId = data.judge.id;
-                    setInitialJudge({
-                        value: data.judge.id,
-                        label: data.judge.name,
-                        subLabel: data.judge.designation
+                if (jData.case) {
+                    setInitialCaseOption({
+                        value: jData.case.id,
+                        label: `${jData.case.caseNumber} - ${jData.case.title}`,
+                        subLabel: jData.case.court
                     });
-                } else if (data.judgeId) {
-                    judgeId = data.judgeId;
+                    setSelectedCaseData(jData.case);
                 }
 
-                let caseId = "";
-                if (data.case && data.case.id) {
-                    caseId = data.case.id;
-                    setInitialCase({
-                        value: data.case.id,
-                        label: `${data.case.caseNumber} - ${data.case.title}`,
-                        subLabel: data.case.court
-                    });
-                } else if (data.caseId) {
-                    caseId = data.caseId;
+                // Lead Judges Migration/Initialization
+                let leadJudgeIds: string[] = [];
+                let leadJudgeOptions: any[] = [];
+
+                if (jData.leadJudges && Array.isArray(jData.leadJudges)) {
+                    leadJudgeIds = jData.leadJudges.map((j: any) => j.id);
+                    leadJudgeOptions = jData.leadJudges.map((j: any) => ({
+                        value: j.id,
+                        label: j.name,
+                        subLabel: j.designation
+                    }));
+                } else if (jData.judge) {
+                    // Legacy single judge
+                    leadJudgeIds = [jData.judge.id];
+                    leadJudgeOptions = [{
+                        value: jData.judge.id,
+                        label: jData.judge.name,
+                        subLabel: jData.judge.designation
+                    }];
                 }
 
-                // Format date for input
-                let judgmentDate = "";
-                if (data.judgmentDate) {
-                    judgmentDate = new Date(data.judgmentDate).toISOString().split('T')[0];
-                }
-
-                let parsedCitations: string[] = [];
-                if (Array.isArray(data.citations)) {
-                    parsedCitations = data.citations;
-                } else if (typeof data.citations === 'string' && data.citations.trim()) {
-                    parsedCitations = data.citations.split(',').map((c: string) => c.trim()).filter(Boolean);
-                }
-
-                let parsedKeyPoints: string[] = [];
-                if (Array.isArray(data.keyPoints)) {
-                    parsedKeyPoints = data.keyPoints;
-                } else if (typeof data.keyPoints === 'string' && data.keyPoints.trim()) {
-                    parsedKeyPoints = data.keyPoints.split(',').map((k: string) => k.trim()).filter(Boolean);
-                }
+                setInitialLeadJudgeOptions(leadJudgeOptions);
 
                 setFormData({
-                    title: data.title || "",
-                    caseId: caseId,
-                    judgeId: judgeId,
-                    judgmentDate: judgmentDate,
-                    judgmentType: data.judgmentType || "final",
-                    outcome: data.outcome || "",
-                    isLandmark: data.isLandmark || false,
-                    citations: parsedCitations,
-                    keyPoints: parsedKeyPoints,
-                    summary: data.summary || "",
-                    fullText: data.fullText || data.content || "",
-                    pdfUrl: data.pdfUrl || "",
-                    petitioner: data.petitioner || "",
-                    respondent: data.respondent || "",
-                    petitionerCounsel: data.petitionerCounsel || "",
-                    respondentCounsel: data.respondentCounsel || "",
-                    bench: data.bench || "",
+                    title: jData.title || "",
+                    caseId: caseId || "",
+                    judgeIds: leadJudgeIds,
+                    coramIds: coramIds,
+                    judgmentDate: jData.judgmentDate ? new Date(jData.judgmentDate).toISOString().split('T')[0] : "",
+                    judgmentType: jData.judgmentType || "",
+                    summary: jData.summary || "",
+                    fullText: jData.fullText || "",
+                    outcome: jData.outcome || "",
+                    petitioner: jData.petitioner || "",
+                    petitionerPartyType: jData.petitionerPartyType || "",
+                    respondent: jData.respondent || "",
+                    respondentPartyType: jData.respondentPartyType || "",
+                    intervenors: jData.intervenors || "",
+                    amicusCuriae: jData.amicusCuriae || "",
+                    natureOfCompliance: jData.natureOfCompliance || "",
+                    neutralCitationHC: jData.neutralCitationHC || "",
+                    neutralCitationSC: jData.neutralCitationSC || "",
+                    implementationDelivery: jData.implementationDelivery || "",
+                    judgmentLink: jData.judgmentLink || "",
+                    benchStrength: jData.benchStrength || "",
+                    judgeRole: jData.judgeRole || "",
+                    petitionInfo: jData.petitionInfo || "",
+                    administrativeDetails: jData.administrativeDetails || "",
+                    proceedingDetail: jData.proceedingDetail || "",
+                    reporterCitation: jData.reporterCitation || "",
+                    caseNotes: jData.caseNotes || "",
+                    historyLink: jData.historyLink || "",
+                    citationManagementSite: jData.citationManagementSite || "",
+                    articleCreator: jData.articleCreator || "",
+                    discoverySocialInfo: jData.discoverySocialInfo || "",
+                    isReserved: jData.isReserved || false,
+                    reservedDuration: jData.reservedDuration || "",
+                    additionalNotes: jData.additionalNotes || "",
+                    pdfUrl: jData.pdfUrl || "",
+                    isLandmark: jData.isLandmark || false,
+                    reservedDateFrom: jData.reservedDateFrom ? new Date(jData.reservedDateFrom).toISOString().split('T')[0] : "",
+                    nextListDate: jData.nextListDate ? new Date(jData.nextListDate).toISOString().split('T')[0] : "",
+                    legalPhrases: jData.legalPhrases || [],
+                    relevantSections: jData.relevantSections || [],
+                    citations: jData.citations || [],
+                    keyPoints: jData.keyPoints || [],
+                    relatedNewsIds: jData.relatedNewsIds || [],
+                    counselDetails: {
+                        petitionerCounsel: Array.isArray(jData.counselDetails?.petitionerCounsel)
+                            ? jData.counselDetails.petitionerCounsel.join(", ")
+                            : (jData.counselDetails?.petitionerCounsel || ""),
+                        respondentCounsel: Array.isArray(jData.counselDetails?.respondentCounsel)
+                            ? jData.counselDetails.respondentCounsel.join(", ")
+                            : (jData.counselDetails?.respondentCounsel || ""),
+                        intervenorCounsel: Array.isArray(jData.counselDetails?.intervenorCounsel)
+                            ? jData.counselDetails.intervenorCounsel.join(", ")
+                            : (jData.counselDetails?.intervenorCounsel || ""),
+                        stateCounsel: Array.isArray(jData.counselDetails?.stateCounsel)
+                            ? jData.counselDetails.stateCounsel.join(", ")
+                            : (jData.counselDetails?.stateCounsel || ""),
+                    }
                 });
 
             } catch (error: any) {
                 console.error("Error fetching data:", error);
-                toast.error(error.message || "Failed to fetch data");
+                toast.error("Failed to load judgment details");
             } finally {
                 setLoading(false);
             }
         };
 
-        if (params.id) {
-            fetchData();
-        }
+        if (params.id) fetchData();
     }, [params.id]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-        }));
+    const handleCaseChange = async (caseId: string) => {
+        setFormData((prev: any) => ({ ...prev, caseId }));
+        if (caseId) {
+            try {
+                const res = await casesService.getById(caseId);
+                const caseData = res.data?.data || res.data;
+                setSelectedCaseData(caseData);
 
-        // Clear error when user types
-        if (errors[name]) {
-            setErrors((prev) => {
-                const newErrors = { ...prev };
-                delete newErrors[name];
-                return newErrors;
-            });
+                // Auto-fill logic
+                setFormData((prev: any) => {
+                    const next = { ...prev };
+                    delete next.petitionerCounsel;
+                    delete next.respondentCounsel;
+
+                    return {
+                        ...next,
+                        petitioner: caseData.petitioner?.join(", ") || "",
+                        respondent: caseData.respondent?.join(", ") || "",
+                        counselDetails: {
+                            ...prev.counselDetails,
+                            petitionerCounsel: caseData.petitionerAdvocate?.join(", ") || "",
+                            respondentCounsel: caseData.respondentAdvocate?.join(", ") || "",
+                        }
+                    };
+                });
+                toast.success("Case details auto-filled");
+            } catch (error) {
+                console.error("Auto-fill fail:", error);
+            }
+        } else {
+            setSelectedCaseData(null);
         }
     };
 
-    const inputClasses = (name: string) => `w-full px-4 py-2 border rounded-lg outline-none transition-all ${
-        errors[name] 
-            ? "border-red-500 ring-2 ring-red-500/10 bg-red-50/5 placeholder:text-red-300" 
-            : "border-gray-300 focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] bg-white"
-    }`;
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+        const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
 
-    const handleFullTextChange = (value: string) => {
-        setFormData(prev => ({ ...prev, fullText: value }));
-        if (errors.fullText) {
-            setErrors(prev => {
+        setFormData((prev: any) => {
+            if (name.includes('.')) {
+                const [parent, child] = name.split('.');
+                return {
+                    ...prev,
+                    [parent]: { ...prev[parent], [child]: val }
+                };
+            }
+            return { ...prev, [name]: val };
+        });
+
+        if (errors[name]) {
+            setErrors((prev) => {
                 const next = { ...prev };
-                delete next.fullText;
+                delete next[name];
                 return next;
             });
         }
     };
 
-    const addCitation = () => {
-        if (newCitation.trim()) {
-            setFormData(prev => ({ ...prev, citations: [...prev.citations, newCitation.trim()] }));
-            setNewCitation("");
-        }
-    };
-
-    const removeCitation = (index: number) => {
-        setFormData(prev => ({ ...prev, citations: prev.citations.filter((_, i) => i !== index) }));
-    };
-
-    const addKeyPoint = () => {
-        if (newKeyPoint.trim()) {
-            setFormData(prev => ({ ...prev, keyPoints: [...prev.keyPoints, newKeyPoint.trim()] }));
-            setNewKeyPoint("");
-        }
-    };
-
-    const removeKeyPoint = (index: number) => {
-        setFormData(prev => ({ ...prev, keyPoints: prev.keyPoints.filter((_, i) => i !== index) }));
+    const handleArrayAction = (field: string, action: 'add' | 'remove', value?: string, index?: number) => {
+        setFormData((prev: any) => {
+            const list = [...prev[field]];
+            if (action === 'add' && value) {
+                // Split by comma, trim, filter empty
+                const newValues = value.split(',').map(v => v.trim()).filter(Boolean);
+                newValues.forEach(val => {
+                    if (!list.includes(val)) list.push(val);
+                });
+            } else if (action === 'remove' && index !== undefined) {
+                list.splice(index, 1);
+            }
+            return { ...prev, [field]: list };
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Manual validation
-        const requiredFields = [
+        const req = [
+            { key: 'caseId', label: 'Case' },
             { key: 'title', label: 'Title' },
-            { key: 'caseId', label: 'Case Selection' },
-            { key: 'judgeId', label: 'Select Judge' }, // Added
-            { key: 'judgmentDate', label: 'Judgment Date' },
+            { key: 'judgmentDate', label: 'Date' },
             { key: 'outcome', label: 'Outcome' },
-            { key: 'petitioner', label: 'Petitioner / Appellant' }, // Added
-            { key: 'respondent', label: 'Respondent / Defendant' }, // Added
-            { key: 'petitionerCounsel', label: "Petitioner's Counsel" }, // Added
-            { key: 'respondentCounsel', label: "Respondent's Counsel" }, // Added
-            { key: 'bench', label: 'Coram / Bench' }, // Added
             { key: 'summary', label: 'Summary' },
-            { key: 'fullText', label: 'Full Judgment Text' }
         ];
 
         const newErrors: Record<string, string> = {};
-        for (const field of requiredFields) {
-            const value = formData[field.key as keyof typeof formData];
-            if (!value || (typeof value === 'string' && value.trim() === '')) {
-                newErrors[field.key] = `${field.label} is required`;
+        req.forEach(f => {
+            if (!formData[f.key] || formData[f.key].toString().trim() === '') {
+                newErrors[f.key] = `${f.label} is required`;
             }
-        }
-
-        // Additional check for RichTextEditor to remove HTML tags and check if empty
-        const stripHtml = (html: string) => {
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-            return doc.body.textContent || "";
-        };
-
-        if (!newErrors.fullText && stripHtml(formData.fullText).trim() === '') {
-            newErrors.fullText = "Full Judgment Text cannot be empty";
-        }
+        });
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
-            
-            // Scroll to the first error
-            const firstErrorKey = Object.keys(newErrors)[0];
-            const element = document.getElementsByName(firstErrorKey)[0];
-            if (element) {
-                const container = element.closest('.group');
-                if (container) {
-                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                } else {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') {
-                    element.focus();
+            // toast.error("Please fill required fields");
+
+            // Scroll to the first error field
+            const firstErrorField = req.find(f => newErrors[f.key]);
+            if (firstErrorField) {
+                const el = document.getElementsByName(firstErrorField.key)[0];
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Give a slight delay for smooth scroll before focusing
+                    setTimeout(() => el.focus({ preventScroll: true }), 500);
                 }
             }
             return;
@@ -268,10 +344,18 @@ export default function EditJudgmentPage() {
 
         setSubmitting(true);
         try {
-            // Exclude read-only and relational fields from payload as needed. Title is now editable.
-            const { ...dataToSend } = formData;
+            // Sanitize payload: Ensure no root-level counsel fields are sent
+            const payload = { ...formData };
+            delete (payload as any).petitionerCounsel;
+            delete (payload as any).respondentCounsel;
 
-            await judgmentsService.update(params.id as string, dataToSend);
+            // Sanitize dates: empty strings must be null for ISO 8601 validation
+            if (!payload.reservedDateFrom) (payload as any).reservedDateFrom = null;
+            if (!payload.nextListDate) (payload as any).nextListDate = null;
+            if (!payload.reservedDateFrom) delete (payload as any).reservedDateFrom; // or keep as null if backend likes it
+            if (!payload.nextListDate) delete (payload as any).nextListDate;
+
+            await judgmentsService.update(params.id as string, payload);
             toast.success("Judgment updated successfully");
             router.push("/admin/judgments");
         } catch (error: any) {
@@ -281,334 +365,555 @@ export default function EditJudgmentPage() {
         }
     };
 
-    const extractTotalPages = (response: any) => {
-        const meta = response.data?.meta ?? response.data?.data?.meta;
-        if (meta?.totalPages) return meta.totalPages;
-        
-        const total = response.data?.data?.total ?? response.data?.total ?? 0;
-        const limit = response.data?.data?.limit ?? response.data?.limit ?? 12;
-        return total > 0 ? Math.ceil(total / limit) : 1;
-    };
 
     if (loading) return <div className="flex justify-center items-center min-h-screen"><Loader size="lg" text="Loading Judgment Details..." /></div>;
 
-    return (
-        <div className="p-6 max-w-4xl mx-auto">
-            {submitting && <Loader fullScreen text="Updating Judgment..." />}
+    const inputClasses = (name: string) => `w-full px-4 py-2 border rounded-lg outline-none transition-all text-sm font-medium ${errors[name]
+        ? "border-red-500 ring-2 ring-red-500/10 bg-red-50/5"
+        : "border-gray-200 focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] bg-gray-50/30 hover:bg-white"
+        }`;
 
-            <div className="flex items-center gap-4 mb-6">
-                <button
-                    onClick={() => router.back()}
-                    className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-                >
-                    <ArrowLeft size={24} className="text-gray-600" />
-                </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Edit Judgment</h1>
-                    <p className="text-gray-500 text-sm">Update the details of the judgment</p>
-                </div>
+    const labelClasses = "text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 px-1";
+
+    const sectionHeader = (title: string, icon: React.ReactNode) => (
+        <div className="flex items-center gap-3 py-4 border-b border-gray-100 mb-6 group">
+            <div className="p-2 bg-gray-50 rounded-lg">
+                {icon}
             </div>
+            <h2 className="text-lg font-bold text-gray-800 tracking-tight">{title}</h2>
+        </div>
+    );
 
-            <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8 space-y-8">
+    return (
+        <div className="min-h-screen bg-gray-50 py-12 px-6">
+            {submitting && <Loader fullScreen text="Updating Legal Record..." />}
 
-                <div className="space-y-6">
-                    <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">Judgment Details</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="md:col-span-2">
-                            <FormField label="Title" error={errors.title} required>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    value={formData.title}
-                                    className={inputClasses('title')}
-                                    placeholder="Enter an appropriate title for the judgment"
-                                    onChange={handleChange}
-                                />
-                            </FormField>
-                        </div>
-                        <div className="md:col-span-2">
-                            <FormField label="Select Case" error={errors.caseId} required>
-                                <InfiniteSearchableSelect
-                                    name="caseId"
-                                    value={formData.caseId}
-                                    error={errors.caseId}
-                                    initialOption={initialCase}
-                                    onChange={(val) => {
-                                        setFormData(prev => ({ ...prev, caseId: val }));
-                                        if (errors.caseId) {
-                                            setErrors(prev => {
-                                                const next = { ...prev };
-                                                delete next.caseId;
-                                                return next;
-                                            });
-                                        }
-                                    }}
-                                    placeholder="Search and select a case..."
-                                    className="w-full"
-                                    options={cases.map((c: any) => ({
-                                        value: c.id,
-                                        label: `${c.caseNumber} - ${c.title}`,
-                                        subLabel: c.court
-                                    }))}
-                                    onSearch={async (query, page) => {
-                                        const res = query.trim()
-                                            ? await casesService.searchCases(query, page, 10)
-                                            : await casesService.getAll({ page, limit: 10 });
-
-                                        const items = res.data?.data?.data || res.data?.data || [];
-                                        return {
-                                            options: items.map((c: any) => ({
-                                                value: c.id,
-                                                label: `${c.caseNumber} - ${c.title}`,
-                                                subLabel: c.court
-                                            })),
-                                            totalPages: extractTotalPages(res)
-                                        };
-                                    }}
-                                />
-                            </FormField>
-                        </div>
-
-                        <FormField label="Judgment Date" error={errors.judgmentDate} required>
-                            <input
-                                type="date"
-                                name="judgmentDate"
-                                value={formData.judgmentDate}
-                                className={inputClasses('judgmentDate')}
-                                onChange={handleChange}
-                            />
-                        </FormField>
-
-                        <FormField label="Select Judge" error={errors.judgeId} required>
-                            <InfiniteSearchableSelect
-                                name="judgeId"
-                                value={formData.judgeId}
-                                initialOption={initialJudge}
-                                error={errors.judgeId}
-                                onChange={(val) => {
-                                    setFormData(prev => ({ ...prev, judgeId: val }));
-                                    if (errors.judgeId) {
-                                        setErrors(prev => {
-                                            const next = { ...prev };
-                                            delete next.judgeId;
-                                            return next;
-                                        });
-                                    }
-                                }}
-                                placeholder="Search and select a judge..."
-                                className="w-full"
-                                options={judges.map((j: any) => ({
-                                    value: j.id,
-                                    label: j.name,
-                                    subLabel: j.email ? `${j.designation} (${j.email})` : j.designation
-                                }))}
-                                onSearch={async (query, page) => {
-                                    const res = query.trim()
-                                        ? await judgesService.searchJudges(query, page, 10)
-                                        : await judgesService.getAll({ page, limit: 10 });
-
-                                    const items = res.data?.data?.data || res.data?.data || [];
-                                    return {
-                                        options: items.map((j: any) => ({
-                                            value: j.id,
-                                            label: j.name,
-                                            subLabel: j.email ? `${j.designation} (${j.email})` : j.designation
-                                        })),
-                                        totalPages: extractTotalPages(res)
-                                    };
-                                }}
-                            />
-                        </FormField>
-
-                        <FormField label="Judgment Type" error={errors.judgmentType}>
-                            <select
-                                name="judgmentType"
-                                value={formData.judgmentType}
-                                onChange={handleChange}
-                                className={inputClasses('judgmentType')}
-                            >
-                                <option value="final">Final</option>
-                                <option value="interim">Interim</option>
-                                <option value="order">Order</option>
-                                <option value="directive">Directive</option>
-                            </select>
-                        </FormField>
-                        <FormField label="Outcome" error={errors.outcome} required>
-                            <input
-                                type="text"
-                                name="outcome"
-                                value={formData.outcome}
-                                className={inputClasses('outcome')}
-                                placeholder="e.g. Dismissed, Allowed"
-                                onChange={handleChange}
-                            />
-                        </FormField>
-
-                        {/* NEW LITIGATION PARTIES FIELDS */}
-                        <FormField label="Petitioner / Appellant" error={errors.petitioner} required>
-                            <input
-                                type="text"
-                                name="petitioner"
-                                value={formData.petitioner}
-                                className={inputClasses('petitioner')}
-                                placeholder="e.g. State of Maharashtra"
-                                onChange={handleChange}
-                            />
-                        </FormField>
-                        <FormField label="Respondent / Defendant" error={errors.respondent} required>
-                            <input
-                                type="text"
-                                name="respondent"
-                                value={formData.respondent}
-                                className={inputClasses('respondent')}
-                                placeholder="e.g. Union of India"
-                                onChange={handleChange}
-                            />
-                        </FormField>
-                        <FormField label="Petitioner's Counsel" error={errors.petitionerCounsel} required>
-                            <input
-                                type="text"
-                                name="petitionerCounsel"
-                                value={formData.petitionerCounsel}
-                                className={inputClasses('petitionerCounsel')}
-                                placeholder="Advocates for the petitioner..."
-                                onChange={handleChange}
-                            />
-                        </FormField>
-                        <FormField label="Respondent's Counsel" error={errors.respondentCounsel} required>
-                            <input
-                                type="text"
-                                name="respondentCounsel"
-                                value={formData.respondentCounsel}
-                                className={inputClasses('respondentCounsel')}
-                                placeholder="Advocates for the respondent..."
-                                onChange={handleChange}
-                            />
-                        </FormField>
-                        <div className="md:col-span-2">
-                            <FormField label="Coram / Bench" error={errors.bench} required>
-                                <input
-                                    type="text"
-                                    name="bench"
-                                    value={formData.bench}
-                                    className={inputClasses('bench')}
-                                    placeholder="e.g. Hon'ble Mr. Justice D.Y. Chandrachud, Hon'ble Mr. Justice J.B. Pardiwala"
-                                    onChange={handleChange}
-                                />
-                            </FormField>
-                        </div>
-
-                        <div className="flex items-end pb-3">
-                            <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    name="isLandmark"
-                                    checked={formData.isLandmark}
-                                    onChange={handleChange}
-                                    className="w-5 h-5 text-[#C9A227] rounded focus:ring-[#C9A227] border-gray-300"
-                                />
-                                <span className="text-sm font-medium text-gray-700">Is Distingushed/Landmark Judgment?</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    {/* Citations */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Citations</label>
-                        <div className="flex gap-2 mb-2">
-                            <input
-                                type="text"
-                                value={newCitation}
-                                onChange={(e) => setNewCitation(e.target.value)}
-                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none"
-                                placeholder="Add citation (e.g. 2024 SCC 123)"
-                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCitation())}
-                            />
-                            <button type="button" onClick={addCitation} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                                <Plus size={20} className="text-gray-700" />
-                            </button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {formData.citations.map((cit, idx) => (
-                                <span key={idx} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                    {cit}
-                                    <button type="button" onClick={() => removeCitation(idx)} className="hover:text-blue-900"><X size={14} /></button>
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Key Points */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Key Points</label>
-                        <div className="flex gap-2 mb-2">
-                            <input
-                                type="text"
-                                value={newKeyPoint}
-                                onChange={(e) => setNewKeyPoint(e.target.value)}
-                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none"
-                                placeholder="Add key point..."
-                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addKeyPoint())}
-                            />
-                            <button type="button" onClick={addKeyPoint} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                                <Plus size={20} className="text-gray-700" />
-                            </button>
-                        </div>
-                        <ul className="space-y-1">
-                            {formData.keyPoints.map((point, idx) => (
-                                <li key={idx} className="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                                    <span className="mt-0.5">•</span>
-                                    <span className="flex-1">{point}</span>
-                                    <button type="button" onClick={() => removeKeyPoint(idx)} className="text-gray-400 hover:text-red-500"><X size={16} /></button>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <FormField label="Summary" error={errors.summary} required>
-                        <textarea
-                            name="summary"
-                            value={formData.summary}
-                            rows={3}
-                            className={inputClasses('summary')}
-                            placeholder="Brief summary of the judgment..."
-                            onChange={handleChange}
-                        />
-                    </FormField>
-
-                    <FormField label="Full Judgment Text" error={errors.fullText} required>
-                        <div className={`border rounded-lg overflow-hidden bg-white transition-all ${
-                            errors.fullText ? "border-red-500 ring-2 ring-red-500/10" : "border-gray-300"
-                        }`}>
-                            <RichTextEditor
-                                value={formData.fullText}
-                                onChange={handleFullTextChange}
-                                placeholder="Full text of the judgment..."
-                            />
-                        </div>
-                        {/* Hidden input for scrolling to RichTextEditor */}
-                        <input type="text" name="fullText" className="sr-only" readOnly />
-                    </FormField>
-                </div>
-
-                <div className="flex justify-end gap-4 pt-4 border-t border-gray-100">
+            <div className="max-w-4xl mx-auto">
+                <div className="flex items-center gap-4 mb-8">
                     <button
-                        type="button"
                         onClick={() => router.back()}
-                        className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors"
+                        className="p-2 hover:bg-white rounded-lg transition-colors border border-gray-200"
                     >
-                        Cancel
+                        <ArrowLeft size={18} className="text-gray-600" />
                     </button>
-                    <button
-                        type="submit"
-                        disabled={submitting}
-                        className="px-6 py-2.5 bg-[#0A2342] text-white rounded-lg hover:bg-[#153a66] font-medium transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                        <Save size={18} />
-                        {submitting ? "Updating..." : "Update Judgment"}
-                    </button>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Edit Judgment</h1>
+                        <p className="text-gray-500 text-sm">Update and verify judicial decision details</p>
+                    </div>
                 </div>
-            </form>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+
+                    {/* BASIC INFORMATION */}
+                    <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
+                        {sectionHeader("Basic Information", <Landmark size={20} className="text-[#C9A227]" />)}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="md:col-span-2">
+                                <FormField label="Select Case" description="Link this judgment to an existing case file" error={errors.caseId} required>
+                                    <InfiniteSearchableSelect
+                                        name="caseId"
+                                        value={formData.caseId}
+                                        initialOption={initialCaseOption}
+                                        placeholder="Search by Case Number, Title or CNR..."
+                                        onChange={handleCaseChange}
+                                        onSearch={async (query, page) => {
+                                            const res = query.trim()
+                                                ? await casesService.searchCases(query, page, 10)
+                                                : await casesService.getAll({ page, limit: 10 });
+                                            const items = res.data?.data?.data || res.data?.data || [];
+                                            return {
+                                                options: items.map((c: any) => ({
+                                                    value: c.id,
+                                                    label: `${c.caseNumber || "N/A"} - ${c.title || "Untitled"}`,
+                                                    subLabel: `${c.court || "Unknown Court"} | ${c.caseType || "Unknown Type"}`
+                                                })),
+                                                totalPages: res.data?.meta?.totalPages || res.data?.totalPages || 1
+                                            };
+                                        }}
+                                    />
+                                </FormField>
+                            </div>
+
+                            {selectedCaseData && (
+                                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200 animate-in fade-in slide-in-from-top-2">
+                                    <div>
+                                        <p className="text-[10px] uppercase font-bold text-gray-400">Case Number</p>
+                                        <p className="text-sm font-bold text-gray-700">{selectedCaseData.caseNumber || "N/A"}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] uppercase font-bold text-gray-400">Case Type</p>
+                                        <p className="text-sm font-bold text-gray-700">{selectedCaseData.caseType || "N/A"}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] uppercase font-bold text-gray-400">Court / Jurisdiction</p>
+                                        <p className="text-sm font-bold text-gray-700">{selectedCaseData.court || "N/A"}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="md:col-span-2">
+                                <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                                    <Scale size={18} className="text-amber-600 shrink-0" />
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            name="isLandmark"
+                                            checked={formData.isLandmark}
+                                            onChange={handleChange}
+                                            className="w-5 h-5 text-[#C9A227] rounded-lg border-gray-300 focus:ring-[#C9A227] transition-all"
+                                        />
+                                        <span className="text-sm font-bold text-amber-900">Mark as Landmark / Latest Significant Case?</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* JUDGMENT DETAILS */}
+                    <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
+                        {sectionHeader("Judgment Details", <Gavel size={20} className="text-[#0A2342]" />)}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="md:col-span-2">
+                                <FormField label="Judgment Title" error={errors.title} required>
+                                    <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Descriptive title for identifying this legal record</p>
+                                    <input
+                                        type="text"
+                                        name="title"
+                                        value={formData.title}
+                                        className={inputClasses('title')}
+                                        placeholder="Brief descriptive title"
+                                        onChange={handleChange}
+                                    />
+                                </FormField>
+                            </div>
+
+                            <FormField label="Judgment Date" error={errors.judgmentDate} required>
+                                <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">The date the judgment was officially delivered</p>
+                                <input type="date" name="judgmentDate" value={formData.judgmentDate} className={inputClasses('judgmentDate')} onChange={handleChange} />
+                            </FormField>
+
+                            <FormField label="Judgment Type" required>
+                                <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Select the nature of this judicial decision</p>
+                                <CustomSelect
+                                    name="judgmentType"
+                                    options={JUDGMENT_TYPES.map(t => ({ value: t, label: t }))}
+                                    value={formData.judgmentType}
+                                    onChange={(val) => setFormData((prev: any) => ({ ...prev, judgmentType: val }))}
+                                    placeholder="Select Type"
+                                />
+                            </FormField>
+
+                            <FormField label="Decision / Result (Outcome)" error={errors.outcome} required>
+                                <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Final legal result (Disposal Nature)</p>
+                                <CustomSelect
+                                    name="outcome"
+                                    options={DISPOSAL_NATURES.map(d => ({ value: d, label: d }))}
+                                    value={formData.outcome}
+                                    onChange={(val) => setFormData((prev: any) => ({ ...prev, outcome: val }))}
+                                    placeholder="Select Outcome"
+                                    error={!!errors.outcome}
+                                />
+                            </FormField>
+
+                            <FormField label="Neutral Citation (HC)">
+                                <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Official High Court neutral citation</p>
+                                <input type="text" name="neutralCitationHC" value={formData.neutralCitationHC} className={inputClasses('neutralCitationHC')} placeholder="HC Citation link/text" onChange={handleChange} />
+                            </FormField>
+
+                            <FormField label="Neutral Citation (SC/Other)">
+                                <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Official Supreme Court/Other neutral citation</p>
+                                <input type="text" name="neutralCitationSC" value={formData.neutralCitationSC} className={inputClasses('neutralCitationSC')} placeholder="SC Citation link/text" onChange={handleChange} />
+                            </FormField>
+
+                            <FormField label="Implementation / Delivery">
+                                <input type="text" name="implementationDelivery" value={formData.implementationDelivery} className={inputClasses('implementationDelivery')} placeholder="e.g. In-person, Virtual" onChange={handleChange} />
+                            </FormField>
+
+                            <div className="md:col-span-2">
+                                <FormField label="Link of the Judgment">
+                                    <div className="relative">
+                                        <LinkIcon size={16} className="absolute left-3 top-3 text-gray-400" />
+                                        <input type="text" name="judgmentLink" value={formData.judgmentLink} className={inputClasses('judgmentLink') + " pl-10"} placeholder="https://..." onChange={handleChange} />
+                                    </div>
+                                </FormField>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 space-y-6 pt-6 border-t border-gray-50">
+                            {/* Legal Phrases */}
+                            <div>
+                                <p className={labelClasses}>Legal Phrases / Subject</p>
+                                <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Add multiple by separating with commas or points</p>
+                                <div className="flex gap-3 mb-3">
+                                    <input
+                                        type="text"
+                                        value={newLegalPhrase}
+                                        onChange={(e) => setNewLegalPhrase(e.target.value)}
+                                        className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-[#C9A227] transition-all"
+                                        placeholder="e.g. Negligence, Article 21, Damages..."
+                                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleArrayAction('legalPhrases', 'add', newLegalPhrase), setNewLegalPhrase(""))}
+                                    />
+                                    <button type="button" onClick={() => { handleArrayAction('legalPhrases', 'add', newLegalPhrase); setNewLegalPhrase(""); }} className="p-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
+                                        <Plus size={18} className="text-gray-700" />
+                                    </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.legalPhrases.map((p: string, i: number) => (
+                                        <span key={i} className="bg-[#0A2342]/5 text-[#0A2342] px-3 py-1.5 rounded-lg text-xs font-bold border border-[#0A2342]/10 flex items-center gap-2">
+                                            {p}
+                                            <button type="button" onClick={() => handleArrayAction('legalPhrases', 'remove', undefined, i)} className="hover:text-red-600 transition-colors"><X size={14} /></button>
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Sections/Articles */}
+                            <div>
+                                <p className={labelClasses}>Section / Article Involved</p>
+                                <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Enter sections separated by commas or points</p>
+                                <div className="flex gap-3 mb-3">
+                                    <input
+                                        type="text"
+                                        value={newSection}
+                                        onChange={(e) => setNewSection(e.target.value)}
+                                        className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-[#C9A227] transition-all"
+                                        placeholder="e.g. Section 302, Article 32, Section 144..."
+                                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleArrayAction('relevantSections', 'add', newSection), setNewSection(""))}
+                                    />
+                                    <button type="button" onClick={() => { handleArrayAction('relevantSections', 'add', newSection); setNewSection(""); }} className="p-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
+                                        <Plus size={18} className="text-gray-700" />
+                                    </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.relevantSections.map((s: string, i: number) => (
+                                        <span key={i} className="bg-amber-50 text-amber-800 px-3 py-1.5 rounded-lg text-xs font-bold border border-amber-200 flex items-center gap-2">
+                                            {s}
+                                            <button type="button" onClick={() => handleArrayAction('relevantSections', 'remove', undefined, i)} className="hover:text-red-600 transition-colors"><X size={14} /></button>
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* JUDICIAL PROCEEDING DETAILS */}
+                    <div className="bg-blue-50/20 rounded-xl border border-blue-100/50 p-8 shadow-sm">
+                        {sectionHeader("Judicial Proceeding Details", <div className="text-[#0A2342] font-black text-xs">SC</div>)}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <FormField label="Bench Strength Type">
+                                <input type="text" name="benchStrength" value={formData.benchStrength} onChange={handleChange} className={inputClasses('benchStrength')} />
+                            </FormField>
+                            <FormField label="Judge Role">
+                                <input type="text" name="judgeRole" value={formData.judgeRole} onChange={handleChange} className={inputClasses('judgeRole')} />
+                            </FormField>
+                            <div className="md:col-span-2">
+                                <FormField label="Added Petition Info">
+                                    <textarea name="petitionInfo" value={formData.petitionInfo} onChange={handleChange} rows={2} className={inputClasses('petitionInfo')} />
+                                </FormField>
+                            </div>
+                            <FormField label="Administrative Details">
+                                <input type="text" name="administrativeDetails" value={formData.administrativeDetails} onChange={handleChange} className={inputClasses('administrativeDetails')} />
+                            </FormField>
+                            <FormField label="Proceeding Detail">
+                                <input type="text" name="proceedingDetail" value={formData.proceedingDetail} onChange={handleChange} className={inputClasses('proceedingDetail')} />
+                            </FormField>
+                        </div>
+                    </div>
+
+                    {/* APPELLATE / PARTY DETAILS */}
+                    <div className="bg-amber-50/20 rounded-xl border border-amber-100/50 p-8 shadow-sm">
+                        {sectionHeader("Appellate & Party Details", <div className="text-[#C9A227] font-black text-xs">HC</div>)}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <FormField label="Petitioner / Appellant Name">
+                                <input type="text" name="petitioner" value={formData.petitioner} onChange={handleChange} className={inputClasses('petitioner')} />
+                            </FormField>
+                            <FormField label="Petitioner Party Type">
+                                <input type="text" name="petitionerPartyType" value={formData.petitionerPartyType} onChange={handleChange} className={inputClasses('petitionerPartyType')} />
+                            </FormField>
+                            <FormField label="Respondent / Defendant Name">
+                                <input type="text" name="respondent" value={formData.respondent} onChange={handleChange} className={inputClasses('respondent')} />
+                            </FormField>
+                            <FormField label="Respondent Party Type">
+                                <input type="text" name="respondentPartyType" value={formData.respondentPartyType} onChange={handleChange} className={inputClasses('respondentPartyType')} />
+                            </FormField>
+                            <FormField label="Intervenors" description="Names of intervenors separated by commas">
+                                <input type="text" name="intervenors" value={formData.intervenors} onChange={handleChange} className={inputClasses('intervenors')} />
+                            </FormField>
+                            <FormField label="Amicus Curiae" description="Names of amicus curiae separated by commas">
+                                <input type="text" name="amicusCuriae" value={formData.amicusCuriae} onChange={handleChange} className={inputClasses('amicusCuriae')} />
+                            </FormField>
+                            <div className="md:col-span-2">
+                                <FormField label="Nature of Compliance">
+                                    <input type="text" name="natureOfCompliance" value={formData.natureOfCompliance} onChange={handleChange} className={inputClasses('natureOfCompliance')} />
+                                </FormField>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* BENCH & COUNSEL DETAILS */}
+                    <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
+                        {sectionHeader("Bench & Counsel Details", <Users size={20} className="text-blue-500" />)}
+                        <div className="space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <FormField label="Lead / Authoring Judge" description="Update lead judges for this judgment">
+                                    <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Select the main judge(s) who authored the decision</p>
+                                    <InfiniteSearchableMultiSelect
+                                        selectedValues={formData.judgeIds}
+                                        initialOptions={initialLeadJudgeOptions}
+                                        placeholder="Search for lead judge(s)..."
+                                        onSearch={async (query, page) => {
+                                            const res = query.trim()
+                                                ? await judgesService.searchJudges(query, page, 10)
+                                                : await judgesService.getAll({ page, limit: 10 });
+                                            const items = res.data?.data?.data || res.data?.data || [];
+                                            return {
+                                                options: items.map((j: any) => ({
+                                                    value: j.id, label: j.name || "Unknown Judge", subLabel: j.designation || "Judge"
+                                                })),
+                                                totalPages: res.data?.meta?.totalPages || res.data?.totalPages || 1
+                                            };
+                                        }}
+                                        onChange={(vals) => setFormData((prev: any) => ({ ...prev, judgeIds: vals }))}
+                                    />
+                                </FormField>
+
+                                <FormField label="Coram (Bench List)">
+                                    <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">List of fellow judges presiding on the bench</p>
+                                    <InfiniteSearchableMultiSelect
+                                        selectedValues={formData.coramIds}
+                                        placeholder="Add other judges in bench..."
+                                        onSearch={async (query, page) => {
+                                            const res = query.trim()
+                                                ? await judgesService.searchJudges(query, page, 10)
+                                                : await judgesService.getAll({ page, limit: 10 });
+                                            const items = res.data?.data?.data || res.data?.data || [];
+                                            return {
+                                                options: items.map((j: any) => ({
+                                                    value: j.id, label: j.name, subLabel: j.designation
+                                                })),
+                                                totalPages: res.data?.meta?.totalPages || res.data?.totalPages || 1
+                                            };
+                                        }}
+                                        onChange={(vals) => setFormData((prev: any) => ({ ...prev, coramIds: vals }))}
+                                    />
+                                </FormField>
+                            </div>
+
+                            {/* Counsel Details (Text Entry) */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-50">
+                                <FormField
+                                    label="Petitioner Counsel"
+                                    description="Enter full names separated by commas (e.g. Adv. R.K. Sharma, Adv. S. Mittal)"
+                                >
+                                    <textarea
+                                        name="counselDetails.petitionerCounsel"
+                                        value={formData.counselDetails.petitionerCounsel}
+                                        onChange={handleChange}
+                                        className={inputClasses('counselDetails.petitionerCounsel')}
+                                        rows={2}
+                                        placeholder="Type petitioner counsel names..."
+                                    />
+                                </FormField>
+                                <FormField
+                                    label="Respondent Counsel"
+                                    description="Enter full names separated by commas"
+                                >
+                                    <textarea
+                                        name="counselDetails.respondentCounsel"
+                                        value={formData.counselDetails.respondentCounsel}
+                                        onChange={handleChange}
+                                        className={inputClasses('counselDetails.respondentCounsel')}
+                                        rows={2}
+                                        placeholder="Type respondent counsel names..."
+                                    />
+                                </FormField>
+                                <FormField
+                                    label="Intervenor Counsel"
+                                    description="Enter names separated by commas"
+                                >
+                                    <textarea
+                                        name="counselDetails.intervenorCounsel"
+                                        value={formData.counselDetails.intervenorCounsel}
+                                        onChange={handleChange}
+                                        className={inputClasses('counselDetails.intervenorCounsel')}
+                                        rows={2}
+                                        placeholder="Type intervenor counsel names..."
+                                    />
+                                </FormField>
+                                <FormField
+                                    label="State / Central Counsel"
+                                    description="Enter govt. counsel names separated by commas"
+                                >
+                                    <textarea
+                                        name="counselDetails.stateCounsel"
+                                        value={formData.counselDetails.stateCounsel}
+                                        onChange={handleChange}
+                                        className={inputClasses('counselDetails.stateCounsel')}
+                                        rows={2}
+                                        placeholder="Type govt counsel names..."
+                                    />
+                                </FormField>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* CITATIONS & CASE LINKS */}
+                    <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
+                        {sectionHeader("Citations & History", <FileText size={20} className="text-purple-500" />)}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <FormField label="Reporter Citation">
+                                <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Official citation (e.g. 2024 (1) SCC 456)</p>
+                                <input type="text" name="reporterCitation" value={formData.reporterCitation} onChange={handleChange} className={inputClasses('reporterCitation')} placeholder="e.g. 2024 (1) SCC 456" />
+                            </FormField>
+                            <FormField label="Citation Management Site">
+                                <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Portal or site managing this citation</p>
+                                <input type="text" name="citationManagementSite" value={formData.citationManagementSite} onChange={handleChange} className={inputClasses('citationManagementSite')} />
+                            </FormField>
+                            <div className="md:col-span-2">
+                                <FormField label="Case Referring / History Link">
+                                    <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Link to previous orders or internal case history</p>
+                                    <div className="relative">
+                                        <History size={16} className="absolute left-3 top-3 text-gray-400" />
+                                        <input type="text" name="historyLink" value={formData.historyLink} onChange={handleChange} className={inputClasses('historyLink') + " pl-10"} placeholder="https://..." />
+                                    </div>
+                                </FormField>
+                            </div>
+                            <div className="md:col-span-2">
+                                <FormField label="Case Notes / Head Note">
+                                    <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Summarized legal principles or editorial headnotes</p>
+                                    <textarea name="caseNotes" value={formData.caseNotes} onChange={handleChange} rows={4} className={inputClasses('caseNotes')} />
+                                </FormField>
+                            </div>
+                        </div>
+
+                        <div className="mt-8">
+                            <p className={labelClasses}>Key Legal Points</p>
+                            <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Add specific legal observations as separate points</p>
+                            <div className="flex gap-3 mb-3">
+                                <input
+                                    type="text"
+                                    value={newKeyPoint}
+                                    onChange={(e) => setNewKeyPoint(e.target.value)}
+                                    className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-[#C9A227]"
+                                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleArrayAction('keyPoints', 'add', newKeyPoint), setNewKeyPoint(""))}
+                                />
+                                <button type="button" onClick={() => { handleArrayAction('keyPoints', 'add', newKeyPoint); setNewKeyPoint(""); }} className="p-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
+                                    <Plus size={18} className="text-gray-700" />
+                                </button>
+                            </div>
+                            <ul className="space-y-2">
+                                {formData.keyPoints.map((point: string, i: number) => (
+                                    <li key={i} className="flex items-start gap-4 text-sm text-gray-600 bg-gray-50/50 p-4 rounded-2xl group border border-gray-100">
+                                        <div className="w-5 h-5 rounded-full bg-[#0A2342] text-white flex items-center justify-center text-[10px] shrink-0 mt-0.5">{i + 1}</div>
+                                        <span className="flex-1 font-medium">{point}</span>
+                                        <button type="button" onClick={() => handleArrayAction('keyPoints', 'remove', undefined, i)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><X size={18} /></button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+
+                    {/* Section 7: ADMINISTRATIVE INFORMATION */}
+                    <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
+                        {sectionHeader("Section 7: Administrative Info", <Info size={20} className="text-green-500" />)}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <FormField label="Article Creator">
+                                <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Name of the staff member creating this record</p>
+                                <input type="text" name="articleCreator" value={formData.articleCreator} onChange={handleChange} className={inputClasses('articleCreator')} placeholder="Enter your name..." />
+                            </FormField>
+                            <FormField label="Discovery / Social Info">
+                                <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">Tags or notes for social media and search discovery</p>
+                                <input type="text" name="discoverySocialInfo" value={formData.discoverySocialInfo} onChange={handleChange} className={inputClasses('discoverySocialInfo')} placeholder="e.g. Shared on FB, Twitter handle..." />
+                            </FormField>
+
+                            <div className="md:col-span-2">
+                                <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100">
+                                    <label className="flex items-center gap-3 cursor-pointer mb-4">
+                                        <input
+                                            type="checkbox"
+                                            name="isReserved"
+                                            checked={formData.isReserved}
+                                            onChange={handleChange}
+                                            className="w-5 h-5 text-blue-600 rounded-lg border-gray-300"
+                                        />
+                                        <span className="text-sm font-bold text-blue-900">Was Judgment Reserved?</span>
+                                    </label>
+
+                                    {formData.isReserved && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-2">
+                                            <FormField label="Reserved From Date">
+                                                <input type="date" name="reservedDateFrom" value={formData.reservedDateFrom} onChange={handleChange} className={inputClasses('reservedDateFrom')} />
+                                            </FormField>
+                                            <FormField label="Reserved Duration">
+                                                <input type="text" name="reservedDuration" value={formData.reservedDuration} onChange={handleChange} className={inputClasses('reservedDuration')} />
+                                            </FormField>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <FormField label="Next List / Mentioning Date">
+                                <input type="date" name="nextListDate" value={formData.nextListDate} onChange={handleChange} className={inputClasses('nextListDate')} />
+                            </FormField>
+
+                            <div className="md:col-span-2">
+                                <FormField label="Notes or Additional Detail">
+                                    <textarea name="additionalNotes" value={formData.additionalNotes} onChange={handleChange} rows={3} className={inputClasses('additionalNotes')} />
+                                </FormField>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 8: CONTENT & METADATA */}
+                    <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
+                        {sectionHeader("Section 8: Content & Summary", <ImageIcon size={20} className="text-pink-600" />)}
+                        <div className="space-y-6">
+                            <FormField label="Judgment Summary" error={errors.summary} required>
+                                <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">A concise summary for quick review by legal portal users</p>
+                                <textarea
+                                    name="summary"
+                                    value={formData.summary}
+                                    rows={6}
+                                    className={inputClasses('summary')}
+                                    placeholder="Provide a concise, professional summary for the legal portal..."
+                                    onChange={handleChange}
+                                />
+                            </FormField>
+
+                            <FormField label="Full Judgment Text / Content" required>
+                                <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">The complete verbatim text of the judgment decree</p>
+                                <div className="border border-gray-200 rounded-2xl overflow-hidden bg-gray-50">
+                                    <RichTextEditor
+                                        value={formData.fullText}
+                                        onChange={(v) => setFormData((prev: any) => ({ ...prev, fullText: v }))}
+                                    />
+                                </div>
+                            </FormField>
+                        </div>
+                    </div>
+
+                    {/* FORM ACTIONS (At the end) */}
+                    <div className="flex justify-end items-center gap-4 pt-8 border-t border-gray-200">
+                        <button
+                            type="button"
+                            onClick={() => router.back()}
+                            className="px-6 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 font-bold transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="px-8 py-2.5 bg-[#0A2342] text-white rounded-lg hover:bg-black font-bold transition-all flex items-center gap-2 shadow-md disabled:opacity-50"
+                        >
+                            {submitting ? "Processing..." : "Update Judgment"}
+                        </button>
+                    </div>
+
+                </form>
+            </div>
         </div>
     );
 }

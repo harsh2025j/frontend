@@ -2,16 +2,56 @@ import { API_ENDPOINTS } from "../apiConfig/apiContants";
 import apiClient from "../apiConfig/apiClient";
 
 export interface Judgment {
+    id?: string;
+    title?: string;
     caseId: string;
-    judgeId: string;
+    judgeIds?: string[];
+    coramIds?: string[];
     judgmentDate: string;
     judgmentType: string;
     summary: string;
-    fullText: string;
+    fullText?: string;
+    neutralCitationHC?: string;
+    neutralCitationSC?: string;
+    legalPhrases?: string[];
+    relevantSections?: string[];
+    implementationDelivery?: string;
+    judgmentLink?: string;
     outcome: string;
-    isLandmark: boolean;
-    citations: string[];
-    keyPoints: string[];
+    benchStrength?: string;
+    judgeRole?: string;
+    petitionInfo?: string;
+    administrativeDetails?: string;
+    proceedingDetail?: string;
+    petitioner?: string;
+    petitionerPartyType?: string;
+    respondent?: string;
+    respondentPartyType?: string;
+    intervenors?: string;
+    amicusCuriae?: string;
+    natureOfCompliance?: string;
+    counselDetails?: {
+        petitionerCounsel?: string;
+        respondentCounsel?: string;
+        intervenorCounsel?: string;
+        stateCounsel?: string;
+    };
+    reporterCitation?: string;
+    citations?: string[];
+    caseNotes?: string;
+    historyLink?: string;
+    citationManagementSite?: string;
+    keyPoints?: string[];
+    articleCreator?: string;
+    discoverySocialInfo?: string;
+    isReserved?: boolean;
+    reservedDateFrom?: string;
+    reservedDuration?: string;
+    nextListDate?: string;
+    additionalNotes?: string;
+    relatedNewsIds?: string[];
+    pdfUrl?: string;
+    isLandmark?: boolean;
 }
 
 export const judgmentsService = {

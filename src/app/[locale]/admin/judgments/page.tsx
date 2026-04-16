@@ -143,128 +143,132 @@ export default function AdminJudgmentsPage() {
 
     return (
         <div className="p-6 space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Manage Judgments</h1>
-                    <p className="text-gray-500 text-sm mt-1">View and manage legal judgments</p>
-                </div>
-                <Link
-                    href="/admin/judgments/create"
-                    className="bg-[#0A2342] text-white px-4 py-2.5 rounded-lg hover:bg-[#153a66] transition-colors flex items-center gap-2 shadow-sm font-medium"
-                >
-                    <Plus size={18} /> Add New Judgment
-                </Link>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-4 border-b border-gray-200 bg-gray-50/50">
-                    <div className="relative max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Search by Case Number or Summary, Parties ..."
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+            <div className={viewJudgmentId ? "no-print" : ""}>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Manage Judgments</h1>
+                        <p className="text-gray-500 text-sm mt-1">View and manage legal judgments</p>
                     </div>
+                    <Link
+                        href="/admin/judgments/create"
+                        className="bg-[#0A2342] text-white px-4 py-2.5 rounded-lg hover:bg-[#153a66] transition-colors flex items-center gap-2 shadow-sm font-medium"
+                    >
+                        <Plus size={18} /> Add New Judgment
+                    </Link>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[200px]">Judgment Title</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case ID</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judge</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {loading ? (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 bg-gray-50/50">
+                        <div className="relative max-w-md">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search by Case Number or Summary, Parties ..."
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center">
-                                        <div className="flex justify-center items-center min-h-[200px]">
-                                            <Loader size="lg" text="Loading Judgments..." />
-                                        </div>
-                                    </td>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[200px]">Judgment Title</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case ID</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judgment Date</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judge</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
-                            ) : judgments.length > 0 ? (
-                                judgments.map((j) => (
-                                    <tr key={j.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[200px]">{j.title?.substring(0, 400) + "..." || "No Title"}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {j.case?.caseNumber || (j.caseId && casesMap[j.caseId]) || "N/A"}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {formatDate(j.judgmentDate)}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                            {j.judge?.name || (j.judgeId && judgesMap[j.judgeId]) || "Unknown"}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex justify-end gap-3">
-                                                <button
-                                                    onClick={() => setViewJudgmentId(j.id)}
-                                                    className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
-                                                    title="View"
-                                                >
-                                                    <Eye size={18} />
-                                                </button>
-                                                <Link
-                                                    href={`/admin/judgments/${j.id}`}
-                                                    className="text-[#0A2342] hover:text-[#C9A227] p-1 hover:bg-[#0A2342]/5 rounded transition-colors"
-                                                    title="Edit"
-                                                >
-                                                    <Edit size={18} />
-                                                </Link>
-                                                <button
-                                                    onClick={() => handleDelete(j.id)}
-                                                    className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-12 text-center">
+                                            <div className="flex justify-center items-center min-h-[200px]">
+                                                <Loader size="lg" text="Loading Judgments..." />
                                             </div>
                                         </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                        <div className="flex flex-col items-center justify-center gap-2">
-                                            <Gavel size={48} className="text-gray-300" />
-                                            <p>No judgments found matching your search.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Pagination */}
-                {!loading && totalPages > 1 && (
-                    <div className="p-4 border-t border-gray-200 bg-gray-50/50 flex flex-col items-center gap-4">
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={handlePageChange}
-                        />
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                            Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords} records
-                        </p>
+                                ) : judgments.length > 0 ? (
+                                    judgments.map((j) => (
+                                        <tr key={j.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[200px]">{j.title?.substring(0, 400) + "..." || "No Title"}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                                {j.case?.caseNumber || (j.caseId && casesMap[j.caseId]) || "N/A"}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                                {formatDate(j.judgmentDate)}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                                {j.leadJudges && j.leadJudges.length > 0
+                                                    ? j.leadJudges.map((lj: any) => lj.name).join(", ")
+                                                    : (j.judge?.name || (j.judgeId && judgesMap[j.judgeId]) || "Unknown")}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <div className="flex justify-end gap-3">
+                                                    <button
+                                                        onClick={() => setViewJudgmentId(j.id)}
+                                                        className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
+                                                        title="View"
+                                                    >
+                                                        <Eye size={18} />
+                                                    </button>
+                                                    <Link
+                                                        href={`/admin/judgments/${j.id}`}
+                                                        className="text-[#0A2342] hover:text-[#C9A227] p-1 hover:bg-[#0A2342]/5 rounded transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <Edit size={18} />
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => handleDelete(j.id)}
+                                                        className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                                            <div className="flex flex-col items-center justify-center gap-2">
+                                                <Gavel size={48} className="text-gray-300" />
+                                                <p>No judgments found matching your search.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
-                )}
+
+                    {/* Pagination */}
+                    {!loading && totalPages > 1 && (
+                        <div className="p-4 border-t border-gray-200 bg-gray-50/50 flex flex-col items-center gap-4">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange}
+                            />
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords} records
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* View Judgment Modal Overlay */}
             {viewJudgmentId && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setViewJudgmentId(null)}></div>
-                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-10">
+                <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 print:p-0">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm no-print" onClick={() => setViewJudgmentId(null)}></div>
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200 print:max-h-none print:h-auto print:rounded-none print:shadow-none print:static">
+                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-10 no-print">
                             <h3 className="text-xl font-bold text-gray-900 font-sans">Judgment Preview</h3>
                             <button
                                 onClick={() => setViewJudgmentId(null)}
@@ -273,10 +277,10 @@ export default function AdminJudgmentsPage() {
                                 <X size={24} />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto">
+                        <div className="flex-1 overflow-y-auto print:overflow-visible">
                             <JudgmentDetailPage judgmentId={viewJudgmentId} isModal={true} />
                         </div>
-                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 font-sans">
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 font-sans no-print">
                             <button
                                 onClick={() => setViewJudgmentId(null)}
                                 className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium shadow-sm"
