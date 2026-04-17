@@ -1,20 +1,30 @@
 export interface SearchResult {
     id: string;
     title: string;
-    type: 'article' | 'judgment' | 'case';
+    type: 'article' | 'judgment' | 'case' | 'judge';
     slug?: string;
     description?: string;
     date?: string;
     thumbnail?: string;
     status?: string;
-    firstPage?: string;
-    lastPage?: string;
+    // For specific types
+    caseNumber?: string;
+    court?: string;
+    designation?: string;
+    petitioner?: string;
+    respondent?: string;
     category?: {
         name: string;
         slug: string;
     };
-    authors?: string;
     authorId?: string;
+}
+
+export interface SearchSuggestion {
+    id: string;
+    title: string;
+    type: string;
+    slug?: string;
 }
 
 // The raw item from the API

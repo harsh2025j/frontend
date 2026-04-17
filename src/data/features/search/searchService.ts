@@ -1,114 +1,119 @@
 import apiClient from "@/data/services/apiConfig/apiClient";
 import { articleApi } from "@/data/services/article-service/article-service";
 import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
-import { SearchApiResponse, SearchResult, SearchItem } from "./search.types";
+import { SearchApiResponse, SearchResult, SearchItem, SearchSuggestion } from "./search.types";
 import { Article } from "../article/article.types";
 
 export const searchService = {
-    // Original method for dropdown (quick search)
-    searchContent: async (query: string, signal?: AbortSignal): Promise<SearchResult[]> => {
+    // 1. SUGGESTIONS: Fast, title-only for header dropdown
+    getSuggestions: async (query: string, signal?: AbortSignal): Promise<SearchSuggestion[]> => {
+        if (!query.trim()) return [];
         try {
-            const response = await apiClient.get<SearchApiResponse>(`/search?q=${encodeURIComponent(query)}`, {
-                signal
-            });
-
-            if (!response.data || !response.data.success || !response.data.data || !response.data.data.data) {
-                return [];
-            }
-
-            return mapItemsToResults(response.data.data.data);
+            const response = await apiClient.get<any>(
+                `/search/suggestions?q=${encodeURIComponent(query)}`,
+                { signal }
+            );
+            // Response structure: { success: true, data: { data: [] } }
+            return response.data?.data?.data || [];
         } catch (error: any) {
             if (error.name === 'CanceledError' || error.name === 'AbortError') throw error;
-            console.error("Search service failed:", error);
+            console.error("Suggestions failed:", error);
             return [];
         }
     },
 
-    // 2. DETAIL PATH: 2-Step search to bypass AWS payload limits on the Search Page
-    searchContentWithPagination: async (
+    // 2. UNIVERSAL SEARCH: Aggregated, mixed results for Search Page "All" tab or general search
+    getUniversalSearch: async (
         query: string,
         page: number = 1,
         limit: number = 10,
         signal?: AbortSignal
-    ): Promise<{ data: SearchResult[]; meta?: SearchApiResponse['data']['meta'] }> => {
+    ): Promise<{ data: SearchResult[]; meta?: any }> => {
         try {
-            // Step A: Hit the optimized /search endpoint to natively find WHICH articles match.
-            // Since you excluded heavy fields in the backend, this is lightning fast.
-            const response = await apiClient.get<SearchApiResponse>(
-                `/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
+            const response = await apiClient.get<any>(
+                `/search/universal?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
                 { signal }
             );
 
-            const itemsFromStepA = response.data?.data?.data || (Array.isArray(response.data?.data) ? response.data.data : []);
-            const meta = response.data?.data?.meta || (response.data as any)?.meta;
+            // The response structure from universal search is { success: true, data: { data: SearchResult[], meta: {...} } }
+            const items = response.data?.data?.data || [];
+            const meta = response.data?.data?.meta;
 
-            if (!itemsFromStepA || itemsFromStepA.length === 0) {
-                return { data: [], meta };
-            }
-
-            // Get exactly the IDs for the current page
-            const ids = itemsFromStepA.map((item: any) => item.id || item._id);
-
-            // Step B: Fetch only those specific articles in a focused batch.
-            // The search page skeleton loader will naturally stay active until this finishes.
-            try {
-                const detailedArticlesResponse = await articleApi.fetchMultipleArticles(ids);
-                const detailedArticles: Article[] = detailedArticlesResponse.data?.data || detailedArticlesResponse.data || [];
-
-                // Map full articles to Rich Cards
-                const data = mapDetailedArticlesToResults(detailedArticles);
-                return { data, meta };
-            } catch (multiError) {
-                console.error("Multi-fetch failed, falling back to minimal results", multiError);
-                return { data: mapItemsToResults(itemsFromStepA), meta };
-            }
+            return {
+                data: mapItemsToResults(items),
+                meta
+            };
         } catch (error: any) {
             if (error.name === 'CanceledError' || error.name === 'AbortError') throw error;
-            console.error("Paginated search failed:", error);
+            console.error("Universal search failed:", error);
+            return { data: [] };
+        }
+    },
+
+    // 3. CATEGORY SPECIFIC: Use existing endpoints for specific tabs
+    getCategorySearch: async (
+        category: 'articles' | 'judges' | 'cases' | 'judgments',
+        query: string,
+        page: number = 1,
+        limit: number = 10,
+        signal?: AbortSignal
+    ): Promise<{ data: SearchResult[]; meta?: any }> => {
+        try {
+            const endpoint = category === 'articles' ? '/search' : `/search/${category}`;
+            const response = await apiClient.get<any>(
+                `${endpoint}?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
+                { signal }
+            );
+
+            // Response structure: { success: true, data: { data: [], meta: {} } }
+            const items = response.data?.data?.data || [];
+            const meta = response.data?.data?.meta;
+
+            return {
+                data: mapItemsToResults(items),
+                meta
+            };
+        } catch (error: any) {
+            if (error.name === 'CanceledError' || error.name === 'AbortError') throw error;
+            console.error(`${category} search failed:`, error);
             return { data: [] };
         }
     }
 };
 
-// Helper to map API items to Frontend Results (Fallback/Step A)
+// Updated helper to map ANY search item to a standard Result
 function mapItemsToResults(items: any[]): SearchResult[] {
-    return items.map((item: any) => ({
-        id: item.id || item._id,
-        title: item.title,
-        type: item.category?.slug?.includes('judgment') ? 'judgment' : 'article',
-        slug: item.slug,
-        description: item.body
-            ? item.body.replace(/<[^>]*>/g, '').substring(0, 160) + '...'
-            : item.subHeadline || '',
-        date: item.createdAt
-            ? new Date(item.createdAt).toLocaleDateString('en-US', {
-                month: 'short', day: 'numeric', year: 'numeric'
-            })
-            : undefined,
-        thumbnail: item.thumbnail,
-        status: item.status || 'pending', // Default to pending if not provided
-        category: item.category,
-        // FIX: Check multiple fields for author name
-        authors: item.author?.name || item.authors || item.author || item.advocateName || item.user?.name || item.creator?.name || "Unknown",
-        authorId: item.authorId || item.author?._id || item.user?._id || item.creator?._id
-    }));
-}
+    return items.map((item: any) => {
+        // Handle type normalization from OpenSearch index name
+        const rawType = item.type || 'article';
+        const typeMapping: Record<string, 'article' | 'judgment' | 'case' | 'judge'> = {
+            'article': 'article',
+            'judgment': 'judgment',
+            'case': 'case',
+            'judge': 'judge'
+        };
 
-// Helper: Map full articles to Rich Cards
-function mapDetailedArticlesToResults(articles: any[]): SearchResult[] {
-    return articles.map((item: any) => ({
-        id: item.id || item._id,
-        title: item.title,
-        type: 'article',
-        slug: item.slug,
-        description: item.subHeadline || item.aiSummary || (item.content ? item.content.replace(/<[^>]*>/g, '').substring(0, 160) + '...' : ''),
-        date: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US', {
-            month: 'short', day: 'numeric', year: 'numeric'
-        }) : undefined,
-        thumbnail: item.thumbnail,
-        status: item.status || 'pending',
-        category: item.category,
-        authors: item.authors || item.advocateName || item.author?.name || "Unknown",
-        authorId: item.authorId || item.user?._id || item.creator?._id
-    }));
+        return {
+            id: item.id || item._id,
+            title: item.title || item.name || item.caseNumber || "Untitled",
+            type: typeMapping[rawType] || 'article',
+            slug: item.slug,
+            description: item.subHeadline || item.summary || (item.body ? item.body.replace(/<[^>]*>/g, '').substring(0, 160) + '...' : ''),
+            date: item.createdAt || item.judgmentDate || item.filingDate
+                ? new Date(item.createdAt || item.judgmentDate || item.filingDate).toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric', year: 'numeric'
+                })
+                : undefined,
+            thumbnail: item.thumbnail || item.photoUrl,
+            status: item.status,
+            category: item.category,
+            // Type-specific fields
+            caseNumber: item.caseNumber,
+            court: item.court,
+            petitioner: item.petitioner,
+            respondent: item.respondent,
+            designation: item.designation,
+            authorId: item.authorId || item.creatorId
+        };
+    });
 }

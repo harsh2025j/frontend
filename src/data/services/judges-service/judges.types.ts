@@ -74,3 +74,6 @@ export interface CreateJudgeRequest {
 }
 
 export type UpdateJudgeRequest = Partial<CreateJudgeRequest>;
+
+export type JudgeCategory = 'chief-justice' | 'senior-judges' | 'judges' | 'retired';
+

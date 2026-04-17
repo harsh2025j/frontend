@@ -3,7 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, FileText, Scale, Gavel } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { searchService } from '@/data/features/search/searchService';
-import { SearchResult } from '@/data/features/search/search.types';
+import { SearchSuggestion } from '@/data/features/search/search.types';
+import { User } from 'lucide-react';
 
 interface SearchWithDropdownProps {
     placeholder?: string;
@@ -20,7 +21,7 @@ export default function SearchWithDropdown({
 }: SearchWithDropdownProps) {
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
-    const [results, setResults] = useState<SearchResult[]>([]);
+    const [results, setResults] = useState<SearchSuggestion[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
@@ -38,37 +39,31 @@ export default function SearchWithDropdown({
 
 
     useEffect(() => {
-        // 1. Reset if query is less than 3 characters
-        if (query.trim().length < 3) {
+        if (query.trim().length < 2) {
             setResults([]);
             setIsOpen(false);
             return;
         }
 
-        // 2. Setup AbortController to cancel previous requests
         const controller = new AbortController();
         const signal = controller.signal;
 
         setIsLoading(true);
 
-        // 3. Debounce the API call
         const timer = setTimeout(async () => {
             try {
-                const results = await searchService.searchContent(query, signal);
+                const results = await searchService.getSuggestions(query, signal);
                 setResults(results);
                 setIsOpen(results.length > 0);
             } catch (error: any) {
                 if (error.name !== 'AbortError' && error.name !== 'CanceledError') {
-                    // console.error("Search failed:", error); // Handled in service
                     setResults([]);
                 }
             } finally {
-                // Only turn off loading if the request wasn't cancelled
                 if (!signal.aborted) setIsLoading(false);
             }
-        }, 600);
+        }, 300); // Faster debounce for suggestions
 
-        // Cleanup: Cancel the fetch if the user types again before it finishes
         return () => {
             clearTimeout(timer);
             controller.abort();
@@ -76,10 +71,16 @@ export default function SearchWithDropdown({
     }, [query]);
 
 
-    const handleResultClick = (result: SearchResult) => {
-        if (result.slug) {
-            router.push(`/news/${result.slug}`);
+    const handleResultClick = (result: SearchSuggestion) => {
+        let path = '';
+        switch (result.type) {
+            case 'judgment': path = `/judgments/${result.id}`; break;
+            case 'case': path = `/cases/${result.id}`; break;
+            case 'judge': path = `/judges/${result.id}`; break;
+            default: path = `/news/${result.slug}`; break;
         }
+        
+        router.push(path);
         setQuery('');
         setIsOpen(false);
         if (onResultSelect) onResultSelect();
@@ -110,9 +111,10 @@ export default function SearchWithDropdown({
 
     const getIcon = (type: string) => {
         switch (type) {
-            case 'judgment': return <Gavel size={18} className="text-blue-600" />;
-            case 'case': return <Scale size={18} className="text-purple-600" />;
-            default: return <FileText size={18} className="text-gray-600" />;
+            case 'judgment': return <Gavel size={18} className="text-[#C9A227]" />;
+            case 'case': return <Scale size={18} className="text-[#C9A227]" />;
+            case 'judge': return <User size={18} className="text-[#C9A227]" />;
+            default: return <FileText size={18} className="text-[#C9A227]" />;
         }
     };
 
@@ -156,7 +158,10 @@ export default function SearchWithDropdown({
                                     <div className="flex items-start gap-3">
                                         <div className="mt-1 flex-shrink-0">{getIcon(result.type)}</div>
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="text-sm md:text-base font-semibold text-gray-900 group-hover:text-[#C9A227] transition-colors line-clamp-2">{result.title}</h4>
+                                            <h4 className="text-sm md:text-base font-semibold text-gray-900 group-hover:text-[#C9A227] transition-colors line-clamp-2">
+                                                {result.title} 
+                                                <span className="ml-2 text-xs font-normal text-gray-400 capitalize">({result.type})</span>
+                                            </h4>
                                         </div>
                                     </div>
                                 </button>
