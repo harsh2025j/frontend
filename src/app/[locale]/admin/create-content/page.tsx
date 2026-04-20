@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronUp, X } from "lucide-react";
 import CategorySelect from "@/components/ui/CategorySelect";
 import FormField from "@/components/ui/FormField";
 import { useState } from "react";
@@ -81,11 +81,10 @@ const CreateUpdatePage: React.FC = () => {
     }
   };
 
-  const inputClasses = (name: string) => `w-full border rounded-lg px-3 py-2.5 bg-gray-50 text-sm sm:text-base outline-none transition-all ${
-    errors[name] 
-      ? "border-red-500 ring-2 ring-red-500/10 bg-red-50/5 placeholder:text-red-300" 
-      : "border-gray-200 focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
-  }`;
+  const inputClasses = (name: string) => `w-full border rounded-lg px-3 py-2.5 bg-gray-50 text-sm sm:text-base outline-none transition-all ${errors[name]
+    ? "border-red-500 ring-2 ring-red-500/10 bg-red-50/5 placeholder:text-red-300"
+    : "border-gray-200 focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
+    }`;
 
 
   const dispatch = useAppDispatch();
@@ -139,7 +138,7 @@ const CreateUpdatePage: React.FC = () => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      
+
       // Scroll to the first error
       const firstErrorKey = Object.keys(newErrors)[0];
       const element = document.getElementsByName(firstErrorKey)[0];
@@ -390,15 +389,28 @@ const CreateUpdatePage: React.FC = () => {
 
             {/* Thumbnail */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <div className="border rounded-lg p-4 sm:p-6 bg-gray-50 flex items-center justify-center h-40 sm:h-48 order-2 md:order-1">
+              <div className="relative border rounded-lg bg-gray-50 flex items-center justify-center aspect-video order-2 md:order-1 overflow-hidden">
                 {previewUrl ? (
-                  <img src={previewUrl} alt="Preview" className="max-h-full max-w-full object-contain rounded" />
+                  <>
+                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFormData((prev) => ({ ...prev, thumbnail: null }));
+                      }}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 shadow hover:bg-red-600 transition-colors"
+                      title="Remove Image"
+                    >
+                      <X size={16} />
+                    </button>
+                  </>
                 ) : (
                   <span className="text-gray-400 text-sm">Preview Thumbnail</span>
                 )}
               </div>
 
-              <label className="border-2 border-dashed rounded-lg p-4 sm:p-6 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-center flex-col h-40 sm:h-48 order-1 md:order-2">
+              <label className="border-2 border-dashed rounded-lg p-4 sm:p-6 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-center flex-col aspect-video order-1 md:order-2">
                 <input
                   type="file"
                   name="thumbnail"
@@ -409,7 +421,7 @@ const CreateUpdatePage: React.FC = () => {
                 <svg className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
-                <span className="text-gray-500 text-sm text-center">Click to upload thumbnail</span>
+                <span className="text-gray-500 text-sm text-center">Click to upload thumbnail (ratio 16:9)</span>
 
                 {formData.thumbnail && (
                   <p className="text-xs text-blue-500 mt-2 text-center truncate max-w-full px-2">{formData.thumbnail.name}</p>
@@ -419,9 +431,8 @@ const CreateUpdatePage: React.FC = () => {
 
             {/* Content Editor */}
             <FormField label="Main Content" error={errors.content} required>
-              <div className={`border rounded-lg overflow-hidden transition-all ${
-                errors.content ? "border-red-500 ring-2 ring-red-500/10" : "border-gray-200"
-              }`}>
+              <div className={`border rounded-lg transition-all ${errors.content ? "border-red-500 ring-2 ring-red-500/10" : "border-gray-200"
+                }`}>
                 <RichTextEditor
                   value={formData.content}
                   onChange={handleLocalContentChange}

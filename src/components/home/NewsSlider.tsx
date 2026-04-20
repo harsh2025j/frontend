@@ -155,7 +155,7 @@ export default function NewsSlider() {
                     src={slides[current].image}
                     alt={slides[current].title}
                     fill
-                    className="relative z-10 object-cover transition-transform duration-[10s] group-hover/card:scale-110"
+                    className="relative z-10  transition-transform duration-[10s] group-hover/card:scale-110" //object-contain or cover
                     priority={true}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 900px"
                     quality={100}

@@ -118,14 +118,14 @@ export default function ArticleDetailPage() {
     const readTime = calculateReadTime(article.content);
 
     return (
-        <div className="bg-white min-h-screen">
+        <div className="bg-white min-h-screen font-unna">
             <div className="max-w-7xl mx-auto px-4 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-8">
                         {/* Header */}
                         <div className="mb-6">
-                            <h1 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight">
+                            <h1 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight font-unna">
                                 {article.title}
                             </h1>
                             {/* Metadata */}
@@ -148,7 +148,7 @@ export default function ArticleDetailPage() {
 
                         {/* Featured Image */}
                         {article.thumbnail && (
-                            <div className="relative w-full h-[450px] mb-8 rounded overflow-hidden">
+                            <div className="relative w-full aspect-video md:aspect-auto md:h-[450px] mb-8 rounded overflow-hidden">
                                 <Image
                                     src={article.thumbnail}
                                     alt={article.title}
@@ -208,7 +208,7 @@ export default function ArticleDetailPage() {
                     {/* Sidebar */}
                     <div className="lg:col-span-4">
                         <div className="sticky top-24">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">{t('relatedArticles')}</h3>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 font-unna">{t('relatedArticles')}</h3>
                             <div className="space-y-6 max-h-[85vh] overflow-y-auto scrollbar-hide pb-10">
                                 {recommendedArticles.map((rec) => (
                                     <Link key={rec.id} href={`/news/${rec.slug}`} className="block group">

@@ -1,10 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Unna:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
 @import "tailwindcss";
 
 
 @theme {
   --font-merriweather: Merriweather, sans-serif;
+  --font-unna: Unna, serif;
 }
 
 
@@ -246,10 +247,16 @@ textarea,
 
 /* Custom Article Content Styling */
 .article-content {
-  font-family: var(--font-merriweather), serif;
+  font-family: var(--font-unna), serif;
   color: #333;
-  line-height: 1.8;
+  line-height: 1.6;
   font-size: 1.125rem;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  /* For older browsers */
+  word-break: break-word;
+  /* For Safari */
+  width: 100%;
 }
 
 .article-content h1,
@@ -293,6 +300,7 @@ textarea,
   /* blue-600 */
   text-decoration: underline;
   text-underline-offset: 4px;
+  word-break: break-all;
 }
 
 .article-content a:hover {
@@ -482,4 +490,59 @@ textarea,
 
 .print-footer {
   display: none;
+}
+
+/* Quill Ratio Picker Styles */
+.ql-picker.ql-ratio {
+  width: 80px !important;
+}
+
+.ql-picker.ql-ratio .ql-picker-label::before,
+.ql-picker.ql-ratio .ql-picker-item::before {
+  content: 'Ratio';
+}
+
+.ql-picker.ql-ratio .ql-picker-label[data-value="16:9"]::before,
+.ql-picker.ql-ratio .ql-picker-item[data-value="16:9"]::before {
+  content: '16:9';
+}
+
+.ql-picker.ql-ratio .ql-picker-label[data-value="1:1"]::before,
+.ql-picker.ql-ratio .ql-picker-item[data-value="1:1"]::before {
+  content: '1:1';
+}
+
+.ql-picker.ql-ratio .ql-picker-label[data-value="4:3"]::before,
+.ql-picker.ql-ratio .ql-picker-item[data-value="4:3"]::before {
+  content: '4:3';
+}
+
+.ql-picker.ql-ratio .ql-picker-label[data-value="custom"]::before,
+.ql-picker.ql-ratio .ql-picker-item[data-value="custom"]::before {
+  content: 'Custom';
+}
+
+/* Force Aspect Ratio on Images and Videos */
+img[data-ratio="16:9"],
+iframe[data-ratio="16:9"],
+.ql-editor img[data-ratio="16:9"],
+.ql-editor iframe[data-ratio="16:9"] {
+  aspect-ratio: 16 / 9 !important;
+  height: auto !important;
+}
+
+img[data-ratio="1:1"],
+iframe[data-ratio="1:1"],
+.ql-editor img[data-ratio="1:1"],
+.ql-editor iframe[data-ratio="1:1"] {
+  aspect-ratio: 1 / 1 !important;
+  height: auto !important;
+}
+
+img[data-ratio="4:3"],
+iframe[data-ratio="4:3"],
+.ql-editor img[data-ratio="4:3"],
+.ql-editor iframe[data-ratio="4:3"] {
+  aspect-ratio: 4 / 3 !important;
+  height: auto !important;
 }

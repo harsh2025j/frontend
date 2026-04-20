@@ -72,7 +72,7 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
-    // "ngrok-skip-browser-warning": "true",  //only in local development with ngrok, can be removed in production
+    "ngrok-skip-browser-warning": "true",  //only in local development with ngrok, can be removed in production
   },
   timeout: 30000,
 });

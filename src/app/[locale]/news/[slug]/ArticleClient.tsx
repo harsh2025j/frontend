@@ -176,7 +176,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
             <div>
                 {/* Title */}
                 <div className="mb-6">
-                    <h2 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight">{displayTitle}</h2>
+                    <h2 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight font-unna">{displayTitle}</h2>
 
                     {/* Author metadata */}
                     {authorUsername ? (
@@ -242,7 +242,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
 
                 {/* Thumbnail */}
                 {article.thumbnail && (
-                    <div className="relative w-full h-[450px] mb-8 rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                    <div className="relative w-full aspect-video md:aspect-auto md:h-[450px] mb-8 rounded-2xl overflow-hidden shadow-sm border border-gray-100">
                         <Image
                             src={getSafeImageUrl(article.thumbnail)}
                             alt={displayTitle}
@@ -250,7 +250,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                             priority={true}
                             sizes="(max-width: 1024px) 100vw, 900px"
                             quality={100}
-                            className="object-cover"
+                        // className="object-contain" //object-cover
                         />
                     </div>
                 )}
@@ -277,7 +277,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                                     <h3 className="font-bold text-gray-900 flex items-center gap-2"><Sparkles size={16} className="text-blue-600" /> AI Summary</h3>
                                     <button type="button" onClick={() => setShowSummary(false)} className="p-1 hover:bg-gray-200 rounded-full transition-colors text-gray-900 hover:text-red-500"><X size={18} /></button>
                                 </div>
-                                <div className="text-md text-black leading-relaxed max-h-[300px] overflow-y-auto">
+                                <div className="text-md text-black leading-relaxed max-h-[300px] overflow-y-auto font-unna">
                                     {isFetchingSummary ? <div className="flex justify-center py-6"><Loader size="sm" text="Thinking..." /></div>
                                         : summary ? <TypewriterText text={summary} speed={30} /> : "No summary available."}
                                 </div>
@@ -325,6 +325,17 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
 
                 {/* Article Content */}
                 <div className="article-content relative">
+                    <style>{`
+                        .article-content img {
+                            max-width: 100% !important;
+                            height: auto !important;
+                        }
+                        .article-content iframe, .article-content video {
+                            max-width: 100% !important;
+                            aspect-ratio: 16 / 9;
+                            height: auto !important;
+                        }
+                    `}</style>
                     <div dangerouslySetInnerHTML={{ __html: displayContent }} />
                     {!hasFullAccess && <PaywallOverlay isLoggedIn={!!user} t={t} />}
                 </div>
@@ -371,7 +382,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                 {/* Developing Story Timeline */}
                 {hasFullAccess && article.updates && article.updates.length > 0 && (
                     <div className="mb-16 mt-12 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-                        <h3 className="text-3xl font-bold text-gray-900 mb-10 pb-4 border-b">Developing Story Timeline</h3>
+                        <h3 className="text-3xl font-bold text-gray-900 mb-10 pb-4 border-b font-unna">Developing Story Timeline</h3>
                         <div className="space-y-12 relative pl-8 border-l-[3px] border-[#2A65A4] ml-2">
                             {[...article.updates].map((update, idx) => {
                                 const isLatest = idx === article.updates!.length - 1;
@@ -388,7 +399,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                                         <div className="flex flex-col gap-2">
                                             <span className="text-gray-500 text-sm font-semibold tracking-wide uppercase">{formatDate(update.updateDate as string)}</span>
                                             {update.title && <h4 className="font-bold text-[22px] text-[#0A2342] leading-snug">{update.title}</h4>}
-                                            <div className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1" dangerouslySetInnerHTML={{ __html: update.content }} />
+                                            <div className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1 font-unna" dangerouslySetInnerHTML={{ __html: update.content }} />
                                         </div>
                                     </div>
                                 );
@@ -597,7 +608,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
     }
 
     return (
-        <div className="bg-white min-h-screen">
+        <div className="bg-white min-h-screen font-unna">
             <div className="max-w-7xl mx-auto  py-8 px-4">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
@@ -648,7 +659,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                     {/* ── Sidebar (sticky, related articles from category) ── */}
                     <div className="lg:col-span-4">
                         <div className="sticky top-24">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">{t("relatedArticles")}</h3>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 font-unna">{t("relatedArticles")}</h3>
                             <div className="space-y-6 max-h-[85vh] overflow-y-auto scrollbar-hide pb-10">
                                 {loadingRecommended ? (
                                     Array(5).fill(0).map((_, i) => (
