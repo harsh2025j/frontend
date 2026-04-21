@@ -30,6 +30,7 @@ import logo from "@/assets/logo.png";
 import SavedPostsList from "./SavedPostsList";
 import Loader from "@/components/ui/Loader";
 import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
+import ImageCropperModal from "@/components/ui/ImageCropperModal";
 
 interface ProfileViewProps {
   viewContext: "public" | "admin";
@@ -200,6 +201,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imageToCrop, setImageToCrop] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [prefs, setPrefs] = useState({ language: currentLocale, doNotDisturb: false, caseStatusAlerts: true });
@@ -230,14 +232,13 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
     } finally { setSaving(false); }
   };
 
-  const handleImageUpload = async () => {
-    if (!selectedFile) return;
+  const handleImageUpload = async (croppedFile: File) => {
     setSaving(true);
     try {
-      const response = await profileApi.updateProfile({ avatar: selectedFile });
+      const response = await profileApi.updateProfile({ avatar: croppedFile });
       if (response.data.success) {
         setProfileUser({ ...profileUser!, profilePicture: response.data.data.profilePicture });
-        setIsImageModalOpen(false);
+        setImageToCrop(null);
       }
     } finally { setSaving(false); }
   };
@@ -577,13 +578,30 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
       </main>
 
       {/* 3. MODALS */}
-      <input type="file" ref={fileInputRef} onChange={(e) => { if (e.target.files?.[0]) { const file = e.target.files[0]; setSelectedFile(file); setPreviewUrl(URL.createObjectURL(file)); setIsImageModalOpen(true); } }} accept="image/*" className="hidden" />
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={(e) => { 
+          if (e.target.files?.[0]) { 
+            setImageToCrop(e.target.files[0]); 
+          } 
+        }} 
+        accept="image/*" 
+        className="hidden" 
+      />
       <AnimatePresence>
         {isModalOpen && (
           <EditProfileModal onClose={() => setIsModalOpen(false)} formData={formData} setFormData={setFormData} onSave={handleUpdate} saving={saving} isProfessional={isProfessional} />
         )}
-        {isImageModalOpen && (
-          <ImagePreviewModal url={previewUrl!} onClose={() => setIsImageModalOpen(false)} onConfirm={handleImageUpload} saving={saving} />
+        {imageToCrop && (
+          <ImageCropperModal
+            imageFile={imageToCrop}
+            onClose={() => setImageToCrop(null)}
+            onCrop={handleImageUpload}
+            aspect={1 / 1}
+            title="Adjust Profile Photo"
+            description="Drag and zoom to center your portrait (1:1 ratio)"
+          />
         )}
         {showLogoutConfirm && (
           <LogoutOverlay onCancel={() => setShowLogoutConfirm(false)} onConfirm={handleLogout} />
@@ -708,22 +726,7 @@ function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isPr
   );
 }
 
-function ImagePreviewModal({ url, onClose, onConfirm, saving }: any) {
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
-      <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="max-w-xl w-full text-center text-white">
-        <div className="w-80 h-80 rounded-[48px] overflow-hidden mx-auto mb-10 border-4 border-[#C9A227]">
-          <Image src={url} alt="Preview" width={320} height={320} className="object-cover" quality={100} sizes="740px" />
-        </div>
-        <h3 className="text-3xl font-serif mb-10">Confirm Visual Identity</h3>
-        <div className="flex gap-4">
-          <button onClick={onClose} className="flex-1 py-4 text-[10px] font-black uppercase text-white/40">Reject</button>
-          <button onClick={onConfirm} disabled={saving} className="flex-[2] py-4 bg-[#C9A227] rounded-2xl text-white text-[10px] font-black uppercase">{saving ? "Syncing..." : "Apply Portrait"}</button>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
+
 
 function LogoutOverlay({ onCancel, onConfirm }: any) {
   return (

@@ -151,11 +151,10 @@ export default function AdminJudgesPage() {
                                             <div className="text-xs text-gray-500">{j.court}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase transition-colors ${
-                                                j.status === 'published' 
-                                                ? "bg-green-100 text-green-700 border border-green-200" 
-                                                : "bg-gray-100 text-gray-600 border border-gray-200"
-                                            }`}>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase transition-colors ${j.status === 'published'
+                                                    ? "bg-green-100 text-green-700 border border-green-200"
+                                                    : "bg-gray-100 text-gray-600 border border-gray-200"
+                                                }`}>
                                                 {j.status}
                                             </span>
                                         </td>

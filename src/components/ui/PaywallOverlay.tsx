@@ -18,7 +18,7 @@ export default function PaywallOverlay({ isLoggedIn, t }: PaywallOverlayProps) {
       <div className="relative bg-white border-t border-gray-100 px-6 py-12 text-center rounded-b-2xl shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.1)]">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#0A2342]/5 mb-6 ring-8 ring-[#0A2342]/5">
           <div className="w-14 h-14 rounded-full bg-[#0A2342] flex items-center justify-center text-[#C9A227] shadow-xl">
-            <Lock size={28} />
+            <img src="/logo-gold.png" alt="Lock" className="w-14 h-14" />
           </div>
         </div>
 
@@ -33,18 +33,18 @@ export default function PaywallOverlay({ isLoggedIn, t }: PaywallOverlayProps) {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/subscription"
-            className="w-full sm:w-auto px-10 py-4 bg-[#C9A227] !text-white !no-underline font-bold rounded-xl hover:bg-[#C9A227] hover:text-white transition-all transform hover:-translate-y-1 hover:shadow-2xl flex items-center justify-center gap-2 group"
+            className="w-full sm:w-auto px-10 py-4 bg-[#C9A227] !text-white !no-underline font-bold rounded-xl hover:bg-[#C9A227] hover:text-white transition-all  hover:shadow-sm flex items-center justify-center gap-2 group"
           >
-            <Sparkles size={20} className="text-white group-hover:animate-pulse" />
+            {/* <Sparkles size={20} className="text-white group-hover:animate-pulse" /> */}
             Upgrade to Premium
           </Link>
 
           {!isLoggedIn && (
             <Link
               href="/auth/login"
-              className="w-full !no-underline sm:w-auto px-10 py-4 bg-white text-[#0A2342] font-bold rounded-xl border-2 border-[#0A2342] hover:bg-gray-50 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
+              className="w-full !no-underline sm:w-auto px-10 py-4 bg-white text-[#0A2342] font-bold rounded-xl border-2 border-[#0A2342] hover:bg-gray-50 transition-all  flex items-center justify-center gap-2"
             >
-              <UserPlus size={20} />
+              {/* <UserPlus size={20} /> */}
               Login / Sign Up
             </Link>
           )}

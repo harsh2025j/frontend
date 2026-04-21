@@ -28,7 +28,7 @@ const LatestNews: React.FC<LatestNewsProps> = ({
   return (
     <div className="bg-white  rounded-md  overflow-hidden hover:border-blue-300 transition-all duration-300 flex flex-col justify-between border border-gray-200 p-0">
 
-      <div className="relative w-full h-60 ">
+      <div className="relative w-full aspect-video">
         <Link href={`/news/${slug}`} className="relative block w-full h-full">
           <Image
             src={getSafeImageUrl(typeof img === 'string' ? img : (img as StaticImageData)?.src || '')}

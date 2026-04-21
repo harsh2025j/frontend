@@ -66,7 +66,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
 
                 // Set initial value
                 if (value) {
-                    const clipboard = quill.getModule('clipboard');
+                    const clipboard = quill.getModule('clipboard') as any;
                     clipboard.dangerouslyPasteHTML(value);
                 }
 

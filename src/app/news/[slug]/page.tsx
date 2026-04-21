@@ -120,7 +120,7 @@ export default function ArticleDetailPage() {
     return (
         <div className="bg-white min-h-screen font-unna">
             <div className="max-w-7xl mx-auto px-4 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-8">
                         {/* Header */}
@@ -206,7 +206,7 @@ export default function ArticleDetailPage() {
                     </div>
 
                     {/* Sidebar */}
-                    <div className="lg:col-span-4">
+                    <div className="lg:col-span-2">
                         <div className="sticky top-24">
                             <h3 className="text-lg font-bold text-gray-900 mb-4 font-unna">{t('relatedArticles')}</h3>
                             <div className="space-y-6 max-h-[85vh] overflow-y-auto scrollbar-hide pb-10">

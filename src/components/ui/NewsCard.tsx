@@ -25,16 +25,15 @@ export default function NewsCard({
 
   return (
     <div className="w-full rounded-[4px] bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition flex flex-col h-full">
-      {/* Image — fixed height */}
-      <div className="relative h-[180px] w-full flex-shrink-0">
+      {/* Image — 16:9 ratio */}
+      <div className="relative aspect-video w-full flex-shrink-0">
         <Image
           src={validSrc}
-          width={600}
-          height={180}
+          fill
           alt={title}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
           quality={85}
-          className="object-cover w-full h-full"
+          className="object-cover"
         />
       </div>
 

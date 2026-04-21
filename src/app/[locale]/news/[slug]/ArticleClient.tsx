@@ -181,7 +181,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                     {/* Author metadata */}
                     {authorUsername ? (
                         <Link href={`/profile/${authorUsername}`} className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/author">
-                            <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative group-hover/author:ring-[#C9A227]/40 transition-all">
+                            <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-2 ring-[#C9A227]/80 shadow-sm shrink-0 overflow-hidden relative group-hover/author:ring-[#C9A227]/70 transition-all">
                                 {authorPhoto ? (
                                     <Image src={authorPhoto} alt={article.authors || "Author"} fill sizes="100px" className="object-cover" quality={90} />
                                 ) : (
@@ -242,7 +242,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
 
                 {/* Thumbnail */}
                 {article.thumbnail && (
-                    <div className="relative w-full aspect-video md:aspect-auto md:h-[450px] mb-8 rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                    <div className="relative w-full aspect-video mb-8 rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-gray-50">
                         <Image
                             src={getSafeImageUrl(article.thumbnail)}
                             alt={displayTitle}
@@ -250,7 +250,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                             priority={true}
                             sizes="(max-width: 1024px) 100vw, 900px"
                             quality={100}
-                        // className="object-contain" //object-cover
+                            className="object-cover" // className="object-contain" //object-cover
                         />
                     </div>
                 )}
@@ -269,12 +269,12 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                     )}
                     <div className="absolute right-0 top-0">
                         <button type="button" onClick={handleSummaryClick} className="px-6 py-2 bg-blue-600 text-white text-base font-medium rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm">
-                            <Sparkles size={18} /><span>AI Summary</span>
+                            AI Summary
                         </button>
                         {showSummary && (
                             <div className="absolute right-0 top-12 sm:right-full sm:top-0 sm:mr-3 w-[85vw] sm:w-[400px] max-w-[400px] bg-[#C9A227] p-4 rounded-xl shadow-2xl border border-gray-200 z-10 text-left">
                                 <div className="flex justify-between items-start mb-3 border-b border-gray-200 pb-2">
-                                    <h3 className="font-bold text-gray-900 flex items-center gap-2"><Sparkles size={16} className="text-blue-600" /> AI Summary</h3>
+                                    <h3 className="font-bold text-gray-900 flex items-center gap-2"> AI Summary</h3>
                                     <button type="button" onClick={() => setShowSummary(false)} className="p-1 hover:bg-gray-200 rounded-full transition-colors text-gray-900 hover:text-red-500"><X size={18} /></button>
                                 </div>
                                 <div className="text-md text-black leading-relaxed max-h-[300px] overflow-y-auto font-unna">
@@ -417,7 +417,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
 
                             return username ? (
                                 <Link key={idx} href={`/profile/${username}`} className="flex items-center gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/advocate">
-                                    <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative group-hover/advocate:ring-[#C9A227]/40 transition-all">
+                                    <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-2 ring-[#C9A227]/80 shadow-sm shrink-0 overflow-hidden relative group-hover/advocate:ring-[#C9A227]/70 transition-all">
                                         {adv?.userId && advocatePhotos[adv.userId] ? (
                                             <Image src={advocatePhotos[adv.userId]} alt={adv.name || "Advocate"} fill sizes="100px" className="object-cover" quality={90} />
                                         ) : (
@@ -610,7 +610,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
     return (
         <div className="bg-white min-h-screen font-unna">
             <div className="max-w-7xl mx-auto  py-8 px-4">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
 
                     {/* ── Main content column ── */}
                     <div className="lg:col-span-8">
@@ -657,7 +657,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                     </div>
 
                     {/* ── Sidebar (sticky, related articles from category) ── */}
-                    <div className="lg:col-span-4">
+                    <div className="lg:col-span-2">
                         <div className="sticky top-24">
                             <h3 className="text-lg font-bold text-gray-900 mb-4 font-unna">{t("relatedArticles")}</h3>
                             <div className="space-y-6 max-h-[85vh] overflow-y-auto scrollbar-hide pb-10">
@@ -675,7 +675,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                                     displayRecommended.map((rec) => (
                                         <Link key={rec.id} href={`/news/${rec.slug}`} className="block group">
                                             <div className="flex gap-4">
-                                                <div className="relative w-24 h-24 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                                                <div className="relative w-28 aspect-video flex-shrink-0 rounded overflow-hidden bg-gray-100">
                                                     <Image src={getSafeImageUrl(rec.thumbnail)} alt={rec.title} fill sizes="200px" className="object-cover" quality={90} />
                                                 </div>
                                                 <div className="flex-1">

@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
-import NewsCard from "@/components/ui/NewsCard";
-import { Link } from "@/i18n/routing";
+import { useParams, useSearchParams } from "next/navigation";
+import { Link, useRouter, usePathname } from "@/i18n/routing";
 import { Article } from "@/data/features/article/article.types";
 import Loader from "@/components/ui/Loader";
 import { useGoogleTranslate } from "@/hooks/useGoogleTranslate";
@@ -12,16 +11,20 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import { timeAgo } from "@/lib/utils/timeAgo";
 import { articleApi } from "@/data/services/article-service/article-service";
 import Pagination from "@/components/Pagination";
+import NewsCard from "@/components/ui/NewsCard";
 
 const ITEMS_PER_PAGE = 12;
 
 export default function TagPage() {
     const params = useParams();
     const slug = params.slug as string;
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
     const locale = useLocale();
 
     const [articles, setArticles] = useState<Article[]>([]);
-    const [currentPage, setCurrentPage] = useState(1);
+    const currentPage = parseInt(searchParams.get("page") || "1");
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -70,8 +73,6 @@ export default function TagPage() {
     }, [slug, currentPage]);
 
     useEffect(() => { fetchData(); }, [fetchData]);
-    // Reset page on slug change
-    useEffect(() => { setCurrentPage(1); }, [slug]);
 
     // ── Translation ──
     const [textsToTranslate, setTextsToTranslate] = useState<string[]>([]);
@@ -157,7 +158,11 @@ export default function TagPage() {
                     <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}
-                        onPageChange={setCurrentPage}
+                        onPageChange={(page) => {
+                            const params = new URLSearchParams(searchParams.toString());
+                            params.set("page", page.toString());
+                            router.push(`${pathname}?${params.toString()}`);
+                        }}
                     />
                 </>
             )}

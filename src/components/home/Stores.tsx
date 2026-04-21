@@ -450,17 +450,17 @@ export default function Stores() {
           </div>
         </div> */}
 
-        {/* Latest News & Judgments */}
+        {/* Latest News*/}
         <div className="w-full px-4">
           <div className="flex items-center justify-center my-6 md:my-10">
             <div className="flex-1 h-px bg-gray-400"></div>
             <h2 className="px-3 sm:px-4 text-base sm:text-lg md:text-xl font-merriweather font-semibold text-black text-center whitespace-nowrap">
-              Latest News & Judgments
+              Latest News
             </h2>
             <div className="flex-1 h-px bg-gray-400"></div>
           </div>
 
-          <div className="flex justify-center">
+          <div className="flex justify-center mb-6 md:mb-10">
             <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {loading ? (
                 <ArticleSkeleton count={4} type="latest" noWrapper={true} />
@@ -482,25 +482,40 @@ export default function Stores() {
             </div>
           </div>
         </div>
+        <div className="flex justify-center mb-6 md:mb-10">
+          <Link href="/category/latest-news" onClick={handleNavClick}>
+            <button className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 sm:px-6 py-1 sm:py-2 text-sm sm:text-base">
+              View More
+            </button>
+          </Link>
+        </div>
+        <div className="w-full px-4">
+          <div className="flex items-center justify-center my-6 md:my-10">
+            <div className="flex-1 h-px bg-gray-400"></div>
+            <h2 className="px-3 sm:px-4 text-base sm:text-lg md:text-xl font-merriweather font-semibold text-black text-center whitespace-nowrap">
+              Judgments
+            </h2>
+            <div className="flex-1 h-px bg-gray-400"></div>
+          </div>
+          {/* Judgments Grid */}
+          <div className="flex justify-center px-4">
+            <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {loading ? (
+                <ArticleSkeleton count={3} type="judgement" noWrapper={true} />
+              ) : (
+                displayJudgments.map((data: any) => (
 
-        {/* Judgments Grid */}
-        <div className="flex justify-center px-4 my-6 md:my-12">
-          <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {loading ? (
-              <ArticleSkeleton count={3} type="judgement" noWrapper={true} />
-            ) : (
-              displayJudgments.map((data: any) => (
-
-                <Judgement
-                  key={data.id}
-                  img={data.thumbnail}
-                  description={data.content}
-                  date={formatDate(data.createdAt)}
-                  author={data.authors || data.advocateName}
-                  slug={data.slug}
-                />
-              ))
-            )}
+                  <Judgement
+                    key={data.id}
+                    img={data.thumbnail}
+                    description={data.content}
+                    date={formatDate(data.createdAt)}
+                    author={data.authors || data.advocateName}
+                    slug={data.slug}
+                  />
+                ))
+              )}
+            </div>
           </div>
         </div>
 

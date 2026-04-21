@@ -25,7 +25,7 @@ const HindiNews: React.FC<HindiNews> = ({
 
       {/* Left - Image */}
       <Link href={`/news/${slug}`} className="w-[25%]">
-        <div className="relative h-[120px] sm:h-[160px] w-full">
+        <div className="relative aspect-video w-full">
           <Image
             src={getSafeImageUrl(typeof img === 'string' ? img : img.src)}
             alt="Image"

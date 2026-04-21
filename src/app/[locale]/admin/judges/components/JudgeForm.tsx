@@ -19,6 +19,7 @@ import Loader from "@/components/ui/Loader";
 import RichTextEditor from "@/components/ui/RichTextEditor";
 import FormField from "@/components/ui/FormField";
 import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
+import ImageCropperModal from "@/components/ui/ImageCropperModal";
 import { judgesService } from "@/data/services/judges-service/judgesService";
 import { Judge } from "@/data/services/judges-service/judges.types";
 
@@ -32,6 +33,7 @@ export default function JudgeForm({ initialData }: JudgeFormProps) {
     const [activeTab, setActiveTab] = useState("identity");
     const [photoPreview, setPhotoPreview] = useState<string | null>(initialData?.photoUrl || null);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [imageToCrop, setImageToCrop] = useState<File | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [formData, setFormData] = useState({
@@ -91,13 +93,14 @@ export default function JudgeForm({ initialData }: JudgeFormProps) {
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                toast.error("Image size must be less than 5MB");
-                return;
-            }
-            setPhotoFile(file);
-            setPhotoPreview(URL.createObjectURL(file));
+            setImageToCrop(file);
         }
+    };
+
+    const handleCropComplete = (croppedFile: File) => {
+        setPhotoFile(croppedFile);
+        setPhotoPreview(URL.createObjectURL(croppedFile));
+        setImageToCrop(null);
     };
 
     const validateTab = (tabId: string) => {
@@ -628,6 +631,17 @@ export default function JudgeForm({ initialData }: JudgeFormProps) {
                     )}
                 </div>
             </div>
+
+            {imageToCrop && (
+                <ImageCropperModal
+                    imageFile={imageToCrop}
+                    onClose={() => setImageToCrop(null)}
+                    onCrop={handleCropComplete}
+                    aspect={1 / 1}
+                    title="Adjust Judge Photo"
+                    description="Drag and zoom to center the judicial portrait (1:1 ratio)"
+                />
+            )}
         </form>
     );
 }

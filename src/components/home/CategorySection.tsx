@@ -77,14 +77,14 @@ export default function CategorySection({ title, slug, layout, limit = 6 }: Cate
 const ArticleCard = ({ article, compact = false }: { article: any; compact?: boolean }) => (
   <Link href={`/news/${article.slug}`} className="group block h-full">
     <div className="bg-white rounded-md overflow-hidden border border-gray-100 hover:shadow-md transition-all duration-300 h-full flex flex-col">
-      <div className={`relative overflow-hidden ${compact ? "h-40" : "h-52"}`}>
+      <div className="relative overflow-hidden aspect-video">
         <Image
           src={getSafeImageUrl(article.thumbnail)}
           alt={article.title}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 500px"
           quality={90}
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className="object-cover transition-transform duration-500 "
         />
       </div>
       <div className="p-4 flex flex-col flex-grow">
@@ -171,7 +171,7 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
       {/* Main Featured Article */}
       <div className="lg:col-span-7">
-        <Link href={`/news/${featured.slug}`} className="group block relative h-[400px] lg:h-[500px] rounded-2xl overflow-hidden shadow-lg">
+        <Link href={`/news/${featured.slug}`} className="group block relative aspect-video w-full rounded-2xl overflow-hidden shadow-lg">
           <Image
             src={getSafeImageUrl(featured.thumbnail)}
             alt={featured.title}

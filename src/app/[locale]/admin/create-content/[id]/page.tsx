@@ -16,6 +16,7 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronUp, X } from "lucide-react";
 import CategorySelect from "@/components/ui/CategorySelect";
 import FormField from "@/components/ui/FormField";
+import ImageCropperModal from "@/components/ui/ImageCropperModal";
 
 
 const EditArticlePage: React.FC = () => {
@@ -46,6 +47,20 @@ const EditArticlePage: React.FC = () => {
     const [existingDocuments, setExistingDocuments] = useState<any[]>([]);
     const [expandedUpdates, setExpandedUpdates] = useState<string[]>([]);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [imageToCrop, setImageToCrop] = useState<File | null>(null);
+
+    const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageToCrop(file);
+        }
+        e.target.value = '';
+    };
+
+    const handleCropComplete = (croppedFile: File) => {
+        setFormData((prev: any) => ({ ...prev, thumbnail: croppedFile }));
+        setImageToCrop(null);
+    };
 
     const toggleUpdateExpansion = (id: string) => {
         setExpandedUpdates(prev =>
@@ -282,6 +297,13 @@ const EditArticlePage: React.FC = () => {
 
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-800">
+            {imageToCrop && (
+                <ImageCropperModal
+                    imageFile={imageToCrop}
+                    onClose={() => setImageToCrop(null)}
+                    onCrop={handleCropComplete}
+                />
+            )}
             <main className="flex-1 w-full p-3 sm:p-4 md:p-6 lg:p-8">
 
                 <div className="flex items-center gap-4 mb-4 sm:mb-6 px-2">
@@ -529,7 +551,7 @@ const EditArticlePage: React.FC = () => {
                                     type="file"
                                     name="thumbnail"
                                     className="hidden"
-                                    onChange={handleFileUpload}
+                                    onChange={handleThumbnailSelect}
                                     accept="image/*"
                                 />
                                 <svg className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

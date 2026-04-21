@@ -32,7 +32,7 @@ export default function AdminDisplayBoardsPage() {
         try {
             const response = await displayBoardsService.getAll({ page, limit: LIMIT });
             const payload = response.data;
-            
+
             // With standardized backend response:
             // payload.data is the array
             // payload.meta contains total, page, etc.

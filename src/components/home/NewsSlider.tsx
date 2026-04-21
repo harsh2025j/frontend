@@ -99,7 +99,7 @@ export default function NewsSlider() {
   if (loading && articles.length === 0) {
     return (
       <div className="w-full h-[600px] bg-[#0A2342] flex items-center justify-center">
-        <Loader size="lg" text="Syncing 3D Perception Board..." />
+        <Loader size="lg" text="Loading articles..." />
       </div>
     );
   }
@@ -132,14 +132,14 @@ export default function NewsSlider() {
       </div>
 
       {/* ─── MAIN CONTENT CONTAINER ─── */}
-      <div className="container relative z-10 mx-auto h-full px-2 md:px-6 flex items-center py-6 md:py-10 lg:py-0">
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-24 items-center">
+      <div className="container relative z-10 mx-auto h-full px-2 md:px-3 flex items-center py-6 md:py-10 lg:py-0">
+        <div className="max-w-7xl mx-auto  w-full grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-20 items-center">
 
           {/* IMAGE BLOCK */}
           <div className="order-1 lg:order-1 relative flex justify-center lg:justify-start transition-all duration-700">
             <motion.div
               style={{ rotateX, rotateY, backfaceVisibility: "hidden" }}
-              className="relative w-full max-w-[100vw] md:max-w-[90vw] lg:max-w-[600px] aspect-[16/11] rounded-[15px] md:rounded-[20px] lg:rounded-[20px] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.5)] border border-white/10 group/card isolation-isolate transform-gpu [mask-image:linear-gradient(white,white)]"
+              className="relative w-full mx-[-20px] max-w-[100vw] md:max-w-[90vw] lg:min-h-[400px]  aspect-[16/9] rounded-[15px] md:rounded-[20px] lg:rounded-[20px] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.5)] border border-white/10 group/card isolation-isolate transform-gpu [mask-image:linear-gradient(white,white)]"
             >
               <AnimatePresence mode="wait" custom={direction}>
                 <motion.div
@@ -155,7 +155,7 @@ export default function NewsSlider() {
                     src={slides[current].image}
                     alt={slides[current].title}
                     fill
-                    className="relative z-10  transition-transform duration-[10s] group-hover/card:scale-110" //object-contain or cover
+                    className="relative z-10 object-cover transition-transform duration-[10s] group-hover/card:scale-110" //object-contain or cover
                     priority={true}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 900px"
                     quality={100}
@@ -225,11 +225,10 @@ export default function NewsSlider() {
                 <div className="mt-2 lg:mt-auto pt-6 lg:pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-center lg:justify-between gap-6">
                   <Link
                     href={slides[current].link}
-                    className="group/btn relative inline-flex items-center gap-3 bg-gradient-to-r from-[#C9A227] to-[#b39022]  text-[#0A2342] px-8 lg:px-10 py-4 lg:py-5 rounded-full font-black text-[10px] lg:text-xs tracking-widest overflow-hidden transition-all hover:pr-12 shadow-[0_20px_50px_rgba(201,162,39,0.2)]"
+                    className="group/btn inline-flex items-center gap-3 bg-[#C9A227] hover:bg-[#b39022] text-[#0A2342] px-8 lg:px-10 py-3.5 lg:py-4 rounded-full font-bold text-[10px] lg:text-xs tracking-widest transition-all duration-300 shadow-md hover:shadow-lg active:scale-95"
                   >
-                    <span className="relative z-10">READ PERSPECTIVE</span>
-                    <ArrowRight className="w-4 h-4 relative z-10 transition-transform group-hover/btn:translate-x-1" />
-                    <div className="absolute inset-0 bg-white translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+                    <span className="!text-white">READ FULL ARTICLE</span>
+                    {/* <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" /> */}
                   </Link>
 
                   <div className="flex items-center gap-3">
@@ -237,13 +236,13 @@ export default function NewsSlider() {
                       onClick={prevSlide}
                       className="w-12 h-12 lg:w-14 lg:h-14 flex items-center justify-center rounded-full border border-white/10 transition-all hover:bg-white/5 group/nav"
                     >
-                      <ChevronLeft size={20} className="text-white transition-transform group-hover/nav:-translate-x-1" />
+                      <ChevronLeft size={20} className="text-white transition-transform group-hover/nav:-translate-x-0.5" />
                     </button>
                     <button
                       onClick={nextSlide}
                       className="w-12 h-12 lg:w-14 lg:h-14 flex items-center justify-center rounded-full border border-white/10 transition-all hover:bg-white/5 group/nav"
                     >
-                      <ChevronRight size={20} className="text-white transition-transform group-hover/nav:translate-x-1" />
+                      <ChevronRight size={20} className="text-white transition-transform group-hover/nav:translate-x-0.5" />
                     </button>
                   </div>
                 </div>
