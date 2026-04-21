@@ -4,13 +4,16 @@ import toast from "react-hot-toast";
 import { Article } from "@/data/features/article/article.types";
 import Image from "next/image";
 import logo from "../../../../../public/logo.png";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { articleApi } from "@/data/services/article-service/article-service";
 import Pagination from "@/components/Pagination";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useDebounce } from "@/hooks/useDebounce";
+import { Suspense } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -117,19 +120,21 @@ const DeleteConfirmationModal = ({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const ContentManagementPage: React.FC = () => {
+const ContentManagementPageContent: React.FC = () => {
   useDocTitle("Content Management | Sajjad Husain Law Associates");
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useProfileActions();
 
+  // ── Derived from URL ──
+  const statusFilter = (searchParams.get("status") as StatusFilter) || "all";
+  const currentPage = parseInt(searchParams.get("page") || "1");
+  const urlQ = searchParams.get("q") || "";
 
-
-  // ── State ──
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
+  // ── Local State for Input ──
+  const [searchQuery, setSearchQuery] = useState(urlQ);
+  const debouncedQ = useDebounce(searchQuery, 600);
 
   const [articles, setArticles] = useState<Article[]>([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -140,16 +145,25 @@ const ContentManagementPage: React.FC = () => {
   const [articleToDelete, setArticleToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Debounce
+  const updateUrl = (updates: Record<string, string | number | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value && value !== "all") {
+        params.set(key, value.toString());
+      } else {
+        params.delete(key);
+      }
+    });
+    router.push(`/admin/content-management?${params.toString()}`);
+  };
+
+  // Sync debounced search to URL
   useEffect(() => {
-    const h = setTimeout(() => setDebouncedQ(searchQuery), 600);
-    return () => clearTimeout(h);
-  }, [searchQuery]);
+    if (debouncedQ !== urlQ) {
+      updateUrl({ q: debouncedQ, page: 1 });
+    }
+  }, [debouncedQ]);
 
-  // Reset page on filter/search change
-  useEffect(() => { setCurrentPage(1); }, [statusFilter, debouncedQ]);
-
-  // ── Fetch ──
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -159,7 +173,7 @@ const ContentManagementPage: React.FC = () => {
         limit: ITEMS_PER_PAGE,
       };
       if (statusFilter !== "all") params.status = statusFilter;
-      if (debouncedQ) params.q = debouncedQ;
+      if (urlQ) params.q = urlQ;
 
       const res = await articleApi.fetchArticles(params);
       const data = res.data as any;
@@ -171,7 +185,7 @@ const ContentManagementPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, statusFilter, debouncedQ]);
+  }, [currentPage, statusFilter, urlQ]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -234,12 +248,11 @@ const ContentManagementPage: React.FC = () => {
               </button>
             </div>
 
-            {/* STATUS FILTER TABS */}
             <div className="flex gap-2 mb-6 flex-wrap">
               {STATUS_TABS.map((tab) => (
                 <button
                   key={tab.value}
-                  onClick={() => setStatusFilter(tab.value)}
+                  onClick={() => updateUrl({ status: tab.value, page: 1 })}
                   className={`px-5 py-2 rounded-full text-sm font-medium transition-colors border ${statusFilter === tab.value
                     ? "bg-[#0B2149] text-white border-[#0B2149]"
                     : "bg-white text-gray-600 border-gray-200 hover:border-[#0B2149] hover:text-[#0B2149]"
@@ -333,7 +346,7 @@ const ContentManagementPage: React.FC = () => {
                           <div className="relative w-12 h-12 rounded-md overflow-hidden">
                             <Image
                               src={(item.thumbnail && (item.thumbnail.startsWith("http") || item.thumbnail.startsWith("/"))) ? item.thumbnail : logo}
-                              alt="thumbnail" fill sizes="100px" 
+                              alt="thumbnail" fill sizes="100px"
                               quality={90}
                               className="object-cover"
                             />
@@ -361,11 +374,10 @@ const ContentManagementPage: React.FC = () => {
               </table>
             </div>
 
-            {/* PAGINATION */}
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
-              onPageChange={setCurrentPage}
+              onPageChange={(page) => updateUrl({ page })}
             />
 
           </div>
@@ -379,6 +391,14 @@ const ContentManagementPage: React.FC = () => {
         isDeleting={isDeleting}
       />
     </div>
+  );
+};
+
+const ContentManagementPage: React.FC = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <ContentManagementPageContent />
+    </Suspense>
   );
 };
 

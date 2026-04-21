@@ -578,16 +578,16 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
       </main>
 
       {/* 3. MODALS */}
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={(e) => { 
-          if (e.target.files?.[0]) { 
-            setImageToCrop(e.target.files[0]); 
-          } 
-        }} 
-        accept="image/*" 
-        className="hidden" 
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={(e) => {
+          if (e.target.files?.[0]) {
+            setImageToCrop(e.target.files[0]);
+          }
+        }}
+        accept="image/*"
+        className="hidden"
       />
       <AnimatePresence>
         {isModalOpen && (
@@ -730,10 +730,10 @@ function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isPr
 
 function LogoutOverlay({ onCancel, onConfirm }: any) {
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-[#0A2342]/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-[610] flex items-center justify-center p-6 bg-[#0A2342]/80 backdrop-blur-md">
       <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className="bg-white rounded-[40px] p-12 max-w-md w-full text-center">
         <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8"><LogOut size={40} /></div>
-        <h3 className="text-3xl font-serif text-[#0A2342] mb-4">Security Exit</h3>
+        <h3 className="text-3xl font-serif text-[#0A2342] mb-4">Logout?</h3>
         <div className="flex gap-4">
           <button onClick={onCancel} className="flex-1 py-4 text-[10px] font-black uppercase border border-gray-100 rounded-2xl">Cancel</button>
           <button onClick={onConfirm} className="flex-1 py-4 bg-red-500 text-white rounded-2xl shadow-xl shadow-red-500/20">Sign Out</button>

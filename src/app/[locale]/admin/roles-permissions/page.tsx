@@ -27,9 +27,12 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { resetRolesState } from "@/data/features/roles/rolesSlice";
 import { resetPermissionsState } from "@/data/features/permissions/permissionsSlice";
 
-export default function RolesPermissionsPage() {
+import { useSearchParams } from "next/navigation";
+
+const RolesPermissionsPageContent = () => {
     useDocTitle("Roles & Permissions Management | Sajjad Husain Law Associates");
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { user } = useProfileActions();
 
 
@@ -44,7 +47,7 @@ export default function RolesPermissionsPage() {
         error: permsError,
     } = useAppSelector((state) => state.permissions);
 
-    const [activeTab, setActiveTab] = useState<"roles" | "permissions">("roles");
+    const [activeTab, setActiveTab] = useState<"roles" | "permissions">((searchParams.get("tab") as any) || "roles");
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Role Form State
@@ -63,6 +66,17 @@ export default function RolesPermissionsPage() {
         dispatch(fetchRoles());
         dispatch(fetchPermissions());
     }, [dispatch]);
+
+    useEffect(() => {
+        const tab = searchParams.get("tab") || "roles";
+        setActiveTab(tab as any);
+    }, [searchParams]);
+
+    const handleTabChange = (tab: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("tab", tab);
+        router.push(`/admin/roles-permissions?${params.toString()}`);
+    };
 
     // --- Role Handlers ---
     const handleOpenRoleModal = (role?: any) => {
@@ -182,7 +196,7 @@ export default function RolesPermissionsPage() {
             {/* Tabs */}
             <div className="flex space-x-4 mb-6 border-b border-gray-200">
                 <button
-                    onClick={() => setActiveTab("roles")}
+                    onClick={() => handleTabChange("roles")}
                     className={`pb-2 px-4 font-medium transition-colors ${activeTab === "roles"
                         ? "border-b-2 border-orange-500 text-orange-600"
                         : "text-gray-500 hover:text-gray-700"
@@ -193,7 +207,7 @@ export default function RolesPermissionsPage() {
                     </div>
                 </button>
                 <button
-                    onClick={() => setActiveTab("permissions")}
+                    onClick={() => handleTabChange("permissions")}
                     className={`pb-2 px-4 font-medium transition-colors ${activeTab === "permissions"
                         ? "border-b-2 border-orange-500 text-orange-600"
                         : "text-gray-500 hover:text-gray-700"
@@ -217,15 +231,15 @@ export default function RolesPermissionsPage() {
                         </button>
                     </div>
 
-                    {rolesLoading && (
-                        <div className="flex justify-center py-12">
-                            <Loader size="lg" text="Loading roles..." />
-                        </div>
-                    )}
                     {rolesError && <p className="text-red-500">{rolesError}</p>}
 
                     {/* Mobile Card View for Roles */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden mb-6">
+                        {rolesLoading && (
+                            <div className="col-span-full flex justify-center py-12">
+                                <Loader size="lg" text="Loading roles..." />
+                            </div>
+                        )}
                         {Array.isArray(roles) && roles.map((role) => (
                             <div key={role.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4">
                                 <div className="border-b border-gray-100 pb-3">
@@ -285,6 +299,15 @@ export default function RolesPermissionsPage() {
                             </thead>
 
                             <tbody>
+                                {rolesLoading && (
+                                    <tr>
+                                        <td colSpan={5} className="py-12">
+                                            <div className="flex justify-center">
+                                                <Loader size="lg" text="Loading roles..." />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
                                 {Array.isArray(roles) && roles.map((role) => (
                                     <tr
                                         key={role.id}
@@ -360,15 +383,15 @@ export default function RolesPermissionsPage() {
                         </button>
                     </div>
 
-                    {permsLoading && (
-                        <div className="flex justify-center py-12">
-                            <Loader size="lg" text="Loading permissions..." />
-                        </div>
-                    )}
                     {permsError && <p className="text-red-500">{permsError}</p>}
 
                     {/* Mobile Card View for Permissions */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden mb-6">
+                        {permsLoading && (
+                            <div className="col-span-full flex justify-center py-12">
+                                <Loader size="lg" text="Loading permissions..." />
+                            </div>
+                        )}
                         {Array.isArray(permissions) && permissions.map((perm) => (
                             <div key={perm._id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4">
                                 <div className="border-b border-gray-100 pb-3">
@@ -428,6 +451,15 @@ export default function RolesPermissionsPage() {
                             </thead>
 
                             <tbody>
+                                {permsLoading && (
+                                    <tr>
+                                        <td colSpan={5} className="py-12">
+                                            <div className="flex justify-center">
+                                                <Loader size="lg" text="Loading permissions..." />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
                                 {Array.isArray(permissions) && permissions.map((perm) => (
                                     <tr
                                         key={perm._id}
@@ -674,5 +706,13 @@ export default function RolesPermissionsPage() {
                 </div>
             )}
         </div>
+    );
+};
+
+export default function RolesPermissionsPage() {
+    return (
+        <React.Suspense fallback={<Loader />}>
+            <RolesPermissionsPageContent />
+        </React.Suspense>
     );
 }

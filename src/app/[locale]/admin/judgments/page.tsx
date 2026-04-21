@@ -15,7 +15,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchParams, useRouter } from "next/navigation";
 import Pagination from "@/components/Pagination";
 
-export default function AdminJudgmentsPage() {
+const AdminJudgmentsPageContent = () => {
     useDocTitle("Judgments  | Sajjad Husain Law Associates");
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -292,5 +292,13 @@ export default function AdminJudgmentsPage() {
                 </div>
             )}
         </div>
+    );
+};
+
+export default function AdminJudgmentsPage() {
+    return (
+        <React.Suspense fallback={<Loader />}>
+            <AdminJudgmentsPageContent />
+        </React.Suspense>
     );
 }

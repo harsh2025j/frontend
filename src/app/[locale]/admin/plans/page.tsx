@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { usePlanActions } from "@/data/features/plan/usePlanActions";
 import { Plan } from "@/data/features/plan/plan.types";
@@ -15,11 +15,14 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 // Module-level flag to ensure fetch only happens ONCE across ALL instances
 let hasInitiatedFetch = false;
 
-export default function PlansManagement() {
+import { useSearchParams } from "next/navigation";
+
+const PlansManagementContent = () => {
     useDocTitle("Plans Management | Sajjad Husain Law Associates");
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { plans, loading, deletePlan, refetchPlans, hasFetched } = usePlanActions();
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
     const [showPlanModal, setShowPlanModal] = useState(false);
@@ -33,6 +36,23 @@ export default function PlansManagement() {
             refetchPlans();
         }
     }, []); // Empty deps - only run on first mount
+
+    const updateUrl = (updates: any) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value) {
+                params.set(key, value.toString());
+            } else {
+                params.delete(key);
+            }
+        });
+        router.push(`/admin/plans?${params.toString()}`);
+    };
+
+    const handleSearchChange = (val: string) => {
+        setSearchQuery(val);
+        updateUrl({ q: val });
+    };
 
     const filteredPlans = plans.filter((plan: Plan) =>
         plan.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -90,7 +110,7 @@ export default function PlansManagement() {
                                 type="text"
                                 placeholder="Search plans..."
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => handleSearchChange(e.target.value)}
                                 className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#C9A227] focus:border-transparent outline-none"
                             />
                         </div>
@@ -262,5 +282,13 @@ export default function PlansManagement() {
                 />
             )}
         </div>
+    );
+};
+
+export default function PlansManagement() {
+    return (
+        <React.Suspense fallback={<Loader />}>
+            <PlansManagementContent />
+        </React.Suspense>
     );
 }

@@ -367,7 +367,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                         ref={dropdownRef}
                         className={`absolute top-full mt-0 bg-white border border-gray-200 shadow-xl rounded-lg z-50 max-h-[70vh] overflow-auto w-max max-w-[calc(100vw-200px)] transition-opacity duration-200 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
                         style={{ left: `${leftPos}px` }}
-                        onClick={(e) => isPinned && e.stopPropagation()} 
+                        onClick={(e) => isPinned && e.stopPropagation()}
                     >
                         <div className="p-6 grid grid-cols-2 md:grid-cols-3 gap-6">
                             {item.children!.map((child, i) => (
@@ -466,9 +466,9 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
 
                                 {/* User Profile or Auth Buttons */}
                                 {user ? (
-                                    <div 
-                                        className="relative pb-4 -mb-4" 
-                                        onMouseEnter={() => setIsProfileOpen(true)} 
+                                    <div
+                                        className="relative pb-4 -mb-4"
+                                        onMouseEnter={() => setIsProfileOpen(true)}
                                         onMouseLeave={() => setIsProfileOpen(false)}
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -719,7 +719,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
 
 function LogoutModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fadeIn">
+        <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 animate-fadeIn">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onCancel} />
             <div className="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 border border-gray-100 transform transition-all scale-100">
                 <div className="flex flex-col items-center text-center">

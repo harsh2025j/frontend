@@ -4,7 +4,7 @@ import { FiSearch } from "react-icons/fi";
 import { Article } from "@/data/features/article/article.types";
 import Image from "next/image";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useDocTitle } from "@/hooks/useDocTitle";
@@ -12,6 +12,10 @@ import { articleApi } from "@/data/services/article-service/article-service";
 import Pagination from "@/components/Pagination";
 import { getSafeImageUrl } from "@/utils/imageUtils";
 import { motion } from "framer-motion";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useDebounce } from "@/hooks/useDebounce";
+import { Suspense } from "react";
+import Loader from "@/components/ui/Loader";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -110,17 +114,20 @@ const ApproveModal = ({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const ContentApprovalPanel = () => {
+const ContentApprovalPanelContent = () => {
   useDocTitle("Content Approval | Sajjad Husain Law Associates");
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useProfileActions();
 
+  // ── Derived from URL ──
+  const statusFilter = (searchParams.get("status") as StatusFilter) || "pending";
+  const currentPage = parseInt(searchParams.get("page") || "1");
+  const urlQ = searchParams.get("q") || "";
 
-  // ── State ──
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("pending");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
+  // ── Local State for Input ──
+  const [searchQuery, setSearchQuery] = useState(urlQ);
+  const debouncedQ = useDebounce(searchQuery, 600);
 
   const [articles, setArticles] = useState<Article[]>([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -135,14 +142,25 @@ const ContentApprovalPanel = () => {
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [articleToApprove, setArticleToApprove] = useState<string | null>(null);
 
-  // Debounce search
-  useEffect(() => {
-    const h = setTimeout(() => setDebouncedQ(searchQuery), 600);
-    return () => clearTimeout(h);
-  }, [searchQuery]);
+  const updateUrl = (updates: Record<string, string | number | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value && value !== "all") {
+        params.set(key, value.toString());
+      } else {
+        params.delete(key);
+      }
+    });
+    router.push(`/admin/content-approval?${params.toString()}`);
+  };
 
-  // Reset page on filter/search change
-  useEffect(() => { setCurrentPage(1); }, [statusFilter, debouncedQ]);
+  // Sync debounced search to URL
+  useEffect(() => {
+    if (debouncedQ !== urlQ) {
+      updateUrl({ q: debouncedQ, page: 1 });
+    }
+  }, [debouncedQ]);
+
 
   // ── Fetch ──
   const fetchData = useCallback(async () => {
@@ -154,7 +172,7 @@ const ContentApprovalPanel = () => {
         limit: ITEMS_PER_PAGE,
       };
       if (statusFilter !== "all") params.status = statusFilter;
-      if (debouncedQ) params.q = debouncedQ;
+      if (urlQ) params.q = urlQ;
 
       const res = await articleApi.fetchArticles(params);
       const data = res.data as any;
@@ -166,7 +184,7 @@ const ContentApprovalPanel = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, statusFilter, debouncedQ]);
+  }, [currentPage, statusFilter, urlQ]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -230,12 +248,11 @@ const ContentApprovalPanel = () => {
           </div>
         </div>
 
-        {/* STATUS FILTER TABS */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.value}
-              onClick={() => setStatusFilter(tab.value)}
+              onClick={() => updateUrl({ status: tab.value, page: 1 })}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors border ${statusFilter === tab.value
                 ? "bg-[#0B2149] text-white border-[#0B2149]"
                 : "bg-white text-gray-600 border-gray-200 hover:border-[#0B2149] hover:text-[#0B2149]"
@@ -348,11 +365,10 @@ const ContentApprovalPanel = () => {
           </table>
         </div>
 
-        {/* PAGINATION */}
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={setCurrentPage}
+          onPageChange={(page) => updateUrl({ page })}
         />
 
       </div>
@@ -373,7 +389,7 @@ const ContentApprovalPanel = () => {
 
       {/* PREVIEW MODAL: THE INTELLIGENCE BRIEF */}
       {showPreview && previewArticle && (
-        <div className="fixed inset-0 bg-[#0A2342]/40 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-fadeIn">
+        <div className="fixed inset-0 bg-[#0A2342]/40 backdrop-blur-md flex items-center justify-center z-[600] p-4 animate-fadeIn">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -633,6 +649,14 @@ const ContentApprovalPanel = () => {
         </div>
       )}
     </div>
+  );
+};
+
+const ContentApprovalPanel = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <ContentApprovalPanelContent />
+    </Suspense>
   );
 };
 

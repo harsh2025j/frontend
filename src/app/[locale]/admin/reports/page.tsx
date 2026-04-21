@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
 import { reportsService } from "@/data/services/reports-service/reportsService";
 import { Link } from "@/i18n/routing";
 import { Trash2, Plus, FileText, BarChart, Download } from "lucide-react";
@@ -9,30 +9,41 @@ import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate, formatDateTime } from "@/utils/dateUtils";
 import Pagination from "@/components/Pagination";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const LIMIT = 12;
 
-export default function AdminReportsPage() {
+export function AdminReportsPageContent() {
     useDocTitle("Reports | Sajjad Husain Law Associates");
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // --- Derived from URL ---
+    const currentPage = parseInt(searchParams.get("page") || "1");
+
     const [reports, setReports] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
 
-    useEffect(() => {
-        fetchReports(currentPage);
-    }, [currentPage]);
+    const updateUrl = (updates: Record<string, string | number | null>) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value !== "" && value !== null && value !== undefined) {
+                params.set(key, value.toString());
+            } else {
+                params.delete(key);
+            }
+        });
+        router.push(`/admin/reports?${params.toString()}`);
+    };
 
-    const fetchReports = async (page: number) => {
+    const fetchReports = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await reportsService.getAll({ page, limit: LIMIT });
+            const response = await reportsService.getAll({ page: currentPage, limit: LIMIT });
             const payload = response.data;
             
-            // With standardized backend response:
-            // payload.data is the array
-            // payload.meta contains total, page, etc.
             if (payload.success && Array.isArray(payload.data)) {
                 setReports(payload.data);
                 setTotalPages(payload.meta?.totalPages || Math.ceil((payload.meta?.total || 0) / LIMIT) || 1);
@@ -43,19 +54,22 @@ export default function AdminReportsPage() {
                 setTotalItems(0);
             }
         } catch (error) {
-            console.error("Error fetching reports:", error);
             toast.error("Failed to fetch reports");
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage]);
+
+    useEffect(() => {
+        fetchReports();
+    }, [fetchReports]);
 
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this report?")) return;
         try {
             await reportsService.delete(id);
             toast.success("Report deleted successfully");
-            fetchReports(currentPage);
+            fetchReports();
         } catch (error) {
             console.error("Error deleting report:", error);
             toast.error("Failed to delete report");
@@ -183,10 +197,18 @@ export default function AdminReportsPage() {
                     <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}
-                        onPageChange={(page) => setCurrentPage(page)}
+                        onPageChange={(page) => updateUrl({ page })}
                     />
                 </div>
             )}
         </div>
+    );
+}
+
+export default function AdminReportsPage() {
+    return (
+        <Suspense fallback={<Loader />}>
+            <AdminReportsPageContent />
+        </Suspense>
     );
 }

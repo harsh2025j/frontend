@@ -11,31 +11,57 @@ import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import Pagination from "@/components/Pagination";
 
-export default function AdminJudgesPage() {
+import { useSearchParams, useRouter } from "next/navigation";
+
+const AdminJudgesPageContent = () => {
     useDocTitle("Manage Judges | Sajjad Husain Law Associates");
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
     const [judges, setJudges] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
     const debouncedSearchTerm = useDebounce(searchTerm, 600);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get("page") || "1"));
     const [totalPages, setTotalPages] = useState(1);
 
+    const updateUrl = (updates: any) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value) {
+                params.set(key, value.toString());
+            } else {
+                params.delete(key);
+            }
+        });
+        router.push(`/admin/judges?${params.toString()}`);
+    };
+
+    const handlePageChange = (page: number) => {
+        updateUrl({ page });
+    };
+
     useEffect(() => {
-        setCurrentPage(1);
+        const currentQ = searchParams.get("q") || "";
+        if (debouncedSearchTerm !== currentQ) {
+            updateUrl({ q: debouncedSearchTerm, page: 1 });
+        }
     }, [debouncedSearchTerm]);
 
     useEffect(() => {
-        fetchData();
-    }, [debouncedSearchTerm, currentPage]);
+        const page = parseInt(searchParams.get("page") || "1");
+        setCurrentPage(page);
+        fetchData(page, searchParams.get("q") || "");
+    }, [searchParams]);
 
-    const fetchData = async () => {
+    const fetchData = async (page: number, query: string) => {
         setLoading(true);
         try {
             let response;
-            if (debouncedSearchTerm) {
-                response = await judgesService.searchJudges(debouncedSearchTerm, currentPage, 12);
+            if (query) {
+                response = await judgesService.searchJudges(query, page, 12);
             } else {
-                response = await judgesService.getAll({ page: currentPage, limit: 12 });
+                response = await judgesService.getAll({ page, limit: 12 });
             }
 
             const responseData = response.data?.data ?? response.data;
@@ -64,7 +90,7 @@ export default function AdminJudgesPage() {
         try {
             await judgesService.delete(id);
             toast.success("Judge deleted successfully");
-            fetchData();
+            fetchData(currentPage, searchParams.get("q") || "");
         } catch (error: any) {
             toast.error(error.message || "Failed to delete judge");
         }
@@ -208,11 +234,19 @@ export default function AdminJudgesPage() {
                         <Pagination
                             currentPage={currentPage}
                             totalPages={totalPages}
-                            onPageChange={setCurrentPage}
+                            onPageChange={handlePageChange}
                         />
                     </div>
                 )}
             </div>
         </div>
+    );
+};
+
+export default function AdminJudgesPage() {
+    return (
+        <React.Suspense fallback={<Loader />}>
+            <AdminJudgesPageContent />
+        </React.Suspense>
     );
 }

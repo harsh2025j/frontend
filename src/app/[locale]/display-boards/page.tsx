@@ -6,7 +6,8 @@ import { displayBoardsService } from "@/data/services/display-boards-service/dis
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate, formatDateTime } from "@/utils/dateUtils";
 import Pagination from "@/components/Pagination";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
 
 const LIMIT = 12;
 
@@ -22,19 +23,35 @@ interface DisplayItem {
     isNew?: boolean;
 }
 
-export default function DisplayBoardsPage() {
+function DisplayBoardsPageContent() {
     useDocTitle("Display Boards | Sajjad Husain Law Associates");
-    const [activeBoard, setActiveBoard] = useState<BoardType>("daily-orders");
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
+    const activeBoard = (searchParams.get("board") as BoardType) || "daily-orders";
+    const selectedDate = searchParams.get("date") || new Date().toISOString().split('T')[0];
+    const currentPage = parseInt(searchParams.get("page") || "1");
+
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [loading, setLoading] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-
-
-
     const [displayItems, setDisplayItems] = useState<DisplayItem[]>([]);
     const [error, setError] = useState<string | null>(null);
+
+    const updateUrl = (updates: any) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value) {
+                params.set(key, value.toString());
+            } else {
+                params.delete(key);
+            }
+        });
+        if (updates.board || updates.date) {
+            params.set("page", "1");
+        }
+        router.push(`/display-boards?${params.toString()}`, { scroll: false });
+    };
 
     // Fetch data from API
     useEffect(() => {
@@ -166,10 +183,7 @@ export default function DisplayBoardsPage() {
                 {/* Board Selection Tabs */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <button
-                        onClick={() => {
-                            setActiveBoard("daily-orders");
-                            setCurrentPage(1);
-                        }}
+                        onClick={() => updateUrl({ board: "daily-orders" })}
                         className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "daily-orders"
                             ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
                             : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
@@ -190,10 +204,7 @@ export default function DisplayBoardsPage() {
                     </button>
 
                     <button
-                        onClick={() => {
-                            setActiveBoard("cause-list");
-                            setCurrentPage(1);
-                        }}
+                        onClick={() => updateUrl({ board: "cause-list" })}
                         className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "cause-list"
                             ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
                             : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
@@ -214,10 +225,7 @@ export default function DisplayBoardsPage() {
                     </button>
 
                     <button
-                        onClick={() => {
-                            setActiveBoard("notices");
-                            setCurrentPage(1);
-                        }}
+                        onClick={() => updateUrl({ board: "notices" })}
                         className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "notices"
                             ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
                             : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
@@ -238,10 +246,7 @@ export default function DisplayBoardsPage() {
                     </button>
 
                     <button
-                        onClick={() => {
-                            setActiveBoard("announcements");
-                            setCurrentPage(1);
-                        }}
+                        onClick={() => updateUrl({ board: "announcements" })}
                         className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "announcements"
                             ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
                             : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
@@ -282,10 +287,7 @@ export default function DisplayBoardsPage() {
                                     type="date"
                                     className="pl-11 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
                                     value={selectedDate}
-                                    onChange={(e) => {
-                                        setSelectedDate(e.target.value);
-                                        setCurrentPage(1);
-                                    }}
+                                    onChange={(e) => updateUrl({ date: e.target.value })}
                                 />
                             </div>
                         </div>
@@ -376,7 +378,7 @@ export default function DisplayBoardsPage() {
                         <Pagination
                             currentPage={currentPage}
                             totalPages={totalPages}
-                            onPageChange={(page) => setCurrentPage(page)}
+                            onPageChange={(page) => updateUrl({ page })}
                         />
                     </div>
                 )}
@@ -417,3 +419,13 @@ export default function DisplayBoardsPage() {
         </div>
     );
 }
+
+
+export default function DisplayBoardsPage() {
+    return (
+        <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading Display Boards...</div>}>
+            <DisplayBoardsPageContent />
+        </React.Suspense>
+    );
+}
+

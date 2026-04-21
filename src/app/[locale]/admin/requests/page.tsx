@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { permissionRequestService } from "@/data/features/permission-requests/permissionRequestService";
 import Loader from "@/components/ui/Loader";
 import { toast } from "react-hot-toast";
@@ -11,20 +12,36 @@ import { fetchPermissions } from "@/data/features/permissions/permissionsThunks"
 import { RootState } from "@/data/redux/store";
 import Pagination from "@/components/Pagination";
 
-export default function AdminRequestsPage() {
+export function AdminRequestsPageContent() {
     const dispatch = useAppDispatch();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const { roles } = useAppSelector((state: RootState) => state.roles);
     const { permissions } = useAppSelector((state: RootState) => state.permissions);
+
+    // --- Derived from URL ---
+    const currentPage = parseInt(searchParams.get("page") || "1");
 
     const [requests, setRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<string | null>(null);
 
     // Pagination State
-    const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [total, setTotal] = useState(0);
     const limit = 12;
+
+    const updateUrl = (updates: Record<string, string | number | null>) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value !== "" && value !== null && value !== undefined) {
+                params.set(key, value.toString());
+            } else {
+                params.delete(key);
+            }
+        });
+        router.push(`/admin/requests?${params.toString()}`);
+    };
 
     // Modal State
     const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
@@ -34,11 +51,10 @@ export default function AdminRequestsPage() {
     // Reject Modal State
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
 
-    const fetchRequests = async (page: number) => {
+    const fetchRequests = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await permissionRequestService.getAllRequests(page, limit);
-            // Handle both array and paginated object response
+            const response = await permissionRequestService.getAllRequests(currentPage, limit);
             if (response && response.data) {
                 setRequests(response.data);
                 setTotalPages(response.totalPages);
@@ -51,11 +67,11 @@ export default function AdminRequestsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage]);
 
     useEffect(() => {
-        fetchRequests(currentPage);
-    }, [currentPage]);
+        fetchRequests();
+    }, [fetchRequests]);
 
     useEffect(() => {
         dispatch(fetchRoles());
@@ -83,7 +99,7 @@ export default function AdminRequestsPage() {
             });
             toast.success(`Request ${status} successfully!`);
             setIsApproveModalOpen(false);
-            fetchRequests(currentPage); // Refresh current page
+            fetchRequests(); // Refresh current page
         } catch (error: any) {
             toast.error(error.response?.data?.message || `Failed to ${status} request.`);
         } finally {
@@ -91,7 +107,11 @@ export default function AdminRequestsPage() {
         }
     };
 
-    if (loading) return <Loader />;
+    if (loading) return (
+        <div className="flex justify-center items-center h-64">
+            <Loader />
+        </div>
+    );
 
     return (
         <div className="space-y-6">
@@ -222,7 +242,7 @@ export default function AdminRequestsPage() {
                         <Pagination
                             currentPage={currentPage}
                             totalPages={totalPages}
-                            onPageChange={(page) => setCurrentPage(page)}
+                            onPageChange={(page) => updateUrl({ page })}
                         />
                     </div>
                 </div>
@@ -368,5 +388,13 @@ export default function AdminRequestsPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function AdminRequestsPage() {
+    return (
+        <Suspense fallback={<Loader />}>
+            <AdminRequestsPageContent />
+        </Suspense>
     );
 }

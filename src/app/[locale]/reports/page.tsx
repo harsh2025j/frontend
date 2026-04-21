@@ -1,5 +1,6 @@
 "use client";
 
+
 import React, { useState, useEffect } from "react";
 import { Scale, Home, ChevronRight, FileText, Download, Eye, Calendar, Loader2, AlertCircle, RefreshCw, Filter } from 'lucide-react';
 import toast from "react-hot-toast";
@@ -7,7 +8,8 @@ import { reportsService } from "@/data/services/reports-service/reportsService";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
 import Pagination from "@/components/Pagination";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
 
 const LIMIT = 12;
 
@@ -23,62 +25,82 @@ interface Report {
     fileUrl?: string;
 }
 
-export default function ReportsPage() {
+
+function ReportsPageContent() {
     useDocTitle("Reports | Sajjad Husain Law Associates");
-    const [activeType, setActiveType] = useState<ReportType>("all");
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
+    const activeType = (searchParams.get("type") as ReportType) || "all";
+    const currentPage = parseInt(searchParams.get("page") || "1");
+
     const [reports, setReports] = useState<Report[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+
+    const updateUrl = (updates: any) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value) {
+                params.set(key, value.toString());
+            } else {
+                params.delete(key);
+            }
+        });
+        if (updates.type) {
+            params.set("page", "1");
+        }
+        router.push(`/reports?${params.toString()}`, { scroll: false });
+    };
 
     // Fetch reports data
     useEffect(() => {
-        fetchReports(currentPage);
-    }, [currentPage, activeType]);
+        const fetchReports = async (page: number) => {
+            setLoading(true);
+            setError(null);
+            try {
+                const params = {
+                    page,
+                    limit: LIMIT,
+                    reportType: activeType === "all" ? undefined : activeType
+                };
+                const response = await reportsService.getAll(params);
+                const payload = response.data;
 
-    const fetchReports = async (page: number) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const params = {
-                page,
-                limit: LIMIT,
-                reportType: activeType === "all" ? undefined : activeType
-            };
-            const response = await reportsService.getAll(params);
-            const payload = response.data;
+                if (payload.success && Array.isArray(payload.data)) {
+                    // Map and validate data
+                    const mappedReports: Report[] = payload.data.map((item: any) => ({
+                        id: item.id || Math.random().toString(36).substr(2, 9),
+                        title: item.title || "Untitled Report",
+                        description: item.description || "No description available",
+                        type: ["case-statistics", "judgment-analysis", "custom"].includes(item.type)
+                            ? item.type
+                            : "custom",
+                        generatedDate: item.generatedDate || item.createdAt || item.date || new Date().toISOString(),
+                        generatedBy: item.generatedBy || item.createdBy || item.author || "System",
+                        fileUrl: item.fileUrl || item.url || null
+                    }));
 
-            if (payload.success && Array.isArray(payload.data)) {
-                // Map and validate data
-                const mappedReports: Report[] = payload.data.map((item: any) => ({
-                    id: item.id || Math.random().toString(36).substr(2, 9),
-                    title: item.title || "Untitled Report",
-                    description: item.description || "No description available",
-                    type: ["case-statistics", "judgment-analysis", "custom"].includes(item.type)
-                        ? item.type
-                        : "custom",
-                    generatedDate: item.generatedDate || item.createdAt || item.date || new Date().toISOString(),
-                    generatedBy: item.generatedBy || item.createdBy || item.author || "System",
-                    fileUrl: item.fileUrl || item.url || null
-                }));
-
-                setReports(mappedReports);
-                setTotalPages(payload.meta?.totalPages || 1);
-            } else {
+                    setReports(mappedReports);
+                    setTotalPages(payload.meta?.totalPages || 1);
+                } else {
+                    setReports([]);
+                    setTotalPages(1);
+                }
+            } catch (err: any) {
+                console.error("Error fetching reports:", err);
+                setError(err.message || "Failed to load reports data from the server");
                 setReports([]);
                 setTotalPages(1);
+                toast.error("Unable to load reports. Please try again later.");
+            } finally {
+                setLoading(false);
             }
-        } catch (err: any) {
-            console.error("Error fetching reports:", err);
-            setError(err.message || "Failed to load reports data from the server");
-            setReports([]);
-            setTotalPages(1);
-            toast.error("Unable to load reports. Please try again later.");
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+
+        fetchReports(currentPage);
+    }, [currentPage, activeType]);
 
     const handleDownloadReport = async (reportId: string, title: string) => {
         try {
@@ -157,10 +179,7 @@ export default function ReportsPage() {
                     </div>
                     <div className="flex flex-wrap gap-3">
                         <button
-                            onClick={() => {
-                                setActiveType("all");
-                                setCurrentPage(1);
-                            }}
+                            onClick={() => updateUrl({ type: "all" })}
                             className={`px-4 py-2 rounded-lg font-semibold transition-all ${activeType === "all"
                                 ? 'bg-gradient-to-r from-[#0A2342] to-[#1a3a75] text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -169,10 +188,7 @@ export default function ReportsPage() {
                             All Reports
                         </button>
                         <button
-                            onClick={() => {
-                                setActiveType("case-statistics");
-                                setCurrentPage(1);
-                            }}
+                            onClick={() => updateUrl({ type: "case-statistics" })}
                             className={`px-4 py-2 rounded-lg font-semibold transition-all ${activeType === "case-statistics"
                                 ? 'bg-gradient-to-r from-[#0A2342] to-[#1a3a75] text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -181,10 +197,7 @@ export default function ReportsPage() {
                             Case Statistics
                         </button>
                         <button
-                            onClick={() => {
-                                setActiveType("judgment-analysis");
-                                setCurrentPage(1);
-                            }}
+                            onClick={() => updateUrl({ type: "judgment-analysis" })}
                             className={`px-4 py-2 rounded-lg font-semibold transition-all ${activeType === "judgment-analysis"
                                 ? 'bg-gradient-to-r from-[#0A2342] to-[#1a3a75] text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -193,10 +206,7 @@ export default function ReportsPage() {
                             Judgment Analysis
                         </button>
                         <button
-                            onClick={() => {
-                                setActiveType("custom");
-                                setCurrentPage(1);
-                            }}
+                            onClick={() => updateUrl({ type: "custom" })}
                             className={`px-4 py-2 rounded-lg font-semibold transition-all ${activeType === "custom"
                                 ? 'bg-gradient-to-r from-[#0A2342] to-[#1a3a75] text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -222,7 +232,7 @@ export default function ReportsPage() {
                                 </div>
                             </div>
                             <button
-                                onClick={() => fetchReports(currentPage)}
+                                onClick={() => router.refresh()}
                                 className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
                                 title="Refresh"
                             >
@@ -252,7 +262,7 @@ export default function ReportsPage() {
                                     The reports data could not be retrieved from the server. Please check your connection and try again.
                                 </p>
                                 <button
-                                    onClick={() => fetchReports(currentPage)}
+                                    onClick={() => updateUrl({ page: currentPage })}
                                     className="px-6 py-3 bg-[#0A2342] text-white rounded-lg hover:bg-[#1a3a75] transition-colors font-semibold"
                                 >
                                     Retry
@@ -324,7 +334,7 @@ export default function ReportsPage() {
                         <Pagination
                             currentPage={currentPage}
                             totalPages={totalPages}
-                            onPageChange={(page) => setCurrentPage(page)}
+                            onPageChange={(page) => updateUrl({ page })}
                         />
                     </div>
                 )}
@@ -347,3 +357,12 @@ export default function ReportsPage() {
         </div>
     );
 }
+
+export default function ReportsPage() {
+    return (
+        <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading Reports...</div>}>
+            <ReportsPageContent />
+        </React.Suspense>
+    );
+}
+

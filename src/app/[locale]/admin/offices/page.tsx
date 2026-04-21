@@ -17,9 +17,12 @@ import { useRouter } from "next/navigation";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 
-export default function OfficesManagementPage() {
+import { useSearchParams } from "next/navigation";
+
+const OfficesManagementPageContent = () => {
     useDocTitle("Office Management | Sajjad Husain Law Associates");
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { user } = useProfileActions();
 
 
@@ -41,8 +44,8 @@ export default function OfficesManagementPage() {
 
     const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
     const [isActionLoading, setIsActionLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filterActive, setFilterActive] = useState<"all" | "active" | "inactive">("all");
+    const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
+    const [filterActive, setFilterActive] = useState<"all" | "active" | "inactive">((searchParams.get("status") as any) || "all");
 
     useEffect(() => {
         dispatch(fetchOffices());
@@ -56,6 +59,32 @@ export default function OfficesManagementPage() {
             }, 2000);
         }
     }, [message, dispatch]);
+
+    const updateUrl = (updates: any) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value && value !== "all") {
+                params.set(key, value.toString());
+            } else {
+                params.delete(key);
+            }
+        });
+        router.push(`/admin/offices?${params.toString()}`);
+    };
+
+    useEffect(() => {
+        const status = searchParams.get("status") || "all";
+        setFilterActive(status as any);
+    }, [searchParams]);
+
+    const handleSearchChange = (val: string) => {
+        setSearchTerm(val);
+        updateUrl({ q: val });
+    };
+
+    const handleStatusChange = (status: string) => {
+        updateUrl({ status });
+    };
 
     const handleOpenModal = (office?: any) => {
         if (office) {
@@ -172,13 +201,13 @@ export default function OfficesManagementPage() {
                             type="text"
                             placeholder="Search by name, code, city, or state..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => handleSearchChange(e.target.value)}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-transparent"
                         />
                     </div>
                     <div className="flex gap-2">
                         <button
-                            onClick={() => setFilterActive("all")}
+                            onClick={() => handleStatusChange("all")}
                             className={`px-4 py-2 rounded-lg transition-colors ${
                                 filterActive === "all"
                                     ? "bg-[#0B2149] text-white"
@@ -188,7 +217,7 @@ export default function OfficesManagementPage() {
                             All
                         </button>
                         <button
-                            onClick={() => setFilterActive("active")}
+                            onClick={() => handleStatusChange("active")}
                             className={`px-4 py-2 rounded-lg transition-colors ${
                                 filterActive === "active"
                                     ? "bg-green-600 text-white"
@@ -198,7 +227,7 @@ export default function OfficesManagementPage() {
                             Active
                         </button>
                         <button
-                            onClick={() => setFilterActive("inactive")}
+                            onClick={() => handleStatusChange("inactive")}
                             className={`px-4 py-2 rounded-lg transition-colors ${
                                 filterActive === "inactive"
                                     ? "bg-red-600 text-white"
@@ -504,7 +533,7 @@ export default function OfficesManagementPage() {
             {/* Delete Confirmation Modal */}
             {deleteTarget && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                    <div className="bg-white rounded-lg shadow-xl max-md w-full p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Delete</h3>
                         <p className="text-gray-600 mb-6">
                             Are you sure you want to delete this office? This action cannot be undone.
@@ -529,5 +558,13 @@ export default function OfficesManagementPage() {
                 </div>
             )}
         </div>
+    );
+};
+
+export default function OfficesManagementPage() {
+    return (
+        <React.Suspense fallback={<Loader />}>
+            <OfficesManagementPageContent />
+        </React.Suspense>
     );
 }

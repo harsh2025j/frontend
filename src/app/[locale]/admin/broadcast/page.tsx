@@ -1,36 +1,50 @@
 "use client";
 
-import React, { useState } from "react";
-import { Send, Bell, RefreshCw, Loader } from "lucide-react";
-import { Link } from "@/i18n/routing";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter, Link } from "@/i18n/routing";
+import React, { useState, useCallback, Suspense } from "react";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import { getBroadcastService, postBroadcastService } from "@/data/services/broadcast-service/broadcastService";
 import toast from "react-hot-toast";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import Pagination from "@/components/Pagination";
+import Loader from "@/components/ui/Loader";
+import { Send, Bell, RefreshCw } from "lucide-react";
 
 const LIMIT = 16;
 
-export default function BroadcastPage() {
+export function BroadcastPageContent() {
     useDocTitle("Broadcast | Sajjad Husain Law Associates");
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { user } = useProfileActions();
+
+    // --- Derived from URL ---
+    const currentPage = parseInt(searchParams.get("page") || "1");
 
     const [history, setHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [sendingId, setSendingId] = useState<string | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
 
-    const router = useRouter();
-    const { user } = useProfileActions();
+    const updateUrl = (updates: Record<string, string | number | null>) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value !== "" && value !== null && value !== undefined) {
+                params.set(key, value.toString());
+            } else {
+                params.delete(key);
+            }
+        });
+        router.push(`/admin/broadcast?${params.toString()}`);
+    };
 
-
-    const fetchBroadcasts = async (page: number) => {
+    const fetchBroadcasts = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await getBroadcastService.getBroadcast(page, LIMIT);
+            const response = await getBroadcastService.getBroadcast(currentPage, LIMIT);
             const payload = response.data;
             setHistory(payload.data ?? []);
             setTotalPages(payload.meta?.total_pages ?? 1);
@@ -40,15 +54,12 @@ export default function BroadcastPage() {
         } finally {
             setLoading(false);
         }
-    };
-
-    React.useEffect(() => {
-        fetchBroadcasts(currentPage);
     }, [currentPage]);
 
-    const handlePageChange = (page: number) => {
-        if (page >= 1 && page <= totalPages) setCurrentPage(page);
-    };
+
+    React.useEffect(() => {
+        fetchBroadcasts();
+    }, [fetchBroadcasts]);
 
     const handleResend = async (id: string) => {
         if (sendingId) return;
@@ -91,7 +102,7 @@ export default function BroadcastPage() {
 
                 {loading ? (
                     <div className="p-12 text-center text-gray-500">
-                        <Loader className="animate-spin text-[#0A2342] mx-auto" size={48} />
+                        <Loader text="Loading Broadcasts..." />
                     </div>
                 ) : history.length === 0 ? (
                     <div className="p-12 text-center text-gray-500">
@@ -141,12 +152,20 @@ export default function BroadcastPage() {
                             <Pagination
                                 currentPage={currentPage}
                                 totalPages={totalPages}
-                                onPageChange={handlePageChange}
+                                onPageChange={(page) => updateUrl({ page })}
                             />
                         </div>
                     </>
                 )}
             </div>
         </div>
+    );
+}
+
+export default function BroadcastPage() {
+    return (
+        <Suspense fallback={<Loader />}>
+            <BroadcastPageContent />
+        </Suspense>
     );
 }

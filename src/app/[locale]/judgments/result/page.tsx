@@ -9,7 +9,7 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
 import Pagination from "@/components/Pagination";
 
-export default function JudgmentResultPage() {
+function JudgmentResultPageContent() {
     useDocTitle("Judgments | Sajjad Husain Law Associates");
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -17,12 +17,12 @@ export default function JudgmentResultPage() {
     const [resultsData, setResultsData] = useState<{ data: any[], total: number, page: number, limit: number }>({ data: [], total: 0, page: 1, limit: 10 });
     const [loading, setLoading] = useState(true);
     const [searchType, setSearchType] = useState<JudgmentSearchType>("caseNumber");
-    const [currentPage, setCurrentPage] = useState(1);
+    const currentPage = parseInt(searchParams.get("page") || "1");
 
     const totalPages = Math.ceil(resultsData.total / resultsData.limit) || 1;
 
     useEffect(() => {
-        const type = searchParams.get("searchType") as JudgmentSearchType;
+        const type = (searchParams.get("searchType") as JudgmentSearchType) || "caseNumber";
         const caseNumber = searchParams.get("caseNumber") || "";
         const caseType = searchParams.get("caseType") || "";
         const diaryNumber = searchParams.get("diaryNumber") || "";
@@ -32,28 +32,22 @@ export default function JudgmentResultPage() {
         const toDate = searchParams.get("toDate") || "";
         const judgeName = searchParams.get("judgeName") || "";
         const judgeYear = searchParams.get("judgeYear") || "";
-        const pageQuery = searchParams.get("page") || "1";
 
-        const pageNum = parseInt(pageQuery, 10);
-        setCurrentPage(!isNaN(pageNum) && pageNum > 0 ? pageNum : 1);
-
-        if (type) {
-            setSearchType(type);
-            const inputs: JudgmentSearchInputs = {
-                caseNumber,
-                caseType,
-                year,
-                diaryNumber,
-                freeText,
-                fromDate,
-                toDate,
-                judgeName,
-                judgeYear,
-                page: !isNaN(pageNum) && pageNum > 0 ? pageNum : 1
-            };
-            executeSearch(type, inputs);
-        }
-    }, [searchParams]);
+        setSearchType(type);
+        const inputs: JudgmentSearchInputs = {
+            caseNumber,
+            caseType,
+            year,
+            diaryNumber,
+            freeText,
+            fromDate,
+            toDate,
+            judgeName,
+            judgeYear,
+            page: currentPage
+        };
+        executeSearch(type, inputs);
+    }, [searchParams, currentPage]);
 
     const executeSearch = async (type: JudgmentSearchType, inputs: JudgmentSearchInputs) => {
         setLoading(true);
@@ -196,3 +190,12 @@ export default function JudgmentResultPage() {
         </div>
     );
 }
+
+export default function JudgmentResultPage() {
+    return (
+        <React.Suspense fallback={<div className="p-8 text-center text-gray-500">Loading search results...</div>}>
+            <JudgmentResultPageContent />
+        </React.Suspense>
+    );
+}
+

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import {
   fetchAuditLogs,
@@ -29,33 +29,61 @@ import {
 } from "lucide-react";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
-export default function AuditLogsPage() {
+export function AuditLogsPageContent() {
   useDocTitle("Audit Logs | Sajjad Husain Law Associates");
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
 
   const { logs, stats, total, page, limit, loading, error, message } = useAppSelector(
     (state) => state.auditLogs
   );
 
-  // Filter state
-  const [filters, setFilters] = useState({
-    userEmail: "",
-    action: "",
-    resource: "",
-    success: "",
-    startDate: "",
-    endDate: "",
-    page: 1,
-    limit: 50,
-  });
+  // --- Derived from URL ---
+  const currentFilters = {
+    userEmail: searchParams.get("userEmail") || "",
+    action: searchParams.get("action") || "",
+    resource: searchParams.get("resource") || "",
+    success: searchParams.get("success") || "",
+    startDate: searchParams.get("startDate") || "",
+    endDate: searchParams.get("endDate") || "",
+    page: parseInt(searchParams.get("page") || "1"),
+    limit: parseInt(searchParams.get("limit") || "50"),
+  };
 
+  // --- Local State for Input ---
+  const [filters, setFilters] = useState(currentFilters);
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    dispatch(fetchAuditLogs(filters));
+  const updateUrl = (updates: Record<string, string | number | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== "" && value !== null && value !== undefined) {
+        params.set(key, value.toString());
+      } else {
+        params.delete(key);
+      }
+    });
+    // Reset page to 1 if any filter other than 'page' or 'limit' is changed
+    if (Object.keys(updates).some(k => k !== 'page' && k !== 'limit')) {
+      params.set('page', '1');
+    }
+    router.push(`/admin/audit-logs?${params.toString()}`);
+  };
+
+  const loadData = useCallback(() => {
+    dispatch(fetchAuditLogs(currentFilters));
     dispatch(fetchAuditStatistics());
-  }, []);
+  }, [dispatch, searchParams]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Sync local state with URL for back button support
+  useEffect(() => {
+    setFilters(currentFilters);
+  }, [searchParams]);
 
   useEffect(() => {
     if (message) {
@@ -69,31 +97,19 @@ export default function AuditLogsPage() {
   }, [message, error]);
 
   const handleSearch = () => {
-    dispatch(fetchAuditLogs({ ...filters, page: 1 }));
+    updateUrl(filters);
   };
 
   const handleClearFilters = () => {
-    const clearedFilters = {
-      userEmail: "",
-      action: "",
-      resource: "",
-      success: "",
-      startDate: "",
-      endDate: "",
-      page: 1,
-      limit: 50,
-    };
-    setFilters(clearedFilters);
-    dispatch(fetchAuditLogs(clearedFilters));
+    router.push("/admin/audit-logs");
   };
 
   const handleExport = () => {
-    dispatch(exportAuditLogsToCsv(filters));
+    dispatch(exportAuditLogsToCsv(currentFilters));
   };
 
   const handlePageChange = (newPage: number) => {
-    setFilters({ ...filters, page: newPage });
-    dispatch(fetchAuditLogs({ ...filters, page: newPage }));
+    updateUrl({ page: newPage });
   };
 
   const getActionBadgeColor = (action: string) => {
@@ -441,5 +457,13 @@ export default function AuditLogsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AuditLogsPage() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <AuditLogsPageContent />
+    </Suspense>
   );
 }

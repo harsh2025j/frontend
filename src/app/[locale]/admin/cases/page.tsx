@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
 import { useAppSelector } from "@/data/redux/hooks";
 import { casesService } from "@/data/services/cases-service/casesService";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { Trash2, Edit, Plus, Search, FileText, Eye, X } from "lucide-react";
 import toast from "react-hot-toast";
@@ -22,29 +23,46 @@ const STATUS_OPTIONS = [
     "Recalled", "Restored", "Null and Void"
 ].map(s => ({ value: s, label: s }));
 
-export default function AdminCasesPage() {
+export function AdminCasesPageContent() {
     useDocTitle("Cases | Sajjad Husain Law Associates");
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const { user } = useAppSelector((state) => state.auth);
+
+    // --- Derived from URL ---
+    const currentPage = parseInt(searchParams.get("page") || "1");
+    const urlSearch = searchParams.get("q") || "";
+
+    // --- Local State for Input ---
+    const [searchTerm, setSearchTerm] = useState(urlSearch);
+    const debouncedSearchTerm = useDebounce(searchTerm, 600);
 
     const [cases, setCases] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, caseId: "", newStatus: "" });
     const [viewCaseId, setViewCaseId] = useState<string | null>(null);
-    const debouncedSearchTerm = useDebounce(searchTerm, 600);
-    const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
-    // Reset page when search term changes
+    const updateUrl = (updates: Record<string, string | number | null>) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value !== "" && value !== null && value !== undefined) {
+                params.set(key, value.toString());
+            } else {
+                params.delete(key);
+            }
+        });
+        router.push(`/admin/cases?${params.toString()}`);
+    };
+
+    // Sync debounced search to URL
     useEffect(() => {
-        setCurrentPage(1);
+        if (debouncedSearchTerm !== urlSearch) {
+            updateUrl({ q: debouncedSearchTerm, page: 1 });
+        }
     }, [debouncedSearchTerm]);
 
-    useEffect(() => {
-        fetchData();
-    }, [debouncedSearchTerm, currentPage]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             // Check if user is restricted
@@ -52,26 +70,23 @@ export default function AdminCasesPage() {
             const createdBy = !isAdmin ? user?._id : undefined;
 
             let response;
-            if (debouncedSearchTerm) {
-                response = await casesService.searchCases(debouncedSearchTerm, currentPage, 12, createdBy);
+            if (urlSearch) {
+                response = await casesService.searchCases(urlSearch, currentPage, 12, createdBy);
             } else {
                 response = await casesService.getAll({ page: currentPage, limit: 12, createdBy });
             }
 
             // Handle different data formats
             const responseData = response.data?.data ?? response.data;
-            // console.table("response cases", responseData);
             const items = Array.isArray(responseData)
                 ? responseData
                 : (responseData?.data ?? []);
             setCases(items);
 
-            // /search/cases returns a `meta` object; /cases returns total+limit directly
             const meta = response.data?.meta ?? response.data?.data?.meta;
             if (meta?.totalPages) {
                 setTotalPages(meta.totalPages);
             } else {
-                // Fallback: calculate from total + limit at the top level
                 const total = response.data?.data?.total ?? response.data?.total ?? 0;
                 const limit = response.data?.data?.limit ?? response.data?.limit ?? 12;
                 setTotalPages(total > 0 ? Math.ceil(total / limit) : 1);
@@ -81,7 +96,11 @@ export default function AdminCasesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, urlSearch, user]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this case?")) return;
@@ -242,7 +261,7 @@ export default function AdminCasesPage() {
                             <Pagination
                                 currentPage={currentPage}
                                 totalPages={totalPages}
-                                onPageChange={setCurrentPage}
+                                onPageChange={(page) => updateUrl({ page })}
                             />
                         </div>
                     )}
@@ -289,5 +308,13 @@ export default function AdminCasesPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function AdminCasesPage() {
+    return (
+        <Suspense fallback={<Loader />}>
+            <AdminCasesPageContent />
+        </Suspense>
     );
 }

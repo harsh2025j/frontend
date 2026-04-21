@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Bookmark, Search, ArrowRight, Loader2, Calendar, Scale, FileText } from "lucide-react";
+import { useEffect, useState, useCallback, Suspense } from "react";
+import { Bookmark, Search, ArrowRight, Loader2, Calendar, Scale, FileText, Loader as LoaderIcon } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { useAppDispatch } from "@/data/redux/hooks";
@@ -10,86 +10,109 @@ import { articleApi } from "@/data/services/article-service/article-service";
 import { judgmentsService } from "@/data/services/judgments-service/judgmentsService";
 import Image from "next/image";
 
-export default function SavedPostsPage() {
-    const { user, loading } = useProfileActions();
+import { useRouter, useSearchParams } from "next/navigation";
+import Pagination from "@/components/Pagination";
+import Loader from "@/components/ui/Loader";
+
+const LIMIT = 10;
+
+export function SavedPostsPageContent() {
+    const { user, loading: profileLoading } = useProfileActions();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const dispatch = useAppDispatch();
+
+    // --- Derived from URL ---
+    const currentPage = parseInt(searchParams.get("page") || "1");
+
     const [hydratedItems, setHydratedItems] = useState<any[]>([]);
     const [isLoadingItems, setIsLoadingItems] = useState(false);
     const [unresolvableCount, setUnresolvableCount] = useState(0);
     const [missingIds, setMissingIds] = useState<string[]>([]);
 
     const savedPosts = user?.savedPosts || [];
-    const savedPostsStr = savedPosts.join(',');
+    const totalItems = savedPosts.length;
+    const totalPages = Math.ceil(totalItems / LIMIT);
 
-    useEffect(() => {
+    const updateUrl = (updates: Record<string, string | number | null>) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value !== "" && value !== null && value !== undefined) {
+                params.set(key, value.toString());
+            } else {
+                params.delete(key);
+            }
+        });
+        router.push(`/admin/saved-posts?${params.toString()}`);
+    };
+
+    const fetchItems = useCallback(async () => {
         if (savedPosts.length === 0) {
             setHydratedItems([]);
             return;
         }
 
-        const fetchItems = async () => {
-            setIsLoadingItems(true);
-            try {
-                // Fetch articles and judgments in parallel
-                const [articlesRes, judgmentsRes] = await Promise.all([
-                    articleApi.fetchMultipleArticles(savedPosts).catch(() => ({ data: { data: [] } })),
-                    judgmentsService.fetchMultipleJudgments(savedPosts).catch(() => ({ data: [] }))
-                ]);
+        const startIndex = (currentPage - 1) * LIMIT;
+        const pageIds = savedPosts.slice(startIndex, startIndex + LIMIT);
 
-                // Adjust based on the actual NestJS response structure (often nested under data.data for paginated endpoints, but here we used raw rep.find)
-                const articles = Array.isArray(articlesRes?.data) ? articlesRes.data : articlesRes?.data?.data || [];
-                const judgments = Array.isArray(judgmentsRes?.data) ? judgmentsRes.data : judgmentsRes?.data?.data || [];
+        setIsLoadingItems(true);
+        try {
+            const [articlesRes, judgmentsRes] = await Promise.all([
+                articleApi.fetchMultipleArticles(pageIds).catch(() => ({ data: { data: [] } })),
+                judgmentsService.fetchMultipleJudgments(pageIds).catch(() => ({ data: [] }))
+            ]);
 
-                // Normalize them into a common structure
-                const combined = [
-                    ...articles.map((a: any) => ({
-                        id: a.id,
-                        type: 'Article',
-                        title: a.title,
-                        description: a.subHeadline || a.seoDescription || (a.content ? a.content.substring(0, 120).replace(/<[^>]*>?/gm, '') + '...' : ''),
-                        image: a.thumbnail,
-                        link: `/news/${a.slug || a.id}`,
-                        date: a.createdAt,
-                        category: a.category?.name || 'News'
-                    })),
-                    ...judgments.map((j: any) => ({
-                        id: j.id,
-                        type: 'Judgment',
-                        title: j.title || j.case?.title || `Judgment for ${j.case?.caseNumber || 'Unknown Case'}`,
-                        description: j.summary || (j.fullText ? j.fullText.substring(0, 120).replace(/<[^>]*>?/gm, '') + '...' : 'No summary available.'),
-                        image: null,
-                        link: `/judgments/${j.id}`,
-                        date: j.judgmentDate || j.createdAt,
-                        category: j.judgmentType || 'Judgment'
-                    }))
-                ];
+            const articles = Array.isArray(articlesRes?.data) ? articlesRes.data : articlesRes?.data?.data || [];
+            const judgments = Array.isArray(judgmentsRes?.data) ? judgmentsRes.data : judgmentsRes?.data?.data || [];
 
-                // Order by how they appear in the savedPosts array to retain user's chronological save order
-                // Any ID that isn't found in 'combined' was likely deleted or unpublished.
-                const ordered: any[] = [];
-                const missing: string[] = [];
+            const combined = [
+                ...articles.map((a: any) => ({
+                    id: a.id,
+                    type: 'Article',
+                    title: a.title,
+                    description: a.subHeadline || a.seoDescription || (a.content ? a.content.substring(0, 120).replace(/<[^>]*>?/gm, '') + '...' : ''),
+                    image: a.thumbnail,
+                    link: `/news/${a.slug || a.id}`,
+                    date: a.createdAt,
+                    category: a.category?.name || 'News'
+                })),
+                ...judgments.map((j: any) => ({
+                    id: j.id,
+                    type: 'Judgment',
+                    title: j.title || j.case?.title || `Judgment for ${j.case?.caseNumber || 'Unknown Case'}`,
+                    description: j.summary || (j.fullText ? j.fullText.substring(0, 120).replace(/<[^>]*>?/gm, '') + '...' : 'No summary available.'),
+                    image: null,
+                    link: `/judgments/${j.id}`,
+                    date: j.judgmentDate || j.createdAt,
+                    category: j.judgmentType || 'Judgment'
+                }))
+            ];
 
-                savedPosts.forEach(id => {
-                    const match = combined.find(item => item.id === id);
-                    if (match) {
-                        ordered.push(match);
-                    } else {
-                        missing.push(id);
-                    }
-                });
+            const ordered: any[] = [];
+            const missing: string[] = [];
 
-                setHydratedItems(ordered);
-                setUnresolvableCount(missing.length);
-                setMissingIds(missing);
-            } catch (error) {
-                console.error("Failed to fetch saved items:", error);
-            } finally {
-                setIsLoadingItems(false);
-            }
-        };
+            pageIds.forEach(id => {
+                const match = combined.find(item => item.id === id);
+                if (match) {
+                    ordered.push(match);
+                } else {
+                    missing.push(id);
+                }
+            });
 
+            setHydratedItems(ordered);
+            setUnresolvableCount(missing.length);
+            setMissingIds(missing);
+        } catch (error) {
+            console.error("Failed to fetch saved items:", error);
+        } finally {
+            setIsLoadingItems(false);
+        }
+    }, [currentPage, savedPosts]);
+
+    useEffect(() => {
         fetchItems();
-    }, [savedPostsStr]);
+    }, [fetchItems]);
 
     const handleRemoveSave = async (e: React.MouseEvent, postId: string) => {
         e.preventDefault(); // Prevent navigating to the article link
@@ -117,10 +140,10 @@ export default function SavedPostsPage() {
         }
     };
 
-    if (loading) {
+    if (profileLoading) {
         return (
             <div className="flex justify-center items-center min-h-[400px]">
-                <Loader2 size={48} className="animate-spin text-blue-500" />
+                <Loader />
             </div>
         );
     }
@@ -266,9 +289,26 @@ export default function SavedPostsPage() {
                                 )}
                             </div>
                         )}
-                    </div>
+                    {totalPages > 1 && (
+                        <div className="mt-8 flex justify-center">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={(page) => updateUrl({ page })}
+                            />
+                        </div>
+                    )}
                 </div>
-            )}
-        </div>
+            </div>
+        )}
+    </div>
+);
+}
+
+export default function SavedPostsPage() {
+    return (
+        <Suspense fallback={<Loader />}>
+            <SavedPostsPageContent />
+        </Suspense>
     );
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { Search, Filter, RefreshCw, CheckCircle, XCircle, Shield, Building2, Scale } from "lucide-react";
 
 // Components & Hooks
@@ -20,10 +21,10 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 
 import Pagination from "@/components/Pagination";
 
-
-export default function UserManagementPage() {
-    useDocTitle("User Management  | Sajjad Husain Law Associates");
+export function UserManagementPageContent() {
+    useDocTitle("User Management | Sajjad Husain Law Associates");
     const router = useRouter();
+    const searchParams = useSearchParams();
     const dispatch = useAppDispatch();
 
     // --- Profile ---
@@ -34,18 +35,37 @@ export default function UserManagementPage() {
     const { offices } = useAppSelector((state) => state.offices);
     const { practiceAreas } = useAppSelector((state) => state.practiceAreas);
 
-    // --- Local State for Filters ---
+    // --- Local State for Input (initialized from URL) ---
     const [filters, setFilters] = useState<UserFilter>({
-        name: "",
-        email: "",
-        isActive: "",
-        isVerified: "",
-        officeId: "",
-        practiceAreaId: "",
-        clearanceLevel: "",
-        page: 1,
-        limit: 15
+        name: searchParams.get("name") || "",
+        email: searchParams.get("email") || "",
+        isActive: searchParams.get("isActive") || "",
+        isVerified: searchParams.get("isVerified") || "",
+        officeId: searchParams.get("officeId") || "",
+        practiceAreaId: searchParams.get("practiceAreaId") || "",
+        clearanceLevel: searchParams.get("clearanceLevel") || "",
+        page: parseInt(searchParams.get("page") || "1"),
+        limit: parseInt(searchParams.get("limit") || "15")
     });
+
+    const updateUrl = (updates: Record<string, string | number | boolean | null | undefined>) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value !== "" && value !== null && value !== undefined) {
+                params.set(key, value.toString());
+            } else {
+                params.delete(key);
+            }
+        });
+
+        // Reset page to 1 if any filter other than 'page' or 'limit' is changed
+        const isFilterChange = Object.keys(updates).some(k => k !== 'page' && k !== 'limit');
+        if (isFilterChange) {
+            params.set('page', '1');
+        }
+
+        router.push(`/admin/users?${params.toString()}`);
+    };
 
     // --- Modal State ---
     const [verifyModalOpen, setVerifyModalOpen] = useState(false);
@@ -54,29 +74,49 @@ export default function UserManagementPage() {
 
     // --- Fetch Users ---
     const loadUsers = useCallback(() => {
-
-        // Clean up filters before sending
         const activeFilters: UserFilter = {};
-        if (filters.name) activeFilters.name = filters.name;
-        if (filters.email) activeFilters.email = filters.email;
-        if (filters.isActive !== "") activeFilters.isActive = filters.isActive === "true";
-        if (filters.isVerified !== "") activeFilters.isVerified = filters.isVerified === "true";
-        if (filters.officeId) activeFilters.officeId = filters.officeId;
-        if (filters.practiceAreaId) activeFilters.practiceAreaId = filters.practiceAreaId;
-        if (filters.clearanceLevel !== "") activeFilters.clearanceLevel = parseInt(filters.clearanceLevel as string);
+        const name = searchParams.get("name");
+        const email = searchParams.get("email");
+        const isActive = searchParams.get("isActive");
+        const isVerified = searchParams.get("isVerified");
+        const officeId = searchParams.get("officeId");
+        const practiceAreaId = searchParams.get("practiceAreaId");
+        const clearanceLevel = searchParams.get("clearanceLevel");
+        const pageParam = searchParams.get("page");
+        const limitParam = searchParams.get("limit");
 
-        activeFilters.page = filters.page || 1;
-        activeFilters.limit = filters.limit || 15;
+        if (name) activeFilters.name = name;
+        if (email) activeFilters.email = email;
+        if (isActive !== null && isActive !== "") activeFilters.isActive = isActive === "true";
+        if (isVerified !== null && isVerified !== "") activeFilters.isVerified = isVerified === "true";
+        if (officeId) activeFilters.officeId = officeId;
+        if (practiceAreaId) activeFilters.practiceAreaId = practiceAreaId;
+        if (clearanceLevel !== null && clearanceLevel !== "") activeFilters.clearanceLevel = parseInt(clearanceLevel);
+
+        activeFilters.page = parseInt(pageParam || "1");
+        activeFilters.limit = parseInt(limitParam || "15");
 
         dispatch(fetchUsers(activeFilters));
-    }, [filters, dispatch]);
+    }, [searchParams, dispatch]);
 
     useEffect(() => {
         loadUsers();
-    }, [filters.page, dispatch, loadUsers]);
+    }, [loadUsers]);
 
-    // For other filters, we only want to load when "Filter" or "Search" is clicked
-    // But page changes should trigger instantly.
+    // Sync local filters with URL when URL changes (for back button support)
+    useEffect(() => {
+        setFilters({
+            name: searchParams.get("name") || "",
+            email: searchParams.get("email") || "",
+            isActive: searchParams.get("isActive") || "",
+            isVerified: searchParams.get("isVerified") || "",
+            officeId: searchParams.get("officeId") || "",
+            practiceAreaId: searchParams.get("practiceAreaId") || "",
+            clearanceLevel: searchParams.get("clearanceLevel") || "",
+            page: parseInt(searchParams.get("page") || "1"),
+            limit: parseInt(searchParams.get("limit") || "15")
+        });
+    }, [searchParams]);
 
     useEffect(() => {
         dispatch(fetchOffices());
@@ -91,31 +131,21 @@ export default function UserManagementPage() {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        // Reset to page 1 on search
-        setFilters(prev => ({ ...prev, page: 1 }));
-        loadUsers();
+        updateUrl({
+            ...filters,
+            isActive: filters.isActive !== "" ? filters.isActive : null,
+            isVerified: filters.isVerified !== "" ? filters.isVerified : null,
+            clearanceLevel: filters.clearanceLevel !== "" ? filters.clearanceLevel : null,
+            page: 1
+        });
     };
 
     const handleReset = () => {
-        const resetFilters = {
-            name: "",
-            email: "",
-            isActive: "",
-            isVerified: "",
-            officeId: "",
-            practiceAreaId: "",
-            clearanceLevel: "",
-            page: 1,
-            limit: 15
-        };
-        setFilters(resetFilters);
-        // Dispatch directly with reset filters to be immediate
-        dispatch(fetchUsers({ page: 1, limit: 15 }));
+        router.push("/admin/users");
     };
 
     const handlePageChange = (newPage: number) => {
-        setFilters(prev => ({ ...prev, page: newPage }));
-        // The useEffect watching filters.page will trigger loadUsers()
+        updateUrl({ page: newPage });
     };
 
     // --- Verification Handlers ---
@@ -507,6 +537,14 @@ export default function UserManagementPage() {
 
             </div >
         </div >
+    );
+}
+
+export default function UserManagementPage() {
+    return (
+        <Suspense fallback={<Loader />}>
+            <UserManagementPageContent />
+        </Suspense>
     );
 }
 

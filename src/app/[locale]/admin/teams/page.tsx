@@ -1,8 +1,7 @@
 "use client";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
-import { useRouter } from "next/navigation";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
 import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { teamsApi } from "@/data/services/teams-service/teamsService";
@@ -11,20 +10,46 @@ import Pagination from "@/components/Pagination";
 import toast from "react-hot-toast";
 import { Search } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useSearchParams, useRouter } from "next/navigation";
 
-const TeamManagementPage: React.FC = () => {
+const TeamManagementPageContent: React.FC = () => {
   useDocTitle("Team Management | Sajjad Husain Law Associates");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user } = useProfileActions();
+
+  // --- Derived from URL ---
+  const currentPage = parseInt(searchParams.get("page") || "1");
+  const urlSearch = searchParams.get("q") || "";
+
+  // --- Local State for Input ---
+  const [searchTerm, setSearchTerm] = useState(urlSearch);
+  const debouncedSearchTerm = useDebounce(searchTerm, 600);
+
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearchTerm = useDebounce(searchTerm, 600);
   const limit = 15;
 
-  const router = useRouter();
-    const { user } = useProfileActions();
+  const updateUrl = (updates: Record<string, string | number | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== "" && value !== null && value !== undefined) {
+        params.set(key, value.toString());
+      } else {
+        params.delete(key);
+      }
+    });
+    router.push(`/admin/teams?${params.toString()}`);
+  };
+
+  // Sync debounced search to URL
+  useEffect(() => {
+    if (debouncedSearchTerm !== urlSearch) {
+      updateUrl({ q: debouncedSearchTerm, page: 1 });
+    }
+  }, [debouncedSearchTerm]);
 
 
   const fetchTeamData = useCallback(async () => {
@@ -33,9 +58,8 @@ const TeamManagementPage: React.FC = () => {
       const response = await teamsApi.fetchTeams({
         page: currentPage,
         limit,
-        name: debouncedSearchTerm,
+        name: urlSearch,
       });
-      // response is UserListResponse, which has a nested data object containing { data: User[], total, page, limit }
       const paginatedData = response.data;
       setTeamMembers(paginatedData.data || []);
       setTotal(paginatedData.total || 0);
@@ -45,16 +69,12 @@ const TeamManagementPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, debouncedSearchTerm]);
+  }, [currentPage, urlSearch]);
 
   useEffect(() => {
     fetchTeamData();
   }, [fetchTeamData]);
 
-  // Reset to first page when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearchTerm]);
 
 
   return (
@@ -193,12 +213,20 @@ const TeamManagementPage: React.FC = () => {
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
-              onPageChange={setCurrentPage}
+              onPageChange={(page) => updateUrl({ page })}
             />
           </div>
         )}
       </div>
     </div>
+  );
+};
+
+const TeamManagementPage: React.FC = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <TeamManagementPageContent />
+    </Suspense>
   );
 };
 
