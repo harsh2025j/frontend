@@ -9,7 +9,7 @@ import { Link } from "@/i18n/routing";
 import { Trash2, Edit, Plus, Search, FileText, Eye, X } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
-import CaseDetailPage from "@/app/[locale]/cases/[id]/page";
+import CaseView from "@/app/[locale]/cases/[id]/CaseView";
 
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useDocTitle } from "@/hooks/useDocTitle";
@@ -294,7 +294,7 @@ export function AdminCasesPageContent() {
                             </button>
                         </div>
                         <div className="flex-1 overflow-y-auto print:overflow-visible">
-                            <CaseDetailPage caseId={viewCaseId} isModal={true} />
+                            <CaseView caseId={viewCaseId} isModal={true} />
                         </div>
                         <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end no-print">
                             <button

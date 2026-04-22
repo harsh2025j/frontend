@@ -123,11 +123,11 @@ export default function ContentSlider({ name, FilteredData, slug }: ContentSlide
                 </Link>
               </div>
               <Link href={`/news/${item.slug}`}>
-                <div className="p-3 h-[80px] flex flex-col items-center justify-center">
-                  <p className="text-center text-gray-800 font-medium text-sm line-clamp-2 leading-relaxed hover:text-blue-600 transition-colors">
+                <div className="p-3 h-[100px] flex flex-col items-center justify-center">
+                  <p className="text-center text-gray-800 font-medium text-sm line-clamp-2 leading-snug hover:text-blue-600 transition-colors">
                     {item.title}
                   </p>
-                  <p className="text-[10px] text-gray-500 mt-1">
+                  <p className="text-[10px] text-gray-500 mt-2">
                     Author: {item.authors || item.advocateName || "Anonymous"}
                   </p>
                 </div>

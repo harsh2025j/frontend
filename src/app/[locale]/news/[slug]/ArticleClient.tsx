@@ -320,7 +320,8 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
 
                 {/* if not need then remove this  and also SpeechPlayer.tsx  which is in sre/components/ui/SpeechPlayer.tsx*/}
                 {/* Speech Player */}
-                <SpeechPlayer article={article} />
+
+                {/* <SpeechPlayer article={article} /> */}
 
 
                 {/* Article Content */}
@@ -396,7 +397,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                                         ) : (
                                             <div className="absolute -left-[41px] top-1 w-4 h-4 rounded-full border-[3px] border-[#2A65A4] bg-white ring-4 ring-white z-10" />
                                         )}
-                                        <div className="flex flex-col gap-2">
+                                        <div className="flex flex-col gap-2 timeline-update-content">
                                             <span className="text-gray-500 text-sm font-semibold tracking-wide uppercase">{formatDate(update.updateDate as string)}</span>
                                             {update.title && <h4 className="font-bold text-[22px] text-[#0A2342] leading-snug">{update.title}</h4>}
                                             <div className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1 font-unna" dangerouslySetInnerHTML={{ __html: update.content }} />
@@ -610,10 +611,10 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
     return (
         <div className="bg-white min-h-screen font-unna">
             <div className="max-w-7xl mx-auto  py-8 px-4">
-                <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                     {/* ── Main content column ── */}
-                    <div className="lg:col-span-8">
+                    <div className="lg:col-span-9">
                         {articles.map((article, i) => (
                             <React.Fragment key={article.id}>
 
@@ -657,7 +658,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                     </div>
 
                     {/* ── Sidebar (sticky, related articles from category) ── */}
-                    <div className="lg:col-span-2">
+                    <div className="lg:col-span-3">
                         <div className="sticky top-24">
                             <h3 className="text-lg font-bold text-gray-900 mb-4 font-unna">{t("relatedArticles")}</h3>
                             <div className="space-y-6 max-h-[85vh] overflow-y-auto scrollbar-hide pb-10">

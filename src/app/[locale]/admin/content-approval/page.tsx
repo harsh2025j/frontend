@@ -145,7 +145,7 @@ const ContentApprovalPanelContent = () => {
   const updateUrl = (updates: Record<string, string | number | null>) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([key, value]) => {
-      if (value && value !== "all") {
+      if (value) {
         params.set(key, value.toString());
       } else {
         params.delete(key);
@@ -542,7 +542,7 @@ const ContentApprovalPanelContent = () => {
                       {previewArticle.updates.map((update, i) => (
                         <div key={i} className="relative group">
                           <div className="absolute -left-[41px] top-4 w-5 h-5 rounded-full border-4 border-white bg-[#C9A227] shadow-sm group-hover:scale-125 transition-transform" />
-                          <div className="bg-white border border-gray-100 rounded-[24px] p-6 shadow-sm hover:shadow-md transition-all">
+                          <div className="bg-white border border-gray-100 rounded-[24px] p-6 shadow-sm hover:shadow-md transition-all timeline-update-content">
                             <div className="flex justify-between items-center mb-3">
                               <h4 className="text-sm font-black text-[#0A2342] uppercase tracking-wider">{update.title || "Update Entry"}</h4>
                               <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">

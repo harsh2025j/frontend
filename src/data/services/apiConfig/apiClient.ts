@@ -148,9 +148,10 @@ apiClient.interceptors.request.use(
           } catch (error: any) {
             processQueue(error, null);
 
-            // ONLY hide the toast if it's the specific refresh token error
             if (error.response?.data?.message?.includes("Invalid refresh token")) {
-              toast.dismiss();
+              if (typeof window !== "undefined") {
+                toast.dismiss();
+              }
             }
 
             localStorage.removeItem("token");
@@ -193,14 +194,15 @@ apiClient.interceptors.response.use(
     if (store) {
       // store.dispatch(stopLoading());
     }
-    toast.dismiss('retry-toast');
+    if (typeof window !== "undefined") {
+      toast.dismiss('retry-toast');
+    }
     return response;
   },
   async (error: AxiosError) => {
-    if (store) {
-      // store.dispatch(stopLoading());
+    if (typeof window !== "undefined") {
+      toast.dismiss('retry-toast');
     }
-    toast.dismiss('retry-toast');
     const config = error.config as AxiosRequestConfig & { retryCount?: number };
     const retryCount = config?.retryCount || 0;
 

@@ -29,7 +29,7 @@ export default async function Image({ params }: { params: { slug: string; locale
         // "ngrok-skip-browser-warning": "true",
       },
     });
-    
+
     if (res.ok) {
       const responseData = await res.json();
       const article = responseData.data;
@@ -40,28 +40,28 @@ export default async function Image({ params }: { params: { slug: string; locale
         }
 
         if (article.thumbnail) {
-             try {
-                const imgRes = await fetch(article.thumbnail);
-                const contentType = imgRes.headers.get('content-type') || '';
-                
-                if (imgRes.ok) {
-                   const imgArrayBuffer = await imgRes.arrayBuffer();
-                   const isWebp = article.thumbnail.toLowerCase().includes('.webp') || contentType.includes('webp');
-                   
-                   if (isWebp) {
-                       // Convert WebP to PNG using sharp so Satori can render it!
-                       const pngBuffer = await sharp(imgArrayBuffer).png().toBuffer();
-                       // Convert Node Buffer back to standard ArrayBuffer for Satori
-                       thumbnailSrc = new Uint8Array(pngBuffer).buffer; 
-                       useFallback = false;
-                   } else {
-                       thumbnailSrc = imgArrayBuffer;
-                       useFallback = false;
-                   }
-                }
-             } catch (imgErr) {
-                console.error("Failed to fetch/convert image", imgErr);
-             }
+          try {
+            const imgRes = await fetch(article.thumbnail);
+            const contentType = imgRes.headers.get('content-type') || '';
+
+            if (imgRes.ok) {
+              const imgArrayBuffer = await imgRes.arrayBuffer();
+              const isWebp = article.thumbnail.toLowerCase().includes('.webp') || contentType.includes('webp');
+
+              if (isWebp) {
+                // Convert WebP to PNG using sharp so Satori can render it!
+                const pngBuffer = await sharp(imgArrayBuffer).png().toBuffer();
+                // Convert Node Buffer back to standard ArrayBuffer for Satori
+                thumbnailSrc = new Uint8Array(pngBuffer).buffer;
+                useFallback = false;
+              } else {
+                thumbnailSrc = imgArrayBuffer;
+                useFallback = false;
+              }
+            }
+          } catch (imgErr) {
+            console.error("Failed to fetch/convert image", imgErr);
+          }
         }
       }
     }
@@ -94,7 +94,7 @@ export default async function Image({ params }: { params: { slug: string; locale
             padding: useFallback ? '100px' : '0',
           }}
         />
-        
+
         {/* Subtle bottom gradient just to ensure the URL watermark is readable */}
         <div
           style={{

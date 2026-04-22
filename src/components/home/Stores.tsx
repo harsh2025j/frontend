@@ -498,7 +498,7 @@ export default function Stores() {
             <div className="flex-1 h-px bg-gray-400"></div>
           </div>
           {/* Judgments Grid */}
-          <div className="flex justify-center px-4">
+          <div className="flex justify-center px-4 mb-10">
             <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {loading ? (
                 <ArticleSkeleton count={3} type="judgement" noWrapper={true} />
@@ -508,6 +508,7 @@ export default function Stores() {
                   <Judgement
                     key={data.id}
                     img={data.thumbnail}
+                    title={data.title}
                     description={data.content}
                     date={formatDate(data.createdAt)}
                     author={data.authors || data.advocateName}

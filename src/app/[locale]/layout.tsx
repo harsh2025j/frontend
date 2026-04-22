@@ -24,10 +24,77 @@ const METADATA_BASE = new URL('https://www.sajjadhusainlawassociates.com'); // p
 
 export const metadata: Metadata = {
   metadataBase: METADATA_BASE,
-  description: "Next-Gen Legal Tech",
+  title: {
+    default: "Sajjad Husain Law Associates | News, Judgment & Case Status",
+    template: "%s | Legal News & Judgment - Sajjad Husain Law Associates"
+  },
+  description: "India's premier legal technology platform providing real-time High Court and Supreme Court judgments, latest law news, and a comprehensive case status portal.",
+  keywords: [
+    "Indian Legal News",
+    "Latest High Court Judgments",
+    "Supreme Court Orders",
+    "Legal Tech India",
+    "Case Status Portal",
+    "Law Updates Today",
+    "Judgment Analysis",
+    "Advocate News India",
+    "Legal Research Platform",
+    "Sajjad Husain Law Associates",
+    "Law Journal Online",
+    "Court Room Updates",
+    "Latest Supreme Court Judgements",
+    "High Court Judgements",
+    "Legal News"
+  ],
+  authors: [{ name: "Sajjad Husain Law Associates" }],
+  creator: "Sajjad Husain Law Associates",
+  publisher: "Sajjad Husain Law Associates",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   icons: {
     icon: "/logo.png",
+    apple: "/logo.png",
   },
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    url: "https://www.sajjadhusainlawassociates.com",
+    siteName: "Sajjad Husain Law Associates",
+    title: "Sajjad Husain Law Associates | Next-Gen Legal Tech",
+    description: "Advanced Legal Technology Platform providing legal insights, judgment analysis, and latest law news in India.",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Sajjad Husain Law Associates",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sajjad Husain Law Associates | Next-Gen Legal Tech",
+    description: "Advanced Legal Technology Platform providing legal insights, judgment analysis, and latest law news in India.",
+    creator: "@SajjadHusainLaw",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: "2V5MrE-SR9--pjYygKw7KYu269YLinXDRr_MRj1Hy-A",
+  }
 };
 
 import { NextIntlClientProvider } from 'next-intl';
@@ -99,9 +166,27 @@ export default async function RootLayout({
     hindiArticles
   };
 
+  const siteSearchJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Sajjad Husain Law Associates",
+    "url": METADATA_BASE.toString(),
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": `${METADATA_BASE}/${locale}/search?q={search_term_string}`,
+      "query-input": "required name=search_term_string"
+    }
+  };
+
 
   return (
     <html lang={locale}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSearchJsonLd) }}
+        />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <ErrorBoundary>

@@ -12,7 +12,7 @@ import {
   Heart, Calendar, MapPin, Award,
   MessageSquare, ExternalLink, Clock, BookOpen, Plus,
   Shield, Globe, Bell, LogOut, ChevronRight, Check, ShieldCheck, Key, Languages, Phone,
-  Gavel
+  Gavel, Loader2
 } from "lucide-react";
 
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
@@ -46,7 +46,7 @@ const BentoStatCard = ({ label, value, icon: Icon, description, delay = 0 }: any
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5, delay }}
     whileHover={{ y: -5 }}
-    className="relative overflow-hidden group bg-white/70 dark:bg-[#0A2342]/10 backdrop-blur-xl rounded-[32px] p-8 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.05)]"
+    className="relative overflow-hidden group bg-white/70 dark:bg-[#0A2342]/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-sm"
   >
     <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
       <Icon size={72} strokeWidth={1} />
@@ -73,7 +73,7 @@ const BentoCard = ({ title, subtitle, children, className = "", delay = 0 }: any
     initial={{ opacity: 0, scale: 0.98 }}
     animate={{ opacity: 1, scale: 1 }}
     transition={{ duration: 0.5, delay }}
-    className={`group relative overflow-hidden bg-white/70 dark:bg-[#0A2342]/10 backdrop-blur-xl rounded-[40px] p-8 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.05)] ${className}`}
+    className={`group relative overflow-hidden bg-white/70 dark:bg-[#0A2342]/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-sm ${className}`}
   >
     <div className="flex flex-col h-full relative z-10">
       <div className="mb-6">
@@ -212,6 +212,8 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
 
   const handleUpdate = async () => {
     setSaving(true);
+    // Artificial delay to ensure loader is visible
+    await new Promise(resolve => setTimeout(resolve, 800));
     try {
       // Final sanitization: convert specialization string back to a clean array
       let finalSpecialization = formData.specialization;
@@ -278,14 +280,20 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
             <div className="absolute inset-[-10px] bg-gradient-to-tr from-[#C9A227] via-[#0A2342]/10 to-[#C9A227] opacity-30 rounded-[50px] animate-[spin_12s_linear_infinite]" />
             <div className="w-56 h-56 rounded-[40px] overflow-hidden border-4 border-white dark:border-[#0A2342] shadow-2xl relative group cursor-pointer" onClick={() => isOwner && fileInputRef.current?.click()}>
               {profileUser.profilePicture ? (
-                <Image src={profileUser.profilePicture} alt="Avatar" fill className="object-cover group-hover:scale-110 transition-transform duration-700" quality={100} sizes="500px" />
+                <Image src={profileUser.profilePicture} alt="Avatar" fill className="object-cover  transition-transform duration-700" quality={100} sizes="500px" />
               ) : (
                 <div className="w-full h-full bg-zinc-50 flex items-center justify-center text-6xl text-gray-300 font-serif">{profileUser.name?.[0].toUpperCase()}</div>
               )}
               {isOwner && (
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
-                  <Camera size={32} strokeWidth={1} className="mb-2" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Update Portrait</span>
+                  {saving || loggedInLoading ? (
+                    <Loader2 size={32} className="animate-spin" />
+                  ) : (
+                    <Camera size={32} strokeWidth={1} className="mb-2" />
+                  )}
+                  <span className="text-[10px] font-bold uppercase tracking-widest">
+                    {saving || loggedInLoading ? "Uploading..." : "Update Portrait"}
+                  </span>
                 </div>
               )}
             </div>
@@ -325,7 +333,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 
           <aside className="lg:col-span-3 sticky top-20 md:top-24 z-20 -mx-4 sm:mx-0 px-4 sm:px-0">
-            <div className="flex flex-row lg:flex-col gap-1 md:gap-2 p-1.5 bg-white/60 dark:bg-[#0A2342]/20 backdrop-blur-2xl rounded-full lg:rounded-[32px] border border-white/20 shadow-2xl shadow-black/5 overflow-x-auto scrollbar-hide">
+            <div className="flex flex-row lg:flex-col gap-1 md:gap-2 p-1.5 bg-white/60 dark:bg-[#0A2342]/20 backdrop-blur-2xl rounded-2xl border border-white/20 shadow-lg shadow-black/5 overflow-x-auto scrollbar-hide">
               {[
                 { id: "personal", label: "Identity", icon: User, show: true },
                 { id: "saved", label: "Vault", icon: Heart, show: isOwner },
@@ -342,7 +350,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                   {activeTab === tab.id && (
                     <motion.div
                       layoutId="activeTabIndicator"
-                      className="absolute inset-0 bg-white dark:bg-[#122b4d] rounded-full lg:rounded-2xl shadow-sm z-0"
+                      className="absolute inset-0 bg-white dark:bg-[#122b4d] rounded-xl shadow-sm z-0"
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
                   )}
@@ -433,7 +441,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
 
                     {isOwner && (
                       <div className="md:col-span-2">
-                        <button onClick={openEditModal} className="w-full py-8 bg-[#0A2342] text-white rounded-[32px] shadow-2xl text-[11px] font-bold tracking-widest uppercase flex items-center justify-center gap-4 hover:bg-[#153a66] transition-all">
+                        <button onClick={openEditModal} className="w-full py-8 bg-[#0A2342] text-white rounded-2xl shadow-lg text-[11px] font-bold tracking-widest uppercase flex items-center justify-center gap-4 hover:bg-[#153a66] transition-all">
                           Update Credentials <ChevronRight size={16} />
                         </button>
                       </div>
@@ -491,11 +499,11 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                         {/* English Selector */}
                         <button
                           onClick={() => handleLanguageChange("en")}
-                          className={`w-full p-5 rounded-[24px] flex items-center justify-between border transition-all ${currentLocale === "en" ? "bg-[#C9A227]/5 border-[#C9A227]/20 shadow-sm" : "bg-transparent border-gray-100 hover:border-gray-200"
+                          className={`w-full p-5 rounded-2xl flex items-center justify-between border transition-all ${currentLocale === "en" ? "bg-[#C9A227]/5 border-[#C9A227]/20 shadow-sm" : "bg-transparent border-gray-100 hover:border-gray-200"
                             }`}
                         >
                           <div className="flex items-center gap-4">
-                            <div className={`p-2 rounded-xl transition-colors ${currentLocale === "en" ? "bg-[#C9A227] text-white" : "bg-gray-100 text-gray-400"}`}>
+                            <div className={`p-2 rounded-lg transition-colors ${currentLocale === "en" ? "bg-[#C9A227] text-white" : "bg-gray-100 text-gray-400"}`}>
                               <Languages size={18} />
                             </div>
                             <span className="text-xs font-bold text-[#0A2342] dark:text-white">English</span>
@@ -508,11 +516,11 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                         {/* Hindi Selector */}
                         <button
                           onClick={() => handleLanguageChange("hi")}
-                          className={`w-full p-5 rounded-[24px] flex items-center justify-between border transition-all ${currentLocale === "hi" ? "bg-[#C9A227]/5 border-[#C9A227]/20 shadow-sm" : "bg-transparent border-gray-100 hover:border-gray-200"
+                          className={`w-full p-5 rounded-2xl flex items-center justify-between border transition-all ${currentLocale === "hi" ? "bg-[#C9A227]/5 border-[#C9A227]/20 shadow-sm" : "bg-transparent border-gray-100 hover:border-gray-200"
                             }`}
                         >
                           <div className="flex items-center gap-4">
-                            <div className={`p-2 rounded-xl transition-colors ${currentLocale === "hi" ? "bg-[#C9A227] text-white" : "bg-gray-100 text-gray-400"}`}>
+                            <div className={`p-2 rounded-lg transition-colors ${currentLocale === "hi" ? "bg-[#C9A227] text-white" : "bg-gray-100 text-gray-400"}`}>
                               <Languages size={18} />
                             </div>
                             <span className="text-xs font-bold text-[#0A2342] dark:text-white">Hindi</span>
@@ -527,7 +535,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                     {/* C. Subscription Plans */}
                     <BentoCard title="Subscription Plans" subtitle="Membership Status">
                       <p className="text-[10px] text-gray-400 mb-6 font-serif italic">Manage your current membership and upgrades.</p>
-                      <div className="space-y-4 p-6 bg-gray-50 dark:bg-white/5 rounded-[24px]">
+                      <div className="space-y-4 p-6 bg-gray-50 dark:bg-white/5 rounded-2xl">
                         <div className="flex justify-between items-center group">
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Plan Name</span>
                           <span className="text-xs font-black text-[#0A2342]">{subscription?.planName || "Basic Plan"}</span>
@@ -540,7 +548,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ending Date</span>
                           <span className="text-xs font-semibold">{formatDate(subscription?.endDate || "2026-04-13")}</span>
                         </div>
-                        <Link href="/subscription" className="block w-full py-4 bg-[#0A2342] text-white text-center rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#0A2342]/10 hover:bg-[#1a3a5f] transition-all">
+                        <Link href="/subscription" className="block w-full py-4 bg-[#0A2342] text-white text-center rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md shadow-[#0A2342]/10 hover:bg-[#1a3a5f] transition-all">
                           Upgrade
                         </Link>
                       </div>
@@ -591,7 +599,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
       />
       <AnimatePresence>
         {isModalOpen && (
-          <EditProfileModal onClose={() => setIsModalOpen(false)} formData={formData} setFormData={setFormData} onSave={handleUpdate} saving={saving} isProfessional={isProfessional} />
+          <EditProfileModal onClose={() => setIsModalOpen(false)} formData={formData} setFormData={setFormData} onSave={handleUpdate} saving={saving || loggedInLoading} isProfessional={isProfessional} />
         )}
         {imageToCrop && (
           <ImageCropperModal
@@ -601,6 +609,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
             aspect={1 / 1}
             title="Adjust Profile Photo"
             description="Drag and zoom to center your portrait (1:1 ratio)"
+            loading={saving || loggedInLoading}
           />
         )}
         {showLogoutConfirm && (
@@ -629,7 +638,7 @@ function TonalField({ label, value, icon: Icon }: any) {
 function CaseBentoLink({ caseData, delay }: any) {
   return (
     <Link href={`/cases/${caseData.id}`}>
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }} className="h-full bg-white/70 dark:bg-[#0A2342]/10 p-8 rounded-[40px] border border-white/20 group hover:shadow-2xl transition-all">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }} className="h-full bg-white/70 dark:bg-[#0A2342]/10 p-8 rounded-2xl border border-white/20 group hover:border-[#C9A227]/20 transition-all">
         <div className="flex justify-between items-start mb-6">
           <span className="text-[10px] font-black text-[#C9A227] uppercase tracking-widest">{caseData.caseType || "Case"}</span>
           <div className="p-2 rounded-xl bg-gray-50 dark:bg-white/5"><Briefcase size={16} /></div>
@@ -645,11 +654,11 @@ function ArticleBentoLink({ articleData, delay, logo }: any) {
   return (
     <Link href={`/news/${articleData.slug}`}>
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }} className="group">
-        <div className="aspect-[4/5] rounded-[40px] overflow-hidden relative mb-6 shadow-xl group-hover:shadow-2xl transition-all duration-700">
-          <Image src={articleData.thumbnail || logo} alt="Insight" fill className="object-cover group-hover:scale-110 transition-transform duration-1000" quality={90} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 500px" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0A2342]/90 to-transparent p-8 flex flex-col justify-end">
-            <span className="text-[10px] font-black text-[#C9A227] uppercase tracking-widest mb-3">{articleData.category?.name || "Editorial"}</span>
-            <h3 className="text-xl font-serif text-white leading-snug line-clamp-3">{articleData.title}</h3>
+        <div className="aspect-video rounded-[10px] overflow-hidden relative mb-6  border-2 border-white/10 group hover:border-[#C9A227]/50 transition-all duration-700">
+          <Image src={articleData.thumbnail || logo} alt="Insight" fill className="object-cover transition-transform duration-1000" quality={90} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 500px" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A2342]/90 to-transparent pt-10  pl-2 flex flex-col justify-end">
+            <span className="text-[10px] font-black text-[#C9A227] uppercase tracking-widest mb-1">{articleData.category?.name || "Editorial"}</span>
+            <h3 className="text-xl font-serif text-white leading-snug line-clamp-3 mb-1">{articleData.title}</h3>
           </div>
         </div>
       </motion.div>
@@ -673,8 +682,8 @@ function ToggleItem({ label, checked, onChange, icon: Icon }: any) {
 
 function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isProfessional }: any) {
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-6 bg-[#0A2342]/60 backdrop-blur-md">
-      <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-white dark:bg-[#0A2342] rounded-[48px] w-full max-w-2xl overflow-hidden shadow-2xl relative">
+    <div className="fixed inset-0 z-[690] flex items-center justify-center p-6 bg-[#0A2342]/60 backdrop-blur-md">
+      <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-white dark:bg-[#0A2342] rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl relative">
         <button onClick={onClose} className="absolute top-8 right-8 p-3 rounded-2xl hover:bg-gray-50"><X size={24} /></button>
         <div className="p-12 pb-4">
           <h2 className="text-4xl font-serif text-[#0A2342] dark:text-white mb-2">Edit Credentials</h2>
@@ -717,8 +726,18 @@ function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isPr
         </div>
         <div className="p-12 flex gap-4 bg-gray-50/50">
           <button onClick={onClose} className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest border border-gray-100 rounded-2xl">Cancel</button>
-          <button onClick={onSave} disabled={saving} className="flex-[2] py-4 bg-[#0A2342] dark:bg-[#C9A227] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:opacity-90 transition-all flex items-center justify-center gap-4">
-            {saving ? "Updating..." : "Commit Update"} <Check size={16} />
+          <button onClick={onSave} disabled={saving} className="flex-[2] py-4 bg-[#0A2342] dark:bg-[#C9A227] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:opacity-90 transition-all flex items-center justify-center gap-4 min-h-[56px]">
+            {saving ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Processing...</span>
+              </>
+            ) : (
+              <>
+                <span>Commit Update</span>
+                <Check size={16} />
+              </>
+            )}
           </button>
         </div>
       </motion.div>
@@ -731,7 +750,7 @@ function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isPr
 function LogoutOverlay({ onCancel, onConfirm }: any) {
   return (
     <div className="fixed inset-0 z-[610] flex items-center justify-center p-6 bg-[#0A2342]/80 backdrop-blur-md">
-      <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className="bg-white rounded-[40px] p-12 max-w-md w-full text-center">
+      <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className="bg-white rounded-3xl p-12 max-w-md w-full text-center">
         <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8"><LogOut size={40} /></div>
         <h3 className="text-3xl font-serif text-[#0A2342] mb-4">Logout?</h3>
         <div className="flex gap-4">
@@ -763,7 +782,7 @@ function TextAreaField({ label, value, onChange, className = "" }: any) {
 
 function EmptyState({ icon: Icon, message }: any) {
   return (
-    <div className="col-span-full py-32 flex flex-col items-center justify-center bg-white/50 rounded-[48px] border-2 border-dashed border-gray-200">
+    <div className="col-span-full py-32 flex flex-col items-center justify-center bg-white/50 rounded-3xl border-2 border-dashed border-gray-200">
       <div className="w-20 h-20 rounded-3xl bg-gray-50 flex items-center justify-center text-gray-200 mb-8"><Icon size={40} /></div>
       <p className="text-gray-400 font-serif italic text-lg">{message}</p>
     </div>

@@ -9,7 +9,7 @@ import { formatDate } from "@/utils/dateUtils";
 import { Trash2, Edit, Plus, Search, Gavel, Eye, X } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
-import JudgmentDetailPage from "@/app/[locale]/judgments/[id]/page";
+import JudgmentView from "@/app/[locale]/judgments/[id]/JudgmentView";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -278,7 +278,7 @@ const AdminJudgmentsPageContent = () => {
                             </button>
                         </div>
                         <div className="flex-1 overflow-y-auto print:overflow-visible">
-                            <JudgmentDetailPage judgmentId={viewJudgmentId} isModal={true} />
+                            <JudgmentView judgmentId={viewJudgmentId} isModal={true} />
                         </div>
                         <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 font-sans no-print">
                             <button
