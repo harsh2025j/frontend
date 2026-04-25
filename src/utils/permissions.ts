@@ -293,6 +293,11 @@ export const canAccessBroadcastPage = (user: UserData | null): boolean => {
     );
 };
 
+export const canAccessAdvertisementsPage = (user: UserData | null): boolean => {
+    if (!user) return false;
+    return hasAnyRole(user, [ROLES.ADMIN, ROLES.SUPERADMIN]);
+};
+
 export const canAccessSettingsPage = (user: UserData | null): boolean => {
     if (!user) return false;
     return hasAnyRole(user, [ROLES.ADMIN, ROLES.SUPERADMIN]);
@@ -366,6 +371,9 @@ export const ROUTE_PROTECTION_MAP: Record<string, PermissionCheckFn> = {
     "/admin/content-management": canAccessContentManagementPage,
     "/admin/categories": canAccessCategoryManagementPage,
     "/admin/content-approval": canAccessContentApprovalPage,
+    "/admin/advertisements": canAccessAdvertisementsPage,
+    "/admin/advertisements/create": canAccessAdvertisementsPage,
+    "/admin/advertisements/edit/[id]": canAccessAdvertisementsPage,
     "/admin/create-content": canAccessContentManagementPage,
     "/admin/create-content/[id]": canAccessContentManagementPage,
 

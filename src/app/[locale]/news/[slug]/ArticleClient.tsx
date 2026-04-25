@@ -21,6 +21,7 @@ import { RootState } from "@/data/redux/store";
 import PaywallOverlay from "@/components/ui/PaywallOverlay";
 
 import SpeechPlayer from "@/components/ui/SpeechPlayer";
+import { InFeedAd, ArticleTopAd, ArticleSidebarTopAd, ArticleSidebarBottomAd, ArticleBottomAd } from "@/components/ads/StandardAds";
 
 interface ArticleClientProps {
     initialArticle: Article;
@@ -455,6 +456,13 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                     </div>
                 )}
 
+                {/* Article Bottom Banner */}
+                {!isPremium && (
+                    <div className="mt-12 mb-4">
+                        <ArticleBottomAd />
+                    </div>
+                )}
+
                 {/* Print-only Footer */}
                 <div className="print-footer">
                     https://www.sajjadhusainlawassociates.com
@@ -479,6 +487,18 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
 
     const user = useSelector((state: RootState) => state.auth.user);
     const subscription = useSelector((state: RootState) => state.subscription.currentSubscription);
+
+    const isPremium = useMemo(() => {
+        if (!user) return false;
+        if (subscription?.status === 'active') return true;
+
+        // Admin/Editor bypass
+        const roles = user.roles || [];
+        return roles.some((r: any) => {
+            const name = typeof r === 'string' ? r : r.name;
+            return ['admin', 'superadmin', 'editor'].includes(name.toLowerCase());
+        });
+    }, [user, subscription]);
 
     // Re-fetch initial article if it was truncated by server-side fetch (which lacks JWT)
     useEffect(() => {
@@ -610,7 +630,15 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
 
     return (
         <div className="bg-white min-h-screen font-unna">
-            <div className="max-w-7xl mx-auto  py-8 px-4">
+            <div className="max-w-7xl mx-auto py-8 px-4">
+                
+                {/* Article Top Banner */}
+                {!isPremium && (
+                    <div className="mb-8">
+                        <ArticleTopAd />
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                     {/* ── Main content column ── */}
@@ -620,15 +648,20 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
 
                                 {/* "Next News" divider between articles */}
                                 {i > 0 && (
-                                    <div className="relative flex items-center my-16">
-                                        <div className="flex-1 border-t-2 border-dashed border-[#0B2149]/20" />
-                                        <div className="mx-6 flex items-center gap-3 px-6 py-3 bg-[#0B2149] text-white rounded-full shadow-lg text-sm font-bold tracking-widest uppercase whitespace-nowrap">
-                                            <ChevronDown size={15} className="text-[#C9A227]" />
-                                            Next News
-                                            <ChevronDown size={15} className="text-[#C9A227]" />
+                                    <>
+                                        <div className="relative flex items-center my-16">
+                                            <div className="flex-1 border-t-2 border-dashed border-[#0B2149]/20" />
+                                            <div className="mx-6 flex items-center gap-3 px-6 py-3 bg-[#0B2149] text-white rounded-full shadow-lg text-sm font-bold tracking-widest uppercase whitespace-nowrap">
+                                                <ChevronDown size={15} className="text-[#C9A227]" />
+                                                Next News
+                                                <ChevronDown size={15} className="text-[#C9A227]" />
+                                            </div>
+                                            <div className="flex-1 border-t-2 border-dashed border-[#0B2149]/20" />
                                         </div>
-                                        <div className="flex-1 border-t-2 border-dashed border-[#0B2149]/20" />
-                                    </div>
+
+                                        {/* In-Feed Ad between articles in infinite scroll */}
+                                        <InFeedAd />
+                                    </>
                                 )}
 
                                 <ArticleBody article={article} locale={locale} t={t} />
@@ -644,22 +677,18 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                                 <Loader size="sm" text="Loading next article..." />
                             </div>
                         )}
-
-
-                        {/* {!hasMore && articles.length > 1 && (
-                            <div className="relative flex items-center my-16">
-                                <div className="flex-1 border-t-2 border-dashed border-gray-200" />
-                                <div className="mx-6 px-6 py-3 bg-gray-100 text-gray-500 rounded-full text-sm font-semibold tracking-widest uppercase whitespace-nowrap">
-                                    No More Articles
-                                </div>
-                                <div className="flex-1 border-t-2 border-dashed border-gray-200" />
-                            </div>
-                        )} */}
                     </div>
 
                     {/* ── Sidebar (sticky, related articles from category) ── */}
                     <div className="lg:col-span-3">
                         <div className="sticky top-24">
+                            {/* Sidebar Top Ad */}
+                            {!isPremium && (
+                                <div className="mb-8">
+                                    <ArticleSidebarTopAd />
+                                </div>
+                            )}
+
                             <h3 className="text-lg font-bold text-gray-900 mb-4 font-unna">{t("relatedArticles")}</h3>
                             <div className="space-y-6 max-h-[85vh] overflow-y-auto scrollbar-hide pb-10">
                                 {loadingRecommended ? (
@@ -689,6 +718,13 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                                     <p className="text-gray-500 text-sm">No related articles found.</p>
                                 )}
                             </div>
+
+                            {/* Sidebar Bottom Ad */}
+                            {!isPremium && (
+                                <div className="mt-8">
+                                    <ArticleSidebarBottomAd />
+                                </div>
+                            )}
                         </div>
                     </div>
 

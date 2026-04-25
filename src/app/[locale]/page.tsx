@@ -1,47 +1,19 @@
 "use client"
 import { useTranslations } from "next-intl";
-import Image from "next/image";
 import { useState, useEffect } from "react";
-import NewsCard from "@/components/ui/NewsCard";
-import logo from "../../public/logo.png";
 import CategorySection from "@/components/home/CategorySection";
 import NewsSlider from "@/components/home/NewsSlider";
 import Stores from "@/components/home/Stores";
-import AdBanner from "@/components/ads/AdBanner";
-import AdSidebar from "@/components/ads/AdSidebar";
-// import AdsPopup from "@/components/ads/AdsPopup";
-// import NewsletterSubscription from "@/components/home/NewsletterSubscription";
-import LegalTimeline from "@/components/home/LegalTimeline";
+import { AdBanner, AdSidebar, AdPopup } from "@/components/ads/StandardAds";
 import { useDocTitle } from "@/hooks/useDocTitle";
-
-// import LiveCourtUpdates from "@/components/home/LiveCourtUpdates";
 
 export default function Home() {
   useDocTitle("Sajjad Husain Law Associates");
-
   const t = useTranslations('Home');
-
-
-  // const [showAdPopup, setShowAdPopup] = useState(false);
-
-  // useEffect(() => {
-  //   // Show popup after 3 seconds
-  //   const timer = setTimeout(() => {
-  //     setShowAdPopup(true);
-  //   }, 3000);
-
-  //   return () => clearTimeout(timer);
-  // }, []);
 
   return (
     <>
-      {/* {showAdPopup && (
-        <AdsPopup
-          onClose={() => setShowAdPopup(false)}
-          imageUrl="/sajjad-husain-ad.png"
-          linkUrl="#"
-        />
-      )} */}
+      <AdPopup slotId="HOME_POPUP" />
       <div className="bg-gray-50 min-h-screen">
         {/* Hero Section - NewsSlider */}
         <NewsSlider />
@@ -49,13 +21,10 @@ export default function Home() {
         {/* Stores Section */}
         <Stores />
 
-        {/* Top Banner Ad */}
-        <div className="container mx-auto px-4 py-8">
-          <AdBanner
-            size="large"
-            imageUrl=""   //    /banner-top.png
-            linkUrl="#"
-          />
+        {/* Top Banner Ads */}
+        <div className="container mx-auto px-4 py-8 space-y-4">
+          {/* <AdBanner slotId="HOME_BANNER_TOP_1" /> */}
+          <AdBanner slotId="HOME_BANNER_TOP_2" />
         </div>
 
         {/* Supreme Court Section */}
@@ -98,35 +67,22 @@ export default function Home() {
             <div className="space-y-6">
               <div className="sticky top-24 space-y-6">
                 {/* Sponsored Ad */}
-                <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-                  <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('sponsored')}</h3>
-                  <AdSidebar
-                    imageUrl=""   // /banner-expert-legal.jpg
-                    linkUrl="#"
-                  />
+                <div className="bg-white p-1 rounded-lg border border-gray-100 shadow-sm">
+                  {/* <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('sponsored')}</h3> */}
+                  <AdSidebar slotId="HOME_SIDEBAR_1" />
                 </div>
 
                 {/* Trending Ad */}
-                <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-                  <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('trending')}</h3>
-                  <AdSidebar
-                    imageUrl=""   //   /banner-dream-explore.jpg
-                    linkUrl="#"
-                  />
+                <div className="bg-white p-1 rounded-lg border border-gray-100 shadow-sm">
+                  {/* <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('trending')}</h3> */}
+                  <AdSidebar slotId="HOME_SIDEBAR_2" />
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Banner Ad */}
-        <div className="container mx-auto px-4 py-8">
-          <AdBanner
-            size="large"
-            imageUrl=""   //    /banner-bottom.png
-            linkUrl="#"
-          />
-        </div>
+
 
         {/* Judgments Section */}
         <CategorySection
@@ -135,9 +91,6 @@ export default function Home() {
           layout="grid"
           limit={8}
         />
-
-        {/* Legal Timeline - Commented */}
-        {/* <LegalTimeline /> */}
 
         {/* Hindi News Section */}
         <CategorySection
@@ -154,11 +107,6 @@ export default function Home() {
           layout="grid"
           limit={8}
         />
-
-        {/* Newsletter Subscription */}
-        {/* <div className="mt-12">
-          <NewsletterSubscription />
-        </div> */}
       </div>
     </>
   );

@@ -60,6 +60,7 @@ import {
   canAccessBroadcastPage,
   canAccessProfilePage,
   canAccessSavedPostsPage,
+  canAccessAdvertisementsPage,
   isAdmin as checkIsAdmin
 } from "@/utils/permissions";
 
@@ -105,6 +106,7 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
   const showBroadcast = canAccessBroadcastPage(user);
   const showProfile = canAccessProfilePage(user);
   const showSavedPosts = canAccessSavedPostsPage(user);
+  const showAdvertisements = canAccessAdvertisementsPage(user);
 
   const handleLogout = () => {
     dispatch(logoutUser());
@@ -264,6 +266,12 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       icon: <Bell size={18} />,
       href: "/admin/broadcast",
       show: showBroadcast
+    },
+    {
+      name: "Advertisements",
+      icon: <Monitor size={18} />,
+      href: "/admin/advertisements",
+      show: showAdvertisements
     },
     // {
     //   name: "Settings",

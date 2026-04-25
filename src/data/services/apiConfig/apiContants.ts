@@ -113,6 +113,12 @@ export const API_ENDPOINTS = {
     STATISTICS: "/audit-logs/statistics",
     FAILED_ATTEMPTS: "/audit-logs/failed-attempts",
     EXPORT: "/audit-logs/export",
+  },
+  ADVERTISEMENTS: {
+    BASE: "/advertisements",
+    BY_SLOT: "/advertisements/slot",
+    TRACK_IMPRESSION: "/advertisements/:id/track-impression",
+    TRACK_CLICK: "/advertisements/:id/track-click",
   }
 };
 

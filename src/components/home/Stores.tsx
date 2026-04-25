@@ -10,6 +10,7 @@ import AiPoweredFeatures from "../ui/AiPoweredFeatures";
 import ContentSlider from "@/components/home/ContentSlider";
 import LatestNews from "../ui/LatestNews";
 import Judgement from "../ui/judgement";
+import { LeaderboardAd, InFeedAd } from "../ads/StandardAds";
 
 import TopJudges from "./TopJudges";
 import TopAdvocateSection from "./TopAdvocateSection";
@@ -361,6 +362,9 @@ export default function Stores() {
           </div>
         </div>
 
+        {/* Home Top Leaderboard Ad */}
+        <LeaderboardAd />
+
         {/* High Courts Section */}
         <div className="bg-gradient-to-b from-white to-gray-50 w-full mb-8 md:mb-12 py-12 md:py-16">
           <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-10">
@@ -489,6 +493,10 @@ export default function Stores() {
             </button>
           </Link>
         </div>
+
+        {/* In-Feed Ad after Latest News */}
+        <InFeedAd />
+
         <div className="w-full px-4">
           <div className="flex items-center justify-center my-6 md:my-10">
             <div className="flex-1 h-px bg-gray-400"></div>

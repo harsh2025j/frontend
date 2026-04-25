@@ -12,10 +12,16 @@ import { timeAgo } from "@/lib/utils/timeAgo";
 import { articleApi } from "@/data/services/article-service/article-service";
 import Pagination from "@/components/Pagination";
 import NewsCard from "@/components/ui/NewsCard";
+import { AdBanner, AdSidebar } from "@/components/ads/StandardAds";
+import { useSelector } from "react-redux";
+import { RootState } from "@/data/redux/store";
 
 const ITEMS_PER_PAGE = 12;
 
 export default function CategoryClient() {
+    const { currentSubscription } = useSelector((state: RootState) => state.subscription);
+    const isPremium = currentSubscription?.status === "active";
+
     const params = useParams();
     const slug = params.slug as string;
     const searchParams = useSearchParams();
@@ -114,6 +120,11 @@ export default function CategoryClient() {
 
     return (
         <div className="container mx-auto px-4 py-10">
+            {/* Top Category Banner */}
+            <div className="mb-10">
+                <AdBanner slotId="CATEGORY_BANNER_1" />
+            </div>
+
             <div className="text-left mb-10 space-y-2">
                 <h1 className="text-4xl text-[#0A2342] sm:text-5xl font-bold capitalize flex items-center gap-3">
                     {displayCategoryName}
@@ -133,36 +144,51 @@ export default function CategoryClient() {
                     No articles found in this category.
                 </div>
             ) : (
-                <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
-                        {(loading ? Array(ITEMS_PER_PAGE).fill(null) : displayArticles).map((article, i) =>
-                            loading ? (
-                                <div key={i} className="bg-gray-100 rounded-xl animate-pulse h-64" />
-                            ) : (
-                                <Link href={`/news/${article.slug}`} key={article.id} className="flex">
-                                    <NewsCard
-                                        title={article.title}
-                                        content={article.content}
-                                        src={article.thumbnail || undefined}
-                                        court={article.location || undefined}
-                                        time={timeAgo(article.createdAt)}
-                                        author={article.authors || article.advocateName || undefined}
-                                    />
-                                </Link>
-                            )
-                        )}
-                    </div>
+                <div className={`grid grid-cols-1 ${isPremium ? 'lg:grid-cols-1' : 'lg:grid-cols-4'} gap-8`}>
+                    {/* Main Content */}
+                    <div className={`${isPremium ? 'lg:col-span-1' : 'lg:col-span-3'} space-y-10`}>
+                        <div className={`grid grid-cols-1 md:grid-cols-2 ${isPremium ? 'lg:grid-cols-3' : ''} gap-6 items-stretch`}>
+                            {(loading ? Array(ITEMS_PER_PAGE).fill(null) : displayArticles).map((article, i) =>
+                                loading ? (
+                                    <div key={i} className="bg-gray-100 rounded-xl animate-pulse h-64" />
+                                ) : (
+                                    <Link href={`/news/${article.slug}`} key={article.id} className="flex">
+                                        <NewsCard
+                                            title={article.title}
+                                            content={article.content}
+                                            src={article.thumbnail || undefined}
+                                            court={article.location || undefined}
+                                            time={timeAgo(article.createdAt)}
+                                            author={article.authors || article.advocateName || undefined}
+                                        />
+                                    </Link>
+                                )
+                            )}
+                        </div>
 
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={(page) => {
-                            const params = new URLSearchParams(searchParams.toString());
-                            params.set("page", page.toString());
-                            router.push(`${pathname}?${params.toString()}`);
-                        }}
-                    />
-                </>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={(page) => {
+                                const params = new URLSearchParams(searchParams.toString());
+                                params.set("page", page.toString());
+                                router.push(`${pathname}?${params.toString()}`);
+                            }}
+                        />
+                    </div>
+                    
+                    {/* Sidebar Ad (Hidden for Premium) */}
+                    {!isPremium && (
+                        <div className="lg:col-span-1">
+                            <div className="sticky top-24 space-y-6">
+                                <div className="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+                                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-2">Sponsored</h3>
+                                    <AdSidebar slotId="CATEGORY_SIDEBAR_1" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
             )}
         </div>
     );
