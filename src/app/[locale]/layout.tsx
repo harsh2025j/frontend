@@ -55,8 +55,14 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: [
+      { url: "/logo-new.png", sizes: "32x32", type: "image/png" },
+      { url: "/logo-new.png", sizes: "any", type: "image/png" },
+    ],
+    shortcut: "/logo-new.png",
+    apple: [
+      { url: "/logo-gold.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   openGraph: {
     type: "website",
