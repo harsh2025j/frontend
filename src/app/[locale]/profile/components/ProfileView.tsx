@@ -31,6 +31,7 @@ import SavedPostsList from "./SavedPostsList";
 import Loader from "@/components/ui/Loader";
 import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
 import ImageCropperModal from "@/components/ui/ImageCropperModal";
+import ConsultancyFormModal from "./ConsultancyFormModal";
 
 interface ProfileViewProps {
   viewContext: "public" | "admin";
@@ -205,6 +206,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [prefs, setPrefs] = useState({ language: currentLocale, doNotDisturb: false, caseStatusAlerts: true });
+  const [isConsultancyModalOpen, setIsConsultancyModalOpen] = useState(false);
 
   const handleLanguageChange = (nextLocale: string) => {
     router.push(pathname, { locale: nextLocale as any });
@@ -325,6 +327,24 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
           >
             {profileUser.bio || "Professional narrative pending registry update."}
           </motion.div>
+
+          {/* Consultancy Action */}
+          {loggedInUser && !isOwner && isProfessional && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-12"
+            >
+              <button
+                onClick={() => setIsConsultancyModalOpen(true)}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-[#0A2342] dark:bg-[#C9A227] text-white rounded-2xl shadow-xl hover:shadow-[#C9A227]/20 transition-all hover:-translate-y-1 group"
+              >
+                <MessageSquare size={18} className="group-hover:rotate-12 transition-transform" />
+                <span className="text-[11px] font-black uppercase tracking-widest">Request Consultancy</span>
+              </button>
+            </motion.div>
+          )}
         </div>
       </section>
 
@@ -614,6 +634,13 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
         )}
         {showLogoutConfirm && (
           <LogoutOverlay onCancel={() => setShowLogoutConfirm(false)} onConfirm={handleLogout} />
+        )}
+        {isConsultancyModalOpen && (
+          <ConsultancyFormModal
+            advocateId={profileUser.id || profileUser._id}
+            advocateName={profileUser.name}
+            onClose={() => setIsConsultancyModalOpen(false)}
+          />
         )}
       </AnimatePresence>
     </div>

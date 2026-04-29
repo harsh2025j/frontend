@@ -8,6 +8,12 @@ import GlobalLoader from "@/components/ui/GlobalLoader";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { AdProvider } from "@/context/AdContext";
 
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+
+import { API_BASE_URL, API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
+
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -56,12 +62,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/logo-gold.png", sizes: "32x32", type: "image/png" },
-      { url: "/logo-gold.png", sizes: "any", type: "image/png" },
+      { url: "/logoico.png", sizes: "16x16", type: "image/png" },
+      { url: "/logoico.png", sizes: "32x32", type: "image/png" },
+      { url: "/logoico.png", sizes: "48x48", type: "image/png" },
     ],
-    shortcut: "/logo-gold.png",
+    shortcut: "/logoico.png",
     apple: [
-      { url: "/logo-gold.png", sizes: "180x180", type: "image/png" },
+      { url: "/logoico.png", sizes: "180x180", type: "image/png" },
     ],
   },
   openGraph: {
@@ -103,16 +110,12 @@ export const metadata: Metadata = {
   }
 };
 
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
-
-import { API_BASE_URL, API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
 
 async function getCategories() {
   try {
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CATEGORIES.FETCH_ALL_CATEGORY}`, {
       headers: {
-        // "ngrok-skip-browser-warning": "true",
+        "ngrok-skip-browser-warning": "true",
       },
       next: { revalidate: 3600 }
     });
@@ -133,7 +136,7 @@ async function getArticles(params: any = {}) {
 
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ARTICLE.FETCH_ALL}?${queryParams.toString()}`, {
       headers: {
-        // "ngrok-skip-browser-warning": "true",
+        "ngrok-skip-browser-warning": "true",
       },
       next: { revalidate: 3600 }
     });

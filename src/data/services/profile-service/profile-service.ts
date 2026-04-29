@@ -62,4 +62,8 @@ export const profileApi = {
       API_ENDPOINTS.PROFILE.BY_USERNAME.replace(":username", username)
     );
   },
+
+  requestConsultancy: async (data: { advocateId: string; subject: string; message: string }) => {
+    return await apiClient.post<any>(API_ENDPOINTS.PROFILE.CONSULTANCY, data);
+  },
 };
