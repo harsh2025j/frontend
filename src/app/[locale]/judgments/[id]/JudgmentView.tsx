@@ -61,7 +61,7 @@ export default function JudgmentView({ judgmentId: propId, isModal = false }: { 
 
     const coramText = leadJudgesList
         ? (coramJudgesList ? `${leadJudgesList} ; ${coramJudgesList}` : leadJudgesList)
-        : (judgment.benchStrength || judgment.bench || "Hon'ble Judges");
+        : (judgment.scrapedJudgeNames || judgment.benchStrength || judgment.bench || "Hon'ble Judges");
 
     return (
         <div className="min-h-screen bg-gray-100 pb-16 font-serif text-gray-900 leading-relaxed">
@@ -120,7 +120,7 @@ export default function JudgmentView({ judgmentId: propId, isModal = false }: { 
 
                     <div className="space-y-1 font-sans text-sm font-bold uppercase tracking-wider text-gray-700">
                         <p>{judgment.judgmentType || "Judgment"}</p>
-                        {judgment.case?.caseNumber && <p className="text-lg">Case No: {judgment.case.caseNumber}</p>}
+                        {(judgment.case?.caseNumber || judgment.scrapedCaseNumber) && <p className="text-lg">Case No: {judgment.case?.caseNumber || judgment.scrapedCaseNumber}</p>}
                     </div>
 
                     {judgment.isLandmark && (

@@ -12,6 +12,7 @@ import {
 import { Link } from '@/i18n/routing';
 import { useDocTitle } from '@/hooks/useDocTitle';
 import Pagination from '@/components/Pagination';
+import SavePostButton from '@/components/ui/SavePostButton';
 
 type SearchTab = 'all' | 'judgment' | 'case' | 'judge' | 'article';
 
@@ -90,6 +91,9 @@ const SearchResultsContent = () => {
     };
 
     const getResultLink = (result: SearchResult) => {
+        if (result.type === 'judgment' && result.pdfUrl) {
+            return result.pdfUrl;
+        }
         switch (result.type) {
             case 'judgment': return `/judgments/${result.id}`;
             case 'case': return `/cases/${result.id}`;
@@ -107,76 +111,92 @@ const SearchResultsContent = () => {
             article: <FileText size={20} className="text-[#C9A227]" />
         }[result.type] || <FileText size={20} />;
 
+        const isPdf = result.type === 'judgment' && !!result.pdfUrl;
+
         return (
-            <Link
-                href={getResultLink(result)}
-                className="block group bg-white rounded-2xl border border-gray-100 hover:border-[#C9A227]/30 hover:shadow-xl hover:shadow-[#C9A227]/5 transition-all duration-300 p-5 mb-4"
-            >
-                <div className="flex flex-col md:flex-row gap-6">
-                    {/* Visual Media (Optional for legal types) */}
-                    {(result.thumbnail || result.type === 'article' || result.type === 'judge') && (
-                        <div className="w-full md:w-40 h-40 md:h-28 rounded-xl overflow-hidden flex-shrink-0 relative bg-gray-50 border border-gray-100">
-                            {result.thumbnail ? (
-                                <Image
-                                    src={result.thumbnail}
-                                    alt={result.title}
-                                    fill
-                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-300">
+            <div className="relative group mb-4">
+                <Link
+                    href={getResultLink(result)}
+                    target={isPdf ? "_blank" : "_self"}
+                    className="block bg-white rounded-2xl border border-gray-100 hover:border-[#C9A227]/30 hover:shadow-xl hover:shadow-[#C9A227]/5 transition-all duration-300 p-5"
+                >
+                    <div className="flex flex-col md:flex-row gap-6">
+                        {/* Visual Media (Optional for legal types) */}
+                        {(result.thumbnail || result.type === 'article' || result.type === 'judge') && (
+                            <div className="w-full md:w-40 h-40 md:h-28 rounded-xl overflow-hidden flex-shrink-0 relative bg-gray-50 border border-gray-100">
+                                {result.thumbnail ? (
+                                    <Image
+                                        src={result.thumbnail}
+                                        alt={result.title}
+                                        fill
+                                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                        {icon}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#C9A227]/10 text-[#C9A227]">
                                     {icon}
+                                    {result.type}
+                                </span>
+                                {result.date && (
+                                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                                        <Calendar size={12} /> {result.date}
+                                    </span>
+                                )}
+                            </div>
+
+                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#C9A227] transition-colors mb-2 leading-snug line-clamp-2">
+                                {result.title}
+                            </h3>
+
+                            {/* Type Specific Extras */}
+                            {result.type === 'judgment' && (result.petitioner || result.respondent) && (
+                                <div className="text-sm font-medium text-gray-700 italic mb-2">
+                                    {result.petitioner || 'Petitioner'} <span className="text-[#C9A227] not-italic mx-1">vs</span> {result.respondent || 'Respondent'}
                                 </div>
                             )}
-                        </div>
-                    )}
 
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#C9A227]/10 text-[#C9A227]">
-                                {icon}
-                                {result.type}
-                            </span>
-                            {result.date && (
-                                <span className="text-xs text-gray-400 flex items-center gap-1">
-                                    <Calendar size={12} /> {result.date}
-                                </span>
+                            {result.type === 'case' && result.caseNumber && (
+                                <div className="text-sm font-bold text-gray-600 mb-2 font-mono">
+                                    Case No: {result.caseNumber}
+                                </div>
                             )}
+
+                            {result.court && (
+                                <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+                                    <MapPin size={12} className="text-[#C9A227]" /> {result.court}
+                                </div>
+                            )}
+
+                            <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                                {result.description}
+                            </p>
                         </div>
 
-                        <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#C9A227] transition-colors mb-2 leading-snug line-clamp-2">
-                            {result.title}
-                        </h3>
-
-                        {/* Type Specific Extras */}
-                        {result.type === 'judgment' && (result.petitioner || result.respondent) && (
-                            <div className="text-sm font-medium text-gray-700 italic mb-2">
-                                {result.petitioner || 'Petitioner'} <span className="text-[#C9A227] not-italic mx-1">vs</span> {result.respondent || 'Respondent'}
-                            </div>
-                        )}
-
-                        {result.type === 'case' && result.caseNumber && (
-                            <div className="text-sm font-bold text-gray-600 mb-2 font-mono">
-                                Case No: {result.caseNumber}
-                            </div>
-                        )}
-
-                        {result.court && (
-                            <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
-                                <MapPin size={12} className="text-[#C9A227]" /> {result.court}
-                            </div>
-                        )}
-
-                        <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                            {result.description}
-                        </p>
+                        <div className="hidden md:flex items-center justify-center self-center text-gray-300 group-hover:text-[#C9A227] transition-colors translate-x-0 group-hover:translate-x-1 duration-300">
+                            <ChevronRight size={24} />
+                        </div>
                     </div>
+                </Link>
 
-                    <div className="hidden md:flex items-center justify-center self-center text-gray-300 group-hover:text-[#C9A227] transition-colors translate-x-0 group-hover:translate-x-1 duration-300">
-                        <ChevronRight size={24} />
+                {/* Bookmark/Save Button - Only for articles and judgments */}
+                {(result.type === 'article' || result.type === 'judgment') && (
+                    <div className="absolute top-4 right-4 z-10">
+                        <SavePostButton
+                            postId={result.id}
+                            iconSize={18}
+                            className="bg-white/80 backdrop-blur-sm shadow-sm border border-gray-100 hover:scale-110 transition-transform"
+                        />
                     </div>
-                </div>
-            </Link>
+                )}
+            </div>
         );
     };
 

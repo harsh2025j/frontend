@@ -263,7 +263,25 @@ export default function CreateJudgmentPage() {
             if (!payload.reservedDateFrom) delete (payload as any).reservedDateFrom;
             if (!payload.nextListDate) delete (payload as any).nextListDate;
 
-            await judgmentsService.create(payload);
+            const formDataObj = new FormData();
+
+            // Append all fields to FormData
+            Object.keys(payload).forEach(key => {
+                const value = (payload as any)[key];
+                if (key === 'file') {
+                    if (value) formDataObj.append('file', value);
+                } else if (typeof value === 'object' && value !== null) {
+                    formDataObj.append(key, JSON.stringify(value));
+                } else if (value !== undefined && value !== null) {
+                    formDataObj.append(key, value.toString());
+                }
+            });
+            // console.log("[Judgment Create] Submitting FormData...");
+            // for (let [key, value] of (formDataObj as any).entries()) {
+            //     console.log(`${key}:`, value instanceof File ? `File [${value.name}, ${value.size} bytes]` : value);
+            // }
+
+            await judgmentsService.create(formDataObj);
             toast.success("Judgment created successfully");
             router.push("/admin/judgments");
         } catch (error: any) {
@@ -438,14 +456,67 @@ export default function CreateJudgmentPage() {
                                 <input type="text" name="implementationDelivery" value={formData.implementationDelivery} className={inputClasses('implementationDelivery')} placeholder="e.g. In-person, Virtual" onChange={handleChange} />
                             </FormField>
 
-                            <div className="md:col-span-2">
-                                <FormField label="Link of the Judgment" description="External official URL or PDF link">
+                            <FormField label="Upload Original PDF" description="Directly upload the official court PDF">
+                                <div className="space-y-3">
                                     <div className="relative">
-                                        <LinkIcon size={16} className="absolute left-3 top-3 text-gray-400" />
-                                        <input type="text" name="judgmentLink" value={formData.judgmentLink} className={inputClasses('judgmentLink') + " pl-10"} placeholder="https://..." onChange={handleChange} />
+                                        <input
+                                            type="file"
+                                            id="pdf-upload"
+                                            accept="application/pdf"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    if (file.size > 10 * 1024 * 1024) {
+                                                        toast.error("File size exceeds 10MB limit");
+                                                        e.target.value = ""; // clear input
+                                                        return;
+                                                    }
+                                                    setFormData((prev: any) => ({ ...prev, file }));
+                                                }
+                                            }}
+                                        />
+                                        <label
+                                            htmlFor="pdf-upload"
+                                            className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all cursor-pointer group"
+                                        >
+                                            <FileText size={20} className="text-gray-400 group-hover:text-primary-500" />
+                                            <span className="text-sm font-medium text-gray-600 group-hover:text-primary-700">
+                                                {formData.file ? 'Change PDF Document' : 'Click to Select PDF Judgment'}
+                                            </span>
+                                        </label>
                                     </div>
-                                </FormField>
-                            </div>
+
+                                    {formData.file && (
+                                        <div className="flex items-center justify-between p-3 bg-primary-50 border border-primary-100 rounded-lg animate-in fade-in slide-in-from-top-2">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-white rounded-md shadow-sm">
+                                                    <FileText size={18} className="text-primary-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-gray-900 truncate max-w-[200px]">
+                                                        {formData.file.name}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {(formData.file.size / (1024 * 1024)).toFixed(2)} MB
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData((prev: any) => {
+                                                    const next = { ...prev };
+                                                    delete next.file;
+                                                    return next;
+                                                })}
+                                                className="p-1 hover:bg-primary-100 rounded-full text-primary-600 transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </FormField>
                         </div>
 
                         <div className="mt-8 space-y-6 pt-6 border-t border-gray-50">

@@ -74,7 +74,16 @@ export default function SearchWithDropdown({
     const handleResultClick = (result: SearchSuggestion) => {
         let path = '';
         switch (result.type) {
-            case 'judgment': path = `/judgments/${result.id}`; break;
+            case 'judgment': 
+                if (result.pdfUrl) {
+                    window.open(result.pdfUrl, '_blank');
+                    setQuery('');
+                    setIsOpen(false);
+                    if (onResultSelect) onResultSelect();
+                    return;
+                }
+                path = `/judgments/${result.id}`; 
+                break;
             case 'case': path = `/cases/${result.id}`; break;
             case 'judge': path = `/judges/${result.id}`; break;
             default: path = `/news/${result.slug}`; break;
@@ -145,7 +154,7 @@ export default function SearchWithDropdown({
 
             {/* Dropdown Results */}
             {isOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-[#C9A227] rounded-lg shadow-2xl max-h-[400px] overflow-y-auto z-50 animate-slideDown">
+                <div className="absolute top-full left-0 lg:-left-10 lg:-right-10 right-0 mt-2 bg-white border-2 border-[#C9A227] rounded-xl shadow-2xl max-h-[500px] overflow-y-auto z-50 animate-slideDown overflow-x-hidden">
                     {isLoading ? (
                         <div className="p-4 text-center text-gray-500">
                             <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-[#C9A227]"></div>
@@ -156,12 +165,16 @@ export default function SearchWithDropdown({
                             {results.map((result) => (
                                 <button key={result.id} onClick={() => handleResultClick(result)} className="w-full px-4 py-3 hover:bg-[#C9A227]/5 transition-colors text-left border-b border-gray-100 last:border-b-0 group">
                                     <div className="flex items-start gap-3">
-                                        <div className="mt-1 flex-shrink-0">{getIcon(result.type)}</div>
+                                        <div className="mt-1 flex-shrink-0 bg-gray-50 p-1.5 rounded-lg group-hover:bg-white transition-colors border border-transparent group-hover:border-[#C9A227]/20">{getIcon(result.type)}</div>
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="text-sm md:text-base font-semibold text-gray-900 group-hover:text-[#C9A227] transition-colors line-clamp-2">
-                                                {result.title} 
-                                                <span className="ml-2 text-xs font-normal text-gray-400 capitalize">({result.type})</span>
-                                            </h4>
+                                            <div className="flex justify-between items-start gap-4">
+                                                <h4 className="text-sm md:text-base font-semibold text-gray-900 group-hover:text-[#C9A227] transition-colors line-clamp-2 flex-1">
+                                                    {result.title}
+                                                </h4>
+                                                <span className="flex-shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 rounded border border-gray-200 group-hover:bg-[#C9A227]/10 group-hover:text-[#C9A227] group-hover:border-[#C9A227]/20 transition-all">
+                                                    {result.type}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </button>

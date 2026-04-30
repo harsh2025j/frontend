@@ -55,7 +55,8 @@ export default function SavedPostsList() {
                         title: j.title || j.case?.title || `Judgment for ${j.case?.caseNumber || 'Unknown Case'}`,
                         description: j.summary || (j.fullText ? j.fullText.substring(0, 120).replace(/<[^>]*>?/gm, '') + '...' : 'No summary available.'),
                         image: null,
-                        link: `/judgments/${j.id}`,
+                        link: j.pdfUrl || `/judgments/${j.id}`,
+                        isExternal: !!j.pdfUrl,
                         date: j.judgmentDate || j.createdAt,
                         category: j.judgmentType || 'Judgment'
                     }))
@@ -158,8 +159,8 @@ export default function SavedPostsList() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {hydratedItems.map((item) => (
-                    <Link key={item.id} href={item.link} className="group relative block bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-[#0A2342]/5 transition-all duration-500">
+                {hydratedItems.map((item) => {
+                    const CardContent = (
                         <div className="flex h-full">
                             {/* Visual Indicator/Image */}
                             <div className="w-1/3 bg-gray-50 relative overflow-hidden flex items-center justify-center border-r border-gray-50">
@@ -207,8 +208,30 @@ export default function SavedPostsList() {
                                 </div>
                             </div>
                         </div>
-                    </Link>
-                ))}
+                    );
+
+                    const className = "group relative block bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-[#0A2342]/5 transition-all duration-500";
+
+                    if (item.isExternal) {
+                        return (
+                            <a
+                                key={item.id}
+                                href={item.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={className}
+                            >
+                                {CardContent}
+                            </a>
+                        );
+                    }
+
+                    return (
+                        <Link key={item.id} href={item.link} className={className}>
+                            {CardContent}
+                        </Link>
+                    );
+                })}
             </div>
         </div>
     );

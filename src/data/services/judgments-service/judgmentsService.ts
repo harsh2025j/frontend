@@ -69,12 +69,15 @@ export const judgmentsService = {
     getById: async (id: string) => {
         return await apiClient.get(`${API_ENDPOINTS.JUDGMENTS.BASE}/${id}`);
     },
-    create: async (data: Judgment | any) => {
-        console.log(data)
-        return await apiClient.post(API_ENDPOINTS.JUDGMENTS.BASE, data);
+    create: async (data: any) => {
+        // If data is FormData (has files), let axios set the correct Content-Type with boundary
+        const config = data instanceof FormData ? { headers: { 'Content-Type': undefined } } : {};
+        return await apiClient.post(API_ENDPOINTS.JUDGMENTS.BASE, data, config);
     },
     update: async (id: string, data: any) => {
-        return await apiClient.patch(`${API_ENDPOINTS.JUDGMENTS.BASE}/${id}`, data);
+        // If data is FormData (has files), let axios set the correct Content-Type with boundary
+        const config = data instanceof FormData ? { headers: { 'Content-Type': undefined } } : {};
+        return await apiClient.patch(`${API_ENDPOINTS.JUDGMENTS.BASE}/${id}`, data, config);
     },
     delete: async (id: string) => {
         return await apiClient.delete(`${API_ENDPOINTS.JUDGMENTS.BASE}/${id}`);

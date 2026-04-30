@@ -6,7 +6,7 @@ import { judgesService } from "@/data/services/judges-service/judgesService";
 import { casesService } from "@/data/services/cases-service/casesService";
 import { Link } from "@/i18n/routing";
 import { formatDate } from "@/utils/dateUtils";
-import { Trash2, Edit, Plus, Search, Gavel, Eye, X } from "lucide-react";
+import { Trash2, Edit, Plus, Search, Gavel, Eye, X, ExternalLink } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
 import JudgmentView from "@/app/[locale]/judgments/[id]/JudgmentView";
@@ -176,7 +176,7 @@ const AdminJudgmentsPageContent = () => {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[200px]">Judgment Title</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case ID</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case Number</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judgment Date</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judge</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -196,7 +196,7 @@ const AdminJudgmentsPageContent = () => {
                                         <tr key={j.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[200px]">{j.title?.substring(0, 400) + "..." || "No Title"}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                {j.case?.caseNumber || (j.caseId && casesMap[j.caseId]) || "N/A"}
+                                                {j.case?.caseNumber || j.scrapedCaseNumber || (j.caseId && casesMap[j.caseId]) || "N/A"}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                 {formatDate(j.judgmentDate)}
@@ -204,7 +204,7 @@ const AdminJudgmentsPageContent = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                 {j.leadJudges && j.leadJudges.length > 0
                                                     ? j.leadJudges.map((lj: any) => lj.name).join(", ")
-                                                    : (j.judge?.name || (j.judgeId && judgesMap[j.judgeId]) || "Unknown")}
+                                                    : (j.scrapedJudgeNames || j.judge?.name || (j.judgeId && judgesMap[j.judgeId]) || "Unknown")}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <div className="flex justify-end gap-3">
@@ -269,7 +269,26 @@ const AdminJudgmentsPageContent = () => {
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm no-print" onClick={() => setViewJudgmentId(null)}></div>
                     <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200 print:max-h-none print:h-auto print:rounded-none print:shadow-none print:static">
                         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-10 no-print">
-                            <h3 className="text-xl font-bold text-gray-900 font-sans">Judgment Preview</h3>
+                            <div className="flex items-center gap-4">
+                                <h3 className="text-xl font-bold text-gray-900 font-sans">Judgment Preview</h3>
+                                {(() => {
+                                    const selectedJudgment = judgments.find(j => j.id === viewJudgmentId);
+                                    if (selectedJudgment?.pdfUrl) {
+                                        return (
+                                            <a
+                                                href={selectedJudgment.pdfUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg hover:bg-amber-100 transition text-xs font-bold shadow-sm"
+                                            >
+                                                <ExternalLink size={14} />
+                                                Open in Full Screen
+                                            </a>
+                                        );
+                                    }
+                                    return null;
+                                })()}
+                            </div>
                             <button
                                 onClick={() => setViewJudgmentId(null)}
                                 className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
@@ -277,8 +296,27 @@ const AdminJudgmentsPageContent = () => {
                                 <X size={24} />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto print:overflow-visible">
-                            <JudgmentView judgmentId={viewJudgmentId} isModal={true} />
+                        <div className="flex-1 overflow-hidden print:overflow-visible flex flex-col">
+                            {(() => {
+                                const selectedJudgment = judgments.find(j => j.id === viewJudgmentId);
+                                if (selectedJudgment?.pdfUrl) {
+                                    return (
+                                        <div className="flex-1 w-full bg-gray-100">
+                                            <iframe
+                                                src={`${selectedJudgment.pdfUrl}#toolbar=1&navpanes=0&scrollbar=1`}
+                                                className="w-full h-full border-0"
+                                                style={{ minHeight: 'calc(90vh - 120px)' }}
+                                                title="Judgment PDF Preview"
+                                            />
+                                        </div>
+                                    );
+                                }
+                                return (
+                                    <div className="overflow-y-auto">
+                                        <JudgmentView judgmentId={viewJudgmentId} isModal={true} />
+                                    </div>
+                                );
+                            })()}
                         </div>
                         <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 font-sans no-print">
                             <button

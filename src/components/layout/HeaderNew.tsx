@@ -455,7 +455,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                             {/* Search & Actions */}
                             <div className="hidden lg:flex items-center gap-3">
                                 {/* Search Bar */}
-                                <div className="w-64">
+                                <div className="w-[350px]">
                                     <SearchWithDropdown
                                         placeholder="Search articles, cases..."
                                         onSearch={handleSearch}

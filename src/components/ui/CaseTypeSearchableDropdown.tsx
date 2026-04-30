@@ -2,7 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, Check, Search, X, FileText, Info } from "lucide-react";
-import { CASE_TYPES } from "@/constants/caseOptions";
+import { CASE_TYPES as DEFAULT_CASE_TYPES } from "@/constants/caseOptions";
+import { casesService } from "@/data/services/cases-service/casesService";
 
 interface CaseTypeSearchableDropdownProps {
   value: string;
@@ -25,8 +26,26 @@ export default function CaseTypeSearchableDropdown({
 }: CaseTypeSearchableDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [dynamicTypes, setDynamicTypes] = useState<string[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetchDynamicTypes();
+  }, []);
+
+  const fetchDynamicTypes = async () => {
+    try {
+      const response = await casesService.getCaseTypes();
+      // Ensure we only have strings and handle different response structures
+      const types = response.data?.data || response.data || [];
+      if (Array.isArray(types)) {
+        setDynamicTypes(types);
+      }
+    } catch (error) {
+      console.error("Error fetching dynamic case types:", error);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -45,7 +64,13 @@ export default function CaseTypeSearchableDropdown({
     }
   }, [isOpen]);
 
-  const filteredTypes = CASE_TYPES.filter((ct) =>
+  // Merge default types with dynamic types from database, ensuring uniqueness
+  const allCaseTypes = Array.from(new Set([
+    ...DEFAULT_CASE_TYPES,
+    ...dynamicTypes
+  ])).sort();
+
+  const filteredTypes = allCaseTypes.filter((ct) =>
     ct.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

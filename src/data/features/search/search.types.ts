@@ -18,6 +18,7 @@ export interface SearchResult {
         slug: string;
     };
     authorId?: string;
+    pdfUrl?: string;
 }
 
 export interface SearchSuggestion {
@@ -25,6 +26,7 @@ export interface SearchSuggestion {
     title: string;
     type: string;
     slug?: string;
+    pdfUrl?: string;
 }
 
 // The raw item from the API
@@ -32,7 +34,7 @@ export interface SearchItem {
     id: string;
     title: string;
     subHeadline?: string;
-    body?: string; // Was 'content' in previous assumption, now 'body'
+    body?: string; 
     slug: string;
     thumbnail?: string;
     createdAt: string;

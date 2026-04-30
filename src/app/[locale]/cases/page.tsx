@@ -356,7 +356,7 @@ export default function CasesPage() {
                                                 <input
                                                     type="text"
                                                     required
-                                                    placeholder="Enter Case Number (e.g., 123/2024)"
+                                                    placeholder="Enter Case Number (e.g., 1234)"
                                                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all text-base md:text-sm"
                                                     value={inputs.caseNumber}
                                                     onChange={(e) => setInputs({ ...inputs, caseNumber: e.target.value })}

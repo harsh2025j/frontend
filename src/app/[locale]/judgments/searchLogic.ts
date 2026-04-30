@@ -44,6 +44,8 @@ export const performJudgmentSearch = async (searchType: JudgmentSearchType, inpu
             if (!inputs.freeText?.trim()) return resultsData;
             response = await judgmentsService.search({
                 q: inputs.freeText.trim(),
+                fromDate: inputs.fromDate,
+                toDate: inputs.toDate,
                 page: inputs.page || 1,
                 limit: 10
             });

@@ -33,5 +33,8 @@ export const casesService = {
         return await apiClient.get(API_ENDPOINTS.SEARCH.CASES, {
             params: { q, page, limit, createdBy }
         });
+    },
+    getCaseTypes: async () => {
+        return await apiClient.get(API_ENDPOINTS.CASES.CASE_TYPES);
     }
 };

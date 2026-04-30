@@ -74,8 +74,12 @@ export default function LatestInformationSection() {
         }
     };
 
-    const handleDownload = (id: string) => {
-        window.open(`/judgments/${id}?print=true`, "_blank");
+    const handleDownload = (id: string, pdfUrl?: string) => {
+        if (pdfUrl) {
+            window.open(pdfUrl, "_blank");
+        } else {
+            window.open(`/judgments/${id}?print=true`, "_blank");
+        }
     };
 
     const renderListItems = (tab: TabType) => {
@@ -182,6 +186,8 @@ export default function LatestInformationSection() {
 
             if (tab === 'judgments') {
                 const title = `${item.caseTitle || item.case?.title || item.title || 'Judgment'} - ${item.case?.caseNumber || ''}`;
+                const pdfUrl = item.pdfUrl;
+
                 return (
                     <div key={id || index} className="flex items-start gap-2.5 pb-3.5 border-b border-gray-200 last:border-0 cursor-pointer hover:bg-gray-50/50 transition-colors group/item p-2">
                         <span className="text-[#C9A227] mt-0.5">▸</span>
@@ -193,18 +199,23 @@ export default function LatestInformationSection() {
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        handleDownload(id);
+                                        handleDownload(id, pdfUrl);
                                     }}
                                     className="px-3 py-1 bg-[#0A2342] text-white text-[10px] font-medium rounded hover:bg-[#1a3a75] transition-colors"
                                 >
-                                    download
+                                    {pdfUrl ? 'view pdf' : 'download'}
                                 </button>
                             </div>
-                            <Link href={`/judgments/${id}`}>
+                            <a 
+                                href={pdfUrl || `/judgments/${id}`}
+                                target={pdfUrl ? "_blank" : "_self"}
+                                rel={pdfUrl ? "noopener noreferrer" : undefined}
+                                className="block"
+                            >
                                 <p className="text-sm text-gray-700 leading-relaxed truncate group-hover/item:text-[#0A2342] font-medium">
                                     {title}
                                 </p>
-                            </Link>
+                            </a>
                         </div>
                     </div>
                 );

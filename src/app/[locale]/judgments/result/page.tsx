@@ -8,6 +8,7 @@ import { performJudgmentSearch, JudgmentSearchType, JudgmentSearchInputs } from 
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
 import Pagination from "@/components/Pagination";
+import SavePostButton from "@/components/ui/SavePostButton";
 
 function JudgmentResultPageContent() {
     useDocTitle("Judgments | Sajjad Husain Law Associates");
@@ -127,21 +128,32 @@ function JudgmentResultPageContent() {
                                                     </span>
                                                 </div>
 
-                                                <Link
-                                                    href={`/judgments/${item._id || item.id}`}
-                                                    className="text-xl font-bold text-[#0A2342] hover:text-[#C9A227] transition-colors leading-tight"
-                                                >
-                                                    {item.caseTitle || item.case?.title || "Case Title Not Available"}
-                                                </Link>
+                                                {item.pdfUrl ? (
+                                                    <a
+                                                        href={item.pdfUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xl font-bold text-[#0A2342] hover:text-[#C9A227] transition-colors leading-tight"
+                                                    >
+                                                        {item.title || item.caseTitle || item.case?.title || (item.scrapedCaseNumber ? `${item.scrapedCaseType || ''} No. ${item.scrapedCaseNumber}` : "Case Title Not Available")}
+                                                    </a>
+                                                ) : (
+                                                    <Link
+                                                        href={`/judgments/${item._id || item.id}`}
+                                                        className="text-xl font-bold text-[#0A2342] hover:text-[#C9A227] transition-colors leading-tight"
+                                                    >
+                                                        {item.title || item.caseTitle || item.case?.title || (item.scrapedCaseNumber ? `${item.scrapedCaseType || ''} No. ${item.scrapedCaseNumber}` : "Case Title Not Available")}
+                                                    </Link>
+                                                )}
 
                                                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 text-sm text-gray-600">
                                                     <div className="flex items-center gap-1.5">
                                                         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path></svg>
-                                                        <span className="font-medium">{item.court || item.case?.court || item.judge?.court || "Court N/A"}</span>
+                                                        <span className="font-medium">{item.court || item.case?.court || item.scrapedCourt || "Court N/A"}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5">
                                                         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                                        <span>{item.benchStrength || item.judge?.bench || item.bench || "Bench N/A"}</span>
+                                                        <span>{item.benchStrength || item.bench || item.scrapedJudgeNames || "Bench N/A"}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -157,14 +169,34 @@ function JudgmentResultPageContent() {
                                             </p>
                                         </div>
 
-                                        <div className="mt-5 pt-4 border-t border-gray-100 flex justify-end">
-                                            <Link
-                                                href={`/judgments/${item._id || item.id}`}
-                                                className="inline-flex items-center gap-2 text-sm font-semibold text-[#0A2342] hover:text-[#C9A227] transition-colors bg-white border border-gray-200 hover:border-[#C9A227] px-4 py-2 rounded-lg"
-                                            >
-                                                Read Full Judgment
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                            </Link>
+                                        <div className="mt-5 pt-4 border-t border-gray-100 flex justify-between items-center">
+                                            <div className="flex items-center gap-2">
+                                                <SavePostButton 
+                                                    postId={item._id || item.id} 
+                                                    iconSize={18}
+                                                    className="bg-gray-50 border border-gray-200 hover:border-blue-200"
+                                                />
+                                                <span className="text-xs text-gray-500 font-medium">Save for later</span>
+                                            </div>
+                                            {item.pdfUrl ? (
+                                                <a
+                                                    href={item.pdfUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-2 text-sm font-semibold text-[#0A2342] hover:text-[#C9A227] transition-colors bg-white border border-gray-200 hover:border-[#C9A227] px-4 py-2 rounded-lg"
+                                                >
+                                                    View Original PDF
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                                </a>
+                                            ) : (
+                                                <Link
+                                                    href={`/judgments/${item._id || item.id}`}
+                                                    className="inline-flex items-center gap-2 text-sm font-semibold text-[#0A2342] hover:text-[#C9A227] transition-colors bg-white border border-gray-200 hover:border-[#C9A227] px-4 py-2 rounded-lg"
+                                                >
+                                                    Read Full Judgment
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                                </Link>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

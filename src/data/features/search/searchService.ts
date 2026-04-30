@@ -113,7 +113,8 @@ function mapItemsToResults(items: any[]): SearchResult[] {
             petitioner: item.petitioner,
             respondent: item.respondent,
             designation: item.designation,
-            authorId: item.authorId || item.creatorId
+            authorId: item.authorId || item.creatorId,
+            pdfUrl: item.pdfUrl
         };
     });
 }

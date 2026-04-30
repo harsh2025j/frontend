@@ -96,6 +96,9 @@ export default function EditJudgmentPage() {
         additionalNotes: "",
 
         relatedNewsIds: [] as string[],
+        pdfUrl: "",
+        pdfName: "",
+        pdfSize: "",
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -198,6 +201,8 @@ export default function EditJudgmentPage() {
                     reservedDuration: jData.reservedDuration || "",
                     additionalNotes: jData.additionalNotes || "",
                     pdfUrl: jData.pdfUrl || "",
+                    pdfName: jData.pdfName || "",
+                    pdfSize: jData.pdfSize || "",
                     isLandmark: jData.isLandmark || false,
                     reservedDateFrom: jData.reservedDateFrom ? new Date(jData.reservedDateFrom).toISOString().split('T')[0] : "",
                     nextListDate: jData.nextListDate ? new Date(jData.nextListDate).toISOString().split('T')[0] : "",
@@ -349,13 +354,41 @@ export default function EditJudgmentPage() {
             delete (payload as any).petitionerCounsel;
             delete (payload as any).respondentCounsel;
 
-            // Sanitize dates: empty strings must be null for ISO 8601 validation
-            if (!payload.reservedDateFrom) (payload as any).reservedDateFrom = null;
-            if (!payload.nextListDate) (payload as any).nextListDate = null;
-            if (!payload.reservedDateFrom) delete (payload as any).reservedDateFrom; // or keep as null if backend likes it
+            // Sanitize dates: empty strings must be null or deleted for ISO 8601 validation
+            if (!payload.reservedDateFrom) delete (payload as any).reservedDateFrom;
             if (!payload.nextListDate) delete (payload as any).nextListDate;
+            if (!payload.judgmentDate) delete (payload as any).judgmentDate;
 
-            await judgmentsService.update(params.id as string, payload);
+            const formDataObj = new FormData();
+
+            // Append all fields to FormData
+            Object.keys(payload).forEach(key => {
+                const value = (payload as any)[key];
+
+                // Skip internal 'file' property (we append it separately)
+                if (key === 'file') return;
+
+                // Don't send empty pdfUrl to prevent overwriting existing S3 links in backend
+                if (key === 'pdfUrl' && !value) return;
+
+                if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
+                    formDataObj.append(key, JSON.stringify(value));
+                } else if (value !== undefined && value !== null) {
+                    formDataObj.append(key, value.toString());
+                }
+            });
+
+            // Append the file if a new one was selected
+            if (formData.file) {
+                formDataObj.append('file', formData.file);
+            }
+
+            // console.log("[Judgment Update] Submitting FormData for ID:", params.id);
+            // for (let [key, value] of (formDataObj as any).entries()) {
+            //     console.log(`${key}:`, value instanceof File ? `File [${value.name}, ${value.size} bytes]` : value);
+            // }
+
+            await judgmentsService.update(params.id as string, formDataObj);
             toast.success("Judgment updated successfully");
             router.push("/admin/judgments");
         } catch (error: any) {
@@ -531,14 +564,98 @@ export default function EditJudgmentPage() {
                                 <input type="text" name="implementationDelivery" value={formData.implementationDelivery} className={inputClasses('implementationDelivery')} placeholder="e.g. In-person, Virtual" onChange={handleChange} />
                             </FormField>
 
-                            <div className="md:col-span-2">
-                                <FormField label="Link of the Judgment">
+                            <FormField label="Upload Original PDF" description="Replace or add the official court PDF">
+                                <div className="space-y-3">
+                                    {/* Previously Uploaded Document */}
+                                    {formData.pdfUrl && !formData.file && (
+                                        <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-white rounded-md shadow-sm border border-gray-100">
+                                                    <FileText size={18} className="text-gray-400" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Previously Uploaded</p>
+                                                    <p className="text-sm font-semibold text-gray-900 truncate max-w-[250px]">
+                                                        {formData.pdfName || "judgment_document.pdf"}
+                                                    </p>
+                                                    {formData.pdfSize && (
+                                                        <p className="text-xs text-gray-400">{formData.pdfSize}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <a
+                                                href={formData.pdfUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="px-3 py-1 text-xs font-medium bg-white border border-gray-200 rounded hover:bg-gray-50 text-primary-600 transition-colors"
+                                            >
+                                                View PDF
+                                            </a>
+                                        </div>
+                                    )}
+
+                                    {/* File Input Selector */}
                                     <div className="relative">
-                                        <LinkIcon size={16} className="absolute left-3 top-3 text-gray-400" />
-                                        <input type="text" name="judgmentLink" value={formData.judgmentLink} className={inputClasses('judgmentLink') + " pl-10"} placeholder="https://..." onChange={handleChange} />
+                                        <input
+                                            type="file"
+                                            id="pdf-upload"
+                                            accept="application/pdf"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    if (file.size > 10 * 1024 * 1024) {
+                                                        toast.error("File size exceeds 10MB limit");
+                                                        e.target.value = ""; // clear input
+                                                        return;
+                                                    }
+                                                    setFormData((prev: any) => ({ ...prev, file }));
+                                                }
+                                            }}
+                                        />
+                                        <label
+                                            htmlFor="pdf-upload"
+                                            className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all cursor-pointer group"
+                                        >
+                                            <FileText size={20} className="text-gray-400 group-hover:text-primary-500" />
+                                            <span className="text-sm font-medium text-gray-600 group-hover:text-primary-700">
+                                                {formData.pdfUrl ? 'Replace Current PDF' : 'Select PDF Judgment'}
+                                            </span>
+                                        </label>
                                     </div>
-                                </FormField>
-                            </div>
+
+                                    {/* Newly Selected File (Preview before upload) */}
+                                    {formData.file && (
+                                        <div className="flex items-center justify-between p-3 bg-primary-50 border border-primary-100 rounded-lg animate-in fade-in slide-in-from-top-2">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-white rounded-md shadow-sm">
+                                                    <FileText size={18} className="text-primary-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-medium text-primary-600 uppercase tracking-wider">New Selection</p>
+                                                    <p className="text-sm font-semibold text-gray-900 truncate max-w-[200px]">
+                                                        {formData.file.name}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {(formData.file.size / (1024 * 1024)).toFixed(2)} MB
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData((prev: any) => {
+                                                    const next = { ...prev };
+                                                    delete next.file;
+                                                    return next;
+                                                })}
+                                                className="p-1 hover:bg-primary-100 rounded-full text-primary-600 transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </FormField>
                         </div>
 
                         <div className="mt-8 space-y-6 pt-6 border-t border-gray-50">
