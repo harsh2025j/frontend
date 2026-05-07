@@ -6,11 +6,16 @@ export default function robots(): MetadataRoute.Robots {
     return {
         rules: {
             userAgent: '*',
-            allow: '/',
+            allow: [
+                '/',
+                '/*opengraph-image*', // Explicitly allow social share images
+            ],
             disallow: [
                 '/admin/',       // Don't index the admin panel
                 '/api/',         // Don't index API routes
-                '/*?*',          // Don't index internal search result URLs with many query params
+                '/search',       // Don't index search pages
+                '/zh/',          // Don't index Chinese version
+                '/mr/',          // Don't index Marathi version
             ],
         },
         sitemap: `${SITE_URL}/sitemap.xml`,
