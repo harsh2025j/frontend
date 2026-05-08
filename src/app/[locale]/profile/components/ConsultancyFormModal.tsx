@@ -54,18 +54,18 @@ export default function ConsultancyFormModal({ advocateId, advocateName, onClose
             <motion.div
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="bg-white dark:bg-[#0A2342] rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl relative"
+                className="bg-white rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl relative"
             >
                 <button
                     onClick={onClose}
-                    className="absolute top-6 right-6 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                    className="absolute top-6 right-6 p-2 rounded-xl hover:bg-gray-100 transition-colors"
                 >
                     <X size={20} />
                 </button>
 
                 <div className="p-8 md:p-10">
-                    <h2 className="text-3xl font-serif text-[#0A2342] dark:text-white mb-2">Request Consultancy</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 font-medium">
+                    <h2 className="text-3xl font-serif text-[#0A2342] mb-2">Request Consultancy</h2>
+                    <p className="text-sm text-gray-500 mb-8 font-medium">
                         Send a consultation request to <span className="text-[#C9A227] font-bold">{advocateName}</span>.
                     </p>
 
@@ -74,7 +74,7 @@ export default function ConsultancyFormModal({ advocateId, advocateName, onClose
                             <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <Check size={32} />
                             </div>
-                            <h3 className="text-xl font-serif text-[#0A2342] dark:text-white mb-2">Request Sent!</h3>
+                            <h3 className="text-xl font-serif text-[#0A2342] mb-2">Request Sent!</h3>
                             <p className="text-sm text-gray-500">The advocate will receive your message via email.</p>
                         </div>
                     ) : (
@@ -86,7 +86,7 @@ export default function ConsultancyFormModal({ advocateId, advocateName, onClose
                                     value={subject}
                                     onChange={(e) => setSubject(e.target.value)}
                                     placeholder="e.g., Property Dispute Consultation"
-                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-black/20 border-2 border-transparent focus:border-[#C9A227] rounded-2xl outline-none transition-all text-sm font-semibold"
+                                    className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-[#C9A227] rounded-2xl outline-none transition-all text-sm font-semibold"
                                     required
                                 />
                             </div>
@@ -97,7 +97,7 @@ export default function ConsultancyFormModal({ advocateId, advocateName, onClose
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
                                     placeholder="Describe your legal requirement briefly..."
-                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-black/20 border-2 border-transparent focus:border-[#C9A227] rounded-2xl outline-none transition-all text-sm font-semibold min-h-[150px] resize-none"
+                                    className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-[#C9A227] rounded-2xl outline-none transition-all text-sm font-semibold min-h-[150px] resize-none"
                                     required
                                 />
                             </div>
@@ -105,7 +105,7 @@ export default function ConsultancyFormModal({ advocateId, advocateName, onClose
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-5 bg-[#0A2342] dark:bg-[#C9A227] text-white text-[11px] font-bold tracking-widest uppercase rounded-2xl shadow-xl hover:opacity-90 transition-all flex items-center justify-center gap-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full py-5 bg-[#0A2342] text-white text-[11px] font-bold tracking-widest uppercase rounded-2xl shadow-xl hover:opacity-90 transition-all flex items-center justify-center gap-4 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {loading ? (
                                     <>

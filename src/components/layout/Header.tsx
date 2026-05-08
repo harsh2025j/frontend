@@ -332,9 +332,9 @@ export default function Header() {
   return (
     <>
       <header className="w-full border-b border-gray-200 bg-white z-[100] fixed top-0 left-0">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <Link href="/" className="flex items-center">
-            <Image src={logo} alt="Logo" className="object-contain" width={140} height={40} priority />
+            <Image src={logo} alt="Logo" className="object-contain" width={130} height={36} priority />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6 text-sm font-medium h-full">
@@ -342,7 +342,7 @@ export default function Header() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1.5 border border-gray-200">
+            <div className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1 border border-gray-200">
               <Globe size={14} className="text-gray-500" />
               <button onClick={() => switchLocale("en")} className={`text-xs font-medium transition-colors ${locale === "en" ? "text-[#C9A227] font-bold" : "text-gray-500 hover:text-gray-700"}`}>EN</button>
               <span className="text-gray-300">|</span>
@@ -352,8 +352,8 @@ export default function Header() {
             {user ? (
               <div className="relative pb-4 -mb-4" onMouseEnter={() => setIsProfileOpen(true)} onMouseLeave={() => setIsProfileOpen(false)}>
                 <button className="flex items-center gap-2 focus:outline-none py-2">
-                  <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700 overflow-hidden border-2 border-[#C9A227]">
-                    {avatar ? <Image src={avatar} alt="Avatar" width={40} height={40} className="object-cover w-full h-full" quality={90} sizes="100px" /> : (user?.name?.[0] || "U").toUpperCase()}
+                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700 overflow-hidden border-2 border-[#C9A227]">
+                    {avatar ? <Image src={avatar} alt="Avatar" width={32} height={32} className="object-cover w-full h-full" quality={90} sizes="100px" /> : (user?.name?.[0] || "U").toUpperCase()}
                   </div>
                   <span className="text-sm font-medium text-gray-800 hover:text-[#C9A227] transition-colors">{user?.name}</span>
                   <ChevronDown size={14} className="text-gray-500" />
@@ -381,7 +381,7 @@ export default function Header() {
         </div>
 
         {menuOpen && (
-          <div className="lg:hidden bg-white border-t border-gray-200 w-full h-[calc(100vh-80px)] overflow-y-auto shadow-lg absolute top-20 left-0 z-40 pb-20">
+          <div className="lg:hidden bg-white border-t border-gray-200 w-full h-[calc(100vh-64px)] overflow-y-auto shadow-lg absolute top-16 left-0 z-40 pb-20">
             <nav className="flex flex-col p-5 gap-2">
               <div className="mb-4 border-b border-gray-200 pb-4">
                 {user ? (

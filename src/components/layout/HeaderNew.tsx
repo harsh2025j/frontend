@@ -393,7 +393,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                     <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDE2YzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00em0wIDI0YzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00ek0xMiAxNmMwLTIuMjEgMS43OS00IDQtNHM0IDEuNzkgNCA0LTEuNzkgNC00IDQtNC0xLjc5LTQtNHptMCAyNGMwLTIuMjEgMS43OS00IDQtNHM0IDEuNzkgNCA0LTEuNzkgNC00IDQtNC0xLjc5LTQtNHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-50"></div>
 
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                        <div className="flex items-center justify-between h-10 text-xs">
+                        <div className="flex items-center justify-between h-8 text-[10px] sm:text-xs">
                             {/* Left - Contact Info */}
                             <div className="flex md:flex-row items-center gap-4 ml-2 md:ml-0">
                                 <a href="mailto:sajjadhusainlawassociates@gmail.com" className="flex items-center gap-1.5 hover:text-amber-400 transition-all duration-300 hover:scale-105 group">
@@ -433,20 +433,20 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                 {/* Main Header Container */}
                 <div className="border-b border-gray-100">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between h-20">
+                        <div className="flex items-center justify-between h-16">
                             {/* Logo & Tagline */}
                             <Link href="/" className="flex items-center gap-3 group">
                                 <div className="relative">
-                                    <Image src={logo} alt="Sajjad Husain Law Associates" className="object-contain" width={50} height={50} priority />
+                                    <Image src={logo} alt="Sajjad Husain Law Associates" className="object-contain" width={40} height={40} priority />
                                     <div className="absolute -inset-1 bg-[#C9A227]/20 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 </div>
                                 <div className="block">
-                                    <h1 className="text-sm min-[400px]:text-base sm:text-xl font-bold text-gray-900 leading-tight">
+                                    <h1 className="text-sm min-[400px]:text-base sm:text-lg font-bold text-gray-900 leading-tight">
                                         <span className="sm:hidden">Sajjad Husain Law</span>
                                         <span className="hidden sm:inline">Sajjad Husain Law Associates</span>
                                     </h1>
-                                    <p className="hidden min-[350px]:flex text-[10px] sm:text-xs text-gray-600 items-center gap-1">
-                                        <Scale size={12} className="text-[#C9A227]" />
+                                    <p className="hidden min-[350px]:flex text-[9px] sm:text-[10px] text-gray-600 items-center gap-1">
+                                        <Scale size={11} className="text-[#C9A227]" />
                                         Excellence in Legal Services
                                     </p>
                                 </div>
@@ -467,7 +467,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                 {/* User Profile or Auth Buttons */}
                                 {user ? (
                                     <div
-                                        className="relative pb-4 -mb-4"
+                                        className="relative pb-2 -mb-2"
                                         onMouseEnter={() => setIsProfileOpen(true)}
                                         onMouseLeave={() => setIsProfileOpen(false)}
                                         onClick={(e) => {
@@ -475,9 +475,9 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                             togglePin("profile");
                                         }}
                                     >
-                                        <button className="flex items-center gap-2 focus:outline-none py-2 px-3 hover:bg-gray-50 rounded-full transition-colors">
-                                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#C9A227] to-[#b39022] flex items-center justify-center text-sm font-semibold text-white overflow-hidden border-2 border-white shadow-md">
-                                                {avatar ? <Image src={avatar} alt="Avatar" width={40} height={40} className="object-cover w-full h-full" quality={90} sizes="100px" /> : (user?.name?.[0] || "U").toUpperCase()}
+                                        <button className="flex items-center gap-2 focus:outline-none py-1.5 px-3 hover:bg-gray-50 rounded-full transition-colors">
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#C9A227] to-[#b39022] flex items-center justify-center text-sm font-semibold text-white overflow-hidden border-2 border-white shadow-md">
+                                                {avatar ? <Image src={avatar} alt="Avatar" width={32} height={32} className="object-cover w-full h-full" quality={90} sizes="100px" /> : (user?.name?.[0] || "U").toUpperCase()}
                                             </div>
                                             <span className="text-sm font-medium text-gray-800 hidden xl:block">{user?.name}</span>
                                             <ChevronDown size={14} className={`text-gray-500 hidden xl:block transition-transform duration-200 ${(isProfileOpen || activeDropdown === "profile") ? "rotate-180" : ""}`} />
@@ -590,7 +590,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                 {/* Navigation Bar */}
                 <div className="hidden lg:block bg-white border-b border-gray-100" ref={navRef}>
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8 overflow-hidden">
-                        <nav className="flex items-center gap-8 h-14 text-sm font-medium overflow-hidden">
+                        <nav className="flex items-center gap-8 h-10 text-sm font-medium overflow-hidden">
                             {navItems.map((item, i) => (
                                 <DesktopMenuItem
                                     key={i}

@@ -96,7 +96,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onOpen={() => setIsSidebarOpen(true)} />
       <div className={`flex flex-col flex-1 transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : "lg:ml-20"} ml-0`}>
         <AdminNavbar onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)} />
         <main className="flex-1 pt-24 p-8">{children}</main>

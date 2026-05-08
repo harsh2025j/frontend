@@ -64,7 +64,7 @@ import {
   isAdmin as checkIsAdmin
 } from "@/utils/permissions";
 
-const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: () => void; onOpen: () => void }) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { user: reduxProfileUser } = useProfileActions();
@@ -224,7 +224,6 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
         }
       ]
     },
-
     {
       name: "Plan Management",
       icon: <Crown size={18} />,
@@ -293,14 +292,14 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
         className={`
         fixed left-0 top-16
         h-[calc(100vh-4rem)]
-        bg-white dark:bg-[#0A2342]
-        border-r border-gray-200 dark:border-gray-800
+        bg-white
+        border-r border-gray-200
         shadow-sm flex flex-col justify-between z-40
         transition-all duration-300 ease-in-out
         ${isOpen ? "translate-x-0 w-72" : "-translate-x-full lg:translate-x-0 lg:w-20"}
       `}
       >
-        <div className="flex-1 overflow-y-auto py-3 px-3">
+        <div className="flex-1 overflow-y-auto py-3 px-3 custom-scrollbar">
           <nav className="space-y-1">
 
             {navItems.map((item) => {
@@ -313,12 +312,19 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                 return (
                   <div key={item.name} className="space-y-1">
                     <div
-                      onClick={() => setOpenDropdown(isExpanded ? null : item.name)}
+                      onClick={() => {
+                        if (!isOpen) {
+                          onOpen();
+                          setOpenDropdown(item.name);
+                        } else {
+                          setOpenDropdown(isExpanded ? null : item.name);
+                        }
+                      }}
                       className={`
                         flex items-center w-full ${isOpen ? "gap-4" : "lg:justify-center"} 
-                        px-3 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+                        px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-100
                         cursor-pointer transition-all duration-200 select-none
-                        ${isChildActive ? "bg-blue-50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400" : ""}
+                        ${isChildActive ? "bg-blue-50 text-blue-600" : ""}
                       `}
                     >
                       <span className="shrink-0">{item.icon}</span>
@@ -331,7 +337,7 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                     </div>
 
                     {(isExpanded || (!isOpen && isChildActive)) && (
-                      <div className={`${isOpen ? "ml-4 border-l-2 border-gray-100 dark:border-gray-800 pl-2" : "hidden"} space-y-1`}>
+                      <div className={`${isOpen ? "ml-4 border-l-2 border-gray-100 pl-2" : "hidden"} space-y-1`}>
                         {item.children
                           .filter((child: any) => child.show)
                           .map((child: any) => {
@@ -344,8 +350,8 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                                 className={`
                                   group flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-200
                                   ${isItemActive
-                                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-white"
+                                    ? "bg-blue-50 text-blue-600"
+                                    : "text-gray-600 hover:bg-gray-100 hover:text-blue-600"
                                   }
                                 `}
                               >
@@ -360,7 +366,7 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                 );
               }
 
-              // 🔹 NORMAL ITEM (UNCHANGED)
+
               const isActive = activeNav === item.name;
 
               return (
@@ -371,14 +377,14 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                   className={`
                   group flex items-center ${isOpen ? "gap-4" : "lg:justify-center"} px-3 py-2 rounded-xl transition-all duration-200
                   ${isActive
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-white"
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-blue-600"
                     }
                 `}
                   title={!isOpen ? item.name : ""}
                 >
                   <span
-                    className={`shrink-0 transition-colors duration-200 ${isActive ? "text-blue-600 dark:text-blue-400" : "group-hover:text-blue-600 dark:group-hover:text-orange-500"
+                    className={`shrink-0 transition-colors duration-200 ${isActive ? "text-blue-600" : "group-hover:text-blue-600"
                       }`}
                   >
                     {item.icon}

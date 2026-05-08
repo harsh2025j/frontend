@@ -69,7 +69,6 @@ export default function NotesApp() {
   const [showSidebar, setShowSidebar] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
 
   // Helpers
   function findSelectedFile() {
@@ -322,7 +321,7 @@ export default function NotesApp() {
   const file = sel ? sel.file : null
 
   return (
-    <div className={`${darkMode ? 'dark bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'} min-h-screen flex flex-col transition-colors`}>
+    <div className="bg-gray-50 text-gray-900 min-h-screen flex flex-col transition-colors">
       {/* Top Bar */}
       {!focusMode && (
         <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-sm transition-colors">
@@ -335,7 +334,6 @@ export default function NotesApp() {
             <button onClick={addFile} className="px-3 py-1 rounded bg-blue-600 text-white shadow hover:shadow-md transition">New File</button>
             <button onClick={toggleFullscreen} className="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 shadow hover:shadow-md transition">{isFullscreen ? 'Exit Full' : 'Full Screen'}</button>
             <button onClick={() => setFocusMode((f) => !f)} className="px-3 py-1 rounded bg-purple-600 text-white shadow hover:shadow-md transition">{focusMode ? 'Show UI' : 'Focus Mode'}</button>
-            <button onClick={() => setDarkMode((d) => !d)} className="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 shadow hover:shadow-md transition">{darkMode ? 'Light' : 'Dark'}</button>
           </div>
         </div>
       )}

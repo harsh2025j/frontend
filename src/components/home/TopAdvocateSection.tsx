@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { advocatesService } from "@/data/services/advocates-service/advocatesService";
 import Loader from "../ui/Loader";
 import Image from "next/image";
+import { Link } from "@/i18n/routing";
 
 export default function TopAdvocateSection() {
     const [advocates, setAdvocates] = useState<any[]>([]);
@@ -153,16 +154,16 @@ export default function TopAdvocateSection() {
                             <div key={i} className="flex items-center gap-4 p-2 border-b border-gray-50 last:border-0">
                                 {/* Rank */}
                                 <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0" />
-                                
+
                                 {/* Avatar */}
                                 <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />
-                                
+
                                 {/* Info */}
                                 <div className="flex-1 space-y-2">
                                     <div className="h-3 bg-gray-200 w-3/4 rounded" />
                                     <div className="h-2 bg-gray-100 w-1/2 rounded" />
                                 </div>
-                                
+
                                 {/* Score */}
                                 <div className="text-right space-y-1">
                                     <div className="h-4 bg-gray-200 w-8 ml-auto rounded" />
@@ -182,7 +183,7 @@ export default function TopAdvocateSection() {
                 ) : (
                     <div className="space-y-4">
                         {advocates.map((advocate) => (
-                            <div key={advocate.id} className="flex items-center gap-4 group hover:bg-gray-50 p-2 rounded-lg transition-colors border-b border-gray-50 last:border-0">
+                            <Link href={`/profile/${advocate.username}`} key={advocate.id} className="flex items-center gap-4 group hover:bg-gray-50 p-2 rounded-lg transition-colors border-b border-gray-50 last:border-0 cursor-pointer">
                                 {/* Rank */}
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${getRankColor(advocate.rank)}`}>
                                     {advocate.rank}
@@ -219,21 +220,12 @@ export default function TopAdvocateSection() {
                                     <p className="text-lg font-bold text-[#0A2342]">{advocate.caseCount}</p>
                                     <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Cases</p>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 )}
             </div>
-
-            {/* Footer */}
-            {/* <div className="p-4 bg-gray-50 border-t border-gray-100">
-                <button className="w-full py-2 bg-transparent text-[#0A2342] text-xs font-bold uppercase tracking-widest hover:text-[#C9A227] transition-colors flex items-center justify-center gap-2">
-                    View Full Directory
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                </button>
-            </div> */}
         </div>
     );
 }
+

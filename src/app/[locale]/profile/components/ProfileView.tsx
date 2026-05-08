@@ -12,7 +12,8 @@ import {
   Heart, Calendar, MapPin, Award,
   MessageSquare, ExternalLink, Clock, BookOpen, Plus,
   Shield, Globe, Bell, LogOut, ChevronRight, Check, ShieldCheck, Key, Languages, Phone,
-  Gavel, Loader2
+  Gavel, Loader2,
+  BookmarkCheck
 } from "lucide-react";
 
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
@@ -47,7 +48,7 @@ const BentoStatCard = ({ label, value, icon: Icon, description, delay = 0 }: any
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5, delay }}
     whileHover={{ y: -5 }}
-    className="relative overflow-hidden group bg-white/70 dark:bg-[#0A2342]/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-sm"
+    className="relative overflow-hidden group bg-white/70 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-sm"
   >
     <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
       <Icon size={72} strokeWidth={1} />
@@ -60,7 +61,7 @@ const BentoStatCard = ({ label, value, icon: Icon, description, delay = 0 }: any
         <span className="text-[9px] font-bold tracking-[0.2em] text-[#C9A227] uppercase">{label}</span>
       </div>
       <div className="flex items-baseline gap-1 mb-2">
-        <h3 className="text-4xl font-serif text-[#0A2342] dark:text-white leading-none">{value}</h3>
+        <h3 className="text-4xl font-serif text-[#0A2342] leading-none">{value}</h3>
       </div>
       <p className="text-[10px] text-gray-400 font-medium leading-relaxed max-w-[180px]">
         {description}
@@ -74,7 +75,7 @@ const BentoCard = ({ title, subtitle, children, className = "", delay = 0 }: any
     initial={{ opacity: 0, scale: 0.98 }}
     animate={{ opacity: 1, scale: 1 }}
     transition={{ duration: 0.5, delay }}
-    className={`group relative overflow-hidden bg-white/70 dark:bg-[#0A2342]/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-sm ${className}`}
+    className={`group relative overflow-hidden bg-white/70 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-sm ${className}`}
   >
     <div className="flex flex-col h-full relative z-10">
       <div className="mb-6">
@@ -83,11 +84,11 @@ const BentoCard = ({ title, subtitle, children, className = "", delay = 0 }: any
             {subtitle}
           </span>
         )}
-        <h4 className="text-2xl font-serif text-[#0A2342] dark:text-white tracking-tight">{title}</h4>
+        <h4 className="text-2xl font-serif text-[#0A2342] tracking-tight">{title}</h4>
       </div>
       <div className="flex-grow">{children}</div>
     </div>
-    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent dark:from-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
   </motion.div>
 );
 
@@ -154,7 +155,11 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
     async function fetchProfile() {
       try {
         setLoading(true);
-        const response = await profileApi.fetchProfileByUsername(username);
+        const isMongoId = /^[0-9a-fA-F]{24}$/.test(username);
+        const response = isMongoId
+          ? await profileApi.fetchPublicProfile(username)
+          : await profileApi.fetchProfileByUsername(username);
+
         if (response.data.success) {
           const fetchedUser = response.data.data as any;
           try {
@@ -253,7 +258,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   if (error || !profileUser) return <BentoErrorView error={error} context={viewContext} router={router} />;
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] dark:bg-[#000d22] pb-32 text-[#0A2342] dark:text-white">
+    <div className="min-h-screen bg-[#F8F9FA] pb-32 text-[#0A2342]">
       <div className="absolute top-0 inset-x-0 h-[60vh] bg-gradient-to-b from-[#0A2342]/10 to-transparent pointer-events-none" />
 
       {/* 0. FLOATING BACK BUTTON - Only show if not viewing own profile */}
@@ -268,10 +273,10 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
               router.push("/");
             }
           }}
-          className="absolute top-22 md:top-38 left-4 md:left-14 z-[45] flex items-center gap-3 px-5 py-3 bg-white/70 dark:bg-[#081b31]/60 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl hover:shadow-[#C9A227]/10 group transition-all ring-1 ring-black/5 cursor-pointer"
+          className="absolute top-22 md:top-38 left-4 md:left-14 z-[45] flex items-center gap-3 px-5 py-3 bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl hover:shadow-[#C9A227]/10 group transition-all ring-1 ring-black/5 cursor-pointer"
         >
-          <ArrowLeft size={16} className="text-[#0A2342] dark:text-[#C9A227] group-hover:-translate-x-1 transition-transform" />
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#0A2342] dark:text-white hidden sm:inline">Return</span>
+          <ArrowLeft size={16} className="text-[#0A2342] group-hover:-translate-x-1 transition-transform" />
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#0A2342] hidden sm:inline">Return</span>
         </motion.button>
       )}
 
@@ -280,7 +285,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
         <div className="max-w-6xl mx-auto px-4 relative">
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative inline-block mb-12">
             <div className="absolute inset-[-10px] bg-gradient-to-tr from-[#C9A227] via-[#0A2342]/10 to-[#C9A227] opacity-30 rounded-[50px] animate-[spin_12s_linear_infinite]" />
-            <div className="w-56 h-56 rounded-[40px] overflow-hidden border-4 border-white dark:border-[#0A2342] shadow-2xl relative group cursor-pointer" onClick={() => isOwner && fileInputRef.current?.click()}>
+            <div className="w-56 h-56 rounded-[40px] overflow-hidden border-4 border-white shadow-2xl relative group cursor-pointer" onClick={() => isOwner && fileInputRef.current?.click()}>
               {profileUser.profilePicture ? (
                 <Image src={profileUser.profilePicture} alt="Avatar" fill className="object-cover  transition-transform duration-700" quality={100} sizes="500px" />
               ) : (
@@ -300,18 +305,18 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
               )}
             </div>
             {profileIsAdvocate && (
-              <motion.div initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1, transition: { delay: 0.6 } }} className="absolute -right-12 top-10 p-4 bg-white/80 dark:bg-[#0A2342]/40 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20">
+              <motion.div initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1, transition: { delay: 0.6 } }} className="absolute -right-12 top-10 p-4 bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20">
                 <ShieldCheck size={24} className="text-[#C9A227]" />
                 <div className="absolute top-14 -right-2 bg-[#0A2342] text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-full">Verified</div>
               </motion.div>
             )}
           </motion.div>
 
-          <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-6xl sm:text-8xl font-serif text-[#0A2342] dark:text-white mb-4">
+          <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-6xl sm:text-8xl font-serif text-[#0A2342] mb-4">
             {profileUser.name}
           </motion.h1>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs font-bold text-[#C9A227] tracking-[0.4em] uppercase mb-12">
-            <span className="text-[#0A2342] dark:text-white">
+            <span className="text-[#0A2342]">
               {getRoleLabel()} | </span>
             {Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0
               ? profileUser.specialization.join(" • ")
@@ -323,7 +328,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="max-w-2xl mx-auto mt-2 text-[13px] md:text-sm text-gray-500 dark:text-gray-400 font-medium italic leading-relaxed px-6"
+            className="max-w-2xl mx-auto mt-2 text-[13px] md:text-sm text-gray-500 font-medium italic leading-relaxed px-6"
           >
             {profileUser.bio || "Professional narrative pending registry update."}
           </motion.div>
@@ -338,7 +343,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
             >
               <button
                 onClick={() => setIsConsultancyModalOpen(true)}
-                className="inline-flex items-center gap-3 px-8 py-4 bg-[#0A2342] dark:bg-[#C9A227] text-white rounded-2xl shadow-xl hover:shadow-[#C9A227]/20 transition-all hover:-translate-y-1 group"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-[#0A2342] text-white rounded-2xl shadow-xl hover:shadow-[#C9A227]/20 transition-all hover:-translate-y-1 group"
               >
                 <MessageSquare size={18} className="group-hover:rotate-12 transition-transform" />
                 <span className="text-[11px] font-black uppercase tracking-widest">Request Consultancy</span>
@@ -353,10 +358,10 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 
           <aside className="lg:col-span-3 sticky top-20 md:top-24 z-20 -mx-4 sm:mx-0 px-4 sm:px-0">
-            <div className="flex flex-row lg:flex-col gap-1 md:gap-2 p-1.5 bg-white/60 dark:bg-[#0A2342]/20 backdrop-blur-2xl rounded-2xl border border-white/20 shadow-lg shadow-black/5 overflow-x-auto scrollbar-hide">
+            <div className="flex flex-row lg:flex-col gap-1 md:gap-2 p-1.5 bg-white/60 backdrop-blur-2xl rounded-2xl border border-white/20 shadow-lg shadow-black/5 overflow-x-auto scrollbar-hide">
               {[
                 { id: "personal", label: "Identity", icon: User, show: true },
-                { id: "saved", label: "Vault", icon: Heart, show: isOwner },
+                { id: "saved", label: "Saved", icon: BookmarkCheck, show: isOwner },
                 { id: "cases", label: "Portfolio", icon: Briefcase, show: showLegalSections },
                 { id: "articles", label: "Insights", icon: FileText, show: showLegalSections },
                 { id: "settings", label: "Account", icon: Settings, show: isOwner },
@@ -364,17 +369,17 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`relative flex items-center gap-2 md:gap-4 px-4 md:px-6 py-2.5 md:py-4 rounded-full lg:rounded-2xl transition-all duration-500 whitespace-nowrap flex-shrink-0 group ${activeTab === tab.id ? "text-[#0A2342] dark:text-[#C9A227]" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  className={`relative flex items-center gap-2 md:gap-4 px-4 md:px-6 py-2.5 md:py-4 rounded-full lg:rounded-2xl transition-all duration-500 whitespace-nowrap flex-shrink-0 group ${activeTab === tab.id ? "text-[#0A2342]" : "text-gray-400 hover:text-gray-600"
                     }`}
                 >
                   {activeTab === tab.id && (
                     <motion.div
                       layoutId="activeTabIndicator"
-                      className="absolute inset-0 bg-white dark:bg-[#122b4d] rounded-xl shadow-sm z-0"
+                      className="absolute inset-0 bg-white rounded-xl shadow-sm z-0"
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
                   )}
-                  <div className={`relative z-10 p-1.5 rounded-xl transition-colors duration-500 ${activeTab === tab.id ? "bg-[#C9A227] text-white" : "bg-transparent group-hover:bg-gray-100 dark:group-hover:bg-white/5"}`}>
+                  <div className={`relative z-10 p-1.5 rounded-xl transition-colors duration-500 ${activeTab === tab.id ? "bg-[#C9A227] text-white" : "bg-transparent group-hover:bg-gray-100"}`}>
                     <tab.icon size={14} className="md:w-4 md:h-4" />
                   </div>
                   <span className="relative z-10 text-[10px] md:text-[11px] font-bold uppercase tracking-widest">{tab.label}</span>
@@ -438,7 +443,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                                 <Shield size={12} className="text-[#C9A227]" />
                                 <span className="text-[10px] text-[#C9A227] uppercase font-black tracking-widest">DOB</span>
                               </div>
-                              <span className="text-xs font-bold text-[#0A2342] dark:text-white">
+                              <span className="text-xs font-bold text-[#0A2342]">
                                 {!isNaN(new Date(profileUser.dob).getTime())
                                   ? new Date(profileUser.dob).toLocaleDateString()
                                   : "Registry Pending"}
@@ -526,7 +531,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                             <div className={`p-2 rounded-lg transition-colors ${currentLocale === "en" ? "bg-[#C9A227] text-white" : "bg-gray-100 text-gray-400"}`}>
                               <Languages size={18} />
                             </div>
-                            <span className="text-xs font-bold text-[#0A2342] dark:text-white">English</span>
+                            <span className="text-xs font-bold text-[#0A2342]">English</span>
                           </div>
                           {currentLocale === "en" && (
                             <span className="px-3 py-1 bg-[#C9A227] text-white text-[8px] font-black rounded-full uppercase tracking-tighter">Active</span>
@@ -543,7 +548,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                             <div className={`p-2 rounded-lg transition-colors ${currentLocale === "hi" ? "bg-[#C9A227] text-white" : "bg-gray-100 text-gray-400"}`}>
                               <Languages size={18} />
                             </div>
-                            <span className="text-xs font-bold text-[#0A2342] dark:text-white">Hindi</span>
+                            <span className="text-xs font-bold text-[#0A2342]">Hindi</span>
                           </div>
                           {currentLocale === "hi" && (
                             <span className="px-3 py-1 bg-[#C9A227] text-white text-[8px] font-black rounded-full uppercase tracking-tighter">Active</span>
@@ -555,7 +560,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                     {/* C. Subscription Plans */}
                     <BentoCard title="Subscription Plans" subtitle="Membership Status">
                       <p className="text-[10px] text-gray-400 mb-6 font-serif italic">Manage your current membership and upgrades.</p>
-                      <div className="space-y-4 p-6 bg-gray-50 dark:bg-white/5 rounded-2xl">
+                      <div className="space-y-4 p-6 bg-gray-50 rounded-2xl">
                         <div className="flex justify-between items-center group">
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Plan Name</span>
                           <span className="text-xs font-black text-[#0A2342]">{subscription?.planName || "Basic Plan"}</span>
@@ -580,11 +585,11 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                       <div className="space-y-3">
                         <Link
                           href="/auth/forgot-password"
-                          className="w-full flex items-center justify-between p-4 bg-white dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-2xl group hover:border-[#C9A227]/30 transition-all"
+                          className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl group hover:border-[#C9A227]/30 transition-all"
                         >
                           <div className="flex items-center gap-4">
-                            <Key size={18} className="text-[#0A2342] dark:text-[#C9A227]" />
-                            <span className="text-xs font-bold text-[#0A2342] dark:text-white">Reset Password</span>
+                            <Key size={18} className="text-[#0A2342]" />
+                            <span className="text-xs font-bold text-[#0A2342]">Reset Password</span>
                           </div>
                           <ChevronRight size={16} className="text-gray-300 group-hover:text-[#C9A227] transition-colors" />
                         </Link>
@@ -657,7 +662,7 @@ function TonalField({ label, value, icon: Icon }: any) {
         {Icon && <Icon size={12} className="text-[#C9A227]" />}
         <label className="text-[9px] font-extrabold uppercase tracking-widest">{label}</label>
       </div>
-      <div className="text-sm font-semibold border-b border-gray-100 dark:border-white/5 pb-3 group-hover:border-[#C9A227]/30 transition-all">{display || "---"}</div>
+      <div className="text-sm font-semibold border-b border-gray-100 pb-3 group-hover:border-[#C9A227]/30 transition-all">{display || "---"}</div>
     </div>
   );
 }
@@ -665,10 +670,10 @@ function TonalField({ label, value, icon: Icon }: any) {
 function CaseBentoLink({ caseData, delay }: any) {
   return (
     <Link href={`/cases/${caseData.id}`}>
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }} className="h-full bg-white/70 dark:bg-[#0A2342]/10 p-8 rounded-2xl border border-white/20 group hover:border-[#C9A227]/20 transition-all">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }} className="h-full bg-white/70 p-8 rounded-2xl border border-white/20 group hover:border-[#C9A227]/20 transition-all">
         <div className="flex justify-between items-start mb-6">
           <span className="text-[10px] font-black text-[#C9A227] uppercase tracking-widest">{caseData.caseType || "Case"}</span>
-          <div className="p-2 rounded-xl bg-gray-50 dark:bg-white/5"><Briefcase size={16} /></div>
+          <div className="p-2 rounded-xl bg-gray-50"><Briefcase size={16} /></div>
         </div>
         <h3 className="text-2xl font-serif mb-4 line-clamp-2">{caseData.title}</h3>
         <p className="text-xs text-black/40 line-clamp-2 italic">Registry: {caseData.court}</p>
@@ -695,9 +700,9 @@ function ArticleBentoLink({ articleData, delay, logo }: any) {
 
 function ToggleItem({ label, checked, onChange, icon: Icon }: any) {
   return (
-    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-2xl">
+    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
       <div className="flex items-center gap-4">
-        <Icon size={18} className="text-[#0A2342] dark:text-[#C9A227]" />
+        <Icon size={18} className="text-[#0A2342]" />
         <span className="text-xs font-bold">{label}</span>
       </div>
       <button onClick={() => onChange(!checked)} className={`relative w-12 h-6 rounded-full transition-colors ${checked ? 'bg-[#C9A227]' : 'bg-gray-200'}`}>
@@ -710,10 +715,10 @@ function ToggleItem({ label, checked, onChange, icon: Icon }: any) {
 function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isProfessional }: any) {
   return (
     <div className="fixed inset-0 z-[690] flex items-center justify-center p-6 bg-[#0A2342]/60 backdrop-blur-md">
-      <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-white dark:bg-[#0A2342] rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl relative">
+      <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl relative">
         <button onClick={onClose} className="absolute top-8 right-8 p-3 rounded-2xl hover:bg-gray-50"><X size={24} /></button>
         <div className="p-12 pb-4">
-          <h2 className="text-4xl font-serif text-[#0A2342] dark:text-white mb-2">Edit Credentials</h2>
+          <h2 className="text-4xl font-serif text-[#0A2342] mb-2">Edit Credentials</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto px-1 pr-6 custom-scrollbar">
             <InputField label={isProfessional ? "Full Legal Name" : "Full Name"} value={formData.name} onChange={(v: any) => setFormData({ ...formData, name: v })} />
             <InputField label="Professional Designation" value={formData.designation} onChange={(v: any) => setFormData({ ...formData, designation: v })} />
@@ -753,7 +758,7 @@ function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isPr
         </div>
         <div className="p-12 flex gap-4 bg-gray-50/50">
           <button onClick={onClose} className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest border border-gray-100 rounded-2xl">Cancel</button>
-          <button onClick={onSave} disabled={saving} className="flex-[2] py-4 bg-[#0A2342] dark:bg-[#C9A227] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:opacity-90 transition-all flex items-center justify-center gap-4 min-h-[56px]">
+          <button onClick={onSave} disabled={saving} className="flex-[2] py-4 bg-[#0A2342] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:opacity-90 transition-all flex items-center justify-center gap-4 min-h-[56px]">
             {saving ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
@@ -793,7 +798,7 @@ function InputField({ label, value, onChange, className = "", type = "text" }: a
   return (
     <div className={`space-y-1.5 ${className}`}>
       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
-      <input type={type} value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full px-6 py-4 bg-gray-50 dark:bg-black/20 border-2 border-transparent focus:border-[#C9A227] rounded-2xl outline-none transition-all text-sm font-semibold" />
+      <input type={type} value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-[#C9A227] rounded-2xl outline-none transition-all text-sm font-semibold" />
     </div>
   );
 }
@@ -802,7 +807,7 @@ function TextAreaField({ label, value, onChange, className = "" }: any) {
   return (
     <div className={`space-y-1.5 ${className}`}>
       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
-      <textarea value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full px-6 py-4 bg-gray-50 dark:bg-black/20 border-2 border-transparent focus:border-[#C9A227] rounded-2xl outline-none transition-all text-sm font-semibold min-h-[120px] resize-none" />
+      <textarea value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-[#C9A227] rounded-2xl outline-none transition-all text-sm font-semibold min-h-[120px] resize-none" />
     </div>
   );
 }
@@ -818,23 +823,23 @@ function EmptyState({ icon: Icon, message }: any) {
 
 function BentoSkeleton() {
   return (
-    <div className="min-h-screen bg-[#F8F9FA] dark:bg-[#000d22] pb-32 animate-pulse">
+    <div className="min-h-screen bg-[#F8F9FA] pb-32 animate-pulse">
       {/* 1. HERO SKELETON */}
       <section className="relative pt-24 pb-24 overflow-hidden text-center z-10">
         <div className="max-w-6xl mx-auto px-4 relative">
           {/* Avatar Circle */}
           <div className="relative inline-block mb-12">
-            <div className="w-56 h-56 rounded-[40px] bg-gray-200 dark:bg-[#0A2342]/20" />
+            <div className="w-56 h-56 rounded-[40px] bg-gray-200" />
           </div>
 
           {/* Name Pulse */}
-          <div className="h-20 w-3/4 max-w-2xl bg-gray-200 dark:bg-[#0A2342]/20 mx-auto mb-6 rounded-3xl" />
+          <div className="h-20 w-3/4 max-w-2xl bg-gray-200 mx-auto mb-6 rounded-3xl" />
 
           {/* Role/Spec Pulse */}
-          <div className="h-4 w-1/2 max-w-md bg-gray-200 dark:bg-[#0A2342]/20 mx-auto mb-12 rounded-lg" />
+          <div className="h-4 w-1/2 max-w-md bg-gray-200 mx-auto mb-12 rounded-lg" />
 
           {/* Bio Pulse */}
-          <div className="h-16 w-full max-w-2xl bg-gray-100 dark:bg-[#0A2342]/10 mx-auto rounded-3xl" />
+          <div className="h-16 w-full max-w-2xl bg-gray-100 mx-auto rounded-3xl" />
         </div>
       </section>
 
@@ -844,9 +849,9 @@ function BentoSkeleton() {
 
           {/* Sidebar Skeleton */}
           <aside className="lg:col-span-3">
-            <div className="flex flex-col gap-2 p-2 bg-gray-100 dark:bg-[#0A2342]/10 rounded-[32px]">
+            <div className="flex flex-col gap-2 p-2 bg-gray-100 rounded-[32px]">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-14 w-full bg-gray-200 dark:bg-[#0A2342]/20 rounded-2xl" />
+                <div key={i} className="h-14 w-full bg-gray-200 rounded-2xl" />
               ))}
             </div>
           </aside>
@@ -856,14 +861,14 @@ function BentoSkeleton() {
             {/* Stats Row Pulse */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-44 bg-gray-100 dark:bg-[#0A2342]/10 rounded-[32px]" />
+                <div key={i} className="h-44 bg-gray-100 rounded-[32px]" />
               ))}
             </div>
 
             {/* Content Grid Pulse */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="h-[500px] bg-gray-100 dark:bg-[#0A2342]/10 rounded-[40px]" />
-              <div className="h-[500px] bg-gray-100 dark:bg-[#0A2342]/10 rounded-[40px]" />
+              <div className="h-[500px] bg-gray-100 rounded-[40px]" />
+              <div className="h-[500px] bg-gray-100 rounded-[40px]" />
             </div>
           </div>
         </div>
@@ -876,7 +881,7 @@ function BentoErrorView({ error, context, router }: any) {
   return (
     <div className="min-h-screen flex items-center justify-center p-8 bg-[#F8F9FA] text-center">
       <div className="max-w-md w-full bg-white p-12 rounded-[56px] shadow-2xl">
-        <h2 className="text-3xl font-serif text-[#0A2342] mb-4">Registry Error</h2>
+        <h2 className="text-3xl font-serif text-[#0A2342] mb-4">Profile Not Found</h2>
         <p className="text-gray-500 mb-12 text-sm">{error || "Access restricted."}</p>
         <button onClick={() => router.push(context === "admin" ? "/admin" : "/")} className="w-full py-5 bg-[#0A2342] text-white rounded-2xl font-black uppercase text-xs">Return Home</button>
       </div>

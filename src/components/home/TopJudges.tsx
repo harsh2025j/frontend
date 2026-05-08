@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { judgesService } from "@/data/services/judges-service/judgesService";
 import Loader from "../ui/Loader";
 import Image from "next/image";
+import { Link } from "@/i18n/routing";
 
 export default function TopJudges() {
     const [judges, setJudges] = useState<any[]>([]);
@@ -182,7 +183,7 @@ export default function TopJudges() {
                 ) : (
                     <div className="space-y-4">
                         {Array.isArray(judges) && judges.map((judge) => (
-                            <div key={judge.id} className="flex items-center gap-4 group hover:bg-gray-50 p-2 rounded-lg transition-colors border-b border-gray-50 last:border-0">
+                            <Link href={`/judges/${judge.id}`} key={judge.id} className="flex items-center gap-4 group hover:bg-gray-50 p-2 rounded-lg transition-colors border-b border-gray-50 last:border-0 cursor-pointer">
                                 {/* Rank */}
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${getRankColor(judge.rank)}`}>
                                     {judge.rank}
@@ -219,7 +220,7 @@ export default function TopJudges() {
                                     <p className="text-lg font-bold text-[#0A2342]">{judge.judgmentCount}</p>
                                     <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Judgments</p>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 )}
