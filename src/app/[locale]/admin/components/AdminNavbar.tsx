@@ -156,7 +156,7 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
                     onClick={() => { setIsProfileOpen(false); setIsPinned(false); }}
                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
-                    <PlusCircle size={16} /> Submit Post
+                    <PlusCircle size={16} /> Membership Form
                   </Link>
                 )}
 

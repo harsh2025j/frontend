@@ -20,7 +20,7 @@ const selectIsToken = (state: RootState) => state.auth.token;
 const selectAuthMessage = (state: RootState) => state.auth.message;
 const selectDebugOtp = (state: RootState) => state.auth.debugOtp;
 
-const useAuth = () => {
+export const useAuth = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const user = useAppSelector(selectAuthUser);

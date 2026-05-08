@@ -53,7 +53,7 @@ export default function TopAdvocateSection() {
     const fetchTopAdvocates = async () => {
         setLoading(true);
         try {
-            const response = await advocatesService.getTopAdvocates(1, 5, selectedCourt || undefined);
+            const response = await advocatesService.getTopAdvocates(1, 12, selectedCourt || undefined);
             const data = response.data;
             if (data && Array.isArray(data.data)) {
                 setAdvocates(data.data);
@@ -80,97 +80,22 @@ export default function TopAdvocateSection() {
     };
 
     return (
-        <div className="flex-1 bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden min-h-[450px] flex flex-col">
+        <div className="flex-1 overflow-hidden min-h-[450px] flex flex-col">
             {/* Header */}
-            <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="p-5 border-b border-[#0A2342]/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h2 className="text-xl font-bold text-[#0A2342]">Top Advocates</h2>
                     <p className="text-xs text-gray-500 mt-0.5">Ranked by cases created</p>
                 </div>
-
-                <div className="relative w-full sm:w-auto z-[20]">
-                    <div className="relative group">
-                        <button
-                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className="w-full sm:w-56 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 flex items-center justify-between hover:border-[#C9A227] transition-all focus:outline-none focus:ring-2 focus:ring-[#C9A227]/20"
-                        >
-                            <span className="truncate">{selectedCourt || "All Courts"}</span>
-                            <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
-
-                        {isDropdownOpen && (
-                            <>
-                                <div
-                                    className="fixed inset-0 z-0"
-                                    onClick={() => setIsDropdownOpen(false)}
-                                ></div>
-                                <div className="absolute right-0 mt-2 w-full sm:w-64 bg-white border border-gray-100 rounded-xl shadow-2xl z-10 py-2 max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-200">
-                                    <button
-                                        onClick={() => {
-                                            setSelectedCourt("");
-                                            setIsDropdownOpen(false);
-                                        }}
-                                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between transition-colors ${!selectedCourt ? 'text-[#C9A227] font-semibold bg-[#C9A227]/5' : 'text-gray-700'}`}
-                                    >
-                                        All Courts
-                                        {!selectedCourt && (
-                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                            </svg>
-                                        )}
-                                    </button>
-                                    <div className="h-px bg-gray-100 my-1"></div>
-                                    {Array.isArray(courts) && courts.map((court) => (
-                                        <button
-                                            key={court}
-                                            onClick={() => {
-                                                setSelectedCourt(court);
-                                                setIsDropdownOpen(false);
-                                            }}
-                                            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between transition-colors ${selectedCourt === court ? 'text-[#C9A227] font-semibold bg-[#C9A227]/5' : 'text-gray-700'}`}
-                                        >
-                                            <span className="truncate">{court}</span>
-                                            {selectedCourt === court && (
-                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                </svg>
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
+                
+                {/* Optional: Add court filtering back if needed, for now keeping simple */}
             </div>
 
-            {/* List */}
-            <div className="flex-1 p-5 overflow-y-auto">
+            {/* Content Area */}
+            <div className="flex-1 relative flex flex-col justify-center overflow-hidden">
                 {loading ? (
-                    <div className="space-y-4 animate-pulse">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="flex items-center gap-4 p-2 border-b border-gray-50 last:border-0">
-                                {/* Rank */}
-                                <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0" />
-
-                                {/* Avatar */}
-                                <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />
-
-                                {/* Info */}
-                                <div className="flex-1 space-y-2">
-                                    <div className="h-3 bg-gray-200 w-3/4 rounded" />
-                                    <div className="h-2 bg-gray-100 w-1/2 rounded" />
-                                </div>
-
-                                {/* Score */}
-                                <div className="text-right space-y-1">
-                                    <div className="h-4 bg-gray-200 w-8 ml-auto rounded" />
-                                    <div className="h-2 bg-gray-100 w-10 ml-auto rounded" />
-                                </div>
-                            </div>
-                        ))}
+                    <div className="flex items-center justify-center h-full">
+                        <Loader />
                     </div>
                 ) : advocates.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full py-10 opacity-60">
@@ -178,54 +103,58 @@ export default function TopAdvocateSection() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                         <p className="text-gray-500 font-medium">No advocate data found</p>
-                        <p className="text-xs text-gray-400 mt-1">Try selecting a different court</p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
-                        {advocates.map((advocate) => (
-                            <Link href={`/profile/${advocate.username}`} key={advocate.id} className="flex items-center gap-4 group hover:bg-gray-50 p-2 rounded-lg transition-colors border-b border-gray-50 last:border-0 cursor-pointer">
-                                {/* Rank */}
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${getRankColor(advocate.rank)}`}>
-                                    {advocate.rank}
-                                </div>
-
-                                {/* Avatar */}
-                                <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 border-2 border-white shadow-sm relative">
-                                    {advocate.photoUrl ? (
-                                        <Image
-                                            src={advocate.photoUrl}
-                                            alt={advocate.name}
-                                            fill
-                                            sizes="100px"
-                                            quality={90}
-                                            className="object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                            </svg>
+                    <div className="w-full py-4 overflow-hidden bg-transparent">
+                        <div className="flex relative overflow-hidden group/marquee">
+                            <div className="flex animate-marquee group-hover/marquee:[animation-play-state:paused] gap-4 px-4">
+                                {[...advocates, ...advocates, ...advocates, ...advocates].map((advocate, idx) => (
+                                    <Link 
+                                        href={`/profile/${advocate.username}`} 
+                                        key={`${advocate.id}-${idx}`} 
+                                        className="flex-shrink-0 w-48 group/card block"
+                                    >
+                                        <div className="relative bg-[#0A2342] rounded-2xl overflow-hidden h-72 shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-xl border border-transparent hover:border-[#C8A028]">
+                                            <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-lg z-20 ${getRankColor(advocate.rank)}`}>
+                                                {advocate.rank}
+                                            </div>
+                                            <div className="h-[70%] w-full relative overflow-hidden">
+                                                {advocate.photoUrl ? (
+                                                    <Image src={advocate.photoUrl} alt={advocate.name} fill className="object-cover group-hover/card:scale-110 transition-transform duration-700" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-600">
+                                                        <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+                                                    </div>
+                                                )}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-[#0A2342] via-transparent to-transparent opacity-60"></div>
+                                            </div>
+                                            <div className="absolute bottom-2 left-2 right-2 bg-white rounded-xl p-2 shadow-xl">
+                                                <div className="text-center">
+                                                    <h4 className="text-xs font-bold text-[#0A2342] truncate">{advocate.name}</h4>
+                                                    <p className="text-[8px] text-gray-400 uppercase tracking-tighter truncate">{advocate.city}</p>
+                                                </div>
+                                                <div className="mt-1 flex justify-center">
+                                                    <div className="bg-[#0A2342] text-white text-[7px] font-bold uppercase px-3 py-1 rounded-full group-hover/card:bg-[#C8A028] transition-colors">View Profile</div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
-
-                                {/* Info */}
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="text-sm font-semibold text-[#0A2342] truncate group-hover:text-[#C9A227] transition-colors">{advocate.name}</h4>
-                                    <p className="text-[10px] text-gray-500 truncate">{advocate.designation} • {advocate.city}</p>
-                                </div>
-
-                                {/* Score */}
-                                <div className="text-right">
-                                    <p className="text-lg font-bold text-[#0A2342]">{advocate.caseCount}</p>
-                                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Cases</p>
-                                </div>
-                            </Link>
-                        ))}
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
+
+            <style jsx global>{`
+                @keyframes marquee {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
+                }
+                .animate-marquee {
+                    animation: marquee 20s linear infinite;
+                }
+            `}</style>
         </div>
     );
 }
-

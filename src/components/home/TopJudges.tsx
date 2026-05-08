@@ -53,7 +53,7 @@ export default function TopJudges() {
     const fetchTopJudges = async () => {
         setLoading(true);
         try {
-            const response = await judgesService.getTopJudges(1, 5, selectedCourt || undefined);
+            const response = await judgesService.getTopJudges(1, 12, selectedCourt || undefined);
             const data = response.data;
             if (data && Array.isArray(data.data)) {
                 setJudges(data.data);
@@ -80,9 +80,9 @@ export default function TopJudges() {
     };
 
     return (
-        <div className="flex-1 bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden min-h-[450px] flex flex-col">
+        <div className="flex-1 overflow-hidden min-h-[450px] flex flex-col">
             {/* Header */}
-            <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="p-5 border-b border-[#0A2342]/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h2 className="text-xl font-bold text-[#0A2342]">Top Judges</h2>
                     <p className="text-xs text-gray-500 mt-0.5">Ranked by judgments delivered</p>
@@ -115,11 +115,6 @@ export default function TopJudges() {
                                         className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between transition-colors ${!selectedCourt ? 'text-[#C9A227] font-semibold bg-[#C9A227]/5' : 'text-gray-700'}`}
                                     >
                                         All Courts
-                                        {!selectedCourt && (
-                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                            </svg>
-                                        )}
                                     </button>
                                     <div className="h-px bg-gray-100 my-1"></div>
                                     {Array.isArray(courts) && courts.map((court) => (
@@ -132,11 +127,6 @@ export default function TopJudges() {
                                             className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between transition-colors ${selectedCourt === court ? 'text-[#C9A227] font-semibold bg-[#C9A227]/5' : 'text-gray-700'}`}
                                         >
                                             <span className="truncate">{court}</span>
-                                            {selectedCourt === court && (
-                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                </svg>
-                                            )}
                                         </button>
                                     ))}
                                 </div>
@@ -147,27 +137,15 @@ export default function TopJudges() {
             </div>
 
             {/* List */}
-            <div className="flex-1 p-5 overflow-y-auto">
+            <div className="flex-1 p-5 overflow-y-auto custom-scrollbar">
                 {loading ? (
                     <div className="space-y-4 animate-pulse">
                         {[1, 2, 3, 4, 5].map((i) => (
                             <div key={i} className="flex items-center gap-4 p-2 border-b border-gray-50 last:border-0">
-                                {/* Rank */}
-                                <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0" />
-                                
-                                {/* Avatar */}
-                                <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />
-                                
-                                {/* Info */}
+                                <div className="w-10 h-10 rounded-full bg-gray-200" />
                                 <div className="flex-1 space-y-2">
                                     <div className="h-3 bg-gray-200 w-3/4 rounded" />
                                     <div className="h-2 bg-gray-100 w-1/2 rounded" />
-                                </div>
-                                
-                                {/* Score */}
-                                <div className="text-right space-y-1">
-                                    <div className="h-4 bg-gray-200 w-8 ml-auto rounded" />
-                                    <div className="h-2 bg-gray-100 w-10 ml-auto rounded" />
                                 </div>
                             </div>
                         ))}
@@ -177,64 +155,72 @@ export default function TopJudges() {
                         <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
-                        <p className="text-gray-500 font-medium">No ranking data available yet</p>
-                        <p className="text-xs text-gray-400 mt-1">Try selecting a different court</p>
+                        <p className="text-gray-500 font-medium">No ranking data found</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {Array.isArray(judges) && judges.map((judge) => (
-                            <Link href={`/judges/${judge.id}`} key={judge.id} className="flex items-center gap-4 group hover:bg-gray-50 p-2 rounded-lg transition-colors border-b border-gray-50 last:border-0 cursor-pointer">
-                                {/* Rank */}
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${getRankColor(judge.rank)}`}>
-                                    {judge.rank}
-                                </div>
+                        {judges.map((judge) => (
+                            <Link href={`/judges/${judge.id}`} key={judge.id} className="block group">
+                                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-[0_10px_25px_rgba(184,154,62,0.15)] group-hover:-translate-y-[3px] group-hover:border-[#C8A028] transition-all duration-300 ease-in-out overflow-hidden flex h-32 sm:h-36 relative">
+                                    {/* Rank Badge Overlay */}
+                                    <div className={`absolute top-3 left-3 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shadow-lg z-20 group-hover:scale-[1.15] transition-transform duration-300 ease-in-out ${getRankColor(judge.rank)}`}>
+                                        {judge.rank}
+                                    </div>
 
-                                {/* Avatar */}
-                                <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 border-2 border-white shadow-sm relative">
-                                    {judge.photoUrl ? (
-                                        <Image
-                                            src={judge.photoUrl}
-                                            alt={judge.name}
-                                            fill
-                                            sizes="100px"
-                                            quality={90}
-                                            className="object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                            </svg>
+                                    {/* Left Side: Judge Photo */}
+                                    <div className="w-1/3 sm:w-[120px] relative bg-gray-50 flex-shrink-0 overflow-hidden">
+                                        {judge.photoUrl ? (
+                                            <Image
+                                                src={judge.photoUrl}
+                                                alt={judge.name}
+                                                fill
+                                                sizes="(max-width: 768px) 33vw, 120px"
+                                                quality={90}
+                                                className="object-cover group-hover:scale-[1.06] transition-transform duration-300 ease-in-out"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 group-hover:scale-[1.06] transition-transform duration-300 ease-in-out">
+                                                <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Right Side: Details & Actions */}
+                                    <div className="flex-1 p-3 flex flex-col justify-between bg-white min-w-0">
+                                        <div className="space-y-0.5 sm:space-y-1">
+                                            <h4 className="text-sm sm:text-base font-bold text-[#0A2342] group-hover:text-[#C8A028] group-hover:tracking-wider transition-all duration-300 ease-in-out line-clamp-1 leading-tight">
+                                                {judge.name}
+                                            </h4>
+                                            <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                {judge.designation}
+                                            </p>
                                         </div>
-                                    )}
-                                </div>
 
-                                {/* Info */}
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="text-sm font-semibold text-[#0A2342] truncate group-hover:text-[#C9A227] transition-colors">{judge.name}</h4>
-                                    <p className="text-[10px] text-gray-500 truncate">{judge.designation} • {judge.court}</p>
-                                </div>
-
-                                {/* Score */}
-                                <div className="text-right">
-                                    <p className="text-lg font-bold text-[#0A2342]">{judge.judgmentCount}</p>
-                                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Judgments</p>
+                                        <div className="flex items-center justify-between gap-2 mt-2">
+                                            {/* Full Profile Button (Pill) */}
+                                            <div className="flex-1 bg-white border border-gray-200 group-hover:border-[#C8A028] group-hover:bg-[#C8A028]/5 rounded-full py-1 px-2 sm:px-4 flex items-center justify-center gap-2 shadow-sm transition-all duration-300 ease-in-out">
+                                                <span className="text-[9px] sm:text-xs font-bold text-[#0A2342] group-hover:text-[#C8A028] transition-colors duration-300">Full Profile</span>
+                                                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-[#0A2342] group-hover:text-[#C8A028] transition-all duration-300 group-hover:-rotate-[10deg]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Floating Judgments Count Badge */}
+                                    <div className="absolute top-2 right-2 p-1">
+                                        <div className="bg-[#0A2342]/10 group-hover:bg-[#C8A028]/15 text-[#0A2342] group-hover:text-[#C8A028] px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-tighter transition-all duration-300 ease-in-out">
+                                            {judge.judgmentCount} Judgments
+                                        </div>
+                                    </div>
                                 </div>
                             </Link>
                         ))}
                     </div>
                 )}
             </div>
-
-            {/* Footer */}
-            {/* <div className="p-4 bg-gray-50 border-t border-gray-100">
-                <button className="w-full py-2 bg-transparent text-[#0A2342] text-xs font-bold uppercase tracking-widest hover:text-[#C9A227] transition-colors flex items-center justify-center gap-2">
-                    View Full Leaderboard
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                </button>
-            </div> */}
         </div>
     );
 }

@@ -14,6 +14,7 @@ import { LeaderboardAd, InFeedAd } from "../ads/StandardAds";
 
 import TopJudges from "./TopJudges";
 import TopAdvocateSection from "./TopAdvocateSection";
+import MembershipPromotion from "./MembershipPromotion";
 import HindiNews from "../ui/HindiNews";
 import CustomInput from "../ui/CustomInput"
 import StateJudgement from "../ui/stateJudgement";
@@ -433,6 +434,9 @@ export default function Stores() {
             <TopAdvocateSection />
           </div>
         </div>
+
+        {/* Membership Promotion for New Users */}
+        <MembershipPromotion />
 
         {/* AI Powered Features */}
         {/* <div className="w-full">
