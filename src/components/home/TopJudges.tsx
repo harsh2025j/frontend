@@ -80,7 +80,7 @@ export default function TopJudges() {
     };
 
     return (
-        <div className="flex-1 overflow-hidden min-h-[450px] flex flex-col">
+        <div className="flex-1 min-w-0 h-[480px] flex flex-col overflow-hidden">
             {/* Header */}
             <div className="p-5 border-b border-[#0A2342]/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -221,6 +221,22 @@ export default function TopJudges() {
                     </div>
                 )}
             </div>
+            
+            <style jsx>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 5px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #0A234220;
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: #C8A02840;
+                }
+            `}</style>
         </div>
     );
 }

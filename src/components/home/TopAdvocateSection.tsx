@@ -80,7 +80,7 @@ export default function TopAdvocateSection() {
     };
 
     return (
-        <div className="flex-1 overflow-hidden min-h-[450px] flex flex-col">
+        <div className="flex-1 min-w-0 h-[480px] flex flex-col overflow-hidden">
             {/* Header */}
             <div className="p-5 border-b border-[#0A2342]/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -107,8 +107,8 @@ export default function TopAdvocateSection() {
                 ) : (
                     <div className="w-full py-4 overflow-hidden bg-transparent">
                         <div className="flex relative overflow-hidden group/marquee">
-                            <div className="flex animate-marquee group-hover/marquee:[animation-play-state:paused] gap-4 px-4">
-                                {[...advocates, ...advocates, ...advocates, ...advocates].map((advocate, idx) => (
+                            <div className={`flex ${advocates.length >= 3 ? 'animate-marquee group-hover/marquee:[animation-play-state:paused]' : 'justify-center w-full'} gap-4 px-4`}>
+                                {(advocates.length >= 3 ? [...advocates, ...advocates, ...advocates, ...advocates] : advocates).map((advocate, idx) => (
                                     <Link 
                                         href={`/profile/${advocate.username}`} 
                                         key={`${advocate.id}-${idx}`} 
