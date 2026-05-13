@@ -11,4 +11,8 @@ export const advocatesService = {
   getUniqueCourts: async () => {
     return apiClient.get(API_ENDPOINTS.ADVOCATES.UNIQUE_COURTS);
   },
+
+  getAdvocateById: async (id: string) => {
+    return apiClient.get(`${API_ENDPOINTS.ADVOCATES.BASE}/${id}`);
+  },
 };
