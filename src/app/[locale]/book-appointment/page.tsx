@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Clock, User, Phone, Mail, FileText, CheckCircle, ArrowRight, ShieldCheck, Briefcase, Search } from "lucide-react";
+import { Calendar, Clock, User, Phone, Mail, FileText, CheckCircle, ArrowRight, ShieldCheck, Briefcase, Search, Gavel } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
 import Footer from "@/components/layout/Footer";
 import { useDocTitle } from "@/hooks/useDocTitle";
