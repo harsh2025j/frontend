@@ -29,7 +29,7 @@ import {
   Bookmark,
   UserCircle
 } from "lucide-react";
-import { Link } from "@/i18n/routing";
+import { Link, usePathname } from "@/i18n/routing";
 import { LogOut } from "lucide-react";
 import { useAppDispatch } from "@/data/redux/hooks";
 import { logoutUser } from "@/data/features/auth/authSlice";
@@ -68,8 +68,14 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { user: reduxProfileUser } = useProfileActions();
+  const pathname = usePathname();
   const [activeNav, setActiveNav] = useState<string>("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  // Context-aware logic: Detect if we are viewing a specific case
+  // Pattern: /admin/cases/[id]/view or similar
+  const caseIdMatch = pathname.match(/\/admin\/cases\/([^\/]+)/);
+  const activeCaseId = caseIdMatch ? caseIdMatch[1] : null;
 
   const user = reduxProfileUser as UserData;
 
@@ -271,16 +277,49 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
       icon: <Monitor size={18} />,
       href: "/admin/advertisements",
       show: showAdvertisements
-    },
-    // {
-    //   name: "Settings",
-    //   icon: <Settings size={18} />,
-    //   href: "/admin/settings",
-    //   show: hasAdminPrivileges
-    // }
+    }
   ];
 
+  // Dynamic Case-Specific Links (only show if viewing a case)
+  if (activeCaseId && activeCaseId !== 'create') {
+    const caseIndex = allNavItems.findIndex(item => item.name === "Legal Cases");
+    if (caseIndex !== -1) {
+      allNavItems.splice(caseIndex + 1, 0, {
+        name: `Current Case: ${activeCaseId.slice(0, 8)}...`,
+        icon: <ClipboardList size={18} />,
+        isDropdown: true,
+        show: true,
+        children: [
+          {
+            name: "Case Timeline",
+            icon: <FileText size={16} />,
+            href: `/admin/cases/${activeCaseId}/view`,
+            show: true
+          },
+          {
+            name: "Appointments",
+            icon: <ClipboardCheck size={16} />,
+            href: `/admin/cases/${activeCaseId}/view?tab=appointments`,
+            show: true
+          },
+          {
+            name: "Hearings",
+            icon: <Gavel size={16} />,
+            href: `/admin/cases/${activeCaseId}/view?tab=hearings`,
+            show: true
+          }
+        ]
+      } as any);
+    }
+  }
+
   const navItems = allNavItems.filter((item) => item.show);
+
+  const isLinkActive = (href?: string) => {
+    if (!href || href === "#") return false;
+    if (href === "/admin" && pathname !== "/admin") return false;
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   return (
     <>
@@ -307,7 +346,7 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
               // 🔽 TREE ITEM (NESTED)
               if (item.isDropdown) {
                 const isExpanded = openDropdown === item.name;
-                const isChildActive = item.children?.some((child: any) => activeNav === child.name);
+                const isChildActive = item.children?.some((child: any) => isLinkActive(child.href));
 
                 return (
                   <div key={item.name} className="space-y-1">
@@ -341,7 +380,7 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
                         {item.children
                           .filter((child: any) => child.show)
                           .map((child: any) => {
-                            const isItemActive = activeNav === child.name;
+                            const isItemActive = isLinkActive(child.href);
                             return (
                               <Link
                                 key={child.name}
@@ -367,7 +406,7 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
               }
 
 
-              const isActive = activeNav === item.name;
+              const isActive = isLinkActive(item.href);
 
               return (
                 <Link

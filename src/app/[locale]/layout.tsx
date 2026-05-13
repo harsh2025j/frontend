@@ -120,7 +120,7 @@ async function getCategories() {
       next: { revalidate: 3600 }
     });
     const data = await res.json();
-    return data.data || [];
+    return Array.isArray(data.data) ? data.data : [];
   } catch (e) {
     console.error("Failed to fetch categories on server:", e);
     return [];
@@ -141,7 +141,7 @@ async function getArticles(params: any = {}) {
       next: { revalidate: 3600 }
     });
     const data = await res.json();
-    return data.data || [];
+    return Array.isArray(data.data) ? data.data : [];
   } catch (e) {
     console.error("Failed to fetch articles on server:", e);
     return [];

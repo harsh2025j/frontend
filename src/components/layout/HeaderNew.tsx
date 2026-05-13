@@ -205,7 +205,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
             "hindi news"
         ];
 
-        const dynamicCats = categories.map(mapToNavItem);
+        const dynamicCats = Array.isArray(categories) ? categories.map(mapToNavItem) : [];
         const LIMIT = 6;
 
         let visible = dynamicCats.slice(0, LIMIT);
