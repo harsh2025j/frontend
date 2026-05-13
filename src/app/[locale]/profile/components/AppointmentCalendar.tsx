@@ -38,10 +38,15 @@ interface Appointment {
   id: string;
   fullName: string;
   advocateName?: string;
+  email: string;
+  phone: string;
+  description: string;
   preferredDate: string;
   preferredTimeSlot: string;
   status: string;
   practiceArea: string;
+  isRead: boolean;
+  createdAt: string;
   profilePicture?: string;
   advocateProfilePicture?: string;
   caseId?: string | null;
