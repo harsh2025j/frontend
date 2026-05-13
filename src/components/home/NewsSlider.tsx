@@ -17,8 +17,12 @@ export default function NewsSlider() {
   const { articles: reduxArticles, loading: reduxLoading } = useArticleListActions();
 
   const articles = useMemo(() => {
-    const base = reduxArticles.length > 0 ? reduxArticles : (homeData?.latestArticles || []);
-    return base.filter((a: any) => a.status === 'published');
+    const rawLatest = homeData?.latestArticles;
+    const base = (Array.isArray(reduxArticles) && reduxArticles.length > 0) 
+      ? reduxArticles 
+      : (Array.isArray(rawLatest) ? rawLatest : []);
+    
+    return base.filter((a: any) => a && a.status === 'published');
   }, [reduxArticles, homeData?.latestArticles]);
 
   const loading = reduxLoading && reduxArticles.length === 0 && (!homeData || homeData.latestArticles.length === 0);
