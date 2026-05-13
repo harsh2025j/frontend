@@ -108,6 +108,7 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
   };
 
   const handleReschedule = async () => {
+    if (!selectedAppointment) return;
     if (!rescheduleData.date || !rescheduleData.time) {
       toast.error("Please select both date and time");
       return;
