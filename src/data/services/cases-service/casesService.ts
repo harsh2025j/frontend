@@ -2,7 +2,7 @@ import { API_ENDPOINTS } from "../apiConfig/apiContants";
 import apiClient from "../apiConfig/apiClient";
 
 export const casesService = {
-    getAll: async (params?: { page?: number; limit?: number; createdBy?: string }) => {
+    getAll: async (params?: { page?: number; limit?: number; createdBy?: string; clientEmail?: string }) => {
         return await apiClient.get(API_ENDPOINTS.CASES.BASE, { params });
     },
     getById: async (id: string) => {
@@ -29,9 +29,9 @@ export const casesService = {
     updateStatus: async (id: string, status: string) => {
         return await apiClient.patch(`${API_ENDPOINTS.CASES.BASE}/${id}/status`, { status });
     },
-    searchCases: async (q: string, page: number = 1, limit: number = 12, createdBy?: string) => {
+    searchCases: async (q: string, page: number = 1, limit: number = 12, createdBy?: string, clientEmail?: string) => {
         return await apiClient.get(API_ENDPOINTS.SEARCH.CASES, {
-            params: { q, page, limit, createdBy }
+            params: { q, page, limit, createdBy, clientEmail }
         });
     },
     getCaseTypes: async () => {

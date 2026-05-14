@@ -27,13 +27,19 @@ import {
   BriefcaseMedical,
   ClipboardCheck,
   Bookmark,
-  UserCircle
+  UserCircle,
+  Calendar,
+  History
 } from "lucide-react";
+<<<<<<< Updated upstream
 import { Link, usePathname } from "@/i18n/routing";
+=======
+import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
+import { Link, usePathname, useRouter } from "@/i18n/routing";
+>>>>>>> Stashed changes
 import { LogOut } from "lucide-react";
 import { useAppDispatch } from "@/data/redux/hooks";
 import { logoutUser } from "@/data/features/auth/authSlice";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   getUserType,
@@ -71,6 +77,25 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
   const pathname = usePathname();
   const [activeNav, setActiveNav] = useState<string>("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [unreadAppointments, setUnreadAppointments] = useState(0);
+
+  const fetchUnread = async () => {
+    if (reduxProfileUser?.id || reduxProfileUser?._id) {
+      try {
+        const res = await appointmentsService.getUnreadCount(reduxProfileUser.id || reduxProfileUser._id);
+        const count = res.data?.data ?? res.data;
+        setUnreadAppointments(typeof count === 'number' ? count : 0);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  React.useEffect(() => {
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 60000); // Poll every minute
+    return () => clearInterval(interval);
+  }, [reduxProfileUser]);
 
   // Context-aware logic: Detect if we are viewing a specific case
   // Pattern: /admin/cases/[id]/view or similar
@@ -113,6 +138,13 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
   const showProfile = canAccessProfilePage(user);
   const showSavedPosts = canAccessSavedPostsPage(user);
   const showAdvertisements = canAccessAdvertisementsPage(user);
+  
+  const pathname = usePathname();
+  // Match UUID or MongoDB ID in paths like /cases/[id] or /admin/cases/[id]
+  const caseIdMatch = pathname.match(/(?:\/admin)?\/cases\/([a-f0-9-]{36}|[0-9a-fA-F]{24})/);
+  const activeCaseId = caseIdMatch ? caseIdMatch[1] : null;
+  const isAdminPath = pathname.startsWith("/admin");
+  const isCaseContext = !!activeCaseId && !pathname.includes("/admin/cases/create");
 
   const handleLogout = () => {
     dispatch(logoutUser());
@@ -130,6 +162,13 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
       icon: <Home size={18} />,
       href: "/admin",
       show: showDashboard
+    },
+    {
+      name: "Appointments",
+      icon: <Calendar size={18} />,
+      href: "/admin/appointments",
+      show: true, // Show for all dashboard users (or can restrict to advocates)
+      badge: unreadAppointments
     },
 
     // 🔽 ACCESS CONTROL SECTION
@@ -241,6 +280,20 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
       icon: <FileText size={18} />,
       href: "/admin/cases",
       show: showLegalCases
+    },
+    {
+      name: "Case Timeline",
+      icon: <History size={18} />,
+      href: activeCaseId ? (isAdminPath ? `/admin/cases/${activeCaseId}/view?tab=timeline` : `/cases/${activeCaseId}?tab=timeline`) : "#",
+      show: isCaseContext,
+      indent: true
+    },
+    {
+      name: "Case Appointments",
+      icon: <Calendar size={18} />,
+      href: activeCaseId ? (isAdminPath ? `/admin/cases/${activeCaseId}/view?tab=appointments` : `/cases/${activeCaseId}?tab=appointments`) : "#",
+      show: isCaseContext,
+      indent: true
     },
     {
       name: "Judgments",
@@ -419,6 +472,7 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
                       ? "bg-blue-50 text-blue-600"
                       : "text-gray-600 hover:bg-gray-100 hover:text-blue-600"
                     }
+                  ${(item as any).indent && isOpen ? "ml-6 border-l-2 border-gray-100 pl-4" : ""}
                 `}
                   title={!isOpen ? item.name : ""}
                 >
@@ -437,6 +491,17 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
                   >
                     {item.name}
                   </span>
+
+                  {item.badge > 0 && (
+                    <span className={`
+                      absolute ${isOpen ? "right-4" : "top-1 right-1"} 
+                      bg-red-500 text-white text-[10px] font-black 
+                      w-5 h-5 flex items-center justify-center rounded-full 
+                      border-2 border-white shadow-sm z-10
+                    `}>
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}

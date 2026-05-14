@@ -20,6 +20,7 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { profileApi } from "@/data/services/profile-service/profile-service";
 import { casesService } from "@/data/services/cases-service/casesService";
 import { articleApi } from "@/data/services/article-service/article-service";
+import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { getUserSubscription } from "@/data/features/subscription/subscriptionThunks";
@@ -29,6 +30,7 @@ import { isAdmin as checkIsAdmin, isAdvocate as checkIsAdvocate } from "@/utils/
 
 import logo from "@/assets/logo.png";
 import SavedPostsList from "./SavedPostsList";
+import AppointmentsList from "./AppointmentsList";
 import Loader from "@/components/ui/Loader";
 import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
 import ImageCropperModal from "@/components/ui/ImageCropperModal";
@@ -38,7 +40,7 @@ interface ProfileViewProps {
   viewContext: "public" | "admin";
 }
 
-type TabType = "personal" | "saved" | "cases" | "articles" | "settings";
+type TabType = "personal" | "saved" | "cases" | "articles" | "settings" | "appointments";
 
 // --- REUSABLE BENTO COMPONENTS ---
 
@@ -164,8 +166,17 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
           const fetchedUser = response.data.data as any;
           try {
             const userId = fetchedUser._id || fetchedUser.id;
+            const isProfessionalUser = fetchedUser?.roles?.some((r: any) =>
+              ['lawyer', 'law_student', 'legal_professional', 'advocate'].includes(r.slug?.toLowerCase() || r.name.toLowerCase())
+            );
+
             const [casesRes, articlesRes] = await Promise.all([
-              casesService.getAll({ page: 1, limit: 12, createdBy: userId }).catch(() => ({ data: null })),
+              casesService.getAll({
+                page: 1,
+                limit: 12,
+                createdBy: isProfessionalUser ? userId : undefined,
+                clientEmail: !isProfessionalUser ? fetchedUser.email : undefined
+              }).catch(() => ({ data: null })),
               articleApi.fetchArticles({ page: 1, limit: 12, authorId: userId }).catch(() => ({ data: null }))
             ]);
 
@@ -212,6 +223,25 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [prefs, setPrefs] = useState({ language: currentLocale, doNotDisturb: false, caseStatusAlerts: true });
   const [isConsultancyModalOpen, setIsConsultancyModalOpen] = useState(false);
+  const [unreadAppointments, setUnreadAppointments] = useState(0);
+
+  const fetchUnreadAppointments = async () => {
+    if (isOwner && isProfessional) {
+      try {
+        const response = await appointmentsService.getUnreadCount(profileUser?.id || profileUser?._id);
+        const count = response.data?.data ?? response.data;
+        setUnreadAppointments(typeof count === 'number' ? count : 0);
+      } catch (error) {
+        console.error("Failed to fetch unread appointments", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (profileUser) {
+      fetchUnreadAppointments();
+    }
+  }, [profileUser, isOwner, isProfessional]);
 
   const handleLanguageChange = (nextLocale: string) => {
     router.push(pathname, { locale: nextLocale as any });
@@ -361,6 +391,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
             <div className="flex flex-row lg:flex-col gap-1 md:gap-2 p-1.5 bg-white/60 backdrop-blur-2xl rounded-2xl border border-white/20 shadow-lg shadow-black/5 overflow-x-auto scrollbar-hide">
               {[
                 { id: "personal", label: "Identity", icon: User, show: true },
+                { id: "appointments", label: isProfessional ? "Appointments" : "My Bookings", icon: Calendar, show: isOwner, badge: unreadAppointments },
                 { id: "saved", label: "Saved", icon: BookmarkCheck, show: isOwner },
                 { id: "cases", label: "Portfolio", icon: Briefcase, show: showLegalSections },
                 { id: "articles", label: "Insights", icon: FileText, show: showLegalSections },
@@ -383,6 +414,11 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                     <tab.icon size={14} className="md:w-4 md:h-4" />
                   </div>
                   <span className="relative z-10 text-[10px] md:text-[11px] font-bold uppercase tracking-widest">{tab.label}</span>
+                  {tab.badge > 0 && (
+                    <span className="absolute top-2 right-2 md:top-3 md:right-3 w-4 h-4 bg-red-500 text-white text-[8px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-white z-20">
+                      {tab.badge}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -471,6 +507,20 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                         </button>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {activeTab === "appointments" && isOwner && (
+                  <div className="space-y-8">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[10px] font-black text-[#C9A227] uppercase tracking-[0.3em]">Management Console</span>
+                      <h2 className="text-4xl font-serif text-[#0A2342]">Appointments</h2>
+                    </div>
+                    <AppointmentsList
+                      advocateId={isProfessional ? profileUser.id || profileUser._id : undefined}
+                      clientEmail={!isProfessional ? (loggedInUser?.email || profileUser.email) : undefined}
+                      onUpdateUnread={fetchUnreadAppointments}
+                    />
                   </div>
                 )}
 

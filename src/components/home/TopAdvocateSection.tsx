@@ -107,18 +107,18 @@ export default function TopAdvocateSection() {
                 ) : (
                     <div className="w-full py-4 overflow-hidden bg-transparent">
                         <div className="flex relative overflow-hidden group/marquee">
-                            <div className={`flex ${advocates.length >= 3 ? 'animate-marquee group-hover/marquee:[animation-play-state:paused]' : 'justify-center w-full'} gap-4 px-4`}>
+                            <div className={`flex ${advocates.length >= 3 ? 'animate-marquee group-hover/marquee:[animation-play-state:paused]' : 'justify-start'} gap-4 px-4`}>
                                 {(advocates.length >= 3 ? [...advocates, ...advocates, ...advocates, ...advocates] : advocates).map((advocate, idx) => (
-                                    <Link 
-                                        href={`/profile/${advocate.username}`} 
+                                    <div 
                                         key={`${advocate.id}-${idx}`} 
                                         className="flex-shrink-0 w-48 group/card block"
                                     >
-                                        <div className="relative bg-[#0A2342] rounded-2xl overflow-hidden h-72 shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-xl border border-transparent hover:border-[#C8A028]">
+                                        <div className="relative bg-[#0A2342] rounded-2xl overflow-hidden h-80 shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-xl border border-transparent hover:border-[#C8A028]">
                                             <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-lg z-20 ${getRankColor(advocate.rank)}`}>
                                                 {advocate.rank}
                                             </div>
-                                            <div className="h-[70%] w-full relative overflow-hidden">
+                                            
+                                            <Link href={`/profile/${advocate.username || advocate.id}`} className="h-[60%] w-full relative overflow-hidden block">
                                                 {advocate.photoUrl ? (
                                                     <Image src={advocate.photoUrl} alt={advocate.name} fill className="object-cover group-hover/card:scale-110 transition-transform duration-700" />
                                                 ) : (
@@ -127,18 +127,31 @@ export default function TopAdvocateSection() {
                                                     </div>
                                                 )}
                                                 <div className="absolute inset-0 bg-gradient-to-t from-[#0A2342] via-transparent to-transparent opacity-60"></div>
-                                            </div>
-                                            <div className="absolute bottom-2 left-2 right-2 bg-white rounded-xl p-2 shadow-xl">
-                                                <div className="text-center">
-                                                    <h4 className="text-xs font-bold text-[#0A2342] truncate">{advocate.name}</h4>
+                                            </Link>
+
+                                            <div className="absolute bottom-2 left-2 right-2 bg-white rounded-xl p-2.5 shadow-xl">
+                                                <Link href={`/profile/${advocate.username || advocate.id}`} className="text-center block mb-2">
+                                                    <h4 className="text-xs font-bold text-[#0A2342] truncate group-hover/card:text-[#C8A028] transition-colors">{advocate.name}</h4>
                                                     <p className="text-[8px] text-gray-400 uppercase tracking-tighter truncate">{advocate.city}</p>
-                                                </div>
-                                                <div className="mt-1 flex justify-center">
-                                                    <div className="bg-[#0A2342] text-white text-[7px] font-bold uppercase px-3 py-1 rounded-full group-hover/card:bg-[#C8A028] transition-colors">View Profile</div>
+                                                </Link>
+                                                
+                                                <div className="flex flex-col gap-1.5">
+                                                    <Link 
+                                                        href={`/profile/${advocate.username || advocate.id}`} 
+                                                        className="bg-[#0A2342] text-white text-[7px] font-bold uppercase py-1.5 rounded-full text-center hover:bg-[#C8A028] transition-colors"
+                                                    >
+                                                        View Profile
+                                                    </Link>
+                                                    <Link 
+                                                        href={`/book-appointment?advocateId=${advocate.id}`} 
+                                                        className="border border-[#0A2342] text-[#0A2342] text-[7px] font-bold uppercase py-1.5 rounded-full text-center hover:bg-[#0A2342] hover:text-white transition-colors"
+                                                    >
+                                                        Book Appointment
+                                                    </Link>
                                                 </div>
                                             </div>
                                         </div>
-                                    </Link>
+                                    </div>
                                 ))}
                             </div>
                         </div>

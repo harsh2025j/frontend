@@ -489,11 +489,11 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                             </div>
                                             <div className="py-2">
                                                 {dashboardAccess ? (
-                                                    <Link href={user?.username ? `/admin/profile/${user.username}` : "#"} onClick={() => { setIsProfileOpen(false); setActiveDropdown(null); }} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
+                                                    <Link href={user?.username || user?.id || user?._id ? `/admin/profile/${user.username || user.id || user._id}` : "#"} onClick={() => { setIsProfileOpen(false); setActiveDropdown(null); }} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
                                                         <UserIcon size={16} /> {t('profile')}
                                                     </Link>
                                                 ) : (
-                                                    <Link href={user?.username ? `/profile/${user.username}` : "#"} onClick={() => { setIsProfileOpen(false); setActiveDropdown(null); }} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
+                                                    <Link href={user?.username || user?.id || user?._id ? `/profile/${user.username || user.id || user._id}` : "#"} onClick={() => { setIsProfileOpen(false); setActiveDropdown(null); }} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
                                                         <UserIcon size={16} /> {t('profile')}
                                                     </Link>
                                                 )}
@@ -633,7 +633,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                             </div>
                                             {dashboardAccess ? (
                                                 <Link
-                                                    href={user?.username ? `/admin/profile/${user.username}` : "#"}
+                                                    href={user?.username || user?.id || user?._id ? `/admin/profile/${user.username || user.id || user._id}` : "#"}
                                                     onClick={() => {
                                                         setIsProfileOpen(false);
                                                         setMenuOpen(false);
@@ -644,7 +644,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                                 </Link>
                                             ) : (
                                                 <Link
-                                                    href={user?.username ? `/profile/${user.username}` : "#"}
+                                                    href={user?.username || user?.id || user?._id ? `/profile/${user.username || user.id || user._id}` : "#"}
                                                     onClick={() => {
                                                         setIsProfileOpen(false);
                                                         setMenuOpen(false);

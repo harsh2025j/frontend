@@ -180,8 +180,8 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                     <h2 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight font-unna">{displayTitle}</h2>
 
                     {/* Author metadata */}
-                    {authorUsername ? (
-                        <Link href={`/profile/${authorUsername}`} className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/author">
+                    {authorUsername || article.authorId ? (
+                        <Link href={`/profile/${authorUsername || article.authorId}`} className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/author">
                             <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-2 ring-[#C9A227]/80 shadow-sm shrink-0 overflow-hidden relative group-hover/author:ring-[#C9A227]/70 transition-all">
                                 {authorPhoto ? (
                                     <Image src={authorPhoto} alt={article.authors || "Author"} fill sizes="100px" className="object-cover" quality={90} />
@@ -415,10 +415,9 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                     <div className="space-y-4 mb-8">
                         {(article.advocates && article.advocates.length > 0 ? article.advocates : ([{ name: article.advocateName }] as Advocate[])).map((adv, idx) => {
                             if (!adv?.name && !article.advocateName) return null;
-                            const username = adv.userId ? advocateUsernames[adv.userId] : null;
-
-                            return username ? (
-                                <Link key={idx} href={`/profile/${username}`} className="flex items-center gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/advocate">
+                            const profileId = adv.userId || username;
+                            return profileId ? (
+                                <Link key={idx} href={`/profile/${username || adv.userId}`} className="flex items-center gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/advocate">
                                     <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-2 ring-[#C9A227]/80 shadow-sm shrink-0 overflow-hidden relative group-hover/advocate:ring-[#C9A227]/70 transition-all">
                                         {adv?.userId && advocatePhotos[adv.userId] ? (
                                             <Image src={advocatePhotos[adv.userId]} alt={adv.name || "Advocate"} fill sizes="100px" className="object-cover" quality={90} />
