@@ -9,9 +9,10 @@ const API_BASE = 'https://api.sajjadhusainlawassociates.com';
 async function fetchArticles(page: number) {
     try {
         const res = await fetch(`${API_BASE}/articles?page=${page}&limit=25`);
+        if (!res.ok) return [];
         const json = await res.json();
         // Articles are in 'data'
-        return json.data || [];
+        return Array.isArray(json.data) ? json.data : [];
     } catch (e) {
         return [];
     }
@@ -20,9 +21,10 @@ async function fetchArticles(page: number) {
 async function fetchJudgmentsOrCases(endpoint: string, page: number) {
     try {
         const res = await fetch(`${API_BASE}${endpoint}?page=${page}&limit=25`);
+        if (!res.ok) return [];
         const json = await res.json();
         // Judgments and Cases are in 'data.data'
-        return json.data?.data || [];
+        return Array.isArray(json.data?.data) ? json.data.data : [];
     } catch (e) {
         return [];
     }
@@ -31,8 +33,9 @@ async function fetchJudgmentsOrCases(endpoint: string, page: number) {
 async function fetchCategories() {
     try {
         const res = await fetch(`${API_BASE}/categories`);
+        if (!res.ok) return [];
         const json = await res.json();
-        return json.data || [];
+        return Array.isArray(json.data) ? json.data : [];
     } catch (e) {
         return [];
     }

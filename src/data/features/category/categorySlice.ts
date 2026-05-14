@@ -31,7 +31,8 @@ const categorySlice = createSlice({
             })
             .addCase(fetchCategories.fulfilled, (state, action) => {
                 state.loading = false;
-                const categories = action.payload?.data || [];
+                const rawData = action.payload?.data;
+                const categories = Array.isArray(rawData) ? rawData : [];
                 state.categories = categories;
                 if (typeof window !== 'undefined') {
                     localStorage.setItem("categories", JSON.stringify(categories));

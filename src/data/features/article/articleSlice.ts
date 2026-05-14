@@ -47,7 +47,8 @@ const articleSlice = createSlice({
       })
       .addCase(fetchArticles.fulfilled, (state, action) => {
         state.loading = false;
-        const data = (action.payload as any).data || [];
+        const rawData = (action.payload as any).data;
+        const data = Array.isArray(rawData) ? rawData : [];
         state.articles = data;
         if (typeof window !== "undefined") {
           localStorage.setItem("articles_cache", JSON.stringify(data));

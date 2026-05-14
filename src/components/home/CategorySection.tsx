@@ -26,17 +26,17 @@ export default function CategorySection({ title, slug, layout, limit = 6 }: Cate
   // Use server articles if available for this specific category
   const initialArticles = useMemo(() => {
     if (!homeData) return [];
-    if (slug === 'finance-articles') return homeData.financeArticles;
-    if (slug === 'legal-articles') return homeData.legalArticles;
-    if (slug === 'hindi-news') return homeData.hindiArticles;
-    if (slug === 'latest-news') return homeData.latestArticles;
+    if (slug === 'finance-articles') return Array.isArray(homeData.financeArticles) ? homeData.financeArticles : [];
+    if (slug === 'legal-articles') return Array.isArray(homeData.legalArticles) ? homeData.legalArticles : [];
+    if (slug === 'hindi-news') return Array.isArray(homeData.hindiArticles) ? homeData.hindiArticles : [];
+    if (slug === 'latest-news') return Array.isArray(homeData.latestArticles) ? homeData.latestArticles : [];
     return [];
   }, [homeData, slug]);
 
 
   const articles = useMemo(() => {
-    const base = reduxArticles.length > 0 ? reduxArticles : initialArticles;
-    return base?.filter((a: any) => a.status === 'published') || [];
+    const base = (Array.isArray(reduxArticles) && reduxArticles.length > 0) ? reduxArticles : initialArticles;
+    return Array.isArray(base) ? base.filter((a: any) => a && a.status === 'published') : [];
   }, [reduxArticles, initialArticles]);
 
   const loading = reduxLoading && reduxArticles.length === 0 && initialArticles.length === 0;

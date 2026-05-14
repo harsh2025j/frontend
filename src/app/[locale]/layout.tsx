@@ -119,6 +119,7 @@ async function getCategories() {
       },
       next: { revalidate: 3600 }
     });
+    if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data.data) ? data.data : [];
   } catch (e) {
@@ -140,6 +141,7 @@ async function getArticles(params: any = {}) {
       },
       next: { revalidate: 3600 }
     });
+    if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data.data) ? data.data : [];
   } catch (e) {
