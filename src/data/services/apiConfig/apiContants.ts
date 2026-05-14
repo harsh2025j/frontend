@@ -1,6 +1,6 @@
 // export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev";
-export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
-// export const API_BASE_URL = "http://localhost:8000/"
+// export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
+export const API_BASE_URL = "http://localhost:8000/"
 export const API_ENDPOINTS = {
   SEARCH: {
     JUDGES: "/search/judges",
@@ -122,6 +122,18 @@ export const API_ENDPOINTS = {
     BY_SLOT: "/advertisements/slot",
     TRACK_IMPRESSION: "/advertisements/:id/track-impression",
     TRACK_CLICK: "/advertisements/:id/track-click",
+  },
+  APPOINTMENTS: {
+    CREATE: "/appointments",
+    FETCH_BY_ID: "/appointments/:id",
+    FETCH_BY_ADVOCATE: "/appointments/advocate/:advocateId",
+    FETCH_BY_CLIENT: "/appointments/client",
+    FETCH_BY_CASE: "/appointments/case/:caseId",
+    GET_UNREAD_COUNT: "/appointments/unread-count/:advocateId",
+    MARK_READ: "/appointments/:id/read",
+    UPDATE_STATUS: "/appointments/:id/status",
+    UPDATE_OUTCOME: "/appointments/:id/outcome",
+    CANCEL: "/appointments/:id/cancel",
   }
 };
 

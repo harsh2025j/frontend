@@ -112,6 +112,7 @@ export default function CreateCasePage() {
         cnrNumber: "",
         title: "",
         description: "",
+        clientEmail: "",
         // Section 2
         courtLevel: "District Court",
         court: "",
@@ -624,6 +625,9 @@ export default function CreateCasePage() {
                     </FormField>
                     <FormField label="Amicus Curiae" description="Friend of the Court">
                         <input name="amicusCuriae" value={formData.amicusCuriae} className={inputClasses('amicusCuriae')} placeholder="Court appointed counsel..." onChange={handleChange} />
+                    </FormField>
+                    <FormField label="Client Email Address" description="Used for private dashboard access">
+                        <input type="email" name="clientEmail" value={formData.clientEmail} className={inputClasses('clientEmail')} placeholder="client@example.com" onChange={handleChange} />
                     </FormField>
                 </div>
 

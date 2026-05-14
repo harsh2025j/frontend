@@ -113,6 +113,7 @@ export default function EditCasePage() {
         cnrNumber: "",
         title: "",
         description: "",
+        clientEmail: "",
         // Section 2
         courtLevel: "District Court",
         court: "",
@@ -272,6 +273,7 @@ export default function EditCasePage() {
                 officeId: data.officeId || "",
                 practiceArea: data.practiceArea || "",
                 confidentialityLevel: data.confidentialityLevel || "Internal",
+                clientEmail: data.clientEmail || "",
             });
         } catch (error: any) {
             toast.error(error.message || "Failed to fetch case details");
@@ -652,6 +654,9 @@ export default function EditCasePage() {
                     </FormField>
                     <FormField label="Amicus Curiae" description="Friend of the Court">
                         <input name="amicusCuriae" value={formData.amicusCuriae} className={inputClasses('amicusCuriae')} placeholder="Court appointed counsel..." onChange={handleChange} />
+                    </FormField>
+                    <FormField label="Client Email Address" description="Used for private dashboard access">
+                        <input type="email" name="clientEmail" value={formData.clientEmail} className={inputClasses('clientEmail')} placeholder="client@example.com" onChange={handleChange} />
                     </FormField>
                 </div>
 
