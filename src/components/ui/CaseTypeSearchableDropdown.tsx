@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, Check, Search, X, FileText, Info } from "lucide-react";
-import { CASE_TYPES as DEFAULT_CASE_TYPES } from "@/constants/caseOptions";
+import { ChevronDown, Check, Search, X, FileText, Info, Loader2 } from "lucide-react";
 import { casesService } from "@/data/services/cases-service/casesService";
 
 interface CaseTypeSearchableDropdownProps {
@@ -30,20 +29,61 @@ export default function CaseTypeSearchableDropdown({
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    fetchDynamicTypes();
-  }, []);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const fetchDynamicTypes = async () => {
+  useEffect(() => {
+    // Reset and fetch when search query changes
+    const delayDebounceFn = setTimeout(() => {
+      setPage(1);
+      setHasMore(true);
+      fetchDynamicTypes(1, searchQuery, true);
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const fetchDynamicTypes = async (pageNum: number, search: string, isReset: boolean = false) => {
+    if (isLoading || (!hasMore && !isReset)) return;
+    
+    setIsLoading(true);
     try {
-      const response = await casesService.getCaseTypes();
-      // Ensure we only have strings and handle different response structures
-      const types = response.data?.data || response.data || [];
-      if (Array.isArray(types)) {
-        setDynamicTypes(types);
+      const response = await casesService.getCaseTypes({
+        search,
+        page: pageNum,
+        limit: 20
+      });
+      
+      let responseData = response.data?.data || response.data;
+      let newTypes = Array.isArray(responseData) ? responseData : (responseData?.data || []);
+      const total = responseData?.total || (Array.isArray(responseData) ? responseData.length : 0);
+      
+      console.log(`[Dropdown] Fetched ${newTypes.length} types, total available: ${total}`);
+      setTotalCount(total);
+      
+      if (isReset) {
+        setDynamicTypes(newTypes);
+      } else {
+        setDynamicTypes(prev => [...prev, ...newTypes]);
       }
+      
+      setHasMore(newTypes.length === 20 && (pageNum * 20) < total);
     } catch (error) {
       console.error("Error fetching dynamic case types:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight + 50 && hasMore && !isLoading) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchDynamicTypes(nextPage, searchQuery);
     }
   };
 
@@ -64,15 +104,8 @@ export default function CaseTypeSearchableDropdown({
     }
   }, [isOpen]);
 
-  // Merge default types with dynamic types from database, ensuring uniqueness
-  const allCaseTypes = Array.from(new Set([
-    ...DEFAULT_CASE_TYPES,
-    ...dynamicTypes
-  ])).sort();
-
-  const filteredTypes = allCaseTypes.filter((ct) =>
-    ct.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Only use dynamic types from the database
+  const allCaseTypes = Array.isArray(dynamicTypes) ? dynamicTypes : [];
 
   const handleSelect = (caseType: string) => {
     onChange(caseType.toUpperCase());
@@ -143,14 +176,18 @@ export default function CaseTypeSearchableDropdown({
 
           {/* Count badge */}
           <div className="px-4 py-1.5 text-[10px] uppercase tracking-widest font-bold text-gray-400 bg-gray-50/30 flex justify-between items-center">
-            <span>{searchQuery ? "Matching Types" : "All Case Types"}</span>
-            <span className="text-gray-400 font-normal">{filteredTypes.length} found</span>
+            <span>{searchQuery ? "Matching Types" : "Available Types"}</span>
+            <span className="text-gray-400 font-normal">{totalCount > 0 ? totalCount : allCaseTypes.length} found</span>
           </div>
 
           {/* Options list */}
-          <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
+          <div 
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="max-h-[320px] overflow-y-auto custom-scrollbar"
+          >
             {/* Custom selection option */}
-            {searchQuery && !filteredTypes.some(t => t.toLowerCase() === searchQuery.toLowerCase()) && (
+            {searchQuery && !allCaseTypes.some(t => t.toLowerCase() === searchQuery.toLowerCase()) && (
               <div className="p-1.5 border-b border-gray-100 bg-amber-50/20">
                 <button
                   type="button"
@@ -168,9 +205,9 @@ export default function CaseTypeSearchableDropdown({
               </div>
             )}
 
-            {filteredTypes.length > 0 ? (
+            {allCaseTypes.length > 0 ? (
               <div className="p-1.5">
-                {filteredTypes.map((ct) => (
+                {allCaseTypes.map((ct) => (
                   <button
                     key={ct}
                     type="button"
@@ -180,24 +217,36 @@ export default function CaseTypeSearchableDropdown({
                     `}
                   >
                     <div className="flex items-center gap-3 overflow-hidden">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors
                         ${value?.toUpperCase() === ct.toUpperCase() ? "bg-[#C9A227] text-white" : "bg-gray-100 text-gray-400 group-hover:bg-amber-100 group-hover:text-[#C9A227]"}
                       `}>
-                        <FileText size={13} />
+                        <FileText size={10} />
                       </div>
-                      <span className={`text-xs leading-tight ${value?.toUpperCase() === ct.toUpperCase() ? "text-[#0A2342] font-bold" : "text-gray-700 font-medium group-hover:text-gray-900"}`}>
+                      <span className={`text-xs leading-tight truncate ${value?.toUpperCase() === ct.toUpperCase() ? "text-[#0A2342] font-bold" : "text-gray-700 font-medium group-hover:text-gray-900"}`}>
                         {ct}
                       </span>
                     </div>
-                    {value?.toUpperCase() === ct.toUpperCase() && <Check size={15} className="text-[#C9A227] shrink-0 ml-2" />}
+                    {value?.toUpperCase() === ct.toUpperCase() && <Check size={14} className="text-[#C9A227] shrink-0 ml-2" />}
                   </button>
                 ))}
+
+                {isLoading && (
+                   <div className="flex justify-center py-4">
+                      <Loader2 size={18} className="text-[#C9A227] animate-spin" />
+                   </div>
+                )}
               </div>
             ) : (
-              <div className="px-4 py-10 text-center flex flex-col items-center gap-2">
-                <Search size={24} className="text-gray-300" />
-                <span className="text-sm text-gray-500">No case types match "{searchQuery}"</span>
-              </div>
+              isLoading ? (
+                <div className="flex justify-center py-10">
+                   <Loader2 size={24} className="text-[#C9A227] animate-spin" />
+                </div>
+              ) : (
+                <div className="px-4 py-10 text-center flex flex-col items-center gap-2">
+                  <Search size={24} className="text-gray-300" />
+                  <span className="text-sm text-gray-500">No case types match "{searchQuery}"</span>
+                </div>
+              )
             )}
           </div>
         </div>

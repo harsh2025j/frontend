@@ -34,17 +34,7 @@ export default function CaseView({ caseId: propId, isModal = false }: { caseId?:
         try {
             const response = await casesService.getById(id);
             const data = response.data.data;
-            
-            // Authorization Check
-            const isAdmin = user?.roles?.some(role => role.name.toLowerCase().includes("admin"));
-            const isCreator = data.createdBy === user?.id || data.createdBy === user?._id;
-            const isClient = data.clientEmail === user?.email;
-
-            if (!isAdmin && !isCreator && !isClient) {
-                setUnauthorized(true);
-            } else {
-                setCaseData(data);
-            }
+            setCaseData(data);
         } catch (error) {
             console.error("Error fetching case details:", error);
         } finally {
