@@ -45,11 +45,10 @@ export default function AdminAppointmentsPage() {
                     {/* Case-linked filter toggle */}
                     <button
                         onClick={() => setShowCaseLinkedOnly(prev => !prev)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold uppercase tracking-widest border transition-all ${
-                            showCaseLinkedOnly
+                        className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold uppercase tracking-widest border transition-all ${showCaseLinkedOnly
                                 ? 'bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm'
                                 : 'bg-white text-gray-400 border-gray-100 hover:border-gray-200 hover:text-gray-600'
-                        }`}
+                            }`}
                     >
                         <Filter size={14} />
                         Case-Linked Only
@@ -65,8 +64,8 @@ export default function AdminAppointmentsPage() {
             </div>
 
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-1">
-                <AppointmentsList 
-                    advocateId={user.id || user._id} 
+                <AppointmentsList
+                    advocateId={user.id || user._id}
                     onUpdateUnread={fetchUnread}
                     filterCaseLinkedOnly={showCaseLinkedOnly}
                 />

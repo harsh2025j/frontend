@@ -13,10 +13,6 @@ export const advocatesService = {
   },
 
   getAdvocateById: async (id: string) => {
-<<<<<<< Updated upstream
-    return apiClient.get(`${API_ENDPOINTS.ADVOCATES.BASE}/${id}`);
-=======
     return apiClient.get(API_ENDPOINTS.PROFILE.PUBLIC.replace(":id", id));
->>>>>>> Stashed changes
   },
 };

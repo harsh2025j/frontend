@@ -17,7 +17,7 @@ import { FaXTwitter } from "react-icons/fa6";
 import { Mail, Phone, MapPin, Scale } from "lucide-react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AppDispatch, RootState } from "@/data/redux/store";
 import { fetchCategories } from "@/data/features/category/categoryThunks";
 import { Category } from "@/data/features/category/category.types";
@@ -26,9 +26,21 @@ export default function Footer() {
   const dispatch = useDispatch<AppDispatch>();
   const { categories } = useSelector((state: RootState) => state.category);
 
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
+    setMounted(true);
     dispatch(fetchCategories());
   }, [dispatch]);
+
+  if (!mounted) {
+    return (
+        <footer className="relative bg-gradient-to-br from-[#0a1628] via-[#122340] to-[#1a2f4d] text-white overflow-hidden">
+             <div className="container mx-auto px-6 py-12 relative z-10 text-center">
+                <p className="text-blue-200">Loading footer...</p>
+             </div>
+        </footer>
+    );
+  }
 
   // Helper to get all descendants (subcategories)
   const getAllSubCategories = (cats: Category[]): Category[] => {

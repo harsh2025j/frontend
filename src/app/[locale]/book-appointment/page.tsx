@@ -13,9 +13,12 @@ import Loader from "@/components/ui/Loader";
 import BookingTimeline from "./components/BookingTimeline";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { AlertCircle } from "lucide-react";
+import FormField from "@/components/ui/FormField";
+import { useRouter } from "next/navigation";
 
 function BookingForm() {
     useDocTitle("Book an Appointment | Sajjad Husain Law Associates");
+    const router = useRouter();
     const searchParams = useSearchParams();
     const advocateIdFromUrl = searchParams.get("advocateId");
     const caseIdFromUrl = searchParams.get("caseId");
@@ -27,7 +30,7 @@ function BookingForm() {
     const [caseData, setCaseData] = useState<any>(null);
     const [advocatesPool, setAdvocatesPool] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
-    
+
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
@@ -41,6 +44,7 @@ function BookingForm() {
         caseId: caseIdFromUrl || ""
     });
 
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const [bookingResult, setBookingResult] = useState<any>(null);
 
     useEffect(() => {
@@ -73,10 +77,10 @@ function BookingForm() {
         try {
             const response = await advocatesService.getAdvocateById(id);
             const data = response.data?.data || response.data;
+            const spec = data.specialization || data.designation;
+            const area = Array.isArray(spec) ? spec.join(", ") : spec;
+            setFormData(prev => ({ ...prev, practiceArea: area || "Family" }));
             setAdvocate(data);
-            if (data.specialization) {
-                setFormData(prev => ({ ...prev, practiceArea: data.specialization }));
-            }
         } catch (error) {
             console.error("Failed to fetch advocate:", error);
             toast.error("Could not load advocate details.");
@@ -97,10 +101,35 @@ function BookingForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const requiredFields = [
+            { key: 'fullName', label: 'Full Name' },
+            { key: 'email', label: 'Email' },
+            { key: 'phone', label: 'Phone Number' },
+            { key: 'practiceArea', label: 'Practice Area' },
+            { key: 'description', label: 'Case Description' },
+            { key: 'preferredDate', label: 'Preferred Date' },
+            { key: 'preferredTimeSlot', label: 'Time Slot' },
+        ];
+
+        const newErrors: Record<string, string> = {};
+        requiredFields.forEach(field => {
+            if (!formData[field.key as keyof typeof formData]) {
+                newErrors[field.key] = `${field.label} is required`;
+            }
+        });
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            toast.error("Please fill all required fields");
+            return;
+        }
+
         if (!formData.advocateId) {
             toast.error("Please select an advocate for your appointment.");
             return;
         }
+
         if (!formData.termsAccepted) {
             toast.error("Please accept the Terms & Privacy Policy");
             return;
@@ -119,15 +148,15 @@ function BookingForm() {
             const { termsAccepted, ...payload } = formData;
             const response = await appointmentsService.createAppointment(payload);
             const data = response.data;
-            
+
             if (data.advocateEmail) {
                 toast.success(`Appointment booked! Notification sent to ${data.advocateEmail}`);
             } else {
                 toast.success("Appointment booked successfully!");
             }
-            
+
             setBookingResult(data);
-            
+
             setFormData({
                 fullName: "",
                 email: "",
@@ -151,79 +180,85 @@ function BookingForm() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const val = type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
-        
-        setFormData({
-            ...formData,
+
+        setFormData(prev => ({
+            ...prev,
             [name]: val
-        });
+        }));
+
+        if (errors[name]) {
+            setErrors(prev => {
+                const next = { ...prev };
+                delete next[name];
+                return next;
+            });
+        }
     };
 
     const handleAdvocateSelect = (adv: any) => {
         setAdvocate(adv);
-        setFormData(prev => ({ 
-            ...prev, 
-            advocateId: adv.id || adv._id,
-            practiceArea: adv.specialization || adv.designation || prev.practiceArea 
-        }));
+        setFormData(prev => {
+            const spec = adv.specialization || adv.designation;
+            const area = Array.isArray(spec) ? spec.join(", ") : spec;
+            return {
+                ...prev,
+                advocateId: adv.id || adv._id,
+                practiceArea: area || "Family"
+            };
+        });
         setSearchQuery("");
+        if (errors.advocateId) {
+            setErrors(prev => {
+                const next = { ...prev };
+                delete next.advocateId;
+                return next;
+            });
+        }
     };
 
     const practiceAreas = ["Family", "Criminal", "Property", "Corporate", "Other"];
     const timeSlots = ["Morning", "Afternoon", "Evening"];
 
-    const filteredAdvocates = advocatesPool.filter(a => 
+    const filteredAdvocates = advocatesPool.filter(a =>
         a.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const isSelfBooking = (loggedInUser?.id || loggedInUser?._id) === (advocate?.id || advocate?._id) && !!advocate;
-
     if (bookingResult) {
         return (
-            <div className="min-h-screen bg-white font-sans selection:bg-[#C9A227] selection:text-white">
-                <div className="relative bg-[#0A2342] text-white py-24 lg:py-32 px-4 overflow-hidden">
-                    <div className="absolute inset-0">
-                        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#C9A227]/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
-                    </div>
-                    <div className="container mx-auto max-w-6xl relative z-10 text-center">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 backdrop-blur-sm mb-8">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                            <span className="text-xs font-bold tracking-widest uppercase text-green-500">Booking Confirmed</span>
+            <div className="min-h-screen bg-white font-sans selection:bg-[#C9A227] selection:text-white flex flex-col">
+                <div className="flex-1 flex items-center justify-center py-20 px-4">
+                    <div className="max-w-xl w-full text-center space-y-8">
+                        <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mx-auto border-4 border-green-100">
+                            <CheckCircle className="w-12 h-12 text-green-500" />
                         </div>
-                        <h1 className="text-5xl md:text-6xl font-bold mb-8 tracking-tight">
-                            Successfully <span className="text-[#C9A227]">Booked</span>
-                        </h1>
-                        <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed font-light">
-                            Thank you, {bookingResult.fullName}. Your appointment request has been sent to {bookingResult.advocateName || 'the advocate'}.
-                        </p>
-                    </div>
-                </div>
 
-                <div className="container mx-auto max-w-3xl px-4 py-20 -mt-20 relative z-20">
-                    <div className="bg-white p-8 lg:p-12 border border-gray-100 shadow-2xl rounded-3xl">
-                        <h2 className="text-2xl font-bold text-[#0A2342] mb-8 border-b border-gray-50 pb-6">Track Your Application</h2>
-                        
-                        <BookingTimeline status={bookingResult.status} />
+                        <div className="space-y-4">
+                            <h1 className="text-4xl md:text-5xl font-bold text-[#0A2342] tracking-tight">
+                                Application <span className="text-[#C9A227]">Sent!</span>
+                            </h1>
+                            <p className="text-lg text-gray-500 leading-relaxed font-medium">
+                                Thank you, {bookingResult.fullName}. Your appointment request has been submitted successfully.
+                            </p>
+                        </div>
 
-                        <div className="mt-12 p-6 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Reference ID</span>
-                                <span className="text-xs font-black text-[#0A2342]">{bookingResult.id}</span>
+                        <div className="p-8 bg-blue-50/50 rounded-3xl border border-blue-100/50 flex items-start gap-4 text-left">
+                            <div className="p-3 bg-blue-100 rounded-2xl text-blue-600 flex-shrink-0">
+                                <Mail size={24} />
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Preferred Date</span>
-                                <span className="text-xs font-bold text-[#0A2342]">{bookingResult.preferredDate}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Time Slot</span>
-                                <span className="text-xs font-bold text-[#0A2342]">{bookingResult.preferredTimeSlot}</span>
+                            <div>
+                                <h3 className="font-bold text-[#0A2342] mb-1">What happens next?</h3>
+                                <p className="text-sm text-gray-600 leading-relaxed">
+                                    The advocate will review your request. Once they accept or suggest a new time, you will receive an automatic notification on your registered/given email address.
+                                </p>
                             </div>
                         </div>
 
-                        <button 
-                            onClick={() => window.location.reload()}
-                            className="w-full mt-12 py-5 bg-[#0A2342] text-white font-bold tracking-widest rounded-2xl hover:bg-[#153a66] transition-all flex items-center justify-center gap-3"
+                        <button
+                            onClick={() => router.push("/")}
+                            className="w-full py-5 bg-[#0A2342] text-white font-bold tracking-widest rounded-2xl hover:bg-[#153a66] transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-900/10"
                         >
-                            Book Another Appointment <ArrowRight className="w-5 h-5" />
+                            Return to Home <ArrowRight className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
@@ -235,7 +270,7 @@ function BookingForm() {
     return (
         <div className="min-h-screen bg-white font-sans selection:bg-[#C9A227] selection:text-white">
             {/* Premium Hero Section */}
-            <div className="relative bg-[#0A2342] text-white py-24 lg:py-32 px-4 overflow-hidden">
+            <div className="relative bg-[#0A2342] text-white py-6 lg:py-10 px-4 overflow-hidden">
                 <div className="absolute inset-0">
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#C9A227]/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
                     <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2"></div>
@@ -243,7 +278,7 @@ function BookingForm() {
 
                 <div className="container mx-auto max-w-6xl relative z-10 text-center">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-8">
-                        <span className="w-2 h-2 rounded-full bg-[#C9A227] animate-pulse"></span>
+                        {/* <span className="w-2 h-2 rounded-full bg-[#C9A227] animate-pulse"></span> */}
                         <span className="text-xs font-medium tracking-widest uppercase text-gray-300">Individual & Specific Booking</span>
                     </div>
 
@@ -273,11 +308,11 @@ function BookingForm() {
                                 <div className="p-6">
                                     <div className="aspect-square bg-gray-50 relative overflow-hidden rounded-2xl border-4 border-gray-50 shadow-inner group-hover:border-[#C9A227]/20 transition-all duration-500">
                                         {advocate.photoUrl || advocate.profilePicture ? (
-                                            <Image 
-                                                src={advocate.photoUrl || advocate.profilePicture} 
-                                                alt={advocate.name} 
-                                                fill 
-                                                className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                                            <Image
+                                                src={advocate.photoUrl || advocate.profilePicture}
+                                                alt={advocate.name}
+                                                fill
+                                                className="object-cover transition-transform duration-700 group-hover:scale-105"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-gray-200">
@@ -300,7 +335,7 @@ function BookingForm() {
                                         <span>{advocate.yearsOfExperience || 'Experienced'} Professional</span>
                                     </div>
                                     {(!advocateIdFromUrl || (loggedInUser?.id || loggedInUser?._id) === (advocate.id || advocate._id)) && (
-                                        <button 
+                                        <button
                                             onClick={() => { setAdvocate(null); setFormData(p => ({ ...p, advocateId: "" })); }}
                                             className="text-xs font-bold text-[#0A2342] hover:text-[#C9A227] transition-colors uppercase tracking-widest pt-4 border-t border-gray-50 w-full text-left flex items-center gap-2"
                                         >
@@ -314,9 +349,9 @@ function BookingForm() {
                                 <h3 className="text-lg font-bold text-[#0A2342] mb-6">Select an Advocate</h3>
                                 <div className="relative mb-6">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search by name..." 
+                                    <input
+                                        type="text"
+                                        placeholder="Search by name..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-lg focus:border-[#C9A227] outline-none text-sm transition-all"
@@ -324,7 +359,7 @@ function BookingForm() {
                                 </div>
                                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                     {filteredAdvocates.map((adv: any) => (
-                                        <div 
+                                        <div
                                             key={adv.id || adv._id}
                                             onClick={() => handleAdvocateSelect(adv)}
                                             className="flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-[#C9A227]/30 hover:bg-gray-50 cursor-pointer transition-all group"
@@ -361,7 +396,7 @@ function BookingForm() {
                             <div className="mb-12 border-b border-gray-100 pb-8">
                                 <h2 className="text-3xl font-bold text-[#0A2342] mb-3">Appointment Details</h2>
                                 <p className="text-gray-400">Fill in the form to book your slot with {advocate?.name || 'an expert advocate'}.</p>
-                                
+
                                 {(loggedInUser?.id || loggedInUser?._id) === (advocate?.id || advocate?._id) && advocate && (
                                     <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600">
                                         <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -391,122 +426,95 @@ function BookingForm() {
                             <form onSubmit={handleSubmit} className="space-y-8">
                                 {/* Personal Information */}
                                 <div className="grid md:grid-cols-2 gap-8">
-                                    <div className="group">
-                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-[#C9A227] transition-colors">
-                                            <User className="w-3 h-3" /> Full Name
-                                        </label>
+                                    <FormField label="Full Name" error={errors.fullName} required>
                                         <input
                                             type="text"
                                             name="fullName"
                                             value={formData.fullName}
                                             onChange={handleChange}
-                                            required
                                             disabled={isSelfBooking}
-                                            className={`w-full pb-3 border-b border-gray-200 focus:border-[#C9A227] outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${errors.fullName ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             placeholder="John Doe"
                                         />
-                                    </div>
-                                    <div className="group">
-                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-[#C9A227] transition-colors">
-                                            <Mail className="w-3 h-3" /> Email Address
-                                        </label>
+                                    </FormField>
+
+                                    <FormField label="Email Address" error={errors.email} required>
                                         <input
                                             type="email"
                                             name="email"
                                             value={formData.email}
                                             onChange={handleChange}
-                                            required
                                             disabled={isSelfBooking}
-                                            className={`w-full pb-3 border-b border-gray-200 focus:border-[#C9A227] outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${errors.email ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             placeholder="john@example.com"
                                         />
-                                    </div>
+                                    </FormField>
                                 </div>
 
                                 <div className="grid md:grid-cols-2 gap-8">
-                                    <div className="group">
-                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-[#C9A227] transition-colors">
-                                            <Phone className="w-3 h-3" /> Phone Number
-                                        </label>
+                                    <FormField label="Phone Number" error={errors.phone} required>
                                         <input
                                             type="tel"
                                             name="phone"
                                             value={formData.phone}
                                             onChange={handleChange}
-                                            required
                                             disabled={isSelfBooking}
-                                            className={`w-full pb-3 border-b border-gray-200 focus:border-[#C9A227] outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${errors.phone ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             placeholder="+91 XXXX XXXX"
                                         />
-                                    </div>
-                                    <div className="group">
-                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-[#C9A227] transition-colors">
-                                            <Briefcase className="w-3 h-3" /> Practice Area
-                                        </label>
-                                        <select
+                                    </FormField>
+
+                                    <FormField label="Practice Area" error={errors.practiceArea} required>
+                                        <input
+                                            type="text"
                                             name="practiceArea"
                                             value={formData.practiceArea}
-                                            onChange={handleChange}
-                                            disabled={isSelfBooking}
-                                            className={`w-full pb-3 border-b border-gray-200 focus:border-[#C9A227] outline-none bg-transparent transition-all text-[#0A2342] font-medium appearance-none ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            {practiceAreas.map(area => (
-                                                <option key={area} value={area}>{area}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                            readOnly
+                                            className="w-full pb-3 border-b border-gray-200 outline-none bg-transparent text-[#0A2342] font-medium cursor-default"
+                                        />
+                                    </FormField>
                                 </div>
 
                                 {/* Appointment Specifics */}
                                 <div className="grid md:grid-cols-2 gap-8">
-                                    <div className="group">
-                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-[#C9A227] transition-colors">
-                                            <Calendar className="w-3 h-3" /> Preferred Date
-                                        </label>
+                                    <FormField label="Preferred Date" error={errors.preferredDate} required>
                                         <input
                                             type="date"
                                             name="preferredDate"
                                             value={formData.preferredDate}
                                             onChange={handleChange}
-                                            required
                                             disabled={isSelfBooking}
                                             min={new Date().toISOString().split('T')[0]}
-                                            className={`w-full pb-3 border-b border-gray-200 focus:border-[#C9A227] outline-none bg-transparent transition-all text-[#0A2342] font-medium ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            className={`w-full pb-3 border-b outline-none bg-transparent transition-all text-[#0A2342] font-medium ${errors.preferredDate ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         />
-                                    </div>
-                                    <div className="group">
-                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-[#C9A227] transition-colors">
-                                            <Clock className="w-3 h-3" /> Time Slot
-                                        </label>
+                                    </FormField>
+
+                                    <FormField label="Time Slot" error={errors.preferredTimeSlot} required>
                                         <select
                                             name="preferredTimeSlot"
                                             value={formData.preferredTimeSlot}
                                             onChange={handleChange}
                                             disabled={isSelfBooking}
-                                            className={`w-full pb-3 border-b border-gray-200 focus:border-[#C9A227] outline-none bg-transparent transition-all text-[#0A2342] font-medium appearance-none ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            className={`w-full pb-3 border-b outline-none bg-transparent transition-all text-[#0A2342] font-medium appearance-none ${errors.preferredTimeSlot ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
                                             {timeSlots.map(slot => (
                                                 <option key={slot} value={slot}>{slot}</option>
                                             ))}
                                         </select>
-                                    </div>
+                                    </FormField>
                                 </div>
 
-                                <div className="group">
-                                    <label className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-[#C9A227] transition-colors">
-                                        <FileText className="w-3 h-3" /> Case Description
-                                    </label>
+                                <FormField label="Case Description" error={errors.description} required>
                                     <textarea
                                         name="description"
                                         value={formData.description}
                                         onChange={handleChange}
-                                        required
                                         rows={4}
                                         disabled={isSelfBooking}
-                                        className={`w-full pb-3 border-b border-gray-200 focus:border-[#C9A227] outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium resize-none ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium resize-none ${errors.description ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         placeholder="Briefly describe your legal concern..."
                                     ></textarea>
-                                </div>
+                                </FormField>
 
                                 <div className="flex items-start gap-3 pt-4">
                                     <input
@@ -527,11 +535,11 @@ function BookingForm() {
                                     <button
                                         type="submit"
                                         disabled={loading || isSelfBooking}
-                                        className={`group relative w-full md:w-auto px-12 py-5 bg-[#0A2342] text-white font-bold tracking-widest overflow-hidden transition-all hover:bg-[#153a66] disabled:opacity-50 ${isSelfBooking ? 'cursor-not-allowed' : ''}`}
+                                        className={`group relative w-full md:w-auto rounded-md px-12 py-5 bg-[#0A2342] text-white font-bold tracking-widest overflow-hidden transition-all hover:bg-[#153a66] disabled:opacity-50 ${isSelfBooking ? 'cursor-not-allowed' : ''}`}
                                     >
-                                        <span className="relative z-10 flex items-center justify-center gap-3">
+                                        <span className="relative z-10 flex items-center justify-center gap-3 ">
                                             {loading ? "PROCESSING..." : "CONFIRM BOOKING"}
-                                            {!loading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+                                            {/* {!loading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />} */}
                                         </span>
                                         <div className="absolute inset-0 bg-[#C9A227] transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></div>
                                     </button>

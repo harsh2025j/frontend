@@ -222,13 +222,13 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [prefs, setPrefs] = useState({ language: currentLocale, doNotDisturb: false, caseStatusAlerts: true });
-  const [isConsultancyModalOpen, setIsConsultancyModalOpen] = useState(false);
   const [unreadAppointments, setUnreadAppointments] = useState(0);
 
   const fetchUnreadAppointments = async () => {
-    if (isOwner && isProfessional) {
+    const userId = profileUser?.id || profileUser?._id;
+    if (isOwner && isProfessional && userId) {
       try {
-        const response = await appointmentsService.getUnreadCount(profileUser?.id || profileUser?._id);
+        const response = await appointmentsService.getUnreadCount(userId);
         const count = response.data?.data ?? response.data;
         setUnreadAppointments(typeof count === 'number' ? count : 0);
       } catch (error) {
@@ -372,7 +372,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
               className="mt-12"
             >
               <button
-                onClick={() => setIsConsultancyModalOpen(true)}
+                onClick={() => router.push(`/book-appointment?advocateId=${profileUser.id || profileUser._id}`)}
                 className="inline-flex items-center gap-3 px-8 py-4 bg-[#0A2342] text-white rounded-2xl shadow-xl hover:shadow-[#C9A227]/20 transition-all hover:-translate-y-1 group"
               >
                 <MessageSquare size={18} className="group-hover:rotate-12 transition-transform" />
@@ -414,7 +414,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                     <tab.icon size={14} className="md:w-4 md:h-4" />
                   </div>
                   <span className="relative z-10 text-[10px] md:text-[11px] font-bold uppercase tracking-widest">{tab.label}</span>
-                  {tab.badge > 0 && (
+                  {tab.badge !== undefined && tab.badge > 0 && (
                     <span className="absolute top-2 right-2 md:top-3 md:right-3 w-4 h-4 bg-red-500 text-white text-[8px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-white z-20">
                       {tab.badge}
                     </span>
@@ -689,13 +689,6 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
         )}
         {showLogoutConfirm && (
           <LogoutOverlay onCancel={() => setShowLogoutConfirm(false)} onConfirm={handleLogout} />
-        )}
-        {isConsultancyModalOpen && (
-          <ConsultancyFormModal
-            advocateId={profileUser.id || profileUser._id}
-            advocateName={profileUser.name}
-            onClose={() => setIsConsultancyModalOpen(false)}
-          />
         )}
       </AnimatePresence>
     </div>

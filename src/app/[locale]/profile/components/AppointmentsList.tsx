@@ -155,19 +155,17 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
       {/* View Switcher */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 bg-gray-100/50 p-1 rounded-xl border border-gray-100">
-          <button 
+          <button
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-              viewMode === 'list' ? 'bg-white text-[#0A2342] shadow-sm' : 'text-gray-400 hover:text-gray-600'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'list' ? 'bg-white text-[#0A2342] shadow-sm' : 'text-gray-400 hover:text-gray-600'
+              }`}
           >
             <List size={14} /> List View
           </button>
-          <button 
+          <button
             onClick={() => setViewMode('calendar')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-              viewMode === 'calendar' ? 'bg-white text-[#0A2342] shadow-sm' : 'text-gray-400 hover:text-gray-600'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'calendar' ? 'bg-white text-[#0A2342] shadow-sm' : 'text-gray-400 hover:text-gray-600'
+              }`}
           >
             <LayoutGrid size={14} /> Calendar
           </button>
@@ -176,8 +174,8 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
 
       {viewMode === 'calendar' ? (
         <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm flex flex-col h-[800px]">
-          <AppointmentCalendar 
-            appointments={appointments} 
+          <AppointmentCalendar
+            appointments={appointments}
             onSelectAppointment={(apt) => {
               setSelectedAppointment(apt);
               if (!apt.isRead) handleMarkAsRead(apt.id);
@@ -206,55 +204,53 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                 {appointments
                   .filter(a => !filterCaseLinkedOnly || !!a.caseId)
                   .map((appointment) => (
-                  <div
-                    key={appointment.id}
-                    onClick={() => {
-                      setSelectedAppointment(appointment);
-                      if (!appointment.isRead) handleMarkAsRead(appointment.id);
-                    }}
-                    className={`p-5 transition-all hover:bg-gray-50 cursor-pointer group relative ${
-                      selectedAppointment?.id === appointment.id ? "bg-blue-50/60" : ""
-                    } ${!appointment.isRead ? "bg-blue-50/20" : ""}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="relative flex-shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-sm border border-gray-200 overflow-hidden shadow-sm">
-                          {appointment.profilePicture ? (
-                            <img src={appointment.profilePicture} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            (appointment.fullName || "C").charAt(0).toUpperCase()
+                    <div
+                      key={appointment.id}
+                      onClick={() => {
+                        setSelectedAppointment(appointment);
+                        if (!appointment.isRead) handleMarkAsRead(appointment.id);
+                      }}
+                      className={`p-5 transition-all hover:bg-gray-50 cursor-pointer group relative ${selectedAppointment?.id === appointment.id ? "bg-blue-50/60" : ""
+                        } ${!appointment.isRead ? "bg-blue-50/20" : ""}`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="relative flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-sm border border-gray-200 overflow-hidden shadow-sm">
+                            {appointment.profilePicture ? (
+                              <img src={appointment.profilePicture} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              (appointment.fullName || "C").charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          {!appointment.isRead && (
+                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-blue-600 rounded-full border-2 border-white" />
                           )}
                         </div>
-                        {!appointment.isRead && (
-                          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-blue-600 rounded-full border-2 border-white" />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-grow">
-                        <div className="flex items-center justify-between gap-2">
-                          <h4 className={`text-sm font-bold truncate ${selectedAppointment?.id === appointment.id ? "text-[#0A2342]" : "text-gray-900"}`}>
-                            {appointment.fullName}
-                          </h4>
-                          <span className="text-[9px] font-bold text-gray-400 whitespace-nowrap">
-                            {formatDate(appointment.preferredDate)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-tighter border ${
-                            appointment.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-100' :
-                            appointment.status === 'proposed' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                            appointment.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
-                            'bg-orange-50 text-orange-700 border-orange-100'
-                          }`}>
-                            {appointment.status}
-                          </span>
-                          <span className="text-[9px] font-medium text-blue-600 truncate">
-                            {appointment.practiceArea}
-                          </span>
+                        <div className="min-w-0 flex-grow">
+                          <div className="flex items-center justify-between gap-2">
+                            <h4 className={`text-sm font-bold truncate ${selectedAppointment?.id === appointment.id ? "text-[#0A2342]" : "text-gray-900"}`}>
+                              {appointment.fullName}
+                            </h4>
+                            <span className="text-[9px] font-bold text-gray-400 whitespace-nowrap">
+                              {formatDate(appointment.preferredDate)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-tighter border ${appointment.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-100' :
+                              appointment.status === 'proposed' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                                appointment.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
+                                  'bg-orange-50 text-orange-700 border-orange-100'
+                              }`}>
+                              {appointment.status}
+                            </span>
+                            <span className="text-[9px] font-medium text-blue-600 truncate">
+                              {appointment.practiceArea}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           </div>
@@ -283,18 +279,17 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                       <div>
                         <h3 className="text-2xl font-bold text-[#0A2342] tracking-tight">{selectedAppointment.fullName}</h3>
                         <div className="flex items-center gap-3 mt-1">
-                          <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-                            selectedAppointment.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-100' :
+                          <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${selectedAppointment.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-100' :
                             selectedAppointment.status === 'proposed' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                            selectedAppointment.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
-                            'bg-orange-50 text-orange-700 border-orange-100'
-                          }`}>
+                              selectedAppointment.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
+                                'bg-orange-50 text-orange-700 border-orange-100'
+                            }`}>
                             {selectedAppointment.status}
                           </span>
-                          <CaseLinkedBadge 
-                            caseId={selectedAppointment.caseId} 
-                            caseTitle={selectedAppointment.case?.title} 
-                            caseNumber={selectedAppointment.case?.caseNumber} 
+                          <CaseLinkedBadge
+                            caseId={selectedAppointment.caseId}
+                            caseTitle={selectedAppointment.case?.title}
+                            caseNumber={selectedAppointment.case?.caseNumber}
                           />
                         </div>
                       </div>
@@ -344,33 +339,33 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                     </div>
 
                     {isRescheduling && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4"
                       >
                         <h4 className="text-[10px] font-bold text-blue-700 uppercase tracking-widest">Suggest New Schedule</h4>
                         <div className="grid grid-cols-2 gap-4">
-                          <input 
-                            type="date" 
+                          <input
+                            type="date"
                             className="w-full px-4 py-2.5 bg-white border border-blue-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                             onChange={(e) => setRescheduleData(prev => ({ ...prev, date: e.target.value }))}
                           />
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             placeholder="e.g. 10:00 AM"
                             className="w-full px-4 py-2.5 bg-white border border-blue-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                             onChange={(e) => setRescheduleData(prev => ({ ...prev, time: e.target.value }))}
                           />
                         </div>
                         <div className="flex gap-2">
-                          <button 
+                          <button
                             onClick={handleReschedule}
                             className="flex-1 py-2.5 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-colors"
                           >
                             Send Proposal
                           </button>
-                          <button 
+                          <button
                             onClick={() => setIsRescheduling(false)}
                             className="px-4 py-2.5 bg-white text-gray-500 text-[10px] font-bold uppercase tracking-widest rounded-xl border border-gray-200"
                           >
@@ -386,19 +381,19 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                     <div className="p-8 border-t border-gray-50 bg-white flex gap-3">
                       {selectedAppointment.status === 'pending' && !isRescheduling && (
                         <>
-                          <button 
+                          <button
                             onClick={() => handleUpdateStatus(selectedAppointment.id, 'confirmed')}
                             className="flex-1 py-3.5 bg-[#0A2342] text-white font-bold tracking-widest rounded-xl hover:bg-[#153a66] transition-all uppercase text-[10px]"
                           >
                             Confirm Appointment
                           </button>
-                          <button 
+                          <button
                             onClick={() => { setIsRescheduling(true); setRescheduleData({ date: selectedAppointment.preferredDate, time: selectedAppointment.preferredTimeSlot }); }}
                             className="flex-1 py-3.5 bg-white text-[#0A2342] border border-gray-200 font-bold tracking-widest rounded-xl hover:bg-gray-50 transition-all uppercase text-[10px]"
                           >
                             Reschedule
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleUpdateStatus(selectedAppointment.id, 'cancelled')}
                             className="px-6 py-3.5 bg-white text-red-600 border border-red-50 font-bold tracking-widest rounded-xl hover:bg-red-50 transition-all uppercase text-[10px]"
                           >
@@ -409,7 +404,7 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                       {(selectedAppointment.status !== 'pending' || isRescheduling) && (
                         <div className="w-full flex items-center justify-between text-gray-400">
                           <span className="text-[10px] font-bold uppercase tracking-widest">Status: {selectedAppointment.status}</span>
-                          <button 
+                          <button
                             onClick={() => handleUpdateStatus(selectedAppointment.id, 'pending')}
                             className="text-[10px] font-bold text-blue-600 hover:underline uppercase tracking-widest"
                           >
@@ -422,13 +417,13 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
 
                   {!!clientEmail && selectedAppointment.status === 'proposed' && (
                     <div className="p-8 border-t border-gray-50 bg-white flex gap-3">
-                      <button 
+                      <button
                         onClick={() => handleClientAccept(selectedAppointment.id)}
                         className="flex-1 py-3.5 bg-green-600 text-white font-bold tracking-widest rounded-xl hover:bg-green-700 transition-all uppercase text-[10px]"
                       >
                         Accept Proposal
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleUpdateStatus(selectedAppointment.id, 'cancelled')}
                         className="flex-1 py-3.5 bg-white text-red-600 border border-red-100 font-bold tracking-widest rounded-xl hover:bg-red-50 transition-all uppercase text-[10px]"
                       >

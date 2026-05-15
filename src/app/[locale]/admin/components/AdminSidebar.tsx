@@ -31,12 +31,8 @@ import {
   Calendar,
   History
 } from "lucide-react";
-<<<<<<< Updated upstream
-import { Link, usePathname } from "@/i18n/routing";
-=======
 import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
->>>>>>> Stashed changes
 import { LogOut } from "lucide-react";
 import { useAppDispatch } from "@/data/redux/hooks";
 import { logoutUser } from "@/data/features/auth/authSlice";
@@ -98,8 +94,8 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
   }, [reduxProfileUser]);
 
   // Context-aware logic: Detect if we are viewing a specific case
-  // Pattern: /admin/cases/[id]/view or similar
-  const caseIdMatch = pathname.match(/\/admin\/cases\/([^\/]+)/);
+  // Match UUID or MongoDB ID in paths like /cases/[id] or /admin/cases/[id]
+  const caseIdMatch = pathname.match(/(?:\/admin)?\/cases\/([a-f0-9-]{36}|[0-9a-fA-F]{24})/);
   const activeCaseId = caseIdMatch ? caseIdMatch[1] : null;
 
   const user = reduxProfileUser as UserData;
@@ -138,11 +134,7 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
   const showProfile = canAccessProfilePage(user);
   const showSavedPosts = canAccessSavedPostsPage(user);
   const showAdvertisements = canAccessAdvertisementsPage(user);
-  
-  const pathname = usePathname();
-  // Match UUID or MongoDB ID in paths like /cases/[id] or /admin/cases/[id]
-  const caseIdMatch = pathname.match(/(?:\/admin)?\/cases\/([a-f0-9-]{36}|[0-9a-fA-F]{24})/);
-  const activeCaseId = caseIdMatch ? caseIdMatch[1] : null;
+
   const isAdminPath = pathname.startsWith("/admin");
   const isCaseContext = !!activeCaseId && !pathname.includes("/admin/cases/create");
 
@@ -492,7 +484,7 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
                     {item.name}
                   </span>
 
-                  {item.badge > 0 && (
+                  {item.badge !== undefined && item.badge > 0 && (
                     <span className={`
                       absolute ${isOpen ? "right-4" : "top-1 right-1"} 
                       bg-red-500 text-white text-[10px] font-black 

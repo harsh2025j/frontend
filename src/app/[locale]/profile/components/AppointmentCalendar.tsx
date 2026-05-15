@@ -139,8 +139,8 @@ export default function AppointmentCalendar({ appointments, onSelectAppointment,
                   </div>
                 </div>
                 <div className="grid grid-cols-7 text-center">
-                  {["S", "M", "T", "W", "T", "F", "S"].map(d => (
-                    <span key={d} className="text-[10px] font-medium text-gray-500 py-1">{d}</span>
+                  {["S", "M", "T", "W", "T", "F", "S"].map((d, idx) => (
+                    <span key={`${d}-${idx}`} className="text-[10px] font-medium text-gray-500 py-1">{d}</span>
                   ))}
                   {miniCalendarDays.map(day => (
                     <button
