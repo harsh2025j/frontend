@@ -1,7 +1,8 @@
 "use client";
 
-import { Calendar, Clock, User, Phone, Mail, FileText, CheckCircle, ArrowRight, ShieldCheck, Briefcase, Search, Gavel } from "lucide-react";
+import { Calendar, Clock, User, Phone, Mail, FileText, CheckCircle, ArrowRight, ShieldCheck, Briefcase, Search, Gavel, Lock, X } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Footer from "@/components/layout/Footer";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
@@ -21,13 +22,11 @@ function BookingForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const advocateIdFromUrl = searchParams.get("advocateId");
-    const caseIdFromUrl = searchParams.get("caseId");
     const { user: loggedInUser } = useProfileActions();
 
     const [loading, setLoading] = useState(false);
     const [fetchingAdvocate, setFetchingAdvocate] = useState(false);
     const [advocate, setAdvocate] = useState<any>(null);
-    const [caseData, setCaseData] = useState<any>(null);
     const [advocatesPool, setAdvocatesPool] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -38,11 +37,12 @@ function BookingForm() {
         practiceArea: "Family",
         description: "",
         preferredDate: "",
-        preferredTimeSlot: "Morning",
+        preferredTimeSlot: "10:00",
         termsAccepted: false,
-        advocateId: advocateIdFromUrl || "",
-        caseId: caseIdFromUrl || ""
+        advocateId: advocateIdFromUrl || ""
     });
+
+    const [showAuthModal, setShowAuthModal] = useState(false);
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [bookingResult, setBookingResult] = useState<any>(null);
@@ -54,23 +54,24 @@ function BookingForm() {
             fetchAdvocatesPool();
         }
 
-        if (caseIdFromUrl) {
-            fetchCaseDetails(caseIdFromUrl);
-        }
-    }, [advocateIdFromUrl, caseIdFromUrl]);
+    }, [advocateIdFromUrl]);
 
-    const fetchCaseDetails = async (id: string) => {
-        try {
-            const { casesService } = await import("@/data/services/cases-service/casesService");
-            const response = await casesService.getById(id);
-            setCaseData(response.data.data);
-            if (response.data.data?.practiceArea) {
-                setFormData(prev => ({ ...prev, practiceArea: response.data.data.practiceArea }));
-            }
-        } catch (error) {
-            console.error("Failed to fetch case details:", error);
+    // Pre-fill user data if logged in
+    useEffect(() => {
+        if (loggedInUser) {
+            setFormData(prev => ({
+                ...prev,
+                fullName: loggedInUser.name || prev.fullName,
+                email: loggedInUser.email || prev.email,
+                phone: loggedInUser.phone || prev.phone
+            }));
+            setShowAuthModal(false);
+        } else {
+            setShowAuthModal(true);
         }
-    };
+    }, [loggedInUser]);
+
+
 
     const fetchAdvocate = async (id: string) => {
         setFetchingAdvocate(true);
@@ -164,10 +165,9 @@ function BookingForm() {
                 practiceArea: advocate?.specialization || "Family",
                 description: "",
                 preferredDate: "",
-                preferredTimeSlot: "Morning",
+                preferredTimeSlot: "10:00",
                 termsAccepted: false,
-                advocateId: advocateIdFromUrl || "",
-                caseId: caseIdFromUrl || ""
+                advocateId: advocateIdFromUrl || ""
             });
         } catch (error: any) {
             console.error("Failed to book appointment:", error);
@@ -217,7 +217,6 @@ function BookingForm() {
     };
 
     const practiceAreas = ["Family", "Criminal", "Property", "Corporate", "Other"];
-    const timeSlots = ["Morning", "Afternoon", "Evening"];
 
     const filteredAdvocates = advocatesPool.filter(a =>
         a.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -294,260 +293,273 @@ function BookingForm() {
 
             {/* Main Content */}
             <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-20 -mt-20 relative z-20">
-                <div className="grid lg:grid-cols-12 gap-12 mb-16">
+                {!loggedInUser ? (
+                    <div className="bg-white p-12 lg:p-20 border border-gray-100 shadow-2xl shadow-[#0A2342]/5 rounded-[32px] text-center max-w-2xl mx-auto">
+                        <div className="w-20 h-20 bg-[#C9A227]/10 text-[#C9A227] rounded-[24px] flex items-center justify-center mb-8 mx-auto border border-[#C9A227]/20">
+                            <Lock size={32} strokeWidth={1.5} />
+                        </div>
 
-                    {/* Left Column: Advocate Selection/Details */}
-                    <div className="lg:col-span-4 space-y-8">
-                        {fetchingAdvocate ? (
-                            <div className="bg-white p-12 border border-gray-100 shadow-sm flex flex-col items-center justify-center">
-                                <Loader />
-                                <p className="mt-4 text-gray-400 text-sm">Loading advocate details...</p>
-                            </div>
-                        ) : advocate ? (
-                            <div className="bg-white border border-gray-100 shadow-xl overflow-hidden group">
-                                <div className="p-6">
-                                    <div className="aspect-square bg-gray-50 relative overflow-hidden rounded-2xl border-4 border-gray-50 shadow-inner group-hover:border-[#C9A227]/20 transition-all duration-500">
-                                        {advocate.photoUrl || advocate.profilePicture ? (
-                                            <Image
-                                                src={advocate.photoUrl || advocate.profilePicture}
-                                                alt={advocate.name}
-                                                fill
-                                                className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-200">
-                                                <User className="w-24 h-24" />
-                                            </div>
+                        <h3 className="text-4xl md:text-5xl font-serif text-[#0A2342] mb-6 tracking-tight">Identity Required</h3>
+                        <p className="text-gray-500 mb-12 text-lg leading-relaxed font-medium">
+                            To facilitate a secure professional consultation, please authenticate your profile. This ensures both parties have verified credentials for the appointment.
+                        </p>
+
+                        <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+                            <button
+                                onClick={() => router.push(`/auth/login?redirect=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname + window.location.search : '')}`)}
+                                className="px-10 py-5 bg-[#0A2342] text-white rounded-2xl shadow-xl shadow-[#0A2342]/10 text-[11px] font-black uppercase tracking-widest hover:bg-[#153a66] transition-all flex items-center justify-center gap-3"
+                            >
+                                <User size={16} />
+                                Continue to Login
+                            </button>
+
+                            <button
+                                onClick={() => router.push(`/auth/signup?redirect=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname + window.location.search : '')}`)}
+                                className="px-10 py-5 bg-[#C9A227] text-white rounded-2xl shadow-xl shadow-[#C9A227]/10 text-[11px] font-black uppercase tracking-widest hover:opacity-90 transition-all"
+                            >
+                                Create New Profile
+                            </button>
+                        </div>
+                        
+                        <p className="mt-16 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            Secure & Confidential Booking Environment
+                        </p>
+                    </div>
+                ) : (
+                    <div className="grid lg:grid-cols-12 gap-12 mb-16">
+                        {/* Left Column: Advocate Selection/Details */}
+                        <div className="lg:col-span-4 space-y-8">
+                            {fetchingAdvocate ? (
+                                <div className="bg-white p-12 border border-gray-100 shadow-sm flex flex-col items-center justify-center">
+                                    <Loader />
+                                    <p className="mt-4 text-gray-400 text-sm">Loading advocate details...</p>
+                                </div>
+                            ) : advocate ? (
+                                <div className="bg-white border border-gray-100 shadow-xl overflow-hidden group">
+                                    <div className="p-6">
+                                        <div className="aspect-square bg-gray-50 relative overflow-hidden rounded-2xl border-4 border-gray-50 shadow-inner group-hover:border-[#C9A227]/20 transition-all duration-500">
+                                            {advocate.photoUrl || advocate.profilePicture ? (
+                                                <Image
+                                                    src={advocate.photoUrl || advocate.profilePicture}
+                                                    alt={advocate.name}
+                                                    fill
+                                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-gray-200">
+                                                    <User className="w-24 h-24" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="px-6 pb-8 space-y-4">
+                                        <div className="pb-4 border-b border-gray-50">
+                                            <h3 className="text-2xl font-bold text-[#0A2342]">{advocate.name}</h3>
+                                            <p className="text-[#C9A227] text-[10px] font-black uppercase tracking-[0.2em] mt-1">{advocate.designation || 'Advocate'}</p>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-sm text-gray-600 pt-2">
+                                            <Briefcase className="w-4 h-4 text-[#C9A227]" />
+                                            <span>{advocate.specialization || advocate.practiceArea || 'General Practice'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-sm text-gray-600">
+                                            <ShieldCheck className="w-4 h-4 text-[#C9A227]" />
+                                            <span>{advocate.yearsOfExperience || 'Experienced'} Professional</span>
+                                        </div>
+                                        {(!advocateIdFromUrl || (loggedInUser?.id || loggedInUser?._id) === (advocate.id || advocate._id)) && (
+                                            <button
+                                                onClick={() => { setAdvocate(null); setFormData(p => ({ ...p, advocateId: "" })); }}
+                                                className="text-xs font-bold text-[#0A2342] hover:text-[#C9A227] transition-colors uppercase tracking-widest pt-4 border-t border-gray-50 w-full text-left flex items-center gap-2"
+                                            >
+                                                Change Advocate <ArrowRight className="w-3 h-3" />
+                                            </button>
                                         )}
                                     </div>
                                 </div>
-                                <div className="px-6 pb-8 space-y-4">
-                                    <div className="pb-4 border-b border-gray-50">
-                                        <h3 className="text-2xl font-bold text-[#0A2342]">{advocate.name}</h3>
-                                        <p className="text-[#C9A227] text-[10px] font-black uppercase tracking-[0.2em] mt-1">{advocate.designation || 'Advocate'}</p>
+                            ) : (
+                                <div className="bg-white p-8 border border-gray-100 shadow-sm">
+                                    <h3 className="text-lg font-bold text-[#0A2342] mb-6">Select an Advocate</h3>
+                                    <div className="relative mb-6">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search by name..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-lg focus:border-[#C9A227] outline-none text-sm transition-all"
+                                        />
                                     </div>
-                                    <div className="flex items-center gap-3 text-sm text-gray-600 pt-2">
-                                        <Briefcase className="w-4 h-4 text-[#C9A227]" />
-                                        <span>{advocate.specialization || advocate.practiceArea || 'General Practice'}</span>
+                                    <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                        {filteredAdvocates.map((adv: any) => (
+                                            <div
+                                                key={adv.id || adv._id}
+                                                onClick={() => handleAdvocateSelect(adv)}
+                                                className="flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-[#C9A227]/30 hover:bg-gray-50 cursor-pointer transition-all group"
+                                            >
+                                                <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden relative">
+                                                    {adv.photoUrl || adv.profilePicture ? (
+                                                        <Image src={adv.photoUrl || adv.profilePicture} alt={adv.name} fill className="object-cover" />
+                                                    ) : <User className="w-full h-full p-2 text-gray-300" />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="text-sm font-bold text-[#0A2342] truncate group-hover:text-[#C9A227] transition-colors">{adv.name}</h4>
+                                                    <p className="text-[10px] text-gray-400 uppercase tracking-tighter truncate">{adv.city || 'Advocate'}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {filteredAdvocates.length === 0 && (
+                                            <p className="text-center py-10 text-gray-400 text-xs italic">No advocates found matching your search.</p>
+                                        )}
                                     </div>
-                                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                                        <ShieldCheck className="w-4 h-4 text-[#C9A227]" />
-                                        <span>{advocate.yearsOfExperience || 'Experienced'} Professional</span>
+                                </div>
+                            )}
+
+                            <div className="bg-[#C9A227] p-8 text-[#0A2342] relative overflow-hidden group">
+                                <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                                <h3 className="text-xl font-bold mb-4 relative z-10">Confidentiality Assured</h3>
+                                <p className="text-sm font-medium mb-6 relative z-10 opacity-90">All consultations are strictly private and follow legal privilege standards.</p>
+                            </div>
+                        </div>
+
+                        {/* Right Column: Booking Form */}
+                        <div className="lg:col-span-8">
+                            <div className="bg-white p-8 lg:p-12 border border-gray-100 shadow-2xl shadow-[#0A2342]/5 relative min-h-[600px] flex flex-col">
+                                {/* Form Header */}
+                                <div className="mb-12 border-b border-gray-100 pb-8">
+                                    <h2 className="text-3xl font-bold text-[#0A2342] mb-3">Appointment Details</h2>
+                                    <p className="text-gray-400">Fill in the form to book your slot with {advocate?.name || 'an expert advocate'}.</p>
+
+                                    {loggedInUser && (loggedInUser?.id || loggedInUser?._id) === (advocate?.id || advocate?._id) && advocate && (
+                                        <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600">
+                                            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                                            <p className="text-sm font-medium">You cannot book an appointment with yourself. Please select another advocate.</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <form onSubmit={handleSubmit} className="space-y-8">
+                                    {/* Personal Information */}
+                                    <div className="grid md:grid-cols-2 gap-8">
+                                        <FormField label="Full Name" error={errors.fullName} required>
+                                            <input
+                                                type="text"
+                                                name="fullName"
+                                                value={formData.fullName}
+                                                onChange={handleChange}
+                                                disabled={isSelfBooking}
+                                                className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${errors.fullName ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking || (loggedInUser && loggedInUser.name) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                                placeholder="John Doe"
+                                                readOnly={!!(loggedInUser && loggedInUser.name)}
+                                            />
+                                        </FormField>
+
+                                        <FormField label="Email Address" error={errors.email} required>
+                                            <input
+                                                type="email"
+                                                name="email"
+                                                value={formData.email}
+                                                onChange={handleChange}
+                                                disabled={isSelfBooking}
+                                                className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${errors.email ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking || (loggedInUser && loggedInUser.email) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                                placeholder="john@example.com"
+                                                readOnly={!!(loggedInUser && loggedInUser.email)}
+                                            />
+                                        </FormField>
                                     </div>
-                                    {(!advocateIdFromUrl || (loggedInUser?.id || loggedInUser?._id) === (advocate.id || advocate._id)) && (
+
+                                    <div className="grid md:grid-cols-2 gap-8">
+                                        <FormField label="Phone Number" error={errors.phone} required>
+                                            <input
+                                                type="tel"
+                                                name="phone"
+                                                value={formData.phone}
+                                                onChange={handleChange}
+                                                disabled={isSelfBooking}
+                                                className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${errors.phone ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                placeholder="+91 XXXX XXXX"
+                                            />
+                                        </FormField>
+
+                                        <FormField label="Practice Area" error={errors.practiceArea} required>
+                                            <input
+                                                type="text"
+                                                name="practiceArea"
+                                                value={formData.practiceArea}
+                                                readOnly
+                                                className="w-full pb-3 border-b border-gray-200 outline-none bg-transparent text-[#0A2342] font-medium cursor-default"
+                                            />
+                                        </FormField>
+                                    </div>
+
+                                    {/* Appointment Specifics */}
+                                    <div className="grid md:grid-cols-2 gap-8">
+                                        <FormField label="Preferred Date" error={errors.preferredDate} required>
+                                            <input
+                                                type="date"
+                                                name="preferredDate"
+                                                value={formData.preferredDate}
+                                                onChange={handleChange}
+                                                disabled={isSelfBooking}
+                                                min={new Date().toISOString().split('T')[0]}
+                                                className={`w-full pb-3 border-b outline-none bg-transparent transition-all text-[#0A2342] font-medium ${errors.preferredDate ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            />
+                                        </FormField>
+
+                                        <FormField label="Time Slot" error={errors.preferredTimeSlot} required>
+                                            <input
+                                                type="time"
+                                                name="preferredTimeSlot"
+                                                value={formData.preferredTimeSlot}
+                                                onChange={handleChange}
+                                                disabled={isSelfBooking}
+                                                className={`w-full pb-3 border-b outline-none bg-transparent transition-all text-[#0A2342] font-medium ${errors.preferredTimeSlot ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            />
+                                        </FormField>
+                                    </div>
+
+                                    <FormField label="Case Description" error={errors.description} required>
+                                        <textarea
+                                            name="description"
+                                            value={formData.description}
+                                            onChange={handleChange}
+                                            rows={4}
+                                            disabled={isSelfBooking}
+                                            className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium resize-none ${errors.description ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            placeholder="Briefly describe your legal concern..."
+                                        ></textarea>
+                                    </FormField>
+
+                                    <div className="flex items-start gap-3 pt-4">
+                                        <input
+                                            type="checkbox"
+                                            name="termsAccepted"
+                                            checked={formData.termsAccepted}
+                                            onChange={handleChange}
+                                            id="terms"
+                                            disabled={isSelfBooking}
+                                            className={`mt-1 w-4 h-4 text-[#C9A227] border-gray-300 rounded focus:ring-[#C9A227] ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        />
+                                        <label htmlFor="terms" className="text-sm text-gray-500 leading-tight cursor-pointer select-none">
+                                            I agree to the <span className="text-[#0A2342] font-bold hover:text-[#C9A227]">Terms of Service</span> and <span className="text-[#0A2342] font-bold hover:text-[#C9A227]">Privacy Policy</span>. I understand that this consultation request does not establish an attorney-client relationship.
+                                        </label>
+                                    </div>
+
+                                    <div className="pt-6">
                                         <button
-                                            onClick={() => { setAdvocate(null); setFormData(p => ({ ...p, advocateId: "" })); }}
-                                            className="text-xs font-bold text-[#0A2342] hover:text-[#C9A227] transition-colors uppercase tracking-widest pt-4 border-t border-gray-50 w-full text-left flex items-center gap-2"
+                                            type="submit"
+                                            disabled={loading || isSelfBooking}
+                                            className={`group relative w-full md:w-auto rounded-md px-12 py-5 bg-[#0A2342] text-white font-bold tracking-widest overflow-hidden transition-all hover:bg-[#153a66] disabled:opacity-50 ${isSelfBooking ? 'cursor-not-allowed' : ''}`}
                                         >
-                                            Change Advocate <ArrowRight className="w-3 h-3" />
+                                            <span className="relative z-10 flex items-center justify-center gap-3 ">
+                                                {loading ? "PROCESSING..." : "CONFIRM BOOKING"}
+                                            </span>
+                                            <div className="absolute inset-0 bg-[#C9A227] transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></div>
                                         </button>
-                                    )}
-                                </div>
+                                    </div>
+                                </form>
                             </div>
-                        ) : (
-                            <div className="bg-white p-8 border border-gray-100 shadow-sm">
-                                <h3 className="text-lg font-bold text-[#0A2342] mb-6">Select an Advocate</h3>
-                                <div className="relative mb-6">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search by name..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-lg focus:border-[#C9A227] outline-none text-sm transition-all"
-                                    />
-                                </div>
-                                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                                    {filteredAdvocates.map((adv: any) => (
-                                        <div
-                                            key={adv.id || adv._id}
-                                            onClick={() => handleAdvocateSelect(adv)}
-                                            className="flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-[#C9A227]/30 hover:bg-gray-50 cursor-pointer transition-all group"
-                                        >
-                                            <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden relative">
-                                                {adv.photoUrl || adv.profilePicture ? (
-                                                    <Image src={adv.photoUrl || adv.profilePicture} alt={adv.name} fill className="object-cover" />
-                                                ) : <User className="w-full h-full p-2 text-gray-300" />}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className="text-sm font-bold text-[#0A2342] truncate group-hover:text-[#C9A227] transition-colors">{adv.name}</h4>
-                                                <p className="text-[10px] text-gray-400 uppercase tracking-tighter truncate">{adv.city || 'Advocate'}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {filteredAdvocates.length === 0 && (
-                                        <p className="text-center py-10 text-gray-400 text-xs italic">No advocates found matching your search.</p>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="bg-[#C9A227] p-8 text-[#0A2342] relative overflow-hidden group">
-                            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
-                            <h3 className="text-xl font-bold mb-4 relative z-10">Confidentiality Assured</h3>
-                            <p className="text-sm font-medium mb-6 relative z-10 opacity-90">All consultations are strictly private and follow legal privilege standards.</p>
                         </div>
                     </div>
-
-                    {/* Right Column: Booking Form */}
-                    <div className="lg:col-span-8">
-                        <div className="bg-white p-8 lg:p-12 border border-gray-100 shadow-2xl shadow-[#0A2342]/5 relative">
-                            {/* Form Header */}
-                            <div className="mb-12 border-b border-gray-100 pb-8">
-                                <h2 className="text-3xl font-bold text-[#0A2342] mb-3">Appointment Details</h2>
-                                <p className="text-gray-400">Fill in the form to book your slot with {advocate?.name || 'an expert advocate'}.</p>
-
-                                {(loggedInUser?.id || loggedInUser?._id) === (advocate?.id || advocate?._id) && advocate && (
-                                    <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600">
-                                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                                        <p className="text-sm font-medium">You cannot book an appointment with yourself. Please select another advocate.</p>
-                                    </div>
-                                )}
-
-                                {caseData && (
-                                    <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
-                                                <Gavel size={20} />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Booking for Case</p>
-                                                <p className="text-sm font-bold text-[#0A2342]">{caseData.title}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Case No.</p>
-                                            <p className="text-xs font-bold text-[#0A2342]">{caseData.caseNumber || 'N/A'}</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <form onSubmit={handleSubmit} className="space-y-8">
-                                {/* Personal Information */}
-                                <div className="grid md:grid-cols-2 gap-8">
-                                    <FormField label="Full Name" error={errors.fullName} required>
-                                        <input
-                                            type="text"
-                                            name="fullName"
-                                            value={formData.fullName}
-                                            onChange={handleChange}
-                                            disabled={isSelfBooking}
-                                            className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${errors.fullName ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            placeholder="John Doe"
-                                        />
-                                    </FormField>
-
-                                    <FormField label="Email Address" error={errors.email} required>
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleChange}
-                                            disabled={isSelfBooking}
-                                            className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${errors.email ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            placeholder="john@example.com"
-                                        />
-                                    </FormField>
-                                </div>
-
-                                <div className="grid md:grid-cols-2 gap-8">
-                                    <FormField label="Phone Number" error={errors.phone} required>
-                                        <input
-                                            type="tel"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleChange}
-                                            disabled={isSelfBooking}
-                                            className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${errors.phone ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            placeholder="+91 XXXX XXXX"
-                                        />
-                                    </FormField>
-
-                                    <FormField label="Practice Area" error={errors.practiceArea} required>
-                                        <input
-                                            type="text"
-                                            name="practiceArea"
-                                            value={formData.practiceArea}
-                                            readOnly
-                                            className="w-full pb-3 border-b border-gray-200 outline-none bg-transparent text-[#0A2342] font-medium cursor-default"
-                                        />
-                                    </FormField>
-                                </div>
-
-                                {/* Appointment Specifics */}
-                                <div className="grid md:grid-cols-2 gap-8">
-                                    <FormField label="Preferred Date" error={errors.preferredDate} required>
-                                        <input
-                                            type="date"
-                                            name="preferredDate"
-                                            value={formData.preferredDate}
-                                            onChange={handleChange}
-                                            disabled={isSelfBooking}
-                                            min={new Date().toISOString().split('T')[0]}
-                                            className={`w-full pb-3 border-b outline-none bg-transparent transition-all text-[#0A2342] font-medium ${errors.preferredDate ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        />
-                                    </FormField>
-
-                                    <FormField label="Time Slot" error={errors.preferredTimeSlot} required>
-                                        <select
-                                            name="preferredTimeSlot"
-                                            value={formData.preferredTimeSlot}
-                                            onChange={handleChange}
-                                            disabled={isSelfBooking}
-                                            className={`w-full pb-3 border-b outline-none bg-transparent transition-all text-[#0A2342] font-medium appearance-none ${errors.preferredTimeSlot ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            {timeSlots.map(slot => (
-                                                <option key={slot} value={slot}>{slot}</option>
-                                            ))}
-                                        </select>
-                                    </FormField>
-                                </div>
-
-                                <FormField label="Case Description" error={errors.description} required>
-                                    <textarea
-                                        name="description"
-                                        value={formData.description}
-                                        onChange={handleChange}
-                                        rows={4}
-                                        disabled={isSelfBooking}
-                                        className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium resize-none ${errors.description ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        placeholder="Briefly describe your legal concern..."
-                                    ></textarea>
-                                </FormField>
-
-                                <div className="flex items-start gap-3 pt-4">
-                                    <input
-                                        type="checkbox"
-                                        name="termsAccepted"
-                                        checked={formData.termsAccepted}
-                                        onChange={handleChange}
-                                        id="terms"
-                                        disabled={isSelfBooking}
-                                        className={`mt-1 w-4 h-4 text-[#C9A227] border-gray-300 rounded focus:ring-[#C9A227] ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    />
-                                    <label htmlFor="terms" className="text-sm text-gray-500 leading-tight cursor-pointer select-none">
-                                        I agree to the <span className="text-[#0A2342] font-bold hover:text-[#C9A227]">Terms of Service</span> and <span className="text-[#0A2342] font-bold hover:text-[#C9A227]">Privacy Policy</span>. I understand that this consultation request does not establish an attorney-client relationship.
-                                    </label>
-                                </div>
-
-                                <div className="pt-6">
-                                    <button
-                                        type="submit"
-                                        disabled={loading || isSelfBooking}
-                                        className={`group relative w-full md:w-auto rounded-md px-12 py-5 bg-[#0A2342] text-white font-bold tracking-widest overflow-hidden transition-all hover:bg-[#153a66] disabled:opacity-50 ${isSelfBooking ? 'cursor-not-allowed' : ''}`}
-                                    >
-                                        <span className="relative z-10 flex items-center justify-center gap-3 ">
-                                            {loading ? "PROCESSING..." : "CONFIRM BOOKING"}
-                                            {/* {!loading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />} */}
-                                        </span>
-                                        <div className="absolute inset-0 bg-[#C9A227] transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></div>
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                )}
             </div>
 
             <Footer />
@@ -567,6 +579,70 @@ function BookingForm() {
                     background: #C9A227;
                 }
             `}</style>
+        </div>
+    );
+}
+
+function AuthPromptModal({ onClose }: { onClose: () => void }) {
+    const router = useRouter();
+    const [pathname, setPathname] = useState("");
+
+    useEffect(() => {
+        setPathname(window.location.pathname + window.location.search);
+    }, []);
+
+    return (
+        <div className="fixed inset-0 z-[700] flex items-center justify-center p-6 bg-black/10 backdrop-blur-sm">
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="bg-white rounded-3xl p-10 md:p-14 max-w-lg w-full text-center relative overflow-hidden shadow-2xl border border-black/5"
+            >
+                {/* Decorative elements */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9A227]/5 rounded-full -mr-16 -mt-16" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#0A2342]/5 rounded-full -ml-12 -mb-12" />
+
+                <button
+                    onClick={onClose}
+                    className="absolute top-8 right-8 p-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-400 hover:text-[#0A2342]"
+                >
+                    <X size={20} />
+                </button>
+
+                <div className="w-20 h-20 bg-[#C9A227]/10 text-[#C9A227] rounded-[24px] flex items-center justify-center mx-auto mb-8 relative border border-[#C9A227]/20">
+                    <Lock size={32} strokeWidth={1.5} />
+                </div>
+
+                <h3 className="text-4xl font-serif text-[#0A2342] mb-4 tracking-tight">Identity Required</h3>
+                <p className="text-gray-500 mb-10 text-sm leading-relaxed font-medium">
+                    To facilitate a secure professional consultation, please authenticate your profile. This ensures both parties have verified credentials for the appointment.
+                </p>
+
+                <div className="flex flex-col gap-4">
+                    <button
+                        onClick={() => router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`)}
+                        className="w-full py-5 bg-[#0A2342] text-white rounded-2xl shadow-xl shadow-[#0A2342]/10 text-[11px] font-black uppercase tracking-widest hover:bg-[#153a66] transition-all flex items-center justify-center gap-3"
+                    >
+                        <User size={16} />
+                        Continue to Login
+                    </button>
+
+                    <button
+                        onClick={() => router.push(`/auth/signup?redirect=${encodeURIComponent(pathname)}`)}
+                        className="w-full py-5 bg-[#C9A227] text-white rounded-2xl shadow-xl shadow-[#C9A227]/10 text-[11px] font-black uppercase tracking-widest hover:opacity-90 transition-all"
+                    >
+                        Create New Profile
+                    </button>
+                </div>
+
+                <button
+                    onClick={onClose}
+                    className="mt-8 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#0A2342] transition-colors"
+                >
+                    Maybe Later
+                </button>
+            </motion.div>
         </div>
     );
 }

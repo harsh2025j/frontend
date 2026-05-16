@@ -415,9 +415,10 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                     <div className="space-y-4 mb-8">
                         {(article.advocates && article.advocates.length > 0 ? article.advocates : ([{ name: article.advocateName }] as Advocate[])).map((adv, idx) => {
                             if (!adv?.name && !article.advocateName) return null;
-                            const profileId = adv.userId || username;
-                            return profileId ? (
-                                <Link key={idx} href={`/profile/${username || adv.userId}`} className="flex items-center gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/advocate">
+                            const profileId = adv.userId;
+                            const targetPath = adv.userId ? (advocateUsernames[adv.userId] || adv.userId) : null;
+                            return targetPath ? (
+                                <Link key={idx} href={`/profile/${targetPath}`} className="flex items-center gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/advocate">
                                     <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-2 ring-[#C9A227]/80 shadow-sm shrink-0 overflow-hidden relative group-hover/advocate:ring-[#C9A227]/70 transition-all">
                                         {adv?.userId && advocatePhotos[adv.userId] ? (
                                             <Image src={advocatePhotos[adv.userId]} alt={adv.name || "Advocate"} fill sizes="100px" className="object-cover" quality={90} />
@@ -483,6 +484,47 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
     const [loadingNext, setLoadingNext] = useState(false);
     const [loadedSlugs] = useState(() => new Set([slug]));
     const sentinelRef = useRef<HTMLDivElement>(null);
+    const sidebarContainerRef = useRef<HTMLDivElement>(null);
+    const sidebarScrollRef = useRef<HTMLDivElement>(null);
+    const isHoveringSidebar = useRef(false);
+
+    // ── SYNCED SCROLLING LOGIC ──
+    useEffect(() => {
+        const handleGlobalWheel = (e: WheelEvent) => {
+            const scroller = sidebarScrollRef.current;
+            if (!scroller) return;
+
+            if (isHoveringSidebar.current) {
+                const isAtTop = scroller.scrollTop <= 0;
+                const isAtBottom = Math.ceil(scroller.scrollTop + scroller.clientHeight) >= scroller.scrollHeight;
+
+                if (e.deltaY > 0 && !isAtBottom) {
+                    // Scrolling down and sidebar can scroll
+                    scroller.scrollTop += e.deltaY;
+                    if (e.cancelable) e.preventDefault();
+                } else if (e.deltaY < 0 && !isAtTop) {
+                    // Scrolling up and sidebar can scroll
+                    scroller.scrollTop += e.deltaY;
+                    if (e.cancelable) e.preventDefault();
+                }
+                // If at boundaries, don't preventDefault -> news side scrolls
+            } else {
+                // News side scroll -> Sidebar chaining at bottom
+                const isPageAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50;
+                if (e.deltaY > 0 && isPageAtBottom) {
+                    const isSidebarAtBottom = Math.ceil(scroller.scrollTop + scroller.clientHeight) >= scroller.scrollHeight;
+                    if (!isSidebarAtBottom) {
+                        scroller.scrollTop += e.deltaY;
+                        if (e.cancelable) e.preventDefault();
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('wheel', handleGlobalWheel, { passive: false });
+        return () => window.removeEventListener('wheel', handleGlobalWheel);
+    }, []);
+    // ────────────────────────────
 
     const user = useSelector((state: RootState) => state.auth.user);
     const subscription = useSelector((state: RootState) => state.subscription.currentSubscription);
@@ -529,45 +571,47 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
 
     const loadNextArticle = useCallback(async () => {
         if (loadingNext || !hasMore || !initialArticle.category?.slug) return;
-
-        // Limit to max 5 articles total (1 initial + 4 fetched)
-        if (articles.length >= 5) {
-            setHasMore(false);
-            return;
-        }
+        if (articles.length >= 5) { setHasMore(false); return; }
 
         setLoadingNext(true);
         try {
-            const res = await articleApi.fetchArticles({
-                category: initialArticle.category.slug,
-                page,
-                limit: 1,
-            });
-            const raw = res.data as any;
-            const fetched: Article[] = raw?.data || [];
-            const totalPages: number = raw?.meta?.total_pages || 1;
+            let currentPage = page;
+            let foundNext = false;
+            let attempts = 0;
 
-            const next = fetched.find((a) => !loadedSlugs.has(a.slug));
-            if (!next) {
-                // This page had no usable article — skip to next page or end
-                if (page >= totalPages) {
-                    setHasMore(false);
+            while (!foundNext && attempts < 3) {
+                const res = await articleApi.fetchArticles({
+                    category: initialArticle.category.slug,
+                    page: currentPage,
+                    limit: 3, // Fetch more to increase chances of finding a new one
+                });
+                const raw = res.data as any;
+                const fetched: Article[] = raw?.data || [];
+                const totalPages: number = raw?.meta?.total_pages || 1;
+
+                const next = fetched.find((a) => !loadedSlugs.has(a.slug));
+                if (next) {
+                    loadedSlugs.add(next.slug);
+                    setArticles((prev) => [...prev, next]);
+                    setPage(currentPage + 1);
+                    if (currentPage >= totalPages) setHasMore(false);
+                    foundNext = true;
                 } else {
-                    setPage((p) => p + 1);
+                    if (currentPage >= totalPages) {
+                        setHasMore(false);
+                        break;
+                    }
+                    currentPage++;
+                    attempts++;
                 }
-            } else {
-                loadedSlugs.add(next.slug);
-                setArticles((prev) => [...prev, next]);
-                const nextPage = page + 1;
-                setPage(nextPage);
-                if (nextPage > totalPages) setHasMore(false);
             }
+            if (!foundNext) setPage(currentPage);
         } catch {
             setHasMore(false);
         } finally {
             setLoadingNext(false);
         }
-    }, [loadingNext, hasMore, initialArticle.category?.slug, page, loadedSlugs]);
+    }, [loadingNext, hasMore, initialArticle.category?.slug, page, loadedSlugs, articles.length]);
 
     // Wire IntersectionObserver to sentinel div
     useEffect(() => {
@@ -575,11 +619,16 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
         if (!el) return;
         const observer = new IntersectionObserver(
             (entries) => { if (entries[0].isIntersecting) loadNextArticle(); },
-            { rootMargin: "300px" }
+            { rootMargin: "1000px" } // Load much earlier (1 news in advance)
         );
         observer.observe(el);
         return () => observer.disconnect();
     }, [loadNextArticle]);
+
+    // Ensure 1 news in advance is loaded immediately on mount
+    useEffect(() => {
+        loadNextArticle();
+    }, []);
 
     // ── Sidebar: related articles ─────────────────────────────────────────────
     const [recommendedArticles, setRecommendedArticles] = useState<Article[]>([]);
@@ -630,7 +679,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
     return (
         <div className="bg-white min-h-screen font-unna">
             <div className="max-w-7xl mx-auto py-8 px-4">
-                
+
                 {/* Article Top Banner */}
                 {!isPremium && (
                     <div className="mb-8">
@@ -679,8 +728,16 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                     </div>
 
                     {/* ── Sidebar (sticky, related articles from category) ── */}
-                    <div className="lg:col-span-3">
-                        <div className="sticky top-24">
+                    <div
+                        className="lg:col-span-3 relative z-20"
+                        ref={sidebarContainerRef}
+                        onMouseEnter={() => { isHoveringSidebar.current = true; }}
+                        onMouseLeave={() => { isHoveringSidebar.current = false; }}
+                    >
+                        <div
+                            ref={sidebarScrollRef}
+                            className="sticky top-24 max-h-[90vh] overflow-y-auto pr-2 scrollbar-hide pb-10"
+                        >
                             {/* Sidebar Top Ad */}
                             {!isPremium && (
                                 <div className="mb-8">
@@ -689,7 +746,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                             )}
 
                             <h3 className="text-lg font-bold text-gray-900 mb-4 font-unna">{t("relatedArticles")}</h3>
-                            <div className="space-y-6 max-h-[85vh] overflow-y-auto scrollbar-hide pb-10">
+                            <div className="space-y-6">
                                 {loadingRecommended ? (
                                     Array(5).fill(0).map((_, i) => (
                                         <div key={i} className="flex gap-4 animate-pulse">

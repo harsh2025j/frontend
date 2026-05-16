@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
 import { Calendar, Clock, Mail, Phone, User, CheckCircle, XCircle, Clock3, MoreVertical, ExternalLink, X, MapPin, Hash, Briefcase, List, LayoutGrid } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDate } from "@/utils/dateUtils";
 import toast from "react-hot-toast";
 import AppointmentCalendar from "./AppointmentCalendar";
-import CaseLinkedBadge from "@/components/appointments/CaseLinkedBadge";
 
 interface Appointment {
   id: string;
   fullName: string;
   advocateName?: string;
+  advocateEmail?: string;
+  advocatePhone?: string;
   email: string;
   phone: string;
   practiceArea: string;
@@ -24,31 +25,36 @@ interface Appointment {
   createdAt: string;
   profilePicture?: string;
   advocateProfilePicture?: string;
-  caseId?: string | null;
-  case?: {
-    id: string;
-    title: string;
-    caseNumber?: string;
-  };
+  isAdvocateInitiated?: boolean;
 }
 
 interface AppointmentsListProps {
   advocateId?: string;
   clientEmail?: string;
   onUpdateUnread?: () => void;
-  filterCaseLinkedOnly?: boolean;
+  hideCalendar?: boolean;
+  filterType?: 'unconfirmed' | 'upcoming-confirmed';
 }
 
-export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnread, filterCaseLinkedOnly }: AppointmentsListProps) {
+export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnread, hideCalendar, filterType }: AppointmentsListProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const detailPanelRef = useRef<HTMLDivElement>(null);
+
+  const scrollToDetailOnMobile = () => {
+    if (window.innerWidth < 1024 && detailPanelRef.current) {
+      setTimeout(() => {
+        detailPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+    }
+  };
 
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      console.log("Fetching appointments. AdvocateId:", advocateId, "ClientEmail:", clientEmail);
+      // console.log("Fetching appointments. AdvocateId:", advocateId, "ClientEmail:", clientEmail);
       let response;
       if (clientEmail) {
         response = await appointmentsService.fetchByClient(clientEmail);
@@ -61,7 +67,22 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
 
       const data = response.data?.data || response.data;
       if (Array.isArray(data)) {
-        setAppointments(data);
+        let finalData = data;
+        if (filterType === 'unconfirmed') {
+          finalData = data.filter(a => a.status !== 'confirmed' && a.status !== 'cancelled');
+        } else if (filterType === 'upcoming-confirmed') {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          finalData = data.filter(a => {
+            if (a.status !== 'confirmed') return false;
+            const aptDate = new Date(a.preferredDate);
+            return aptDate >= today;
+          });
+
+          // Sort ascending by date for upcoming appointments
+          finalData.sort((a, b) => new Date(a.preferredDate).getTime() - new Date(b.preferredDate).getTime());
+        }
+        setAppointments(finalData);
       } else {
         setAppointments([]);
       }
@@ -99,7 +120,10 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
       await appointmentsService.updateStatus(id, status);
-      setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+      await fetchAppointments();
+      if (selectedAppointment?.id === id) {
+        setSelectedAppointment(prev => prev ? { ...prev, status } : null);
+      }
       toast.success(`Appointment ${status}`);
     } catch (error) {
       console.error("Failed to update status", error);
@@ -120,8 +144,8 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
         status: 'proposed'
       });
       const updated = response.data;
-      setAppointments(prev => prev.map(a => a.id === selectedAppointment.id ? { ...a, ...updated } : a));
-      setSelectedAppointment(null);
+      await fetchAppointments();
+      setSelectedAppointment(updated);
       setIsRescheduling(false);
       toast.success("Reschedule proposal sent to client");
     } catch (error) {
@@ -133,9 +157,11 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
   const handleClientAccept = async (id: string) => {
     try {
       await appointmentsService.updateStatus(id, 'confirmed');
-      setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'confirmed' } : a));
+      await fetchAppointments();
+      if (selectedAppointment?.id === id) {
+        setSelectedAppointment(prev => prev ? { ...prev, status: 'confirmed' } : null);
+      }
       toast.success("Appointment confirmed!");
-      setSelectedAppointment(null);
     } catch (error) {
       console.error("Failed to confirm appointment", error);
       toast.error("Failed to confirm appointment");
@@ -153,26 +179,28 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
   return (
     <div className="space-y-6">
       {/* View Switcher */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 bg-gray-100/50 p-1 rounded-xl border border-gray-100">
-          <button
-            onClick={() => setViewMode('list')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'list' ? 'bg-white text-[#0A2342] shadow-sm' : 'text-gray-400 hover:text-gray-600'
-              }`}
-          >
-            <List size={14} /> List View
-          </button>
-          <button
-            onClick={() => setViewMode('calendar')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'calendar' ? 'bg-white text-[#0A2342] shadow-sm' : 'text-gray-400 hover:text-gray-600'
-              }`}
-          >
-            <LayoutGrid size={14} /> Calendar
-          </button>
+      {!hideCalendar && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 bg-gray-100/50 p-1 rounded-xl border border-gray-100">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'list' ? 'bg-white text-[#0A2342] shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                }`}
+            >
+              <List size={14} /> List View
+            </button>
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'calendar' ? 'bg-white text-[#0A2342] shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                }`}
+            >
+              <LayoutGrid size={14} /> Calendar
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {viewMode === 'calendar' ? (
+      {viewMode === 'calendar' && !hideCalendar ? (
         <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm flex flex-col h-[800px]">
           <AppointmentCalendar
             appointments={appointments}
@@ -190,11 +218,13 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
           <p className="text-sm text-gray-500 mt-1">New requests will appear here when clients book.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[800px]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Scrollable List */}
-          <div className="lg:col-span-4 bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm flex flex-col h-full">
+          <div className="lg:col-span-4 bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm flex flex-col max-h-[420px] lg:max-h-none lg:h-0 lg:min-h-full">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Upcoming Requests</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                {clientEmail ? "My Booking History" : "Upcoming Requests"}
+              </span>
               <span className="px-2 py-0.5 bg-gray-50 rounded-full text-[9px] font-bold text-gray-400 border border-gray-100">
                 {appointments.length} Total
               </span>
@@ -202,13 +232,13 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
             <div className="overflow-y-auto custom-scrollbar flex-grow">
               <div className="divide-y divide-gray-100">
                 {appointments
-                  .filter(a => !filterCaseLinkedOnly || !!a.caseId)
                   .map((appointment) => (
                     <div
                       key={appointment.id}
                       onClick={() => {
                         setSelectedAppointment(appointment);
                         if (!appointment.isRead) handleMarkAsRead(appointment.id);
+                        scrollToDetailOnMobile();
                       }}
                       className={`p-5 transition-all hover:bg-gray-50 cursor-pointer group relative ${selectedAppointment?.id === appointment.id ? "bg-blue-50/60" : ""
                         } ${!appointment.isRead ? "bg-blue-50/20" : ""}`}
@@ -216,10 +246,18 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                       <div className="flex items-center gap-4">
                         <div className="relative flex-shrink-0">
                           <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-sm border border-gray-200 overflow-hidden shadow-sm">
-                            {appointment.profilePicture ? (
-                              <img src={appointment.profilePicture} alt="" className="w-full h-full object-cover" />
+                            {clientEmail ? (
+                              appointment.advocateProfilePicture ? (
+                                <img src={appointment.advocateProfilePicture} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                (appointment.advocateName || "A").charAt(0).toUpperCase()
+                              )
                             ) : (
-                              (appointment.fullName || "C").charAt(0).toUpperCase()
+                              appointment.profilePicture ? (
+                                <img src={appointment.profilePicture} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                (appointment.fullName || "C").charAt(0).toUpperCase()
+                              )
                             )}
                           </div>
                           {!appointment.isRead && (
@@ -229,7 +267,7 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                         <div className="min-w-0 flex-grow">
                           <div className="flex items-center justify-between gap-2">
                             <h4 className={`text-sm font-bold truncate ${selectedAppointment?.id === appointment.id ? "text-[#0A2342]" : "text-gray-900"}`}>
-                              {appointment.fullName}
+                              {clientEmail ? (appointment.advocateName || "Advocate") : appointment.fullName}
                             </h4>
                             <span className="text-[9px] font-bold text-gray-400 whitespace-nowrap">
                               {formatDate(appointment.preferredDate)}
@@ -256,7 +294,7 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
           </div>
 
           {/* Right Column: Detailed View */}
-          <div className="lg:col-span-8 bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm flex flex-col h-full relative">
+          <div ref={detailPanelRef} className="lg:col-span-8 bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm flex flex-col relative">
             <AnimatePresence mode="wait">
               {selectedAppointment ? (
                 <motion.div
@@ -270,14 +308,24 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                   <div className="p-8 pb-6 border-b border-gray-50 flex items-center justify-between">
                     <div className="flex items-center gap-6">
                       <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200/50 flex items-center justify-center text-[#0A2342] font-black text-2xl shadow-sm overflow-hidden">
-                        {selectedAppointment.profilePicture ? (
-                          <img src={selectedAppointment.profilePicture} alt="" className="w-full h-full object-cover" />
+                        {clientEmail ? (
+                          selectedAppointment.advocateProfilePicture ? (
+                            <img src={selectedAppointment.advocateProfilePicture} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            (selectedAppointment.advocateName || "A").charAt(0).toUpperCase()
+                          )
                         ) : (
-                          (selectedAppointment.fullName || "C").charAt(0).toUpperCase()
+                          selectedAppointment.profilePicture ? (
+                            <img src={selectedAppointment.profilePicture} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            (selectedAppointment.fullName || "C").charAt(0).toUpperCase()
+                          )
                         )}
                       </div>
                       <div>
-                        <h3 className="text-2xl font-bold text-[#0A2342] tracking-tight">{selectedAppointment.fullName}</h3>
+                        <h3 className="text-2xl font-bold text-[#0A2342] tracking-tight">
+                          {clientEmail ? (selectedAppointment.advocateName || "Advocate") : selectedAppointment.fullName}
+                        </h3>
                         <div className="flex items-center gap-3 mt-1">
                           <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${selectedAppointment.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-100' :
                             selectedAppointment.status === 'proposed' ? 'bg-blue-50 text-blue-700 border-blue-100' :
@@ -286,11 +334,6 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                             }`}>
                             {selectedAppointment.status}
                           </span>
-                          <CaseLinkedBadge
-                            caseId={selectedAppointment.caseId}
-                            caseTitle={selectedAppointment.case?.title}
-                            caseNumber={selectedAppointment.case?.caseNumber}
-                          />
                         </div>
                       </div>
                     </div>
@@ -300,12 +343,26 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                   <div className="flex-grow overflow-y-auto p-8 space-y-8 custom-scrollbar">
                     <div className="grid grid-cols-2 gap-8">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Email Address</label>
-                        <p className="text-sm font-semibold text-[#0A2342]">{selectedAppointment.email}</p>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                          {clientEmail ? "Client Details (Me)" : "Client Details"}
+                        </label>
+                        <p className="text-sm font-semibold text-[#0A2342]">{selectedAppointment.fullName}</p>
+                        <p className="text-xs text-gray-500 font-medium">{selectedAppointment.email}</p>
+                        <p className="text-xs text-gray-500 font-medium">{selectedAppointment.phone}</p>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Contact Number</label>
-                        <p className="text-sm font-semibold text-[#0A2342]">{selectedAppointment.phone}</p>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                          {clientEmail ? "Advocate Details" : "Contact Number"}
+                        </label>
+                        {clientEmail ? (
+                          <>
+                            <p className="text-sm font-semibold text-[#0A2342]">{selectedAppointment.advocateName || "Advocate"}</p>
+                            <p className="text-xs text-gray-500 font-medium">{selectedAppointment.advocateEmail}</p>
+                            <p className="text-xs text-gray-500 font-medium">{selectedAppointment.advocatePhone}</p>
+                          </>
+                        ) : (
+                          <p className="text-sm font-semibold text-[#0A2342]">{selectedAppointment.phone}</p>
+                        )}
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Appointment Date</label>
@@ -346,22 +403,36 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                       >
                         <h4 className="text-[10px] font-bold text-blue-700 uppercase tracking-widest">Suggest New Schedule</h4>
                         <div className="grid grid-cols-2 gap-4">
-                          <input
-                            type="date"
-                            className="w-full px-4 py-2.5 bg-white border border-blue-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                            onChange={(e) => setRescheduleData(prev => ({ ...prev, date: e.target.value }))}
-                          />
-                          <input
-                            type="text"
-                            placeholder="e.g. 10:00 AM"
-                            className="w-full px-4 py-2.5 bg-white border border-blue-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                            onChange={(e) => setRescheduleData(prev => ({ ...prev, time: e.target.value }))}
-                          />
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">New Date <span className="text-red-500">*</span></label>
+                            <input
+                              type="date"
+                              value={rescheduleData.date}
+                              min={new Date().toISOString().split('T')[0]}
+                              className="w-full px-4 py-2.5 bg-white border border-blue-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                              onChange={(e) => setRescheduleData(prev => ({ ...prev, date: e.target.value }))}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">New Time <span className="text-red-500">*</span></label>
+                            <input
+                              type="time"
+                              value={rescheduleData.time}
+                              className="w-full px-4 py-2.5 bg-white border border-blue-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                              onChange={(e) => setRescheduleData(prev => ({ ...prev, time: e.target.value }))}
+                              required
+                            />
+                          </div>
                         </div>
                         <div className="flex gap-2">
                           <button
                             onClick={handleReschedule}
-                            className="flex-1 py-2.5 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-colors"
+                            disabled={!rescheduleData.date || !rescheduleData.time}
+                            className={`flex-1 py-2.5 text-[10px] text-white font-bold uppercase tracking-widest rounded-xl transition-colors ${!rescheduleData.date || !rescheduleData.time
+                              ? "bg-blue-300 cursor-not-allowed"
+                              : "bg-blue-600 hover:bg-blue-700"
+                              }`}
                           >
                             Send Proposal
                           </button>
@@ -388,7 +459,7 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                             Confirm Appointment
                           </button>
                           <button
-                            onClick={() => { setIsRescheduling(true); setRescheduleData({ date: selectedAppointment.preferredDate, time: selectedAppointment.preferredTimeSlot }); }}
+                            onClick={() => { setIsRescheduling(true); setRescheduleData({ date: '', time: '' }); }}
                             className="flex-1 py-3.5 bg-white text-[#0A2342] border border-gray-200 font-bold tracking-widest rounded-xl hover:bg-gray-50 transition-all uppercase text-[10px]"
                           >
                             Reschedule
@@ -404,12 +475,14 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                       {(selectedAppointment.status !== 'pending' || isRescheduling) && (
                         <div className="w-full flex items-center justify-between text-gray-400">
                           <span className="text-[10px] font-bold uppercase tracking-widest">Status: {selectedAppointment.status}</span>
-                          <button
-                            onClick={() => handleUpdateStatus(selectedAppointment.id, 'pending')}
-                            className="text-[10px] font-bold text-blue-600 hover:underline uppercase tracking-widest"
-                          >
-                            Reset to Pending
-                          </button>
+                          {!(selectedAppointment.isAdvocateInitiated && selectedAppointment.status === 'proposed') && (
+                            <button
+                              onClick={() => handleUpdateStatus(selectedAppointment.id, 'pending')}
+                              className="text-[10px] font-bold text-blue-600 hover:underline uppercase tracking-widest"
+                            >
+                              Reset to Pending
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

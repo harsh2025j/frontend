@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import CategorySection from "@/components/home/CategorySection";
 import NewsSlider from "@/components/home/NewsSlider";
 import Stores from "@/components/home/Stores";
-import { AdBanner, AdSidebar, AdPopup } from "@/components/ads/StandardAds";
+import { AdBanner, AdSidebar } from "@/components/ads/StandardAds";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function Home() {
@@ -13,7 +13,6 @@ export default function Home() {
 
   return (
     <>
-      <AdPopup slotId="HOME_POPUP" />
       <div className="bg-gray-50 min-h-screen">
         {/* Hero Section - NewsSlider */}
         <NewsSlider />
@@ -67,16 +66,10 @@ export default function Home() {
             <div className="space-y-6">
               <div className="sticky top-24 space-y-6">
                 {/* Sponsored Ad */}
-                <div className="bg-white p-1 rounded-lg border border-gray-100 shadow-sm">
-                  {/* <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('sponsored')}</h3> */}
-                  <AdSidebar slotId="HOME_SIDEBAR_1" />
-                </div>
+                <AdSidebar slotId="HOME_SIDEBAR_1" withContainer />
 
                 {/* Trending Ad */}
-                <div className="bg-white p-1 rounded-lg border border-gray-100 shadow-sm">
-                  {/* <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">{t('trending')}</h3> */}
-                  <AdSidebar slotId="HOME_SIDEBAR_2" />
-                </div>
+                <AdSidebar slotId="HOME_SIDEBAR_2" withContainer />
               </div>
             </div>
           </div>

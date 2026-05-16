@@ -12,6 +12,7 @@ import { restoreSession } from "@/data/features/auth/authSlice";
 import { setArticles } from "@/data/features/article/articleSlice";
 import { setCategories } from "@/data/features/category/categorySlice";
 import { getUserSubscription } from "@/data/features/subscription/subscriptionThunks";
+import { AdPopup } from "../ads/StandardAds";
 
 export default function ClientLayout({
   children,
@@ -84,6 +85,7 @@ export default function ClientLayout({
   return (
     <HomeDataProvider data={initialHomeData}>
       <HeaderNew initialCategories={initialCategories} />
+      <AdPopup slotId="HOME_POPUP" />
 
       <div>
         {children}

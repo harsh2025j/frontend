@@ -13,7 +13,7 @@ import {
   MessageSquare, ExternalLink, Clock, BookOpen, Plus,
   Shield, Globe, Bell, LogOut, ChevronRight, Check, ShieldCheck, Key, Languages, Phone,
   Gavel, Loader2,
-  BookmarkCheck
+  BookmarkCheck, Lock
 } from "lucide-react";
 
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
@@ -223,6 +223,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [prefs, setPrefs] = useState({ language: currentLocale, doNotDisturb: false, caseStatusAlerts: true });
   const [unreadAppointments, setUnreadAppointments] = useState(0);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const fetchUnreadAppointments = async () => {
     const userId = profileUser?.id || profileUser?._id;
@@ -364,7 +365,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
           </motion.div>
 
           {/* Consultancy Action */}
-          {loggedInUser && !isOwner && isProfessional && (
+          {!isOwner && isProfessional && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -372,11 +373,23 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
               className="mt-12"
             >
               <button
-                onClick={() => router.push(`/book-appointment?advocateId=${profileUser.id || profileUser._id}`)}
+                onClick={() => {
+                  if (loggedInUser) {
+                    router.push(`/book-appointment?advocateId=${profileUser.id || profileUser._id}`);
+                  } else {
+                    setShowAuthModal(true);
+                  }
+                }}
                 className="inline-flex items-center gap-3 px-8 py-4 bg-[#0A2342] text-white rounded-2xl shadow-xl hover:shadow-[#C9A227]/20 transition-all hover:-translate-y-1 group"
               >
-                <MessageSquare size={18} className="group-hover:rotate-12 transition-transform" />
-                <span className="text-[11px] font-black uppercase tracking-widest">Request Consultancy</span>
+                {!loggedInUser ? (
+                  <Lock size={18} className="text-[#C9A227]" />
+                ) : (
+                  <MessageSquare size={18} className="group-hover:rotate-12 transition-transform" />
+                )}
+                <span className="text-[11px] font-black uppercase tracking-widest">
+                  Book Appointment
+                </span>
               </button>
             </motion.div>
           )}
@@ -520,6 +533,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                       advocateId={isProfessional ? profileUser.id || profileUser._id : undefined}
                       clientEmail={!isProfessional ? (loggedInUser?.email || profileUser.email) : undefined}
                       onUpdateUnread={fetchUnreadAppointments}
+                      hideCalendar={true}
                     />
                   </div>
                 )}
@@ -690,6 +704,9 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
         {showLogoutConfirm && (
           <LogoutOverlay onCancel={() => setShowLogoutConfirm(false)} onConfirm={handleLogout} />
         )}
+        {showAuthModal && (
+          <AuthPromptModal onClose={() => setShowAuthModal(false)} />
+        )}
       </AnimatePresence>
     </div>
   );
@@ -834,6 +851,66 @@ function LogoutOverlay({ onCancel, onConfirm }: any) {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+function AuthPromptModal({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  return (
+    <div className="fixed inset-0 z-[700] flex items-center justify-center p-6 bg-black/10 backdrop-blur-sm">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        className="bg-white rounded-3xl p-10 md:p-14 max-w-lg w-full text-center relative overflow-hidden shadow-2xl border border-black/5"
+      >
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9A227]/5 rounded-full -mr-16 -mt-16" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#0A2342]/5 rounded-full -ml-12 -mb-12" />
+
+        <button
+          onClick={onClose}
+          className="absolute top-8 right-8 p-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-400 hover:text-[#0A2342]"
+        >
+          <X size={20} />
+        </button>
+
+        <div className="w-20 h-20 bg-[#C9A227]/10 text-[#C9A227] rounded-[24px] flex items-center justify-center mx-auto mb-8 relative border border-[#C9A227]/20">
+          <Lock size={32} strokeWidth={1.5} />
+        </div>
+
+        <h3 className="text-4xl font-serif text-[#0A2342] mb-4 tracking-tight">Identity Required</h3>
+        <p className="text-gray-500 mb-10 text-sm leading-relaxed font-medium">
+          To facilitate a secure professional consultation, please authenticate your profile. This ensures both parties have verified credentials for the appointment.
+        </p>
+
+        <div className="flex flex-col gap-4">
+          <button
+            onClick={() => router.push(`/auth/login`)}
+            className="w-full py-5 bg-[#0A2342] text-white rounded-2xl shadow-xl shadow-[#0A2342]/10 text-[11px] font-black uppercase tracking-widest hover:bg-[#153a66] transition-all flex items-center justify-center gap-3"
+          >
+            <User size={16} />
+            Continue to Login
+          </button>
+
+          <button
+            onClick={() => router.push(`/auth/signup`)}
+            className="w-full py-5 bg-[#C9A227] text-white rounded-2xl shadow-xl shadow-[#C9A227]/10 text-[11px] font-black uppercase tracking-widest hover:opacity-90 transition-all"
+          >
+            Create New Profile
+          </button>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="mt-8 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#0A2342] transition-colors"
+        >
+          Maybe Later
+        </button>
+      </motion.div>
+    </div >
   );
 }
 

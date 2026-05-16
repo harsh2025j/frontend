@@ -9,7 +9,6 @@ import { appointmentsService } from "@/data/services/appointments-service/appoin
 export default function AdminAppointmentsPage() {
     const { user } = useProfileActions();
     const [unreadCount, setUnreadCount] = useState(0);
-    const [showCaseLinkedOnly, setShowCaseLinkedOnly] = useState(false);
 
     const fetchUnread = async () => {
         if (user?.id || user?._id) {
@@ -42,17 +41,6 @@ export default function AdminAppointmentsPage() {
                     <p className="text-gray-500 text-sm">Manage and track all your client booking requests.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    {/* Case-linked filter toggle */}
-                    <button
-                        onClick={() => setShowCaseLinkedOnly(prev => !prev)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold uppercase tracking-widest border transition-all ${showCaseLinkedOnly
-                                ? 'bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm'
-                                : 'bg-white text-gray-400 border-gray-100 hover:border-gray-200 hover:text-gray-600'
-                            }`}
-                    >
-                        <Filter size={14} />
-                        Case-Linked Only
-                    </button>
 
                     {unreadCount > 0 && (
                         <div className="px-4 py-2 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-2">
@@ -67,7 +55,8 @@ export default function AdminAppointmentsPage() {
                 <AppointmentsList
                     advocateId={user.id || user._id}
                     onUpdateUnread={fetchUnread}
-                    filterCaseLinkedOnly={showCaseLinkedOnly}
+                    hideCalendar={true}
+                    filterType="unconfirmed"
                 />
             </div>
         </div>

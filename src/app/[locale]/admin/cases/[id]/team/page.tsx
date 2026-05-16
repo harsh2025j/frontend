@@ -122,7 +122,7 @@ export default function MatterTeamPage() {
   const handleRemoveMember = async (memberId: string) => {
     if (confirm("Are you sure you want to remove this team member?")) {
       await dispatch(removeTeamMember(memberId));
-      dispatch(fetchTeamByMatter(matterId));
+      dispatch(fetchTeamByMatter(memberId));
     }
   };
 

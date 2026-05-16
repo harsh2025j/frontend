@@ -428,8 +428,8 @@ export default function Stores() {
         </div>
 
         {/* Top Judges & Top Advocate */}
-        <div className="flex justify-center px-4 mb-6 md:mb-10 pt-8">
-          <div className="container flex flex-col lg:flex-row gap-4 md:gap-6">
+        <div className="flex justify-center mb-6 md:mb-10 pt-8">
+          <div className="container mx-auto px-4 sm:px-6 md:px-8 grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 items-start">
             <TopJudges />
             <TopAdvocateSection />
           </div>

@@ -6,11 +6,12 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/data/redux/store";
 import { advertisementApi } from "@/data/services/advertisement-service/advertisement-service";
 import { Advertisement } from "@/data/features/advertisement/advertisement.types";
+import { isAdmin as checkIsAdmin } from "@/utils/permissions";
 
 /**
  * Custom hook to fetch advertisement for a specific slot
  */
-function useAdvertisement(slotId: string) {
+export function useAdvertisement(slotId: string) {
   const [ad, setAd] = useState<Advertisement | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -138,39 +139,44 @@ export function BaseAd({
 /** 
  * AdBanner - Wide horizontal advertisements
  */
-export function AdBanner({ slotId }: { slotId: string }) {
+export function AdBanner({ slotId, withContainer = false }: { slotId: string; withContainer?: boolean }) {
   const { ad, loading } = useAdvertisement(slotId);
 
-  // --- PREMIUM USER AD-FREE CHECK ---
-  // If user has an active subscription, hide advertisements entirely.
-  // Comment out the next 4 lines to show ads to everyone regardless of status.
+  // --- PREMIUM & ADMIN AD-FREE CHECK ---
   const { currentSubscription } = useSelector((state: RootState) => state.subscription);
-  if (currentSubscription?.status === 'active') return null;
+  const { user } = useSelector((state: RootState) => state.auth);
+  if (currentSubscription?.status === 'active' || checkIsAdmin(user as any)) return null;
   // ----------------------------------
 
-  // Set height based on slotId or type
-  // Set height based on slotId or type
-  // Set height based on slotId or type
+  if (loading || !ad || !ad.isActive) return null;
+
   const bannerHeight = (slotId === "HOME_FEED_1") ? 150 : 90;
 
-  if (loading) return (
-    <div className="w-full flex justify-center py-4">
-      <div className="w-full bg-gray-50 animate-pulse rounded-sm border border-gray-100" style={{ height: `${bannerHeight}px` }} />
-    </div>
+  const content = (
+    <BaseAd
+      width="100%"
+      height={bannerHeight}
+      label={ad.title}
+      imageUrl={ad.imageUrl}
+      linkUrl={ad.link}
+      adId={ad._id}
+    />
   );
 
-  if (!ad || !ad.isActive) return null;
+  if (withContainer) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-2">Advertisement</h3>
+          {content}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex justify-center py-4">
-      <BaseAd
-        width="100%"
-        height={bannerHeight}
-        label={ad.title}
-        imageUrl={ad.imageUrl}
-        linkUrl={ad.link}
-        adId={ad._id}
-      />
+      {content}
     </div>
   );
 }
@@ -178,34 +184,40 @@ export function AdBanner({ slotId }: { slotId: string }) {
 /** 
  * AdSidebar - Square or vertical rectangular ads for sidebars 
  */
-export function AdSidebar({ slotId }: { slotId: string }) {
+export function AdSidebar({ slotId, withContainer = false }: { slotId: string; withContainer?: boolean }) {
   const { ad, loading } = useAdvertisement(slotId);
 
-  // --- PREMIUM USER AD-FREE CHECK ---
-  // If user has an active subscription, hide advertisements entirely.
-  // Comment out the next 4 lines to show ads to everyone regardless of status.
+  // --- PREMIUM & ADMIN AD-FREE CHECK ---
   const { currentSubscription } = useSelector((state: RootState) => state.subscription);
-  if (currentSubscription?.status === 'active') return null;
+  const { user } = useSelector((state: RootState) => state.auth);
+  if (currentSubscription?.status === 'active' || checkIsAdmin(user as any)) return null;
   // ----------------------------------
 
-  if (loading) return (
-    <div className="mb-6">
-      <div className="w-full bg-gray-50 animate-pulse rounded-sm border border-gray-100" style={{ height: '250px' }} />
-    </div>
+  if (loading || !ad || !ad.isActive) return null;
+
+  const content = (
+    <BaseAd
+      width="100%"
+      height={250}
+      label={ad.title}
+      imageUrl={ad.imageUrl}
+      linkUrl={ad.link}
+      adId={ad._id}
+    />
   );
 
-  if (!ad || !ad.isActive) return null;
+  if (withContainer) {
+    return (
+      <div className="bg-white p-2 rounded-xl border border-gray-100 shadow-sm mb-6">
+        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-2">Sponsored</h3>
+        {content}
+      </div>
+    );
+  }
 
   return (
     <div className="mb-6">
-      <BaseAd
-        width="100%"
-        height={250}
-        label={ad.title}
-        imageUrl={ad.imageUrl}
-        linkUrl={ad.link}
-        adId={ad._id}
-      />
+      {content}
     </div>
   );
 }
@@ -219,19 +231,23 @@ export function AdPopup({ slotId, showAfterSeconds = 5 }: { slotId: string, show
   const [hasBeenClosed, setHasBeenClosed] = useState(false);
 
   useEffect(() => {
-    if (!loading && ad && ad.isActive && !hasBeenClosed) {
+    // Check if seen in this session
+    const hasSeen = sessionStorage.getItem(`has_seen_ad_${slotId}`);
+    
+    if (!loading && ad && ad.isActive && !hasBeenClosed && !hasSeen) {
       const timer = setTimeout(() => {
         setIsVisible(true);
+        // Mark as seen for this session immediately when it shows
+        sessionStorage.setItem(`has_seen_ad_${slotId}`, "true");
       }, showAfterSeconds * 1000);
       return () => clearTimeout(timer);
     }
-  }, [loading, ad, showAfterSeconds, hasBeenClosed]);
+  }, [loading, ad, showAfterSeconds, hasBeenClosed, slotId]);
 
-  // --- PREMIUM USER AD-FREE CHECK ---
-  // If user has an active subscription, hide advertisements entirely.
-  // Comment out the next 4 lines to show ads to everyone regardless of status.
+  // --- PREMIUM & ADMIN AD-FREE CHECK ---
   const { currentSubscription } = useSelector((state: RootState) => state.subscription);
-  if (currentSubscription?.status === 'active') return null;
+  const { user } = useSelector((state: RootState) => state.auth);
+  if (currentSubscription?.status === 'active' || checkIsAdmin(user as any)) return null;
   // ----------------------------------
 
   if (loading || !ad || !ad.isActive || !isVisible || hasBeenClosed) return null;

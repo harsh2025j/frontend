@@ -29,7 +29,8 @@ import {
   Bookmark,
   UserCircle,
   Calendar,
-  History
+  History,
+  CheckCircle
 } from "lucide-react";
 import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
@@ -63,6 +64,7 @@ import {
   canAccessProfilePage,
   canAccessSavedPostsPage,
   canAccessAdvertisementsPage,
+  canAccessAppointmentsPage,
   isAdmin as checkIsAdmin
 } from "@/utils/permissions";
 
@@ -134,6 +136,7 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
   const showProfile = canAccessProfilePage(user);
   const showSavedPosts = canAccessSavedPostsPage(user);
   const showAdvertisements = canAccessAdvertisementsPage(user);
+  const showAppointments = canAccessAppointmentsPage(user);
 
   const isAdminPath = pathname.startsWith("/admin");
   const isCaseContext = !!activeCaseId && !pathname.includes("/admin/cases/create");
@@ -148,7 +151,7 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
     if (window.innerWidth < 1024) onClose();
   };
 
-  const allNavItems = [
+  const allNavItems: any[] = [
     {
       name: "Dashboard",
       icon: <Home size={18} />,
@@ -158,9 +161,29 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
     {
       name: "Appointments",
       icon: <Calendar size={18} />,
-      href: "/admin/appointments",
-      show: true, // Show for all dashboard users (or can restrict to advocates)
-      badge: unreadAppointments
+      isDropdown: true,
+      show: showAppointments,
+      children: [
+        {
+          name: "Current Requests",
+          icon: <Calendar size={16} />,
+          href: "/admin/appointments",
+          show: showAppointments,
+          badge: unreadAppointments
+        },
+        {
+          name: "Confirmed",
+          icon: <CheckCircle size={16} />,
+          href: "/admin/appointments/confirmed",
+          show: showAppointments
+        },
+        {
+          name: "History",
+          icon: <History size={16} />,
+          href: "/admin/appointments/history",
+          show: showAppointments
+        }
+      ]
     },
 
     // 🔽 ACCESS CONTROL SECTION
@@ -274,20 +297,6 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
       show: showLegalCases
     },
     {
-      name: "Case Timeline",
-      icon: <History size={18} />,
-      href: activeCaseId ? (isAdminPath ? `/admin/cases/${activeCaseId}/view?tab=timeline` : `/cases/${activeCaseId}?tab=timeline`) : "#",
-      show: isCaseContext,
-      indent: true
-    },
-    {
-      name: "Case Appointments",
-      icon: <Calendar size={18} />,
-      href: activeCaseId ? (isAdminPath ? `/admin/cases/${activeCaseId}/view?tab=appointments` : `/cases/${activeCaseId}?tab=appointments`) : "#",
-      show: isCaseContext,
-      indent: true
-    },
-    {
       name: "Judgments",
       icon: <Gavel size={18} />,
       href: "/admin/judgments",
@@ -325,45 +334,31 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
     }
   ];
 
-  // Dynamic Case-Specific Links (only show if viewing a case)
-  if (activeCaseId && activeCaseId !== 'create') {
-    const caseIndex = allNavItems.findIndex(item => item.name === "Legal Cases");
-    if (caseIndex !== -1) {
-      allNavItems.splice(caseIndex + 1, 0, {
-        name: `Current Case: ${activeCaseId.slice(0, 8)}...`,
-        icon: <ClipboardList size={18} />,
-        isDropdown: true,
-        show: true,
-        children: [
-          {
-            name: "Case Timeline",
-            icon: <FileText size={16} />,
-            href: `/admin/cases/${activeCaseId}/view`,
-            show: true
-          },
-          {
-            name: "Appointments",
-            icon: <ClipboardCheck size={16} />,
-            href: `/admin/cases/${activeCaseId}/view?tab=appointments`,
-            show: true
-          },
-          {
-            name: "Hearings",
-            icon: <Gavel size={16} />,
-            href: `/admin/cases/${activeCaseId}/view?tab=hearings`,
-            show: true
-          }
-        ]
-      } as any);
-    }
-  }
 
   const navItems = allNavItems.filter((item) => item.show);
 
   const isLinkActive = (href?: string) => {
     if (!href || href === "#") return false;
+    
+    // Priority 1: Exact Match
+    if (pathname === href) return true;
+
+    // Priority 2: Admin Dashboard exact match
     if (href === "/admin" && pathname !== "/admin") return false;
-    return pathname === href || pathname.startsWith(`${href}/`);
+    
+    // Priority 3: Prefix matching with exclusion for overlapping siblings
+    if (pathname.startsWith(`${href}/`)) {
+      // Prevent /admin/appointments from highlighting when on /admin/appointments/history etc.
+      if (href === "/admin/appointments" && (
+          pathname.includes("/admin/appointments/confirmed") || 
+          pathname.includes("/admin/appointments/history")
+      )) {
+          return false;
+      }
+      return true;
+    }
+
+    return false;
   };
 
   return (

@@ -90,11 +90,11 @@ export default function LatestInformationSection() {
                     {[1, 2, 3, 4, 5, 6].map((i) => (
                         <div key={i} className="flex items-start gap-3 pb-4 border-b border-gray-200 last:border-0 last:pb-0 p-2">
                             <div className="w-3 h-3 bg-gray-200 rounded-full mt-1 shrink-0" />
-                            
+
                             {tab === 'articles' && (
                                 <div className="w-14 h-14 bg-gray-200 rounded shrink-0" />
                             )}
-                            
+
                             <div className="flex-1 space-y-2">
                                 <div className="flex gap-2">
                                     <div className="h-4 bg-gray-200 w-20 rounded" />
@@ -206,7 +206,7 @@ export default function LatestInformationSection() {
                                     {pdfUrl ? 'view pdf' : 'download'}
                                 </button>
                             </div>
-                            <a 
+                            <a
                                 href={pdfUrl || `/judgments/${id}`}
                                 target={pdfUrl ? "_blank" : "_self"}
                                 rel={pdfUrl ? "noopener noreferrer" : undefined}
@@ -295,14 +295,14 @@ export default function LatestInformationSection() {
                 </div>
 
                 {/* Footer Section */}
-                <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-center">
-                    {/* <Link 
+                {/* <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-center">
+                    <Link
                         href={`/${activeTab === 'articles' ? 'articles' : activeTab}`}
                         className="text-xs font-bold text-[#C9A227] uppercase tracking-widest hover:text-[#0A2342] transition-colors"
                     >
                         View all {activeTab}
-                    </Link> */}
-                </div>
+                    </Link>
+                </div> */}
             </div>
         </div>
     );

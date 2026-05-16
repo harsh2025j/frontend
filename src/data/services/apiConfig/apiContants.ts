@@ -128,7 +128,6 @@ export const API_ENDPOINTS = {
     FETCH_BY_ID: "/appointments/:id",
     FETCH_BY_ADVOCATE: "/appointments/advocate/:advocateId",
     FETCH_BY_CLIENT: "/appointments/client",
-    FETCH_BY_CASE: "/appointments/case/:caseId",
     GET_UNREAD_COUNT: "/appointments/unread-count/:advocateId",
     MARK_READ: "/appointments/:id/read",
     UPDATE_STATUS: "/appointments/:id/status",

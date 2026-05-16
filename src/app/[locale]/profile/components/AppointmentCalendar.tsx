@@ -49,7 +49,6 @@ interface Appointment {
   createdAt: string;
   profilePicture?: string;
   advocateProfilePicture?: string;
-  caseId?: string | null;
 }
 
 interface AppointmentCalendarProps {

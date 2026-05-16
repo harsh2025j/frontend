@@ -29,11 +29,6 @@ export const appointmentsService = {
     return apiClient.patch(API_ENDPOINTS.APPOINTMENTS.UPDATE_STATUS.replace(':id', id), { status });
   },
 
-  // ─── Case Management Integration Methods ───
-
-  fetchByCase: async (caseId: string) => {
-    return apiClient.get(API_ENDPOINTS.APPOINTMENTS.FETCH_BY_CASE.replace(':caseId', caseId));
-  },
   updateOutcome: async (id: string, outcome: string) => {
     return apiClient.patch(API_ENDPOINTS.APPOINTMENTS.UPDATE_OUTCOME.replace(':id', id), { outcome });
   },
@@ -58,16 +53,18 @@ export function generateIcsFile(appointment: {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
 
-  // Map time slot to approximate hours
-  let startHour = '09';
-  let endHour = '10';
-  const slot = (appointment.preferredTimeSlot || '').toLowerCase();
-  if (slot.includes('afternoon')) { startHour = '14'; endHour = '15'; }
-  else if (slot.includes('evening')) { startHour = '17'; endHour = '18'; }
-  else if (slot.includes('morning')) { startHour = '10'; endHour = '11'; }
+  // Parse specific time (e.g., "14:30")
+  let startHour = '10';
+  let startMin = '00';
+  if (appointment.preferredTimeSlot && appointment.preferredTimeSlot.includes(':')) {
+    const [h, m] = appointment.preferredTimeSlot.split(':');
+    startHour = h.padStart(2, '0');
+    startMin = m.padStart(2, '0');
+  }
 
-  const dtStart = `${year}${month}${day}T${startHour}0000`;
-  const dtEnd = `${year}${month}${day}T${endHour}0000`;
+  const endHour = String(Number(startHour) + 1).padStart(2, '0');
+  const dtStart = `${year}${month}${day}T${startHour}${startMin}00`;
+  const dtEnd = `${year}${month}${day}T${endHour}${startMin}00`;
   const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
   const locationStr = appointment.location || appointment.virtualLink || '';

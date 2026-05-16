@@ -12,7 +12,8 @@ import { timeAgo } from "@/lib/utils/timeAgo";
 import { articleApi } from "@/data/services/article-service/article-service";
 import Pagination from "@/components/Pagination";
 import NewsCard from "@/components/ui/NewsCard";
-import { AdBanner, AdSidebar } from "@/components/ads/StandardAds";
+import { AdBanner, AdSidebar, useAdvertisement } from "@/components/ads/StandardAds";
+import { isAdmin as checkIsAdmin } from "@/utils/permissions";
 import { useSelector } from "react-redux";
 import { RootState } from "@/data/redux/store";
 
@@ -20,7 +21,16 @@ const ITEMS_PER_PAGE = 12;
 
 export default function CategoryClient() {
     const { currentSubscription } = useSelector((state: RootState) => state.subscription);
+    const { user } = useSelector((state: RootState) => state.auth);
     const isPremium = currentSubscription?.status === "active";
+    const isAdmin = checkIsAdmin(user as any);
+
+    // Check for Sidebar Ad presence
+    const { ad: sidebarAd, loading: adLoading } = useAdvertisement("CATEGORY_SIDEBAR_1");
+    const hasActiveAd = !adLoading && sidebarAd && sidebarAd.isActive;
+
+    // Content should only shrink if there's a reason to show the sidebar (Not Premium, Not Admin, and Has Ad)
+    const showSidebar = !isPremium && !isAdmin && hasActiveAd;
 
     const params = useParams();
     const slug = params.slug as string;
@@ -144,10 +154,10 @@ export default function CategoryClient() {
                     No articles found in this category.
                 </div>
             ) : (
-                <div className={`grid grid-cols-1 ${isPremium ? 'lg:grid-cols-1' : 'lg:grid-cols-4'} gap-8`}>
+                <div className={`grid grid-cols-1 ${showSidebar ? 'lg:grid-cols-4' : 'lg:grid-cols-1'} gap-8`}>
                     {/* Main Content */}
-                    <div className={`${isPremium ? 'lg:col-span-1' : 'lg:col-span-3'} space-y-10`}>
-                        <div className={`grid grid-cols-1 md:grid-cols-2 ${isPremium ? 'lg:grid-cols-3' : ''} gap-6 items-stretch`}>
+                    <div className={`${showSidebar ? 'lg:col-span-3' : 'lg:col-span-4'} space-y-10`}>
+                        <div className={`grid grid-cols-1 md:grid-cols-2 ${showSidebar ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-6 items-stretch`}>
                             {(loading ? Array(ITEMS_PER_PAGE).fill(null) : displayArticles).map((article, i) =>
                                 loading ? (
                                     <div key={i} className="bg-gray-100 rounded-xl animate-pulse h-64" />
@@ -177,14 +187,11 @@ export default function CategoryClient() {
                         />
                     </div>
                     
-                    {/* Sidebar Ad (Hidden for Premium) */}
-                    {!isPremium && (
+                    {/* Sidebar Ad (Only if needed) */}
+                    {showSidebar && (
                         <div className="lg:col-span-1">
-                            <div className="sticky top-24 space-y-6">
-                                <div className="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
-                                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-2">Sponsored</h3>
-                                    <AdSidebar slotId="CATEGORY_SIDEBAR_1" />
-                                </div>
+                            <div className="sticky top-24">
+                                <AdSidebar slotId="CATEGORY_SIDEBAR_1" withContainer />
                             </div>
                         </div>
                     )}
