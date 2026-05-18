@@ -8,8 +8,10 @@ export const appointmentsService = {
   fetchById: async (id: string) => {
     return apiClient.get(API_ENDPOINTS.APPOINTMENTS.FETCH_BY_ID.replace(':id', id));
   },
-  fetchByAdvocate: async (advocateId: string) => {
-    return apiClient.get(API_ENDPOINTS.APPOINTMENTS.FETCH_BY_ADVOCATE.replace(':advocateId', advocateId));
+  fetchByAdvocate: async (advocateId: string, page: number = 1, limit: number = 10, search?: string, status?: string) => {
+    return apiClient.get(API_ENDPOINTS.APPOINTMENTS.FETCH_BY_ADVOCATE.replace(':advocateId', advocateId), {
+      params: { page, limit, search, status }
+    });
   },
   fetchByClient: async (email?: string) => {
     return apiClient.get(API_ENDPOINTS.APPOINTMENTS.FETCH_BY_CLIENT, {

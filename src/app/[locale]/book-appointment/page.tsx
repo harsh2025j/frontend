@@ -320,7 +320,7 @@ function BookingForm() {
                                 Create New Profile
                             </button>
                         </div>
-                        
+
                         <p className="mt-16 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                             Secure & Confidential Booking Environment
                         </p>

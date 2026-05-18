@@ -8,7 +8,6 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
 import Loader from "@/components/ui/Loader";
 import { useAppSelector } from "@/data/redux/hooks";
-import CaseAppointmentsTab from "./components/CaseAppointmentsTab";
 import CaseTimeline from "./components/CaseTimeline";
 
 export default function CaseView({ caseId: propId, isModal = false }: { caseId?: string; isModal?: boolean }) {
@@ -278,24 +277,7 @@ export default function CaseView({ caseId: propId, isModal = false }: { caseId?:
                     </div>
                 )}
 
-                {activeTab === "appointments" && (
-                    <div className="bg-white p-10 md:p-14 rounded-[2rem] shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-8 duration-500">
-                        <div className="flex items-center gap-3 mb-10 pb-6 border-b border-slate-100">
-                            <div className="p-3 rounded-2xl bg-blue-50 text-blue-600">
-                                <Calendar size={24} />
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-serif text-[#0A2342]">Case Appointments</h2>
-                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Schedule & Management</p>
-                            </div>
-                        </div>
-                        <CaseAppointmentsTab 
-                            caseId={finalCaseId} 
-                            caseTitle={caseData.title} 
-                            isClientView={caseData.clientEmail === user?.email}
-                        />
-                    </div>
-                )}
+
 
             </div>
         </div>

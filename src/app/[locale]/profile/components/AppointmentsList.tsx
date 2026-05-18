@@ -39,9 +39,23 @@ interface AppointmentsListProps {
 export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnread, hideCalendar, filterType }: AppointmentsListProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const detailPanelRef = useRef<HTMLDivElement>(null);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const scrollToDetailOnMobile = () => {
     if (window.innerWidth < 1024 && detailPanelRef.current) {
@@ -51,58 +65,78 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
     }
   };
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = async (isLoadMore = false) => {
     try {
-      setLoading(true);
-      // console.log("Fetching appointments. AdvocateId:", advocateId, "ClientEmail:", clientEmail);
+      if (isLoadMore) setIsLoadingMore(true);
+      else setLoading(true);
+
       let response;
+      const currentPage = isLoadMore ? page + 1 : 1;
+      const limit = 10;
+
       if (clientEmail) {
         response = await appointmentsService.fetchByClient(clientEmail);
       } else if (advocateId) {
-        response = await appointmentsService.fetchByAdvocate(advocateId);
+        // Pass filterType directly to backend (backend now handles 'unconfirmed' group)
+        response = await appointmentsService.fetchByAdvocate(advocateId, currentPage, limit, debouncedSearch, filterType);
       } else {
-        console.warn("No advocateId or clientEmail provided to AppointmentsList");
         return;
       }
 
-      const data = response.data?.data || response.data;
-      if (Array.isArray(data)) {
-        let finalData = data;
-        if (filterType === 'unconfirmed') {
-          finalData = data.filter(a => a.status !== 'confirmed' && a.status !== 'cancelled');
-        } else if (filterType === 'upcoming-confirmed') {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          finalData = data.filter(a => {
-            if (a.status !== 'confirmed') return false;
-            const aptDate = new Date(a.preferredDate);
-            return aptDate >= today;
-          });
+      const rawData = response.data?.data || response.data;
+      const meta = response.data?.meta;
 
-          // Sort ascending by date for upcoming appointments
-          finalData.sort((a, b) => new Date(a.preferredDate).getTime() - new Date(b.preferredDate).getTime());
-        }
-        setAppointments(finalData);
-      } else {
-        setAppointments([]);
+      let newData = Array.isArray(rawData) ? rawData : (rawData?.data || []);
+      
+      // Secondary filter for upcoming-confirmed (date check) if not already done by backend
+      if (filterType === 'upcoming-confirmed' && Array.isArray(newData)) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        newData = newData.filter(a => new Date(a.preferredDate) >= today);
       }
+
+      if (isLoadMore) {
+        setAppointments(prev => [...prev, ...newData]);
+        setPage(currentPage);
+      } else {
+        setAppointments(newData);
+        setPage(1);
+        if (newData.length > 0 && !selectedAppointment) {
+            setSelectedAppointment(newData[0]);
+        }
+      }
+
+      setHasMore(meta ? meta.hasMore : newData.length === limit);
     } catch (error) {
       console.error("Failed to fetch appointments", error);
-      setAppointments([]);
     } finally {
       setLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    fetchAppointments();
-  }, [advocateId, clientEmail]);
+    fetchAppointments(false);
+  }, [advocateId, clientEmail, debouncedSearch, filterType]);
 
+  // Infinite scroll observer
   useEffect(() => {
-    if (appointments.length > 0 && !selectedAppointment) {
-      setSelectedAppointment(appointments[0]);
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore && !loading && viewMode === 'list') {
+          fetchAppointments(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
     }
-  }, [appointments]);
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, loading, viewMode]);
+
 
   const handleMarkAsRead = async (id: string) => {
     try {
@@ -168,19 +202,27 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
-      {/* View Switcher */}
-      {!hideCalendar && (
-        <div className="flex items-center justify-between">
+      {/* Search and View Switcher */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {viewMode === 'list' && (
+          <div className="relative flex-grow max-w-md">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+              <List size={16} />
+            </div>
+            <input
+              type="text"
+              placeholder="Search appointments..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-6 py-3 bg-white border-2 border-gray-100 focus:border-[#C9A227]/30 rounded-2xl outline-none transition-all text-sm font-medium shadow-sm"
+            />
+          </div>
+        )}
+        
+        {!hideCalendar && (
           <div className="flex items-center gap-2 bg-gray-100/50 p-1 rounded-xl border border-gray-100">
             <button
               onClick={() => setViewMode('list')}
@@ -197,25 +239,25 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
               <LayoutGrid size={14} /> Calendar
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {viewMode === 'calendar' && !hideCalendar ? (
         <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm flex flex-col h-[800px]">
-          <AppointmentCalendar
-            appointments={appointments}
-            onSelectAppointment={(apt) => {
-              setSelectedAppointment(apt);
-              if (!apt.isRead) handleMarkAsRead(apt.id);
-            }}
-            isClientMode={!!clientEmail}
-          />
-        </div>
-      ) : appointments.length === 0 ? (
-        <div className="text-center py-32 bg-white rounded-xl border border-gray-100">
-          <Calendar size={40} className="mx-auto text-gray-200 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900">No appointments yet</h3>
-          <p className="text-sm text-gray-500 mt-1">New requests will appear here when clients book.</p>
+          {loading ? (
+            <div className="flex-grow flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C9A227]"></div>
+            </div>
+          ) : (
+            <AppointmentCalendar
+              appointments={appointments}
+              onSelectAppointment={(apt) => {
+                setSelectedAppointment(apt);
+                if (!apt.isRead) handleMarkAsRead(apt.id);
+              }}
+              isClientMode={!!clientEmail}
+            />
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -229,10 +271,21 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                 {appointments.length} Total
               </span>
             </div>
-            <div className="overflow-y-auto custom-scrollbar flex-grow">
-              <div className="divide-y divide-gray-100">
-                {appointments
-                  .map((appointment) => (
+            
+            <div className="overflow-y-auto custom-scrollbar flex-grow min-h-[300px]">
+              {loading ? (
+                <div className="flex items-center justify-center h-64">
+                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#C9A227]"></div>
+                </div>
+              ) : appointments.length === 0 ? (
+                <div className="text-center py-20 px-6">
+                   <Calendar size={32} className="mx-auto text-gray-200 mb-3" />
+                   <h3 className="text-sm font-bold text-gray-900">No results found</h3>
+                   <p className="text-[10px] text-gray-500 mt-1">Try adjusting your search or filters.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {appointments.map((appointment) => (
                     <div
                       key={appointment.id}
                       onClick={() => {
@@ -289,7 +342,18 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                       </div>
                     </div>
                   ))}
+                
+                {/* Infinite Scroll Sentinel */}
+                <div ref={observerTarget} className="p-4 flex justify-center">
+                  {isLoadingMore && (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#C9A227]"></div>
+                  )}
+                  {!hasMore && appointments.length > 0 && (
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">End of list</p>
+                  )}
+                </div>
               </div>
+            )}
             </div>
           </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
 import {
@@ -50,29 +50,76 @@ export default function AdminAppointmentHistory() {
     const { user } = useProfileActions();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
     const [selectedClientEmail, setSelectedClientEmail] = useState<string | null>(null);
     const [showApproachModal, setShowApproachModal] = useState(false);
+    const observerTarget = useRef<HTMLDivElement>(null);
 
-    const fetchData = async () => {
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    const fetchData = async (isLoadMore = false) => {
         if (!user?.id && !user?._id) return;
         try {
-            setLoading(true);
-            const res = await appointmentsService.fetchByAdvocate(user.id || user._id);
-            const data = res.data?.data || res.data;
-            if (Array.isArray(data)) {
-                setAppointments(data);
+            if (isLoadMore) setIsLoadingMore(true);
+            else setLoading(true);
+
+            const currentPage = isLoadMore ? page + 1 : 1;
+            const limit = 20;
+
+            const res = await appointmentsService.fetchByAdvocate(user.id || user._id, currentPage, limit, debouncedSearch);
+            const rawData = res.data?.data || res.data;
+            const meta = res.data?.meta;
+
+            const newData = Array.isArray(rawData) ? rawData : (rawData?.data || []);
+
+            if (isLoadMore) {
+                setAppointments(prev => [...prev, ...newData]);
+                setPage(currentPage);
+            } else {
+                setAppointments(newData);
+                setPage(1);
             }
+
+            setHasMore(meta ? meta.hasMore : newData.length === limit);
         } catch (error) {
             console.error("Failed to fetch history", error);
         } finally {
             setLoading(false);
+            setIsLoadingMore(false);
         }
     };
 
     useEffect(() => {
-        fetchData();
-    }, [user]);
+        fetchData(false);
+    }, [user, debouncedSearch]);
+
+    // Infinite scroll observer
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            entries => {
+                if (entries[0].isIntersecting && hasMore && !isLoadingMore && !loading && !selectedClientEmail) {
+                    fetchData(true);
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (observerTarget.current) {
+            observer.observe(observerTarget.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasMore, isLoadingMore, loading, selectedClientEmail]);
 
     const clientGroups = useMemo(() => {
         const groups: Record<string, ClientGroup> = {};
@@ -104,16 +151,12 @@ export default function AdminAppointmentHistory() {
         return Object.values(groups).sort((a, b) => new Date(b.lastAppointmentDate).getTime() - new Date(a.lastAppointmentDate).getTime());
     }, [appointments]);
 
-    const filteredGroups = clientGroups.filter(group =>
-        group.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        group.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredGroups = clientGroups;
 
     const selectedClient = useMemo(() =>
         clientGroups.find(g => g.email === selectedClientEmail),
         [clientGroups, selectedClientEmail]);
 
-    if (loading) return <div className="h-[60vh] flex items-center justify-center"><Loader /></div>;
 
     return (
         <div className="p-6 lg:p-8 space-y-8 max-w-[1600px] mx-auto">
@@ -161,8 +204,13 @@ export default function AdminAppointmentHistory() {
                                 </div>
                             </div>
 
-                            <div className="flex-grow overflow-y-auto custom-scrollbar">
-                                <div className="divide-y divide-gray-50">
+                            <div className="flex-grow overflow-y-auto custom-scrollbar min-h-[300px]">
+                                {loading ? (
+                                    <div className="flex items-center justify-center h-64">
+                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#C9A227]"></div>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-gray-50">
                                     {filteredGroups.map((group) => (
                                         <button
                                             key={group.email}
@@ -192,9 +240,20 @@ export default function AdminAppointmentHistory() {
                                             <ChevronRight size={16} className={`text-gray-300 transition-transform ${selectedClientEmail === group.email ? "translate-x-1 text-blue-500" : ""}`} />
                                         </button>
                                     ))}
+
+                                    {/* Infinite Scroll Sentinel */}
+                                    <div ref={observerTarget} className="p-8 flex justify-center">
+                                        {isLoadingMore && (
+                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#C9A227]"></div>
+                                        )}
+                                        {!hasMore && filteredGroups.length > 0 && (
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">End of list</p>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        </motion.div>
+                            )}
+                        </div>
+                    </motion.div>
                     ) : (
                         <motion.div
                             key="client-detail"
@@ -250,7 +309,13 @@ export default function AdminAppointmentHistory() {
                                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                         <History size={14} /> Full Timeline
                                     </h4>
-                                    <div className="relative border-l-2 border-gray-100 ml-3 pl-8 space-y-10">
+                                    
+                                    {loading ? (
+                                        <div className="flex items-center justify-center py-20">
+                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#C9A227]"></div>
+                                        </div>
+                                    ) : (
+                                        <div className="relative border-l-2 border-gray-100 ml-3 pl-8 space-y-10">
                                         {selectedClient.appointments.map((apt, idx) => (
                                             <div key={apt.id} className="relative">
                                                 <div className="absolute -left-[41px] top-0 w-5 h-5 rounded-full border-4 border-white bg-[#C9A227] shadow-sm z-10" />
@@ -280,7 +345,8 @@ export default function AdminAppointmentHistory() {
                                                 </div>
                                             </div>
                                         ))}
-                                    </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>
