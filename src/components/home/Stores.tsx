@@ -68,6 +68,24 @@ export function getArticlesBySlugs(articles: Article[], slugs: string[]) {
   });
 }
 
+export function getArticleExcerpt(item: any, maxLength = 150) {
+  if (!item.content) return "";
+  const stripped = item.content.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+  if (stripped.length > 0) {
+    return stripped.substring(0, maxLength) + (stripped.length > maxLength ? "..." : "");
+  }
+  if (item.subHeadline && item.subHeadline.trim().length > 0) {
+    return item.subHeadline.trim();
+  }
+  if (item.aiSummary && item.aiSummary.trim().length > 0) {
+    return item.aiSummary.trim();
+  }
+  const isJudgment = item.category?.slug === "judgments" || item.category?.parentId === "judgments";
+  return isJudgment 
+    ? "Click to view the full judgment details, neutral citations, and complete court order."
+    : "Click to read the full article, view dynamic updates, and watch the embedded media.";
+}
+
 export default function Stores() {
   useDocTitle("Sajjad Husain Law Associates");
   const router = useRouter();
@@ -199,7 +217,10 @@ export default function Stores() {
   }, [LatestNewsData, translatedText, counts, locale]);
 
   const displayJudgments = useMemo(() => {
-    const base = JudgementNewsData.slice(0, 3);
+    const base = JudgementNewsData.slice(0, 3).map(item => ({
+      ...item,
+      content: getArticleExcerpt(item)
+    }));
     if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return base;
 
     const start = counts.headlines + counts.latest;
@@ -210,9 +231,12 @@ export default function Stores() {
   }, [JudgementNewsData, translatedText, counts, locale]);
 
   const displayHindiNews = useMemo(() => {
-    const base = HindiNewsData.length > 0 ? HindiNewsData : (homeData?.hindiArticles || []);
-    if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return base.slice(0, 3);
-
+    const rawBase = HindiNewsData.length > 0 ? HindiNewsData : (homeData?.hindiArticles || []);
+    const base = rawBase.slice(0, 3).map(item => ({
+      ...item,
+      content: getArticleExcerpt(item)
+    }));
+    if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return base;
 
     const start = counts.headlines + counts.latest + counts.judgments;
     return base.map((item, i) => ({
@@ -220,7 +244,7 @@ export default function Stores() {
       title: translatedText[start + i * 2] || item.title,
       content: translatedText[start + i * 2 + 1] || item.content
     }));
-  }, [HindiNewsData, translatedText, counts, locale]);
+  }, [HindiNewsData, translatedText, counts, locale, homeData?.hindiArticles]);
 
 
   React.useEffect(() => {
