@@ -62,16 +62,29 @@ export interface VerifyPaymentResponse {
   data?: any;
 }
 
+export interface SubscriptionHistoryItem {
+  id: string;
+  status: string;
+  planId: string;
+  planName: string;
+  price: number;
+  startDate: string;
+  endDate: string;
+  duration: string;
+  createdAt: string;
+}
+
 // User Subscription Types
 export interface UserSubscription {
   id: string;
   userId: string;
   planId: string;
   planName?: string;
-  status: "active" | "inactive" | "expired";
+  status: "active" | "inactive" | "expired" | "canceled";
   startDate: string;
   endDate: string;
   autoRenew?: boolean;
+  history?: SubscriptionHistoryItem[];
 }
 
 export interface UserSubscriptionResponse {

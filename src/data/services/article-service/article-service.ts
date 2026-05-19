@@ -162,6 +162,11 @@ export const articleApi = {
     return response;
   },
 
+  triggerDailyNews: async () => {
+    const response = await apiClient.post<any>("/tasks/trigger-daily-news");
+    return response;
+  },
+
   searchAdvocates: async (query: string, page: number = 1, limit: number = 12) => {
     const response = await apiClient.get<any>(`${API_ENDPOINTS.PROFILE.ADVOCATES}`, {
       params: {

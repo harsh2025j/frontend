@@ -140,6 +140,7 @@ const ContentManagementPageContent: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isTriggering, setIsTriggering] = useState(false);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<string | null>(null);
@@ -240,12 +241,51 @@ const ContentManagementPageContent: React.FC = () => {
               <p className="text-sm text-gray-500">
                 {loading ? "..." : `${totalItems} article${totalItems !== 1 ? "s" : ""}`}
               </p>
-              <button
-                onClick={() => router.push("/admin/create-content")}
-                className="bg-[#0B2149] text-white px-5 py-2 rounded-md font-medium hover:bg-[#1a3a75] transition-colors flex items-center gap-2"
-              >
-                <span>+</span> Create New Article
-              </button>
+              <div className="flex items-center gap-3">
+                {(user?._id === "692bf00f87df9dbf18f02a69" || user?.id === "692bf00f87df9dbf18f02a69") && (
+                  <button
+                    disabled={isTriggering}
+                    onClick={async () => {
+                      setIsTriggering(true);
+                      const toastId = toast.loading("Syncing GNews articles...");
+                      try {
+                        const res = await articleApi.triggerDailyNews();
+                        const data = res.data;
+                        if (res.status === 200 || data?.success) {
+                          toast.success("GNews sync started in the background! Please refresh the page in a few seconds to see new articles.", { id: toastId, duration: 6000 });
+                        } else {
+                          toast.error(data?.message || "Failed to sync articles.", { id: toastId });
+                        }
+                      } catch (err: any) {
+                        toast.error(err?.message || "Error syncing GNews articles.", { id: toastId });
+                      } finally {
+                        setIsTriggering(false);
+                      }
+                    }}
+                    className="bg-emerald-600 text-white px-5 py-2 rounded-md font-medium hover:bg-emerald-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isTriggering ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3 3L22 4" />
+                        </svg>
+                        Sync GNews
+                      </>
+                    )}
+                  </button>
+                )}
+                <button
+                  onClick={() => router.push("/admin/create-content")}
+                  className="bg-[#0B2149] text-white px-5 py-2 rounded-md font-medium hover:bg-[#1a3a75] transition-colors flex items-center gap-2"
+                >
+                  <span>+</span> Create New Article
+                </button>
+              </div>
             </div>
 
             <div className="flex gap-2 mb-6 flex-wrap">

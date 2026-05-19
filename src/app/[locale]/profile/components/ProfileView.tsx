@@ -406,8 +406,8 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                 { id: "personal", label: "Identity", icon: User, show: true },
                 { id: "appointments", label: isProfessional ? "Appointments" : "My Bookings", icon: Calendar, show: isOwner, badge: unreadAppointments },
                 { id: "saved", label: "Saved", icon: BookmarkCheck, show: isOwner },
-                { id: "cases", label: "Portfolio", icon: Briefcase, show: showLegalSections },
-                { id: "articles", label: "Insights", icon: FileText, show: showLegalSections },
+                { id: "cases", label: "Cases", icon: Briefcase, show: showLegalSections },
+                { id: "articles", label: "Articles", icon: FileText, show: showLegalSections },
                 { id: "settings", label: "Account", icon: Settings, show: isOwner },
               ].filter(t => t.show).map(tab => (
                 <button
@@ -624,23 +624,55 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                     {/* C. Subscription Plans */}
                     <BentoCard title="Subscription Plans" subtitle="Membership Status">
                       <p className="text-[10px] text-gray-400 mb-6 font-serif italic">Manage your current membership and upgrades.</p>
-                      <div className="space-y-4 p-6 bg-gray-50 rounded-2xl">
-                        <div className="flex justify-between items-center group">
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Plan Name</span>
-                          <span className="text-xs font-black text-[#0A2342]">{subscription?.planName || "Basic Plan"}</span>
+                      
+                      {subscription && (subscription.status === "active" || subscription.status === "expired" || subscription.status === "canceled") ? (
+                        <div className="space-y-4 p-6 bg-gray-50 rounded-2xl">
+                          {subscription.status === "expired" ? (
+                            <div className="p-3 rounded-xl border border-red-100 bg-red-50 text-red-600 text-center text-[10px] font-bold uppercase tracking-wider">
+                              Your plan is expired
+                            </div>
+                          ) : subscription.status === "canceled" ? (
+                            <div className="p-3 rounded-xl border border-amber-100 bg-amber-50 text-amber-600 text-center text-[10px] font-bold uppercase tracking-wider">
+                              Your subscription is CANCELED
+                            </div>
+                          ) : null}
+
+                          <div className="flex justify-between items-center group">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Plan Name</span>
+                            <span className="text-xs font-black text-[#0A2342]">{subscription?.planName}</span>
+                          </div>
+
+                          {subscription.status === "expired" ? (
+                            <div className="flex justify-between items-center pb-2">
+                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Expired Date</span>
+                              <span className="text-xs font-semibold text-red-600">{formatDate(subscription?.endDate)}</span>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex justify-between items-center group">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Starting Date</span>
+                                <span className="text-xs font-semibold">{formatDate(subscription?.startDate)}</span>
+                              </div>
+                              <div className="flex justify-between items-center pb-2">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ending Date</span>
+                                <span className="text-xs font-semibold">{formatDate(subscription?.endDate)}</span>
+                              </div>
+                            </>
+                          )}
+
+                          <Link href="/subscription" className="block w-full py-4 bg-[#0A2342] text-white text-center rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md shadow-[#0A2342]/10 hover:bg-[#1a3a5f] transition-all">
+                            {subscription.status === "active" ? "Upgrade" : "Renew Subscription"}
+                          </Link>
                         </div>
-                        <div className="flex justify-between items-center group">
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Starting Date</span>
-                          <span className="text-xs font-semibold">{formatDate(subscription?.startDate || "2026-03-14")}</span>
+                      ) : (
+                        <div className="p-6 bg-red-50/50 border border-red-100 rounded-2xl text-center mb-4">
+                          <p className="text-xs font-bold text-red-600 mb-2">No Active Subscription</p>
+                          <p className="text-[10px] text-gray-500 mb-4">Subscribe to access our exclusive legal services and documents.</p>
+                          <Link href="/subscription" className="inline-block px-6 py-3 bg-[#0A2342] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#1a3a5f] transition-all">
+                            Subscribe Now
+                          </Link>
                         </div>
-                        <div className="flex justify-between items-center pb-2">
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ending Date</span>
-                          <span className="text-xs font-semibold">{formatDate(subscription?.endDate || "2026-04-13")}</span>
-                        </div>
-                        <Link href="/subscription" className="block w-full py-4 bg-[#0A2342] text-white text-center rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md shadow-[#0A2342]/10 hover:bg-[#1a3a5f] transition-all">
-                          Upgrade
-                        </Link>
-                      </div>
+                      )}
                     </BentoCard>
 
                     {/* D. Security & Auth */}
