@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
-import { Calendar, Clock, Mail, Phone, User, CheckCircle, XCircle, Clock3, MoreVertical, ExternalLink, X, MapPin, Hash, Briefcase, List, LayoutGrid } from "lucide-react";
+import { Calendar, Clock, Mail, Phone, User, CheckCircle, XCircle, Clock3, MoreVertical, ExternalLink, X, MapPin, Hash, Briefcase, List, LayoutGrid, AlertCircle, UploadCloud, Trash2, FileText, Image } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDate } from "@/utils/dateUtils";
 import toast from "react-hot-toast";
@@ -11,6 +11,7 @@ import AppointmentCalendar from "./AppointmentCalendar";
 interface Appointment {
   id: string;
   fullName: string;
+  advocateId?: string;
   advocateName?: string;
   advocateEmail?: string;
   advocatePhone?: string;
@@ -26,6 +27,13 @@ interface Appointment {
   profilePicture?: string;
   advocateProfilePicture?: string;
   isAdvocateInitiated?: boolean;
+  appointmentType?: string;
+  negotiationOpinion?: string;
+  advocateNote?: string;
+  finalPrice?: string;
+  clientDocumentNote?: string;
+  clientDocuments?: string[];
+  cancellationReason?: string;
 }
 
 interface AppointmentsListProps {
@@ -33,7 +41,7 @@ interface AppointmentsListProps {
   clientEmail?: string;
   onUpdateUnread?: () => void;
   hideCalendar?: boolean;
-  filterType?: 'unconfirmed' | 'upcoming-confirmed';
+  filterType?: 'unconfirmed' | 'upcoming-confirmed' | 'history';
 }
 
 export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnread, hideCalendar, filterType }: AppointmentsListProps) {
@@ -87,7 +95,7 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
       const meta = response.data?.meta;
 
       let newData = Array.isArray(rawData) ? rawData : (rawData?.data || []);
-      
+
       // Secondary filter for upcoming-confirmed (date check) if not already done by backend
       if (filterType === 'upcoming-confirmed' && Array.isArray(newData)) {
         const today = new Date();
@@ -102,7 +110,7 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
         setAppointments(newData);
         setPage(1);
         if (newData.length > 0 && !selectedAppointment) {
-            setSelectedAppointment(newData[0]);
+          setSelectedAppointment(newData[0]);
         }
       }
 
@@ -148,8 +156,161 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
     }
   };
 
+  // Advocate action panel states
+  const [actionPanel, setActionPanel] = useState<'none' | 'confirm' | 'reschedule' | 'reject'>('none');
+  const [confirmData, setConfirmData] = useState({ finalPrice: '', advocateNote: '' });
+  const [rescheduleData, setRescheduleData] = useState({ date: '', time: '', finalPrice: '', advocateNote: '' });
+  const [rejectReason, setRejectReason] = useState('');
+  // Client action panel
+  const [paymentAcknowledged, setPaymentAcknowledged] = useState(false);
   const [isRescheduling, setIsRescheduling] = useState(false);
-  const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isConfirming) return;
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    const validFiles: File[] = [];
+    for (const file of files) {
+      const isLarge = file.size > 5 * 1024 * 1024; // 5MB limit
+      const isValidFormat = ["application/pdf", "image/png", "image/jpeg", "image/jpg"].includes(file.type);
+      if (isLarge) {
+        toast.error(`File "${file.name}" is too large. Max size is 5MB.`);
+        continue;
+      }
+      if (!isValidFormat) {
+        toast.error(`File "${file.name}" is invalid format. Only PDF, PNG, JPG/JPEG are supported.`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+    if (validFiles.length > 0) {
+      setSelectedFiles(prev => [...prev, ...validFiles]);
+      toast.success(`Added ${validFiles.length} file(s)`);
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, idx) => idx !== index));
+  };
+
+  useEffect(() => {
+    setSelectedFiles([]);
+    setPaymentAcknowledged(false);
+  }, [selectedAppointment]);
+
+  const renderDocumentUploadArea = () => {
+    return (
+      <div className="space-y-2">
+        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block ml-1">
+          Upload Supporting Documents (Optional)
+        </label>
+        <div className={`border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center transition-colors bg-gray-50/50 relative group ${isConfirming ? 'opacity-60 cursor-not-allowed' : 'hover:border-[#C9A227]/50 cursor-pointer'}`}>
+          <input
+            type="file"
+            multiple
+            accept=".pdf,.png,.jpg,.jpeg"
+            onChange={handleFileChange}
+            disabled={isConfirming}
+            className={`absolute inset-0 w-full h-full opacity-0 ${isConfirming ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+          />
+          <div className="flex flex-col items-center justify-center gap-1.5">
+            <div className="p-2.5 bg-white rounded-xl shadow-sm border border-gray-150 group-hover:scale-105 transition-transform">
+              <UploadCloud size={20} className="text-[#C9A227]" />
+            </div>
+            <p className="text-xs font-bold text-[#0A2342] mt-1">
+              Click or drag files here to upload
+            </p>
+            <p className="text-[10px] text-gray-400 font-medium">
+              PDF, PNG, JPG, or JPEG up to 5MB (multiple files allowed)
+            </p>
+          </div>
+        </div>
+
+        {selectedFiles.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 max-h-48 overflow-y-auto custom-scrollbar p-1">
+            {selectedFiles.map((file, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:border-[#C9A227]/20 transition-all group"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="p-2 bg-gray-50 rounded-lg text-gray-500">
+                    {file.type === "application/pdf" ? (
+                      <FileText size={16} className="text-red-500" />
+                    ) : (
+                      <Image size={16} className="text-blue-500" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-gray-800 truncate">
+                      {file.name}
+                    </p>
+                    <p className="text-[9px] text-gray-400 font-semibold">
+                      {(file.size / (1024 * 1024)).toFixed(2)} MB
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFile(idx)}
+                  disabled={isConfirming}
+                  className="p-1.5 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const [duration, setDuration] = useState<number>(30);
+  const [slots, setSlots] = useState<{ slot: string; isBooked: boolean }[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState<boolean>(false);
+  const [availabilityMessage, setAvailabilityMessage] = useState<string>("");
+
+  useEffect(() => {
+    const fetchSlots = async () => {
+      const targetAdvocateId = advocateId || selectedAppointment?.advocateId;
+      if (!targetAdvocateId || !rescheduleData.date) {
+        setSlots([]);
+        setAvailabilityMessage("");
+        return;
+      }
+      setSlotsLoading(true);
+      setAvailabilityMessage("");
+      try {
+        const response = await appointmentsService.getAvailableSlots(targetAdvocateId, rescheduleData.date, duration);
+        const data = response.data?.data || response.data;
+        if (data.isPastDate) {
+          setAvailabilityMessage("Selected date is in the past. Please select a valid date.");
+          setSlots([]);
+        } else if (!data.isWorkingDay) {
+          const daysStr = data.workingDays?.join(", ") || "Monday to Saturday";
+          setAvailabilityMessage(`Advocate is not available on this day. Working days are: ${daysStr}`);
+          setSlots([]);
+        } else {
+          setSlots(data.slots || []);
+          if (data.slots && data.slots.length === 0) {
+            setAvailabilityMessage("No available time slots for this date and duration.");
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load slots:", error);
+        setAvailabilityMessage("Failed to load slot availability.");
+        setSlots([]);
+      } finally {
+        setSlotsLoading(false);
+      }
+    };
+
+    fetchSlots();
+  }, [rescheduleData.date, duration, selectedAppointment?.advocateId, advocateId, actionPanel, isRescheduling]);
+
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
@@ -165,41 +326,108 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
     }
   };
 
-  const handleReschedule = async () => {
+  const handleAdvocateConfirm = async () => {
     if (!selectedAppointment) return;
-    if (!rescheduleData.date || !rescheduleData.time) {
-      toast.error("Please select both date and time");
-      return;
+    if (confirmData.finalPrice) {
+      const price = parseFloat(confirmData.finalPrice);
+      if (isNaN(price) || price < 0) {
+        toast.error('Please enter a valid, non-negative consultation fee.');
+        return;
+      }
     }
     try {
-      const response = await appointmentsService.update(selectedAppointment.id, {
+      await appointmentsService.confirmWithDetails(selectedAppointment.id, confirmData);
+      toast.success('Appointment confirmed — client notified!');
+      setActionPanel('none');
+      setConfirmData({ finalPrice: '', advocateNote: '' });
+      await fetchAppointments();
+      onUpdateUnread?.();
+    } catch { toast.error('Failed to confirm'); }
+  };
+
+  const handleAdvocateReschedule = async () => {
+    if (!selectedAppointment || !rescheduleData.date || !rescheduleData.time) {
+      toast.error('Date and time required'); return;
+    }
+    if (rescheduleData.finalPrice) {
+      const price = parseFloat(rescheduleData.finalPrice);
+      if (isNaN(price) || price < 0) {
+        toast.error('Please enter a valid, non-negative consultation fee.');
+        return;
+      }
+    }
+    try {
+      await appointmentsService.rescheduleWithDetails(selectedAppointment.id, {
         preferredDate: rescheduleData.date,
         preferredTimeSlot: rescheduleData.time,
-        status: 'proposed'
+        finalPrice: rescheduleData.finalPrice,
+        advocateNote: rescheduleData.advocateNote,
       });
-      const updated = response.data;
+      toast.success('Reschedule proposal sent to client!');
+      setActionPanel('none');
+      setRescheduleData({ date: '', time: '', finalPrice: '', advocateNote: '' });
       await fetchAppointments();
-      setSelectedAppointment(updated);
-      setIsRescheduling(false);
-      toast.success("Reschedule proposal sent to client");
-    } catch (error) {
-      console.error("Failed to reschedule", error);
-      toast.error("Failed to reschedule");
+    } catch { toast.error('Failed to reschedule'); }
+  };
+
+  const handleAdvocateReject = async () => {
+    if (!selectedAppointment) return;
+    if (!rejectReason.trim()) { toast.error('Please provide a rejection reason'); return; }
+    try {
+      await appointmentsService.cancelWithReason(selectedAppointment.id, rejectReason);
+      toast.success('Appointment rejected — client notified');
+      setActionPanel('none'); setRejectReason('');
+      await fetchAppointments();
+      onUpdateUnread?.();
+    } catch { toast.error('Failed to reject'); }
+  };
+
+  const handleClientConfirm = async () => {
+    if (!selectedAppointment) return;
+    if (!paymentAcknowledged) { toast.error('Please acknowledge payment'); return; }
+    setIsConfirming(true);
+    try {
+      const response = await appointmentsService.clientConfirm(selectedAppointment.id, undefined, selectedFiles);
+      toast.success('Appointment confirmed! Check your email for details.');
+      setPaymentAcknowledged(false); setSelectedFiles([]);
+      await fetchAppointments();
+      setSelectedAppointment(prev => prev ? { 
+        ...prev, 
+        status: 'confirmed',
+        clientDocuments: response?.data?.clientDocuments || prev.clientDocuments,
+        clientDocumentNote: response?.data?.clientDocumentNote || prev.clientDocumentNote
+      } : null);
+    } catch { 
+      toast.error('Failed to confirm'); 
+    } finally {
+      setIsConfirming(false);
     }
+  };
+
+  const handleReschedule = async () => {
+    if (!selectedAppointment || !rescheduleData.date || !rescheduleData.time) {
+      toast.error('Please select both date and time'); return;
+    }
+    try {
+      await appointmentsService.rescheduleWithDetails(selectedAppointment.id, {
+        preferredDate: rescheduleData.date,
+        preferredTimeSlot: rescheduleData.time,
+        finalPrice: rescheduleData.finalPrice,
+        advocateNote: rescheduleData.advocateNote,
+      });
+      toast.success('Reschedule proposal sent to client');
+      setIsRescheduling(false);
+      setRescheduleData({ date: '', time: '', finalPrice: '', advocateNote: '' });
+      await fetchAppointments();
+    } catch { toast.error('Failed to reschedule'); }
   };
 
   const handleClientAccept = async (id: string) => {
     try {
-      await appointmentsService.updateStatus(id, 'confirmed');
+      await appointmentsService.updateStatus(id, 'awaiting_payment');
       await fetchAppointments();
-      if (selectedAppointment?.id === id) {
-        setSelectedAppointment(prev => prev ? { ...prev, status: 'confirmed' } : null);
-      }
-      toast.success("Appointment confirmed!");
-    } catch (error) {
-      console.error("Failed to confirm appointment", error);
-      toast.error("Failed to confirm appointment");
-    }
+      toast.success('You have accepted the proposal. Please complete payment.');
+    } catch { toast.error('Failed'); }
   };
 
 
@@ -221,7 +449,7 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
             />
           </div>
         )}
-        
+
         {!hideCalendar && (
           <div className="flex items-center gap-2 bg-gray-100/50 p-1 rounded-xl border border-gray-100">
             <button
@@ -271,17 +499,17 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                 {appointments.length} Total
               </span>
             </div>
-            
+
             <div className="overflow-y-auto custom-scrollbar flex-grow min-h-[300px]">
               {loading ? (
                 <div className="flex items-center justify-center h-64">
-                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#C9A227]"></div>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#C9A227]"></div>
                 </div>
               ) : appointments.length === 0 ? (
                 <div className="text-center py-20 px-6">
-                   <Calendar size={32} className="mx-auto text-gray-200 mb-3" />
-                   <h3 className="text-sm font-bold text-gray-900">No results found</h3>
-                   <p className="text-[10px] text-gray-500 mt-1">Try adjusting your search or filters.</p>
+                  <Calendar size={32} className="mx-auto text-gray-200 mb-3" />
+                  <h3 className="text-sm font-bold text-gray-900">No results found</h3>
+                  <p className="text-[10px] text-gray-500 mt-1">Try adjusting your search or filters.</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
@@ -342,18 +570,18 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                       </div>
                     </div>
                   ))}
-                
-                {/* Infinite Scroll Sentinel */}
-                <div ref={observerTarget} className="p-4 flex justify-center">
-                  {isLoadingMore && (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#C9A227]"></div>
-                  )}
-                  {!hasMore && appointments.length > 0 && (
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">End of list</p>
-                  )}
+
+                  {/* Infinite Scroll Sentinel */}
+                  <div ref={observerTarget} className="p-4 flex justify-center">
+                    {isLoadingMore && (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#C9A227]"></div>
+                    )}
+                    {!hasMore && appointments.length > 0 && (
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">End of list</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
             </div>
           </div>
 
@@ -451,12 +679,81 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                         </div>
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Case Category: <span className="text-[#0A2342]">{selectedAppointment.practiceArea}</span></span>
                       </div>
-                      <div className="space-y-2">
+
+                      {selectedAppointment.appointmentType && (
+                        <div className="flex items-center gap-3 border-t border-gray-100/50 pt-3">
+                          <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100">
+                            <Clock size={16} className="text-[#C9A227]" />
+                          </div>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Appointment Type: <span className="text-[#0A2342] normal-case font-semibold">{selectedAppointment.appointmentType}</span></span>
+                        </div>
+                      )}
+
+                      <div className="space-y-2 border-t border-gray-100/50 pt-3">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Description</label>
                         <p className="text-sm text-gray-600 leading-relaxed font-medium italic">
                           "{selectedAppointment.description}"
                         </p>
                       </div>
+
+                      {selectedAppointment.negotiationOpinion && (
+                        <div className="space-y-2 border-t border-gray-100/50 pt-3">
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Negotiation Expectations / Opinions</label>
+                          <p className="text-sm text-gray-600 leading-relaxed font-medium">
+                            {selectedAppointment.negotiationOpinion}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedAppointment.clientDocumentNote && (
+                        <div className="space-y-2 border-t border-gray-100/50 pt-3">
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Client Document Note</label>
+                          <p className="text-sm text-gray-600 leading-relaxed font-medium">
+                            "{selectedAppointment.clientDocumentNote}"
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedAppointment.clientDocuments && selectedAppointment.clientDocuments.length > 0 && (
+                        <div className="space-y-2 border-t border-gray-100/50 pt-3">
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Uploaded Documents</label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                            {selectedAppointment.clientDocuments.map((docUrl, idx) => {
+                              const fileName = docUrl.split("/").pop() || "Document";
+                              const fileExt = fileName.split(".").pop()?.toLowerCase() || "";
+                              const isPdf = fileExt === "pdf";
+                              return (
+                                <a
+                                  key={idx}
+                                  href={docUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:bg-gray-50 hover:border-[#C9A227]/30 transition-all group"
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <div className="p-2 bg-gray-50 rounded-lg border border-gray-150 text-gray-500">
+                                      {isPdf ? (
+                                        <FileText size={16} className="text-red-500" />
+                                      ) : (
+                                        <Image size={16} className="text-blue-500" />
+                                      )}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-bold text-gray-800 truncate max-w-[150px]">
+                                        {fileName}
+                                      </p>
+                                      <span className="text-[8px] font-black uppercase tracking-widest text-[#C9A227]">
+                                        View/Download
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <ExternalLink size={14} className="text-gray-400 group-hover:text-[#C9A227] transition-colors" />
+                                </a>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {isRescheduling && (
@@ -474,21 +771,76 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                               value={rescheduleData.date}
                               min={new Date().toISOString().split('T')[0]}
                               className="w-full px-4 py-2.5 bg-white border border-blue-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                              onChange={(e) => setRescheduleData(prev => ({ ...prev, date: e.target.value }))}
+                              onChange={(e) => {
+                                setRescheduleData(prev => ({ ...prev, date: e.target.value, time: "" }));
+                              }}
                               required
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">New Time <span className="text-red-500">*</span></label>
-                            <input
-                              type="time"
-                              value={rescheduleData.time}
+                            <label className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Duration</label>
+                            <select
+                              value={duration}
+                              onChange={(e) => {
+                                setDuration(Number(e.target.value));
+                                setRescheduleData(prev => ({ ...prev, time: "" }));
+                              }}
                               className="w-full px-4 py-2.5 bg-white border border-blue-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                              onChange={(e) => setRescheduleData(prev => ({ ...prev, time: e.target.value }))}
-                              required
-                            />
+                            >
+                              <option value={30}>30 Mins</option>
+                              <option value={60}>1 Hour</option>
+                              <option value={120}>2 Hours</option>
+                            </select>
                           </div>
                         </div>
+
+                        {availabilityMessage && (
+                          <div className="p-3 bg-amber-50 border border-amber-100 text-amber-800 rounded-xl text-xs font-semibold flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                            <span>{availabilityMessage}</span>
+                          </div>
+                        )}
+
+                        {rescheduleData.date && !availabilityMessage && (
+                          <div className="space-y-1.5">
+                            <label className="text-[9px] font-bold text-blue-600 uppercase tracking-widest block">Available Time Slots <span className="text-red-500">*</span></label>
+                            {slotsLoading ? (
+                              <div className="py-4 text-gray-400 text-xs italic flex items-center gap-2">
+                                <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-gray-400"></div>
+                                <span>Retrieving slot availability...</span>
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-3 gap-2 mt-1">
+                                {slots.map((s) => {
+                                  const isSelected = rescheduleData.time === s.slot;
+                                  return (
+                                    <button
+                                      key={s.slot}
+                                      type="button"
+                                      disabled={s.isBooked}
+                                      onClick={() => {
+                                        setRescheduleData(prev => ({ ...prev, time: s.slot }));
+                                      }}
+                                      className={`py-2 px-3 rounded-lg text-center text-xs font-bold transition-all duration-200 relative group overflow-hidden ${
+                                        s.isBooked
+                                          ? 'bg-red-50 border border-red-150 text-red-500 opacity-60 cursor-not-allowed'
+                                          : isSelected
+                                          ? 'bg-emerald-500 text-white border border-emerald-500 shadow-sm shadow-emerald-500/10'
+                                          : 'bg-emerald-50 border border-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                                      }`}
+                                    >
+                                      <span>{s.slot}</span>
+                                      {s.isBooked && (
+                                        <span className="block text-[7px] font-black uppercase tracking-tighter opacity-80 mt-0.5">Booked</span>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         <div className="flex gap-2">
                           <button
                             onClick={handleReschedule}
@@ -511,61 +863,300 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                     )}
                   </div>
 
-                  {/* Fixed Bottom Action Bar */}
-                  {!clientEmail && (
-                    <div className="p-8 border-t border-gray-50 bg-white flex gap-3">
-                      {selectedAppointment.status === 'pending' && !isRescheduling && (
-                        <>
-                          <button
-                            onClick={() => handleUpdateStatus(selectedAppointment.id, 'confirmed')}
-                            className="flex-1 py-3.5 bg-[#0A2342] text-white font-bold tracking-widest rounded-xl hover:bg-[#153a66] transition-all uppercase text-[10px]"
-                          >
-                            Confirm Appointment
+                  {/* ── ADVOCATE ACTION BAR ── */}
+                  {!clientEmail && selectedAppointment.status === 'pending' && (
+                    <div className="p-6 border-t border-gray-50 bg-white space-y-3">
+                      {actionPanel === 'none' && (
+                        <div className="flex gap-2">
+                          <button onClick={() => { setActionPanel('confirm'); setConfirmData({ finalPrice: '', advocateNote: '' }); }} className="flex-1 py-3 bg-[#0A2342] text-white font-bold rounded-xl text-[10px] uppercase tracking-widest hover:bg-[#153a66] transition-all">
+                            ✓ Confirm
                           </button>
-                          <button
-                            onClick={() => { setIsRescheduling(true); setRescheduleData({ date: '', time: '' }); }}
-                            className="flex-1 py-3.5 bg-white text-[#0A2342] border border-gray-200 font-bold tracking-widest rounded-xl hover:bg-gray-50 transition-all uppercase text-[10px]"
-                          >
-                            Reschedule
+                          <button onClick={() => { setActionPanel('reschedule'); setRescheduleData({ date: '', time: '', finalPrice: '', advocateNote: '' }); }} className="flex-1 py-3 bg-white text-[#0A2342] border border-gray-200 font-bold rounded-xl text-[10px] uppercase tracking-widest hover:bg-gray-50 transition-all">
+                            ↺ Reschedule
                           </button>
-                          <button
-                            onClick={() => handleUpdateStatus(selectedAppointment.id, 'cancelled')}
-                            className="px-6 py-3.5 bg-white text-red-600 border border-red-50 font-bold tracking-widest rounded-xl hover:bg-red-50 transition-all uppercase text-[10px]"
-                          >
-                            Reject
+                          <button onClick={() => { setActionPanel('reject'); setRejectReason(''); }} className="px-5 py-3 bg-white text-red-600 border border-red-100 font-bold rounded-xl text-[10px] uppercase tracking-widest hover:bg-red-50 transition-all">
+                            ✕ Reject
                           </button>
-                        </>
+                        </div>
                       )}
-                      {(selectedAppointment.status !== 'pending' || isRescheduling) && (
-                        <div className="w-full flex items-center justify-between text-gray-400">
-                          <span className="text-[10px] font-bold uppercase tracking-widest">Status: {selectedAppointment.status}</span>
-                          {!(selectedAppointment.isAdvocateInitiated && selectedAppointment.status === 'proposed') && (
-                            <button
-                              onClick={() => handleUpdateStatus(selectedAppointment.id, 'pending')}
-                              className="text-[10px] font-bold text-blue-600 hover:underline uppercase tracking-widest"
-                            >
-                              Reset to Pending
-                            </button>
+                      {actionPanel === 'confirm' && (
+                        <div className="space-y-3 p-4 bg-green-50 rounded-2xl border border-green-100">
+                          <p className="text-[10px] font-black text-green-700 uppercase tracking-widest">Confirm Appointment</p>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-green-700 uppercase tracking-widest block ml-1">Final Consultation Fee (Flat fee for the booking duration)</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={confirmData.finalPrice}
+                              onChange={e => {
+                                const val = e.target.value;
+                                const cleanVal = val.replace(/[^0-9.]/g, '');
+                                setConfirmData(p => ({ ...p, finalPrice: cleanVal }));
+                              }}
+                              onKeyDown={e => {
+                                if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E') {
+                                  e.preventDefault();
+                                }
+                              }}
+                              placeholder="e.g. 1500"
+                              className="w-full px-4 py-2.5 bg-white border border-green-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-green-400"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-green-700 uppercase tracking-widest block ml-1">Note to Client (Documents needed, instructions...)</label>
+                            <textarea
+                              value={confirmData.advocateNote}
+                              onChange={e => setConfirmData(p => ({ ...p, advocateNote: e.target.value }))}
+                              placeholder="List any documents needed or instructions for the client..."
+                              rows={3}
+                              className="w-full px-4 py-2.5 bg-white border border-green-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-green-400 resize-none"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={handleAdvocateConfirm} className="flex-1 py-2.5 bg-green-600 text-white font-bold rounded-xl text-[10px] uppercase tracking-widest hover:bg-green-700 transition-all">Send Confirmation</button>
+                            <button onClick={() => setActionPanel('none')} className="px-4 py-2.5 bg-white border border-gray-200 text-gray-500 font-bold rounded-xl text-[10px] uppercase tracking-widest">Cancel</button>
+                          </div>
+                        </div>
+                      )}
+                      {actionPanel === 'reschedule' && (
+                        <div className="space-y-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                          <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Propose New Schedule</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">New Date</label>
+                              <input
+                                type="date"
+                                value={rescheduleData.date}
+                                min={new Date().toISOString().split('T')[0]}
+                                onChange={e => setRescheduleData(p => ({ ...p, date: e.target.value, time: "" }))}
+                                className="w-full px-4 py-2 bg-white border border-blue-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-400"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Duration</label>
+                              <select
+                                value={duration}
+                                onChange={(e) => {
+                                  setDuration(Number(e.target.value));
+                                  setRescheduleData(p => ({ ...p, time: "" }));
+                                }}
+                                className="w-full px-4 py-2 bg-white border border-blue-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-400"
+                              >
+                                <option value={30}>30 Mins</option>
+                                <option value={60}>1 Hour</option>
+                                <option value={120}>2 Hours</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {availabilityMessage && (
+                            <div className="p-3 bg-amber-50 border border-amber-100 text-amber-800 rounded-xl text-xs font-semibold flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                              <span>{availabilityMessage}</span>
+                            </div>
                           )}
+
+                          {rescheduleData.date && !availabilityMessage && (
+                            <div className="space-y-1.5">
+                              <label className="text-[9px] font-bold text-blue-600 uppercase tracking-widest block">Available Time Slots</label>
+                              {slotsLoading ? (
+                                <div className="py-4 text-gray-400 text-xs italic flex items-center gap-2">
+                                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-gray-400"></div>
+                                  <span>Retrieving slot availability...</span>
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-3 gap-2 mt-1">
+                                  {slots.map((s) => {
+                                    const isSelected = rescheduleData.time === s.slot;
+                                    return (
+                                      <button
+                                        key={s.slot}
+                                        type="button"
+                                        disabled={s.isBooked}
+                                        onClick={() => {
+                                          setRescheduleData(p => ({ ...p, time: s.slot }));
+                                        }}
+                                        className={`py-2 px-3 rounded-lg text-center text-xs font-bold transition-all duration-200 relative group overflow-hidden ${
+                                          s.isBooked
+                                            ? 'bg-red-50 border border-red-150 text-red-500 opacity-60 cursor-not-allowed'
+                                            : isSelected
+                                            ? 'bg-emerald-500 text-white border border-emerald-500 shadow-sm shadow-emerald-500/10'
+                                            : 'bg-emerald-50 border border-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                                        }`}
+                                      >
+                                        <span>{s.slot}</span>
+                                        {s.isBooked && (
+                                          <span className="block text-[7px] font-black uppercase tracking-tighter opacity-80 mt-0.5">Booked</span>
+                                        )}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-blue-700 uppercase tracking-widest block ml-1">Final Consultation Fee (Flat fee for the booking duration)</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={rescheduleData.finalPrice}
+                              onChange={e => {
+                                const val = e.target.value;
+                                const cleanVal = val.replace(/[^0-9.]/g, '');
+                                setRescheduleData(p => ({ ...p, finalPrice: cleanVal }));
+                              }}
+                              onKeyDown={e => {
+                                if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E') {
+                                  e.preventDefault();
+                                }
+                              }}
+                              placeholder="e.g. 1500"
+                              className="w-full px-4 py-2.5 bg-white border border-blue-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-400"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-blue-700 uppercase tracking-widest block ml-1">Note to Client (Reason for Reschedule & Documents Needed to Send)</label>
+                            <textarea
+                              value={rescheduleData.advocateNote}
+                              onChange={e => setRescheduleData(p => ({ ...p, advocateNote: e.target.value }))}
+                              placeholder="Provide the reason for the reschedule and specify if any documents need to be sent by the client..."
+                              rows={2}
+                              className="w-full px-4 py-2.5 bg-white border border-blue-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={handleAdvocateReschedule} disabled={!rescheduleData.date || !rescheduleData.time} className={`flex-1 py-2.5 text-white font-bold rounded-xl text-[10px] uppercase tracking-widest transition-colors ${!rescheduleData.date || !rescheduleData.time ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>Send Proposal</button>
+                            <button onClick={() => setActionPanel('none')} className="px-4 py-2.5 bg-white border border-gray-200 text-gray-500 font-bold rounded-xl text-[10px] uppercase tracking-widest">Cancel</button>
+                          </div>
+                        </div>
+                      )}
+                      {actionPanel === 'reject' && (
+                        <div className="space-y-3 p-4 bg-red-50 rounded-2xl border border-red-100">
+                          <p className="text-[10px] font-black text-red-700 uppercase tracking-widest">Reject Appointment</p>
+                          <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason for rejection (required — shown to client)…" rows={3} className="w-full px-4 py-2.5 bg-white border border-red-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-400 resize-none" />
+                          <div className="flex gap-2">
+                            <button onClick={handleAdvocateReject} className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-xl text-[10px] uppercase tracking-widest hover:bg-red-700 transition-all">Confirm Rejection</button>
+                            <button onClick={() => setActionPanel('none')} className="px-4 py-2.5 bg-white border border-gray-200 text-gray-500 font-bold rounded-xl text-[10px] uppercase tracking-widest">Cancel</button>
+                          </div>
                         </div>
                       )}
                     </div>
                   )}
+                  {!clientEmail && selectedAppointment.status !== 'pending' && (
+                    <div className="px-6 py-4 border-t border-gray-50 bg-gray-50/50 flex items-center justify-between">
+                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${selectedAppointment.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-200' : selectedAppointment.status === 'awaiting_payment' ? 'bg-amber-50 text-amber-700 border-amber-200' : selectedAppointment.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                        {selectedAppointment.status === 'awaiting_payment' ? 'Awaiting Client Payment' : selectedAppointment.status}
+                      </span>
+                    </div>
+                  )}
 
+                  {/* ── CLIENT ACTION BAR: proposed → accept/decline ── */}
                   {!!clientEmail && selectedAppointment.status === 'proposed' && (
-                    <div className="p-8 border-t border-gray-50 bg-white flex gap-3">
-                      <button
-                        onClick={() => handleClientAccept(selectedAppointment.id)}
-                        className="flex-1 py-3.5 bg-green-600 text-white font-bold tracking-widest rounded-xl hover:bg-green-700 transition-all uppercase text-[10px]"
+                    <div className="p-6 border-t border-gray-50 bg-white space-y-4">
+                      <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-1">
+                        <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Advocate Proposed a New Schedule</p>
+                        {selectedAppointment.finalPrice && (
+                          <p className="text-sm font-bold text-[#0A2342]">
+                             💰 Final Consultation Fee: {/^[0-9]+(\.[0-9]+)?$/.test(selectedAppointment.finalPrice.toString().trim()) ? `₹${selectedAppointment.finalPrice}` : selectedAppointment.finalPrice}
+                          </p>
+                        )}
+                        {selectedAppointment.advocateNote && <p className="text-xs text-gray-600 italic">"{selectedAppointment.advocateNote}"</p>}
+                      </div>
+                      
+                      {renderDocumentUploadArea()}
+                      
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={paymentAcknowledged} 
+                          onChange={e => setPaymentAcknowledged(e.target.checked)} 
+                          disabled={isConfirming}
+                          className="w-4 h-4 accent-blue-600 rounded disabled:opacity-50" 
+                        />
+                        <span className="text-xs font-semibold text-gray-700">I acknowledge the payment amount and will complete payment before the appointment.</span>
+                      </label>
+                      
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={handleClientConfirm} 
+                          disabled={!paymentAcknowledged || isConfirming} 
+                          className={`flex-grow py-3.5 font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all ${paymentAcknowledged && !isConfirming ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'} flex items-center justify-center gap-2`}
+                        >
+                          {isConfirming ? (
+                            <>
+                              <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Confirming...
+                            </>
+                          ) : (
+                            'Accept & Confirm Reschedule'
+                          )}
+                        </button>
+                        <button 
+                          onClick={() => handleUpdateStatus(selectedAppointment.id, 'cancelled')} 
+                          disabled={isConfirming}
+                          className="px-5 py-3.5 bg-white text-red-600 border border-red-100 font-bold rounded-xl text-[10px] uppercase tracking-widest hover:bg-red-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── CLIENT ACTION BAR: awaiting_payment → confirm payment + docs ── */}
+                  {!!clientEmail && selectedAppointment.status === 'awaiting_payment' && (
+                    <div className="p-6 border-t border-gray-50 bg-white space-y-4">
+                      <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-1">
+                        <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">✅ Advocate Accepted Your Request</p>
+                        {selectedAppointment.finalPrice && (
+                          <p className="text-sm font-bold text-[#0A2342]">
+                             💰 Amount Due: {/^[0-9]+(\.[0-9]+)?$/.test(selectedAppointment.finalPrice.toString().trim()) ? `₹${selectedAppointment.finalPrice}` : selectedAppointment.finalPrice}
+                          </p>
+                        )}
+                        {selectedAppointment.advocateNote && <p className="text-xs text-gray-600 italic mt-1">"{selectedAppointment.advocateNote}"</p>}
+                      </div>
+                      
+                      {renderDocumentUploadArea()}
+                      
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={paymentAcknowledged} 
+                          onChange={e => setPaymentAcknowledged(e.target.checked)} 
+                          disabled={isConfirming}
+                          className="w-4 h-4 accent-amber-600 rounded disabled:opacity-50" 
+                        />
+                        <span className="text-xs font-semibold text-gray-700">I acknowledge the payment amount and will complete payment before the appointment.</span>
+                      </label>
+                      <button 
+                        onClick={handleClientConfirm} 
+                        disabled={!paymentAcknowledged || isConfirming} 
+                        className={`w-full py-3.5 font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all ${paymentAcknowledged && !isConfirming ? 'bg-[#0A2342] text-white hover:bg-[#153a66]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'} flex items-center justify-center gap-2`}
                       >
-                        Accept Proposal
+                        {isConfirming ? (
+                          <>
+                            <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Confirming...
+                          </>
+                        ) : (
+                          'Confirm Appointment'
+                        )}
                       </button>
-                      <button
-                        onClick={() => handleUpdateStatus(selectedAppointment.id, 'cancelled')}
-                        className="flex-1 py-3.5 bg-white text-red-600 border border-red-100 font-bold tracking-widest rounded-xl hover:bg-red-50 transition-all uppercase text-[10px]"
-                      >
-                        Decline
-                      </button>
+                    </div>
+                  )}
+
+                  {/* ── Cancellation reason display ── */}
+                  {selectedAppointment.status === 'cancelled' && selectedAppointment.cancellationReason && (
+                    <div className="mx-6 mb-4 p-4 bg-red-50 rounded-2xl border border-red-100">
+                      <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">Rejection Reason</p>
+                      <p className="text-sm text-red-700">{selectedAppointment.cancellationReason}</p>
                     </div>
                   )}
                 </motion.div>

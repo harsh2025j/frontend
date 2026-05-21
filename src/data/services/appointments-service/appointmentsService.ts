@@ -37,6 +37,33 @@ export const appointmentsService = {
   cancelWithReason: async (id: string, cancellationReason: string) => {
     return apiClient.patch(API_ENDPOINTS.APPOINTMENTS.CANCEL.replace(':id', id), { cancellationReason });
   },
+  confirmWithDetails: async (id: string, data: { finalPrice?: string; advocateNote?: string }) => {
+    return apiClient.patch(API_ENDPOINTS.APPOINTMENTS.CONFIRM.replace(':id', id), data);
+  },
+  rescheduleWithDetails: async (id: string, data: { preferredDate: string; preferredTimeSlot: string; finalPrice?: string; advocateNote?: string }) => {
+    return apiClient.patch(API_ENDPOINTS.APPOINTMENTS.RESCHEDULE.replace(':id', id), data);
+  },
+  clientConfirm: async (id: string, clientDocumentNote?: string, files?: File[]) => {
+    const formData = new FormData();
+    if (clientDocumentNote) {
+      formData.append("clientDocumentNote", clientDocumentNote);
+    }
+    if (files && files.length > 0) {
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+    }
+    return apiClient.patch(API_ENDPOINTS.APPOINTMENTS.CLIENT_CONFIRM.replace(':id', id), formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+  getAvailableSlots: async (advocateId: string, date: string, duration: number) => {
+    return apiClient.get(API_ENDPOINTS.APPOINTMENTS.AVAILABLE_SLOTS.replace(':advocateId', advocateId), {
+      params: { date, duration }
+    });
+  },
 };
 
 // ─── ICS Calendar File Generator ───

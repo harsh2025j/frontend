@@ -56,6 +56,9 @@ export interface UserData {
   barRegistrationNumber?: string;
   court?: string;
   bio?: string;
+  workingDays?: string[];
+  workingHours?: string;
+  appointmentPricing?: string;
   savedPosts?: string[];
   articles?: any[];
   cases?: any[];
@@ -77,6 +80,9 @@ export interface UpdateProfileRequest {
   barRegistrationNumber?: string;
   court?: string;
   bio?: string;
+  workingDays?: string[];
+  workingHours?: string;
+  appointmentPricing?: string;
 }
 
 // ================= API Response =================

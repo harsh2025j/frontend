@@ -34,6 +34,11 @@ export const profileApi = {
     }
     if (data.barRegistrationNumber !== undefined) formData.append("barRegistrationNumber", data.barRegistrationNumber);
     if (data.court !== undefined) formData.append("court", data.court);
+    if (data.workingHours !== undefined) formData.append("workingHours", data.workingHours);
+    if (data.workingDays !== undefined && Array.isArray(data.workingDays)) {
+      data.workingDays.forEach(day => formData.append("workingDays", day));
+    }
+    if (data.appointmentPricing !== undefined) formData.append("appointmentPricing", data.appointmentPricing);
     if (data.bio !== undefined) formData.append("bio", data.bio);
     if (data.avatar) formData.append("file", data.avatar);
 

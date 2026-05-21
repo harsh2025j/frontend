@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatDate } from "@/utils/dateUtils";
 import Loader from "@/components/ui/Loader";
 import AdvocateApproachModal from "../components/AdvocateApproachModal";
+import AppointmentDetailModal from "../components/AppointmentDetailModal";
 
 interface Appointment {
     id: string;
@@ -35,6 +36,11 @@ interface Appointment {
     status: string;
     createdAt: string;
     profilePicture?: string;
+    finalPrice?: string;
+    advocateNote?: string;
+    clientDocumentNote?: string;
+    clientDocuments?: string[];
+    cancellationReason?: string;
 }
 
 interface ClientGroup {
@@ -57,6 +63,7 @@ export default function AdminAppointmentHistory() {
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [selectedClientEmail, setSelectedClientEmail] = useState<string | null>(null);
     const [showApproachModal, setShowApproachModal] = useState(false);
+    const [selectedAppointmentDetails, setSelectedAppointmentDetails] = useState<Appointment | null>(null);
     const observerTarget = useRef<HTMLDivElement>(null);
 
     // Debounce search
@@ -319,7 +326,10 @@ export default function AdminAppointmentHistory() {
                                         {selectedClient.appointments.map((apt, idx) => (
                                             <div key={apt.id} className="relative">
                                                 <div className="absolute -left-[41px] top-0 w-5 h-5 rounded-full border-4 border-white bg-[#C9A227] shadow-sm z-10" />
-                                                <div className="bg-gray-50/50 rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-all">
+                                                <div 
+                                                    onClick={() => setSelectedAppointmentDetails(apt)}
+                                                    className="bg-gray-50/50 rounded-2xl border border-gray-100 p-6 hover:shadow-md hover:border-[#C9A227]/30 cursor-pointer transition-all"
+                                                >
                                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                                                         <div className="flex items-center gap-4">
                                                             <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-gray-200 text-xs font-bold text-[#0A2342]">
@@ -364,6 +374,13 @@ export default function AdminAppointmentHistory() {
                         email: selectedClient.email,
                         phone: selectedClient.phone
                     } : undefined}
+                />
+            )}
+
+            {selectedAppointmentDetails && (
+                <AppointmentDetailModal
+                    appointment={selectedAppointmentDetails}
+                    onClose={() => setSelectedAppointmentDetails(null)}
                 />
             )}
 

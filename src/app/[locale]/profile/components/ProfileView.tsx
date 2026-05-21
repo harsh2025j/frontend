@@ -188,6 +188,20 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
             fetchedUser.articles = articlesData?.data ?? [];
             fetchedUser.totalArticles = articlesData?.total ?? fetchedUser.articles.length;
           } catch (e) { console.error("Mapping error:", e); }
+          
+          let wDays = fetchedUser.workingDays;
+          if (typeof wDays === 'string') wDays = [wDays];
+          if (Array.isArray(wDays) && wDays.length === 1 && wDays[0].includes(' to ')) {
+            const val = wDays[0];
+            if (val === "Monday to Sunday") {
+              fetchedUser.workingDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+            } else if (val === "Monday to Saturday") {
+              fetchedUser.workingDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            } else if (val === "Monday to Friday") {
+              fetchedUser.workingDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+            }
+          }
+
           setProfileUser(fetchedUser);
           setFormData(fetchedUser);
         } else { setError(response.data.message || "User not found."); }
@@ -624,7 +638,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                     {/* C. Subscription Plans */}
                     <BentoCard title="Subscription Plans" subtitle="Membership Status">
                       <p className="text-[10px] text-gray-400 mb-6 font-serif italic">Manage your current membership and upgrades.</p>
-                      
+
                       {subscription && (subscription.status === "active" || subscription.status === "expired" || subscription.status === "canceled") ? (
                         <div className="space-y-4 p-6 bg-gray-50 rounded-2xl">
                           {subscription.status === "expired" ? (
@@ -805,6 +819,31 @@ function ToggleItem({ label, checked, onChange, icon: Icon }: any) {
 }
 
 function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isProfessional }: any) {
+  const pricingStr = formData.appointmentPricing || "";
+  const amountMatch = pricingStr.match(/\d+/);
+  const initialAmount = amountMatch ? amountMatch[0] : "";
+  const initialIsHalfHr = pricingStr.toLowerCase().includes("half") || pricingStr.toLowerCase().includes("30") || pricingStr.toLowerCase().includes("/half");
+  
+  const [priceAmount, setPriceAmount] = useState(initialAmount);
+  const [priceUnit, setPriceUnit] = useState(initialIsHalfHr ? "Rs / half hr" : "Rs / hr");
+
+  const handlePriceAmountChange = (val: string) => {
+    const cleanAmount = val.replace(/\D/g, "");
+    setPriceAmount(cleanAmount);
+    setFormData({
+      ...formData,
+      appointmentPricing: cleanAmount ? `${cleanAmount} ${priceUnit}` : ""
+    });
+  };
+
+  const handlePriceUnitChange = (unit: string) => {
+    setPriceUnit(unit);
+    setFormData({
+      ...formData,
+      appointmentPricing: priceAmount ? `${priceAmount} ${unit}` : ""
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-[690] flex items-center justify-center p-6 bg-[#0A2342]/60 backdrop-blur-md">
       <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl relative">
@@ -825,6 +864,84 @@ function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isPr
                 value={formData.yearsOfExperience}
                 onChange={(v: any) => setFormData({ ...formData, yearsOfExperience: v })}
               />
+            )}
+            {isProfessional && (
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                  Appointment Pricing
+                </label>
+                <div className="flex items-center bg-gray-50 border-2 border-transparent focus-within:border-[#C9A227] rounded-2xl transition-all h-[56px] overflow-hidden">
+                  <input
+                    type="text"
+                    placeholder="e.g. 500"
+                    value={priceAmount}
+                    onChange={(e) => handlePriceAmountChange(e.target.value)}
+                    className="w-full pl-6 pr-3 bg-transparent outline-none text-sm font-semibold h-full min-w-0"
+                  />
+                  <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+                  <select
+                    value={priceUnit}
+                    onChange={(e) => handlePriceUnitChange(e.target.value)}
+                    className="px-6 bg-transparent outline-none text-sm font-semibold cursor-pointer border-none h-full flex-shrink-0"
+                  >
+                    <option value="Rs / hr">Rs / hr</option>
+                    <option value="Rs / half hr">Rs / half hr</option>
+                  </select>
+                </div>
+              </div>
+            )}
+            {isProfessional && (
+              <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                <InputField
+                  label="Start Time (e.g. 10:00)"
+                  type="time"
+                  value={formData.workingHours?.split('-')[0] || ''}
+                  onChange={(v: any) => {
+                    const end = formData.workingHours?.split('-')[1] || '';
+                    setFormData({ ...formData, workingHours: v && end ? `${v}-${end}` : v ? `${v}-` : '' });
+                  }}
+                />
+                <InputField
+                  label="End Time (e.g. 18:00)"
+                  type="time"
+                  value={formData.workingHours?.split('-')[1] || ''}
+                  onChange={(v: any) => {
+                    const start = formData.workingHours?.split('-')[0] || '';
+                    setFormData({ ...formData, workingHours: start && v ? `${start}-${v}` : v ? `-${v}` : '' });
+                  }}
+                />
+              </div>
+            )}
+            {isProfessional && (
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Working Days</label>
+                <select
+                  value={
+                    formData.workingDays?.includes("Sunday")
+                      ? "Monday to Sunday"
+                      : formData.workingDays?.includes("Saturday")
+                        ? "Monday to Saturday"
+                        : "Monday to Friday"
+                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    let days: string[] = [];
+                    if (val === "Monday to Sunday") {
+                      days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                    } else if (val === "Monday to Saturday") {
+                      days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                    } else if (val === "Monday to Friday") {
+                      days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+                    }
+                    setFormData({ ...formData, workingDays: days });
+                  }}
+                  className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-[#C9A227] rounded-2xl outline-none transition-all text-sm font-semibold"
+                >
+                  <option value="Monday to Saturday">Monday to Saturday</option>
+                  <option value="Monday to Sunday">Monday to Sunday</option>
+                  <option value="Monday to Friday">Monday to Friday</option>
+                </select>
+              </div>
             )}
             {/* {isProfessional && !checkIsAdvocate({ designation: formData.designation, roles: [] }) && (
               <div className="md:col-span-1 space-y-1.5 flex flex-col">
@@ -946,11 +1063,11 @@ function AuthPromptModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function InputField({ label, value, onChange, className = "", type = "text" }: any) {
+function InputField({ label, value, onChange, className = "", type = "text", ...rest }: any) {
   return (
     <div className={`space-y-1.5 ${className}`}>
       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
-      <input type={type} value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-[#C9A227] rounded-2xl outline-none transition-all text-sm font-semibold" />
+      <input type={type} value={value || ""} onChange={(e) => onChange(e.target.value)} {...rest} className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-[#C9A227] rounded-2xl outline-none transition-all text-sm font-semibold" />
     </div>
   );
 }
