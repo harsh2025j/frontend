@@ -29,6 +29,17 @@ export interface Role {
   assignedAt?: string | null;
 }
 
+// ================= Bank Details =================
+export interface BankDetails {
+  accountHolderName?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  bankName?: string;
+  upiId?: string;
+  panNumber?: string;
+  aadhaarNumber?: string;
+}
+
 // ================= User Data =================
 export interface UserData {
   _id: string;
@@ -64,6 +75,7 @@ export interface UserData {
   cases?: any[];
   totalArticles?: number;
   totalCases?: number;
+  bankDetails?: BankDetails;
 }
 
 // ================= Update Profile =================
@@ -83,6 +95,7 @@ export interface UpdateProfileRequest {
   workingDays?: string[];
   workingHours?: string;
   appointmentPricing?: string;
+  bankDetails?: BankDetails;
 }
 
 // ================= API Response =================

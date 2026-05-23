@@ -41,6 +41,9 @@ interface Appointment {
     clientDocumentNote?: string;
     clientDocuments?: string[];
     cancellationReason?: string;
+    location?: string;
+    virtualLink?: string;
+    mapLink?: string;
 }
 
 interface ClientGroup {
@@ -341,12 +344,14 @@ export default function AdminAppointmentHistory() {
                                                                 {apt.preferredTimeSlot}
                                                             </div>
                                                         </div>
-                                                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${apt.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-100' :
-                                                                apt.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
-                                                                    'bg-blue-50 text-blue-700 border-blue-100'
-                                                            }`}>
-                                                            {apt.status}
-                                                        </span>
+                                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${apt.status === 'confirmed' ? (
+                                                                (!apt.location && !apt.virtualLink) ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-green-50 text-green-700 border-green-100'
+                                                            ) : apt.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
+                                                                'bg-blue-50 text-blue-700 border-blue-100'}`}>
+                                                                {apt.status === 'confirmed' ? (
+                                                                    (!apt.location && !apt.virtualLink) ? 'awaiting confirmation' : 'confirmed'
+                                                                ) : apt.status === 'awaiting_payment' ? (apt.isPaid ? 'awaiting confirmation' : 'awaiting payment') : apt.status}
+                                                            </span>
                                                     </div>
                                                     <div className="space-y-3">
                                                         <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{apt.practiceArea}</div>

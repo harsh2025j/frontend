@@ -21,6 +21,13 @@ interface Appointment {
     clientDocumentNote?: string;
     clientDocuments?: string[];
     cancellationReason?: string;
+    appointmentType?: string;
+    negotiationOpinion?: string;
+    isPaid?: boolean;
+    isAdvocateInitiated?: boolean;
+    location?: string;
+    virtualLink?: string;
+    mapLink?: string;
 }
 
 interface AppointmentDetailModalProps {
@@ -67,9 +74,13 @@ export default function AppointmentDetailModal({ appointment, onClose }: Appoint
                 <div className="p-8 border-b border-gray-100">
                     <div className="flex flex-wrap items-center gap-3 mb-2">
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Appointment Details</span>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${statusColors[appointment.status] || "bg-gray-50 text-gray-700 border-gray-150"}`}>
-                            {appointment.status}
-                        </span>
+                        <div className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${appointment.status === 'confirmed' ? (
+                            (!appointment.location && !appointment.virtualLink) ? 'bg-orange-50 text-orange-700 border-orange-150' : 'bg-green-50 text-green-700 border-green-150'
+                        ) : appointment.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-150' : 'bg-blue-50 text-blue-700 border-blue-150'}`}>
+                            {appointment.status === 'confirmed' ? (
+                                (!appointment.location && !appointment.virtualLink) ? 'awaiting confirmation' : 'confirmed'
+                            ) : appointment.status === 'awaiting_payment' ? (appointment.isPaid ? 'awaiting confirmation' : 'awaiting payment') : appointment.status}
+                        </div>
                     </div>
                     <h2 className="text-2xl font-serif text-[#0A2342]">{appointment.practiceArea}</h2>
                 </div>
@@ -97,12 +108,27 @@ export default function AppointmentDetailModal({ appointment, onClose }: Appoint
                     {/* Consultation Fee (if set) */}
                     {appointment.finalPrice && (
                         <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/50 flex justify-between items-center">
-                            <span className="text-xs font-bold text-[#0A2342]">💰 Consultation Fee</span>
+                            <span className="text-xs font-bold text-[#0A2342]"> Consultation Fee</span>
                             <span className="text-sm font-black text-emerald-700 bg-white border border-emerald-100 px-3 py-1 rounded-xl">
                                 {/^[0-9]+(\.[0-9]+)?$/.test(appointment.finalPrice.toString().trim()) ? `₹${appointment.finalPrice}` : appointment.finalPrice}
                             </span>
                         </div>
                     )}
+
+                    {/* Payment Status */}
+                    <div className="flex flex-wrap gap-3">
+                        {!(appointment.status === 'cancelled' && !appointment.isPaid) && (
+                            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border ${appointment.isPaid ? 'bg-green-50 text-green-700 border-green-100' : 'bg-gray-50 text-gray-500 border-gray-100'
+                                }`}>
+                                {appointment.isPaid ? ' Payment Received' : ' Payment Pending'}
+                            </div>
+                        )}
+                        {appointment.isAdvocateInitiated !== undefined && (
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border bg-blue-50 text-blue-700 border-blue-100">
+                                {appointment.isAdvocateInitiated ? ' Initiated by Advocate' : '👤 Initiated by Client'}
+                            </div>
+                        )}
+                    </div>
 
                     {/* Client Info Summary */}
                     <div className="p-6 bg-gray-50/30 rounded-2xl border border-gray-100 space-y-4">
@@ -132,6 +158,57 @@ export default function AppointmentDetailModal({ appointment, onClose }: Appoint
                             </p>
                         </div>
                     </div>
+
+                    {/* Appointment Type */}
+                    {appointment.appointmentType && (
+                        <div className="space-y-2">
+                            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Appointment Type</h4>
+                            <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100">
+                                <p className="text-xs text-gray-700 font-bold">{appointment.appointmentType}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Negotiation Opinion */}
+                    {appointment.negotiationOpinion && (
+                        <div className="space-y-2">
+                            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Negotiation Expectations / Opinion</h4>
+                            <div className="bg-blue-50/30 rounded-2xl p-5 border border-blue-100/50">
+                                <p className="text-xs text-blue-900 leading-relaxed font-semibold">{appointment.negotiationOpinion}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Location & Virtual Link */}
+                    {(appointment.location || appointment.mapLink || appointment.virtualLink) && (
+                        <div className="space-y-2">
+                            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Meeting Details</h4>
+                            <div className="space-y-2">
+                                {appointment.location && (
+                                    <div className="flex items-center gap-2 px-4 py-3 bg-gray-50/50 rounded-xl border border-gray-100">
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">📍 Location:</span>
+                                        <span className="text-xs font-semibold text-[#0A2342]">{appointment.location}</span>
+                                    </div>
+                                )}
+                                {appointment.mapLink && (
+                                    <div className="flex items-center gap-2 px-4 py-3 bg-gray-50/50 rounded-xl border border-gray-100">
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">🗺️ Map Link:</span>
+                                        <a href={appointment.mapLink} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-blue-600 hover:underline">
+                                            View on Google Maps
+                                        </a>
+                                    </div>
+                                )}
+                                {appointment.virtualLink && (
+                                    <div className="flex items-center gap-2 px-4 py-3 bg-gray-50/50 rounded-xl border border-gray-100">
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">🔗 Virtual Link:</span>
+                                        <a href={appointment.virtualLink} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-blue-600 hover:underline">
+                                            Join Meeting
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Advocate Notes / Cancellation Reasons */}
                     {appointment.advocateNote && (

@@ -2,7 +2,7 @@
 
 import apiClient from "@/data/services/apiConfig/apiClient";
 import { API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
-import { UpdateProfileRequest, ProfileResponse } from "@/data/features/profile/profile.types";
+import { UpdateProfileRequest, ProfileResponse, BankDetails } from "@/data/features/profile/profile.types";
 
 export const profileApi = {
   fetchProfile: async () => {
@@ -48,6 +48,10 @@ export const profileApi = {
           "Content-Type": "multipart/form-data",
         },
       });
+  },
+
+  updateBankDetails: async (bankDetails: BankDetails) => {
+    return await apiClient.patch<ProfileResponse>("/profile/bank-details", bankDetails);
   },
 
   toggleSavePost: async (postId: string) => {

@@ -283,7 +283,7 @@ export const useResendOtp = () => {
   }, []);
 
   const handleReSendOtp = async () => {
-    // ✅ always get the latest email value directly
+    //  always get the latest email value directly
     const currentEmail = localStorage.getItem("email") || email.email;
     if (!currentEmail) {
       console.warn("Email not found in localStorage");

@@ -31,9 +31,14 @@ interface Appointment {
   negotiationOpinion?: string;
   advocateNote?: string;
   finalPrice?: string;
+  isPaid?: boolean;
+  razorpayOrderId?: string;
   clientDocumentNote?: string;
   clientDocuments?: string[];
   cancellationReason?: string;
+  location?: string;
+  virtualLink?: string;
+  mapLink?: string;
 }
 
 interface AppointmentsListProps {
@@ -109,9 +114,17 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
       } else {
         setAppointments(newData);
         setPage(1);
-        if (newData.length > 0 && !selectedAppointment) {
-          setSelectedAppointment(newData[0]);
-        }
+        setSelectedAppointment(prevSelected => {
+          if (!prevSelected) {
+            return newData.length > 0 ? newData[0] : null;
+          }
+          const matchingItem = newData.find((item: any) => item.id === prevSelected.id);
+          if (matchingItem) {
+            return matchingItem;
+          } else {
+            return newData.length > 0 ? newData[0] : null;
+          }
+        });
       }
 
       setHasMore(meta ? meta.hasMore : newData.length === limit);
@@ -150,6 +163,7 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
     try {
       await appointmentsService.markRead(id);
       setAppointments(prev => prev.map(a => a.id === id ? { ...a, isRead: true } : a));
+      setSelectedAppointment(prev => prev && prev.id === id ? { ...prev, isRead: true } : prev);
       onUpdateUnread?.();
     } catch (error) {
       console.error("Failed to mark as read", error);
@@ -157,7 +171,7 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
   };
 
   // Advocate action panel states
-  const [actionPanel, setActionPanel] = useState<'none' | 'confirm' | 'reschedule' | 'reject'>('none');
+  const [actionPanel, setActionPanel] = useState<'none' | 'confirm' | 'reschedule' | 'reject' | 'clientReject'>('none');
   const [confirmData, setConfirmData] = useState({ finalPrice: '', advocateNote: '' });
   const [rescheduleData, setRescheduleData] = useState({ date: '', time: '', finalPrice: '', advocateNote: '' });
   const [rejectReason, setRejectReason] = useState('');
@@ -166,6 +180,101 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
+  const [finalizeData, setFinalizeData] = useState({ location: '', mapLink: '', virtualLink: '' });
+  const [isFinalizing, setIsFinalizing] = useState(false);
+
+  // Load Razorpay checkout.js script dynamically
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) return resolve(true);
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayNow = async () => {
+    if (!selectedAppointment) return;
+    setIsPaying(true);
+    try {
+      // 1. Ask the backend (via subscriptions-service Kafka) to create a Razorpay order
+      const res = await appointmentsService.createPaymentOrder(selectedAppointment.id);
+      const orderData = res.data?.data || res.data;
+
+      // 2. Load checkout script
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        toast.error('Failed to load payment gateway. Please check your internet connection.');
+        setIsPaying(false);
+        return;
+      }
+
+      // 3. Open Razorpay checkout popup
+      const options: any = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: 'INR',
+        name: 'Legal Consultation',
+        description: `Appointment #${selectedAppointment.id.slice(0, 8).toUpperCase()}`,
+        order_id: orderData.orderId,
+        prefill: {
+          name: selectedAppointment.fullName,
+          email: selectedAppointment.email,
+          contact: selectedAppointment.phone,
+        },
+        theme: { color: '#0A2342' },
+        modal: {
+          ondismiss: () => {
+            setIsPaying(false);
+            toast.error('Payment cancelled.');
+          },
+        },
+        handler: async (response: any) => {
+          // 4. Payment success — Verify signature locally, then upload docs.
+          try {
+            await appointmentsService.verifyPaymentOrder(selectedAppointment.id, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            });
+
+            // If it was a proposed or awaiting_payment reschedule/confirmation, automatically confirm and upload the selected documents!
+            if (selectedAppointment.status === 'proposed' || selectedAppointment.status === 'awaiting_payment') {
+              try {
+                await appointmentsService.clientConfirm(selectedAppointment.id, undefined, selectedFiles);
+                toast.success('Payment successful and appointment confirmed!');
+                setSelectedAppointment(prev => prev ? { ...prev, isPaid: true, status: 'confirmed' } : null);
+                setSelectedFiles([]);
+              } catch (uploadError: any) {
+                console.error("Document upload failed after payment", uploadError);
+                toast.error('Payment successful, but document upload failed (file might be too large). You can upload them manually now.');
+                setSelectedAppointment(prev => prev ? { ...prev, isPaid: true, status: 'awaiting_payment' } : null);
+              }
+            } else {
+              toast.success(' Payment successful!');
+              setSelectedAppointment(prev => prev ? { ...prev, isPaid: true } : null);
+            }
+            await fetchAppointments(false);
+          } catch (err: any) {
+            toast.error(err?.response?.data?.message || 'Payment verification failed. Please contact support.');
+            await fetchAppointments(false);
+          } finally {
+            setIsPaying(false);
+          }
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || 'Payment initiation failed';
+      toast.error(msg);
+      setIsPaying(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isConfirming) return;
@@ -198,13 +307,22 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
   useEffect(() => {
     setSelectedFiles([]);
     setPaymentAcknowledged(false);
-  }, [selectedAppointment]);
+    if (selectedAppointment) {
+      setFinalizeData({
+        location: selectedAppointment.location || '',
+        mapLink: selectedAppointment.mapLink || '',
+        virtualLink: selectedAppointment.virtualLink || '',
+      });
+    } else {
+      setFinalizeData({ location: '', mapLink: '', virtualLink: '' });
+    }
+  }, [selectedAppointment?.id]);
 
   const renderDocumentUploadArea = () => {
     return (
       <div className="space-y-2">
         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block ml-1">
-          Upload Supporting Documents (Optional)
+          Upload Supporting Documents First before Pay (Optional)
         </label>
         <div className={`border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center transition-colors bg-gray-50/50 relative group ${isConfirming ? 'opacity-60 cursor-not-allowed' : 'hover:border-[#C9A227]/50 cursor-pointer'}`}>
           <input
@@ -340,6 +458,12 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
       toast.success('Appointment confirmed — client notified!');
       setActionPanel('none');
       setConfirmData({ finalPrice: '', advocateNote: '' });
+      setSelectedAppointment(prev => prev ? {
+        ...prev,
+        status: 'awaiting_payment',
+        finalPrice: confirmData.finalPrice || prev.finalPrice,
+        advocateNote: confirmData.advocateNote || prev.advocateNote
+      } : null);
       await fetchAppointments();
       onUpdateUnread?.();
     } catch { toast.error('Failed to confirm'); }
@@ -366,6 +490,14 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
       toast.success('Reschedule proposal sent to client!');
       setActionPanel('none');
       setRescheduleData({ date: '', time: '', finalPrice: '', advocateNote: '' });
+      setSelectedAppointment(prev => prev ? {
+        ...prev,
+        status: 'proposed',
+        preferredDate: rescheduleData.date,
+        preferredTimeSlot: rescheduleData.time,
+        finalPrice: rescheduleData.finalPrice || prev.finalPrice,
+        advocateNote: rescheduleData.advocateNote || prev.advocateNote
+      } : null);
       await fetchAppointments();
     } catch { toast.error('Failed to reschedule'); }
   };
@@ -377,30 +509,94 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
       await appointmentsService.cancelWithReason(selectedAppointment.id, rejectReason);
       toast.success('Appointment rejected — client notified');
       setActionPanel('none'); setRejectReason('');
+      setSelectedAppointment(prev => prev ? {
+        ...prev,
+        status: 'cancelled',
+        cancellationReason: rejectReason
+      } : null);
       await fetchAppointments();
       onUpdateUnread?.();
     } catch { toast.error('Failed to reject'); }
   };
 
+  const handleClientReject = async () => {
+    if (!selectedAppointment) return;
+    if (!rejectReason.trim()) { toast.error('Please provide a reason for declining'); return; }
+    try {
+      await appointmentsService.cancelWithReason(selectedAppointment.id, rejectReason);
+      toast.success('Proposal declined — advocate notified');
+      setActionPanel('none'); setRejectReason('');
+      setSelectedAppointment(prev => prev ? {
+        ...prev,
+        status: 'cancelled',
+        cancellationReason: rejectReason
+      } : null);
+      await fetchAppointments();
+      onUpdateUnread?.();
+    } catch { toast.error('Failed to decline'); }
+  };
+
   const handleClientConfirm = async () => {
     if (!selectedAppointment) return;
-    if (!paymentAcknowledged) { toast.error('Please acknowledge payment'); return; }
     setIsConfirming(true);
     try {
       const response = await appointmentsService.clientConfirm(selectedAppointment.id, undefined, selectedFiles);
-      toast.success('Appointment confirmed! Check your email for details.');
+      const newStatus = response?.data?.status || 'confirmed';
+      if (newStatus === 'awaiting_payment') {
+        toast.success('Reschedule accepted! Initializing payment...');
+        setSelectedAppointment(prev => prev ? {
+          ...prev,
+          status: newStatus,
+          clientDocuments: response?.data?.clientDocuments || prev.clientDocuments,
+          clientDocumentNote: response?.data?.clientDocumentNote || prev.clientDocumentNote
+        } : null);
+        await handlePayNow();
+        return; // handlePayNow manages its own state cleanup and fetches
+      } else {
+        toast.success('Documents submitted! Awaiting advocate confirmation.');
+      }
       setPaymentAcknowledged(false); setSelectedFiles([]);
       await fetchAppointments();
-      setSelectedAppointment(prev => prev ? { 
-        ...prev, 
-        status: 'confirmed',
+      setSelectedAppointment(prev => prev ? {
+        ...prev,
+        status: newStatus,
         clientDocuments: response?.data?.clientDocuments || prev.clientDocuments,
         clientDocumentNote: response?.data?.clientDocumentNote || prev.clientDocumentNote
       } : null);
-    } catch { 
-      toast.error('Failed to confirm'); 
+    } catch {
+      toast.error('Failed to confirm');
     } finally {
       setIsConfirming(false);
+    }
+  };
+
+  const handleFinalizeMeeting = async () => {
+    if (!selectedAppointment) return;
+    if (!finalizeData.location.trim()) {
+      toast.error('Meeting location/address is required');
+      return;
+    }
+    if (!finalizeData.mapLink.trim()) {
+      toast.error('Meeting directions (map link) is required');
+      return;
+    }
+    setIsFinalizing(true);
+    try {
+      await appointmentsService.finalizeMeeting(selectedAppointment.id, finalizeData);
+      toast.success('Meeting details saved and confirmed!');
+      setSelectedAppointment(prev => prev ? {
+        ...prev,
+        status: 'confirmed',
+        location: finalizeData.location,
+        mapLink: finalizeData.mapLink,
+        virtualLink: finalizeData.virtualLink || undefined
+      } : null);
+      await fetchAppointments();
+    } catch (error) {
+      console.error("Failed to finalize meeting", error);
+      toast.error('Failed to finalize meeting details');
+    } finally {
+      setIsFinalizing(false);
     }
   };
 
@@ -418,6 +614,14 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
       toast.success('Reschedule proposal sent to client');
       setIsRescheduling(false);
       setRescheduleData({ date: '', time: '', finalPrice: '', advocateNote: '' });
+      setSelectedAppointment(prev => prev ? {
+        ...prev,
+        status: 'proposed',
+        preferredDate: rescheduleData.date,
+        preferredTimeSlot: rescheduleData.time,
+        finalPrice: rescheduleData.finalPrice || prev.finalPrice,
+        advocateNote: rescheduleData.advocateNote || prev.advocateNote
+      } : null);
       await fetchAppointments();
     } catch { toast.error('Failed to reschedule'); }
   };
@@ -426,6 +630,9 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
     try {
       await appointmentsService.updateStatus(id, 'awaiting_payment');
       await fetchAppointments();
+      if (selectedAppointment?.id === id) {
+        setSelectedAppointment(prev => prev ? { ...prev, status: 'awaiting_payment' } : null);
+      }
       toast.success('You have accepted the proposal. Please complete payment.');
     } catch { toast.error('Failed'); }
   };
@@ -555,12 +762,16 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                             </span>
                           </div>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-tighter border ${appointment.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-100' :
+                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-tighter border ${appointment.status === 'confirmed' ? (
+                              (!appointment.location && !appointment.virtualLink) ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-green-50 text-green-700 border-green-100'
+                            ) :
                               appointment.status === 'proposed' ? 'bg-blue-50 text-blue-700 border-blue-100' :
                                 appointment.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
                                   'bg-orange-50 text-orange-700 border-orange-100'
                               }`}>
-                              {appointment.status}
+                              {appointment.status === 'confirmed' ? (
+                                (!appointment.location && !appointment.virtualLink) ? 'awaiting confirmation' : 'confirmed'
+                              ) : appointment.status === 'awaiting_payment' ? (appointment.isPaid ? 'awaiting confirmation' : 'awaiting payment') : appointment.status}
                             </span>
                             <span className="text-[9px] font-medium text-blue-600 truncate">
                               {appointment.practiceArea}
@@ -619,12 +830,16 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                           {clientEmail ? (selectedAppointment.advocateName || "Advocate") : selectedAppointment.fullName}
                         </h3>
                         <div className="flex items-center gap-3 mt-1">
-                          <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${selectedAppointment.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-100' :
+                          <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${selectedAppointment.status === 'confirmed' ? (
+                            (!selectedAppointment.location && !selectedAppointment.virtualLink) ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-green-50 text-green-700 border-green-100'
+                          ) :
                             selectedAppointment.status === 'proposed' ? 'bg-blue-50 text-blue-700 border-blue-100' :
                               selectedAppointment.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
                                 'bg-orange-50 text-orange-700 border-orange-100'
                             }`}>
-                            {selectedAppointment.status}
+                            {selectedAppointment.status === 'confirmed' ? (
+                              (!selectedAppointment.location && !selectedAppointment.virtualLink) ? 'awaiting confirmation' : 'confirmed'
+                            ) : selectedAppointment.status === 'awaiting_payment' ? (selectedAppointment.isPaid ? 'awaiting confirmation' : 'awaiting payment') : selectedAppointment.status}
                           </span>
                         </div>
                       </div>
@@ -754,6 +969,55 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                           </div>
                         </div>
                       )}
+
+                      {/* Payment & Advocate Note */}
+                      {(selectedAppointment.finalPrice || selectedAppointment.advocateNote) && (
+                        <div className="space-y-3 border-t border-gray-100/50 pt-3 mt-3">
+                          {selectedAppointment.finalPrice && (
+                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
+                              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Consultation Fee</span>
+                              <span className="text-sm font-bold text-[#0A2342]">
+                                ₹{selectedAppointment.finalPrice}
+                                {selectedAppointment.isPaid ? <span className="text-green-600 text-xs ml-1">(Paid)</span> : <span className="text-amber-600 text-xs ml-1">(Unpaid)</span>}
+                              </span>
+                            </div>
+                          )}
+                          {selectedAppointment.advocateNote && (
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Advocate Note</label>
+                              <p className="text-sm text-gray-700 bg-blue-50/50 p-3 rounded-xl border border-blue-100 italic">
+                                "{selectedAppointment.advocateNote}"
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Location & Virtual Link */}
+                      {selectedAppointment.location && (
+                        <div className="flex items-center gap-3 border-t border-gray-100/50 pt-3">
+                          <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100">
+                            <MapPin size={16} className="text-[#C9A227]" />
+                          </div>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Location: <span className="text-[#0A2342] normal-case font-semibold">{selectedAppointment.location}</span></span>
+                        </div>
+                      )}
+                      {selectedAppointment.mapLink && (
+                        <div className="flex items-center gap-3 border-t border-gray-100/50 pt-3">
+                          <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100">
+                            <MapPin size={16} className="text-[#C9A227]" />
+                          </div>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Directions (Map): <a href={selectedAppointment.mapLink} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-blue-600 hover:underline truncate ml-1">View Map</a></span>
+                        </div>
+                      )}
+                      {selectedAppointment.virtualLink && (
+                        <div className="flex items-center gap-3 border-t border-gray-100/50 pt-3">
+                          <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100">
+                            <ExternalLink size={16} className="text-[#C9A227]" />
+                          </div>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Virtual Meeting: <a href={selectedAppointment.virtualLink} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-blue-600 hover:underline truncate ml-1">Join Meeting</a></span>
+                        </div>
+                      )}
                     </div>
 
                     {isRescheduling && (
@@ -821,13 +1085,12 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                                       onClick={() => {
                                         setRescheduleData(prev => ({ ...prev, time: s.slot }));
                                       }}
-                                      className={`py-2 px-3 rounded-lg text-center text-xs font-bold transition-all duration-200 relative group overflow-hidden ${
-                                        s.isBooked
-                                          ? 'bg-red-50 border border-red-150 text-red-500 opacity-60 cursor-not-allowed'
-                                          : isSelected
+                                      className={`py-2 px-3 rounded-lg text-center text-xs font-bold transition-all duration-200 relative group overflow-hidden ${s.isBooked
+                                        ? 'bg-red-50 border border-red-150 text-red-500 opacity-60 cursor-not-allowed'
+                                        : isSelected
                                           ? 'bg-emerald-500 text-white border border-emerald-500 shadow-sm shadow-emerald-500/10'
                                           : 'bg-emerald-50 border border-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                      }`}
+                                        }`}
                                     >
                                       <span>{s.slot}</span>
                                       {s.isBooked && (
@@ -976,13 +1239,12 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                                         onClick={() => {
                                           setRescheduleData(p => ({ ...p, time: s.slot }));
                                         }}
-                                        className={`py-2 px-3 rounded-lg text-center text-xs font-bold transition-all duration-200 relative group overflow-hidden ${
-                                          s.isBooked
-                                            ? 'bg-red-50 border border-red-150 text-red-500 opacity-60 cursor-not-allowed'
-                                            : isSelected
+                                        className={`py-2 px-3 rounded-lg text-center text-xs font-bold transition-all duration-200 relative group overflow-hidden ${s.isBooked
+                                          ? 'bg-red-50 border border-red-150 text-red-500 opacity-60 cursor-not-allowed'
+                                          : isSelected
                                             ? 'bg-emerald-500 text-white border border-emerald-500 shadow-sm shadow-emerald-500/10'
                                             : 'bg-emerald-50 border border-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                        }`}
+                                          }`}
                                       >
                                         <span>{s.slot}</span>
                                         {s.isBooked && (
@@ -1044,11 +1306,87 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                       )}
                     </div>
                   )}
-                  {!clientEmail && selectedAppointment.status !== 'pending' && (
+                  {!clientEmail && selectedAppointment.status !== 'pending' && !(selectedAppointment.status === 'confirmed' && (!selectedAppointment.location && !selectedAppointment.virtualLink)) && (
                     <div className="px-6 py-4 border-t border-gray-50 bg-gray-50/50 flex items-center justify-between">
                       <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${selectedAppointment.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-200' : selectedAppointment.status === 'awaiting_payment' ? 'bg-amber-50 text-amber-700 border-amber-200' : selectedAppointment.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
-                        {selectedAppointment.status === 'awaiting_payment' ? 'Awaiting Client Payment' : selectedAppointment.status}
+                        {selectedAppointment.status === 'awaiting_payment' ? (selectedAppointment.isPaid ? 'Awaiting Confirmation' : 'Awaiting Client Payment') : selectedAppointment.status}
                       </span>
+                    </div>
+                  )}
+
+                  {/* ── ADVOCATE FINALIZE MEETING DETAILS FORM ── */}
+                  {!clientEmail && selectedAppointment.status === 'confirmed' && (!selectedAppointment.location && !selectedAppointment.virtualLink) && (
+                    <div className="p-6 border-t border-gray-50 bg-white space-y-4">
+                      <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-1">
+                        <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Finalize Meeting Details</p>
+                        <p className="text-xs text-gray-600 font-medium">The client has confirmed the appointment and uploaded documents. Please specify the meeting details to finalize and confirm this appointment.</p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-[#0A2342] uppercase tracking-widest block ml-1">Meeting Address <span className="text-xs text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            value={finalizeData.location}
+                            onChange={e => setFinalizeData(p => ({ ...p, location: e.target.value }))}
+                            placeholder="e.g. Chambers of Advocate Sajjadhusain, Fort, Mumbai"
+                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#C9A227]/50"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-[#0A2342] uppercase tracking-widest block ml-1">Google Maps Link <span className="text-xs text-red-500">*</span></label>
+                          <input
+                            type="url"
+                            value={finalizeData.mapLink}
+                            onChange={e => setFinalizeData(p => ({ ...p, mapLink: e.target.value }))}
+                            placeholder="e.g. https://maps.google.com/?q=..."
+                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#C9A227]/50"
+                          />
+                        </div>
+
+                        {/* <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-[#0A2342] uppercase tracking-widest block ml-1">Virtual Meeting Link (Required if online - e.g. GMeet/Zoom)</label>
+                          <input
+                            type="url"
+                            value={finalizeData.virtualLink}
+                            onChange={e => setFinalizeData(p => ({ ...p, virtualLink: e.target.value }))}
+                            placeholder="e.g. https://meet.google.com/abc-defg-hij"
+                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#C9A227]/50"
+                          />
+                        </div> */}
+                      </div>
+
+                      <button
+                        onClick={handleFinalizeMeeting}
+                        disabled={isFinalizing || (!(finalizeData.location.trim() && finalizeData.mapLink.trim()) && !finalizeData.virtualLink?.trim())}
+                        className={`w-full py-3.5 font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${(((finalizeData.location.trim() && finalizeData.mapLink.trim()) || finalizeData.virtualLink?.trim()) && !isFinalizing)
+                          ? 'bg-[#0A2342] text-white hover:bg-[#153a66] shadow-md hover:shadow-lg'
+                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          }`}
+                      >
+                        {isFinalizing ? (
+                          <>
+                            <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Saving & Sending...
+                          </>
+                        ) : (
+                          'Finalize & Send to Client'
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* ── CLIENT ACTION BAR: client_confirmed info ── */}
+                  {!!clientEmail && selectedAppointment.status === 'confirmed' && (!selectedAppointment.location && !selectedAppointment.virtualLink) && (
+                    <div className="p-6 border-t border-gray-50 bg-white space-y-4">
+                      <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 space-y-1">
+                        <p className="text-[10px] font-black text-orange-700 uppercase tracking-widest">Awaiting Advocate Confirmation</p>
+                        <p className="text-xs text-gray-600 font-medium">You have confirmed the appointment and uploaded your documents. The advocate will review them and finalize the meeting details shortly.</p>
+                      </div>
                     </div>
                   )}
 
@@ -1059,30 +1397,133 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                         <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Advocate Proposed a New Schedule</p>
                         {selectedAppointment.finalPrice && (
                           <p className="text-sm font-bold text-[#0A2342]">
-                             💰 Final Consultation Fee: {/^[0-9]+(\.[0-9]+)?$/.test(selectedAppointment.finalPrice.toString().trim()) ? `₹${selectedAppointment.finalPrice}` : selectedAppointment.finalPrice}
+                            Final Consultation Fee: {/^[0-9]+(\.[0-9]+)?$/.test(selectedAppointment.finalPrice.toString().trim()) ? `₹${selectedAppointment.finalPrice}` : selectedAppointment.finalPrice}
                           </p>
                         )}
                         {selectedAppointment.advocateNote && <p className="text-xs text-gray-600 italic">"{selectedAppointment.advocateNote}"</p>}
                       </div>
-                      
+
                       {renderDocumentUploadArea()}
-                      
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          checked={paymentAcknowledged} 
-                          onChange={e => setPaymentAcknowledged(e.target.checked)} 
-                          disabled={isConfirming}
-                          className="w-4 h-4 accent-blue-600 rounded disabled:opacity-50" 
-                        />
-                        <span className="text-xs font-semibold text-gray-700">I acknowledge the payment amount and will complete payment before the appointment.</span>
-                      </label>
-                      
+
                       <div className="flex gap-2">
-                        <button 
-                          onClick={handleClientConfirm} 
-                          disabled={!paymentAcknowledged || isConfirming} 
-                          className={`flex-grow py-3.5 font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all ${paymentAcknowledged && !isConfirming ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'} flex items-center justify-center gap-2`}
+                        {actionPanel !== 'clientReject' && (
+                          <>
+                            {selectedAppointment.finalPrice && parseFloat(selectedAppointment.finalPrice) > 0 && !selectedAppointment.isPaid ? (
+                              <button
+                                onClick={handlePayNow}
+                                disabled={isPaying}
+                                className={`flex-grow py-3.5 font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all ${!isPaying ? 'bg-gradient-to-r from-[#0A2342] to-[#1a4a80] text-white hover:from-[#153a66] hover:to-[#1e5599]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'} flex items-center justify-center gap-2 shadow-lg`}
+                              >
+                                {isPaying ? (
+                                  <>
+                                    <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Processing...
+                                  </>
+                                ) : (
+                                  `Accept Reschedule & Pay ₹${selectedAppointment.finalPrice} Now`
+                                )}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={handleClientConfirm}
+                                disabled={isConfirming}
+                                className={`flex-grow py-3.5 font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all ${!isConfirming ? 'bg-gradient-to-r from-[#0A2342] to-[#1a4a80] text-white hover:from-[#153a66] hover:to-[#1e5599]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'} flex items-center justify-center gap-2 shadow-lg`}
+                              >
+                                {isConfirming ? (
+                                  <>
+                                    <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Processing...
+                                  </>
+                                ) : (
+                                  'Accept & Confirm Reschedule'
+                                )}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => { setActionPanel('clientReject'); setRejectReason(''); }}
+                              disabled={isConfirming}
+                              className="px-5 py-3.5 bg-white text-red-600 border border-red-100 font-bold rounded-xl text-[10px] uppercase tracking-widest hover:bg-red-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Decline
+                            </button>
+                          </>
+                        )}
+                      </div>
+
+                      {actionPanel === 'clientReject' && (
+                        <div className="space-y-3 p-4 bg-red-50 rounded-2xl border border-red-100 mt-2">
+                          <p className="text-[10px] font-black text-red-700 uppercase tracking-widest">Decline Proposal</p>
+                          <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason for declining (required — shown to advocate)…" rows={3} className="w-full px-4 py-2.5 bg-white border border-red-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-400 resize-none" />
+                          <div className="flex gap-2">
+                            <button onClick={handleClientReject} className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-xl text-[10px] uppercase tracking-widest hover:bg-red-700 transition-all">Confirm Decline</button>
+                            <button onClick={() => setActionPanel('none')} className="px-4 py-2.5 bg-white border border-gray-200 text-gray-500 font-bold rounded-xl text-[10px] uppercase tracking-widest">Cancel</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── CLIENT ACTION BAR: awaiting_payment → Pay Now (Razorpay) or free confirm ── */}
+                  {!!clientEmail && selectedAppointment.status === 'awaiting_payment' && (
+                    <div className="p-6 border-t border-gray-50 bg-white space-y-4">
+
+                      {/* Status banner */}
+                      <div className={`p-4 rounded-2xl border space-y-1 ${selectedAppointment.isPaid ? 'bg-green-50 border-green-100' : 'bg-amber-50 border-amber-100'}`}>
+                        <p className={`text-[10px] font-black uppercase tracking-widest ${selectedAppointment.isPaid ? 'text-green-700' : 'text-amber-700'}`}>
+                          {selectedAppointment.isPaid ? ' Payment Successful' : ' Advocate Accepted Your Request'}
+                        </p>
+                        {selectedAppointment.finalPrice && /^[0-9]+(\.[0-9]+)?$/.test(selectedAppointment.finalPrice.toString().trim()) && (
+                          <p className="text-sm font-bold text-[#0A2342]">
+                            {selectedAppointment.isPaid ? ' Amount Paid: ' : ' Amount Due: '}₹{selectedAppointment.finalPrice}
+                          </p>
+                        )}
+                        {selectedAppointment.advocateNote && (
+                          <p className="text-xs text-gray-600 italic mt-1">"{selectedAppointment.advocateNote}"</p>
+                        )}
+                        {selectedAppointment.isPaid && (
+                          <p className="text-xs font-bold text-green-600 mt-1">Please upload any required documents below and click confirm.</p>
+                        )}
+                      </div>
+
+                      {/* Document upload (always visible for the client) */}
+                      {renderDocumentUploadArea()}
+
+                      {/* ── CASE A: Has a price and NOT yet paid → show Pay Now ── */}
+                      {selectedAppointment.finalPrice &&
+                        /^[0-9]+(\.[0-9]+)?$/.test(selectedAppointment.finalPrice.toString().trim()) &&
+                        parseFloat(selectedAppointment.finalPrice) > 0 &&
+                        !selectedAppointment.isPaid ? (
+                        <button
+                          id="btn-pay-now"
+                          onClick={handlePayNow}
+                          disabled={isPaying}
+                          className="w-full py-4 font-bold rounded-xl text-[11px] uppercase tracking-widest transition-all bg-gradient-to-r from-[#0A2342] to-[#1a4a80] text-white hover:from-[#153a66] hover:to-[#1e5599] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                        >
+                          {isPaying ? (
+                            <>
+                              <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Processing Payment…
+                            </>
+                          ) : (
+                            <>💳 Pay ₹{selectedAppointment.finalPrice} Now</>
+                          )}
+                        </button>
+                      ) : (
+                        /* ── CASE B: No price, or already paid → show Confirm (free / post-payment doc submit) ── */
+                        <button
+                          id="btn-confirm-appointment"
+                          onClick={handleClientConfirm}
+                          disabled={isConfirming}
+                          className="w-full py-3.5 font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all bg-[#0A2342] text-white hover:bg-[#153a66] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                           {isConfirming ? (
                             <>
@@ -1090,65 +1531,20 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                               </svg>
-                              Confirming...
+                              Confirming…
                             </>
                           ) : (
-                            'Accept & Confirm Reschedule'
+                            selectedAppointment.isPaid ? ' Submit Documents & Confirm' : 'Confirm Appointment'
                           )}
                         </button>
-                        <button 
-                          onClick={() => handleUpdateStatus(selectedAppointment.id, 'cancelled')} 
-                          disabled={isConfirming}
-                          className="px-5 py-3.5 bg-white text-red-600 border border-red-100 font-bold rounded-xl text-[10px] uppercase tracking-widest hover:bg-red-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Decline
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                      )}
 
-                  {/* ── CLIENT ACTION BAR: awaiting_payment → confirm payment + docs ── */}
-                  {!!clientEmail && selectedAppointment.status === 'awaiting_payment' && (
-                    <div className="p-6 border-t border-gray-50 bg-white space-y-4">
-                      <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-1">
-                        <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">✅ Advocate Accepted Your Request</p>
-                        {selectedAppointment.finalPrice && (
-                          <p className="text-sm font-bold text-[#0A2342]">
-                             💰 Amount Due: {/^[0-9]+(\.[0-9]+)?$/.test(selectedAppointment.finalPrice.toString().trim()) ? `₹${selectedAppointment.finalPrice}` : selectedAppointment.finalPrice}
-                          </p>
-                        )}
-                        {selectedAppointment.advocateNote && <p className="text-xs text-gray-600 italic mt-1">"{selectedAppointment.advocateNote}"</p>}
-                      </div>
-                      
-                      {renderDocumentUploadArea()}
-                      
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          checked={paymentAcknowledged} 
-                          onChange={e => setPaymentAcknowledged(e.target.checked)} 
-                          disabled={isConfirming}
-                          className="w-4 h-4 accent-amber-600 rounded disabled:opacity-50" 
-                        />
-                        <span className="text-xs font-semibold text-gray-700">I acknowledge the payment amount and will complete payment before the appointment.</span>
-                      </label>
-                      <button 
-                        onClick={handleClientConfirm} 
-                        disabled={!paymentAcknowledged || isConfirming} 
-                        className={`w-full py-3.5 font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all ${paymentAcknowledged && !isConfirming ? 'bg-[#0A2342] text-white hover:bg-[#153a66]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'} flex items-center justify-center gap-2`}
-                      >
-                        {isConfirming ? (
-                          <>
-                            <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Confirming...
-                          </>
-                        ) : (
-                          'Confirm Appointment'
-                        )}
-                      </button>
+                      {/* Helper note */}
+                      <p className="text-[10px] text-gray-400 text-center">
+                        {selectedAppointment.finalPrice && parseFloat(selectedAppointment.finalPrice) > 0 && !selectedAppointment.isPaid
+                          ? 'Secure payment via Razorpay · UPI / Cards / Net Banking accepted'
+                          : 'Your appointment will be confirmed after submission'}
+                      </p>
                     </div>
                   )}
 

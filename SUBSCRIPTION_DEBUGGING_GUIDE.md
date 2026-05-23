@@ -110,7 +110,7 @@ createOrder: async (data: CreateOrderRequest) => {
 },
 ```
 
-**⚠️ WARNING**: This is only for testing the UI! Remove it before production!
+** WARNING**: This is only for testing the UI! Remove it before production!
 
 ### Expected Frontend Flow
 

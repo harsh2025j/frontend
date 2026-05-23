@@ -35,6 +35,7 @@ import Loader from "@/components/ui/Loader";
 import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
 import ImageCropperModal from "@/components/ui/ImageCropperModal";
 import ConsultancyFormModal from "./ConsultancyFormModal";
+import BankDetailsSection from "./BankDetailsSection";
 
 interface ProfileViewProps {
   viewContext: "public" | "admin";
@@ -188,7 +189,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
             fetchedUser.articles = articlesData?.data ?? [];
             fetchedUser.totalArticles = articlesData?.total ?? fetchedUser.articles.length;
           } catch (e) { console.error("Mapping error:", e); }
-          
+
           let wDays = fetchedUser.workingDays;
           if (typeof wDays === 'string') wDays = [wDays];
           if (Array.isArray(wDays) && wDays.length === 1 && wDays[0].includes(' to ')) {
@@ -712,6 +713,14 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                       </div>
                     </BentoCard>
 
+                    {/* E. Bank & Payment Details — Advocate Only */}
+                    {isOwner && profileIsAdvocate && profileUser && (
+                      <BankDetailsSection
+                        user={profileUser}
+                        onUpdate={(updatedUser) => setProfileUser(updatedUser)}
+                      />
+                    )}
+
                   </div>
                 )}
               </motion.div>
@@ -823,7 +832,7 @@ function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isPr
   const amountMatch = pricingStr.match(/\d+/);
   const initialAmount = amountMatch ? amountMatch[0] : "";
   const initialIsHalfHr = pricingStr.toLowerCase().includes("half") || pricingStr.toLowerCase().includes("30") || pricingStr.toLowerCase().includes("/half");
-  
+
   const [priceAmount, setPriceAmount] = useState(initialAmount);
   const [priceUnit, setPriceUnit] = useState(initialIsHalfHr ? "Rs / half hr" : "Rs / hr");
 

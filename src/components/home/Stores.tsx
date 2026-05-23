@@ -81,7 +81,7 @@ export function getArticleExcerpt(item: any, maxLength = 150) {
     return item.aiSummary.trim();
   }
   const isJudgment = item.category?.slug === "judgments" || item.category?.parentId === "judgments";
-  return isJudgment 
+  return isJudgment
     ? "Click to view the full judgment details, neutral citations, and complete court order."
     : "Click to read the full article, view dynamic updates, and watch the embedded media.";
 }
@@ -556,7 +556,7 @@ export default function Stores() {
           </div>
         </div>
 
-        {/* ✅ UPDATED: View More for Judgments */}
+        {/*  UPDATED: View More for Judgments */}
         <div className="flex justify-center mb-6 md:mb-10">
           <Link href="/category/judgments" onClick={handleNavClick}>
             <button className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 sm:px-6 py-1 sm:py-2 text-sm sm:text-base">
@@ -598,7 +598,7 @@ export default function Stores() {
           </div>
         </div>
 
-        {/* ✅ UPDATED: View More for Hindi News */}
+        {/*  UPDATED: View More for Hindi News */}
         <div className="flex justify-center mb-6 md:mb-10">
           <Link href={`/category/${"hindi-news"}`} onClick={handleNavClick}>
             <Button lable="View More" className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 sm:px-6 py-1 sm:py-2 text-sm sm:text-base mt-4 md:mt-5" />

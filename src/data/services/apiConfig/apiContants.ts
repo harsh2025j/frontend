@@ -136,7 +136,19 @@ export const API_ENDPOINTS = {
     CONFIRM: "/appointments/:id/confirm",
     RESCHEDULE: "/appointments/:id/reschedule",
     CLIENT_CONFIRM: "/appointments/:id/client-confirm",
+    FINALIZE_MEETING: "/appointments/:id/finalize-meeting",
     AVAILABLE_SLOTS: "/appointments/available-slots/:advocateId",
+    CREATE_PAYMENT_ORDER: "/appointments/:id/payment/create-order",
+    VERIFY_PAYMENT_ORDER: "/appointments/:id/payment/verify",
+  },
+  PAYOUTS: {
+    GET_COMMISSION: "/payouts/settings/commission",
+    UPDATE_COMMISSION: "/payouts/settings/commission",
+    GET_ADVOCATES: "/payouts/advocates",
+    GET_ADVOCATE_DETAILS: "/payouts/advocate/:id",
+    GET_ADVOCATE_APPOINTMENTS: "/payouts/advocate/:id/appointments",
+    GET_ADVOCATE_PAYOUT_HISTORY: "/payouts/advocate/:id/history",
+    LOG_PAYOUT: "/payouts/advocate/:id",
   }
 };
 

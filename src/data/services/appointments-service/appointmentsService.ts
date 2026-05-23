@@ -59,10 +59,19 @@ export const appointmentsService = {
       },
     });
   },
+  finalizeMeeting: async (id: string, data: { location: string; mapLink: string; virtualLink?: string }) => {
+    return apiClient.patch(API_ENDPOINTS.APPOINTMENTS.FINALIZE_MEETING.replace(':id', id), data);
+  },
   getAvailableSlots: async (advocateId: string, date: string, duration: number) => {
     return apiClient.get(API_ENDPOINTS.APPOINTMENTS.AVAILABLE_SLOTS.replace(':advocateId', advocateId), {
       params: { date, duration }
     });
+  },
+  createPaymentOrder: async (id: string) => {
+    return apiClient.post(API_ENDPOINTS.APPOINTMENTS.CREATE_PAYMENT_ORDER.replace(':id', id));
+  },
+  verifyPaymentOrder: async (id: string, data: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+    return apiClient.post(API_ENDPOINTS.APPOINTMENTS.VERIFY_PAYMENT_ORDER.replace(':id', id), data);
   },
 };
 

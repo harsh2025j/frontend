@@ -204,6 +204,7 @@ function BookingForm() {
             }
 
             setBookingResult(data);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
 
             setFormData({
                 fullName: "",
