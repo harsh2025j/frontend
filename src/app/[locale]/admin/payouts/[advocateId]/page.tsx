@@ -492,7 +492,7 @@ export default function AdvocatePayoutDetails({ params }: { params: Promise<{ ad
                           </span>
                         </div>
                         {pay.adminNote && (
-                          <p className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-100/50 mt-1">
+                          <p className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-100/50 mt-1 break-words break-all whitespace-pre-wrap">
                             {pay.adminNote}
                           </p>
                         )}
