@@ -61,6 +61,7 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const detailPanelRef = useRef<HTMLDivElement>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
+  const isFetchingRef = useRef(false);
 
   // Debounce search
   useEffect(() => {
@@ -79,6 +80,8 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
   };
 
   const fetchAppointments = async (isLoadMore = false) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     try {
       if (isLoadMore) setIsLoadingMore(true);
       else setLoading(true);
@@ -109,7 +112,11 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
       }
 
       if (isLoadMore) {
-        setAppointments(prev => [...prev, ...newData]);
+        setAppointments(prev => {
+          const existingIds = new Set(prev.map(item => item.id));
+          const uniqueNewData = newData.filter((item: any) => !existingIds.has(item.id));
+          return [...prev, ...uniqueNewData];
+        });
         setPage(currentPage);
       } else {
         setAppointments(newData);
@@ -127,12 +134,17 @@ export default function AppointmentsList({ advocateId, clientEmail, onUpdateUnre
         });
       }
 
-      setHasMore(meta ? meta.hasMore : newData.length === limit);
+      if (clientEmail) {
+        setHasMore(false);
+      } else {
+        setHasMore(meta ? meta.hasMore : newData.length === limit);
+      }
     } catch (error) {
       console.error("Failed to fetch appointments", error);
     } finally {
       setLoading(false);
       setIsLoadingMore(false);
+      isFetchingRef.current = false;
     }
   };
 

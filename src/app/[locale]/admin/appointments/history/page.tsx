@@ -44,6 +44,7 @@ interface Appointment {
     location?: string;
     virtualLink?: string;
     mapLink?: string;
+    isPaid?: boolean;
 }
 
 interface ClientGroup {
@@ -68,6 +69,7 @@ export default function AdminAppointmentHistory() {
     const [showApproachModal, setShowApproachModal] = useState(false);
     const [selectedAppointmentDetails, setSelectedAppointmentDetails] = useState<Appointment | null>(null);
     const observerTarget = useRef<HTMLDivElement>(null);
+    const isFetchingRef = useRef(false);
 
     // Debounce search
     useEffect(() => {
@@ -79,6 +81,8 @@ export default function AdminAppointmentHistory() {
 
     const fetchData = async (isLoadMore = false) => {
         if (!user?.id && !user?._id) return;
+        if (isFetchingRef.current) return;
+        isFetchingRef.current = true;
         try {
             if (isLoadMore) setIsLoadingMore(true);
             else setLoading(true);
@@ -93,7 +97,11 @@ export default function AdminAppointmentHistory() {
             const newData = Array.isArray(rawData) ? rawData : (rawData?.data || []);
 
             if (isLoadMore) {
-                setAppointments(prev => [...prev, ...newData]);
+                setAppointments(prev => {
+                    const existingIds = new Set(prev.map(item => item.id));
+                    const uniqueNewData = newData.filter((item: any) => !existingIds.has(item.id));
+                    return [...prev, ...uniqueNewData];
+                });
                 setPage(currentPage);
             } else {
                 setAppointments(newData);
@@ -106,6 +114,7 @@ export default function AdminAppointmentHistory() {
         } finally {
             setLoading(false);
             setIsLoadingMore(false);
+            isFetchingRef.current = false;
         }
     };
 
@@ -221,49 +230,49 @@ export default function AdminAppointmentHistory() {
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-gray-50">
-                                    {filteredGroups.map((group) => (
-                                        <button
-                                            key={group.email}
-                                            onClick={() => setSelectedClientEmail(group.email)}
-                                            className={`w-full p-6 flex items-center gap-4 transition-all hover:bg-gray-50 text-left relative ${selectedClientEmail === group.email ? "bg-blue-50/50" : ""
-                                                }`}
-                                        >
-                                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold border border-gray-200 overflow-hidden shadow-sm shrink-0">
-                                                {group.profilePicture ? (
-                                                    <img src={group.profilePicture} alt="" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    group.fullName.charAt(0).toUpperCase()
-                                                )}
-                                            </div>
-                                            <div className="min-w-0 flex-grow">
-                                                <h4 className="text-sm font-bold text-[#0A2342] truncate">{group.fullName}</h4>
-                                                <p className="text-[11px] text-gray-400 font-medium truncate mt-0.5">{group.email}</p>
-                                                <div className="flex items-center gap-2 mt-2">
-                                                    <span className="px-2 py-0.5 bg-white border border-gray-200 rounded-md text-[9px] font-bold text-gray-500">
-                                                        {group.appointments.length} Bookings
-                                                    </span>
-                                                    <span className="text-[9px] text-gray-400 font-medium">
-                                                        Last: {formatDate(group.lastAppointmentDate)}
-                                                    </span>
+                                        {filteredGroups.map((group) => (
+                                            <button
+                                                key={group.email}
+                                                onClick={() => setSelectedClientEmail(group.email)}
+                                                className={`w-full p-6 flex items-center gap-4 transition-all hover:bg-gray-50 text-left relative ${selectedClientEmail === group.email ? "bg-blue-50/50" : ""
+                                                    }`}
+                                            >
+                                                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold border border-gray-200 overflow-hidden shadow-sm shrink-0">
+                                                    {group.profilePicture ? (
+                                                        <img src={group.profilePicture} alt="" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        group.fullName.charAt(0).toUpperCase()
+                                                    )}
                                                 </div>
-                                            </div>
-                                            <ChevronRight size={16} className={`text-gray-300 transition-transform ${selectedClientEmail === group.email ? "translate-x-1 text-blue-500" : ""}`} />
-                                        </button>
-                                    ))}
+                                                <div className="min-w-0 flex-grow">
+                                                    <h4 className="text-sm font-bold text-[#0A2342] truncate">{group.fullName}</h4>
+                                                    <p className="text-[11px] text-gray-400 font-medium truncate mt-0.5">{group.email}</p>
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <span className="px-2 py-0.5 bg-white border border-gray-200 rounded-md text-[9px] font-bold text-gray-500">
+                                                            {group.appointments.length} Bookings
+                                                        </span>
+                                                        <span className="text-[9px] text-gray-400 font-medium">
+                                                            Last: {formatDate(group.lastAppointmentDate)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <ChevronRight size={16} className={`text-gray-300 transition-transform ${selectedClientEmail === group.email ? "translate-x-1 text-blue-500" : ""}`} />
+                                            </button>
+                                        ))}
 
-                                    {/* Infinite Scroll Sentinel */}
-                                    <div ref={observerTarget} className="p-8 flex justify-center">
-                                        {isLoadingMore && (
-                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#C9A227]"></div>
-                                        )}
-                                        {!hasMore && filteredGroups.length > 0 && (
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">End of list</p>
-                                        )}
+                                        {/* Infinite Scroll Sentinel */}
+                                        <div ref={observerTarget} className="p-8 flex justify-center">
+                                            {isLoadingMore && (
+                                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#C9A227]"></div>
+                                            )}
+                                            {!hasMore && filteredGroups.length > 0 && (
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">End of list</p>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
-                    </motion.div>
+                                )}
+                            </div>
+                        </motion.div>
                     ) : (
                         <motion.div
                             key="client-detail"
@@ -319,31 +328,31 @@ export default function AdminAppointmentHistory() {
                                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                         <History size={14} /> Full Timeline
                                     </h4>
-                                    
+
                                     {loading ? (
                                         <div className="flex items-center justify-center py-20">
                                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#C9A227]"></div>
                                         </div>
                                     ) : (
                                         <div className="relative border-l-2 border-gray-100 ml-3 pl-8 space-y-10">
-                                        {selectedClient.appointments.map((apt, idx) => (
-                                            <div key={apt.id} className="relative">
-                                                <div className="absolute -left-[41px] top-0 w-5 h-5 rounded-full border-4 border-white bg-[#C9A227] shadow-sm z-10" />
-                                                <div 
-                                                    onClick={() => setSelectedAppointmentDetails(apt)}
-                                                    className="bg-gray-50/50 rounded-2xl border border-gray-100 p-6 hover:shadow-md hover:border-[#C9A227]/30 cursor-pointer transition-all"
-                                                >
-                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-gray-200 text-xs font-bold text-[#0A2342]">
-                                                                <Calendar size={14} className="text-[#C9A227]" />
-                                                                {formatDate(apt.preferredDate)}
+                                            {selectedClient.appointments.map((apt, idx) => (
+                                                <div key={apt.id} className="relative">
+                                                    <div className="absolute -left-[41px] top-0 w-5 h-5 rounded-full border-4 border-white bg-[#C9A227] shadow-sm z-10" />
+                                                    <div
+                                                        onClick={() => setSelectedAppointmentDetails(apt)}
+                                                        className="bg-gray-50/50 rounded-2xl border border-gray-100 p-6 hover:shadow-md hover:border-[#C9A227]/30 cursor-pointer transition-all"
+                                                    >
+                                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-gray-200 text-xs font-bold text-[#0A2342]">
+                                                                    <Calendar size={14} className="text-[#C9A227]" />
+                                                                    {formatDate(apt.preferredDate)}
+                                                                </div>
+                                                                <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-gray-200 text-xs font-bold text-[#0A2342]">
+                                                                    <Clock size={14} className="text-[#C9A227]" />
+                                                                    {apt.preferredTimeSlot}
+                                                                </div>
                                                             </div>
-                                                            <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-gray-200 text-xs font-bold text-[#0A2342]">
-                                                                <Clock size={14} className="text-[#C9A227]" />
-                                                                {apt.preferredTimeSlot}
-                                                            </div>
-                                                        </div>
                                                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${apt.status === 'confirmed' ? (
                                                                 (!apt.location && !apt.virtualLink) ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-green-50 text-green-700 border-green-100'
                                                             ) : apt.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
@@ -352,14 +361,14 @@ export default function AdminAppointmentHistory() {
                                                                     (!apt.location && !apt.virtualLink) ? 'awaiting confirmation' : 'confirmed'
                                                                 ) : apt.status === 'awaiting_payment' ? (apt.isPaid ? 'awaiting confirmation' : 'awaiting payment') : apt.status}
                                                             </span>
-                                                    </div>
-                                                    <div className="space-y-3">
-                                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{apt.practiceArea}</div>
-                                                        <p className="text-sm text-gray-600 font-medium italic">"{apt.description}"</p>
+                                                        </div>
+                                                        <div className="space-y-3">
+                                                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{apt.practiceArea}</div>
+                                                            <p className="text-sm text-gray-600 font-medium italic">"{apt.description}"</p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
                                         </div>
                                     )}
                                 </div>
