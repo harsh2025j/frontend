@@ -96,6 +96,111 @@ const RejectionReason = ({ reason }: { reason: string | null }) => {
   );
 };
 
+// ─── Sync News Modal ──────────────────────────────────────────────────────────
+
+const SyncNewsModal = ({
+  isOpen, onClose, onConfirm, isSyncing,
+}: { isOpen: boolean; onClose: () => void; onConfirm: (max: number) => void; isSyncing: boolean }) => {
+  const [inputValue, setInputValue] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const numValue = inputValue === "" ? null : parseInt(inputValue, 10);
+  const isValid = numValue !== null && !isNaN(numValue) && numValue >= 1 && numValue <= 20;
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    // Allow empty or numeric input only
+    if (val !== "" && !/^\d+$/.test(val)) return;
+    setInputValue(val);
+
+    if (val === "") {
+      setError(null);
+      return;
+    }
+
+    const num = parseInt(val, 10);
+    if (isNaN(num)) {
+      setError("Please enter a valid number");
+    } else if (num < 1) {
+      setError("Invalid: minimum is 1");
+    } else if (num > 20) {
+      setError("Invalid: maximum is 20");
+    } else {
+      setError(null);
+    }
+  };
+
+  const handleConfirm = () => {
+    if (isValid && numValue) {
+      onConfirm(numValue);
+      setInputValue("");
+      setError(null);
+    }
+  };
+
+  const handleClose = () => {
+    setInputValue("");
+    setError(null);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Sync GNews Articles</h3>
+        <p className="text-gray-600 mb-4">How many articles would you like to sync? <span className="text-gray-500 text-sm">(Min: 1, Max: 20)</span></p>
+        <div className="mb-4">
+          <input
+            type="text"
+            inputMode="numeric"
+            value={inputValue}
+            onChange={handleInputChange}
+            placeholder="Enter number (1-20)"
+            disabled={isSyncing}
+            className={`w-full px-4 py-2.5 border-2 rounded-lg text-lg font-medium focus:outline-none transition-colors ${
+              error
+                ? "border-red-400 focus:border-red-500 bg-red-50 text-red-700"
+                : inputValue && isValid
+                ? "border-emerald-400 focus:border-emerald-500 bg-emerald-50 text-emerald-700"
+                : "border-gray-200 focus:border-[#0B2149] text-gray-800"
+            }`}
+            autoFocus
+          />
+          {error && (
+            <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {error}
+            </p>
+          )}
+          {inputValue && isValid && (
+            <p className="mt-2 text-sm text-emerald-600 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Will sync {numValue} article{numValue > 1 ? "s" : ""}
+            </p>
+          )}
+        </div>
+        <div className="flex justify-end gap-3">
+          <button onClick={handleClose} disabled={isSyncing} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50">Cancel</button>
+          <button
+            onClick={handleConfirm}
+            disabled={!isValid || isSyncing}
+            className="px-4 py-2 text-white bg-emerald-600 rounded-md hover:bg-emerald-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isSyncing ? (
+              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Syncing...</>
+            ) : "Confirm Sync"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Delete Modal ─────────────────────────────────────────────────────────────
 
 const DeleteConfirmationModal = ({
@@ -141,6 +246,7 @@ const ContentManagementPageContent: React.FC = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isTriggering, setIsTriggering] = useState(false);
+  const [syncModalOpen, setSyncModalOpen] = useState(false);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<string | null>(null);
@@ -245,23 +351,7 @@ const ContentManagementPageContent: React.FC = () => {
                 {(user?._id === "692bf00f87df9dbf18f02a69" || user?.id === "692bf00f87df9dbf18f02a69") && (
                   <button
                     disabled={isTriggering}
-                    onClick={async () => {
-                      setIsTriggering(true);
-                      const toastId = toast.loading("Syncing GNews articles...");
-                      try {
-                        const res = await articleApi.triggerDailyNews();
-                        const data = res.data;
-                        if (res.status === 200 || data?.success) {
-                          toast.success("GNews sync started in the background! Please refresh the page in a few seconds to see new articles.", { id: toastId, duration: 6000 });
-                        } else {
-                          toast.error(data?.message || "Failed to sync articles.", { id: toastId });
-                        }
-                      } catch (err: any) {
-                        toast.error(err?.message || "Error syncing GNews articles.", { id: toastId });
-                      } finally {
-                        setIsTriggering(false);
-                      }
-                    }}
+                    onClick={() => setSyncModalOpen(true)}
                     className="bg-emerald-600 text-white px-5 py-2 rounded-md font-medium hover:bg-emerald-700 transition-colors flex items-center gap-2 disabled:opacity-50"
                   >
                     {isTriggering ? (
@@ -423,6 +513,30 @@ const ContentManagementPageContent: React.FC = () => {
           </div>
         </main>
       </div>
+
+      <SyncNewsModal
+        isOpen={syncModalOpen}
+        onClose={() => setSyncModalOpen(false)}
+        isSyncing={isTriggering}
+        onConfirm={async (max) => {
+          setIsTriggering(true);
+          setSyncModalOpen(false);
+          const toastId = toast.loading(`Syncing ${max} GNews article${max > 1 ? "s" : ""}...`);
+          try {
+            const res = await articleApi.triggerDailyNews(max);
+            const data = res.data;
+            if (res.status === 200 || data?.success) {
+              toast.success(`GNews sync started for ${max} article${max > 1 ? "s" : ""}! Please refresh the page in a few seconds to see new articles.`, { id: toastId, duration: 6000 });
+            } else {
+              toast.error(data?.message || "Failed to sync articles.", { id: toastId });
+            }
+          } catch (err: any) {
+            toast.error(err?.message || "Error syncing GNews articles.", { id: toastId });
+          } finally {
+            setIsTriggering(false);
+          }
+        }}
+      />
 
       <DeleteConfirmationModal
         isOpen={deleteModalOpen}

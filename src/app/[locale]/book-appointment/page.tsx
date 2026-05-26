@@ -37,15 +37,61 @@ function BookingForm() {
         practiceArea: "Family",
         description: "",
         preferredDate: "",
-        preferredTimeSlot: "10:00",
+        preferredTimeSlot: "",
+        appointmentType: "Case Discussion",
+        negotiationOpinion: "",
         termsAccepted: false,
         advocateId: advocateIdFromUrl || ""
     });
 
     const [showAuthModal, setShowAuthModal] = useState(false);
+    const [showTypeSuggestions, setShowTypeSuggestions] = useState(false);
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [bookingResult, setBookingResult] = useState<any>(null);
+
+    const [duration, setDuration] = useState<number>(30);
+    const [slots, setSlots] = useState<{ slot: string; isBooked: boolean }[]>([]);
+    const [slotsLoading, setSlotsLoading] = useState<boolean>(false);
+    const [availabilityMessage, setAvailabilityMessage] = useState<string>("");
+
+    useEffect(() => {
+        const fetchSlots = async () => {
+            if (!formData.advocateId || !formData.preferredDate) {
+                setSlots([]);
+                setAvailabilityMessage("");
+                return;
+            }
+            setSlotsLoading(true);
+            setAvailabilityMessage("");
+            try {
+                const response = await appointmentsService.getAvailableSlots(formData.advocateId, formData.preferredDate, duration);
+                const data = response.data?.data || response.data;
+                if (data.isPastDate) {
+                    setAvailabilityMessage("Selected date is in the past. Please select a valid date.");
+                    setSlots([]);
+                } else if (!data.isWorkingDay) {
+                    const daysStr = data.workingDays?.join(", ") || "Monday to Saturday";
+                    setAvailabilityMessage(`Advocate is not available on this day. Working days are: ${daysStr}`);
+                    setSlots([]);
+                } else {
+                    setSlots(data.slots || []);
+                    if (data.slots && data.slots.length === 0) {
+                        setAvailabilityMessage("No available time slots for this date and duration.");
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to load slots:", error);
+                setAvailabilityMessage("Failed to load slot availability.");
+                setSlots([]);
+            } finally {
+                setSlotsLoading(false);
+            }
+        };
+
+        fetchSlots();
+    }, [formData.advocateId, formData.preferredDate, duration]);
+
 
     useEffect(() => {
         if (advocateIdFromUrl) {
@@ -108,6 +154,7 @@ function BookingForm() {
             { key: 'email', label: 'Email' },
             { key: 'phone', label: 'Phone Number' },
             { key: 'practiceArea', label: 'Practice Area' },
+            { key: 'appointmentType', label: 'Type of Appointment' },
             { key: 'description', label: 'Case Description' },
             { key: 'preferredDate', label: 'Preferred Date' },
             { key: 'preferredTimeSlot', label: 'Time Slot' },
@@ -157,6 +204,7 @@ function BookingForm() {
             }
 
             setBookingResult(data);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
 
             setFormData({
                 fullName: "",
@@ -166,6 +214,8 @@ function BookingForm() {
                 description: "",
                 preferredDate: "",
                 preferredTimeSlot: "10:00",
+                appointmentType: "Case Discussion",
+                negotiationOpinion: "",
                 termsAccepted: false,
                 advocateId: advocateIdFromUrl || ""
             });
@@ -365,6 +415,12 @@ function BookingForm() {
                                             <ShieldCheck className="w-4 h-4 text-[#C9A227]" />
                                             <span>{advocate.yearsOfExperience || 'Experienced'} Professional</span>
                                         </div>
+                                        {advocate.appointmentPricing && (
+                                            <div className="flex items-center gap-3 text-sm font-bold text-[#0A2342] mt-2 bg-[#C9A227]/10 p-3 rounded-xl border border-[#C9A227]/20">
+                                                <Clock className="w-4 h-4 text-[#C9A227]" />
+                                                <span>{advocate.appointmentPricing}</span>
+                                            </div>
+                                        )}
                                         {(!advocateIdFromUrl || (loggedInUser?.id || loggedInUser?._id) === (advocate.id || advocate._id)) && (
                                             <button
                                                 onClick={() => { setAdvocate(null); setFormData(p => ({ ...p, advocateId: "" })); }}
@@ -401,7 +457,14 @@ function BookingForm() {
                                                     ) : <User className="w-full h-full p-2 text-gray-300" />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h4 className="text-sm font-bold text-[#0A2342] truncate group-hover:text-[#C9A227] transition-colors">{adv.name}</h4>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <h4 className="text-sm font-bold text-[#0A2342] truncate group-hover:text-[#C9A227] transition-colors">{adv.name}</h4>
+                                                        {adv.appointmentPricing && (
+                                                            <span className="text-[9px] font-black bg-[#C9A227]/10 text-[#C9A227] px-2 py-1 rounded-full whitespace-nowrap">
+                                                                {adv.appointmentPricing}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-[10px] text-gray-400 uppercase tracking-tighter truncate">{adv.city || 'Advocate'}</p>
                                                 </div>
                                             </div>
@@ -439,7 +502,7 @@ function BookingForm() {
                                 <form onSubmit={handleSubmit} className="space-y-8">
                                     {/* Personal Information */}
                                     <div className="grid md:grid-cols-2 gap-8">
-                                        <FormField label="Full Name" error={errors.fullName} required>
+                                        <FormField label="Your Full Name" error={errors.fullName} required>
                                             <input
                                                 type="text"
                                                 name="fullName"
@@ -447,12 +510,12 @@ function BookingForm() {
                                                 onChange={handleChange}
                                                 disabled={isSelfBooking}
                                                 className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${errors.fullName ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking || (loggedInUser && loggedInUser.name) ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                                placeholder="John Doe"
+                                                placeholder="e.g. John Doe"
                                                 readOnly={!!(loggedInUser && loggedInUser.name)}
                                             />
                                         </FormField>
 
-                                        <FormField label="Email Address" error={errors.email} required>
+                                        <FormField label="Your Email Address" error={errors.email} required>
                                             <input
                                                 type="email"
                                                 name="email"
@@ -460,14 +523,14 @@ function BookingForm() {
                                                 onChange={handleChange}
                                                 disabled={isSelfBooking}
                                                 className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${errors.email ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking || (loggedInUser && loggedInUser.email) ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                                placeholder="john@example.com"
+                                                placeholder="e.g. john@example.com"
                                                 readOnly={!!(loggedInUser && loggedInUser.email)}
                                             />
                                         </FormField>
                                     </div>
 
                                     <div className="grid md:grid-cols-2 gap-8">
-                                        <FormField label="Phone Number" error={errors.phone} required>
+                                        <FormField label="Your Contact Number" error={errors.phone} required>
                                             <input
                                                 type="tel"
                                                 name="phone"
@@ -475,11 +538,11 @@ function BookingForm() {
                                                 onChange={handleChange}
                                                 disabled={isSelfBooking}
                                                 className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${errors.phone ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                placeholder="+91 XXXX XXXX"
+                                                placeholder="e.g. +91 99999 99999"
                                             />
                                         </FormField>
 
-                                        <FormField label="Practice Area" error={errors.practiceArea} required>
+                                        <FormField label="Legal Specialty / Practice Area" error={errors.practiceArea} required>
                                             <input
                                                 type="text"
                                                 name="practiceArea"
@@ -491,32 +554,139 @@ function BookingForm() {
                                     </div>
 
                                     {/* Appointment Specifics */}
-                                    <div className="grid md:grid-cols-2 gap-8">
-                                        <FormField label="Preferred Date" error={errors.preferredDate} required>
-                                            <input
-                                                type="date"
-                                                name="preferredDate"
-                                                value={formData.preferredDate}
-                                                onChange={handleChange}
-                                                disabled={isSelfBooking}
-                                                min={new Date().toISOString().split('T')[0]}
-                                                className={`w-full pb-3 border-b outline-none bg-transparent transition-all text-[#0A2342] font-medium ${errors.preferredDate ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            />
-                                        </FormField>
+                                    <div className="space-y-6">
+                                        <div className="grid md:grid-cols-2 gap-8">
+                                            <FormField label="Select Consultation Date" error={errors.preferredDate} required>
+                                                <input
+                                                    type="date"
+                                                    name="preferredDate"
+                                                    value={formData.preferredDate}
+                                                    onChange={handleChange}
+                                                    disabled={isSelfBooking}
+                                                    min={new Date().toISOString().split('T')[0]}
+                                                    className={`w-full pb-3 border-b outline-none bg-transparent transition-all text-[#0A2342] font-medium ${errors.preferredDate ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                />
+                                            </FormField>
 
-                                        <FormField label="Time Slot" error={errors.preferredTimeSlot} required>
-                                            <input
-                                                type="time"
-                                                name="preferredTimeSlot"
-                                                value={formData.preferredTimeSlot}
-                                                onChange={handleChange}
-                                                disabled={isSelfBooking}
-                                                className={`w-full pb-3 border-b outline-none bg-transparent transition-all text-[#0A2342] font-medium ${errors.preferredTimeSlot ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            />
+                                            <FormField label="Select Appointment Duration" required>
+                                                <div className="flex gap-2 mt-2">
+                                                    {[
+                                                        { label: "30 Mins", value: 30 },
+                                                        { label: "1 Hour", value: 60 },
+                                                        { label: "2 Hours", value: 120 }
+                                                    ].map((item) => (
+                                                        <button
+                                                            key={item.value}
+                                                            type="button"
+                                                            onClick={() => setDuration(item.value)}
+                                                            className={`flex-1 py-2 px-3 text-xs font-bold uppercase tracking-wider rounded-xl border transition-all duration-300 ${duration === item.value ? 'bg-[#0A2342] text-white border-[#0A2342] shadow-md shadow-[#0A2342]/10' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+                                                        >
+                                                            {item.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </FormField>
+                                        </div>
+
+                                        {availabilityMessage && (
+                                            <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl text-xs font-semibold flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                                <span>{availabilityMessage}</span>
+                                            </div>
+                                        )}
+
+                                        {formData.preferredDate && !availabilityMessage && (
+                                            <FormField label="Available Time Slots" error={errors.preferredTimeSlot} required>
+                                                {slotsLoading ? (
+                                                    <div className="py-6 text-gray-400 text-xs italic flex items-center gap-2">
+                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                                                        <span>Retrieving slot availability...</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-3">
+                                                        {slots.map((s) => {
+                                                            const isSelected = formData.preferredTimeSlot === s.slot;
+                                                            return (
+                                                                <button
+                                                                    key={s.slot}
+                                                                    type="button"
+                                                                    disabled={s.isBooked}
+                                                                    onClick={() => {
+                                                                        setFormData(prev => ({ ...prev, preferredTimeSlot: s.slot }));
+                                                                        if (errors.preferredTimeSlot) {
+                                                                            setErrors(prev => {
+                                                                                const next = { ...prev };
+                                                                                delete next.preferredTimeSlot;
+                                                                                return next;
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className={`py-3 px-4 rounded-xl text-center text-xs font-bold transition-all duration-300 relative group overflow-hidden ${s.isBooked
+                                                                            ? 'bg-red-50 border border-red-150 text-red-500 opacity-60 cursor-not-allowed'
+                                                                            : isSelected
+                                                                                ? 'bg-emerald-500 text-white border-2 border-emerald-500 shadow-md shadow-emerald-500/20'
+                                                                                : 'bg-emerald-50 border border-emerald-100 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-200'
+                                                                        }`}
+                                                                >
+                                                                    <span>{s.slot}</span>
+                                                                    {s.isBooked && (
+                                                                        <span className="block text-[8px] font-black uppercase tracking-tighter opacity-80 mt-0.5">Booked</span>
+                                                                    )}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </FormField>
+                                        )}
+                                    </div>
+
+                                    {/* Suggestive and Typable Appointment Type */}
+                                    <div className="relative">
+                                        <FormField label="Type of Appointment" error={errors.appointmentType} required>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    name="appointmentType"
+                                                    value={formData.appointmentType}
+                                                    onChange={handleChange}
+                                                    onFocus={() => setShowTypeSuggestions(true)}
+                                                    onBlur={() => setTimeout(() => setShowTypeSuggestions(false), 200)}
+                                                    disabled={isSelfBooking}
+                                                    placeholder="Type or select a type (e.g. Case Discussion, Document Review)"
+                                                    className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium ${errors.appointmentType ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                />
+                                                {showTypeSuggestions && (
+                                                    <div className="absolute z-50 left-0 right-0 mt-2 bg-white border border-gray-150 rounded-xl shadow-2xl p-3 max-h-60 overflow-y-auto">
+                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-1 mb-1">Suggestions (Click to select or type your own)</p>
+                                                        {[
+                                                            "Case Discussion",
+                                                            "Legal Query / Consultation",
+                                                            "Document Review",
+                                                            "Court Representation",
+                                                            "Contract Drafting",
+                                                            "Fee Negotiation",
+                                                            "Other"
+                                                        ].map((suggestion) => (
+                                                            <button
+                                                                key={suggestion}
+                                                                type="button"
+                                                                onMouseDown={() => {
+                                                                    setFormData(prev => ({ ...prev, appointmentType: suggestion }));
+                                                                    setShowTypeSuggestions(false);
+                                                                }}
+                                                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-[#C9A227]/10 hover:text-[#0A2342] rounded-lg transition-colors font-medium"
+                                                            >
+                                                                {suggestion}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </FormField>
                                     </div>
 
-                                    <FormField label="Case Description" error={errors.description} required>
+                                    <FormField label="Briefly describe your Legal concern / query" error={errors.description} required>
                                         <textarea
                                             name="description"
                                             value={formData.description}
@@ -524,7 +694,20 @@ function BookingForm() {
                                             rows={4}
                                             disabled={isSelfBooking}
                                             className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium resize-none ${errors.description ? "border-red-500" : "border-gray-200 focus:border-[#C9A227]"} ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            placeholder="Briefly describe your legal concern..."
+                                            placeholder="Provide detail description about your query..."
+                                        ></textarea>
+                                    </FormField>
+
+                                    {/* Negotiation Expectation Box */}
+                                    <FormField label="Your Negotiation Expectations / Opinions (Optional)" error={errors.negotiationOpinion}>
+                                        <textarea
+                                            name="negotiationOpinion"
+                                            value={formData.negotiationOpinion}
+                                            onChange={handleChange}
+                                            rows={3}
+                                            disabled={isSelfBooking}
+                                            className={`w-full pb-3 border-b outline-none bg-transparent transition-all placeholder-gray-300 text-[#0A2342] font-medium resize-none border-gray-200 focus:border-[#C9A227] ${isSelfBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            placeholder="e.g. budget limit, payment terms, or preferred consultation rates..."
                                         ></textarea>
                                     </FormField>
 

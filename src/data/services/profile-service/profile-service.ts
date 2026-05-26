@@ -2,7 +2,7 @@
 
 import apiClient from "@/data/services/apiConfig/apiClient";
 import { API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
-import { UpdateProfileRequest, ProfileResponse } from "@/data/features/profile/profile.types";
+import { UpdateProfileRequest, ProfileResponse, BankDetails } from "@/data/features/profile/profile.types";
 
 export const profileApi = {
   fetchProfile: async () => {
@@ -34,6 +34,11 @@ export const profileApi = {
     }
     if (data.barRegistrationNumber !== undefined) formData.append("barRegistrationNumber", data.barRegistrationNumber);
     if (data.court !== undefined) formData.append("court", data.court);
+    if (data.workingHours !== undefined) formData.append("workingHours", data.workingHours);
+    if (data.workingDays !== undefined && Array.isArray(data.workingDays)) {
+      data.workingDays.forEach(day => formData.append("workingDays", day));
+    }
+    if (data.appointmentPricing !== undefined) formData.append("appointmentPricing", data.appointmentPricing);
     if (data.bio !== undefined) formData.append("bio", data.bio);
     if (data.avatar) formData.append("file", data.avatar);
 
@@ -43,6 +48,10 @@ export const profileApi = {
           "Content-Type": "multipart/form-data",
         },
       });
+  },
+
+  updateBankDetails: async (bankDetails: BankDetails) => {
+    return await apiClient.patch<ProfileResponse>("/profile/bank-details", bankDetails);
   },
 
   toggleSavePost: async (postId: string) => {

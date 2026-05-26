@@ -8,7 +8,7 @@ export default function MembershipPromotion() {
     const { user, isAuthenticated } = useAuth();
 
     // Check if user is just a plain 'user'
-    const roles = user?.roles?.map((r: any) => r.name.toLowerCase()) || [];
+    const roles = user?.roles?.map((r: any) => (typeof r === 'string' ? r : (r?.name || r?.slug || '')).toLowerCase()) || [];
     const isPlainUser = isAuthenticated && roles.length === 1 && roles.includes("user");
 
     // Only show to newly registered plain users

@@ -1,6 +1,6 @@
 // export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev";
-export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
-// export const API_BASE_URL = "http://localhost:8000/" 
+// export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
+export const API_BASE_URL = "http://localhost:8000/"
 export const API_ENDPOINTS = {
   SEARCH: {
     JUDGES: "/search/judges",
@@ -133,6 +133,22 @@ export const API_ENDPOINTS = {
     UPDATE_STATUS: "/appointments/:id/status",
     UPDATE_OUTCOME: "/appointments/:id/outcome",
     CANCEL: "/appointments/:id/cancel",
+    CONFIRM: "/appointments/:id/confirm",
+    RESCHEDULE: "/appointments/:id/reschedule",
+    CLIENT_CONFIRM: "/appointments/:id/client-confirm",
+    FINALIZE_MEETING: "/appointments/:id/finalize-meeting",
+    AVAILABLE_SLOTS: "/appointments/available-slots/:advocateId",
+    CREATE_PAYMENT_ORDER: "/appointments/:id/payment/create-order",
+    VERIFY_PAYMENT_ORDER: "/appointments/:id/payment/verify",
+  },
+  PAYOUTS: {
+    GET_COMMISSION: "/payouts/settings/commission",
+    UPDATE_COMMISSION: "/payouts/settings/commission",
+    GET_ADVOCATES: "/payouts/advocates",
+    GET_ADVOCATE_DETAILS: "/payouts/advocate/:id",
+    GET_ADVOCATE_APPOINTMENTS: "/payouts/advocate/:id/appointments",
+    GET_ADVOCATE_PAYOUT_HISTORY: "/payouts/advocate/:id/history",
+    LOG_PAYOUT: "/payouts/advocate/:id",
   }
 };
 

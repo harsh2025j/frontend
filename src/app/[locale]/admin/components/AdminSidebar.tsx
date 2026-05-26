@@ -30,7 +30,8 @@ import {
   UserCircle,
   Calendar,
   History,
-  CheckCircle
+  CheckCircle,
+  Wallet
 } from "lucide-react";
 import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
@@ -184,6 +185,12 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
           show: showAppointments
         }
       ]
+    },
+    {
+      name: "Payouts & Settlements",
+      icon: <Wallet size={18} />,
+      href: "/admin/payouts",
+      show: isAdmin // Or any other permission you prefer
     },
 
     // 🔽 ACCESS CONTROL SECTION
