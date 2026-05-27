@@ -1,5 +1,5 @@
-// export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev";
-export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
+export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev";
+// export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
 // export const API_BASE_URL = "http://localhost:8000/"
 export const API_ENDPOINTS = {
   SEARCH: {
@@ -149,6 +149,11 @@ export const API_ENDPOINTS = {
     GET_ADVOCATE_APPOINTMENTS: "/payouts/advocate/:id/appointments",
     GET_ADVOCATE_PAYOUT_HISTORY: "/payouts/advocate/:id/history",
     LOG_PAYOUT: "/payouts/advocate/:id",
+  },
+  CHATS: {
+    CREATE_OR_GET: "/chats/conversation",
+    GET_USER_CONVERSATIONS: "/chats/user/:userId",
+    GET_MESSAGES: "/chats/:conversationId/messages"
   }
 };
 

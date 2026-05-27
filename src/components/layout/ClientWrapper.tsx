@@ -80,7 +80,8 @@ export default function ClientLayout({
 
   const hiddenFooter =
     pathname.startsWith("/subscription") ||
-    pathname.startsWith("/profile");
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/messages");
 
   return (
     <HomeDataProvider data={initialHomeData}>

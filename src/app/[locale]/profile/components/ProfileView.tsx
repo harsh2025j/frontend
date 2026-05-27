@@ -36,6 +36,7 @@ import CourtSearchableDropdown from "@/components/ui/CourtSearchableDropdown";
 import ImageCropperModal from "@/components/ui/ImageCropperModal";
 import ConsultancyFormModal from "./ConsultancyFormModal";
 import BankDetailsSection from "./BankDetailsSection";
+import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
 
 interface ProfileViewProps {
   viewContext: "public" | "admin";
@@ -385,7 +386,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="mt-12"
+              className="mt-12 flex flex-wrap gap-4 items-center"
             >
               <button
                 onClick={() => {
@@ -400,10 +401,40 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                 {!loggedInUser ? (
                   <Lock size={18} className="text-[#C9A227]" />
                 ) : (
-                  <MessageSquare size={18} className="group-hover:rotate-12 transition-transform" />
+                  <Calendar size={18} className="group-hover:rotate-12 transition-transform" />
                 )}
                 <span className="text-[11px] font-black uppercase tracking-widest">
                   Book Appointment
+                </span>
+              </button>
+
+              <button
+                onClick={async () => {
+                  if (loggedInUser) {
+                    try {
+                      // We import ChatServiceAPI at top level, or call API directly
+                      const res = await fetch(`${API_BASE_URL}/chats/conversation`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem('token')}` },
+                        body: JSON.stringify({ participantIds: [loggedInUser.id || loggedInUser._id, profileUser.id || profileUser._id] })
+                      });
+                      router.push(`/messages`);
+                    } catch (err) {
+                      console.error("Failed to start chat", err);
+                    }
+                  } else {
+                    setShowAuthModal(true);
+                  }
+                }}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-white border border-[#0A2342]/20 text-[#0A2342] rounded-2xl shadow-md hover:shadow-lg transition-all hover:-translate-y-1 group"
+              >
+                {!loggedInUser ? (
+                  <Lock size={18} className="text-gray-400" />
+                ) : (
+                  <MessageSquare size={18} className="text-[#C9A227] group-hover:scale-110 transition-transform" />
+                )}
+                <span className="text-[11px] font-black uppercase tracking-widest">
+                  Chat with Advocate
                 </span>
               </button>
             </motion.div>
