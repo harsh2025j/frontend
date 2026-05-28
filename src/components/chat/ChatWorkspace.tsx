@@ -19,12 +19,14 @@ import {
   FileCheck,
   User,
   ShieldCheck,
-  ArrowLeft
+  ArrowLeft,
+  Reply
 } from "lucide-react";
 import { Message, Conversation, MessageType } from "@/data/features/chat/chat.types";
 import { io, Socket } from "socket.io-client";
 import { ChatServiceAPI } from "@/data/services/chat/chatService";
 import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
+import axios from "axios";
 
 interface ChatWorkspaceProps {
   role: "user" | "advocate";
@@ -148,6 +150,14 @@ const INITIAL_MOCK_MESSAGES: Message[] = [
   }
 ];
 
+const formatFileSize = (bytes: number) => {
+  if (!bytes || bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
+
 export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspaceProps) {
   const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
   const realUser = userStr ? JSON.parse(userStr) : null;
@@ -159,6 +169,10 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
   const [inputText, setInputText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [typingUsers, setTypingUsers] = useState<Map<string, string[]>>(new Map());
@@ -170,6 +184,10 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
   const [payDesc, setPayDesc] = useState("");
 
   // Modal states for Document upload
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgresses, setUploadProgresses] = useState<Record<string, number>>({});
+  const [failedUploads, setFailedUploads] = useState<Record<string, File>>({});
+  const [downloadingFiles, setDownloadingFiles] = useState<Record<string, boolean>>({});
   const [showDocModal, setShowDocModal] = useState(false);
   const [docName, setDocName] = useState("");
   const [isLockedDoc, setIsLockedDoc] = useState(false);
@@ -177,12 +195,20 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [firstUnreadMessageId, setFirstUnreadMessageId] = useState<string | null>(null);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const firstUnreadRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const isFetchingOlderRef = useRef(false);
 
   // Auto scroll to bottom or first unread
   useEffect(() => {
+    if (isFetchingOlderRef.current) {
+      isFetchingOlderRef.current = false;
+      return;
+    }
     if (firstUnreadRef.current) {
       firstUnreadRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     } else {
@@ -323,12 +349,13 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
     if (selectedConv && socket) {
       socket.emit("join_conversation", { conversationId: selectedConv._id, userId: currentUserId });
 
-      ChatServiceAPI.getMessages(selectedConv._id).then(res => {
+      ChatServiceAPI.getMessages(selectedConv._id, 0, 50).then(res => {
         const actualData = res?.data?.data?.data || res?.data?.data || res?.data || [];
         if (Array.isArray(actualData)) {
           // Reverse because API sorts -1 (newest first), but UI needs oldest first top-to-bottom
           const msgs = actualData.reverse();
           setMessages(msgs);
+          setHasMoreMessages(actualData.length === 50);
 
           const firstUnread = msgs.find(m => m.senderId !== currentUserId && m.deliveryStatus !== "seen");
           setFirstUnreadMessageId(firstUnread ? firstUnread._id : null);
@@ -370,19 +397,29 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
     // Clear the unread banner as soon as they reply
     setFirstUnreadMessageId(null);
 
+    const finalMeta = meta || {};
+    if (replyingTo) {
+      finalMeta.replyTo = {
+        messageId: replyingTo._id,
+        content: replyingTo.content,
+        senderName: selectedConv.participants.find((p: any) => p.id === replyingTo.senderId || p._id === replyingTo.senderId)?.name || "User",
+      };
+    }
+
     const payload = {
       conversationId: selectedConv._id,
       senderId: currentUserId,
       recipientId: typeof activeParticipant === "string" ? activeParticipant : (activeParticipant as any).id || (activeParticipant as any)._id,
       type,
       content: body,
-      metadata: meta,
+      metadata: Object.keys(finalMeta).length > 0 ? finalMeta : undefined,
     };
 
     // Emit live to backend
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     socket.emit("stop_typing", { conversationId: selectedConv._id, userId: currentUserId });
     socket.emit("send_message", payload);
+    setReplyingTo(null);
 
     // Optimistically add message to UI immediately
     const tempMsg = {
@@ -429,6 +466,142 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
       if (inputText.trim() || linkedPayReqId) {
         handleSendMessage();
       }
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 100 * 1024 * 1024) {
+        alert("File size exceeds 100MB limit.");
+        return;
+      }
+      setSelectedFile(file);
+      setShowAttachmentMenu(false);
+    }
+  };
+
+  const handleFileUpload = async (file: File, retryMessageId?: string) => {
+    if (!selectedConv || !currentUserId) return;
+
+    const activeParticipant = selectedConv.participants.find(
+      (p: any) => p !== currentUserId && p.id !== currentUserId && p._id !== currentUserId
+    );
+    const recipientId = typeof activeParticipant === "string" ? activeParticipant : (activeParticipant as any)?.id || (activeParticipant as any)?._id;
+
+    const tempId = retryMessageId || `temp_${Date.now()}`;
+
+    if (!retryMessageId) {
+      const initialPayload = {
+        _id: tempId,
+        conversationId: selectedConv._id,
+        senderId: currentUserId,
+        recipientId,
+        type: "document" as MessageType,
+        content: `Document: ${file.name}`,
+        deliveryStatus: "uploading",
+        sentAt: new Date().toISOString(),
+        metadata: {
+          fileName: file.name,
+          fileSize: file.size,
+        }
+      };
+      setMessages((prev) => [...prev, initialPayload as any]);
+    } else {
+      setMessages(prev => prev.map(m => m._id === tempId ? { ...m, deliveryStatus: "uploading" } : m));
+    }
+
+    setUploadProgresses(prev => ({ ...prev, [tempId]: 0 }));
+    setFailedUploads(prev => {
+      const next = { ...prev };
+      delete next[tempId];
+      return next;
+    });
+
+    try {
+      const response = await ChatServiceAPI.getPresignedUrl(file.name, file.type || "application/octet-stream");
+      // Safely extract from response.data.data (if wrapped by interceptor) or response.data
+      const { presignedUrl, fileUrl } = response.data?.data || response.data;
+
+      await axios.put(presignedUrl, file, {
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgresses(prev => ({ ...prev, [tempId]: percentCompleted }));
+          }
+        }
+      });
+
+      const finalPayload = {
+        conversationId: selectedConv._id,
+        senderId: currentUserId,
+        recipientId,
+        type: "document" as MessageType,
+        content: `Document: ${file.name}`,
+        metadata: {
+          fileName: file.name,
+          fileSize: file.size,
+          fileUrl,
+        }
+      };
+
+      setMessages(prev => prev.map(m => m._id === tempId ? { ...m, deliveryStatus: "sent", metadata: { ...m.metadata, fileUrl } } : m));
+      socket?.emit("send_message", finalPayload);
+
+    } catch (err) {
+      console.error("Upload failed", err);
+      setUploadProgresses(prev => { const n = { ...prev }; delete n[tempId]; return n; });
+      setMessages(prev => prev.map(m => m._id === tempId ? { ...m, deliveryStatus: "failed" } : m));
+      setFailedUploads(prev => ({ ...prev, [tempId]: file }));
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      setUploadProgresses(prev => {
+        const next = { ...prev };
+        delete next[tempId];
+        return next;
+      });
+    }
+  };
+
+  const loadMoreMessages = async () => {
+    if (!selectedConv || isLoadingMore) return;
+    setIsLoadingMore(true);
+    isFetchingOlderRef.current = true;
+    
+    const container = scrollContainerRef.current;
+    const previousScrollHeight = container ? container.scrollHeight : 0;
+
+    try {
+      const res = await ChatServiceAPI.getMessages(selectedConv._id, messages.length, 50);
+      const actualData = res?.data?.data?.data || res?.data?.data || res?.data || [];
+      if (Array.isArray(actualData) && actualData.length > 0) {
+        const olderMsgs = actualData.reverse();
+        setMessages(prev => {
+          // Filter out duplicates to be safe
+          const existingIds = new Set(prev.map(m => m._id));
+          const uniqueOlder = olderMsgs.filter(m => !existingIds.has(m._id));
+          return [...uniqueOlder, ...prev];
+        });
+        setHasMoreMessages(actualData.length === 50);
+        
+        // Maintain scroll position after React renders new messages
+        requestAnimationFrame(() => {
+          if (container) {
+            const newScrollHeight = container.scrollHeight;
+            container.scrollTop = newScrollHeight - previousScrollHeight;
+          }
+        });
+        
+      } else {
+        setHasMoreMessages(false);
+      }
+    } catch (err) {
+      console.error("Failed to load more messages", err);
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -615,7 +788,18 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
             </div>
 
             {/* Message Area */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-stone-50/50">
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-stone-50/50">
+              {hasMoreMessages && (
+                <div className="w-full flex justify-center py-2 mb-4">
+                  <button
+                    onClick={loadMoreMessages}
+                    disabled={isLoadingMore}
+                    className="px-4 py-1.5 bg-stone-200 hover:bg-stone-300 text-stone-600 rounded-full text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                  >
+                    {isLoadingMore ? "Loading..." : "Load older messages"}
+                  </button>
+                </div>
+              )}
               {messages.map((msg, index) => {
                 const isMe = msg.senderId === currentUserId;
                 const formattedTime = new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -631,7 +815,8 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                       </div>
                     )}
                     <div
-                      className={`w-full flex ${isMe ? "justify-end" : "justify-start"} items-end gap-2`}
+                      id={`message-${msg._id}`}
+                      className={`w-full flex ${isMe ? "justify-end" : "justify-start"} items-end gap-2 group`}
                     >
                       {!isMe && (
                         <div className="w-7 h-7 rounded-md bg-[#0A2342]/5 flex items-center justify-center font-bold text-xs text-[#C9A227] shrink-0 mb-1">
@@ -646,7 +831,33 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                         </div>
                       )}
 
+                      {isMe && (
+                        <button
+                          onClick={() => setReplyingTo(msg)}
+                          className="p-1.5 text-stone-400 hover:text-[#0A2342] hover:bg-stone-200 rounded-full transition-all mb-4 shrink-0"
+                          title="Reply"
+                        >
+                          <Reply size={15} className="-scale-x-100" />
+                        </button>
+                      )}
+
                       <div className="max-w-[85%] md:max-w-[65%] flex flex-col gap-1 min-w-0">
+                        {/* Render Reply Quoted Block */}
+                        {msg.metadata?.replyTo && (
+                          <div 
+                            onClick={() => {
+                              const el = document.getElementById(`message-${msg.metadata!.replyTo!.messageId}`);
+                              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }}
+                            className={`cursor-pointer px-3 py-2 rounded-xl text-xs border-l-4 mb-1 transition-opacity hover:opacity-80 shadow-sm ${isMe ? 'bg-[#153a66]/50 border-white/30 text-white/90' : 'bg-stone-100 border-[#0A2342]/20 text-stone-600'}`}
+                          >
+                            <span className={`font-bold text-[10px] block mb-0.5 opacity-80 uppercase tracking-wide ${isMe ? 'text-white' : 'text-[#0A2342]'}`}>
+                              {msg.metadata.replyTo.senderName}
+                            </span>
+                            <span className="line-clamp-2">{msg.metadata.replyTo.content}</span>
+                          </div>
+                        )}
+
                         {/* Render standard text bubble */}
                         {msg.type === "text" && (
                           <div
@@ -711,8 +922,10 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                         {msg.type === "document" && (() => {
                           const isUnlocked = isDocumentUnlocked(msg.metadata);
                           const fileSizeFormatted = msg.metadata?.fileSize
-                            ? `${(msg.metadata.fileSize / (1024 * 1024)).toFixed(1)} MB`
+                            ? formatFileSize(msg.metadata.fileSize)
                             : "Size Unknown";
+                          const isUploading = msg.deliveryStatus === "uploading";
+                          const isFailed = msg.deliveryStatus === "failed";
 
                           return (
                             <div className={`bg-white border rounded-2xl p-4 shadow-sm flex flex-col gap-3 min-w-[280px] transition-all duration-300 ${isUnlocked ? "border-stone-200" : "border-amber-500/30 bg-amber-50/10"
@@ -734,18 +947,78 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
 
                               <div className="h-[1px] bg-stone-100" />
 
-                              {isUnlocked ? (
-                                <a
-                                  href="#"
-                                  onClick={(e) => {
+                              {isUploading ? (
+                                <div className="w-full relative overflow-hidden bg-stone-100 rounded-xl py-2.5">
+                                  <div
+                                    className="absolute inset-y-0 left-0 bg-[#0A2342]/15 transition-all duration-300"
+                                    style={{ width: `${uploadProgresses[msg._id] || 0}%` }}
+                                  ></div>
+                                  <div className="relative z-10 flex items-center justify-center gap-2 text-stone-600 text-[11px] font-bold uppercase tracking-wider">
+                                    <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-stone-600 border-t-transparent"></span>
+                                    {uploadProgresses[msg._id] !== undefined ? `UPLOADING... ${uploadProgresses[msg._id]}%` : "UPLOADING..."}
+                                  </div>
+                                </div>
+                              ) : isFailed ? (
+                                <div className="w-full flex items-center justify-between py-2 px-3 bg-red-50 text-red-500 rounded-xl border border-red-100">
+                                  <span className="text-[11px] font-bold uppercase tracking-wider">Upload Failed</span>
+                                  <button
+                                    onClick={() => failedUploads[msg._id] && handleFileUpload(failedUploads[msg._id], msg._id)}
+                                    className="px-3 py-1 bg-white hover:bg-red-50 text-red-600 rounded-lg text-[10px] font-bold uppercase shadow-sm border border-red-200 transition-colors"
+                                  >
+                                    Retry
+                                  </button>
+                                </div>
+                              ) : isUnlocked ? (
+                                <button
+                                  disabled={downloadingFiles[msg._id] || !msg.metadata?.fileUrl}
+                                  onClick={async (e) => {
                                     e.preventDefault();
-                                    alert(`Mock download trigger for ${msg.metadata?.fileName}`);
+                                    if (!msg.metadata?.fileUrl) {
+                                      alert("This file link is expired or missing. Please ask the sender to upload it again.");
+                                      return;
+                                    }
+                                    if (downloadingFiles[msg._id]) return;
+
+                                    try {
+                                      setDownloadingFiles(prev => ({ ...prev, [msg._id]: true }));
+                                      const response = await fetch(msg.metadata.fileUrl);
+                                      if (!response.ok) throw new Error("Network response was not ok");
+                                      const blob = await response.blob();
+                                      const url = window.URL.createObjectURL(blob);
+                                      const a = document.createElement("a");
+                                      a.style.display = "none";
+                                      a.href = url;
+                                      a.download = msg.metadata.fileName || "download";
+                                      document.body.appendChild(a);
+                                      a.click();
+                                      window.URL.revokeObjectURL(url);
+                                      document.body.removeChild(a);
+                                    } catch (err) {
+                                      console.error("Download failed, opening in new tab instead", err);
+                                      window.open(msg.metadata.fileUrl, "_blank");
+                                    } finally {
+                                      setDownloadingFiles(prev => ({ ...prev, [msg._id]: false }));
+                                    }
                                   }}
-                                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95"
+                                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 ${downloadingFiles[msg._id]
+                                      ? "bg-emerald-100 text-emerald-600 cursor-wait"
+                                      : msg.metadata?.fileUrl
+                                        ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                                        : "bg-stone-200 text-stone-500 cursor-not-allowed"
+                                    }`}
                                 >
-                                  <Download size={14} />
-                                  Download File
-                                </a>
+                                  {downloadingFiles[msg._id] ? (
+                                    <>
+                                      <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-emerald-600 border-t-transparent"></span>
+                                      Downloading...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Download size={14} />
+                                      Download File
+                                    </>
+                                  )}
+                                </button>
                               ) : (
                                 <div className="flex flex-col gap-2">
                                   <div className="w-full flex items-center justify-center gap-2 py-2.5 bg-stone-100 text-stone-400 rounded-xl text-xs font-bold uppercase tracking-wider cursor-not-allowed">
@@ -774,6 +1047,16 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                           )}
                         </div>
                       </div>
+
+                      {!isMe && (
+                        <button
+                          onClick={() => setReplyingTo(msg)}
+                          className="p-1.5 text-stone-400 hover:text-[#0A2342] hover:bg-stone-200 rounded-full transition-all mb-4 shrink-0"
+                          title="Reply"
+                        >
+                          <Reply size={15} />
+                        </button>
+                      )}
                     </div>
                   </React.Fragment>
                 );
@@ -783,6 +1066,19 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
 
             {/* Input Toolbar & Bar */}
             <div className="border-t border-stone-200/80 p-4 bg-white flex flex-col gap-3 relative">
+              {replyingTo && (
+                <div className="flex items-start justify-between bg-stone-50 border border-stone-200 rounded-xl p-3 text-sm -mb-1 animate-in slide-in-from-bottom-2 fade-in duration-200">
+                  <div className="flex flex-col min-w-0 border-l-4 border-[#C9A227] pl-3">
+                    <span className="font-bold text-[10px] uppercase tracking-widest text-[#0A2342] mb-0.5">
+                      Replying to {selectedConv?.participants.find((p: any) => p.id === replyingTo.senderId || p._id === replyingTo.senderId)?.name || "User"}
+                    </span>
+                    <span className="text-stone-600 text-xs line-clamp-1 italic">{replyingTo.content}</span>
+                  </div>
+                  <button onClick={() => setReplyingTo(null)} className="p-1 hover:bg-stone-200 rounded-full text-stone-500 ml-2 shrink-0 transition-colors">
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
               {/* Text Input Row */}
               <form
                 onSubmit={(e) => {
@@ -791,6 +1087,13 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                 }}
                 className="flex items-center gap-3 relative"
               >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  accept={role === "advocate" ? ".pdf,.doc,.docx,image/*" : ".pdf,.doc,.docx,image/*"}
+                />
                 {role === "advocate" ? (
                   <div className="relative">
                     <button
@@ -808,7 +1111,7 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                         <div className="absolute bottom-full left-0 mb-3 bg-white border border-stone-200 rounded-2xl shadow-xl w-48 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100">
                           <button
                             type="button"
-                            onClick={() => { setShowDocModal(true); setShowAttachmentMenu(false); }}
+                            onClick={() => { fileInputRef.current?.click(); setShowAttachmentMenu(false); }}
                             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-stone-50 text-left transition-colors border-b border-stone-100"
                           >
                             <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
@@ -833,7 +1136,7 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                 ) : (
                   <button
                     type="button"
-                    onClick={() => alert("Uploads from client side are disabled during free-chat to prevent document farming. Ask advocate to request files.")}
+                    onClick={() => fileInputRef.current?.click()}
                     className="p-3 hover:bg-stone-100 rounded-xl text-stone-400 hover:text-stone-600 transition-colors shrink-0"
                     title="Share file"
                   >
@@ -872,10 +1175,79 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
       </div>
 
       {/* -------------------------------------------------------------
-          MODALS: ADVOCATE TOOLS
+          MODALS: ADVOCATE TOOLS & SHARED MODALS
           ------------------------------------------------------------- */}
 
-      {/* A. Create Payment Request Modal */}
+      {/* A. Document Upload Confirmation Modal */}
+      {selectedFile && (
+        <div className="fixed inset-0 bg-black/60 z-[999] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl border border-stone-100 w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200">
+            <div className="bg-[#0A2342] text-white px-5 py-3.5 flex items-center justify-between">
+              <h3 className="font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+                <FileText size={16} />
+                Send Document
+              </h3>
+              <button
+                onClick={() => {
+                  setSelectedFile(null);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+                className="text-white/80 hover:text-white transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-center">
+              {selectedFile.type.startsWith('image/') ? (
+                <div className="w-40 h-40 mx-auto rounded-2xl overflow-hidden shadow-inner border border-stone-200">
+                  <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-16 h-16 bg-[#0A2342]/5 text-[#C9A227] rounded-2xl flex items-center justify-center mx-auto shadow-inner border border-[#0A2342]/10">
+                  <FileText size={32} />
+                </div>
+              )}
+              <div className="px-2">
+                <p className="text-stone-900 font-bold text-base truncate">
+                  {selectedFile.name}
+                </p>
+                <p className="text-stone-400 text-xs font-semibold mt-1 uppercase tracking-widest">
+                  {formatFileSize(selectedFile.size)}
+                </p>
+              </div>
+              <p className="text-stone-500 text-sm mt-4 bg-stone-50 py-2.5 rounded-xl border border-stone-100">
+                Send to <span className="font-bold text-[#0A2342]">{partnerName}</span>?
+              </p>
+
+              <div className="flex gap-3 justify-center pt-2">
+                <button
+                  onClick={() => {
+                    setSelectedFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  className="flex-1 px-4 py-2.5 border border-stone-200 rounded-xl text-xs font-bold uppercase tracking-wider text-stone-500 hover:bg-stone-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    handleFileUpload(selectedFile);
+                    setSelectedFile(null);
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-[#0A2342] hover:bg-[#06162a] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md shadow-[#0A2342]/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                >
+                  <Send size={14} />
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* B. Create Payment Request Modal */}
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black/60 z-[999] flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-3xl border border-stone-100 w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200">
@@ -939,95 +1311,7 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
         </div>
       )}
 
-      {/* B. Share Document Modal */}
-      {showDocModal && (
-        <div className="fixed inset-0 bg-black/60 z-[999] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl border border-stone-100 w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200">
-            <div className="bg-[#0A2342] text-white px-6 py-4 flex items-center justify-between">
-              <h3 className="font-bold text-sm uppercase tracking-wider">Share Legal Document</h3>
-              <button onClick={() => setShowDocModal(false)} className="text-white/80 hover:text-white">
-                <X size={18} />
-              </button>
-            </div>
 
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-stone-400 block mb-1">
-                  Document Name
-                </label>
-                <input
-                  type="text"
-                  value={docName}
-                  onChange={(e) => setDocName(e.target.value)}
-                  placeholder="e.g. land_registry_summary_final.pdf"
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm focus:outline-none focus:border-[#0A2342]"
-                />
-              </div>
-
-              <div className="flex items-center justify-between py-2 border-y border-stone-100">
-                <div>
-                  <span className="text-xs font-bold text-[#0A2342] block">Restrict Access (Lock Document)</span>
-                  <span className="text-[10px] text-stone-400 font-medium">Require payment to download this document</span>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={isLockedDoc}
-                  onChange={(e) => setIsLockedDoc(e.target.checked)}
-                  className="w-4.5 h-4.5 accent-[#C9A227] cursor-pointer"
-                />
-              </div>
-
-              {isLockedDoc && (
-                <div>
-                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-stone-400 block mb-1">
-                    Link to Payment Request ID
-                  </label>
-                  <select
-                    value={linkedPayReqId}
-                    onChange={(e) => setLinkedPayReqId(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-xs focus:outline-none focus:border-[#0A2342]"
-                  >
-                    <option value="">-- Choose Active Payment Request --</option>
-                    {messages
-                      .filter(m => m.type === "payment_request" && m.metadata?.status === "pending")
-                      .map(m => (
-                        <option key={m._id} value={m.metadata?.paymentRequestId}>
-                          Req ID: {m.metadata?.paymentRequestId} (₹{m.metadata?.amount})
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="flex gap-3 justify-end pt-2">
-                <button
-                  onClick={() => setShowDocModal(false)}
-                  className="px-4 py-2 border border-stone-200 rounded-xl text-xs font-bold uppercase tracking-wider text-stone-500 hover:bg-stone-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    handleSendMessage("document", docName || "Shared Document", {
-                      fileName: docName || "case_file.pdf",
-                      fileSize: 1024 * 1024 * 2.4, // 2.4 MB mock
-                      fileUrl: "https://example.com/protected/case_file.pdf",
-                      paymentRequestId: isLockedDoc ? linkedPayReqId || "pay_req_001" : undefined
-                    });
-                    setShowDocModal(false);
-                    setDocName("");
-                    setIsLockedDoc(false);
-                    setLinkedPayReqId("");
-                  }}
-                  className="px-4 py-2 bg-[#0A2342] hover:bg-[#06162a] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md transition-all"
-                >
-                  Share File
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -8,6 +8,11 @@ export interface MessageMetadata {
   amount?: number;
   status?: "pending" | "paid" | "failed";
   transactionId?: string;
+  replyTo?: {
+    messageId: string;
+    content: string;
+    senderName: string;
+  };
 }
 
 export interface Message {
@@ -18,7 +23,7 @@ export interface Message {
   type: MessageType;
   content: string;
   metadata?: MessageMetadata;
-  deliveryStatus: "sent" | "received" | "seen";
+  deliveryStatus: "sent" | "received" | "seen" | "uploading" | "failed";
   sentAt: string;
   receivedAt?: string;
   seenAt?: string;
@@ -41,7 +46,7 @@ export interface Conversation {
     text: string;
     senderId: string;
     timestamp: string;
-    deliveryStatus?: "sent" | "received" | "seen";
+    deliveryStatus?: "sent" | "received" | "seen" | "uploading" | "failed";
   };
   createdAt: string;
   updatedAt: string;

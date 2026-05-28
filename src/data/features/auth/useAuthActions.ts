@@ -1,7 +1,7 @@
 // src/hooks/useAuthActions.ts
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { LoginRequest, RegisterRequest, ResendOtpRequest, ResetPasswordRequest, VerifyOtpRequest } from "./auth.types";
 import { forgotPassword, loginUser, registerUser, ResendOtp, resetPassword, verifyOtp, loginWithGoogle } from "./authThunks";
@@ -125,6 +125,8 @@ export const useLoginActions = () => {
     password: "",
   });
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -156,29 +158,28 @@ export const useLoginActions = () => {
   useEffect(() => {
     // Check if we have a token and user in the state (successful login)
     if (token && user) {
-      const roles = user.roles?.map((r) => r.name) || [];
-      if (roles.includes("admin") || roles.includes("superadmin") || roles.includes("editor") || roles.includes("creator")) {
-        router.push("/admin");
-      } else {
-        router.push("/");
-      }
       localStorage.setItem("email", formData.email);
       // Ensure localStorage is set if not already (redundant safety)
       if (user) localStorage.setItem("user", JSON.stringify(user));
       if (token) localStorage.setItem("token", token);
 
-      // dispatch(resetAuthState()); // Delay reset to allow redirect to happen?
-      // Actually, resetAuthState clears the message, which might be fine, but let's be careful.
+      if (redirect) {
+        router.push(redirect);
+      } else {
+        const roles = user.roles?.map((r) => r.name) || [];
+        if (roles.includes("admin") || roles.includes("superadmin") || roles.includes("advocate")) {
+          router.push("/admin");
+        } else {
+          router.push("/");
+        }
+      }
     }
 
-    // Specific handler for Google Login success message if needed, but the token check above should suffice 
-    // provided the state is updated correctly. 
-    // However, if the user is already redirected, we might want to reset state.
     if (message === "Google Login Successful" || message === MESSAGES.LOGIN_SUCCESS) {
       dispatch(resetAuthState());
     }
 
-  }, [token, user, message]);
+  }, [token, user, message, redirect, router, dispatch, formData.email]);
 
   return {
     formData,

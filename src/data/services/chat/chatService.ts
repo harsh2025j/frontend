@@ -10,6 +10,14 @@ export const ChatServiceAPI = {
     });
   },
 
+  getPresignedUrl: async (fileName: string, contentType: string) => {
+    return apiClient({
+      url: '/chats/presigned-url',
+      method: 'POST',
+      data: { fileName, contentType },
+    });
+  },
+
   getUserConversations: async (userId: string, skip = 0, limit = 20) => {
     const url = API_ENDPOINTS.CHATS.GET_USER_CONVERSATIONS.replace(':userId', userId);
     return apiClient({
