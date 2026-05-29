@@ -68,7 +68,8 @@ import {
   canAccessAdvertisementsPage,
   canAccessAppointmentsPage,
   canAccessPayoutsPage,
-  isAdmin as checkIsAdmin
+  isAdmin as checkIsAdmin,
+  getUserRoles
 } from "@/utils/permissions";
 
 const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: () => void; onOpen: () => void }) => {
@@ -198,7 +199,7 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
       name: "Messages",
       icon: <MessageSquare size={18} />,
       href: "/admin/messages",
-      show: true
+      show: getUserRoles(user).some(role => role !== "user")
     },
 
     // 🔽 ACCESS CONTROL SECTION

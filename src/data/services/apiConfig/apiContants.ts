@@ -147,13 +147,15 @@ export const API_ENDPOINTS = {
     GET_ADVOCATES: "/payouts/advocates",
     GET_ADVOCATE_DETAILS: "/payouts/advocate/:id",
     GET_ADVOCATE_APPOINTMENTS: "/payouts/advocate/:id/appointments",
+    GET_ADVOCATE_DOCUMENTS: "/payouts/advocate/:id/documents",
     GET_ADVOCATE_PAYOUT_HISTORY: "/payouts/advocate/:id/history",
     LOG_PAYOUT: "/payouts/advocate/:id",
   },
   CHATS: {
     CREATE_OR_GET: "/chats/conversation",
     GET_USER_CONVERSATIONS: "/chats/user/:userId",
-    GET_MESSAGES: "/chats/:conversationId/messages"
+    GET_MESSAGES: "/chats/:conversationId/messages",
+    CREATE_PAYMENT_ORDER: "/chats/payment/create-order",
+    VERIFY_PAYMENT_ORDER: "/chats/payment/verify",
   }
 };
-

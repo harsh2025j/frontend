@@ -26,6 +26,12 @@ export const payoutsService = {
     });
   },
 
+  getAdvocateDocuments: async (id: string, page: number = 1, limit: number = 20) => {
+    return apiClient.get(API_ENDPOINTS.PAYOUTS.GET_ADVOCATE_DOCUMENTS.replace(':id', id), {
+      params: { page, limit }
+    });
+  },
+
   getAdvocatePayoutHistory: async (id: string, page: number = 1, limit: number = 20) => {
     return apiClient.get(API_ENDPOINTS.PAYOUTS.GET_ADVOCATE_PAYOUT_HISTORY.replace(':id', id), {
       params: { page, limit }

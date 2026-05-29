@@ -5,7 +5,7 @@ import { payoutsService } from "@/data/services/payouts-service/payoutsService";
 import apiClient from "@/data/services/apiConfig/apiClient";
 import { API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
 import { toast } from "react-hot-toast";
-import { ArrowLeft, Building, CreditCard, Banknote, Calendar, TrendingUp, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
+import { ArrowLeft, Building, CreditCard, Banknote, Calendar, TrendingUp, CheckCircle, AlertCircle, ArrowRight, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@/utils/dateUtils";
 
@@ -35,12 +35,19 @@ export default function AdvocatePayoutDetails({ params }: { params: Promise<{ ad
   const [payoutsHasMore, setPayoutsHasMore] = useState(false);
   const [isPayoutsLoading, setIsPayoutsLoading] = useState(false);
 
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [documentsPage, setDocumentsPage] = useState(1);
+  const [documentsTotalCount, setDocumentsTotalCount] = useState(0);
+  const [documentsHasMore, setDocumentsHasMore] = useState(false);
+  const [isDocumentsLoading, setIsDocumentsLoading] = useState(false);
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [detailsRes, appointmentsRes, payoutsRes] = await Promise.all([
+      const [detailsRes, appointmentsRes, documentsRes, payoutsRes] = await Promise.all([
         payoutsService.getAdvocateDetails(advocateId),
         payoutsService.getAdvocateAppointments(advocateId, 1, 20),
+        payoutsService.getAdvocateDocuments(advocateId, 1, 20),
         payoutsService.getAdvocatePayoutHistory(advocateId, 1, 20),
       ]);
 
@@ -62,6 +69,14 @@ export default function AdvocatePayoutDetails({ params }: { params: Promise<{ ad
       setPayoutsPage(1);
       setPayoutsTotalCount(payTotal);
       setPayoutsHasMore(initialPayouts.length < payTotal);
+
+      const docData = documentsRes.data?.data || documentsRes.data;
+      const initialDocuments = docData?.data || [];
+      const docTotal = docData?.totalCount || 0;
+      setDocuments(initialDocuments);
+      setDocumentsPage(1);
+      setDocumentsTotalCount(docTotal);
+      setDocumentsHasMore(initialDocuments.length < docTotal);
     } catch (err) {
       toast.error("Failed to load details");
     } finally {
@@ -119,10 +134,40 @@ export default function AdvocatePayoutDetails({ params }: { params: Promise<{ ad
     }
   };
 
+  const fetchMoreDocuments = async () => {
+    if (isDocumentsLoading || !documentsHasMore) return;
+    setIsDocumentsLoading(true);
+    try {
+      const nextPage = documentsPage + 1;
+      const res = await payoutsService.getAdvocateDocuments(advocateId, nextPage, 20);
+      const resData = res.data?.data || res.data;
+      const newDocuments = resData?.data || [];
+      const totalCount = resData?.totalCount || 0;
+
+      setDocuments(prev => {
+        const combined = [...prev, ...newDocuments];
+        setDocumentsHasMore(combined.length < totalCount);
+        return combined;
+      });
+      setDocumentsPage(nextPage);
+    } catch (err) {
+      toast.error("Failed to load more documents");
+    } finally {
+      setIsDocumentsLoading(false);
+    }
+  };
+
   const handleAppointmentsScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     if (target.scrollHeight - target.scrollTop <= target.clientHeight + 15) {
       fetchMoreAppointments();
+    }
+  };
+
+  const handleDocumentsScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (target.scrollHeight - target.scrollTop <= target.clientHeight + 15) {
+      fetchMoreDocuments();
     }
   };
 
@@ -315,10 +360,15 @@ export default function AdvocatePayoutDetails({ params }: { params: Promise<{ ad
       {/* Middle Section: Appointments Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-          <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-            <Calendar size={18} className="text-gray-500" />
-            Paid Appointments (Earnings)
-          </h2>
+          <div>
+            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <Calendar size={18} className="text-gray-500" />
+              Paid Appointments (Earnings)
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Gross: <span className="font-semibold text-gray-700">₹{details?.appointmentsGross || 0}</span> • Net: <span className="font-semibold text-green-600">₹{details?.appointmentsNet || 0}</span>
+            </p>
+          </div>
           <span className="text-xs text-gray-500 font-medium">Scroll to load more</span>
         </div>
         <div
@@ -371,6 +421,87 @@ export default function AdvocatePayoutDetails({ params }: { params: Promise<{ ad
                 ))
               )}
               {isAppointmentsLoading && (
+                <tr>
+                  <td colSpan={6} className="p-4 text-center">
+                    <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                      <svg className="animate-spin h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Loading more...</span>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Middle Section: Document Sharing Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+          <div>
+            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <FileText size={18} className="text-gray-500" />
+              Document Sharing Earnings
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Gross: <span className="font-semibold text-gray-700">₹{details?.documentsGross || 0}</span> • Net: <span className="font-semibold text-green-600">₹{details?.documentsNet || 0}</span>
+            </p>
+          </div>
+          <span className="text-xs text-gray-500 font-medium">Scroll to load more</span>
+        </div>
+        <div
+          onScroll={handleDocumentsScroll}
+          className="p-0 overflow-auto max-h-[380px] custom-scrollbar relative"
+        >
+          <table className="w-full text-left border-collapse">
+            <thead className="sticky top-0 bg-white shadow-sm z-10">
+              <tr className="border-b border-gray-100 bg-white">
+                <th className="p-4 text-xs uppercase text-gray-500 font-semibold tracking-wider w-16">S.No.</th>
+                <th className="p-4 text-xs uppercase text-gray-500 font-semibold tracking-wider">Date</th>
+                <th className="p-4 text-xs uppercase text-gray-500 font-semibold tracking-wider">Client</th>
+                <th className="p-4 text-xs uppercase text-gray-500 font-semibold tracking-wider">Gross</th>
+                <th className="p-4 text-xs uppercase text-gray-500 font-semibold tracking-wider">Platform Fee</th>
+                <th className="p-4 text-xs uppercase text-gray-500 font-semibold tracking-wider">Net Earned</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {isLoading ? (
+                Array.from({ length: 4 }).map((_, idx) => (
+                  <tr key={idx} className="animate-pulse">
+                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-8"></div></td>
+                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
+                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
+                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-28"></div></td>
+                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
+                  </tr>
+                ))
+              ) : documents.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-gray-500 text-sm">
+                    No document sharing payments yet.
+                  </td>
+                </tr>
+              ) : (
+                documents.map((doc: any, idx: number) => (
+                  <tr key={doc.id} className="hover:bg-blue-50/20 transition-colors odd:bg-white even:bg-gray-50/30">
+                    <td className="p-4 text-sm text-gray-500 font-medium">{documentsTotalCount - idx}</td>
+                    <td className="p-4 text-sm text-gray-600">{formatDate(doc.createdAt)}</td>
+                    <td className="p-4 text-sm font-semibold text-gray-900">{doc.fullName}</td>
+                    <td className="p-4 text-sm text-gray-600">₹{doc.finalPrice}</td>
+                    <td className="p-4 text-sm text-red-500 font-medium">-₹{doc.commissionAmount || 0} ({doc.commissionRate || 0}%)</td>
+                    <td className="p-4 text-sm">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                        Paid ₹{doc.netPayable || doc.finalPrice}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+              {isDocumentsLoading && (
                 <tr>
                   <td colSpan={6} className="p-4 text-center">
                     <div className="flex items-center justify-center gap-2 text-xs text-gray-500">

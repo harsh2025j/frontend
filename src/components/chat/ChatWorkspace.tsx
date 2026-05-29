@@ -20,135 +20,25 @@ import {
   User,
   ShieldCheck,
   ArrowLeft,
-  Reply
+  Reply,
+  ChevronRight,
+  Plus,
+  IndianRupee
 } from "lucide-react";
 import { Message, Conversation, MessageType } from "@/data/features/chat/chat.types";
 import { io, Socket } from "socket.io-client";
 import { ChatServiceAPI } from "@/data/services/chat/chatService";
 import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
+import { articleApi } from "@/data/services/article-service/article-service";
 import axios from "axios";
+import { toast } from "react-hot-toast";
 
 interface ChatWorkspaceProps {
   role: "user" | "advocate";
   initialRecipientId?: string;
 }
 
-// -------------------------------------------------------------
-// MOCK DATA FOR THE PREVIEW / INTERACTIVE TEST
-// -------------------------------------------------------------
-const MOCK_PARTICIPANTS = {
-  advocate1: {
-    id: "adv_1",
-    _id: "adv_1",
-    name: "Advocate Sajjad Husain",
-    username: "sajjadhusain",
-    photoUrl: "",
-    role: "advocate",
-  },
-  advocate2: {
-    id: "adv_2",
-    _id: "adv_2",
-    name: "Advocate Alok Sharma",
-    username: "aloksharma",
-    photoUrl: "",
-    role: "advocate",
-  },
-  user1: {
-    id: "usr_1",
-    _id: "usr_1",
-    name: "Keshav Pathak",
-    username: "keshav",
-    photoUrl: "",
-    role: "client",
-  },
-  user2: {
-    id: "usr_2",
-    _id: "usr_2",
-    name: "Vikram Malhotra",
-    username: "vikram",
-    photoUrl: "",
-    role: "client",
-  }
-};
 
-const MOCK_CONVERSATIONS: Conversation[] = [
-  {
-    _id: "conv_1",
-    participants: [MOCK_PARTICIPANTS.user1, MOCK_PARTICIPANTS.advocate1],
-    lastMessage: {
-      text: "Draft document for the land registration case is ready.",
-      senderId: "adv_1",
-      timestamp: new Date(Date.now() - 5 * 60000).toISOString(),
-    },
-    createdAt: new Date(Date.now() - 24 * 3600000).toISOString(),
-    updatedAt: new Date(Date.now() - 5 * 60000).toISOString(),
-  },
-  {
-    _id: "conv_2",
-    participants: [MOCK_PARTICIPANTS.user1, MOCK_PARTICIPANTS.advocate2],
-    lastMessage: {
-      text: "Yes, we can file the petition by tomorrow morning.",
-      senderId: "adv_2",
-      timestamp: new Date(Date.now() - 2 * 3600000).toISOString(),
-    },
-    createdAt: new Date(Date.now() - 48 * 3600000).toISOString(),
-    updatedAt: new Date(Date.now() - 2 * 3600000).toISOString(),
-  }
-];
-
-const INITIAL_MOCK_MESSAGES: Message[] = [
-  {
-    _id: "msg_1",
-    conversationId: "conv_1",
-    senderId: "usr_1",
-    recipientId: "adv_1",
-    type: "text",
-    content: "Greetings sir, I need the case summary draft and the deeds record for our land registry. Could you please share it here?",
-    deliveryStatus: "seen",
-    sentAt: new Date(Date.now() - 20 * 60000).toISOString(),
-  },
-  {
-    _id: "msg_2",
-    conversationId: "conv_1",
-    senderId: "adv_1",
-    recipientId: "usr_1",
-    type: "text",
-    content: "Hello Keshav. Sure, I have finalized the draft report. It took some research so there will be a nominal compilation fee of ₹1,500. Let me send a payment request link.",
-    deliveryStatus: "seen",
-    sentAt: new Date(Date.now() - 15 * 60000).toISOString(),
-  },
-  {
-    _id: "msg_3",
-    conversationId: "conv_1",
-    senderId: "adv_1",
-    recipientId: "usr_1",
-    type: "payment_request",
-    content: "Compilation and formatting charge for Deeds Registry summary report",
-    metadata: {
-      paymentRequestId: "pay_req_001",
-      amount: 1500,
-      status: "pending",
-    },
-    deliveryStatus: "seen",
-    sentAt: new Date(Date.now() - 12 * 60000).toISOString(),
-  },
-  {
-    _id: "msg_4",
-    conversationId: "conv_1",
-    senderId: "adv_1",
-    recipientId: "usr_1",
-    type: "document",
-    content: "Premium Case Deeds Registry Report Draft",
-    metadata: {
-      fileName: "land_registry_summary_final.pdf",
-      fileSize: 1024 * 1024 * 1.8, // 1.8 MB
-      fileUrl: "https://example.com/protected/land_registry_summary_final.pdf",
-      paymentRequestId: "pay_req_001", // linked to this payment
-    },
-    deliveryStatus: "seen",
-    sentAt: new Date(Date.now() - 10 * 60000).toISOString(),
-  }
-];
 
 const formatFileSize = (bytes: number) => {
   if (!bytes || bytes === 0) return '0 Bytes';
@@ -168,6 +58,14 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [globalAdvocates, setGlobalAdvocates] = useState<any[]>([]);
+
+  const [conversationsPage, setConversationsPage] = useState(0);
+  const [hasMoreConversations, setHasMoreConversations] = useState(true);
+  const [isFetchingConversations, setIsFetchingConversations] = useState(false);
+  const conversationsObserver = useRef<IntersectionObserver | null>(null);
+  const lastConversationElementRef = useRef<HTMLDivElement | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
@@ -179,12 +77,10 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Modal states for Advocate action
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [payAmount, setPayAmount] = useState("1000");
-  const [payDesc, setPayDesc] = useState("");
+  // (Standalone payment request states removed as they are now consolidated into document upload)
 
   // Modal states for Document upload
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadProgresses, setUploadProgresses] = useState<Record<string, number>>({});
   const [failedUploads, setFailedUploads] = useState<Record<string, File>>({});
   const [downloadingFiles, setDownloadingFiles] = useState<Record<string, boolean>>({});
@@ -192,8 +88,10 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
   const [docName, setDocName] = useState("");
   const [isLockedDoc, setIsLockedDoc] = useState(false);
   const [linkedPayReqId, setLinkedPayReqId] = useState("");
-  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [firstUnreadMessageId, setFirstUnreadMessageId] = useState<string | null>(null);
+
+  const [docRequiresPayment, setDocRequiresPayment] = useState(true);
+  const [docPaymentAmount, setDocPaymentAmount] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -223,23 +121,105 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
     }
   }, [inputText]);
 
-  // Initial Data Fetch & Socket Connection
+  // Debounce Search Query
   useEffect(() => {
-    const initChat = async () => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setConversationsPage(0);
+    setHasMoreConversations(true);
+  }, [debouncedSearchQuery]);
+
+  // Fetch Conversations (and global advocates if searching)
+  useEffect(() => {
+    const loadConversations = async () => {
+      setIsFetchingConversations(true);
       try {
-        const res = await ChatServiceAPI.getUserConversations(currentUserId);
-        // Robust unwrapping: some backend builds double wrap in { success, data: { success, data: [] } }
+        const skip = conversationsPage * 20;
+        const res = await ChatServiceAPI.getUserConversations(currentUserId, skip, 20, debouncedSearchQuery);
         const actualData = res?.data?.data?.data || res?.data?.data || res?.data || [];
 
         if (Array.isArray(actualData)) {
-          setConversations(actualData);
-          if (actualData.length > 0) setSelectedConv(actualData[0]);
+          if (conversationsPage === 0) {
+            setConversations(actualData);
+            if (actualData.length > 0 && !selectedConv && window.innerWidth >= 768) {
+              setSelectedConv(actualData[0]);
+            }
+          } else {
+            setConversations(prev => {
+              const existingIds = new Set(prev.map(c => c._id));
+              const newConvs = actualData.filter(c => !existingIds.has(c._id));
+              return [...prev, ...newConvs];
+            });
+          }
+          if (actualData.length < 20) {
+            setHasMoreConversations(false);
+          } else {
+            setHasMoreConversations(true);
+          }
+        }
+
+        // Global Advocates Search
+        if (debouncedSearchQuery && debouncedSearchQuery.trim() !== "") {
+          const advRes = await articleApi.searchAdvocates(debouncedSearchQuery, 1, 5);
+
+          let advData = [];
+          if (Array.isArray(advRes?.data?.data?.data)) {
+            advData = advRes.data.data.data;
+          } else if (Array.isArray(advRes?.data?.data)) {
+            advData = advRes.data.data;
+          } else if (Array.isArray(advRes?.data?.data?.advocates)) {
+            advData = advRes.data.data.advocates;
+          } else if (Array.isArray(advRes?.data)) {
+            advData = advRes.data;
+          }
+
+          setGlobalAdvocates(advData);
+        } else {
+          setGlobalAdvocates([]);
         }
       } catch (err) {
         console.error("Failed to fetch conversations", err);
+      } finally {
+        setIsFetchingConversations(false);
       }
     };
-    initChat();
+    loadConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchQuery, conversationsPage, currentUserId]);
+
+  // Intersection Observer for Infinite Scroll
+  useEffect(() => {
+    if (isFetchingConversations || !hasMoreConversations) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          setConversationsPage(prev => prev + 1);
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (lastConversationElementRef.current) {
+      observer.observe(lastConversationElementRef.current);
+    }
+    conversationsObserver.current = observer;
+
+    return () => {
+      if (conversationsObserver.current) {
+        conversationsObserver.current.disconnect();
+      }
+    };
+  }, [isFetchingConversations, hasMoreConversations, conversations]);
+
+  // Initial Socket Connection
+  useEffect(() => {
 
     // The backend gateway is on /chat namespace
     const socketUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
@@ -339,6 +319,31 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
       }));
     });
 
+    newSocket.on("payment_success", (data: any) => {
+      setMessages(prev =>
+        prev.map(m => {
+          // If it's a document and part of this payment, update its metadata so we get the fileUrl
+          if (m.type === "document" && m.metadata?.paymentRequestId === data.paymentRequestId) {
+            const updatedMsg = data.messages?.find((msg: any) => msg._id === m._id);
+            if (updatedMsg) {
+              return { ...m, metadata: updatedMsg.metadata };
+            }
+          }
+          // If it's the payment_request message, update its status
+          if (m.type === "payment_request" && m.metadata?.paymentRequestId === data.paymentRequestId) {
+            return {
+              ...m,
+              metadata: {
+                ...m.metadata,
+                status: data.status,
+              }
+            };
+          }
+          return m;
+        })
+      );
+    });
+
     return () => {
       newSocket.disconnect();
     };
@@ -349,7 +354,7 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
     if (selectedConv && socket) {
       socket.emit("join_conversation", { conversationId: selectedConv._id, userId: currentUserId });
 
-      ChatServiceAPI.getMessages(selectedConv._id, 0, 50).then(res => {
+      ChatServiceAPI.getMessages(selectedConv._id, currentUserId, 0, 50).then(res => {
         const actualData = res?.data?.data?.data || res?.data?.data || res?.data || [];
         if (Array.isArray(actualData)) {
           // Reverse because API sorts -1 (newest first), but UI needs oldest first top-to-bottom
@@ -470,28 +475,79 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 100 * 1024 * 1024) {
-        alert("File size exceeds 100MB limit.");
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      if (files.length > 5) {
+        toast.error("You can only upload up to 5 files at once.");
         return;
       }
-      setSelectedFile(file);
-      setShowAttachmentMenu(false);
+      for (const file of files) {
+        if (file.size > 100 * 1024 * 1024) {
+          toast.error(`File ${file.name} exceeds 100MB limit.`);
+          return;
+        }
+      }
+      setSelectedFiles(files);
+      setDocRequiresPayment(true);
+      setDocPaymentAmount("");
     }
   };
 
-  const handleFileUpload = async (file: File, retryMessageId?: string) => {
-    if (!selectedConv || !currentUserId) return;
+  const handleRetryFileUpload = async (file: File, retryMessageId: string) => {
+    const tempId = retryMessageId;
+    setMessages(prev => prev.map(m => m._id === tempId ? { ...m, deliveryStatus: "uploading" } : m));
+    setUploadProgresses(prev => ({ ...prev, [tempId]: 0 }));
+    setFailedUploads(prev => { const next = { ...prev }; delete next[tempId]; return next; });
+
+    try {
+      const response = await ChatServiceAPI.getPresignedUrl(file.name, file.type || "application/octet-stream");
+      const { presignedUrl, fileUrl } = response.data?.data || response.data;
+      await axios.put(presignedUrl, file, {
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+        onUploadProgress: (progressEvent) => {
+          const total = progressEvent.total;
+          if (total) {
+            setUploadProgresses(prev => ({ ...prev, [tempId]: Math.round((progressEvent.loaded * 100) / total) }));
+          }
+        }
+      });
+
+      let finalPayload: any;
+      setMessages(prev => {
+        const msg = prev.find(m => m._id === tempId);
+        if (msg) {
+          finalPayload = { ...msg, deliveryStatus: "sent", metadata: { ...msg.metadata, fileUrl } };
+          return prev.map(m => m._id === tempId ? finalPayload : m);
+        }
+        return prev;
+      });
+      if (finalPayload && socket) {
+        const { _id, deliveryStatus, sentAt, receivedAt, seenAt, ...socketPayload } = finalPayload;
+        socket.emit("send_message", socketPayload);
+      }
+    } catch (err) {
+      setMessages(prev => prev.map(m => m._id === tempId ? { ...m, deliveryStatus: "failed" } : m));
+      setFailedUploads(prev => ({ ...prev, [tempId]: file }));
+    }
+  };
+
+  const handleFileUpload = async (files: File[], paymentParams?: { requiresPayment: boolean, amount: number }) => {
+    if (!selectedConv || !currentUserId || files.length === 0) return;
 
     const activeParticipant = selectedConv.participants.find(
       (p: any) => p !== currentUserId && p.id !== currentUserId && p._id !== currentUserId
     );
     const recipientId = typeof activeParticipant === "string" ? activeParticipant : (activeParticipant as any)?.id || (activeParticipant as any)?._id;
 
-    const tempId = retryMessageId || `temp_${Date.now()}`;
+    const paymentReqId = paymentParams?.requiresPayment ? `pay_req_${Date.now()}` : undefined;
 
-    if (!retryMessageId) {
+    if (paymentReqId) {
+      // We'll emit the payment request AFTER all documents are queued/uploaded
+    }
+
+    for (const file of files) {
+      const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
       const initialPayload = {
         _id: tempId,
         conversationId: selectedConv._id,
@@ -504,65 +560,58 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
         metadata: {
           fileName: file.name,
           fileSize: file.size,
+          ...(paymentReqId ? { paymentRequestId: paymentReqId } : {})
         }
       };
       setMessages((prev) => [...prev, initialPayload as any]);
-    } else {
-      setMessages(prev => prev.map(m => m._id === tempId ? { ...m, deliveryStatus: "uploading" } : m));
+      setUploadProgresses(prev => ({ ...prev, [tempId]: 0 }));
+
+      try {
+        const response = await ChatServiceAPI.getPresignedUrl(file.name, file.type || "application/octet-stream");
+        const { presignedUrl, fileUrl } = response.data?.data || response.data;
+
+        await axios.put(presignedUrl, file, {
+          headers: { "Content-Type": file.type || "application/octet-stream" },
+          onUploadProgress: (progressEvent) => {
+            const total = progressEvent.total;
+            if (total) {
+              setUploadProgresses(prev => ({ ...prev, [tempId]: Math.round((progressEvent.loaded * 100) / total) }));
+            }
+          }
+        });
+
+        const finalPayload = { ...initialPayload, metadata: { ...initialPayload.metadata, fileUrl } };
+        setMessages(prev => prev.map(m => m._id === tempId ? { ...finalPayload, deliveryStatus: "sent" } as any : m));
+        const { _id, deliveryStatus, sentAt, ...socketPayload } = finalPayload;
+        socket?.emit("send_message", socketPayload);
+
+      } catch (err) {
+        console.error("Upload failed for file:", file.name, err);
+        setMessages(prev => prev.map(m => m._id === tempId ? { ...m, deliveryStatus: "failed" } : m));
+        setFailedUploads(prev => ({ ...prev, [tempId]: file }));
+        toast.error(`Failed to upload ${file.name}`);
+      }
     }
 
-    setUploadProgresses(prev => ({ ...prev, [tempId]: 0 }));
-    setFailedUploads(prev => {
-      const next = { ...prev };
-      delete next[tempId];
-      return next;
-    });
-
-    try {
-      const response = await ChatServiceAPI.getPresignedUrl(file.name, file.type || "application/octet-stream");
-      // Safely extract from response.data.data (if wrapped by interceptor) or response.data
-      const { presignedUrl, fileUrl } = response.data?.data || response.data;
-
-      await axios.put(presignedUrl, file, {
-        headers: { "Content-Type": file.type || "application/octet-stream" },
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            setUploadProgresses(prev => ({ ...prev, [tempId]: percentCompleted }));
-          }
-        }
-      });
-
-      const finalPayload = {
+    if (paymentReqId) {
+      const payPayload = {
         conversationId: selectedConv._id,
         senderId: currentUserId,
         recipientId,
-        type: "document" as MessageType,
-        content: `Document: ${file.name}`,
+        type: "payment_request" as MessageType,
+        content: `Payment required to unlock ${files.length} document${files.length > 1 ? 's' : ''}`,
         metadata: {
-          fileName: file.name,
-          fileSize: file.size,
-          fileUrl,
+          paymentRequestId: paymentReqId,
+          amount: paymentParams!.amount,
+          status: "pending"
         }
       };
+      socket?.emit("send_message", payPayload);
+      setMessages(prev => [...prev, { ...payPayload, _id: `temp_${Date.now()}_pay`, deliveryStatus: "sent", sentAt: new Date().toISOString() } as any]);
+    }
 
-      setMessages(prev => prev.map(m => m._id === tempId ? { ...m, deliveryStatus: "sent", metadata: { ...m.metadata, fileUrl } } : m));
-      socket?.emit("send_message", finalPayload);
-
-    } catch (err) {
-      console.error("Upload failed", err);
-      setUploadProgresses(prev => { const n = { ...prev }; delete n[tempId]; return n; });
-      setMessages(prev => prev.map(m => m._id === tempId ? { ...m, deliveryStatus: "failed" } : m));
-      setFailedUploads(prev => ({ ...prev, [tempId]: file }));
-    } finally {
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-      setUploadProgresses(prev => {
-        const next = { ...prev };
-        delete next[tempId];
-        return next;
-      });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -570,12 +619,12 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
     if (!selectedConv || isLoadingMore) return;
     setIsLoadingMore(true);
     isFetchingOlderRef.current = true;
-    
+
     const container = scrollContainerRef.current;
     const previousScrollHeight = container ? container.scrollHeight : 0;
 
     try {
-      const res = await ChatServiceAPI.getMessages(selectedConv._id, messages.length, 50);
+      const res = await ChatServiceAPI.getMessages(selectedConv._id, currentUserId, messages.length, 50);
       const actualData = res?.data?.data?.data || res?.data?.data || res?.data || [];
       if (Array.isArray(actualData) && actualData.length > 0) {
         const olderMsgs = actualData.reverse();
@@ -586,7 +635,7 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
           return [...uniqueOlder, ...prev];
         });
         setHasMoreMessages(actualData.length === 50);
-        
+
         // Maintain scroll position after React renders new messages
         requestAnimationFrame(() => {
           if (container) {
@@ -594,7 +643,7 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
             container.scrollTop = newScrollHeight - previousScrollHeight;
           }
         });
-        
+
       } else {
         setHasMoreMessages(false);
       }
@@ -605,27 +654,65 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
     }
   };
 
-  // Mock checkout handler for Client
-  const handleMockPayment = (paymentReqId: string) => {
-    // 1. Update the payment request message state locally
-    setMessages(prev =>
-      prev.map(m => {
-        if (m.type === "payment_request" && m.metadata?.paymentRequestId === paymentReqId) {
-          return {
-            ...m,
-            metadata: {
-              ...m.metadata,
-              status: "paid",
-              transactionId: `tx_mock_${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-            }
-          };
-        }
-        return m;
-      })
-    );
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) return resolve(true);
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
 
-    // 2. Play nice notification or alerts
-    alert("Payment of ₹1,500 Completed Successfully! Document Unlocked.");
+  const handleDocumentPayment = async (paymentReqId: string, amount: number) => {
+    if (!selectedConv || !currentUserId) return;
+    try {
+      const activeParticipant = selectedConv.participants.find(
+        (p: any) => p !== currentUserId && p.id !== currentUserId && p._id !== currentUserId
+      );
+      const advocateId = typeof activeParticipant === "string" ? activeParticipant : (activeParticipant as any)?.id || (activeParticipant as any)?._id;
+
+      // 1. Ask backend to create order
+      const res = await ChatServiceAPI.createPaymentOrder(paymentReqId, amount, currentUserId, advocateId);
+      const orderData = res.data?.data || res.data;
+
+      // 2. Load script
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        toast.error('Failed to load payment gateway.');
+        return;
+      }
+
+      // 3. Open Razorpay checkout
+      const options: any = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_5V6H76K49J9G6E',
+        amount: orderData.amount,
+        currency: 'INR',
+        name: 'Document Unlock',
+        description: `Payment to unlock document(s)`,
+        order_id: orderData.orderId,
+        theme: { color: '#0A2342' },
+        handler: async (response: any) => {
+          try {
+            await ChatServiceAPI.verifyPaymentOrder(
+              response.razorpay_order_id,
+              response.razorpay_payment_id,
+              response.razorpay_signature
+            );
+            toast.success('Payment successful! Unlocking documents...');
+            // The backend handles database updates and sends a 'payment_success' socket event to refresh automatically.
+          } catch (err: any) {
+            toast.error(err?.response?.data?.message || 'Payment verification failed.');
+          }
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Payment initiation failed');
+    }
   };
 
   // Check if a document is unlocked
@@ -647,7 +734,7 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
   const isPartnerTyping = selectedConv && activePartnerId && typingUsers.get(selectedConv._id)?.includes(activePartnerId);
 
   return (
-    <div className="relative flex h-full w-full bg-stone-50/70 border border-stone-200/60 md:rounded-3xl overflow-hidden md:shadow-2xl backdrop-blur-md">
+    <div className="relative flex h-full w-full bg-stone-50/70 border border-stone-200/70 md:rounded-xl rounded-sm overflow-hidden  backdrop-blur-md">
       {/* -------------------------------------------------------------
           SIDEBAR: THREAD LIST
           ------------------------------------------------------------- */}
@@ -677,13 +764,22 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
         </div>
 
         {/* Conversation list */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-1">
+        <div className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
+
+          {debouncedSearchQuery && (
+            <div className="px-2 py-1.5 mb-1 mt-2">
+              <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Recent Chats</span>
+            </div>
+          )}
+
+          {conversations.length === 0 && !isFetchingConversations && (
+            <div className="text-center py-6 text-stone-400 text-sm">
+              {debouncedSearchQuery ? "No recent chats found." : "No conversations yet."}
+            </div>
+          )}
+
           {conversations
-            .filter((c) => {
-              const partner = c.participants.find((p: any) => p !== currentUserId && p.id !== currentUserId);
-              const partnerName = typeof partner === "string" ? partner : (partner as any)?.name || "Unknown";
-              return partnerName.toLowerCase().includes(searchQuery.toLowerCase());
-            })
+            .filter((conv) => conv.lastMessage)
             .map((conv) => {
               const partner = conv.participants.find((p: any) => p !== currentUserId && p.id !== currentUserId);
               const partnerName = typeof partner === "string" ? partner : (partner as any)?.name || "Unknown User";
@@ -738,6 +834,63 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                 </button>
               );
             })}
+
+          {/* Infinite Scroll trigger element */}
+          {!debouncedSearchQuery && hasMoreConversations && (
+            <div ref={lastConversationElementRef} className="py-4 flex justify-center">
+              <div className="w-5 h-5 border-2 border-[#0A2342] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+
+          {/* Global Advocates Section */}
+          {debouncedSearchQuery && globalAdvocates.length > 0 && (
+            <div className="mt-6 border-t border-stone-100 pt-4">
+              <div className="px-2 py-1.5 mb-2">
+                <span className="text-xs font-bold text-[#C9A227] uppercase tracking-wider flex items-center gap-1.5">
+                  <ShieldCheck size={14} /> Platform Advocates
+                </span>
+              </div>
+              {globalAdvocates.map((adv) => (
+                <button
+                  key={adv._id}
+                  onClick={async () => {
+                    try {
+                      const res = await ChatServiceAPI.createOrGetConversation([currentUserId, adv._id]);
+                      const newConv = res.data?.data || res.data;
+                      if (newConv) {
+                        setConversations(prev => {
+                          if (!prev.find(c => c._id === newConv._id)) return [newConv, ...prev];
+                          return prev;
+                        });
+                        setSelectedConv(newConv);
+                        setSearchQuery("");
+                      }
+                    } catch (err) {
+                      toast.error("Failed to start conversation");
+                    }
+                  }}
+                  className="w-full flex items-center gap-4 p-3 hover:bg-stone-100 rounded-xl transition-all text-left group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#0A2342]/5 border border-[#0A2342]/10 flex items-center justify-center font-bold text-lg text-[#C9A227] shrink-0 relative overflow-hidden">
+                    {adv.profilePicture || adv.photoUrl ? (
+                      <img src={adv.profilePicture || adv.photoUrl} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      (adv.name || adv.firstName || "A").charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-semibold text-sm text-stone-900 truncate block">
+                      {adv.name || `${adv.firstName || ''} ${adv.lastName || ''}`.trim()}
+                    </span>
+                    <span className="text-[10px] text-stone-500 truncate block">
+                      {adv.specialization?.join(", ") || "Advocate"}
+                    </span>
+                  </div>
+                  <MessageSquare size={16} className="text-stone-300 group-hover:text-[#C9A227] transition-colors" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -780,11 +933,11 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <button className="p-2 hover:bg-stone-100 rounded-lg text-stone-500 transition-colors">
                   <MoreVertical size={16} />
                 </button>
-              </div>
+              </div> */}
             </div>
 
             {/* Message Area */}
@@ -844,7 +997,7 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                       <div className="max-w-[85%] md:max-w-[65%] flex flex-col gap-1 min-w-0">
                         {/* Render Reply Quoted Block */}
                         {msg.metadata?.replyTo && (
-                          <div 
+                          <div
                             onClick={() => {
                               const el = document.getElementById(`message-${msg.metadata!.replyTo!.messageId}`);
                               if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -904,7 +1057,7 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                                 </span>
                               ) : role === "user" ? (
                                 <button
-                                  onClick={() => handleMockPayment(msg.metadata?.paymentRequestId || "")}
+                                  onClick={() => handleDocumentPayment(msg.metadata?.paymentRequestId || "", msg.metadata?.amount || 0)}
                                   className="px-4 py-2 bg-[#C9A227] hover:bg-[#B38F20] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shadow-amber-500/10 hover:shadow-amber-500/20 active:scale-95"
                                 >
                                   Pay & Unlock
@@ -920,7 +1073,7 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
 
                         {/* Render Document Share Card */}
                         {msg.type === "document" && (() => {
-                          const isUnlocked = isDocumentUnlocked(msg.metadata);
+                          const isUnlocked = isMe || isDocumentUnlocked(msg.metadata);
                           const fileSizeFormatted = msg.metadata?.fileSize
                             ? formatFileSize(msg.metadata.fileSize)
                             : "Size Unknown";
@@ -962,7 +1115,7 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                                 <div className="w-full flex items-center justify-between py-2 px-3 bg-red-50 text-red-500 rounded-xl border border-red-100">
                                   <span className="text-[11px] font-bold uppercase tracking-wider">Upload Failed</span>
                                   <button
-                                    onClick={() => failedUploads[msg._id] && handleFileUpload(failedUploads[msg._id], msg._id)}
+                                    onClick={() => failedUploads[msg._id] && handleRetryFileUpload(failedUploads[msg._id], msg._id)}
                                     className="px-3 py-1 bg-white hover:bg-red-50 text-red-600 rounded-lg text-[10px] font-bold uppercase shadow-sm border border-red-200 transition-colors"
                                   >
                                     Retry
@@ -974,7 +1127,7 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                                   onClick={async (e) => {
                                     e.preventDefault();
                                     if (!msg.metadata?.fileUrl) {
-                                      alert("This file link is expired or missing. Please ask the sender to upload it again.");
+                                      toast.error("This file link is expired or missing. Please ask the sender to upload it again.");
                                       return;
                                     }
                                     if (downloadingFiles[msg._id]) return;
@@ -1001,10 +1154,10 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                                     }
                                   }}
                                   className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 ${downloadingFiles[msg._id]
-                                      ? "bg-emerald-100 text-emerald-600 cursor-wait"
-                                      : msg.metadata?.fileUrl
-                                        ? "bg-emerald-500 hover:bg-emerald-600 text-white"
-                                        : "bg-stone-200 text-stone-500 cursor-not-allowed"
+                                    ? "bg-emerald-100 text-emerald-600 cursor-wait"
+                                    : msg.metadata?.fileUrl
+                                      ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                                      : "bg-stone-200 text-stone-500 cursor-not-allowed"
                                     }`}
                                 >
                                   {downloadingFiles[msg._id] ? (
@@ -1092,57 +1245,18 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                   ref={fileInputRef}
                   onChange={handleFileSelect}
                   className="hidden"
+                  multiple
                   accept={role === "advocate" ? ".pdf,.doc,.docx,image/*" : ".pdf,.doc,.docx,image/*"}
                 />
-                {role === "advocate" ? (
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-                      className={`p-3 rounded-xl transition-colors shrink-0 ${showAttachmentMenu ? "bg-stone-200 text-stone-700" : "hover:bg-stone-100 text-stone-500 hover:text-stone-700"}`}
-                      title="Attachments"
-                    >
-                      <Paperclip size={20} />
-                    </button>
 
-                    {showAttachmentMenu && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={() => setShowAttachmentMenu(false)} />
-                        <div className="absolute bottom-full left-0 mb-3 bg-white border border-stone-200 rounded-2xl shadow-xl w-48 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100">
-                          <button
-                            type="button"
-                            onClick={() => { fileInputRef.current?.click(); setShowAttachmentMenu(false); }}
-                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-stone-50 text-left transition-colors border-b border-stone-100"
-                          >
-                            <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
-                              <FileText size={16} />
-                            </div>
-                            <span className="text-sm font-semibold text-stone-700">Document</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setShowPaymentModal(true); setShowAttachmentMenu(false); }}
-                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-stone-50 text-left transition-colors"
-                          >
-                            <div className="p-2 bg-amber-50 rounded-lg text-amber-600">
-                              <DollarSign size={16} />
-                            </div>
-                            <span className="text-sm font-semibold text-stone-700">Payment Request</span>
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="p-3 hover:bg-stone-100 rounded-xl text-stone-400 hover:text-stone-600 transition-colors shrink-0"
-                    title="Share file"
-                  >
-                    <Paperclip size={20} />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-3 hover:bg-stone-100 rounded-xl text-stone-400 hover:text-stone-600 transition-colors shrink-0"
+                  title="Share file"
+                >
+                  <Paperclip size={20} />
+                </button>
 
                 <textarea
                   ref={textareaRef}
@@ -1178,18 +1292,19 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
           MODALS: ADVOCATE TOOLS & SHARED MODALS
           ------------------------------------------------------------- */}
 
-      {/* A. Document Upload Confirmation Modal */}
-      {selectedFile && (
+      {selectedFiles.length > 0 && (
         <div className="fixed inset-0 bg-black/60 z-[999] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl border border-stone-100 w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200">
-            <div className="bg-[#0A2342] text-white px-5 py-3.5 flex items-center justify-between">
+          <div className="bg-white rounded-3xl border border-stone-100 w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200">
+
+            {/* Header */}
+            <div className="bg-[#0A2342] text-white px-6 py-4 flex items-center justify-between shrink-0">
               <h3 className="font-bold text-sm uppercase tracking-wider flex items-center gap-2">
                 <FileText size={16} />
-                Send Document
+                Send Document{selectedFiles.length > 1 ? "s" : ""} ({selectedFiles.length})
               </h3>
               <button
                 onClick={() => {
-                  setSelectedFile(null);
+                  setSelectedFiles([]);
                   if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
                 className="text-white/80 hover:text-white transition-colors"
@@ -1198,48 +1313,147 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
               </button>
             </div>
 
-            <div className="p-6 space-y-4 text-center">
-              {selectedFile.type.startsWith('image/') ? (
-                <div className="w-40 h-40 mx-auto rounded-2xl overflow-hidden shadow-inner border border-stone-200">
-                  <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="w-full h-full object-cover" />
-                </div>
-              ) : (
-                <div className="w-16 h-16 bg-[#0A2342]/5 text-[#C9A227] rounded-2xl flex items-center justify-center mx-auto shadow-inner border border-[#0A2342]/10">
-                  <FileText size={32} />
-                </div>
-              )}
-              <div className="px-2">
-                <p className="text-stone-900 font-bold text-base truncate">
-                  {selectedFile.name}
-                </p>
-                <p className="text-stone-400 text-xs font-semibold mt-1 uppercase tracking-widest">
-                  {formatFileSize(selectedFile.size)}
-                </p>
-              </div>
-              <p className="text-stone-500 text-sm mt-4 bg-stone-50 py-2.5 rounded-xl border border-stone-100">
-                Send to <span className="font-bold text-[#0A2342]">{partnerName}</span>?
-              </p>
+            {/* Split Content Area */}
+            <div className="flex flex-col md:flex-row flex-1 min-h-0 bg-white">
 
-              <div className="flex gap-3 justify-center pt-2">
-                <button
-                  onClick={() => {
-                    setSelectedFile(null);
-                    if (fileInputRef.current) fileInputRef.current.value = "";
-                  }}
-                  className="flex-1 px-4 py-2.5 border border-stone-200 rounded-xl text-xs font-bold uppercase tracking-wider text-stone-500 hover:bg-stone-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    handleFileUpload(selectedFile);
-                    setSelectedFile(null);
-                  }}
-                  className="flex-1 px-4 py-2.5 bg-[#0A2342] hover:bg-[#06162a] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md shadow-[#0A2342]/20 transition-all flex items-center justify-center gap-2 active:scale-95"
-                >
-                  <Send size={14} />
-                  Send
-                </button>
+              {/* Left Side: Document List */}
+              <div className="flex-1 flex flex-col min-h-0 border-b md:border-b-0 md:border-r border-stone-100 bg-[#F8F9FA]">
+                <div className="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-3">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center gap-4 p-3 bg-white border border-stone-200 shadow-sm rounded-2xl relative group pr-12">
+                      {file.type.startsWith('image/') ? (
+                        <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-stone-100">
+                          <img src={URL.createObjectURL(file)} alt="Preview" className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-14 h-14 bg-[#0A2342]/5 text-[#C9A227] rounded-xl flex items-center justify-center shrink-0 border border-[#0A2342]/10">
+                          <FileText size={24} />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="text-stone-900 font-bold text-sm line-clamp-2 break-all" title={file.name}>
+                          {file.name}
+                        </p>
+                        <p className="text-stone-400 text-[10px] font-semibold mt-1 uppercase tracking-widest">
+                          {formatFileSize(file.size)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== index))}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 bg-white text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg shadow-sm border border-stone-100 transition-all"
+                        title="Remove file"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add More Button (Fixed at bottom of left panel) */}
+                <div className="p-4 bg-white border-t border-stone-100 shrink-0">
+                  <button
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.multiple = true;
+                      input.accept = ".pdf,.doc,.docx,image/*";
+                      input.onchange = (e: any) => {
+                        const newFiles = Array.from(e.target.files || []);
+                        setSelectedFiles(prev => [...prev, ...newFiles as File[]]);
+                      };
+                      input.click();
+                    }}
+                    className="w-full py-3 border-2 border-dashed border-stone-300 rounded-xl text-stone-500 font-bold text-xs uppercase tracking-wider hover:border-[#0A2342] hover:text-[#0A2342] hover:bg-stone-50 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Plus size={16} />
+                    Add More Files
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Side: Payment & Actions */}
+              <div className="w-full md:w-[360px] flex flex-col p-6 shrink-0 bg-white">
+
+                <p className="text-stone-500 text-sm bg-stone-50 py-3 px-4 rounded-xl border border-stone-100 mb-6 text-center">
+                  Send to <span className="font-bold text-[#0A2342]">{partnerName}</span>?
+                </p>
+
+                {role === "advocate" && (
+                  <div className="bg-white border border-stone-200 rounded-2xl p-5 text-left space-y-4 shadow-sm mb-6 flex-1 md:flex-none">
+                    <div className="flex items-center justify-between pb-4 border-b border-stone-100">
+                      <div>
+                        <label className="text-sm font-bold text-[#0A2342] block">Require Payment</label>
+                        <span className="text-[10px] uppercase tracking-wider text-stone-400 font-semibold">Client must pay</span>
+                      </div>
+                      <button
+                        onClick={() => setDocRequiresPayment(!docRequiresPayment)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${docRequiresPayment ? 'bg-emerald-500' : 'bg-stone-300'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${docRequiresPayment ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+
+                    {docRequiresPayment ? (
+                      <div className="animate-in fade-in slide-in-from-top-2 duration-200 pt-2">
+                        <label className="text-xs font-extrabold uppercase tracking-wider text-stone-500 block mb-2">
+                          Amount to Unlock (₹)
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold">₹</span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={docPaymentAmount}
+                            onChange={(e) => setDocPaymentAmount(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (['e', 'E', '+', '-'].includes(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
+                            placeholder="500"
+                            className="w-full pl-8 pr-4 py-3 rounded-xl border border-stone-300 focus:border-[#0A2342] focus:ring-1 focus:ring-[#0A2342] text-base font-bold transition-all outline-none"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="pt-2">
+                        <div className="p-3 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100 text-center text-xs font-semibold leading-relaxed">
+                          Documents will be sent for free and unlocked immediately.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="mt-auto flex gap-3 pt-4">
+                  <button
+                    onClick={() => {
+                      setSelectedFiles([]);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="flex-1 px-4 py-3.5 border border-stone-200 rounded-xl text-xs font-bold uppercase tracking-wider text-stone-500 hover:bg-stone-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (role === "advocate" && docRequiresPayment && (!docPaymentAmount || Number(docPaymentAmount) <= 0)) {
+                        toast.error("Please enter a valid payment amount greater than 0.");
+                        return;
+                      }
+                      handleFileUpload(selectedFiles, role === "advocate" ? {
+                        requiresPayment: docRequiresPayment,
+                        amount: Number(docPaymentAmount)
+                      } : undefined);
+                      setSelectedFiles([]);
+                    }}
+                    className="flex-1 px-4 py-3.5 bg-[#0A2342] hover:bg-[#06162a] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-[#0A2342]/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <Send size={16} />
+                    Send
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1248,69 +1462,7 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
 
 
       {/* B. Create Payment Request Modal */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black/60 z-[999] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl border border-stone-100 w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200">
-            <div className="bg-[#0A2342] text-white px-6 py-4 flex items-center justify-between">
-              <h3 className="font-bold text-sm uppercase tracking-wider">Create Payment Request</h3>
-              <button onClick={() => setShowPaymentModal(false)} className="text-white/80 hover:text-white">
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-stone-400 block mb-1">
-                  Amount (INR)
-                </label>
-                <input
-                  type="number"
-                  value={payAmount}
-                  onChange={(e) => setPayAmount(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-stone-900 font-bold focus:outline-none focus:border-[#0A2342]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-stone-400 block mb-1">
-                  Description / Purpose
-                </label>
-                <textarea
-                  value={payDesc}
-                  onChange={(e) => setPayDesc(e.target.value)}
-                  placeholder="e.g. Charge for Deeds registry summary report"
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm focus:outline-none focus:border-[#0A2342] h-20"
-                />
-              </div>
-
-              <div className="flex gap-3 justify-end pt-2">
-                <button
-                  onClick={() => setShowPaymentModal(false)}
-                  className="px-4 py-2 border border-stone-200 rounded-xl text-xs font-bold uppercase tracking-wider text-stone-500 hover:bg-stone-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    const reqId = `pay_req_${Date.now().toString().slice(-4)}`;
-                    handleSendMessage("payment_request", payDesc || "Legal Consultation / Document Access Fee", {
-                      paymentRequestId: reqId,
-                      amount: Number(payAmount) || 1000,
-                      status: "pending",
-                    });
-                    setShowPaymentModal(false);
-                    setPayDesc("");
-                  }}
-                  className="px-4 py-2 bg-[#0A2342] hover:bg-[#06162a] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md transition-all"
-                >
-                  Send Request
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* Removed standalone payment request modal */}
 
     </div>
   );
