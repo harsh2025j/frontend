@@ -67,6 +67,7 @@ import {
   canAccessSavedPostsPage,
   canAccessAdvertisementsPage,
   canAccessAppointmentsPage,
+  canAccessPayoutsPage,
   isAdmin as checkIsAdmin
 } from "@/utils/permissions";
 
@@ -191,7 +192,7 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
       name: "Payouts & Settlements",
       icon: <Wallet size={18} />,
       href: "/admin/payouts",
-      show: isAdmin // Or any other permission you prefer
+      show: canAccessPayoutsPage(user)
     },
     {
       name: "Messages",

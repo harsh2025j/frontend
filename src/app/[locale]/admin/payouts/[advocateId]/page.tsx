@@ -17,6 +17,7 @@ export default function AdvocatePayoutDetails({ params }: { params: Promise<{ ad
   const [isLoading, setIsLoading] = useState(true);
   const [isBankLoading, setIsBankLoading] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const [payoutAmount, setPayoutAmount] = useState<string>("");
   const [payoutNote, setPayoutNote] = useState<string>("");
@@ -171,16 +172,21 @@ export default function AdvocatePayoutDetails({ params }: { params: Promise<{ ad
     }
   };
 
-  const handleLogPayout = async () => {
+  const handleLogPayout = () => {
     if (!payoutAmount || isNaN(Number(payoutAmount))) {
       toast.error("Enter a valid amount");
       return;
     }
+    setShowConfirmModal(true);
+  };
+
+  const submitLogPayout = async () => {
     try {
       await payoutsService.logPayout(advocateId, Number(payoutAmount), payoutNote);
       toast.success("Payout logged successfully!");
       setPayoutAmount("");
       setPayoutNote("");
+      setShowConfirmModal(false);
       refreshPayoutsAndSummary();
     } catch (err) {
       toast.error("Failed to log payout");
@@ -403,6 +409,11 @@ export default function AdvocatePayoutDetails({ params }: { params: Promise<{ ad
                   type="number"
                   value={payoutAmount}
                   onChange={(e) => setPayoutAmount(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (['e', 'E', '+', '-'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                   className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   placeholder="e.g. 500"
                 />
@@ -568,6 +579,42 @@ export default function AdvocatePayoutDetails({ params }: { params: Promise<{ ad
                 className="px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+            <div className="p-5 border-b border-gray-100 flex items-center gap-3 bg-amber-50/50">
+              <div className="p-2 bg-amber-100 text-amber-600 rounded-xl">
+                <AlertCircle size={20} />
+              </div>
+              <h3 className="font-bold text-gray-900">Confirm Payment Log</h3>
+            </div>
+            <div className="p-6 space-y-3">
+              <p className="text-sm text-gray-600">
+                Are you sure you want to log a payment of <span className="font-bold text-gray-900">₹{payoutAmount}</span>?
+              </p>
+              <p className="text-xs text-gray-500">
+                This action indicates that you have successfully transferred the funds to the advocate's bank account. This cannot be easily undone.
+              </p>
+            </div>
+            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 font-semibold text-sm transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitLogPayout}
+                className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 shadow-sm transition"
+              >
+                Confirm & Log
               </button>
             </div>
           </div>

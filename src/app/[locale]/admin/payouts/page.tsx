@@ -3,12 +3,15 @@
 import React, { useEffect, useState } from "react";
 import { payoutsService } from "@/data/services/payouts-service/payoutsService";
 import { toast } from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Edit2, Eye, Wallet } from "lucide-react";
 import Pagination from "@/components/Pagination";
 
 export default function PayoutsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
   const [commissionRate, setCommissionRate] = useState<number>(0);
   const [advocates, setAdvocates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,9 +20,36 @@ export default function PayoutsPage() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const pageParam = searchParams.get("page");
+  const limitParam = searchParams.get("limit");
+  
+  const [currentPage, setCurrentPage] = useState(pageParam ? parseInt(pageParam) : 1);
+  const [itemsPerPage, setItemsPerPage] = useState(limitParam ? parseInt(limitParam) : 12);
   const [totalPages, setTotalPages] = useState(1);
+
+  // Sync state with URL params if they change externally (e.g. browser back button)
+  useEffect(() => {
+    const page = searchParams.get("page");
+    const limit = searchParams.get("limit");
+    if (page) setCurrentPage(parseInt(page));
+    if (limit) setItemsPerPage(parseInt(limit));
+  }, [searchParams]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", page.toString());
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleLimitChange = (limit: number) => {
+    setItemsPerPage(limit);
+    setCurrentPage(1);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("limit", limit.toString());
+    params.set("page", "1");
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   const fetchSettings = async () => {
     try {
@@ -190,10 +220,7 @@ export default function PayoutsPage() {
               <span className="text-sm text-gray-600">Rows per page:</span>
               <select
                 value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => handleLimitChange(Number(e.target.value))}
                 className="border border-gray-300 rounded-md text-sm px-2 py-1 outline-none focus:border-blue-500 bg-white"
               >
                 <option value={10}>10</option>
@@ -207,7 +234,7 @@ export default function PayoutsPage() {
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                onPageChange={setCurrentPage}
+                onPageChange={handlePageChange}
               />
             </div>
             

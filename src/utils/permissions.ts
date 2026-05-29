@@ -22,6 +22,10 @@ export const PERMISSIONS = {
         EDIT: "edit:subscription",
         DELETE: "delete:subscription",
     },
+    PAYOUT: {
+        READ_ALL: "read:all:payouts",
+        WRITE_ALL: "write:all:payouts",
+    },
     MANAGE: {
         CATEGORIES: "manage:categories",
         TAGS: "manage:tags",
@@ -76,6 +80,8 @@ export type PermissionType =
     | typeof PERMISSIONS.MANAGE.ROLE
     | typeof PERMISSIONS.MANAGE.PERMISSION
     | typeof PERMISSIONS.MANAGE.REPORTS
+    | typeof PERMISSIONS.PAYOUT.READ_ALL
+    | typeof PERMISSIONS.PAYOUT.WRITE_ALL
     | typeof PERMISSIONS.MANAGE.DISPLAY_BOARD;
 
 export type RoleType =
@@ -310,6 +316,15 @@ export const canAccessSettingsPage = (user: UserData | null): boolean => {
     return hasAnyRole(user, [ROLES.ADMIN, ROLES.SUPERADMIN]);
 };
 
+export const canAccessPayoutsPage = (user: UserData | null): boolean => {
+    if (!user) return false;
+    // Explicitly require BOTH read and write permissions rather than defaulting to true for all admins
+    return hasAllPermissions(user, [
+        PERMISSIONS.PAYOUT.READ_ALL,
+        PERMISSIONS.PAYOUT.WRITE_ALL
+    ]);
+};
+
 /**
  * ============================================================================
  * UTILS & CORE UI HELPERS
@@ -331,7 +346,8 @@ export const canSeeAccessControlSection = (user: UserData | null): boolean => {
         canAccessRolePermissionPage(user) ||
         canAccessPermissionMatrixPage(user) ||
         canAccessOfficeManagementPage(user) ||
-        canAccessPracticeAreaManagementPage(user)
+        canAccessPracticeAreaManagementPage(user) ||
+        canAccessPayoutsPage(user)
     );
 };
 
@@ -426,4 +442,6 @@ export const ROUTE_PROTECTION_MAP: Record<string, PermissionCheckFn> = {
 
     // 7. System
     "/admin/settings": canAccessSettingsPage,
+    "/admin/payouts": canAccessPayoutsPage,
+    "/admin/payouts/[advocateId]": canAccessPayoutsPage,
 };
