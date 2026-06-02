@@ -11,11 +11,13 @@ import RichTextEditor from "@/components/ui/RichTextEditor";
 import { useRouter } from "next/navigation";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
+import { articleApi } from "@/data/services/article-service/article-service";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronUp, X } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronUp, X, Cloud, Loader2, CloudCheck, CloudOff } from "lucide-react";
+import { useAutoSave } from "@/hooks/useAutoSave";
 import CategorySelect from "@/components/ui/CategorySelect";
 import FormField from "@/components/ui/FormField";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import ImageCropperModal from "@/components/ui/ImageCropperModal";
 
 
@@ -59,6 +61,9 @@ const CreateUpdatePage: React.FC = () => {
     setImageToCrop(null);
   };
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [createdArticleId, setCreatedArticleId] = useState<string | null>(null);
+  const createdArticleIdRef = useRef<string | null>(null);
+  const createPromiseRef = useRef<Promise<any> | null>(null);
 
   const toggleUpdateExpansion = (id: string) => {
     setExpandedUpdates(prev =>
@@ -124,8 +129,9 @@ const CreateUpdatePage: React.FC = () => {
     }
   }, [user, formData.author, setFormData]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const newErrors: Record<string, string> = {};
 
     const requiredFields = [
       { key: 'category', label: 'Category' },
@@ -134,7 +140,6 @@ const CreateUpdatePage: React.FC = () => {
       { key: 'content', label: 'Main Content' }
     ];
 
-    const newErrors: Record<string, string> = {};
     for (const field of requiredFields) {
       const value = formData[field.key as keyof typeof formData];
       if (!value || (typeof value === 'string' && value.trim() === '')) {
@@ -142,7 +147,6 @@ const CreateUpdatePage: React.FC = () => {
       }
     }
 
-    // Additional check for RichTextEditor
     const stripHtml = (html: string) => {
       const doc = new DOMParser().parseFromString(html, 'text/html');
       return doc.body.textContent || "";
@@ -154,8 +158,6 @@ const CreateUpdatePage: React.FC = () => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-
-      // Scroll to the first error
       const firstErrorKey = Object.keys(newErrors)[0];
       const element = document.getElementsByName(firstErrorKey)[0];
       if (element) {
@@ -172,8 +174,47 @@ const CreateUpdatePage: React.FC = () => {
       return;
     }
 
-    handleCreateArticle("pending");
+    try {
+      await handleCreateArticle("pending");
+      toast.success("Article requested for publishing successfully");
+      router.push("/admin/content-management");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to create article");
+    }
   };
+
+  // Don't auto-save if both title and content are completely empty
+  const isFormEmpty = !formData.title?.trim() && !formData.content?.trim();
+
+  const { status: autoSaveStatus } = useAutoSave(formData, async () => {
+    if (!formData.title && !formData.content) return; // Skip saving completely empty forms
+
+    if (createdArticleIdRef.current) {
+      await articleApi.updateArticle(createdArticleIdRef.current, { ...formData, status: "draft" });
+    } else if (createPromiseRef.current) {
+      // It's already in the process of being created. Wait for it to finish, then update it.
+      const result = await createPromiseRef.current;
+      await articleApi.updateArticle(result.data.id, { ...formData, status: "draft" });
+    } else {
+      createPromiseRef.current = handleCreateArticle("draft");
+      const result = await createPromiseRef.current;
+      
+      if (result && result.data && result.data.id) {
+        createdArticleIdRef.current = result.data.id;
+        setCreatedArticleId(result.data.id);
+        
+        // Reconstruct URL safely without appending duplicates
+        const segments = window.location.pathname.split('/create-content');
+        const basePath = segments[0] + '/create-content';
+        
+        if (!window.location.pathname.includes(result.data.id)) {
+            window.history.replaceState(null, '', `${basePath}/${result.data.id}`);
+        }
+      }
+    }
+  }, 3000, {
+    enabled: !isFormEmpty
+  });
 
   const previewUrl = useMemo(() => {
     return formData.thumbnail ? URL.createObjectURL(formData.thumbnail) : null;
@@ -205,14 +246,56 @@ const CreateUpdatePage: React.FC = () => {
         />
       )}
       <main className="flex-1 w-full p-3 sm:p-4 md:p-6 lg:p-8">
-        <div className="flex">
+        {/* Floating WhatsApp-Style Auto-Save Indicator */}
+        {autoSaveStatus !== 'idle' && (
+          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
+            <div className="pointer-events-auto flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md shadow-sm border text-sm text-gray-700 font-medium transition-all duration-300">
+
+              {autoSaveStatus === 'unsaved' && (
+                <>
+                  <div className="relative inline-flex items-center justify-center">
+                    <Cloud size={16} className="text-gray-500" />
+                    <span className="absolute top-[4px] text-[12px] font-bold text-gray-700">*</span>
+                  </div>
+                  <span>Unsaved changes</span>
+                </>
+              )}
+
+              {autoSaveStatus === 'saving' && (
+                <>
+                  <div className="relative inline-flex items-center justify-center">
+                    <Cloud size={16} className="text-blue-500" />
+                    <Loader2 size={10} className="absolute animate-spin text-blue-700" />
+                  </div>
+                  <span>Saving...</span>
+                </>
+              )}
+
+              {autoSaveStatus === 'saved' && (
+                <>
+                  <CloudCheck size={16} className="text-green-500" />
+                  <span>Saved</span>
+                </>
+              )}
+
+              {autoSaveStatus === 'error' && (
+                <>
+                  <CloudOff size={16} className="text-red-500" />
+                  <span className="text-red-500">Failed</span>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center gap-4 mb-4 sm:mb-6 px-2">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-200 rounded-full transition-colors mb-4"
+            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
           >
             <ArrowLeft size={24} className="text-gray-600" />
           </button>
-          <span className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 px-2">Create New Content</span>
+          <h1 className="text-xl sm:text-2xl font-semibold">Create New Content</h1>
         </div>
         <div className="max-w-6xl mx-auto bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm">
           <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>

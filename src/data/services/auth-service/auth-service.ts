@@ -94,6 +94,14 @@ export const authApi = {
     return response;
   },
 
+  logout: async (data: { refreshToken: string, fcmToken?: string }) => {
+    const response = await apiClient.post(
+      API_ENDPOINTS.AUTH.LOGOUT,
+      data
+    );
+    return response;
+  },
+
   getProfile: async () => {
     const response = await apiClient.get(
       API_ENDPOINTS.PROFILE.FETCH

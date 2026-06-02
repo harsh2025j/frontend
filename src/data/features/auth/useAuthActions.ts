@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { LoginRequest, RegisterRequest, ResendOtpRequest, ResetPasswordRequest, VerifyOtpRequest } from "./auth.types";
-import { forgotPassword, loginUser, registerUser, ResendOtp, resetPassword, verifyOtp, loginWithGoogle } from "./authThunks";
+import { forgotPassword, loginUser, registerUser, ResendOtp, resetPassword, verifyOtp, loginWithGoogle, logoutUserAsync } from "./authThunks";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 import { resetAuthState, logoutUser } from "./authSlice";
 
@@ -31,8 +31,8 @@ export const useAuth = () => {
   const token = useAppSelector(selectIsToken);
   const debugOtp = useAppSelector(selectDebugOtp);
 
-  const logout = () => {
-    dispatch(logoutUser());
+  const logout = async () => {
+    await dispatch(logoutUserAsync());
     window.location.href = '/'; // Force full page reload
 
   };

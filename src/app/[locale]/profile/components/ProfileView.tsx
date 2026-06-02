@@ -23,6 +23,7 @@ import { articleApi } from "@/data/services/article-service/article-service";
 import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
+import { logoutUserAsync } from "@/data/features/auth/authThunks";
 import { getUserSubscription } from "@/data/features/subscription/subscriptionThunks";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
@@ -299,7 +300,10 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
     } finally { setSaving(false); }
   };
 
-  const handleLogout = () => { localStorage.clear(); window.location.href = "/"; };
+  const handleLogout = async () => {
+    await dispatch(logoutUserAsync());
+    router.replace("/");
+  };
 
   if (loading) return <BentoSkeleton />;
   if (error || !profileUser) return <BentoErrorView error={error} context={viewContext} router={router} />;
@@ -386,7 +390,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="mt-12 flex flex-wrap gap-4 items-center"
+              className="mt-12 flex flex-wrap gap-4 items-center justify-center"
             >
               <button
                 onClick={() => {

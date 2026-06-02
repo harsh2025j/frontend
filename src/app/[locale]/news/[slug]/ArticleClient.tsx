@@ -44,7 +44,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
     useEffect(() => {
         const fetchPhotos = async () => {
             // Fetch Author Photo
-            if (article.authorId && article.authorId !== 'anonymous') {
+            if (article.authorId && article.authorId !== 'anonymous' && article.authorId !== 'system-auto-bot') {
                 try {
                     const res = await profileApi.fetchPublicProfile(article.authorId);
                     if (res.data.success) {
@@ -177,10 +177,10 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
             <div>
                 {/* Title */}
                 <div className="mb-6">
-                    <h2 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight font-unna">{displayTitle}</h2>
+                    <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight font-unna">{displayTitle}</h2>
 
                     {/* Author metadata */}
-                    {authorUsername || article.authorId ? (
+                    {(authorUsername || article.authorId) && article.authorId !== 'system-auto-bot' ? (
                         <Link href={`/profile/${authorUsername || article.authorId}`} className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/author">
                             <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-2 ring-[#C9A227]/80 shadow-sm shrink-0 overflow-hidden relative group-hover/author:ring-[#C9A227]/70 transition-all">
                                 {authorPhoto ? (
@@ -257,19 +257,21 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                 )}
 
                 {/* Tags + AI Summary */}
-                <div className="mb-8 flex flex-wrap items-center gap-2 relative pr-40 min-h-[40px]">
-                    {article.tags && article.tags.length > 0 && (
-                        <>
-                            <span className="text-sm font-bold text-gray-900 mr-2">Tags:</span>
-                            {article.tags.map((tag) => (
-                                <Link key={tag.id} href={`/tags/${tag.slug}`} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-blue-100 hover:text-blue-700 transition-colors">
-                                    {tag.name}
-                                </Link>
-                            ))}
-                        </>
-                    )}
-                    <div className="absolute right-0 top-0">
-                        <button type="button" onClick={handleSummaryClick} className="px-6 py-2 bg-blue-600 text-white text-base font-medium rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm">
+                <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 relative min-h-[40px]">
+                    <div className="flex flex-wrap items-center gap-2 flex-1 pr-0 md:pr-4">
+                        {article.tags && article.tags.length > 0 && (
+                            <>
+                                <span className="text-sm font-bold text-gray-900 mr-2">Tags:</span>
+                                {article.tags.map((tag) => (
+                                    <Link key={tag.id} href={`/tags/${tag.slug}`} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-blue-100 hover:text-blue-700 transition-colors">
+                                        {tag.name}
+                                    </Link>
+                                ))}
+                            </>
+                        )}
+                    </div>
+                    <div className="w-full md:w-auto relative flex justify-start md:justify-end">
+                        <button type="button" onClick={handleSummaryClick} className="w-full md:w-auto justify-center px-6 py-2 bg-blue-600 text-white text-base font-medium rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm">
                             AI Summary
                         </button>
                         {showSummary && (
@@ -289,13 +291,13 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                 </div>
 
                 {/* Social Share */}
-                <div className="flex flex-col sm:flex-row items-center gap-6 mb-10 py-3 px-6 bg-white rounded-full border border-gray-200 w-fit mx-auto sm:mx-0">
-                    <div className="flex items-center gap-3 text-[#0A2342] font-bold min-w-fit">
+                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 mb-10 py-3 sm:py-3 px-4 sm:px-6 bg-white rounded-2xl sm:rounded-full border border-gray-200 w-full sm:w-fit mx-auto sm:mx-0 shadow-sm">
+                    <div className="flex items-center gap-2 sm:gap-3 text-[#0A2342] font-bold min-w-fit w-full sm:w-auto justify-center sm:justify-start border-b sm:border-b-0 border-gray-100 pb-2 sm:pb-0">
                         <Share2 size={20} className="text-[#0A2342]" />
                         <span className="text-sm tracking-wider">{t("shareArticle")}</span>
                     </div>
                     <div className="hidden sm:block w-px h-8 bg-gray-200" />
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2 sm:gap-3 pt-1 sm:pt-0">
                         <SavePostButton postId={article.id || (article as any)._id} className="hover:-translate-y-1 hover:shadow-lg transition-all duration-300" iconSize={20} />
                         <button onClick={() => handleShare("facebook")} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0A2342] text-white hover:text-[#C9A227] transition-all duration-300"><Facebook size={18} /></button>
                         <button onClick={() => handleShare("twitter")} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0A2342] text-white hover:text-[#C9A227] transition-all duration-300">
@@ -310,8 +312,9 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
                         </button>
                     </div>
+                    <div className="w-full sm:hidden h-px bg-gray-100" />
                     <div className="hidden sm:block w-px h-8 bg-gray-200" />
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center gap-3 sm:gap-3 w-full sm:w-auto pb-1 sm:pb-0">
                         <button onClick={() => handleShare("copy")} className={`w-10 h-10 flex items-center justify-center rounded-full ${copied ? "bg-green-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"} transition-all duration-300 hover:-translate-y-1`}>
                             {copied ? <Check size={18} /> : <Link2 size={18} />}
                         </button>
@@ -337,6 +340,13 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                             aspect-ratio: 16 / 9;
                             height: auto !important;
                         }
+                        @media (max-width: 640px) {
+                            .article-content h1 { font-size: 1.75rem !important; line-height: 1.3 !important; margin-bottom: 0.75rem !important; }
+                            .article-content h2 { font-size: 1.5rem !important; line-height: 1.3 !important; margin-bottom: 0.75rem !important; }
+                            .article-content h3 { font-size: 1.25rem !important; line-height: 1.4 !important; margin-bottom: 0.5rem !important; }
+                            .article-content h4, .article-content h5, .article-content h6 { font-size: 1.125rem !important; line-height: 1.4 !important; margin-bottom: 0.5rem !important; }
+                            .article-content p, .article-content li, .article-content span { font-size: 1rem !important; line-height: 1.6 !important; }
+                        }
                     `}</style>
                     <div dangerouslySetInnerHTML={{ __html: displayContent }} />
                     {!hasFullAccess && <PaywallOverlay isLoggedIn={!!user} t={t} />}
@@ -345,7 +355,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                 {/* Related Documents */}
                 {hasFullAccess && article.documents && article.documents.length > 0 && (
                     <div className="mb-12 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                        <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                             <svg className="w-5 h-5 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                             Related Documents
                         </h3>
@@ -384,7 +394,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                 {/* Developing Story Timeline */}
                 {hasFullAccess && article.updates && article.updates.length > 0 && (
                     <div className="mb-16 mt-12 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-                        <h3 className="text-3xl font-bold text-gray-900 mb-10 pb-4 border-b font-unna">Developing Story Timeline</h3>
+                        <h3 className="text-xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-10 pb-4 border-b font-unna">Developing Story Timeline</h3>
                         <div className="space-y-12 relative pl-8 border-l-[3px] border-[#2A65A4] ml-2">
                             {[...article.updates].map((update, idx) => {
                                 const isLatest = idx === article.updates!.length - 1;
@@ -400,7 +410,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                                         )}
                                         <div className="flex flex-col gap-2 timeline-update-content">
                                             <span className="text-gray-500 text-sm font-semibold tracking-wide uppercase">{formatDate(update.updateDate as string)}</span>
-                                            {update.title && <h4 className="font-bold text-[22px] text-[#0A2342] leading-snug">{update.title}</h4>}
+                                            {update.title && <h4 className="font-bold text-[18px] sm:text-[22px] text-[#0A2342] leading-snug">{update.title}</h4>}
                                             <div className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1 font-unna" dangerouslySetInnerHTML={{ __html: update.content }} />
                                         </div>
                                     </div>

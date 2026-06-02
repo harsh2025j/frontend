@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { useCreateArticleActions, useArticleListActions } from "@/data/features/article/useArticleActions";
 import { Advocate } from "@/data/features/article/article.types";
@@ -13,7 +13,8 @@ import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { UserData } from "@/data/features/profile/profile.types";
 import { articleApi } from "@/data/services/article-service/article-service";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronUp, X } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronUp, X, Cloud, Loader2, CloudCheck, CloudOff } from "lucide-react";
+import { useAutoSave } from "@/hooks/useAutoSave";
 import CategorySelect from "@/components/ui/CategorySelect";
 import FormField from "@/components/ui/FormField";
 import ImageCropperModal from "@/components/ui/ImageCropperModal";
@@ -114,6 +115,8 @@ const EditArticlePage: React.FC = () => {
     }, [dispatch]);
 
     // --- Fetch Article Details ---
+    const resetBaselineRef = useRef<((data: any) => void) | null>(null);
+
     useEffect(() => {
         const fetchArticleDetails = async () => {
             if (!articleId) return;
@@ -125,7 +128,7 @@ const EditArticlePage: React.FC = () => {
                 const article = response.data?.id ? response.data : response.data?.data;
 
                 if (article) {
-                    setFormData({
+                    const loadedData = {
                         title: article.title,
                         category: (typeof article.category === 'object' ? article.category?.id : article.category) || "",
                         location: article.location || "",
@@ -141,10 +144,12 @@ const EditArticlePage: React.FC = () => {
                             : (typeof article.tags === 'string' ? (article.tags as string).split(',') : []),
                         thumbnail: null,
                         documents: [],
-                        status: article.status === 'published' ? 'pending' : 'draft',
+                        status: (article.status === 'published' ? 'pending' : 'draft') as "pending" | "draft",
                         isPaywalled: article.isPaywalled || false,
                         advocates: article.advocates || [],
-                    });
+                    };
+                    setFormData(loadedData);
+                    if (resetBaselineRef.current) resetBaselineRef.current(loadedData);
 
                     if (article.thumbnail) {
                         setExistingThumbnailUrl(article.thumbnail);
@@ -170,27 +175,16 @@ const EditArticlePage: React.FC = () => {
     }, [articleId, setFormData, router]);
 
 
-    // --- Helper: Generate Slug ---
-    const generateSlug = (text: string) => {
-        return text
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/(^-|-$)+/g, "");
-    };
-
-    // --- Handler: Title Change (Updates Slug automatically) ---
+    // --- Handler: Title Change ---
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newTitle = e.target.value;
-        const autoSlug = generateSlug(newTitle);
-        const uniqueSuffix = Date.now().toString().slice(-6);
-        const generatedSlug = `${autoSlug}-article-${uniqueSuffix}`;
-
-        // console.log(generatedSlug)
 
         setFormData((prev) => ({
             ...prev,
             title: newTitle,
-            slug: generatedSlug
+            // We NO LONGER auto-generate or overwrite the slug here.
+            // The backend is completely responsible for generating the final slug
+            // when the article is submitted (status -> pending).
         }));
 
         if (errors.title) {
@@ -205,30 +199,33 @@ const EditArticlePage: React.FC = () => {
     const { refetch } = useArticleListActions();
 
     // --- Handler: Update Article ---
-    const handleUpdate = async (status: "draft" | "pending") => {
-        const requiredFields = [
-            { key: 'category', label: 'Category' },
-            { key: 'title', label: 'Headline' },
-            { key: 'location', label: 'Location' },
-            { key: 'content', label: 'Main Content' }
-        ];
-
+    const handleUpdate = async (status: "draft" | "pending", isAutoSave: boolean = false) => {
         const newErrors: Record<string, string> = {};
-        for (const field of requiredFields) {
-            const value = formData[field.key as keyof typeof formData];
-            if (!value || (typeof value === 'string' && value.trim() === '')) {
-                newErrors[field.key] = `${field.label} is required`;
+
+        if (status !== "draft") {
+            const requiredFields = [
+                { key: 'category', label: 'Category' },
+                { key: 'title', label: 'Headline' },
+                { key: 'location', label: 'Location' },
+                { key: 'content', label: 'Main Content' }
+            ];
+
+            for (const field of requiredFields) {
+                const value = formData[field.key as keyof typeof formData];
+                if (!value || (typeof value === 'string' && value.trim() === '')) {
+                    newErrors[field.key] = `${field.label} is required`;
+                }
             }
-        }
 
-        // Additional check for RichTextEditor
-        const stripHtml = (html: string) => {
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-            return doc.body.textContent || "";
-        };
+            // Additional check for RichTextEditor
+            const stripHtml = (html: string) => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                return doc.body.textContent || "";
+            };
 
-        if (!newErrors.content && stripHtml(formData.content).trim() === '') {
-            newErrors.content = "Main Content cannot be empty";
+            if (!newErrors.content && stripHtml(formData.content).trim() === '') {
+                newErrors.content = "Main Content cannot be empty";
+            }
         }
 
         if (Object.keys(newErrors).length > 0) {
@@ -251,18 +248,20 @@ const EditArticlePage: React.FC = () => {
             return;
         }
 
-        setLoading(true);
+        if (!isAutoSave) setLoading(true);
         try {
             await articleApi.updateArticle(articleId!, { ...formData, status });
 
-            toast.success("Article updated successfully");
-            await refetch(true); // Force refresh list
-            router.push("/admin/content-management");
+            if (!isAutoSave) {
+                toast.success("Article updated successfully");
+                await refetch(true); // Force refresh list
+                router.push("/admin/content-management");
+            }
         } catch (error: any) {
-            // console.error("Update failed", error);
-            toast.error(error?.message || "Failed to update article");
+            if (!isAutoSave) toast.error(error?.message || "Failed to update article");
+            throw error; // Rethrow so autoSave hook can catch it
         } finally {
-            setLoading(false);
+            if (!isAutoSave) setLoading(false);
         }
     };
 
@@ -270,6 +269,19 @@ const EditArticlePage: React.FC = () => {
         e.preventDefault();
         await handleUpdate("pending");
     };
+
+    // Don't auto-save if both title and content are completely empty
+    const isFormEmpty = !formData.title?.trim() && !formData.content?.trim();
+
+    const { status: autoSaveStatus, resetBaseline } = useAutoSave(formData, async () => {
+        if (!formData.title && !formData.content) return; // Skip saving completely empty forms
+        await handleUpdate("draft", true);
+    }, 3000, {
+        enabled: !isFormEmpty
+    });
+    
+    // Make resetBaseline available to the fetch effect
+    resetBaselineRef.current = resetBaseline;
 
     // --- Data Preparation for Select ---
     const flattenCategories = (cats: Category[], prefix = ""): { id: string; name: string }[] => {
@@ -305,6 +317,48 @@ const EditArticlePage: React.FC = () => {
                 />
             )}
             <main className="flex-1 w-full p-3 sm:p-4 md:p-6 lg:p-8">
+
+                {/* Floating WhatsApp-Style Auto-Save Indicator */}
+                {autoSaveStatus !== 'idle' && (
+                    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
+                        <div className="pointer-events-auto flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md shadow-sm border text-sm text-gray-700 font-medium transition-all duration-300">
+
+                            {autoSaveStatus === 'unsaved' && (
+                                <>
+                                    <div className="relative inline-flex items-center justify-center">
+                                        <Cloud size={16} className="text-gray-500" />
+                                        <span className="absolute top-[4px] text-[12px] font-bold text-gray-700">*</span>
+                                    </div>
+                                    <span>Unsaved changes</span>
+                                </>
+                            )}
+
+                            {autoSaveStatus === 'saving' && (
+                                <>
+                                    <div className="relative inline-flex items-center justify-center">
+                                        <Cloud size={16} className="text-blue-500" />
+                                        <Loader2 size={10} className="absolute animate-spin text-blue-700" />
+                                    </div>
+                                    <span>Saving...</span>
+                                </>
+                            )}
+
+                            {autoSaveStatus === 'saved' && (
+                                <>
+                                    <CloudCheck size={16} className="text-green-500" />
+                                    <span>Saved</span>
+                                </>
+                            )}
+
+                            {autoSaveStatus === 'error' && (
+                                <>
+                                    <CloudOff size={16} className="text-red-500" />
+                                    <span className="text-red-500">Failed</span>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 <div className="flex items-center gap-4 mb-4 sm:mb-6 px-2">
                     <button
@@ -382,14 +436,15 @@ const EditArticlePage: React.FC = () => {
                         </FormField>
 
                         {/* Slug */}
-                        <FormField label="Slug" error={errors.slug} required>
+                        <FormField label="Slug" error={errors.slug}>
                             <input
                                 type="text"
                                 name="slug"
-                                placeholder="auto-generated-slug"
-                                value={formData.slug}
+                                placeholder="Slug will be auto-generated upon submission"
+                                value={formData.slug || ""}
                                 onChange={handleLocalChange}
                                 className={inputClasses('slug')}
+                                readOnly
                             />
                         </FormField>
 

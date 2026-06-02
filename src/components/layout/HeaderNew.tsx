@@ -19,7 +19,7 @@ import { UserData } from "@/data/features/profile/profile.types";
 
 // Profile & Auth
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
-import { logoutUser } from "@/data/features/auth/authSlice";
+import { logoutUserAsync } from "@/data/features/auth/authThunks";
 
 // Redux
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
@@ -164,9 +164,8 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
     }, [dispatch, reduxCategories.length]);
 
 
-    const confirmLogout = () => {
-        localStorage.clear();
-        dispatch(logoutUser());
+    const confirmLogout = async () => {
+        await dispatch(logoutUserAsync());
         setIsProfileOpen(false);
         setShowLogoutConfirm(false);
         setMenuOpen(false);
@@ -438,7 +437,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                             <Link href="/" className="flex items-center gap-3 group">
                                 <div className="relative">
                                     <Image src={logo} alt="Sajjad Husain Law Associates" className="object-contain" width={40} height={40} priority />
-                                    <div className="absolute -inset-1 bg-[#C9A227]/20 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    {/* <div className="absolute -inset-1 bg-[#C9A227]/20 rounded-full blur-sm opacity-0  transition-opacity duration-300"></div> */}
                                 </div>
                                 <div className="block">
                                     <h1 className="text-sm min-[400px]:text-base sm:text-lg font-bold text-gray-900 leading-tight">

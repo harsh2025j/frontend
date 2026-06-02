@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { loginUser, registerUser, verifyOtp, forgotPassword, resetPassword, ResendOtp, loginWithGoogle, refreshToken } from "./authThunks";
+import { loginUser, registerUser, verifyOtp, forgotPassword, resetPassword, ResendOtp, loginWithGoogle, refreshToken, logoutUserAsync } from "./authThunks";
 import { AuthState } from "./auth.types";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 
@@ -237,6 +237,23 @@ const authSlice = createSlice({
             if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
           }
         } catch { }
+      })
+      .addCase(logoutUserAsync.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(logoutUserAsync.fulfilled, (state) => {
+        state.loading = false;
+        state.token = null;
+        state.refreshToken = null;
+        state.user = null;
+        localStorage.clear();
+      })
+      .addCase(logoutUserAsync.rejected, (state) => {
+        state.loading = false;
+        state.token = null;
+        state.refreshToken = null;
+        state.user = null;
+        localStorage.clear();
       });
 
 

@@ -162,53 +162,19 @@ export const useCreateArticleActions = () => {
     }));
   };
 
-  const handleCreateArticle = (status: "draft" | "pending") => {
-    if (!formData.title || !formData.content) {
+  const handleCreateArticle = async (status: "draft" | "pending") => {
+    if (status !== 'draft' && (!formData.title || !formData.content)) {
       toast.error("Please fill in the Title and Main Content.");
-      return;
+      return Promise.reject(new Error("Please fill in the Title and Main Content."));
     }
 
-    // if (!formData.thumbnail) {
-    //   toast.error("Please upload a thumbnail image.");
-    //   return;
-    // }
-
-    // Generate unique slug from title
-    const baseSlug = formData.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)+/g, "");
-    const uniqueSuffix = Date.now().toString().slice(-6);
-    const generatedSlug = `${baseSlug}-article-${uniqueSuffix}`;
-
-    dispatch(createArticle({ ...formData, slug: generatedSlug, status }));
+    // The backend now completely handles slug generation
+    // upon submission (pending/published status).
+    return dispatch(createArticle({ ...formData, status })).unwrap();
   };
 
-  useEffect(() => {
-    if (!!message) {
-      // Reset form after successful submission
-      setFormData({
-        title: "",
-        category: "",
-        location: "",
-        slug: "",
-        subHeadline: "",
-        updates: [],
-        advocateName: "",
-        advocates: [],
-        language: "English/हिन्दी",
-        author: "",
-        content: "",
-        tags: [],
-        thumbnail: null,
-        documents: [],
-        isPaywalled: false
-      });
-
-      toast.success(message);
-      dispatch(resetArticleState());
-    }
-  }, [message, dispatch]);
+  // Form reset and toast logic has been moved to the UI component 
+  // to prevent auto-save from accidentally wiping the form.
 
   return {
     formData,

@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { fetchProfile, updateProfile, toggleSavePost } from "./profileThunks";
-import { loginWithGoogle } from "../auth/authThunks";
+import { loginWithGoogle, logoutUserAsync } from "../auth/authThunks";
 import { ProfileState } from "./profile.types";
 // 1. Import the logout action
 import { logoutUser } from "../auth/authSlice";
@@ -118,7 +118,12 @@ const profileSlice = createSlice({
         state.error = null;
         state.message = null;
         state.loading = false;
-
+      })
+      .addCase(logoutUserAsync.fulfilled, (state) => {
+        state.user = null;
+        state.error = null;
+        state.message = null;
+        state.loading = false;
       });
   },
 });

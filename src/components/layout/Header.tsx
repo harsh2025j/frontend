@@ -15,7 +15,7 @@ import { UserData } from "@/data/features/profile/profile.types";
 
 // Profile & Auth
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
-import { logoutUser } from "@/data/features/auth/authSlice";
+import { logoutUserAsync } from "@/data/features/auth/authThunks";
 
 // Redux
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
@@ -113,9 +113,8 @@ export default function Header() {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  const confirmLogout = () => {
-    localStorage.clear();
-    dispatch(logoutUser());
+  const confirmLogout = async () => {
+    await dispatch(logoutUserAsync());
     setIsProfileOpen(false);
     setShowLogoutConfirm(false);
     setMenuOpen(false);

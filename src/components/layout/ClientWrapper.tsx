@@ -13,6 +13,10 @@ import { setArticles } from "@/data/features/article/articleSlice";
 import { setCategories } from "@/data/features/category/categorySlice";
 import { getUserSubscription } from "@/data/features/subscription/subscriptionThunks";
 import { AdPopup } from "../ads/StandardAds";
+import { messaging } from "@/config/firebase";
+import { onMessage } from "firebase/messaging";
+import toast from "react-hot-toast";
+import { Bell, X } from "lucide-react";
 
 export default function ClientLayout({
   children,
@@ -31,6 +35,38 @@ export default function ClientLayout({
 
   const pathname = usePathname();
   const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (messaging) {
+      const unsubscribe = onMessage(messaging, (payload) => {
+        console.log("Foreground Message received: ", payload);
+        if (payload.notification) {
+          toast.dismiss('push-notification');
+          toast((t) => (
+            <div className="flex items-start gap-3 relative pr-4 w-full max-w-sm">
+              <Bell className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <strong className="text-sm font-semibold block truncate">{payload.notification?.title}</strong>
+                <p className="text-sm text-gray-600 mt-1 break-all line-clamp-2">{payload.notification?.body}</p>
+              </div>
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="absolute -top-1.5 -right-3 text-gray-400 hover:text-gray-800 transition-colors p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ), {
+            id: 'push-notification',
+            duration: 5000,
+            position: 'top-center',
+            style: { minWidth: '300px', maxWidth: '400px' }
+          });
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, []);
 
   useEffect(() => {
     // Restore Categories from SSR or Cache

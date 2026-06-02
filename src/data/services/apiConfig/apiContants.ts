@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
     RESET_PASSWORD: "/auth/reset-password",
     VERIFY_OTP: "/auth/verify",
     LOGIN: "/auth/login",
+    LOGOUT: "/auth/logout",
     RESEND_OTP: "/auth/resend-otp",
     SOCIAL_LOGIN: "/auth/social-login",
     REFRESH: "/auth/refresh"

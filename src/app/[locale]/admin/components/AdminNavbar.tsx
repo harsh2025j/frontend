@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { useAppDispatch } from "@/data/redux/hooks";
-import { logoutUser } from "@/data/features/auth/authSlice";
+import { logoutUserAsync } from "@/data/features/auth/authThunks";
 import { ROLES, PERMISSIONS, canAccessAdminDashboardPage } from "@/utils/permissions";
 
 interface NavbarProps {
@@ -37,9 +37,8 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
 
   const dashboardAccess = canAccessAdminDashboardPage(user);
 
-  const confirmLogout = () => {
-    dispatch(logoutUser());
-    localStorage.clear();
+  const confirmLogout = async () => {
+    await dispatch(logoutUserAsync());
     setIsProfileOpen(false);
     setIsPinned(false);
     setShowLogoutConfirm(false);

@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import { useAppDispatch } from "@/data/redux/hooks";
-import { logoutUser } from "@/data/features/auth/authSlice";
+import { logoutUserAsync } from "@/data/features/auth/authThunks";
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -31,10 +31,9 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
   const avatar = user?.profilePicture || null;
 
 
-  const confirmLogout = () => {
+  const confirmLogout = async () => {
 
-    dispatch(logoutUser());
-    localStorage.clear();
+    await dispatch(logoutUserAsync());
     setIsProfileOpen(false);
     setShowLogoutConfirm(false);
     router.replace("/");

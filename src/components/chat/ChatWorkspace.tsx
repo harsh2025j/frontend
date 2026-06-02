@@ -68,7 +68,16 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
   const lastConversationElementRef = useRef<HTMLDivElement | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (highlightedMessageId) {
+      const timer = setTimeout(() => {
+        setHighlightedMessageId(null);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedMessageId]);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
@@ -701,6 +710,19 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
               response.razorpay_signature
             );
             toast.success('Payment successful! Unlocking documents...');
+
+            if (socket) {
+              const userName = realUser?.name || `${realUser?.firstName || ''} ${realUser?.lastName || ''}`.trim() || "Client";
+              const paymentNotifyPayload = {
+                conversationId: selectedConv._id,
+                senderId: currentUserId,
+                recipientId: advocateId,
+                type: "text" as MessageType,
+                content: `Payment of ₹${amount} successful for document unlock by ${userName}.`,
+              };
+              socket.emit("send_message", paymentNotifyPayload);
+            }
+
             // The backend handles database updates and sends a 'payment_success' socket event to refresh automatically.
           } catch (err: any) {
             toast.error(err?.response?.data?.message || 'Payment verification failed.');
@@ -953,23 +975,55 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                   </button>
                 </div>
               )}
-              {messages.map((msg, index) => {
-                const isMe = msg.senderId === currentUserId;
-                const formattedTime = new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const isFirstUnread = msg._id === firstUnreadMessageId;
+              {(() => {
+                const groupedMessages: { dateStr: string, dateKey: string, msgs: Message[] }[] = [];
+                messages.forEach((msg) => {
+                  const msgDateObj = new Date(msg.sentAt);
+                  const dateKey = msgDateObj.toLocaleDateString();
+                  let dateStr = msgDateObj.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
+                  const today = new Date();
+                  if (msgDateObj.toDateString() === today.toDateString()) {
+                    dateStr = "Today";
+                  } else {
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    if (msgDateObj.toDateString() === yesterday.toDateString()) {
+                      dateStr = "Yesterday";
+                    }
+                  }
 
-                return (
-                  <React.Fragment key={msg._id}>
-                    {isFirstUnread && (
-                      <div ref={firstUnreadRef} className="flex justify-center my-6">
-                        <span className="bg-stone-200 text-stone-600 text-xs px-4 py-1.5 rounded-full font-medium shadow-sm">
-                          Unread Messages
-                        </span>
-                      </div>
-                    )}
+                  const lastGroup = groupedMessages[groupedMessages.length - 1];
+                  if (lastGroup && lastGroup.dateKey === dateKey) {
+                    lastGroup.msgs.push(msg);
+                  } else {
+                    groupedMessages.push({ dateStr, dateKey, msgs: [msg] });
+                  }
+                });
+
+                return groupedMessages.map(group => (
+                  <div key={group.dateKey} className="flex flex-col gap-4">
+                    <div className="flex justify-center my-2 w-full sticky top-[-1rem] sm:top-[-0.5rem] z-10">
+                      <span className="bg-stone-200/95 backdrop-blur-sm text-stone-600 text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-full font-bold shadow-sm border border-stone-200/50">
+                        {group.dateStr}
+                      </span>
+                    </div>
+                    {group.msgs.map((msg) => {
+                      const isMe = msg.senderId === currentUserId;
+                      const formattedTime = new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                      const isFirstUnread = msg._id === firstUnreadMessageId;
+
+                      return (
+                        <React.Fragment key={msg._id}>
+                          {isFirstUnread && (
+                            <div ref={firstUnreadRef} className="flex justify-center my-6 w-full">
+                              <span className="bg-stone-200 text-stone-600 text-xs px-4 py-1.5 rounded-full font-medium shadow-sm">
+                                Unread Messages
+                              </span>
+                            </div>
+                          )}
                     <div
                       id={`message-${msg._id}`}
-                      className={`w-full flex ${isMe ? "justify-end" : "justify-start"} items-end gap-2 group`}
+                      className={`w-full flex ${isMe ? "justify-end" : "justify-start"} items-end gap-2 group p-2 rounded-2xl transition-all duration-700 ${highlightedMessageId === msg._id ? "bg-amber-100/50 scale-[1.02] shadow-sm" : ""}`}
                     >
                       {!isMe && (
                         <div className="w-7 h-7 rounded-md bg-[#0A2342]/5 flex items-center justify-center font-bold text-xs text-[#C9A227] shrink-0 mb-1">
@@ -999,8 +1053,12 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                         {msg.metadata?.replyTo && (
                           <div
                             onClick={() => {
-                              const el = document.getElementById(`message-${msg.metadata!.replyTo!.messageId}`);
-                              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              const targetId = msg.metadata!.replyTo!.messageId;
+                              const el = document.getElementById(`message-${targetId}`);
+                              if (el) {
+                                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                setHighlightedMessageId(targetId);
+                              }
                             }}
                             className={`cursor-pointer px-3 py-2 rounded-xl text-xs border-l-4 mb-1 transition-opacity hover:opacity-80 shadow-sm ${isMe ? 'bg-[#153a66]/50 border-white/30 text-white/90' : 'bg-stone-100 border-[#0A2342]/20 text-stone-600'}`}
                           >
@@ -1214,7 +1272,10 @@ export default function ChatWorkspace({ role, initialRecipientId }: ChatWorkspac
                   </React.Fragment>
                 );
               })}
-              <div ref={messagesEndRef} />
+            </div>
+          ));
+        })()}
+        <div ref={messagesEndRef} />
             </div>
 
             {/* Input Toolbar & Bar */}

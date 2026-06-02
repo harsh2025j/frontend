@@ -199,14 +199,14 @@ export default function AdminNotificationDropdown({ userId }: AdminNotificationD
                                             onClick={(e) => toggleExpand(notification._id, e)}
                                         >
                                             <div className="flex justify-between items-start gap-2">
-                                                <h4 className={`text-sm ${!notification.read ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
+                                                <h4 className={`text-sm break-all line-clamp-1 ${!notification.read ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
                                                     {notification.title}
                                                 </h4>
                                                 <span className="text-[10px] text-gray-400 whitespace-nowrap">
                                                     {formatDate(notification.createdAt)}
                                                 </span>
                                             </div>
-                                            <p className={`text-xs mt-1 ${!notification.read ? 'text-gray-800 font-medium' : 'text-gray-500'}`}>
+                                            <p className={`text-xs mt-1 break-all line-clamp-3 ${!notification.read ? 'text-gray-800 font-medium' : 'text-gray-500'}`}>
                                                 {notification.body}
                                             </p>
                                         </div>

@@ -36,9 +36,10 @@ import {
 } from "lucide-react";
 import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { useAppDispatch } from "@/data/redux/hooks";
-import { logoutUser } from "@/data/features/auth/authSlice";
+import { logoutUserAsync } from "@/data/features/auth/authThunks";
 import Image from "next/image";
 import {
   getUserType,
@@ -72,11 +73,14 @@ import {
   getUserRoles
 } from "@/utils/permissions";
 
-const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: () => void; onOpen: () => void }) => {
+const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: () => void; onOpen: () => void }) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { user: reduxProfileUser } = useProfileActions();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const mode = searchParams.get('mode');
+
   const [activeNav, setActiveNav] = useState<string>("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [unreadAppointments, setUnreadAppointments] = useState(0);
@@ -145,8 +149,8 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
   const isAdminPath = pathname.startsWith("/admin");
   const isCaseContext = !!activeCaseId && !pathname.includes("/admin/cases/create");
 
-  const handleLogout = () => {
-    dispatch(logoutUser());
+  const handleLogout = async () => {
+    await dispatch(logoutUserAsync());
     window.location.href = "/";
   };
 
@@ -273,7 +277,7 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
     //   show: showSavedPosts
     // },
 
-    // 🔽 CONTENT SECTION
+
     {
       name: "Content",
       icon: <ShieldCheck size={18} />,
@@ -355,21 +359,27 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
 
   const isLinkActive = (href?: string) => {
     if (!href || href === "#") return false;
-    
+
+    // SPECIAL CASE: Approval mode preview
+    if (mode === 'approval' && pathname.includes('/admin/content-management/preview/')) {
+      if (href === '/admin/content-approval') return true;
+      if (href === '/admin/content-management') return false;
+    }
+
     // Priority 1: Exact Match
     if (pathname === href) return true;
 
     // Priority 2: Admin Dashboard exact match
     if (href === "/admin" && pathname !== "/admin") return false;
-    
+
     // Priority 3: Prefix matching with exclusion for overlapping siblings
     if (pathname.startsWith(`${href}/`)) {
       // Prevent /admin/appointments from highlighting when on /admin/appointments/history etc.
       if (href === "/admin/appointments" && (
-          pathname.includes("/admin/appointments/confirmed") || 
-          pathname.includes("/admin/appointments/history")
+        pathname.includes("/admin/appointments/confirmed") ||
+        pathname.includes("/admin/appointments/history")
       )) {
-          return false;
+        return false;
       }
       return true;
     }
@@ -515,5 +525,12 @@ const AdminSidebar = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: (
   );
 };
 
-export default AdminSidebar;
+const AdminSidebar = (props: { isOpen: boolean; onClose: () => void; onOpen: () => void }) => {
+  return (
+    <React.Suspense fallback={null}>
+      <AdminSidebarContent {...props} />
+    </React.Suspense>
+  );
+};
 
+export default AdminSidebar;

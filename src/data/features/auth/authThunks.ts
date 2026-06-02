@@ -13,6 +13,9 @@ import {
   RefreshTokenRequest,
   RefreshTokenResponse,
 } from "./auth.types";
+import { requestFcmToken } from "@/lib/fcmUtils";
+import { firebaseAuth } from "@/data/services/auth-service/auth-service";
+import { AuthUser } from "./auth.types";
 import { authApi } from "@/data/services/auth-service/auth-service";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 import { ApiError } from "@/lib/utils/errorHandler";
@@ -115,14 +118,13 @@ export const ResendOtp = createAsyncThunk<ResendOtpResponse, ResendOtpRequest>(
   }
 )
 
-import { firebaseAuth } from "@/data/services/auth-service/auth-service";
-import { AuthUser } from "./auth.types";
 
 export const loginWithGoogle = createAsyncThunk<LoginResponse, void>(
   "auth/loginWithGoogle",
   async (_, thunkAPI) => {
     try {
       const firebaseUser = await firebaseAuth.loginWithGoogle();
+      const fcmToken = await requestFcmToken();
 
       const socialLoginData = {
         email: firebaseUser.email || "",
@@ -130,7 +132,7 @@ export const loginWithGoogle = createAsyncThunk<LoginResponse, void>(
         provider: "google",
         providerId: firebaseUser.uid,
         profilePicture: firebaseUser.photoURL || "",
-        fcmToken: "", // Add logic to get FCM token if available
+        fcmToken: fcmToken || undefined,
         platform: "web"
       };
 
@@ -154,6 +156,24 @@ export const refreshToken = createAsyncThunk<RefreshTokenResponse, RefreshTokenR
     } catch (err: unknown) {
       const apiError = err as ApiError;
       return thunkAPI.rejectWithValue(apiError.message || "Token Refresh Failed");
+    }
+  }
+);
+
+export const logoutUserAsync = createAsyncThunk(
+  "auth/logoutUserAsync",
+  async (_, thunkAPI) => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      const fcmToken = await requestFcmToken();
+
+      if (refreshToken) {
+        await authApi.logout({ refreshToken, fcmToken: fcmToken || undefined });
+      }
+      return true;
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      return thunkAPI.rejectWithValue(apiError.message || "Logout Failed");
     }
   }
 );

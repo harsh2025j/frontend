@@ -297,6 +297,7 @@ const ContentManagementPageContent: React.FC = () => {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   // ── Actions ──
+  const handleView = (id: string) => router.push(`/admin/content-management/preview/${id}`);
   const handleEdit = (id: string) => router.push(`/admin/create-content/${id}`);
   const handleDeleteClick = (id: string) => { setArticleToDelete(id); setDeleteModalOpen(true); };
 
@@ -434,7 +435,8 @@ const ContentManagementPageContent: React.FC = () => {
                             {item.rejectionReason}
                           </div>
                         )}
-                        <div className={`mt-auto grid ${showDelete ? "grid-cols-2" : "grid-cols-1"} gap-2`}>
+                        <div className={`mt-auto grid ${showDelete ? "grid-cols-3" : "grid-cols-2"} gap-2`}>
+                          <button onClick={() => handleView(item.id)} className="bg-blue-500 text-white py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors">View</button>
                           <button onClick={() => handleEdit(item.id)} className="bg-yellow-500 text-white py-2 rounded-lg text-sm hover:bg-yellow-600 transition-colors">Edit</button>
                           {showDelete && (
                             <button onClick={() => handleDeleteClick(item.id)} className="bg-red-500 text-white py-2 rounded-lg text-sm hover:bg-red-600 transition-colors">Delete</button>
@@ -488,6 +490,7 @@ const ContentManagementPageContent: React.FC = () => {
                         <td className="py-3 px-4"><StatusBadge status={item.status} /></td>
                         <td className="py-3 px-4"><RejectionReason reason={item.rejectionReason} /></td>
                         <td className="py-3 px-4 flex gap-2">
+                          <button onClick={() => handleView(item.id)} className="bg-blue-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-600 transition-colors">View</button>
                           <button onClick={() => handleEdit(item.id)} className="bg-yellow-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-yellow-600 transition-colors">Edit</button>
                           {item.status !== "published" && (
                             <button onClick={() => handleDeleteClick(item.id)} className="bg-red-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-red-600 transition-colors">Delete</button>

@@ -34,11 +34,11 @@ export default function Footer() {
 
   if (!mounted) {
     return (
-        <footer className="relative bg-gradient-to-br from-[#0a1628] via-[#122340] to-[#1a2f4d] text-white overflow-hidden">
-             <div className="container mx-auto px-6 py-12 relative z-10 text-center">
-                <p className="text-blue-200">Loading footer...</p>
-             </div>
-        </footer>
+      <footer className="relative bg-gradient-to-br from-[#0a1628] via-[#122340] to-[#1a2f4d] text-white overflow-hidden">
+        <div className="container mx-auto px-6 py-12 relative z-10 text-center">
+          <p className="text-blue-200">Loading footer...</p>
+        </div>
+      </footer>
     );
   }
 
@@ -88,7 +88,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-12 border-b border-white/10">
           {/* Brand Section */}
           <div className="lg:col-span-4 space-y-6">
-            <div className="transform p-2 rounded-sm hover:scale-105 transition-transform duration-300 -ml-2">
+            <div className="transform p-2 rounded-sm  transition-transform duration-300 -ml-2">
               <Link href="/" className="flex items-center gap-3 group text-decoration-none">
                 <div className="relative">
                   <Image src={logo} alt="Sajjad Husain Law Associates" className="object-contain" width={50} height={50} />

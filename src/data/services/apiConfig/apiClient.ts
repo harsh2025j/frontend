@@ -243,7 +243,12 @@ apiClient.interceptors.response.use(
 
       if (isAuthFailure && shouldShowError('auth-error')) {
         if (typeof window !== "undefined") {
-          localStorage.removeItem("token");
+          if (store) {
+            // Dispatch the synchronous logout action to clear auth and profile state
+            store.dispatch({ type: 'auth/logoutUser' });
+          } else {
+            localStorage.clear();
+          }
           // toast.error("Session expired. Please login again.", {
           //   duration: 3000,
           //   id: 'auth-error-toast'
