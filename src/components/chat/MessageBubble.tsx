@@ -76,11 +76,10 @@ export default function MessageBubble({
 
       <div
         id={`message-${msg._id}`}
-        className={`w-full flex ${isMe ? "justify-end" : "justify-start"} items-end gap-2 group p-2 rounded-2xl transition-all duration-700 ${
-          highlightedMessageId === msg._id
-            ? "bg-amber-100/50 scale-[1.02] shadow-sm"
-            : ""
-        }`}
+        className={`w-full flex ${isMe ? "justify-end" : "justify-start"} items-end gap-2 group p-2 rounded-2xl transition-all duration-700 ${highlightedMessageId === msg._id
+          ? "bg-amber-100/50 scale-[1.02] shadow-sm"
+          : ""
+          }`}
       >
         {/* Partner avatar */}
         {!isMe && (
@@ -118,16 +117,14 @@ export default function MessageBubble({
                   onHighlight(msg.metadata!.replyTo!.messageId);
                 }
               }}
-              className={`cursor-pointer px-3 py-2 rounded-xl text-xs border-l-4 mb-1 transition-opacity hover:opacity-80 shadow-sm ${
-                isMe
-                  ? "bg-[#153a66]/50 border-white/30 text-white/90"
-                  : "bg-stone-100 border-[#0A2342]/20 text-stone-600"
-              }`}
+              className={`cursor-pointer px-3 py-2 rounded-xl text-xs border-l-4 mb-1 transition-opacity hover:opacity-80 shadow-sm ${isMe
+                ? "bg-[#153a66]/50 border-white/30 text-white/90"
+                : "bg-stone-100 border-[#0A2342]/20 text-stone-600"
+                }`}
             >
               <span
-                className={`font-bold text-[10px] block mb-0.5 opacity-80 uppercase tracking-wide ${
-                  isMe ? "text-white" : "text-[#0A2342]"
-                }`}
+                className={`font-bold text-[10px] block mb-0.5 opacity-80 uppercase tracking-wide ${isMe ? "text-white" : "text-[#0A2342]"
+                  }`}
               >
                 {msg.metadata.replyTo.senderName}
               </span>
@@ -139,11 +136,10 @@ export default function MessageBubble({
           {msg.type === "text" && (
             <div
               style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
-              className={`px-4.5 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap min-w-0 ${
-                isMe
-                  ? "bg-[#0A2342] text-white rounded-br-none shadow-md shadow-[#0A2342]/5"
-                  : "bg-white text-stone-800 rounded-bl-none border border-stone-200/60 shadow-sm"
-              }`}
+              className={`px-4.5 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap min-w-0 ${isMe
+                ? "bg-[#0A2342] text-white rounded-br-none shadow-md shadow-[#0A2342]/5"
+                : "bg-white text-stone-800 rounded-bl-none border border-stone-200/60 shadow-sm"
+                }`}
             >
               {msg.content}
             </div>
@@ -178,7 +174,7 @@ export default function MessageBubble({
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl text-xs font-bold">
                     <FileCheck size={14} /> Paid
                   </span>
-                ) : !isMe && role === "user" ? (
+                ) : !isMe && role === "user" ? (  //remove role==="user" when advocate -> advocate send doc with payment
                   <button
                     onClick={() =>
                       onDocumentPayment(
@@ -211,15 +207,13 @@ export default function MessageBubble({
 
               return (
                 <div
-                  className={`bg-white border rounded-2xl p-4 shadow-sm flex flex-col gap-3 min-w-[280px] transition-all duration-300 ${
-                    unlocked ? "border-stone-200" : "border-amber-500/30 bg-amber-50/10"
-                  }`}
+                  className={`bg-white border rounded-2xl p-4 shadow-sm flex flex-col gap-3 min-w-[280px] transition-all duration-300 ${unlocked ? "border-stone-200" : "border-amber-500/30 bg-amber-50/10"
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`p-2.5 rounded-xl ${
-                        unlocked ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
-                      }`}
+                      className={`p-2.5 rounded-xl ${unlocked ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                        }`}
                     >
                       <FileText size={20} />
                     </div>
@@ -267,13 +261,12 @@ export default function MessageBubble({
                     <button
                       disabled={downloadingFiles[msg._id] || !msg.metadata?.fileUrl}
                       onClick={() => onDownload(msg)}
-                      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 ${
-                        downloadingFiles[msg._id]
-                          ? "bg-emerald-100 text-emerald-600 cursor-wait"
-                          : msg.metadata?.fileUrl
+                      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 ${downloadingFiles[msg._id]
+                        ? "bg-emerald-100 text-emerald-600 cursor-wait"
+                        : msg.metadata?.fileUrl
                           ? "bg-emerald-500 hover:bg-emerald-600 text-white"
                           : "bg-stone-200 text-stone-500 cursor-not-allowed"
-                      }`}
+                        }`}
                     >
                       {downloadingFiles[msg._id] ? (
                         <>
@@ -304,9 +297,8 @@ export default function MessageBubble({
 
           {/* Timestamp & delivery status */}
           <div
-            className={`flex items-center gap-1.5 text-[9px] text-stone-400 mt-1 ${
-              isMe ? "justify-end" : "justify-start"
-            }`}
+            className={`flex items-center gap-1.5 text-[9px] text-stone-400 mt-1 ${isMe ? "justify-end" : "justify-start"
+              }`}
           >
             <span>{formattedTime}</span>
             {isMe &&
