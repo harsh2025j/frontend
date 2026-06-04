@@ -69,6 +69,7 @@ import {
   canAccessAdvertisementsPage,
   canAccessAppointmentsPage,
   canAccessPayoutsPage,
+  canAccessMyEarningsPage,
   isAdmin as checkIsAdmin,
   getUserRoles
 } from "@/utils/permissions";
@@ -198,6 +199,12 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
       icon: <Wallet size={18} />,
       href: "/admin/payouts",
       show: canAccessPayoutsPage(user)
+    },
+    {
+      name: "My Earnings",
+      icon: <Wallet size={18} />,
+      href: "/admin/my-earnings",
+      show: canAccessMyEarningsPage(user)
     },
     {
       name: "Messages",

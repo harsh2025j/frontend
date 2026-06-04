@@ -325,6 +325,11 @@ export const canAccessPayoutsPage = (user: UserData | null): boolean => {
     ]);
 };
 
+export const canAccessMyEarningsPage = (user: UserData | null): boolean => {
+    if (!user) return false;
+    return hasAnyRole(user, [ROLES.ADVOCATE, ROLES.LAWYER]);
+};
+
 /**
  * ============================================================================
  * UTILS & CORE UI HELPERS
@@ -444,4 +449,5 @@ export const ROUTE_PROTECTION_MAP: Record<string, PermissionCheckFn> = {
     "/admin/settings": canAccessSettingsPage,
     "/admin/payouts": canAccessPayoutsPage,
     "/admin/payouts/[advocateId]": canAccessPayoutsPage,
+    "/admin/my-earnings": canAccessMyEarningsPage,
 };
