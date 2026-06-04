@@ -178,7 +178,7 @@ export default function MessageBubble({
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl text-xs font-bold">
                     <FileCheck size={14} /> Paid
                   </span>
-                ) : role === "user" ? (
+                ) : !isMe && role === "user" ? (
                   <button
                     onClick={() =>
                       onDocumentPayment(
