@@ -39,7 +39,7 @@ export default function ClientLayout({
   useEffect(() => {
     if (messaging) {
       const unsubscribe = onMessage(messaging, (payload) => {
-        console.log("Foreground Message received: ", payload);
+        // console.log("Foreground Message received: ", payload);
         if (payload.notification) {
           toast.dismiss('push-notification');
           toast((t) => (

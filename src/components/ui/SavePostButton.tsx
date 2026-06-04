@@ -8,9 +8,11 @@ interface SavePostButtonProps {
     postId: string;
     className?: string;
     iconSize?: number;
+    showText?: boolean;
+    text?: string;
 }
 
-export default function SavePostButton({ postId, className = "", iconSize = 24 }: SavePostButtonProps) {
+export default function SavePostButton({ postId, className = "", iconSize = 24, showText = false, text = "Save" }: SavePostButtonProps) {
     const { user, toggleSavePost } = useProfileActions();
     const [isToggling, setIsToggling] = useState(false);
 
@@ -41,7 +43,7 @@ export default function SavePostButton({ postId, className = "", iconSize = 24 }
         <button
             onClick={handleToggle}
             disabled={isToggling}
-            className={`p-2 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center 
+            className={`p-2 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center gap-2
         ${isSaved
                     ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
                     : "text-gray-400 hover:text-blue-500 hover:bg-gray-50"} 
@@ -58,6 +60,7 @@ export default function SavePostButton({ postId, className = "", iconSize = 24 }
                     className={isSaved ? "text-blue-600" : ""}
                 />
             )}
+            {showText && <span className="text-sm font-medium">{text}</span>}
         </button>
     );
 }

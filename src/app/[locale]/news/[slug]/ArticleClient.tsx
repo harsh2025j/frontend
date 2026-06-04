@@ -40,6 +40,23 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
     const [advocatePhotos, setAdvocatePhotos] = useState<Record<string, string>>({});
     const [advocateUsernames, setAdvocateUsernames] = useState<Record<string, string>>({});
     const [isPrinting, setIsPrinting] = useState(false);
+    const [showShareSheet, setShowShareSheet] = useState(false);
+    const summaryRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (summaryRef.current && !summaryRef.current.contains(event.target as Node)) {
+                setShowSummary(false);
+            }
+        };
+
+        if (showSummary) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showSummary]);
 
     useEffect(() => {
         const fetchPhotos = async () => {
@@ -181,7 +198,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
 
                     {/* Author metadata */}
                     {(authorUsername || article.authorId) && article.authorId !== 'system-auto-bot' ? (
-                        <Link href={`/profile/${authorUsername || article.authorId}`} className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/author">
+                        <Link href={`/profile/${authorUsername || article.authorId}`} className="flex items-center gap-3 md:gap-4 mb-4 md:mb-8 p-3 md:p-5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/author">
                             <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-2 ring-[#C9A227]/80 shadow-sm shrink-0 overflow-hidden relative group-hover/author:ring-[#C9A227]/70 transition-all">
                                 {authorPhoto ? (
                                     <Image src={authorPhoto} alt={article.authors || "Author"} fill sizes="100px" className="object-cover" quality={90} />
@@ -213,7 +230,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                             </div>
                         </Link>
                     ) : (
-                        <div className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-8 p-3 md:p-5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
                             <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative">
                                 {authorPhoto ? (
                                     <Image src={authorPhoto} alt={article.authors || "Author"} fill sizes="100px" className="object-cover" quality={90} />
@@ -270,12 +287,12 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                             </>
                         )}
                     </div>
-                    <div className="w-full md:w-auto relative flex justify-start md:justify-end">
+                    <div ref={summaryRef} className="w-full md:w-auto relative flex justify-start md:justify-end">
                         <button type="button" onClick={handleSummaryClick} className="w-full md:w-auto justify-center px-6 py-2 bg-blue-600 text-white text-base font-medium rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm">
                             AI Summary
                         </button>
                         {showSummary && (
-                            <div className="absolute right-0 top-12 sm:right-full sm:top-0 sm:mr-3 w-[85vw] sm:w-[400px] max-w-[400px] bg-[#C9A227] p-4 rounded-xl shadow-2xl border border-gray-200 z-10 text-left">
+                            <div className="absolute right-0 top-12 md:right-full md:top-0 md:mr-3 w-[85vw] md:w-[400px] max-w-[400px] bg-[#C9A227] p-4 rounded-xl shadow-2xl border border-gray-200 z-20 text-left">
                                 <div className="flex justify-between items-start mb-3 border-b border-gray-200 pb-2">
                                     <h3 className="font-bold text-gray-900 flex items-center gap-2"> AI Summary</h3>
                                     <button type="button" onClick={() => setShowSummary(false)} className="p-1 hover:bg-gray-200 rounded-full transition-colors text-gray-900 hover:text-red-500"><X size={18} /></button>
@@ -284,20 +301,43 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                                     {isFetchingSummary ? <div className="flex justify-center py-6"><Loader size="sm" text="Thinking..." /></div>
                                         : summary ? <TypewriterText text={summary} speed={30} /> : "No summary available."}
                                 </div>
-                                <div className="hidden sm:block absolute top-4 -right-2 w-4 h-4 bg-[#C9A227] border-t border-r border-gray-200 transform rotate-45" />
+                                <div className="hidden md:block absolute top-4 -right-2 w-4 h-4 bg-[#C9A227] border-t border-r border-gray-200 transform rotate-45" />
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Social Share */}
-                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 mb-10 py-3 sm:py-3 px-4 sm:px-6 bg-white rounded-2xl sm:rounded-full border border-gray-200 w-full sm:w-fit mx-auto sm:mx-0 shadow-sm">
-                    <div className="flex items-center gap-2 sm:gap-3 text-[#0A2342] font-bold min-w-fit w-full sm:w-auto justify-center sm:justify-start border-b sm:border-b-0 border-gray-100 pb-2 sm:pb-0">
+                {/* Mobile Social Share */}
+                <div className="flex sm:hidden items-center justify-between w-full mb-10 py-2 px-2 bg-white rounded-xl sm:rounded-full border border-gray-200 shadow-sm print:hidden">
+                    {user && (
+                        <>
+                            <SavePostButton postId={article.id || (article as any)._id} showText={true} text="Save Article" className="!bg-transparent hover:!bg-gray-50 border-none !text-gray-700 hover:!text-blue-600 px-2 py-1 flex-1 justify-center" iconSize={18} />
+                            <div className="w-px h-6 bg-gray-200" />
+                        </>
+                    )}
+
+                    <button onClick={() => setShowShareSheet(true)} className="flex flex-1 items-center justify-center gap-2 text-blue-600 font-medium px-2 py-1 hover:bg-gray-50 rounded-lg transition-colors">
+                        <Link2 size={18} className="text-blue-600" />
+                        <span className="text-sm">Share</span>
+                    </button>
+
+                    <div className="w-px h-6 bg-gray-200" />
+
+                    <button onClick={() => handleShare("print")} className="flex flex-1 items-center justify-center gap-2 text-gray-700 font-medium px-2 py-1 hover:bg-gray-50 rounded-lg transition-colors">
+                        <Printer size={18} />
+                        <span className="text-sm text-gray-700">Print</span>
+                    </button>
+                </div>
+
+                {/* Desktop & Tablet Social Share */}
+                <div className="hidden sm:flex flex-row items-center gap-6 mb-10 py-3 px-6 bg-white rounded-full border border-gray-200 w-fit mx-0 shadow-sm relative print:hidden">
+                    <div className="flex items-center gap-3 text-[#0A2342] font-bold min-w-fit">
                         <Share2 size={20} className="text-[#0A2342]" />
                         <span className="text-sm tracking-wider">{t("shareArticle")}</span>
                     </div>
-                    <div className="hidden sm:block w-px h-8 bg-gray-200" />
-                    <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2 sm:gap-3 pt-1 sm:pt-0">
+                    <div className="w-px h-8 bg-gray-200" />
+
+                    <div className="flex flex-wrap items-center gap-3">
                         <SavePostButton postId={article.id || (article as any)._id} className="hover:-translate-y-1 hover:shadow-lg transition-all duration-300" iconSize={20} />
                         <button onClick={() => handleShare("facebook")} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0A2342] text-white hover:text-[#C9A227] transition-all duration-300"><Facebook size={18} /></button>
                         <button onClick={() => handleShare("twitter")} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0A2342] text-white hover:text-[#C9A227] transition-all duration-300">
@@ -312,15 +352,63 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
                         </button>
                     </div>
-                    <div className="w-full sm:hidden h-px bg-gray-100" />
-                    <div className="hidden sm:block w-px h-8 bg-gray-200" />
-                    <div className="flex items-center justify-center gap-3 sm:gap-3 w-full sm:w-auto pb-1 sm:pb-0">
+
+                    <div className="w-px h-8 bg-gray-200" />
+
+                    <div className="flex items-center gap-3">
                         <button onClick={() => handleShare("copy")} className={`w-10 h-10 flex items-center justify-center rounded-full ${copied ? "bg-green-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"} transition-all duration-300 hover:-translate-y-1`}>
                             {copied ? <Check size={18} /> : <Link2 size={18} />}
                         </button>
                         <button onClick={() => handleShare("print")} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:-translate-y-1 transition-all duration-300"><Printer size={18} /></button>
                     </div>
                 </div>
+
+                {/* Mobile Share Bottom Sheet */}
+                {showShareSheet && (
+                    <div className="sm:hidden">
+                        <div className="fixed inset-0 bg-black/40 z-40 transition-opacity" onClick={() => setShowShareSheet(false)} />
+                        <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-transform transform translate-y-0 duration-300 ease-out">
+                            <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="text-xl font-bold text-center w-full text-gray-900">Share Article</h3>
+                            </div>
+                            <p className="text-sm text-gray-500 text-center mb-8">Share this article with your friends and colleagues</p>
+
+                            <div className="grid grid-cols-4 gap-y-6 gap-x-2 mb-8">
+                                <button onClick={() => handleShare("whatsapp")} className="flex flex-col items-center gap-2 group">
+                                    <div className="w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg></div>
+                                    <span className="text-xs text-gray-600 font-medium">WhatsApp</span>
+                                </button>
+                                <button onClick={() => handleShare("telegram")} className="flex flex-col items-center gap-2 group">
+                                    <div className="w-14 h-14 rounded-full bg-[#0088cc] text-white flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all"><FaTelegramPlane size={26} /></div>
+                                    <span className="text-xs text-gray-600 font-medium">Telegram</span>
+                                </button>
+                                <button onClick={() => handleShare("twitter")} className="flex flex-col items-center gap-2 group">
+                                    <div className="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg></div>
+                                    <span className="text-xs text-gray-600 font-medium">X (Twitter)</span>
+                                </button>
+                                <button onClick={() => handleShare("linkedin")} className="flex flex-col items-center gap-2 group">
+                                    <div className="w-14 h-14 rounded-full bg-[#0077b5] text-white flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all"><Linkedin size={24} fill="currentColor" className="text-white" /></div>
+                                    <span className="text-xs text-gray-600 font-medium">LinkedIn</span>
+                                </button>
+                                <button onClick={() => handleShare("facebook")} className="flex flex-col items-center gap-2 group">
+                                    <div className="w-14 h-14 rounded-full bg-[#1877F2] text-white flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all"><Facebook size={26} fill="currentColor" className="text-white" /></div>
+                                    <span className="text-xs text-gray-600 font-medium">Facebook</span>
+                                </button>
+                                <button onClick={() => handleShare("email")} className="flex flex-col items-center gap-2 group">
+                                    <div className="w-14 h-14 rounded-full bg-[#EA4335] text-white flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg></div>
+                                    <span className="text-xs text-gray-600 font-medium">Email</span>
+                                </button>
+                                <button onClick={() => handleShare("copy")} className="flex flex-col items-center gap-2 group">
+                                    <div className={`w-14 h-14 rounded-full ${copied ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700'} flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all`}>
+                                        {copied ? <Check size={24} /> : <Link2 size={24} />}
+                                    </div>
+                                    <span className="text-xs text-gray-600 font-medium">Copy Link</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* if not need then remove this  and also SpeechPlayer.tsx  which is in sre/components/ui/SpeechPlayer.tsx*/}
                 {/* Speech Player */}
@@ -422,13 +510,13 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
 
                 {/* Advocate info */}
                 {((article.advocates && article.advocates.length > 0) || article.advocateName) && (
-                    <div className="space-y-4 mb-8">
+                    <div className="space-y-3 md:space-y-4 mb-4 md:mb-8">
                         {(article.advocates && article.advocates.length > 0 ? article.advocates : ([{ name: article.advocateName }] as Advocate[])).map((adv, idx) => {
                             if (!adv?.name && !article.advocateName) return null;
                             const profileId = adv.userId;
                             const targetPath = adv.userId ? (advocateUsernames[adv.userId] || adv.userId) : null;
                             return targetPath ? (
-                                <Link key={idx} href={`/profile/${targetPath}`} className="flex items-center gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/advocate">
+                                <Link key={idx} href={`/profile/${targetPath}`} className="flex items-center gap-3 md:gap-4 p-3 md:p-5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/advocate">
                                     <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-2 ring-[#C9A227]/80 shadow-sm shrink-0 overflow-hidden relative group-hover/advocate:ring-[#C9A227]/70 transition-all">
                                         {adv?.userId && advocatePhotos[adv.userId] ? (
                                             <Image src={advocatePhotos[adv.userId]} alt={adv.name || "Advocate"} fill sizes="100px" className="object-cover" quality={90} />
@@ -445,7 +533,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                                     </div>
                                 </Link>
                             ) : (
-                                <div key={idx} className="flex items-center gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                                <div key={idx} className="flex items-center gap-3 md:gap-4 p-3 md:p-5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
                                     <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative">
                                         {adv?.userId && advocatePhotos[adv.userId] ? (
                                             <Image src={advocatePhotos[adv.userId]} alt={adv.name || "Advocate"} fill sizes="100px" className="object-cover" quality={90} />
@@ -739,7 +827,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
 
                     {/* ── Sidebar (sticky, related articles from category) ── */}
                     <div
-                        className="lg:col-span-3 relative z-20"
+                        className="lg:col-span-3 relative z-20 print:hidden"
                         ref={sidebarContainerRef}
                         onMouseEnter={() => { isHoveringSidebar.current = true; }}
                         onMouseLeave={() => { isHoveringSidebar.current = false; }}
