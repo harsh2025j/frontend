@@ -6,21 +6,22 @@ import { useRouter } from "next/navigation";
 import {
   Plus,
   Trash2,
-  Edit,
-  ExternalLink,
   ToggleLeft,
   ToggleRight,
   Loader2,
   Search,
-  Filter,
   Eye,
   MousePointerClick,
-  Monitor
 } from "lucide-react";
-import { Link } from "@/i18n/routing";
 import { advertisementApi } from "@/data/services/advertisement-service/advertisement-service";
 import { Advertisement, AD_SLOTS } from "@/data/features/advertisement/advertisement.types";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
+
+const SLOT_TYPE_STYLES: Record<string, string> = {
+  BANNER: "bg-amber-50 text-amber-700 border border-amber-200",
+  SIDEBAR: "bg-violet-50 text-violet-700 border border-violet-200",
+  POPUP: "bg-rose-50 text-rose-700 border border-rose-200",
+};
 
 export default function AdvertisementManagement() {
   const router = useRouter();
@@ -82,126 +83,137 @@ export default function AdvertisementManagement() {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 min-h-[80vh]">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div className="max-w-7xl mx-auto px-4 py-6 space-y-5">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Advertisement Management</h1>
-          <p className="text-gray-500 text-sm">Manage slots, track performance, and update content</p>
+          <h1 className="text-xl font-semibold text-gray-900">Advertisements</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Manage ad slots, track performance, and update content</p>
         </div>
-
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="Search slots..."
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+        <div className="relative w-full sm:w-60">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+          <input
+            type="text"
+            placeholder="Search slots..."
+            className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </div>
 
       {loading ? (
-        <div className="flex flex-col justify-center items-center h-96 gap-4">
-          <Loader2 className="animate-spin text-blue-600" size={40} />
-          <p className="text-gray-500 font-medium animate-pulse">Loading templates...</p>
+        <div className="flex items-center justify-center h-64 gap-3">
+          <Loader2 className="animate-spin text-blue-600" size={22} />
+          <span className="text-sm text-gray-500">Loading slots...</span>
+        </div>
+      ) : filteredSlots.length === 0 ? (
+        <div className="text-center py-16 text-sm text-gray-400">
+          No slots match <span className="font-medium">"{searchTerm}"</span>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-100">
-          <table className="w-full text-left border-collapse">
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100">
-                <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Slot Info</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Current Ad</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Stats</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+              <tr className="border-b border-gray-100 bg-gray-50">
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Slot</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Current Ad</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Status</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Performance</th>
+                <th className="px-5 py-3 text-right text-xs font-medium text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filteredSlots.map((slot) => {
                 const ad = ads.find(a => a.slotId === slot.id);
+                const typeStyle = SLOT_TYPE_STYLES[slot.type] || "bg-gray-100 text-gray-500 border border-gray-200";
 
                 return (
                   <tr
                     key={slot.id}
                     onClick={() => ad ? router.push(`/admin/advertisements/show/${ad._id}`) : router.push(`/admin/advertisements/show/slot/${slot.id}`)}
-                    className="hover:bg-blue-50/30 cursor-pointer transition-colors group"
+                    className="hover:bg-gray-50/70 cursor-pointer transition-colors"
                   >
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">{slot.id}</span>
-                        <span className="font-bold text-gray-900 text-sm">{slot.name}</span>
-                        <span className="text-[11px] text-gray-400">{slot.dimensions} • {slot.type}</span>
+                    <td className="px-5 py-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900">{slot.name}</span>
+                          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${typeStyle}`}>
+                            {slot.type}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                          <code className="font-mono">{slot.id}</code>
+                          <span>·</span>
+                          <span>{slot.dimensions}</span>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+
+                    <td className="px-5 py-4">
                       {ad ? (
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0">
+                          <div className="w-9 h-9 rounded-md bg-gray-100 border border-gray-200 overflow-hidden shrink-0">
                             <img src={ad.imageUrl} alt="" className="w-full h-full object-cover" />
                           </div>
-                          <div className="flex flex-col max-w-[200px]">
-                            <span className="font-semibold text-gray-800 text-sm truncate">{ad.title}</span>
-                            <span className="text-[11px] text-gray-500 truncate">{ad.link}</span>
+                          <div className="min-w-0">
+                            <div className="font-medium text-gray-900 truncate">{ad.title}</div>
+                            <div className="text-xs text-gray-400 truncate max-w-[180px]">{ad.link}</div>
                           </div>
                         </div>
                       ) : (
-                        <span className="text-gray-400 text-xs italic">Empty Slot</span>
+                        <span className="text-xs text-gray-400 italic">Empty</span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
+
+                    <td className="px-5 py-4">
                       {ad ? (
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${ad.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                          }`}>
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md ${
+                          ad.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${ad.isActive ? "bg-green-500" : "bg-gray-400"}`} />
                           {ad.isActive ? "Active" : "Hidden"}
                         </span>
                       ) : (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-gray-100 text-gray-400">
-                          Not Set
-                        </span>
+                        <span className="text-xs text-gray-300">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
+
+                    <td className="px-5 py-4">
                       {ad ? (
-                        <div className="flex items-center gap-4 text-gray-600">
-                          <div className="flex items-center gap-1.5" title="Impressions">
-                            <Eye size={14} className="text-gray-400" />
-                            <span className="text-xs font-medium">{ad.totalImpressions.toLocaleString()}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5" title="Clicks">
-                            <MousePointerClick size={14} className="text-gray-400" />
-                            <span className="text-xs font-medium">{ad.totalClicks.toLocaleString()}</span>
-                          </div>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Eye size={13} className="text-gray-400" />
+                            {ad.totalImpressions.toLocaleString()}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MousePointerClick size={13} className="text-gray-400" />
+                            {ad.totalClicks.toLocaleString()}
+                          </span>
                         </div>
                       ) : (
-                        <span className="text-gray-300">—</span>
+                        <span className="text-xs text-gray-300">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-100 transition-opacity">
+
+                    <td className="px-5 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
                         {ad ? (
                           <>
                             <button
                               onClick={(e) => handleToggleStatus(e, ad._id)}
-                              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                              title={ad.isActive ? "Hide Ad" : "Show Ad"}
+                              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                              title={ad.isActive ? "Hide ad" : "Show ad"}
                             >
-                              {ad.isActive ? <ToggleRight size={25} className="text-green-500" /> : <ToggleLeft size={20} />}
+                              {ad.isActive
+                                ? <ToggleRight size={20} className="text-green-500" />
+                                : <ToggleLeft size={20} />
+                              }
                             </button>
-                            {/* <Link
-                              href={`/admin/advertisements/edit/${ad._id}`}
-                              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                            >
-                              <Edit size={18} />
-                            </Link> */}
                             <button
                               onClick={(e) => openDeleteModal(e, ad._id)}
-                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                             >
-                              <Trash2 size={18} />
+                              <Trash2 size={16} />
                             </button>
                           </>
                         ) : (
@@ -210,9 +222,9 @@ export default function AdvertisementManagement() {
                               e.stopPropagation();
                               router.push(`/admin/advertisements/show/slot/${slot.id}`);
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 text-[11px] font-bold rounded-lg hover:bg-blue-100 transition-colors"
+                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                           >
-                            <Plus size={14} />
+                            <Plus size={13} />
                             Configure
                           </button>
                         )}
@@ -223,13 +235,6 @@ export default function AdvertisementManagement() {
               })}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {!loading && filteredSlots.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-          <Monitor size={48} className="mb-4 opacity-20" />
-          <p>No advertisement slots found matching your search.</p>
         </div>
       )}
 

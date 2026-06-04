@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Image as ImageIcon, Loader2, Info, Monitor } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Info, Monitor, Upload } from "lucide-react";
 import { advertisementApi } from "@/data/services/advertisement-service/advertisement-service";
 import ImageCropperModal from "@/components/ui/ImageCropperModal";
 import { BaseAd } from "@/components/ads/StandardAds";
@@ -19,14 +19,14 @@ export default function AdvertisementForm({ initialData, isEdit = false, onSucce
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<File | null>(null);
-  
+
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     description: initialData?.description || "",
     link: initialData?.link || "",
     slotId: initialData?.slotId || "HOME_BANNER_TOP_1",
     adType: initialData?.adType || "IMAGE",
-    priority: 0, // Simplified: always 0
+    priority: 0,
     isActive: initialData?.isActive ?? true,
   });
 
@@ -35,9 +35,7 @@ export default function AdvertisementForm({ initialData, isEdit = false, onSucce
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setImageToCrop(file);
-    }
+    if (file) setImageToCrop(file);
   };
 
   const handleCropComplete = (croppedFile: File) => {
@@ -51,7 +49,7 @@ export default function AdvertisementForm({ initialData, isEdit = false, onSucce
     try {
       setLoading(true);
       const data = { ...formData, thumbnail: thumbnail || undefined };
-      
+
       if (isEdit && initialData?._id) {
         await advertisementApi.updateAdvertisement(initialData._id, data);
         if (onSuccess) onSuccess();
@@ -72,47 +70,60 @@ export default function AdvertisementForm({ initialData, isEdit = false, onSucce
 
   const selectedSlot = AD_SLOTS.find(s => s.id === formData.slotId);
 
+  const previewHeight =
+    formData.slotId === "HOME_FEED_1" ? "150px" :
+    selectedSlot?.type === "BANNER" || formData.slotId.includes("BANNER") || formData.slotId.includes("FOOTER") ? "90px" :
+    "250px";
+
+  const cropAspect =
+    formData.slotId === "HOME_FEED_1" ? 728 / 150 :
+    selectedSlot?.type === "BANNER" || formData.slotId.includes("BANNER") || formData.slotId.includes("FOOTER") ? 728 / 90 :
+    selectedSlot?.type === "SIDEBAR" || formData.slotId.includes("SIDEBAR") ? 300 / 250 :
+    1;
+
   return (
-    <div className="max-w-5xl mx-auto pb-20">
-      <div className="flex items-center gap-4 mb-8">
-        <button 
+    <div className="max-w-5xl mx-auto px-4 py-6 pb-20">
+      <div className="flex items-center gap-3 mb-6">
+        <button
           onClick={() => router.back()}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
         >
-          <ArrowLeft size={24} />
+          <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {isEdit ? `Edit ${selectedSlot?.name}` : "Configure Ad Template"}
+          <h1 className="text-lg font-semibold text-gray-900">
+            {isEdit ? `Edit: ${selectedSlot?.name}` : "Configure Ad Template"}
           </h1>
-          <p className="text-gray-500">Add content to this advertisement slot</p>
+          <p className="text-sm text-gray-500">Add content to this advertisement slot</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Form Section */}
-        <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Display Title *</label>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-5">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-5">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Display Title *</label>
                 <input
                   type="text"
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                   placeholder="e.g. Premium Legal Service"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Target Template (Slot) *</label>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Target Slot *</label>
                 <select
                   required
                   disabled={isEdit || !!initialData?.slotId}
                   value={formData.slotId}
                   onChange={(e) => setFormData({ ...formData, slotId: e.target.value })}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none transition-all disabled:opacity-70"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-gray-50"
                 >
                   {AD_SLOTS.map(slot => (
                     <option key={slot.id} value={slot.id}>
@@ -123,100 +134,99 @@ export default function AdvertisementForm({ initialData, isEdit = false, onSucce
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700">Redirect Link (URL) *</label>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Redirect URL *</label>
               <input
                 type="url"
                 required
                 value={formData.link}
                 onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                 placeholder="https://example.com"
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700">Admin Notes / Description</label>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Admin Notes</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
                 rows={3}
-                placeholder="e.g. Campaign ends on May 30th"
+                placeholder="e.g. Campaign ends May 30th"
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={formData.isActive}
-                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-              />
-              <label htmlFor="isActive" className="text-sm font-semibold text-gray-700 cursor-pointer">
-                Publish immediately
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Ad Image *</label>
+              <label className="relative flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-xl p-8 hover:border-blue-300 hover:bg-blue-50/20 transition-colors cursor-pointer">
+                {previewUrl ? (
+                  <>
+                    <img src={previewUrl} alt="Preview" className="h-14 object-contain rounded" />
+                    <span className="text-xs text-blue-600 font-medium">Click to replace image</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={22} className="text-gray-400" />
+                    <span className="text-sm text-gray-500">Click to upload ad banner</span>
+                    <span className="text-xs text-gray-400">{selectedSlot?.dimensions} recommended</span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                />
               </label>
             </div>
 
-            <div className="space-y-4">
-              <label className="text-sm font-semibold text-gray-700 block">Ad Image *</label>
-              <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-8 hover:bg-gray-50 transition-colors cursor-pointer relative group">
-                <ImageIcon className="mx-auto text-gray-400 mb-2" size={32} />
-                <p className="text-gray-600 font-medium text-sm">Click to upload ad banner</p>
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="absolute inset-0 opacity-0 cursor-pointer" 
-                />
-              </div>
-            </div>
+            <label className="flex items-center gap-2.5 cursor-pointer w-fit">
+              <input
+                type="checkbox"
+                checked={formData.isActive}
+                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">Publish immediately</span>
+            </label>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+              className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors"
             >
-              {loading ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-              {isEdit ? "Update Template" : "Publish to Slot"}
+              {loading ? <Loader2 className="animate-spin" size={15} /> : <Save size={15} />}
+              {isEdit ? "Save Changes" : "Publish to Slot"}
             </button>
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all"
+              className="px-5 py-2.5 text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
             >
               Cancel
             </button>
           </div>
         </form>
 
-        {/* Live Preview Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-gray-900 font-bold">
-            <Monitor size={20} className="text-blue-600" />
-            <h2>Template Preview</h2>
+        {/* Preview */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+            <Monitor size={16} className="text-blue-600" />
+            Preview
           </div>
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 sticky top-6">
-            <div className="mb-4 flex items-start gap-3 bg-blue-50 p-3 rounded-lg border border-blue-100">
-              <Info size={18} className="text-blue-600 shrink-0 mt-0.5" />
-              <p className="text-[11px] text-blue-800 leading-relaxed">
-                Slot: <strong>{selectedSlot?.name}</strong><br/>
-                Expected Size: <strong>{selectedSlot?.dimensions}</strong>
-              </p>
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sticky top-6 space-y-3">
+            <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
+              <Info size={13} className="text-gray-400 shrink-0" />
+              <span>{selectedSlot?.name} · {selectedSlot?.dimensions}</span>
             </div>
-            
-            <div className="flex justify-center bg-white p-4 rounded-lg border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex justify-center bg-gray-50 rounded-lg p-3 border border-gray-100 overflow-hidden">
               <div className="w-full">
-                <BaseAd 
+                <BaseAd
                   width="100%"
-                  height={
-                    formData.slotId === "HOME_FEED_1" ? "150px" :
-                    selectedSlot?.type === "BANNER" || formData.slotId.includes("BANNER") || formData.slotId.includes("FOOTER") ? "90px" : 
-                    "250px"
-                  }
+                  height={previewHeight}
                   label={formData.title || "Template Slot"}
                   imageUrl={previewUrl}
                   className="w-full"
@@ -232,12 +242,7 @@ export default function AdvertisementForm({ initialData, isEdit = false, onSucce
           imageFile={imageToCrop}
           onClose={() => setImageToCrop(null)}
           onCrop={handleCropComplete}
-          aspect={
-            formData.slotId === "HOME_FEED_1" ? 728 / 150 :
-            selectedSlot?.type === "BANNER" || formData.slotId.includes("BANNER") || formData.slotId.includes("FOOTER") ? 728 / 90 : 
-            selectedSlot?.type === "SIDEBAR" || formData.slotId.includes("SIDEBAR") ? 300 / 250 : 
-            1
-          }
+          aspect={cropAspect}
         />
       )}
     </div>
