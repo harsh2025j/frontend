@@ -26,9 +26,9 @@ const LatestNews: React.FC<LatestNewsProps> = ({
   author,
 }) => {
   return (
-    <div className="bg-white  rounded-md  overflow-hidden hover:border-blue-300 transition-all duration-300 flex flex-col justify-between border border-gray-200 p-0">
+    <div className="bg-white rounded-md overflow-hidden hover:border-blue-300 transition-all duration-300 flex flex-col border border-gray-200 p-0 h-full">
 
-      <div className="relative w-full aspect-video">
+      <div className="relative w-full aspect-video shrink-0">
         <Link href={`/news/${slug}`} className="relative block w-full h-full">
           <Image
             src={getSafeImageUrl(typeof img === 'string' ? img : (img as StaticImageData)?.src || '')}
@@ -36,23 +36,27 @@ const LatestNews: React.FC<LatestNewsProps> = ({
             fill
             sizes="(max-width: 768px) 100vw, 500px"
             quality={90}
-            className="object-cover rounded-t-md"
+            className="object-cover"
           />
         </Link>
       </div>
 
-      <div className="flex flex-col p-3 ">
+      <div className="flex flex-col p-3 sm:p-4 flex-grow">
         <Link href={`/news/${slug}`}>
-          <h2 className="text-gray-900   font-merriweather font-semibold md:text-base text-[13px]  leading-snug">
+          <h2 className="text-gray-900 font-merriweather font-semibold md:text-base text-[13px] leading-snug line-clamp-3 mb-2 hover:text-blue-600 transition-colors">
             {title}
           </h2>
         </Link>
 
-        <div className="text-gray-500 text-xs sm:text-sm flex items-center gap-2 mb-3">
-          <span>Author: {author || "Anonymous"}</span>
+        <div className="text-gray-500 text-xs sm:text-sm flex items-center gap-2 mb-3 mt-auto pt-2">
+          <span className="truncate">Author: {author || "Anonymous"}</span>
           {date && <span>•</span>}
-          <Clock size={14} />
-          {date && <span>{date}</span>}
+          {date && (
+            <span className="flex items-center gap-1 shrink-0">
+              <Clock size={14} />
+              {date}
+            </span>
+          )}
         </div>
 
         <div className="flex gap-3">

@@ -234,7 +234,7 @@ export default function Stores() {
     const rawBase = HindiNewsData.length > 0 ? HindiNewsData : (homeData?.hindiArticles || []);
     const base = rawBase.slice(0, 3).map(item => ({
       ...item,
-      content: getArticleExcerpt(item)
+      content: getArticleExcerpt(item, 400)
     }));
     if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return base;
 
