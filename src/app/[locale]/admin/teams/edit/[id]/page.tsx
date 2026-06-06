@@ -268,7 +268,7 @@ const EditTeamMemberPage: React.FC = () => {
                 conflictList: conflictList ? conflictList.split(",").map(s => s.trim()).filter(Boolean) : [],
             };
 
-            console.log("Submitting updateUserAccessControl with payload:", payload);
+            // console.log("Submitting updateUserAccessControl with payload:", payload);
 
             await dispatch(updateUserAccessControl(payload)).unwrap();
 

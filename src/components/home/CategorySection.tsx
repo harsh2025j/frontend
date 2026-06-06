@@ -182,16 +182,13 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
           <div className="absolute bottom-0 left-0 p-6 md:p-8 w-full">
-            <span className="inline-block bg-[#C9A227] text-white text-xs font-bold px-3 py-1 rounded-full mb-3">
+            <span className="inline-block bg-[#C9A227] text-white text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 rounded-full mb-2">
               FEATURED
             </span>
-            <h3 className="text-2xl md:text-4xl font-bold text-white mb-3 leading-tight group-hover:text-[#C9A227] transition-colors">
+            <h3 className="text-lg md:text-2xl font-bold text-white mb-2 leading-snug group-hover:text-[#C9A227] transition-colors line-clamp-2">
               {featured.title}
             </h3>
-            <p className="text-gray-300 text-sm md:text-base line-clamp-2 max-w-2xl mb-2">
-              {featured.subHeadline || featured.content.replace(/<[^>]*>/g, "").substring(0, 150)}...
-            </p>
-            <span className="text-xs text-gray-400 font-medium tracking-wide">
+            <span className="text-[10px] md:text-xs text-gray-400 font-medium tracking-wide block mt-1">
               Author: {featured.authors || featured.advocateName || "Anonymous"}
             </span>
           </div>

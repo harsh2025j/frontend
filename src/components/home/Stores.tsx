@@ -102,35 +102,40 @@ export default function Stores() {
   const homeData = useHomeData();
   const { articles: allArticles, loading: mainLoading, error } = useArticleListActions();
   const articles = useMemo(() => {
-    const base = allArticles.length > 0 ? allArticles : (homeData?.latestArticles || []);
-    return base.filter((a: { status: string; }) => a.status === 'published');
+    return allArticles.length > 0 ? allArticles : (homeData?.latestArticles || []);
   }, [allArticles, homeData?.latestArticles]);
 
-  const { articles: latestRaw, loading: loadingLatest } = useCategoryArticles("latest-news", 4);
-  const { articles: judgmentsRaw, loading: loadingJudgements } = useCategoryArticles("judgments", 3);
-  const { articles: hindiRaw, loading: loadingHindi } = useCategoryArticles("hindi-news", 3);
-  const { articles: financeRaw, loading: loadingFinance } = useCategoryArticles("finance-articles", 10);
-  const { articles: legalRaw, loading: loadingLegal } = useCategoryArticles("legal-articles", 10);
+  const { articles: latestRaw, loading: loadingLatest } = useCategoryArticles("latest-news", 4, !!homeData?.latestArticles?.length);
+  const { articles: judgmentsRaw, loading: loadingJudgements } = useCategoryArticles("judgments", 3, !!homeData?.judgmentsArticles?.length);
+  const { articles: hindiRaw, loading: loadingHindi } = useCategoryArticles("hindi-news", 3, !!homeData?.hindiArticles?.length);
+  const { articles: financeRaw, loading: loadingFinance } = useCategoryArticles("finance-articles", 10, !!homeData?.financeArticles?.length);
+  const { articles: legalRaw, loading: loadingLegal } = useCategoryArticles("legal-articles", 10, !!homeData?.legalArticles?.length);
 
   const displayFinanceArticles = useMemo(() => {
-    const base = financeRaw.length > 0 ? financeRaw : (homeData?.financeArticles || []);
-    return base.filter(a => a.status === 'published');
+    return financeRaw.length > 0 ? financeRaw : (homeData?.financeArticles || []);
   }, [financeRaw, homeData?.financeArticles]);
 
   const displayLegalArticles = useMemo(() => {
-    const base = legalRaw.length > 0 ? legalRaw : (homeData?.legalArticles || []);
-    return base.filter(a => a.status === 'published');
+    return legalRaw.length > 0 ? legalRaw : (homeData?.legalArticles || []);
   }, [legalRaw, homeData?.legalArticles]);
 
-  const LatestNewsData = useMemo(() => latestRaw.filter(a => a.status === 'published'), [latestRaw]);
-  const JudgementNewsData = useMemo(() => judgmentsRaw.filter(a => a.status === 'published'), [judgmentsRaw]);
-  const HindiNewsData = useMemo(() => hindiRaw.filter(a => a.status === 'published'), [hindiRaw]);
+  const LatestNewsData = useMemo(() => {
+    return latestRaw.length > 0 ? latestRaw : (homeData?.latestArticles || []);
+  }, [latestRaw, homeData?.latestArticles]);
+
+  const JudgementNewsData = useMemo(() => {
+    return judgmentsRaw.length > 0 ? judgmentsRaw : (homeData?.judgmentsArticles || []);
+  }, [judgmentsRaw, homeData?.judgmentsArticles]);
+
+  const HindiNewsData = useMemo(() => {
+    return hindiRaw.length > 0 ? hindiRaw : (homeData?.hindiArticles || []);
+  }, [hindiRaw, homeData?.hindiArticles]);
 
 
-  const isFinanceLoading = loadingFinance && financeRaw.length === 0 && (!homeData || homeData.financeArticles.length === 0);
-  const isLegalLoading = loadingLegal && legalRaw.length === 0 && (!homeData || homeData.legalArticles.length === 0);
-  const isHindiLoading = loadingHindi && HindiNewsData.length === 0 && (!homeData || homeData.hindiArticles.length === 0);
-  const loading = mainLoading || loadingLatest || loadingJudgements || isHindiLoading || isFinanceLoading || isLegalLoading;
+  const isFinanceLoading = loadingFinance && financeRaw.length === 0 && (!homeData || !homeData.financeArticles || homeData.financeArticles.length === 0);
+  const isLegalLoading = loadingLegal && legalRaw.length === 0 && (!homeData || !homeData.legalArticles || homeData.legalArticles.length === 0);
+  const isHindiLoading = loadingHindi && HindiNewsData.length === 0 && (!homeData || !homeData.hindiArticles || homeData.hindiArticles.length === 0);
+  const loading = mainLoading || (loadingLatest && LatestNewsData.length === 0) || (loadingJudgements && JudgementNewsData.length === 0) || isHindiLoading || isFinanceLoading || isLegalLoading;
 
 
 

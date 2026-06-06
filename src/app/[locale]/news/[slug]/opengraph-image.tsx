@@ -26,7 +26,7 @@ export default async function Image({ params }: { params: { slug: string; locale
   try {
     const res = await fetch(`${API_BASE_URL}/articles/${slug}`, {
       headers: {
-        "ngrok-skip-browser-warning": "true",
+        // "ngrok-skip-browser-warning": "true",
       },
     });
     if (res.ok) {

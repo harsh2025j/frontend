@@ -148,9 +148,26 @@ export function AdBanner({ slotId, withContainer = false }: { slotId: string; wi
   if (currentSubscription?.status === 'active' || checkIsAdmin(user as any)) return null;
   // ----------------------------------
 
-  if (loading || !ad || !ad.isActive) return null;
-
   const bannerHeight = (slotId === "HOME_FEED_1") ? 150 : 90;
+
+  if (loading) {
+    if (withContainer) {
+      return (
+        <div className="container mx-auto px-4 py-8">
+          <div className="bg-gray-50 p-2 rounded-xl border border-gray-100 shadow-sm animate-pulse" style={{ minHeight: `${bannerHeight + 40}px` }} />
+        </div>
+      );
+    }
+    return (
+      <div className="w-full flex justify-center py-4 animate-pulse">
+        <div className="bg-gray-50 border border-gray-100 w-full max-w-5xl rounded-sm" style={{ height: `${bannerHeight}px` }} />
+      </div>
+    );
+  }
+
+  if (!ad || !ad.isActive) return null;
+
+
 
   const content = (
     <BaseAd
@@ -193,7 +210,20 @@ export function AdSidebar({ slotId, withContainer = false }: { slotId: string; w
   if (currentSubscription?.status === 'active' || checkIsAdmin(user as any)) return null;
   // ----------------------------------
 
-  if (loading || !ad || !ad.isActive) return null;
+  if (loading) {
+    if (withContainer) {
+      return (
+        <div className="bg-gray-50 p-2 rounded-xl border border-gray-100 shadow-sm mb-6 animate-pulse" style={{ minHeight: '290px' }} />
+      );
+    }
+    return (
+      <div className="mb-6 animate-pulse w-full">
+        <div className="bg-gray-50 border border-gray-100 w-full rounded-sm" style={{ height: '250px' }} />
+      </div>
+    );
+  }
+
+  if (!ad || !ad.isActive) return null;
 
   const content = (
     <BaseAd

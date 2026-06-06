@@ -21,7 +21,7 @@ async function getArticle(slug: string): Promise<Article | null> {
         const res = await fetch(`${API_BASE_URL}/articles/${slug}`, {
             cache: "no-store", // Ensure fresh data
             headers: {
-                "ngrok-skip-browser-warning": "true",
+                // "ngrok-skip-browser-warning": "true",
             },
         });
 

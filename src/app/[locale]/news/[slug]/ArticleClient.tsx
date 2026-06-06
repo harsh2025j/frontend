@@ -29,7 +29,7 @@ interface ArticleClientProps {
 }
 
 // ── Per-article body: manages its own translation + AI summary state ──────────
-function ArticleBody({ article, locale, t }: { article: Article; locale: string; t: ReturnType<typeof useTranslations> }) {
+function ArticleBody({ article, locale, t, isPriority = false }: { article: Article; locale: string; t: ReturnType<typeof useTranslations>, isPriority?: boolean }) {
     const [copied, setCopied] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
     const [summary, setSummary] = useState<string | null>(article.aiSummary || null);
@@ -265,7 +265,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
                             src={getSafeImageUrl(article.thumbnail)}
                             alt={displayTitle}
                             fill
-                            priority={true}
+                            priority={isPriority}
                             sizes="(max-width: 1024px) 100vw, 900px"
                             quality={100}
                             className="object-cover" // className="object-contain" //object-cover
@@ -556,7 +556,7 @@ function ArticleBody({ article, locale, t }: { article: Article; locale: string;
 
                 {/* Article Bottom Banner */}
                 {!isPremium && (
-                    <div className="mt-12 mb-4">
+                    <div className="w-full flex justify-center mb-8">
                         <ArticleBottomAd />
                     </div>
                 )}
@@ -780,7 +780,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
 
                 {/* Article Top Banner */}
                 {!isPremium && (
-                    <div className="mb-8">
+                    <div className="mt-8">
                         <ArticleTopAd />
                     </div>
                 )}
@@ -810,7 +810,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                                     </>
                                 )}
 
-                                <ArticleBody article={article} locale={locale} t={t} />
+                                <ArticleBody article={article} locale={locale} t={t} isPriority={i === 0} />
                             </React.Fragment>
                         ))}
 
@@ -838,7 +838,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                         >
                             {/* Sidebar Top Ad */}
                             {!isPremium && (
-                                <div className="mb-8">
+                                <div className="mb-6">
                                     <ArticleSidebarTopAd />
                                 </div>
                             )}

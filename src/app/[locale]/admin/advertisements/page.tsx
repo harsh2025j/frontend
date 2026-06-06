@@ -31,20 +31,20 @@ export default function AdvertisementManagement() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [adIdToDelete, setAdIdToDelete] = useState<string | null>(null);
 
-  const fetchAds = async () => {
+  const fetchAds = async (showLoader = true) => {
     try {
-      setLoading(true);
+      if (showLoader) setLoading(true);
       const response = await advertisementApi.fetchAdvertisements();
       setAds(response.data.data);
     } catch (error) {
       toast.error("Failed to fetch advertisements");
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAds();
+    fetchAds(true);
   }, []);
 
   const handleDelete = async () => {
@@ -52,7 +52,7 @@ export default function AdvertisementManagement() {
     try {
       await advertisementApi.deleteAdvertisement(adIdToDelete);
       toast.success("Template data removed");
-      fetchAds();
+      fetchAds(false);
     } catch (error) {
       toast.error("Failed to remove template data");
     } finally {
@@ -71,7 +71,7 @@ export default function AdvertisementManagement() {
     try {
       await advertisementApi.toggleAdvertisementStatus(id);
       toast.success("Visibility updated");
-      fetchAds();
+      fetchAds(false);
     } catch (error) {
       toast.error("Failed to update visibility");
     }
@@ -167,9 +167,8 @@ export default function AdvertisementManagement() {
 
                     <td className="px-5 py-4">
                       {ad ? (
-                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md ${
-                          ad.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
-                        }`}>
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md ${ad.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
+                          }`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${ad.isActive ? "bg-green-500" : "bg-gray-400"}`} />
                           {ad.isActive ? "Active" : "Hidden"}
                         </span>
@@ -253,3 +252,4 @@ export default function AdvertisementManagement() {
     </div>
   );
 }
+

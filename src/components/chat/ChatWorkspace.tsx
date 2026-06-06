@@ -266,14 +266,14 @@ export default function ChatWorkspace({ role, initialRecipientId: _initialRecipi
           .map((c) =>
             c._id === msg.conversationId
               ? {
-                  ...c,
-                  lastMessage: {
-                    text: msg.content,
-                    senderId: msg.senderId,
-                    timestamp: msg.sentAt as unknown as string,
-                  },
-                  updatedAt: msg.sentAt as unknown as string,
-                }
+                ...c,
+                lastMessage: {
+                  text: msg.content,
+                  senderId: msg.senderId,
+                  timestamp: msg.sentAt as unknown as string,
+                },
+                updatedAt: msg.sentAt as unknown as string,
+              }
               : c
           )
           .sort((a, b) => new Date(b.updatedAt || "").getTime() - new Date(a.updatedAt || "").getTime())
@@ -354,7 +354,7 @@ export default function ChatWorkspace({ role, initialRecipientId: _initialRecipi
           });
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [selectedConv, socket, currentUserId]);
 
   // Auto-mark incoming as seen while chat is open
@@ -435,14 +435,14 @@ export default function ChatWorkspace({ role, initialRecipientId: _initialRecipi
         .map((c) =>
           c._id === selectedConv._id
             ? {
-                ...c,
-                lastMessage: {
-                  text: body,
-                  senderId: currentUserId,
-                  timestamp: tempMsg.sentAt,
-                },
-                updatedAt: tempMsg.sentAt,
-              }
+              ...c,
+              lastMessage: {
+                text: body,
+                senderId: currentUserId,
+                timestamp: tempMsg.sentAt,
+              },
+              updatedAt: tempMsg.sentAt,
+            }
             : c
         )
         .sort(
@@ -733,7 +733,7 @@ export default function ChatWorkspace({ role, initialRecipientId: _initialRecipi
       if (!loaded) { toast.error("Failed to load payment gateway."); return; }
 
       const options: any = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_5V6H76K49J9G6E",
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: "INR",
         name: "Document Unlock",
@@ -813,9 +813,8 @@ export default function ChatWorkspace({ role, initialRecipientId: _initialRecipi
 
       {/* Main chat area */}
       <div
-        className={`absolute inset-0 z-20 md:static flex-1 flex-col bg-white ${
-          !selectedConv ? "hidden md:flex" : "flex"
-        }`}
+        className={`absolute inset-0 z-20 md:static flex-1 flex-col bg-white ${!selectedConv ? "hidden md:flex" : "flex"
+          }`}
       >
         {selectedConv ? (
           <>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Merriweather, Unna } from "next/font/google";
 import "../globals.css";
 import ClientLayout from "@/components/layout/ClientWrapper";
 import ReduxProvider from "@/data/redux/providers/ReduxProvider";
@@ -22,6 +22,21 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const merriweather = Merriweather({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-merriweather',
+  display: 'swap',
+});
+
+const unna = Unna({
+  weight: ['400', '700'],
+  style: ['normal', 'italic'],
+  subsets: ['latin'],
+  variable: '--font-unna',
+  display: 'swap',
 });
 
 const METADATA_BASE = new URL('https://www.sajjadhusainlawassociates.com'); // production
@@ -115,7 +130,7 @@ async function getCategories() {
   try {
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CATEGORIES.FETCH_ALL_CATEGORY}`, {
       headers: {
-        "ngrok-skip-browser-warning": "true",
+        // "ngrok-skip-browser-warning": "true",
       },
       next: { revalidate: 3600 }
     });
@@ -137,9 +152,9 @@ async function getArticles(params: any = {}) {
 
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ARTICLE.FETCH_ALL}?${queryParams.toString()}`, {
       headers: {
-        "ngrok-skip-browser-warning": "true",
+        // "ngrok-skip-browser-warning": "true",
       },
-      next: { revalidate: 3600 }
+      next: { revalidate: 60 } // 0 means do not cache, so it updates instantly
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -162,19 +177,21 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   // Parallel fetch for speed
-  const [categories, latestArticles, financeArticles, legalArticles, hindiArticles] = await Promise.all([
+  const [categories, latestArticles, financeArticles, legalArticles, hindiArticles, judgmentsArticles] = await Promise.all([
     getCategories(),
-    getArticles({ limit: 6 }), // For NewsSlider
-    getArticles({ category: "finance-articles", limit: 10 }),
-    getArticles({ category: "legal-articles", limit: 10 }),
-    getArticles({ category: "hindi-news", limit: 3 }),
+    getArticles({ limit: 6, status: 'published' }), // For NewsSlider
+    getArticles({ category: "finance-articles", limit: 10, status: 'published' }),
+    getArticles({ category: "legal-articles", limit: 10, status: 'published' }),
+    getArticles({ category: "hindi-news", limit: 3, status: 'published' }),
+    getArticles({ category: "judgments", limit: 3, status: 'published' }),
   ]);
 
   const initialHomeData = {
     latestArticles,
     financeArticles,
     legalArticles,
-    hindiArticles
+    hindiArticles,
+    judgmentsArticles
   };
 
   const siteSearchJsonLd = {
@@ -198,7 +215,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSearchJsonLd) }}
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} ${unna.variable} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <ErrorBoundary>
             <ReduxProvider>

@@ -59,6 +59,7 @@ export default function TagClient() {
                 tag: slug,
                 page: currentPage,
                 limit: ITEMS_PER_PAGE,
+                status: 'published'
             });
             const data = res.data as any;
             const items: Article[] = data.data ?? [];

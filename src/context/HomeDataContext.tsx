@@ -7,6 +7,7 @@ interface HomeData {
   financeArticles: any[];
   legalArticles: any[];
   hindiArticles: any[];
+  judgmentsArticles?: any[];
 }
 
 

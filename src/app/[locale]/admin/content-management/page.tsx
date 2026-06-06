@@ -13,6 +13,7 @@ import { articleApi } from "@/data/services/article-service/article-service";
 import Pagination from "@/components/Pagination";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Suspense } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -231,6 +232,7 @@ const ContentManagementPageContent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useProfileActions();
+  const { hasPermission } = usePermissions();
 
   // ── Derived from URL ──
   const statusFilter = (searchParams.get("status") as StatusFilter) || "all";
@@ -349,7 +351,7 @@ const ContentManagementPageContent: React.FC = () => {
                 {loading ? "..." : `${totalItems} article${totalItems !== 1 ? "s" : ""}`}
               </p>
               <div className="flex items-center gap-3">
-                {(user?._id === "692bf00f87df9dbf18f02a69" || user?.id === "692bf00f87df9dbf18f02a69") && (
+                {hasPermission("manage:g-news:article") && (
                   <button
                     disabled={isTriggering}
                     onClick={() => setSyncModalOpen(true)}

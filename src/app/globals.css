@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Unna:ital,wght@0,400;0,700;1,400;1,700&display=swap');
-
 @import "tailwindcss";
 
 
@@ -286,7 +284,7 @@ textarea,
 
 /* Custom Article Content Styling */
 .article-content {
-  font-family: var(--font-unna), serif;
+  font-family: Georgia, sans-serif;
   color: #333;
   line-height: 1.6;
   font-size: 1.125rem;

@@ -2,12 +2,17 @@ import { useState, useEffect } from "react";
 import { articleApi } from "@/data/services/article-service/article-service";
 import { Article } from "@/data/features/article/article.types";
 
-export const useCategoryArticles = (categorySlug: string, limit: number = 6) => {
+export const useCategoryArticles = (categorySlug: string, limit: number = 6, skipFetch: boolean = false) => {
     const [articles, setArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        if (skipFetch) {
+            setLoading(false);
+            return;
+        }
+
         // Read from cache immediately after mount (hydration-safe)
         if (typeof window !== "undefined") {
             const cached = localStorage.getItem(`articles_cache_${categorySlug}`);
@@ -30,7 +35,7 @@ export const useCategoryArticles = (categorySlug: string, limit: number = 6) => 
                 if (articles.length === 0) {
                     setLoading(true);
                 }
-                const response = await articleApi.fetchArticles({ category: categorySlug, limit });
+                const response = await articleApi.fetchArticles({ category: categorySlug, limit, status: 'published' });
                 const data = response.data.data || [];
                 setArticles(data);
 
@@ -44,10 +49,10 @@ export const useCategoryArticles = (categorySlug: string, limit: number = 6) => 
             }
         };
 
-        if (categorySlug) {
+        if (categorySlug && !skipFetch) {
             fetchData();
         }
-    }, [categorySlug, limit]);
+    }, [categorySlug, limit, skipFetch]);
 
     return { articles, loading, error };
 };
