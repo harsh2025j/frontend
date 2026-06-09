@@ -10,6 +10,7 @@ import { AdProvider } from "@/context/AdContext";
 
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import Script from 'next/script';
 
 import { API_BASE_URL, API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
 
@@ -213,6 +214,14 @@ export default async function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSearchJsonLd) }}
+        />
+        {/* Google AdSense Script - Replace with your actual publisher ID */}
+        <Script 
+          id="google-adsense"
+          async 
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
         />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} ${unna.variable} antialiased`}>

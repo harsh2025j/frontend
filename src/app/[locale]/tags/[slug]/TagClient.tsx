@@ -12,7 +12,7 @@ import { timeAgo } from "@/lib/utils/timeAgo";
 import { articleApi } from "@/data/services/article-service/article-service";
 import Pagination from "@/components/Pagination";
 import NewsCard from "@/components/ui/NewsCard";
-import { AdBanner, AdSidebar, useAdvertisement } from "@/components/ads/StandardAds";
+import { AdBanner, AdSidebar, useAdvertisement, useSlotVisibility } from "@/components/ads/StandardAds";
 import { isAdmin as checkIsAdmin } from "@/utils/permissions";
 import { useSelector } from "react-redux";
 import { RootState } from "@/data/redux/store";
@@ -25,12 +25,17 @@ export default function TagClient() {
     const isPremium = currentSubscription?.status === "active";
     const isAdmin = checkIsAdmin(user as any);
 
-    // Check for Sidebar Ad presence
+    // Check for Sidebar Ad presence AND the new Visibility Toggle
     const { ad: sidebarAd, loading: adLoading } = useAdvertisement("CATEGORY_SIDEBAR_1");
-    const hasActiveAd = !adLoading && sidebarAd && sidebarAd.isActive;
+    const { isSlotEnabled } = useSlotVisibility("CATEGORY_SIDEBAR_1");
 
-    // Content should only shrink if there's a reason to show the sidebar (Not Premium, Not Admin, and Has Ad)
-    const showSidebar = !isPremium && !isAdmin && hasActiveAd;
+    const hasActiveCustomAd = !adLoading && sidebarAd && sidebarAd.isActive;
+    const hasGoogleFallback = !adLoading && !sidebarAd;
+
+    const willShowAd = hasActiveCustomAd || hasGoogleFallback;
+
+    // The layout should only make space for the sidebar if the Slot is Enabled (Visibility ON)
+    const showSidebar = !isPremium && !isAdmin && isSlotEnabled && willShowAd;
 
     const params = useParams();
     const slug = params.slug as string;

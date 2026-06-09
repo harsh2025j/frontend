@@ -8,6 +8,16 @@ import {
 } from "@/data/features/advertisement/advertisement.types";
 
 export const advertisementApi = {
+  fetchSlotVisibility: async () => {
+    const response = await apiClient.get<{ data: { slotVisibility: Record<string, boolean> } }>(`${API_ENDPOINTS.ADVERTISEMENTS.BASE}/slot-visibility`);
+    return response;
+  },
+
+  updateSlotVisibility: async (slotId: string, enabled: boolean) => {
+    const response = await apiClient.patch<{ data: { slotVisibility: Record<string, boolean> } }>(`${API_ENDPOINTS.ADVERTISEMENTS.BASE}/slot-visibility`, { slotId, enabled });
+    return response;
+  },
+
   fetchAdvertisements: async () => {
     const response = await apiClient.get<AdvertisementListResponse>(API_ENDPOINTS.ADVERTISEMENTS.BASE);
     return response;
@@ -40,6 +50,7 @@ export const advertisementApi = {
     formData.append("link", data.link);
     formData.append("slotId", data.slotId);
     formData.append("adType", data.adType);
+    if (data.googleAdId) formData.append("googleAdId", data.googleAdId);
     formData.append("priority", String(data.priority));
     formData.append("isActive", String(data.isActive));
 
@@ -66,6 +77,7 @@ export const advertisementApi = {
     formData.append("link", data.link);
     formData.append("slotId", data.slotId);
     formData.append("adType", data.adType);
+    if (data.googleAdId) formData.append("googleAdId", data.googleAdId);
     formData.append("priority", String(data.priority));
     formData.append("isActive", String(data.isActive));
 

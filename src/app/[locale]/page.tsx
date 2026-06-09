@@ -7,7 +7,7 @@ import { isAdmin as checkIsAdmin } from "@/utils/permissions";
 import CategorySection from "@/components/home/CategorySection";
 import NewsSlider from "@/components/home/NewsSlider";
 import Stores from "@/components/home/Stores";
-import { AdBanner, AdSidebar, useAdvertisement } from "@/components/ads/StandardAds";
+import { AdBanner, AdSidebar, useAdvertisement, useSlotVisibility } from "@/components/ads/StandardAds";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
 export default function Home() {
@@ -21,12 +21,19 @@ export default function Home() {
 
   const { ad: sidebar1, loading: loading1 } = useAdvertisement("HOME_SIDEBAR_1");
   const { ad: sidebar2, loading: loading2 } = useAdvertisement("HOME_SIDEBAR_2");
+  
+  const { isSlotEnabled: sidebar1Enabled, settingsLoading: settingsLoading1 } = useSlotVisibility("HOME_SIDEBAR_1");
+  const { isSlotEnabled: sidebar2Enabled, settingsLoading: settingsLoading2 } = useSlotVisibility("HOME_SIDEBAR_2");
 
   const showSidebar = !isPremiumOrAdmin && (
     (sidebar1 && sidebar1.isActive) || 
     (sidebar2 && sidebar2.isActive) || 
+    sidebar1Enabled ||
+    sidebar2Enabled ||
     loading1 || 
-    loading2
+    loading2 ||
+    settingsLoading1 ||
+    settingsLoading2
   );
 
   return (

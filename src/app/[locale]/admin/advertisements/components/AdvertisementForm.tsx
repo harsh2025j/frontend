@@ -25,7 +25,7 @@ export default function AdvertisementForm({ initialData, isEdit = false, onSucce
     description: initialData?.description || "",
     link: initialData?.link || "",
     slotId: initialData?.slotId || "HOME_BANNER_TOP_1",
-    adType: initialData?.adType || "IMAGE",
+    adType: "IMAGE" as const, // Always custom image — Google AdSense not used
     priority: 0,
     isActive: initialData?.isActive ?? true,
   });
@@ -72,14 +72,14 @@ export default function AdvertisementForm({ initialData, isEdit = false, onSucce
 
   const previewHeight =
     formData.slotId === "HOME_FEED_1" ? "150px" :
-    selectedSlot?.type === "BANNER" || formData.slotId.includes("BANNER") || formData.slotId.includes("FOOTER") ? "90px" :
-    "250px";
+      selectedSlot?.type === "BANNER" || formData.slotId.includes("BANNER") || formData.slotId.includes("FOOTER") ? "90px" :
+        "250px";
 
   const cropAspect =
     formData.slotId === "HOME_FEED_1" ? 728 / 150 :
-    selectedSlot?.type === "BANNER" || formData.slotId.includes("BANNER") || formData.slotId.includes("FOOTER") ? 728 / 90 :
-    selectedSlot?.type === "SIDEBAR" || formData.slotId.includes("SIDEBAR") ? 300 / 250 :
-    1;
+      selectedSlot?.type === "BANNER" || formData.slotId.includes("BANNER") || formData.slotId.includes("FOOTER") ? 728 / 90 :
+        selectedSlot?.type === "SIDEBAR" || formData.slotId.includes("SIDEBAR") ? 300 / 250 :
+          1;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 pb-20">
@@ -225,6 +225,7 @@ export default function AdvertisementForm({ initialData, isEdit = false, onSucce
             <div className="flex justify-center bg-gray-50 rounded-lg p-3 border border-gray-100 overflow-hidden">
               <div className="w-full">
                 <BaseAd
+                  slotId={formData.slotId}
                   width="100%"
                   height={previewHeight}
                   label={formData.title || "Template Slot"}

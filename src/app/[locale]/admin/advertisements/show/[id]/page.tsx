@@ -125,7 +125,7 @@ export default function ShowAdvertisementPage() {
               <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${
                 ad.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
               }`}>
-                {ad.isActive ? "Live" : "Hidden"}
+                {ad.isActive ? "Live" : "Paused"}
               </span>
             </div>
             <h1 className="text-lg font-semibold text-gray-900">{ad.title}</h1>
@@ -142,7 +142,7 @@ export default function ShowAdvertisementPage() {
             }`}
           >
             {ad.isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
-            {ad.isActive ? "Live" : "Hidden"}
+            {ad.isActive ? "Live" : "Paused"}
           </button>
           <button
             onClick={() => router.push(`/admin/advertisements/edit/${ad._id}`)}
@@ -212,6 +212,7 @@ export default function ShowAdvertisementPage() {
           </div>
           <div className="flex justify-center bg-gray-50 rounded-lg p-6 border border-gray-100 overflow-hidden">
             <BaseAd
+              slotId={ad.slotId}
               width="100%"
               height={
                 ad.slotId === "HOME_FEED_1" ? "150px" :

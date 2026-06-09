@@ -780,7 +780,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
 
                 {/* Article Top Banner */}
                 {!isPremium && (
-                    <div className="mt-8">
+                    <div className="mt-1">
                         <ArticleTopAd />
                     </div>
                 )}
@@ -875,7 +875,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
 
                             {/* Sidebar Bottom Ad */}
                             {!isPremium && (
-                                <div className="mt-8">
+                                <div className="mt-1">
                                     <ArticleSidebarBottomAd />
                                 </div>
                             )}

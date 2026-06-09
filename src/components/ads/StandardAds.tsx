@@ -5,11 +5,74 @@ import { X } from 'lucide-react';
 import { useSelector } from "react-redux";
 import { RootState } from "@/data/redux/store";
 import { advertisementApi } from "@/data/services/advertisement-service/advertisement-service";
-import { Advertisement } from "@/data/features/advertisement/advertisement.types";
+import { Advertisement, GOOGLE_AD_MAPPINGS, AD_SLOTS } from "@/data/features/advertisement/advertisement.types";
 import { isAdmin as checkIsAdmin } from "@/utils/permissions";
 
 /**
- * Custom hook to fetch advertisement for a specific slot
+ * Helper to get slot aspect ratio
+ */
+export function getSlotAspectRatio(slotId?: string): string | undefined {
+  if (!slotId) return undefined;
+  const slot = AD_SLOTS.find(s => s.id === slotId);
+  if (slot && slot.dimensions) {
+    const [w, h] = slot.dimensions.split("x");
+    return `${w} / ${h}`;
+  }
+  // Fallbacks if not found in list but slotId naming pattern is standard
+  if (slotId === "HOME_FEED_1") return "728 / 150";
+  if (slotId.includes("BANNER") || slotId.includes("FOOTER")) return "728 / 90";
+  if (slotId.includes("SIDEBAR")) return "300 / 250";
+  return undefined;
+}
+
+/**
+ * Helper to get slot width
+ */
+export function getSlotWidth(slotId?: string): number | undefined {
+  if (!slotId) return undefined;
+  const slot = AD_SLOTS.find(s => s.id === slotId);
+  if (slot && slot.dimensions) {
+    const [w] = slot.dimensions.split("x");
+    return parseInt(w);
+  }
+  // Fallbacks if not found in list but slotId naming pattern is standard
+  if (slotId === "HOME_FEED_1") return 728;
+  if (slotId.includes("BANNER") || slotId.includes("FOOTER")) return 728;
+  if (slotId.includes("SIDEBAR")) return 300;
+  return undefined;
+}
+
+/**
+ * Custom hook to fetch per-slot visibility settings.
+ * Each slot checks its own toggle. Slots not in the map default to ON (visible).
+ */
+export function useSlotVisibility(slotId: string) {
+  const [isSlotEnabled, setIsSlotEnabled] = useState<boolean>(true);
+  const [settingsLoading, setSettingsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await advertisementApi.fetchSlotVisibility();
+        // Fixed: The backend wraps the API response in an extra 'data' object.
+        const map = response.data?.data?.slotVisibility || {};
+        // If the slot is not in the map, default to true (visible)
+        setIsSlotEnabled(map[slotId] !== false);
+      } catch (error) {
+        setIsSlotEnabled(true); // default to visible on error
+      } finally {
+        setSettingsLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, [slotId]);
+
+  return { isSlotEnabled, settingsLoading };
+}
+
+/**
+ * Custom hook to fetch active advertisement for a slot
  */
 export function useAdvertisement(slotId: string) {
   const [ad, setAd] = useState<Advertisement | null>(null);
@@ -42,6 +105,7 @@ interface BaseAdProps {
   className?: string;
   id?: string;
   adId?: string;
+  slotId?: string;
 }
 
 /**
@@ -56,13 +120,16 @@ export function BaseAd({
   className = '',
   id,
   adId,
+  slotId,
 }: BaseAdProps) {
   const isFixed = typeof width === 'number' && typeof height === 'number';
+  const aspectRatio = getSlotAspectRatio(slotId);
+  const slotWidth = getSlotWidth(slotId);
 
   // Impression Tracking
   useEffect(() => {
     if (adId) {
-      advertisementApi.trackImpression(adId).catch(() => {});
+      advertisementApi.trackImpression(adId).catch(() => { });
     }
   }, [adId]);
 
@@ -74,7 +141,7 @@ export function BaseAd({
         userIdentifier = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         localStorage.setItem('ad_user_id', userIdentifier);
       }
-      advertisementApi.trackClick(adId, userIdentifier).catch(() => {});
+      advertisementApi.trackClick(adId, userIdentifier).catch(() => { });
     }
   };
 
@@ -83,12 +150,15 @@ export function BaseAd({
     height: `${height}px`,
   } : {
     width: '100%',
-    minHeight: typeof height === 'number' ? `${height}px` : height,
+    ...(aspectRatio ? { aspectRatio } : {}),
+    height: aspectRatio ? 'auto' : (typeof height === 'number' ? `${height}px` : height),
+    maxHeight: typeof height === 'number' ? `${height}px` : height,
+    maxWidth: slotWidth ? `${slotWidth}px` : undefined,
   };
 
   const Content = () => (
     <div
-      className={`relative bg-gray-50 border border-gray-200 flex flex-col items-center justify-center overflow-hidden rounded-sm transition-all duration-300 hover:border-blue-300 group ${className}`}
+      className={`relative bg-gray-50 border border-gray-200 flex flex-col items-center justify-center overflow-hidden rounded-sm transition-all duration-300 hover:border-blue-300 group mx-auto ${className}`}
       style={containerStyle}
       id={id}
     >
@@ -119,10 +189,10 @@ export function BaseAd({
 
   if (linkUrl) {
     return (
-      <a 
-        href={linkUrl} 
-        className="block no-underline" 
-        target="_blank" 
+      <a
+        href={linkUrl}
+        className="block no-underline"
+        target="_blank"
         rel="noopener noreferrer"
         onClick={handleAdClick}
       >
@@ -134,6 +204,105 @@ export function BaseAd({
   return <Content />;
 }
 
+/**
+ * GoogleAdSense Component - Safely renders Google AdSense units
+ */
+export function GoogleAdSense({ slotId, width, height, className = '' }: { slotId: string, width?: string | number, height?: string | number, className?: string }) {
+  const adUnitId = GOOGLE_AD_MAPPINGS[slotId];
+  const isFixed = typeof width === 'number' && typeof height === 'number';
+  const insRef = React.useRef<HTMLModElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const displayHeight = typeof height === 'number' ? height : (slotId === "HOME_FEED_1" ? 150 : 90);
+  const aspectRatio = getSlotAspectRatio(slotId);
+  const slotWidth = getSlotWidth(slotId);
+
+  const containerStyle: React.CSSProperties = isFixed ? {
+    width: `${width}px`,
+    height: `${height}px`,
+  } : {
+    width: '100%',
+    ...(aspectRatio ? { aspectRatio } : {}),
+    height: aspectRatio ? 'auto' : (typeof height === 'number' ? `${height}px` : (height || '90px')),
+    maxHeight: typeof height === 'number' ? `${height}px` : (height || '90px'),
+    maxWidth: slotWidth ? `${slotWidth}px` : undefined,
+  };
+
+  useEffect(() => {
+    const applyStyles = () => {
+      if (containerRef.current) {
+        if (aspectRatio) {
+          containerRef.current.style.setProperty('aspect-ratio', aspectRatio, 'important');
+          containerRef.current.style.setProperty('height', 'auto', 'important');
+        } else {
+          containerRef.current.style.setProperty('height', `${displayHeight}px`, 'important');
+        }
+        containerRef.current.style.setProperty('max-height', `${displayHeight}px`, 'important');
+        if (slotWidth) {
+          containerRef.current.style.setProperty('max-width', `${slotWidth}px`, 'important');
+        }
+      }
+      if (insRef.current) {
+        if (aspectRatio) {
+          insRef.current.style.setProperty('aspect-ratio', aspectRatio, 'important');
+          insRef.current.style.setProperty('height', 'auto', 'important');
+        } else {
+          insRef.current.style.setProperty('height', `${displayHeight}px`, 'important');
+        }
+        insRef.current.style.setProperty('max-height', `${displayHeight}px`, 'important');
+        if (slotWidth) {
+          insRef.current.style.setProperty('max-width', `${slotWidth}px`, 'important');
+        }
+      }
+    };
+
+    applyStyles();
+
+    try {
+      if (insRef.current && insRef.current.innerHTML === "") {
+        // @ts-ignore
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      }
+    } catch (e) {
+      console.error("AdSense error", e);
+    }
+
+    const timer1 = setTimeout(applyStyles, 100);
+    const timer2 = setTimeout(applyStyles, 500);
+    const timer3 = setTimeout(applyStyles, 2000);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, [slotId, displayHeight, aspectRatio, slotWidth]);
+
+  if (!adUnitId) return null; // No mapping found
+
+  return (
+    <div
+      ref={containerRef}
+      className={`relative bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 mx-auto ${className}`}
+      style={containerStyle}
+    >
+      <div className="absolute top-1 right-1 z-10">
+        <span className="text-[10px] font-bold text-gray-400 bg-white/80 backdrop-blur-sm px-1.5 py-0.5 border border-gray-200 rounded uppercase tracking-tighter leading-none shadow-sm">
+          Google Ad
+        </span>
+      </div>
+      <ins
+        ref={insRef}
+        className="adsbygoogle w-full h-full block"
+        data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with real client ID later
+        data-ad-slot={adUnitId}
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      />
+    </div>
+  );
+}
+
 // ─── DYNAMIC AD COMPONENTS ───
 
 /** 
@@ -141,11 +310,14 @@ export function BaseAd({
  */
 export function AdBanner({ slotId, withContainer = false }: { slotId: string; withContainer?: boolean }) {
   const { ad, loading } = useAdvertisement(slotId);
+  const { isSlotEnabled, settingsLoading } = useSlotVisibility(slotId);
 
   // --- PREMIUM & ADMIN AD-FREE CHECK ---
   const { currentSubscription } = useSelector((state: RootState) => state.subscription);
   const { user } = useSelector((state: RootState) => state.auth);
   if (currentSubscription?.status === 'active' || checkIsAdmin(user as any)) return null;
+  // --- PER-SLOT TOGGLE CHECK ---
+  if (!settingsLoading && !isSlotEnabled) return null;
   // ----------------------------------
 
   const bannerHeight = (slotId === "HOME_FEED_1") ? 150 : 90;
@@ -153,8 +325,8 @@ export function AdBanner({ slotId, withContainer = false }: { slotId: string; wi
   if (loading) {
     if (withContainer) {
       return (
-        <div className="container mx-auto px-4 py-8">
-          <div className="bg-gray-50 p-2 rounded-xl border border-gray-100 shadow-sm animate-pulse" style={{ minHeight: `${bannerHeight + 40}px` }} />
+        <div className="container mx-auto px-4 py-8 flex justify-center">
+          <div className="bg-gray-50 border border-gray-100 w-full max-w-5xl rounded-sm animate-pulse" style={{ height: `${bannerHeight}px` }} />
         </div>
       );
     }
@@ -165,28 +337,36 @@ export function AdBanner({ slotId, withContainer = false }: { slotId: string; wi
     );
   }
 
-  if (!ad || !ad.isActive) return null;
+  const renderAdContent = () => {
+    if (ad && ad.isActive) {
+      return (
+        <BaseAd
+          slotId={slotId}
+          width="100%"
+          height={bannerHeight}
+          label={ad.title}
+          imageUrl={ad.imageUrl}
+          linkUrl={ad.link}
+          adId={ad._id}
+        />
+      );
+    }
 
+    // Google Ad Fallback
+    if (GOOGLE_AD_MAPPINGS[slotId]) {
+      return <GoogleAdSense slotId={slotId} height={bannerHeight} />;
+    }
 
+    return null;
+  };
 
-  const content = (
-    <BaseAd
-      width="100%"
-      height={bannerHeight}
-      label={ad.title}
-      imageUrl={ad.imageUrl}
-      linkUrl={ad.link}
-      adId={ad._id}
-    />
-  );
+  const content = renderAdContent();
+  if (!content) return null;
 
   if (withContainer) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
-          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-2">Advertisement</h3>
-          {content}
-        </div>
+      <div className="container mx-auto px-4 py-8 flex justify-center">
+        {content}
       </div>
     );
   }
@@ -203,50 +383,52 @@ export function AdBanner({ slotId, withContainer = false }: { slotId: string; wi
  */
 export function AdSidebar({ slotId, withContainer = false }: { slotId: string; withContainer?: boolean }) {
   const { ad, loading } = useAdvertisement(slotId);
+  const { isSlotEnabled, settingsLoading } = useSlotVisibility(slotId);
 
   // --- PREMIUM & ADMIN AD-FREE CHECK ---
   const { currentSubscription } = useSelector((state: RootState) => state.subscription);
   const { user } = useSelector((state: RootState) => state.auth);
   if (currentSubscription?.status === 'active' || checkIsAdmin(user as any)) return null;
+  // --- PER-SLOT TOGGLE CHECK ---
+  if (!settingsLoading && !isSlotEnabled) return null;
   // ----------------------------------
 
   if (loading) {
-    if (withContainer) {
+    return (
+      <div className="mb-6 animate-pulse w-full flex justify-center">
+        <div className="bg-gray-50 border border-gray-100 w-full rounded-sm" style={{ height: '250px', maxWidth: '300px' }} />
+      </div>
+    );
+  }
+
+  const renderAdContent = () => {
+    if (ad && ad.isActive) {
       return (
-        <div className="bg-gray-50 p-2 rounded-xl border border-gray-100 shadow-sm mb-6 animate-pulse" style={{ minHeight: '290px' }} />
+        <BaseAd
+          slotId={slotId}
+          width="100%"
+          height={250}
+          label={ad.title}
+          imageUrl={ad.imageUrl}
+          linkUrl={ad.link}
+          adId={ad._id}
+        />
       );
     }
-    return (
-      <div className="mb-6 animate-pulse w-full">
-        <div className="bg-gray-50 border border-gray-100 w-full rounded-sm" style={{ height: '250px' }} />
-      </div>
-    );
-  }
 
-  if (!ad || !ad.isActive) return null;
+    // Google Ad Fallback
+    if (GOOGLE_AD_MAPPINGS[slotId]) {
+      return <GoogleAdSense slotId={slotId} height={250} />;
+    }
 
-  const content = (
-    <BaseAd
-      width="100%"
-      height={250}
-      label={ad.title}
-      imageUrl={ad.imageUrl}
-      linkUrl={ad.link}
-      adId={ad._id}
-    />
-  );
+    return null;
+  };
 
-  if (withContainer) {
-    return (
-      <div className="bg-white p-2 rounded-xl border border-gray-100 shadow-sm mb-6">
-        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-2">Sponsored</h3>
-        {content}
-      </div>
-    );
-  }
+  const content = renderAdContent();
+  if (!content) return null;
 
   return (
-    <div className="mb-6">
+    <div className="mb-6 flex justify-center w-full">
       {content}
     </div>
   );
@@ -257,13 +439,14 @@ export function AdSidebar({ slotId, withContainer = false }: { slotId: string; w
  */
 export function AdPopup({ slotId, showAfterSeconds = 5 }: { slotId: string, showAfterSeconds?: number }) {
   const { ad, loading } = useAdvertisement(slotId);
+  const { isSlotEnabled, settingsLoading } = useSlotVisibility(slotId);
   const [isVisible, setIsVisible] = useState(false);
   const [hasBeenClosed, setHasBeenClosed] = useState(false);
 
   useEffect(() => {
     // Check if seen in this session
     const hasSeen = sessionStorage.getItem(`has_seen_ad_${slotId}`);
-    
+
     if (!loading && ad && ad.isActive && !hasBeenClosed && !hasSeen) {
       const timer = setTimeout(() => {
         setIsVisible(true);
@@ -278,6 +461,8 @@ export function AdPopup({ slotId, showAfterSeconds = 5 }: { slotId: string, show
   const { currentSubscription } = useSelector((state: RootState) => state.subscription);
   const { user } = useSelector((state: RootState) => state.auth);
   if (currentSubscription?.status === 'active' || checkIsAdmin(user as any)) return null;
+  // --- PER-SLOT TOGGLE CHECK ---
+  if (!settingsLoading && !isSlotEnabled) return null;
   // ----------------------------------
 
   if (loading || !ad || !ad.isActive || !isVisible || hasBeenClosed) return null;
@@ -315,7 +500,7 @@ export function AdPopup({ slotId, showAfterSeconds = 5 }: { slotId: string, show
 export function LeaderboardAd({ slotId = "HOME_BANNER_TOP_1" }: { slotId?: string }) { return <AdBanner slotId={slotId} />; }
 export function MediumRectangleAd({ slotId = "HOME_SIDEBAR_1" }: { slotId?: string }) { return <AdSidebar slotId={slotId} />; }
 export function SkyscraperAd({ slotId = "ARTICLE_SIDEBAR_2" }: { slotId?: string }) { return <AdSidebar slotId={slotId} />; }
-export function InFeedAd({ slotId = "HOME_FEED_1" }: { slotId?: string }) { return <AdBanner slotId={slotId} />; }
+export function InFeedAd({ slotId = "HOME_BANNER_TOP_1" }: { slotId?: string }) { return <AdBanner slotId={slotId} />; }
 export function HalfPageAd({ slotId = "ARTICLE_SIDEBAR_2" }: { slotId?: string }) { return <AdSidebar slotId={slotId} />; }
 
 // --- Article Specific Ads ---

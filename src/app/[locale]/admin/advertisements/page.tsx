@@ -27,15 +27,22 @@ export default function AdvertisementManagement() {
   const router = useRouter();
   const [ads, setAds] = useState<Advertisement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [slotVisibility, setSlotVisibility] = useState<Record<string, boolean>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [adIdToDelete, setAdIdToDelete] = useState<string | null>(null);
+  const [togglingSlot, setTogglingSlot] = useState<string | null>(null);
 
   const fetchAds = async (showLoader = true) => {
     try {
       if (showLoader) setLoading(true);
-      const response = await advertisementApi.fetchAdvertisements();
-      setAds(response.data.data);
+      const [adsRes, visibilityRes] = await Promise.all([
+        advertisementApi.fetchAdvertisements(),
+        advertisementApi.fetchSlotVisibility()
+      ]);
+      setAds(adsRes.data.data);
+      // Fixed API response parsing for visibility map
+      setSlotVisibility(visibilityRes.data?.data?.slotVisibility || {});
     } catch (error) {
       toast.error("Failed to fetch advertisements");
     } finally {
@@ -77,17 +84,42 @@ export default function AdvertisementManagement() {
     }
   };
 
+  /** Toggle visibility for a specific slot (controls both custom + Google ads for that position) */
+  const handleSlotVisibilityToggle = async (e: React.MouseEvent, slotId: string) => {
+    e.stopPropagation();
+    const currentState = slotVisibility[slotId] !== false; // default true
+    const newState = !currentState;
+
+    // Optimistic update
+    setTogglingSlot(slotId);
+    setSlotVisibility(prev => ({ ...prev, [slotId]: newState }));
+
+    try {
+      await advertisementApi.updateSlotVisibility(slotId, newState);
+      toast.success(`${slotId} ads ${newState ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      // Revert on error
+      setSlotVisibility(prev => ({ ...prev, [slotId]: currentState }));
+      toast.error("Failed to update slot visibility");
+    } finally {
+      setTogglingSlot(null);
+    }
+  };
+
   const filteredSlots = AD_SLOTS.filter(slot =>
     slot.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     slot.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  /** Helper: is this slot currently visible to users? */
+  const isSlotVisible = (slotId: string) => slotVisibility[slotId] !== false;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-5">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Advertisements</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Manage ad slots, track performance, and update content</p>
+          <p className="text-sm text-gray-500 mt-0.5">Manage ad slots, track performance, and toggle visibility per slot</p>
         </div>
         <div className="relative w-full sm:w-60">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
@@ -108,7 +140,7 @@ export default function AdvertisementManagement() {
         </div>
       ) : filteredSlots.length === 0 ? (
         <div className="text-center py-16 text-sm text-gray-400">
-          No slots match <span className="font-medium">"{searchTerm}"</span>
+          No slots match <span className="font-medium">&quot;{searchTerm}&quot;</span>
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
@@ -119,6 +151,7 @@ export default function AdvertisementManagement() {
                 <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Current Ad</th>
                 <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Status</th>
                 <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Performance</th>
+                <th className="px-5 py-3 text-center text-xs font-medium text-gray-500">Visibility</th>
                 <th className="px-5 py-3 text-right text-xs font-medium text-gray-500">Actions</th>
               </tr>
             </thead>
@@ -126,12 +159,13 @@ export default function AdvertisementManagement() {
               {filteredSlots.map((slot) => {
                 const ad = ads.find(a => a.slotId === slot.id);
                 const typeStyle = SLOT_TYPE_STYLES[slot.type] || "bg-gray-100 text-gray-500 border border-gray-200";
+                const visible = isSlotVisible(slot.id);
 
                 return (
                   <tr
                     key={slot.id}
-                    onClick={() => ad ? router.push(`/admin/advertisements/show/${ad._id}`) : router.push(`/admin/advertisements/show/slot/${slot.id}`)}
-                    className="hover:bg-gray-50/70 cursor-pointer transition-colors"
+                    // onClick={() => ad ? router.push(`/admin/advertisements/show/${ad._id}`) : router.push(`/admin/advertisements/show/slot/${slot.id}`)}
+                    className={`hover:bg-gray-50/70  transition-colors ${!visible ? 'opacity-50' : ''}`}
                   >
                     <td className="px-5 py-4">
                       <div className="space-y-1">
@@ -161,17 +195,29 @@ export default function AdvertisementManagement() {
                           </div>
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-400 italic">Empty</span>
+                        visible ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-100">
+                            🌐 Defaulting to Google Ads
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">Hidden</span>
+                        )
                       )}
                     </td>
 
                     <td className="px-5 py-4">
                       {ad ? (
-                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md ${ad.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
-                          }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${ad.isActive ? "bg-green-500" : "bg-gray-400"}`} />
-                          {ad.isActive ? "Active" : "Hidden"}
-                        </span>
+                        <div className="flex flex-col gap-1.5 items-start">
+                          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md ${ad.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${ad.isActive ? "bg-green-500" : "bg-gray-400"}`} />
+                            {ad.isActive ? "Active" : "Paused"}
+                          </span>
+                          {!ad.isActive && visible && (
+                            <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100" title="Because the custom ad is paused, Google Ads are currently showing in this slot.">
+                              Fallback: Google Ad
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-xs text-gray-300">—</span>
                       )}
@@ -194,34 +240,37 @@ export default function AdvertisementManagement() {
                       )}
                     </td>
 
+                    {/* PER-SLOT VISIBILITY TOGGLE */}
+                    <td className="px-5 py-4 text-center">
+                      <button
+                        onClick={(e) => handleSlotVisibilityToggle(e, slot.id)}
+                        disabled={togglingSlot === slot.id}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full cursor-pointer transition-colors ${visible ? 'bg-green-500' : 'bg-gray-300'} ${togglingSlot === slot.id ? 'opacity-50' : ''}`}
+                        title={visible ? `Hide all ads in ${slot.name}` : `Show ads in ${slot.name}`}
+                      >
+                        <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${visible ? 'translate-x-5' : 'translate-x-1'}`} />
+                      </button>
+                    </td>
+
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
                         {ad ? (
-                          <>
-                            <button
-                              onClick={(e) => handleToggleStatus(e, ad._id)}
-                              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                              title={ad.isActive ? "Hide ad" : "Show ad"}
-                            >
-                              {ad.isActive
-                                ? <ToggleRight size={20} className="text-green-500" />
-                                : <ToggleLeft size={20} />
-                              }
-                            </button>
-                            <button
-                              onClick={(e) => openDeleteModal(e, ad._id)}
-                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/admin/advertisements/show/${ad._id}`);
+                            }}
+                            className="flex cursor-pointer  items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md transition-colors"
+                          >
+                            Manage
+                          </button>
                         ) : (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               router.push(`/admin/advertisements/show/slot/${slot.id}`);
                             }}
-                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                            className="flex cursor-pointer items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                           >
                             <Plus size={13} />
                             Configure
@@ -252,4 +301,3 @@ export default function AdvertisementManagement() {
     </div>
   );
 }
-
