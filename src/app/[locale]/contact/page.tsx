@@ -1,9 +1,8 @@
 "use client";
 
-import { Mail, Phone, MapPin, Clock, Send, User, MessageSquare, Building, ArrowRight } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Send, User, MessageSquare, Building, ArrowRight, CheckCircle2, X } from "lucide-react";
 import { FaFacebookF, FaInstagram, FaWhatsapp, FaTwitter, FaTelegramPlane, FaLinkedinIn, FaYoutube } from "react-icons/fa";
 import { useState } from "react";
-import Footer from "@/components/layout/Footer";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
 
@@ -16,13 +15,18 @@ export default function ContactUs() {
         subject: "",
         message: ""
     });
+    const [showPopup, setShowPopup] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle form submission
-        console.log("Form submitted:", formData);
-        alert("Thank you for contacting us! We'll get back to you soon.");
+        // Simulate a slight delay for better UX (optional), then show popup and clear form
+        setShowPopup(true);
         setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+
+        // Auto-hide popup after 5 seconds
+        setTimeout(() => {
+            setShowPopup(false);
+        }, 5000);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -35,14 +39,14 @@ export default function ContactUs() {
     return (
         <div className="min-h-screen bg-white font-sans selection:bg-[#C9A227] selection:text-white">
             {/* Premium Hero Section */}
-            <div className="relative bg-[#0A2342] text-white py-24 lg:py-32 px-4 overflow-hidden">
+            <div className="relative bg-[#0A2342] text-white py-10 lg:py-15 px-4 overflow-hidden">
                 {/* Abstract Background Elements */}
                 <div className="absolute inset-0">
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#C9A227]/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
                     <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2"></div>
                 </div>
 
-                <div className="container mx-auto max-w-6xl relative z-10 text-center">
+                <div className="container mx-auto max-w-7xl relative z-10 text-center">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-8">
                         <span className="w-2 h-2 rounded-full bg-[#C9A227]"></span>
                         <span className="text-xs font-medium tracking-widest uppercase text-gray-300">24/7 Support Available</span>
@@ -62,8 +66,8 @@ export default function ContactUs() {
             <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-20 -mt-20 relative z-20">
                 <div className="grid lg:grid-cols-12 gap-8 mb-16">
 
-                    {/* Contact Info Column (Left - 4 cols) */}
-                    <div className="lg:col-span-4 space-y-6">
+                    {/* Contact Info Column (Left - 5 cols) */}
+                    <div className="lg:col-span-5 space-y-6">
                         {/* Info Cards */}
                         {[
                             {
@@ -91,18 +95,18 @@ export default function ContactUs() {
                                 icon: Mail,
                                 title: "Email Us",
                                 content: (
-                                    <a href="mailto:sajjadhusainlawassociates@gmail.com" className="hover:text-[#C9A227] transition-colors break-all">
+                                    <a href="mailto:sajjadhusainlawassociates@gmail.com" className="hover:text-[#C9A227] transition-colors whitespace-nowrap overflow-hidden text-ellipsis block max-w-full" title="sajjadhusainlawassociates@gmail.com">
                                         sajjadhusainlawassociates@gmail.com
                                     </a>
                                 )
                             }
                         ].map((item, idx) => (
-                            <div key={idx} className="group bg-white p-8 border border-gray-100 hover:border-[#C9A227] transition-all duration-500">
-                                <div className="flex items-start gap-5">
-                                    <div className="p-3 bg-[#0A2342]/5 text-[#0A2342] rounded-lg group-hover:bg-[#0A2342] group-hover:text-[#C9A227] transition-all duration-500">
+                            <div key={idx} className="group bg-white p-6 lg:p-8 xl:p-8 border border-gray-100 hover:border-[#C9A227] transition-all duration-500 overflow-hidden">
+                                <div className="flex items-start gap-4">
+                                    <div className="p-3 bg-[#0A2342]/5 text-[#0A2342] rounded-lg group-hover:bg-[#0A2342] group-hover:text-[#C9A227] transition-all duration-500 shrink-0">
                                         <item.icon className="w-6 h-6" />
                                     </div>
-                                    <div>
+                                    <div className="min-w-0 flex-1">
                                         <h3 className="text-lg font-bold text-[#0A2342] mb-2">{item.title}</h3>
                                         <p className="text-gray-600 text-sm leading-relaxed font-medium">
                                             {item.content}
@@ -113,20 +117,37 @@ export default function ContactUs() {
                         ))}
 
                         {/* Social Media */}
-                        <div className="bg-white p-8 border border-gray-100 hover:border-[#C9A227] transition-all duration-500 group">
+                        <div className="bg-white p-6 lg:p-8 border border-gray-100 hover:border-[#C9A227] transition-all duration-500 group">
                             <h3 className="text-lg font-bold text-[#0A2342] mb-6">Connect With Us</h3>
                             <div className="flex flex-wrap gap-3">
-                                {[FaFacebookF, FaInstagram, FaWhatsapp, FaTwitter, FaLinkedinIn, FaYoutube].map((Icon, i) => (
-                                    <a key={i} href="#" className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#0A2342]/5 text-[#0A2342] hover:bg-[#0A2342] hover:text-[#C9A227] transition-all duration-300">
-                                        <Icon className="w-4 h-4" />
-                                    </a>
-                                ))}
+                                {[
+                                    { icon: FaFacebookF, href: "https://www.facebook.com/advocatesajjadofficial", label: "Facebook" },
+                                    { icon: FaInstagram, href: "https://www.instagram.com/sajjad_husain_law_associates/?hl=en", label: "Instagram" },
+                                    { icon: FaWhatsapp, href: "https://wa.me/917080909786", label: "WhatsApp" },
+                                    { icon: FaTwitter, href: "https://x.com/advocatesajjad", label: "X (Twitter)" },
+                                    { icon: FaLinkedinIn, href: "https://www.linkedin.com/in/sajjad-husain-associates-law-31715675/", label: "LinkedIn" },
+                                    { icon: FaYoutube, href: "https://www.youtube.com/@SajjadHusainLawAssociates", label: "YouTube" }
+                                ].map((social, i) => {
+                                    const Icon = social.icon;
+                                    return (
+                                        <a 
+                                            key={i} 
+                                            href={social.href} 
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-label={social.label}
+                                            className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#0A2342]/5 text-[#0A2342] hover:bg-[#0A2342] hover:text-[#C9A227] transition-all duration-300"
+                                        >
+                                            <Icon className="w-4 h-4" />
+                                        </a>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
 
-                    {/* Contact Form (Right - 8 cols) */}
-                    <div className="lg:col-span-8">
+                    {/* Contact Form (Right - 7 cols) */}
+                    <div className="lg:col-span-7">
                         <div className="bg-white p-8 lg:p-12 border border-gray-100 h-full">
                             <div className="mb-10">
                                 <h2 className="text-3xl font-bold text-[#0A2342] mb-4">Send Us a Message</h2>
@@ -242,7 +263,36 @@ export default function ContactUs() {
                 </div>
             </div>
 
-            <Footer />
+            {/* Success Popup Modal */}
+            {showPopup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 text-center transform transition-all scale-100 opacity-100">
+                        <div className="flex justify-end mb-2">
+                            <button
+                                onClick={() => setShowPopup(false)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                            <CheckCircle2 className="w-8 h-8 text-green-500" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-[#0A2342] mb-3">
+                            Message Sent!
+                        </h3>
+                        <p className="text-gray-600 mb-8 font-medium">
+                            Thank you for reaching out to Sajjad Husain Law Associates. We'll get back to you as soon as possible.
+                        </p>
+                        <button
+                            onClick={() => setShowPopup(false)}
+                            className="w-full py-3 bg-[#0A2342] text-white font-bold rounded-lg hover:bg-[#153a66] transition-colors"
+                        >
+                            CLOSE
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
