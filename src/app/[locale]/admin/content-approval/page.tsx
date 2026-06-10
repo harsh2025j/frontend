@@ -323,6 +323,7 @@ const ContentApprovalPanelContent = () => {
                 <th className="px-4 py-3 text-left text-sm font-semibold">#</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Title</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Category</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Author</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
               </tr>
@@ -336,6 +337,7 @@ const ContentApprovalPanelContent = () => {
                     <td className="py-3 px-4">{startIndex + idx + 1}</td>
                     <td className="py-3 px-4 max-w-[240px] truncate" title={item.title}>{item.title}</td>
                     <td className="py-3 px-4">{item.category?.name || "—"}</td>
+                    <td className="py-3 px-4">{item.authors || "Unknown"}</td>
                     <td className="py-3 px-4"><StatusBadge status={item.status} /></td>
                     <td className="py-3 px-4 flex gap-2">
                       <button onClick={() => router.push(`/admin/content-management/preview/${item.id}?mode=approval`)} className="bg-blue-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-600 transition-colors">Preview</button>
