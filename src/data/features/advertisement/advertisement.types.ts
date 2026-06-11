@@ -50,13 +50,13 @@ export const AD_SLOTS = [
   { id: "HOME_SIDEBAR_2", name: "Home Sidebar (2)", dimensions: "300x250", type: "SIDEBAR" },
   { id: "HOME_FEED_1", name: "Home In-Feed (1)", dimensions: "728x150", type: "BANNER" },
   { id: "HOME_POPUP", name: "Home Global Popup", dimensions: "300x250", type: "POPUP" },
-  
+
   // Article Pages
   { id: "ARTICLE_BANNER_1", name: "Article Top Banner", dimensions: "728x90", type: "BANNER" },
   { id: "ARTICLE_SIDEBAR_1", name: "Article Sidebar Top", dimensions: "300x250", type: "SIDEBAR" },
   { id: "ARTICLE_SIDEBAR_2", name: "Article Sidebar Bottom", dimensions: "300x250", type: "SIDEBAR" },
   { id: "ARTICLE_FOOTER_1", name: "Article Bottom Banner", dimensions: "728x90", type: "BANNER" },
-  
+
   // Category & Tag Pages
   { id: "CATEGORY_BANNER_1", name: "Category/Tag Top Banner", dimensions: "728x90", type: "BANNER" },
   { id: "CATEGORY_SIDEBAR_1", name: "Category/Tag Sidebar", dimensions: "300x250", type: "SIDEBAR" },
@@ -64,16 +64,17 @@ export const AD_SLOTS = [
 
 export const GOOGLE_AD_MAPPINGS: Record<string, string> = {
   // Map Slot IDs to Google AdSense Unit IDs
-  "HOME_BANNER_TOP_1": "1234567890", // Replace with real AdSense IDs later
-  "HOME_BANNER_TOP_2": "0987654321",
-  "HOME_SIDEBAR_1": "1112223334",
-  "HOME_SIDEBAR_2": "5556667778",
-  "HOME_FEED_1": "9990001112",
-  "HOME_POPUP": "4445556667",
-  "ARTICLE_BANNER_1": "7778889990",
-  "ARTICLE_SIDEBAR_1": "2223334445",
-  "ARTICLE_SIDEBAR_2": "8889990001",
-  "ARTICLE_FOOTER_1": "3334445556",
-  "CATEGORY_BANNER_1": "6667778889",
-  "CATEGORY_SIDEBAR_1": "1231231234",
+  // ONLY put the 10-digit number here.
+  "HOME_BANNER_TOP_1": "7027269897",
+  "HOME_BANNER_TOP_2": "6915589251",
+  "HOME_SIDEBAR_1": "9322260748",
+  "HOME_SIDEBAR_2": "9613609639",
+  "HOME_FEED_1": "4249602311",
+  "HOME_POPUP": "4638620136",
+  "ARTICLE_BANNER_1": "9288311584",
+  "ARTICLE_SIDEBAR_1": "5349066575",
+  "ARTICLE_SIDEBAR_2": "2722903239",
+  "ARTICLE_FOOTER_1": "8729074235",
+  "CATEGORY_BANNER_1": "6452554826",
+  "CATEGORY_SIDEBAR_1": "8258300949",
 };

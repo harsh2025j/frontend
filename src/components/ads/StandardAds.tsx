@@ -294,7 +294,7 @@ export function GoogleAdSense({ slotId, width, height, className = '' }: { slotI
       <ins
         ref={insRef}
         className="adsbygoogle w-full h-full block"
-        data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with real client ID later
+        data-ad-client="ca-pub-6354615575453705"
         data-ad-slot={adUnitId}
         data-ad-format="auto"
         data-full-width-responsive="true"

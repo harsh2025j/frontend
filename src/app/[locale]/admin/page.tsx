@@ -34,7 +34,8 @@ import {
   canAccessPlanManagementPage,
   canAccessContentManagementPage,
   canAccessCategoryManagementPage,
-  isAdmin
+  isAdmin,
+  canAccessMyEarningsPage
 } from "@/utils/permissions";
 import apiClient from "@/data/services/apiConfig/apiClient";
 import { fetchDashboardStats } from "@/data/features/dashboard/dashboardThunks";
@@ -206,9 +207,13 @@ const Page = () => {
             <DummyChart articles={articles} />
           </div>
         )}
-        {(canManagePlans || isAdmin(userData)) && (
+        {(canManagePlans || isAdmin(userData) || canAccessMyEarningsPage(userData)) && (
           <div className="lg:col-span-1">
-            <RevenueChart />
+            <RevenueChart 
+              user={userData} 
+              isAdmin={isAdmin(userData) || canManagePlans} 
+              isAdvocate={canAccessMyEarningsPage(userData)} 
+            />
           </div>
         )}
       </div>

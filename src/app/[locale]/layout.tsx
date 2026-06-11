@@ -216,10 +216,10 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSearchJsonLd) }}
         />
         {/* Google AdSense Script - Replace with your actual publisher ID */}
-        <Script 
+        <Script
           id="google-adsense"
-          async 
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6354615575453705"
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
