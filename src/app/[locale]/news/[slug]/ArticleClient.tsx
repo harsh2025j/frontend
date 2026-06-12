@@ -194,7 +194,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
             <div>
                 {/* Title */}
                 <div className="mb-6">
-                    <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight font-unna">{displayTitle}</h2>
+                    <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight font-georgia">{displayTitle}</h2>
 
                     {/* Author metadata */}
                     {(authorUsername || article.authorId) && article.authorId !== 'system-auto-bot' ? (
@@ -292,12 +292,12 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                             AI Summary
                         </button>
                         {showSummary && (
-                            <div className="absolute right-0 top-12 md:right-full md:top-0 md:mr-3 w-[85vw] md:w-[400px] max-w-[400px] bg-[#C9A227] p-4 rounded-xl shadow-2xl border border-gray-200 z-20 text-left">
+                            <div className="absolute right-0 top-12 md:right-full md:top-0 md:mr-3 w-[85vw] md:w-[450px] max-w-[450px] bg-[#C9A227] p-4 rounded-xl shadow-2xl border border-gray-200 z-20 text-justify">
                                 <div className="flex justify-between items-start mb-3 border-b border-gray-200 pb-2">
                                     <h3 className="font-bold text-gray-900 flex items-center gap-2"> AI Summary</h3>
                                     <button type="button" onClick={() => setShowSummary(false)} className="p-1 hover:bg-gray-200 rounded-full transition-colors text-gray-900 hover:text-red-500"><X size={18} /></button>
                                 </div>
-                                <div className="text-md text-black leading-relaxed max-h-[300px] overflow-y-auto font-unna">
+                                <div className="text-md text-black leading-relaxed max-h-[300px] overflow-y-auto font-georgia pr-4">
                                     {isFetchingSummary ? <div className="flex justify-center py-6"><Loader size="sm" text="Thinking..." /></div>
                                         : summary ? <TypewriterText text={summary} speed={30} /> : "No summary available."}
                                 </div>
@@ -482,7 +482,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                 {/* Developing Story Timeline */}
                 {hasFullAccess && article.updates && article.updates.length > 0 && (
                     <div className="mb-16 mt-12 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-                        <h3 className="text-xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-10 pb-4 border-b font-unna">Developing Story Timeline</h3>
+                        <h3 className="text-xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-10 pb-4 border-b font-georgia">Developing Story Timeline</h3>
                         <div className="space-y-12 relative pl-8 border-l-[3px] border-[#2A65A4] ml-2">
                             {[...article.updates].map((update, idx) => {
                                 const isLatest = idx === article.updates!.length - 1;
@@ -499,7 +499,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                         <div className="flex flex-col gap-2 timeline-update-content">
                                             <span className="text-gray-500 text-sm font-semibold tracking-wide uppercase">{formatDate(update.updateDate as string)}</span>
                                             {update.title && <h4 className="font-bold text-[18px] sm:text-[22px] text-[#0A2342] leading-snug">{update.title}</h4>}
-                                            <div className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1 font-unna" dangerouslySetInnerHTML={{ __html: update.content }} />
+                                            <div className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1 font-georgia" dangerouslySetInnerHTML={{ __html: update.content }} />
                                         </div>
                                     </div>
                                 );
@@ -775,7 +775,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
     }
 
     return (
-        <div className="bg-white min-h-screen font-unna">
+        <div className="bg-white min-h-screen font-georgia">
             <div className="max-w-7xl mx-auto py-8 px-4">
 
                 {/* Article Top Banner */}
@@ -843,7 +843,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                                 </div>
                             )}
 
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 font-unna">{t("relatedArticles")}</h3>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 font-georgia">{t("relatedArticles")}</h3>
                             <div className="space-y-6">
                                 {loadingRecommended ? (
                                     Array(5).fill(0).map((_, i) => (

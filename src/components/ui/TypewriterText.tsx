@@ -14,8 +14,8 @@ export default function TypewriterText({ text, speed = 20, onComplete }: Typewri
         setDisplayedText("");
         let i = 0;
         const timer = setInterval(() => {
-            if (i < text.length) {
-                setDisplayedText((prev) => prev + text.charAt(i));
+            if (i <= text.length) {
+                setDisplayedText(text.substring(0, i));
                 i++;
             } else {
                 clearInterval(timer);

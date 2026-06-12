@@ -104,7 +104,7 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
             onMouseLeave={() => setIsProfileOpen(false)}
             onClick={() => setIsPinned(!isPinned)}
           >
-            <button className="flex items-center gap-3 focus:outline-none py-2 mr-5">
+            <button className="flex items-center gap-3 focus:outline-none py-2 pr-2 hover:bg-gray-50 rounded-lg transition-colors">
               <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center 
                     text-sm font-semibold text-gray-700 overflow-hidden ring-2 ring-white">
                 {avatar ? (
@@ -120,8 +120,8 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
                 )}
               </div>
 
-              <div className="hidden sm:block text-left">
-                <p className="text-sm font-medium text-gray-900 leading-none">
+              <div className="hidden sm:block text-left max-w-[150px]">
+                <p className="text-sm font-medium text-gray-900 leading-none truncate">
                   {user?.name || "Profile"}
                 </p>
               </div>
@@ -129,9 +129,13 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
 
             {/* Dropdown Menu */}
             <div
-              className={`absolute right-0 top-full w-48 bg-white border border-gray-200 rounded-xl shadow-lg transition-all duration-200 transform origin-top-right z-50 ${isProfileOpen || isPinned ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}
+              className={`absolute right-2 top-full min-w-48 w-max max-w-sm bg-white border border-gray-200 rounded-xl shadow-lg transition-all duration-200 transform origin-top-right z-50 ${isProfileOpen || isPinned ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}
               onClick={(e) => isPinned && e.stopPropagation()}
             >
+              <div className="p-3 border-b border-gray-100">
+                <p className="font-semibold text-gray-900 truncate">{user?.name}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              </div>
               <div className="py-2">
                 <Link
                   href={user?.username ? `/admin/profile/${user.username}` : "#"}
@@ -155,7 +159,7 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
                     onClick={() => { setIsProfileOpen(false); setIsPinned(false); }}
                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
-                    <PlusCircle size={16} /> Membership Form
+                    <PlusCircle size={16} /> Become a Member
                   </Link>
                 )}
 

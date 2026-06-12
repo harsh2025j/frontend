@@ -481,10 +481,10 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                             <span className="text-sm font-medium text-gray-800 hidden xl:block">{user?.name}</span>
                                             <ChevronDown size={14} className={`text-gray-500 hidden xl:block transition-transform duration-200 ${(isProfileOpen || activeDropdown === "profile") ? "rotate-180" : ""}`} />
                                         </button>
-                                        <div className={`absolute right-0 top-full w-56 bg-white border border-gray-200 rounded-xl shadow-xl transition-all duration-200 transform origin-top-right z-50 ${(isProfileOpen || activeDropdown === "profile") ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
+                                        <div className={`absolute right-0 top-full min-w-56 w-max max-w-sm bg-white border border-gray-200 rounded-xl shadow-xl transition-all duration-200 transform origin-top-right z-50 ${(isProfileOpen || activeDropdown === "profile") ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
                                             <div className="p-3 border-b border-gray-100">
-                                                <p className="font-semibold text-gray-900">{user?.name}</p>
-                                                <p className="text-xs text-gray-500">{user?.email}</p>
+                                                <p className="font-semibold text-gray-900 truncate">{user?.name}</p>
+                                                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                                             </div>
                                             <div className="py-2">
                                                 {dashboardAccess ? (
@@ -503,7 +503,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                                     </Link>
                                                 ) : (
                                                     <Link href="/admin/membership" onClick={() => { setIsProfileOpen(false); setActiveDropdown(null); }} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#C9A227] transition-colors">
-                                                        <PlusCircle size={16} /> {t('submit_post')}
+                                                        <PlusCircle size={16} /> {t('membership_form')}
                                                     </Link>
                                                 )}
                                                 <div className="h-px bg-gray-100 my-1 mx-2" />
@@ -625,9 +625,9 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                                         (user?.name?.[0] || "U").toUpperCase()
                                                     )}
                                                 </div>
-                                                <div>
-                                                    <p className="font-semibold text-gray-900">{user?.name}</p>
-                                                    <p className="text-xs text-gray-500">{user?.email}</p>
+                                                <div className="overflow-hidden">
+                                                    <p className="font-semibold text-gray-900 truncate">{user?.name}</p>
+                                                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                                                 </div>
                                             </div>
                                             {dashboardAccess ? (
@@ -667,7 +667,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                                     onClick={() => setMenuOpen(false)}
                                                     className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                                                 >
-                                                    <PlusCircle size={16} /> {t("submit_post")}
+                                                    <PlusCircle size={16} /> {t("membership_form")}
                                                 </Link>
                                             )}
                                             <button

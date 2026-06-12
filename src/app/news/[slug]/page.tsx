@@ -118,14 +118,14 @@ export default function ArticleDetailPage() {
     const readTime = calculateReadTime(article.content);
 
     return (
-        <div className="bg-white min-h-screen font-unna">
+        <div className="bg-white min-h-screen font-georgia">
             <div className="max-w-7xl mx-auto px-4 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-8">
                         {/* Header */}
                         <div className="mb-6">
-                            <h1 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight font-unna">
+                            <h1 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight font-georgia">
                                 {article.title}
                             </h1>
                             {/* Metadata */}
@@ -208,7 +208,7 @@ export default function ArticleDetailPage() {
                     {/* Sidebar */}
                     <div className="lg:col-span-2">
                         <div className="sticky top-24">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 font-unna">{t('relatedArticles')}</h3>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 font-georgia">{t('relatedArticles')}</h3>
                             <div className="space-y-6 max-h-[85vh] overflow-y-auto scrollbar-hide pb-10">
                                 {recommendedArticles.map((rec) => (
                                     <Link key={rec.id} href={`/news/${rec.slug}`} className="block group">

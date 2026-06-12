@@ -71,9 +71,6 @@ export default function AdminNotificationDropdown({ userId }: AdminNotificationD
 
     useEffect(() => {
         fetchNotifications();
-        // Optional: Poll every 60 seconds
-        const interval = setInterval(fetchNotifications, 60000);
-        return () => clearInterval(interval);
     }, [userId]);
 
     useEffect(() => {

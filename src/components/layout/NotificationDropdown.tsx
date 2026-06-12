@@ -74,9 +74,6 @@ export default function NotificationDropdown({ userId }: NotificationDropdownPro
 
     useEffect(() => {
         fetchNotifications();
-        // Optional: Poll every 60 seconds
-        const interval = setInterval(fetchNotifications, 60000);
-        return () => clearInterval(interval);
     }, [userId]);
     // console.log("inheader",notifications)
     useEffect(() => {

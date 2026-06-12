@@ -32,13 +32,13 @@ const merriweather = Merriweather({
   display: 'swap',
 });
 
-const unna = Unna({
-  weight: ['400', '700'],
-  style: ['normal', 'italic'],
-  subsets: ['latin'],
-  variable: '--font-unna',
-  display: 'swap',
-});
+// const unna = Unna({
+//   weight: ['400', '700'],
+//   style: ['normal', 'italic'],
+//   subsets: ['latin'],
+//   variable: '--font-unna',
+//   display: 'swap',
+// });
 
 const METADATA_BASE = new URL('https://www.sajjadhusainlawassociates.com'); // production
 // const METADATA_BASE = new URL('https://unimpeded-sprung-banter.ngrok-free.dev'); // dev (url)
@@ -224,7 +224,7 @@ export default async function RootLayout({
           strategy="afterInteractive"
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} ${unna.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <ErrorBoundary>
             <ReduxProvider>

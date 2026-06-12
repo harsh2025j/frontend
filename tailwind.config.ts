@@ -13,6 +13,9 @@ const config: Config = {
         gold: "#caa438",
         lightgray: "#d4d4d4",
       },
+      fontFamily: {
+        georgia: ['Georgia', 'serif'],
+      },
     },
   },
   plugins: [

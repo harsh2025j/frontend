@@ -13,6 +13,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     const containerRef = useRef<HTMLDivElement>(null);
     const quillInstance = useRef<any>(null);
     const onChangeRef = useRef(onChange);
+    const lastEmittedValue = useRef<string>('');
 
     // Always keep the latest onChange handler without triggering re-renders
     useEffect(() => {
@@ -75,7 +76,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                     if (containerRef.current) {
                         const editorInner = containerRef.current.querySelector('.ql-editor');
                         if (editorInner && onChangeRef.current) {
-                            onChangeRef.current(editorInner.innerHTML);
+                            const newHtml = editorInner.innerHTML;
+                            lastEmittedValue.current = newHtml;
+                            onChangeRef.current(newHtml);
                         }
                     }
                 });
@@ -95,15 +98,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     // Update content from external changes safely
     useEffect(() => {
         if (quillInstance.current && containerRef.current) {
-            const currentContent = containerRef.current.querySelector('.ql-editor')?.innerHTML || '';
-            if (value && value !== currentContent) {
-                const clipboard = quillInstance.current.getModule('clipboard');
-                const selection = quillInstance.current.getSelection();
+            // Only update if the value from props is different from the last value we emitted
+            // This prevents the editor from re-rendering and losing cursor position on every keystroke
+            if (value !== undefined && value !== lastEmittedValue.current) {
+                const currentContent = containerRef.current.querySelector('.ql-editor')?.innerHTML || '';
+                if (value !== currentContent) {
+                    const clipboard = quillInstance.current.getModule('clipboard');
+                    const selection = quillInstance.current.getSelection();
 
-                clipboard.dangerouslyPasteHTML(value);
+                    clipboard.dangerouslyPasteHTML(value);
 
-                if (selection) {
-                    quillInstance.current.setSelection(selection);
+                    if (selection) {
+                        quillInstance.current.setSelection(selection);
+                    }
                 }
             }
         }
@@ -122,7 +129,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                 }
                 .ql-editor {
                     min-height: 350px;
-                    font-size: 16px;
+                    font-size: 1.125rem;
+                    font-family: Georgia, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                }
+                .ql-editor p {
+                    margin-bottom: 1em;
                 }
                 .ql-toolbar.ql-snow {
                     border: 1px solid #e5e7eb;
