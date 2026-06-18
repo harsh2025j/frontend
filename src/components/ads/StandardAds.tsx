@@ -315,7 +315,10 @@ export function AdBanner({ slotId, withContainer = false }: { slotId: string; wi
   // --- PREMIUM & ADMIN AD-FREE CHECK ---
   const { currentSubscription } = useSelector((state: RootState) => state.subscription);
   const { user } = useSelector((state: RootState) => state.auth);
-  if (currentSubscription?.status === 'active' || checkIsAdmin(user as any)) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (mounted && (currentSubscription?.status === 'active' || checkIsAdmin(user as any))) return null;
   // --- PER-SLOT TOGGLE CHECK ---
   if (!settingsLoading && !isSlotEnabled) return null;
   // ----------------------------------
@@ -388,7 +391,10 @@ export function AdSidebar({ slotId, withContainer = false }: { slotId: string; w
   // --- PREMIUM & ADMIN AD-FREE CHECK ---
   const { currentSubscription } = useSelector((state: RootState) => state.subscription);
   const { user } = useSelector((state: RootState) => state.auth);
-  if (currentSubscription?.status === 'active' || checkIsAdmin(user as any)) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (mounted && (currentSubscription?.status === 'active' || checkIsAdmin(user as any))) return null;
   // --- PER-SLOT TOGGLE CHECK ---
   if (!settingsLoading && !isSlotEnabled) return null;
   // ----------------------------------
@@ -460,7 +466,10 @@ export function AdPopup({ slotId, showAfterSeconds = 5 }: { slotId: string, show
   // --- PREMIUM & ADMIN AD-FREE CHECK ---
   const { currentSubscription } = useSelector((state: RootState) => state.subscription);
   const { user } = useSelector((state: RootState) => state.auth);
-  if (currentSubscription?.status === 'active' || checkIsAdmin(user as any)) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (mounted && (currentSubscription?.status === 'active' || checkIsAdmin(user as any))) return null;
   // --- PER-SLOT TOGGLE CHECK ---
   if (!settingsLoading && !isSlotEnabled) return null;
   // ----------------------------------

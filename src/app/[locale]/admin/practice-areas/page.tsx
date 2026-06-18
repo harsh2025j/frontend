@@ -239,17 +239,34 @@ const PracticeAreasManagementPageContent = () => {
                 </div>
             )}
 
-            {/* Loading State */}
-            {loading && (
-                <div className="flex justify-center py-12">
-                    <Loader />
-                </div>
-            )}
-
             {/* Practice Areas Grid */}
-            {!loading && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredPracticeAreas.length === 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {loading ? (
+                    [...Array(6)].map((_, i) => (
+                        <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 animate-pulse">
+                            <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                                    <div>
+                                        <div className="h-5 bg-gray-200 rounded w-32 mb-1.5"></div>
+                                        <div className="h-3 bg-gray-200 rounded w-20"></div>
+                                    </div>
+                                </div>
+                                <div className="h-5 bg-gray-200 rounded-full w-16"></div>
+                            </div>
+                            <div className="h-4 bg-gray-200 rounded w-full mb-2 mt-4"></div>
+                            <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
+                            
+                            <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-4">
+                                <div className="h-3 bg-gray-200 rounded w-24"></div>
+                                <div className="flex gap-2">
+                                    <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                                    <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                ) : filteredPracticeAreas.length === 0 ? (
                         <div className="col-span-full flex flex-col items-center justify-center py-12 text-gray-500">
                             <Scale className="w-16 h-16 mb-4 text-gray-300" />
                             <p>No practice areas found</p>
@@ -310,7 +327,6 @@ const PracticeAreasManagementPageContent = () => {
                         ))
                     )}
                 </div>
-            )}
 
             {/* Create/Edit Modal */}
             {isModalOpen && (

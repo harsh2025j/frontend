@@ -95,7 +95,7 @@ export function AdminDisplayBoardsPageContent() {
         }
     };
 
-    if (loading) return <div className="flex justify-center items-center min-h-[400px]"><Loader size="lg" text="Loading Display Boards..." /></div>;
+    // removed inline loading return
 
     return (
         <div className="p-6 space-y-6">
@@ -112,7 +112,9 @@ export function AdminDisplayBoardsPageContent() {
                 </button>
             </div>
 
-            {boards.length > 0 ? (
+            {loading ? (
+                <DisplayBoardsGridSkeleton />
+            ) : boards.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {boards.map((board) => (
                         <div key={board.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
@@ -231,9 +233,59 @@ export function AdminDisplayBoardsPageContent() {
     );
 }
 
+function DisplayBoardsGridSkeleton() {
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-pulse">
+                    <div className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                            <div className="w-16 h-5 bg-gray-200 rounded-full"></div>
+                        </div>
+
+                        <div className="h-5 w-3/4 bg-gray-200 rounded mb-2"></div>
+                        <div className="h-4 w-1/2 bg-gray-100 rounded mb-4"></div>
+
+                        <div className="flex items-center gap-2 mb-4 bg-gray-50 p-2 rounded">
+                            <div className="w-24 h-4 bg-gray-200 rounded"></div>
+                        </div>
+
+                        <div className="bg-gray-50 p-3 rounded border border-gray-100 mb-4 h-20">
+                            <div className="h-3 w-1/3 bg-gray-200 rounded mb-2"></div>
+                            <div className="h-2 w-full bg-gray-100 rounded mb-1"></div>
+                            <div className="h-2 w-2/3 bg-gray-100 rounded"></div>
+                        </div>
+
+                        <div className="flex justify-end pt-2 border-t border-gray-100">
+                            <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function AdminDisplayBoardsSkeleton() {
+    return (
+        <div className="p-6 space-y-6 animate-pulse">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="space-y-2">
+                    <div className="h-8 w-48 bg-gray-200 rounded"></div>
+                    <div className="h-4 w-64 bg-gray-100 rounded"></div>
+                </div>
+                <div className="h-10 w-48 bg-gray-200 rounded-lg"></div>
+            </div>
+
+            <DisplayBoardsGridSkeleton />
+        </div>
+    );
+}
+
 export default function AdminDisplayBoardsPage() {
     return (
-        <Suspense fallback={<Loader />}>
+        <Suspense fallback={<AdminDisplayBoardsSkeleton />}>
             <AdminDisplayBoardsPageContent />
         </Suspense>
     );

@@ -324,7 +324,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
               router.push("/");
             }
           }}
-          className="absolute top-22 md:top-38 left-4 md:left-14 z-[45] flex items-center gap-3 px-5 py-3 bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl hover:shadow-[#C9A227]/10 group transition-all ring-1 ring-black/5 cursor-pointer"
+          className="absolute top-22 md:top-38 left-4 md:left-14 z-[15] flex items-center gap-3 px-5 py-3 bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl shadow-md hover:shadow-[#C9A227]/10 group transition-all ring-1 ring-black/5 cursor-pointer"
         >
           <ArrowLeft size={16} className="text-[#0A2342] group-hover:-translate-x-1 transition-transform" />
           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#0A2342] hidden sm:inline">Return</span>

@@ -33,6 +33,11 @@ const RETRY_DELAY = 1000;
 const shouldRetry = (error: AxiosError, retryCount: number = 0): boolean => {
   if (retryCount >= MAX_RETRIES) return false;
 
+  // Do not retry canceled requests
+  if (axios.isCancel(error) || error.name === 'CanceledError' || error.name === 'AbortError') {
+    return false;
+  }
+
   if (!error.response || (error.response.status >= 500 && error.response.status < 600)) {
     return true;
   }
@@ -207,12 +212,14 @@ apiClient.interceptors.response.use(
     const retryCount = config?.retryCount || 0;
 
     if (shouldRetry(error, retryCount)) {
-      try {
-        return await retryRequest(error);
-      } catch (retryError) {
-        error = retryError as AxiosError;
-      }
+      return retryRequest(error);
     }
+
+    // Do not process or log canceled requests
+    if (axios.isCancel(error) || error.name === 'CanceledError' || error.name === 'AbortError') {
+      return Promise.reject(error);
+    }
+
     const apiError = handleApiError(error);
     console.error(`API Error [${error.config?.method?.toUpperCase()}] ${error.config?.url}:`, apiError);
     const errorKey = `${apiError.statusCode || 'network'}-${error.config?.url || 'unknown'}`;

@@ -261,45 +261,70 @@ const OfficesManagementPageContent = () => {
                 </div>
             )}
 
-            {/* Loading State */}
-            {loading && (
-                <div className="flex justify-center py-12">
-                    <Loader />
-                </div>
-            )}
-
             {/* Offices Table */}
-            {!loading && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Office
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Code
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Location
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Contact
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Created
-                                    </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {filteredOffices.length === 0 ? (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Office
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Code
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Location
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Contact
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Created
+                                </th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {loading ? (
+                                [...Array(10)].map((_, i) => (
+                                    <tr key={i} className="animate-pulse hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center">
+                                                <div className="w-5 h-5 bg-gray-200 rounded mr-3"></div>
+                                                <div>
+                                                    <div className="h-4 bg-gray-200 rounded w-32 mb-1.5"></div>
+                                                    <div className="h-3 bg-gray-200 rounded w-24"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4"><div className="h-5 bg-gray-200 rounded-full w-16"></div></td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-start">
+                                                <div className="w-4 h-4 bg-gray-200 rounded mr-2 mt-0.5"></div>
+                                                <div className="h-4 bg-gray-200 rounded w-48"></div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="h-4 bg-gray-200 rounded w-32 mb-1.5"></div>
+                                            <div className="h-3 bg-gray-200 rounded w-48"></div>
+                                        </td>
+                                        <td className="px-6 py-4"><div className="h-5 bg-gray-200 rounded-full w-16"></div></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                                                <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : filteredOffices.length === 0 ? (
                                     <tr>
                                         <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                                             No offices found
@@ -384,7 +409,6 @@ const OfficesManagementPageContent = () => {
                         </table>
                     </div>
                 </div>
-            )}
 
             {/* Create/Edit Modal */}
             {isModalOpen && (

@@ -38,6 +38,9 @@ export const API_ENDPOINTS = {
     CREATE: "/categories",
     FETCH_ALL_CATEGORY: "/categories",
   },
+  TAGS: {
+    BASE: "/tags",
+  },
 
   SUBSCRIPTION: {
     CREATE: "/plans",

@@ -129,8 +129,59 @@ function ArticlePreviewPageContent() {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <Loader text="Loading Preview..." size="lg" />
+            <div className="bg-white min-h-screen animate-pulse border-t border-gray-100 font-georgia">
+                <div className="max-w-7xl mx-auto mt-4 mb-4 px-4 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full" />
+                        <div className="w-32 h-6 bg-gray-200 rounded" />
+                    </div>
+                    <div className="w-24 h-8 bg-gray-200 rounded-full" />
+                </div>
+                <div className="max-w-5xl mx-auto py-8 px-4">
+                    <div className="article-wrapper">
+                        <div className="mb-6">
+                            {/* Title */}
+                            <div className="h-10 sm:h-12 bg-gray-200 rounded-xl w-full mb-3" />
+                            <div className="h-10 sm:h-12 bg-gray-200 rounded-xl w-3/4 mb-6" />
+                            
+                            {/* Author box */}
+                            <div className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                                <div className="h-14 w-14 rounded-full bg-gray-200 shrink-0" />
+                                <div className="flex-1 space-y-2.5">
+                                    <div className="h-5 bg-gray-200 rounded w-40" />
+                                    <div className="flex gap-4">
+                                        <div className="h-4 bg-gray-200 rounded w-24" />
+                                        <div className="h-4 bg-gray-200 rounded w-20" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Thumbnail */}
+                        <div className="w-full aspect-video mb-8 rounded-2xl bg-gray-200 border border-gray-100" />
+
+                        {/* Tags / AI Summary row */}
+                        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex gap-2">
+                                <div className="w-16 h-6 bg-gray-200 rounded" />
+                                <div className="w-20 h-6 bg-gray-200 rounded-full" />
+                                <div className="w-24 h-6 bg-gray-200 rounded-full" />
+                            </div>
+                            <div className="w-32 h-10 bg-gray-200 rounded-full" />
+                        </div>
+
+                        {/* Content Body */}
+                        <div className="space-y-4">
+                            <div className="h-5 bg-gray-200 rounded w-full" />
+                            <div className="h-5 bg-gray-200 rounded w-[95%]" />
+                            <div className="h-5 bg-gray-200 rounded w-[98%]" />
+                            <div className="h-5 bg-gray-200 rounded w-[90%]" />
+                            <div className="h-5 bg-gray-200 rounded w-full mt-8" />
+                            <div className="h-5 bg-gray-200 rounded w-[85%]" />
+                            <div className="h-5 bg-gray-200 rounded w-[92%]" />
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -214,7 +265,62 @@ function ArticlePreviewPageContent() {
 
 export default function ArticlePreviewPage() {
     return (
-        <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><Loader text="Loading..." size="lg" /></div>}>
+        <Suspense fallback={
+            <div className="bg-white min-h-screen animate-pulse border-t border-gray-100 font-georgia">
+                <div className="max-w-7xl mx-auto mt-4 mb-4 px-4 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full" />
+                        <div className="w-32 h-6 bg-gray-200 rounded" />
+                    </div>
+                    <div className="w-24 h-8 bg-gray-200 rounded-full" />
+                </div>
+                <div className="max-w-5xl mx-auto py-8 px-4">
+                    <div className="article-wrapper">
+                        <div className="mb-6">
+                            {/* Title */}
+                            <div className="h-10 sm:h-12 bg-gray-200 rounded-xl w-full mb-3" />
+                            <div className="h-10 sm:h-12 bg-gray-200 rounded-xl w-3/4 mb-6" />
+                            
+                            {/* Author box */}
+                            <div className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                                <div className="h-14 w-14 rounded-full bg-gray-200 shrink-0" />
+                                <div className="flex-1 space-y-2.5">
+                                    <div className="h-5 bg-gray-200 rounded w-40" />
+                                    <div className="flex gap-4">
+                                        <div className="h-4 bg-gray-200 rounded w-24" />
+                                        <div className="h-4 bg-gray-200 rounded w-20" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Thumbnail */}
+                        <div className="w-full aspect-video mb-8 rounded-2xl bg-gray-200 border border-gray-100" />
+
+                        {/* Tags / AI Summary row */}
+                        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex gap-2">
+                                <div className="w-16 h-6 bg-gray-200 rounded" />
+                                <div className="w-20 h-6 bg-gray-200 rounded-full" />
+                                <div className="w-24 h-6 bg-gray-200 rounded-full" />
+                            </div>
+                            <div className="w-32 h-10 bg-gray-200 rounded-full" />
+                        </div>
+
+                        {/* Content Body */}
+                        <div className="space-y-4">
+                            <div className="h-5 bg-gray-200 rounded w-full" />
+                            <div className="h-5 bg-gray-200 rounded w-[95%]" />
+                            <div className="h-5 bg-gray-200 rounded w-[98%]" />
+                            <div className="h-5 bg-gray-200 rounded w-[90%]" />
+                            <div className="h-5 bg-gray-200 rounded w-full mt-8" />
+                            <div className="h-5 bg-gray-200 rounded w-[85%]" />
+                            <div className="h-5 bg-gray-200 rounded w-[92%]" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }>
             <ArticlePreviewPageContent />
         </Suspense>
     );

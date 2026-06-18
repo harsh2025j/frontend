@@ -94,10 +94,37 @@ export default function DashboardLayout({
     );
   }
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // Necessary to allow dropping
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const url = e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain");
+    if (url) {
+      try {
+        const urlObj = new URL(url);
+        // Only navigate if the dropped link belongs to our app
+        if (urlObj.origin === window.location.origin) {
+          // next-intl router automatically prepends the locale.
+          // We must remove the locale prefix (e.g., '/en') from the dragged URL's pathname.
+          const cleanPath = urlObj.pathname.replace(/^\/[a-z]{2}(\/|$)/, '$1') || "/";
+          router.push(cleanPath + urlObj.search);
+        }
+      } catch (err) {
+        // Not a valid URL, ignore
+      }
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onOpen={() => setIsSidebarOpen(true)} />
-      <div className={`flex flex-col flex-1 transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : "lg:ml-20"} ml-0`}>
+      <div 
+        className={`flex flex-col flex-1 transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : "lg:ml-20"} ml-0`}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
         <AdminNavbar onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)} />
         <main className="flex-1 pt-24 p-8">{children}</main>
       </div>

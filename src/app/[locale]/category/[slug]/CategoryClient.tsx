@@ -12,6 +12,7 @@ import { timeAgo } from "@/lib/utils/timeAgo";
 import { articleApi } from "@/data/services/article-service/article-service";
 import Pagination from "@/components/Pagination";
 import NewsCard from "@/components/ui/NewsCard";
+import CategoryLoading from "./loading";
 import { AdBanner, AdSidebar, useAdvertisement, useSlotVisibility } from "@/components/ads/StandardAds";
 import { isAdmin as checkIsAdmin } from "@/utils/permissions";
 import { useSelector } from "react-redux";
@@ -127,11 +128,7 @@ export default function CategoryClient() {
     }, [articles, translatedText, locale]);
 
     if (loading && currentPage === 1) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <Loader text="Loading Content..." size="lg" />
-            </div>
-        );
+        return <CategoryLoading showSidebar={showSidebar} />;
     }
 
     return (

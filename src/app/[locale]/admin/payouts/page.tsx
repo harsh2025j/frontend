@@ -177,9 +177,17 @@ export default function PayoutsPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-gray-500">Loading data...</td>
-                </tr>
+                [...Array(5)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div></td>
+                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-1/2"></div></td>
+                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-1/2"></div></td>
+                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-1/2"></div></td>
+                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-1/2"></div></td>
+                    <td className="p-4"><div className="h-6 bg-gray-200 rounded-full w-20"></div></td>
+                    <td className="p-4 text-right"><div className="h-8 bg-gray-200 rounded-lg w-24 ml-auto"></div></td>
+                  </tr>
+                ))
               ) : advocates.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-gray-500">No paid appointments found.</td>

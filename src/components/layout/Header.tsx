@@ -292,8 +292,11 @@ export default function Header() {
 
     if (!hasChildren) {
       return (
-        <Link href={item.href || "#"} className={`flex items-center h-full hover:text-[#C9A227] whitespace-nowrap transition-colors ${active ? "text-[#C9A227] font-semibold" : "text-gray-700"}`}>
-          {item.label}
+        <Link href={item.href || "#"} className={`flex items-center h-full hover:text-[#C9A227] whitespace-nowrap transition-colors relative group ${active ? "text-[#C9A227]" : "text-gray-700"}`}>
+          <div className="grid place-items-center">
+            <span className={`col-start-1 row-start-1 ${active ? "font-semibold" : "font-medium"}`}>{item.label}</span>
+            <span className="col-start-1 row-start-1 invisible font-semibold" aria-hidden="true">{item.label}</span>
+          </div>
         </Link>
       );
     }
@@ -305,8 +308,12 @@ export default function Header() {
         onMouseEnter={() => setIsOpen(true)}
         onMouseLeave={() => setIsOpen(false)}
       >
-        <button className={`flex items-center gap-1 hover:text-[#C9A227] whitespace-nowrap transition-colors ${active ? "text-[#C9A227] font-semibold" : "text-gray-700"}`}>
-          {item.label} <ChevronDown size={14} />
+        <button className={`flex items-center gap-1 hover:text-[#C9A227] whitespace-nowrap transition-colors relative ${active || isOpen ? "text-[#C9A227]" : "text-gray-700"}`}>
+          <div className="grid place-items-center">
+            <span className={`col-start-1 row-start-1 ${active || isOpen ? "font-semibold" : "font-medium"}`}>{item.label}</span>
+            <span className="col-start-1 row-start-1 invisible font-semibold" aria-hidden="true">{item.label}</span>
+          </div>
+          <ChevronDown size={14} className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
         </button>
         {isOpen && (
 

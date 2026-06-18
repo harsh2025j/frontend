@@ -790,6 +790,69 @@ export default function ChatWorkspace({ role, initialRecipientId: _initialRecipi
   // Render
   // ═══════════════════════════════════════════════════════════════
 
+  if (isFetchingConversations && conversations.length === 0) {
+    return (
+      <div className="relative flex h-full w-full bg-stone-50/70 border border-stone-200/70 md:rounded-xl rounded-sm overflow-hidden backdrop-blur-md">
+        {/* Sidebar Skeleton */}
+        <div className="absolute inset-0 z-10 md:static md:w-80 border-r border-stone-200/80 bg-white/80 flex flex-col">
+          <div className="p-5 border-b border-stone-100 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="h-6 w-32 bg-stone-200 rounded animate-pulse"></div>
+              <div className="h-5 w-16 bg-stone-200 rounded-full animate-pulse"></div>
+            </div>
+            <div className="h-10 w-full bg-stone-100 rounded-xl animate-pulse"></div>
+          </div>
+          <div className="flex-1 p-3 space-y-2">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="w-full flex items-start gap-4 p-4.5 rounded-2xl">
+                <div className="w-11 h-11 rounded-xl bg-stone-200 shrink-0 animate-pulse"></div>
+                <div className="flex-1 min-w-0 pt-1">
+                  <div className="flex justify-between items-baseline mb-2">
+                    <div className="h-4 w-24 bg-stone-200 rounded animate-pulse"></div>
+                    <div className="h-3 w-8 bg-stone-200 rounded animate-pulse"></div>
+                  </div>
+                  <div className="h-3 w-3/4 bg-stone-200 rounded animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Main Chat Area Skeleton */}
+        <div className="hidden md:flex flex-1 flex-col bg-white">
+          {/* Header */}
+          <div className="h-[73px] border-b border-stone-100 flex items-center px-6 gap-4">
+            <div className="w-10 h-10 rounded-full bg-stone-200 animate-pulse"></div>
+            <div className="flex flex-col gap-2">
+              <div className="h-4 w-32 bg-stone-200 rounded animate-pulse"></div>
+              <div className="h-3 w-16 bg-stone-200 rounded animate-pulse"></div>
+            </div>
+          </div>
+          
+          {/* Messages Area */}
+          <div className="flex-1 p-6 flex flex-col justify-end space-y-6">
+             <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-stone-200 animate-pulse shrink-0"></div>
+                <div className="bg-stone-100 rounded-2xl rounded-tl-sm h-16 w-64 animate-pulse"></div>
+             </div>
+             <div className="flex gap-3 flex-row-reverse">
+                <div className="bg-[#0A2342]/10 rounded-2xl rounded-tr-sm h-12 w-48 animate-pulse"></div>
+             </div>
+             <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-stone-200 animate-pulse shrink-0"></div>
+                <div className="bg-stone-100 rounded-2xl rounded-tl-sm h-24 w-72 animate-pulse"></div>
+             </div>
+          </div>
+          
+          {/* Input Area */}
+          <div className="p-4 border-t border-stone-100 bg-white">
+             <div className="h-12 bg-stone-50 border border-stone-200 rounded-2xl w-full animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative flex h-full w-full bg-stone-50/70 border border-stone-200/70 md:rounded-xl rounded-sm overflow-hidden backdrop-blur-md">
 

@@ -347,8 +347,56 @@ export function UserManagementPageContent() {
                 {/* Users Table */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200">
                     {loading ? (
-                        <div className="p-12 flex justify-center">
-                            <Loader size="lg" />
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-gray-50/50 text-gray-500 border-b border-gray-100">
+                                    <tr>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">User</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Office</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Practice Areas</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Clearance</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Roles</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Status</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Verified</th>
+                                        <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {[...Array(10)].map((_, i) => (
+                                        <tr key={i} className="animate-pulse">
+                                            <td className="py-4 px-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-gray-200"></div>
+                                                    <div>
+                                                        <div className="h-4 bg-gray-200 rounded w-32 mb-1.5"></div>
+                                                        <div className="h-3 bg-gray-200 rounded w-48"></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                                                    <div>
+                                                        <div className="h-3 bg-gray-200 rounded w-24 mb-1"></div>
+                                                        <div className="h-2.5 bg-gray-200 rounded w-16"></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-6"><div className="h-5 bg-gray-200 rounded-full w-24"></div></td>
+                                            <td className="py-4 px-6"><div className="h-5 bg-gray-200 rounded-full w-20"></div></td>
+                                            <td className="py-4 px-6"><div className="h-5 bg-gray-200 rounded-full w-16"></div></td>
+                                            <td className="py-4 px-6"><div className="h-6 bg-gray-200 rounded-full w-20"></div></td>
+                                            <td className="py-4 px-6"><div className="h-5 w-5 bg-gray-200 rounded-full"></div></td>
+                                            <td className="py-4 px-6">
+                                                <div className="flex gap-2">
+                                                    <div className="h-7 w-14 bg-gray-200 rounded"></div>
+                                                    <div className="h-7 w-16 bg-gray-200 rounded"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     ) : error ? (
                         <div className="p-12 text-center">

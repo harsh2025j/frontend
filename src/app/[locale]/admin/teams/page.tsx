@@ -169,11 +169,20 @@ const TeamManagementPageContent: React.FC = () => {
 
             <tbody className="divide-y divide-gray-100 bg-white">
               {loading ? (
-                <tr>
-                  <td colSpan={5} className="text-center py-12">
-                    <Loader size="md" text="Loading Team..." />
-                  </td>
-                </tr>
+                [...Array(10)].map((_, i) => (
+                  <tr key={i} className="animate-pulse border-b border-gray-100">
+                    <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
+                    <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded w-48"></div></td>
+                    <td className="py-4 px-6">
+                      <div className="flex gap-1">
+                        <div className="h-5 bg-gray-200 rounded-full w-16"></div>
+                        <div className="h-5 bg-gray-200 rounded-full w-20"></div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6"><div className="h-6 bg-gray-200 rounded-full w-20"></div></td>
+                    <td className="py-4 px-6 text-right"><div className="h-4 bg-gray-200 rounded w-12 ml-auto"></div></td>
+                  </tr>
+                ))
               ) : teamMembers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-12 text-gray-500">

@@ -23,7 +23,7 @@ const SLOT_TYPE_STYLES: Record<string, string> = {
   POPUP: "bg-rose-50 text-rose-700 border border-rose-200",
 };
 
-export default function AdvertisementManagement() {
+export function AdvertisementManagement() {
   const router = useRouter();
   const [ads, setAds] = useState<Advertisement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,30 +133,29 @@ export default function AdvertisementManagement() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center h-64 gap-3">
-          <Loader2 className="animate-spin text-blue-600" size={22} />
-          <span className="text-sm text-gray-500">Loading slots...</span>
-        </div>
-      ) : filteredSlots.length === 0 ? (
-        <div className="text-center py-16 text-sm text-gray-400">
-          No slots match <span className="font-medium">&quot;{searchTerm}&quot;</span>
-        </div>
-      ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Slot</th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Current Ad</th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Status</th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Performance</th>
-                <th className="px-5 py-3 text-center text-xs font-medium text-gray-500">Visibility</th>
-                <th className="px-5 py-3 text-right text-xs font-medium text-gray-500">Actions</th>
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-100 bg-gray-50">
+              <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Slot</th>
+              <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Current Ad</th>
+              <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Status</th>
+              <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">Performance</th>
+              <th className="px-5 py-3 text-center text-xs font-medium text-gray-500">Visibility</th>
+              <th className="px-5 py-3 text-right text-xs font-medium text-gray-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {loading ? (
+              <AdvertisementTableSkeleton />
+            ) : filteredSlots.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center py-16 text-sm text-gray-400">
+                  No slots match <span className="font-medium">&quot;{searchTerm}&quot;</span>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {filteredSlots.map((slot) => {
+            ) : (
+              filteredSlots.map((slot) => {
                 const ad = ads.find(a => a.slotId === slot.id);
                 const typeStyle = SLOT_TYPE_STYLES[slot.type] || "bg-gray-100 text-gray-500 border border-gray-200";
                 const visible = isSlotVisible(slot.id);
@@ -280,11 +279,11 @@ export default function AdvertisementManagement() {
                     </td>
                   </tr>
                 );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
 
       <ConfirmationModal
         isOpen={showDeleteModal}
@@ -299,5 +298,81 @@ export default function AdvertisementManagement() {
         variant="danger"
       />
     </div>
+  );
+}
+
+function AdvertisementTableSkeleton() {
+  return (
+    <>
+      {[...Array(5)].map((_, i) => (
+        <tr key={i} className="animate-pulse">
+          <td className="px-5 py-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                <div className="h-4 w-16 bg-gray-100 rounded"></div>
+              </div>
+              <div className="h-3 w-40 bg-gray-100 rounded"></div>
+            </div>
+          </td>
+          <td className="px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-gray-200 rounded-md"></div>
+              <div className="space-y-1">
+                <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                <div className="h-3 w-24 bg-gray-100 rounded"></div>
+              </div>
+            </div>
+          </td>
+          <td className="px-5 py-4"><div className="h-5 w-16 bg-gray-200 rounded-md"></div></td>
+          <td className="px-5 py-4">
+            <div className="flex items-center gap-4">
+              <div className="h-4 w-12 bg-gray-200 rounded"></div>
+              <div className="h-4 w-12 bg-gray-200 rounded"></div>
+            </div>
+          </td>
+          <td className="px-5 py-4 text-center">
+            <div className="inline-block h-5 w-9 bg-gray-200 rounded-full"></div>
+          </td>
+          <td className="px-5 py-4 text-right">
+            <div className="flex justify-end">
+              <div className="h-7 w-20 bg-gray-200 rounded-md"></div>
+            </div>
+          </td>
+        </tr>
+      ))}
+    </>
+  );
+}
+
+export default function AdminAdvertisementsPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-5 animate-pulse">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-2">
+            <div className="h-6 w-48 bg-gray-200 rounded"></div>
+            <div className="h-4 w-64 bg-gray-100 rounded"></div>
+          </div>
+          <div className="w-full sm:w-60 h-10 bg-gray-200 rounded-lg"></div>
+        </div>
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50">
+                {[...Array(6)].map((_, i) => (
+                  <th key={i} className="px-5 py-3 text-left"><div className="h-3 w-16 bg-gray-300 rounded"></div></th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              <AdvertisementTableSkeleton />
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }>
+      <AdvertisementManagement />
+    </React.Suspense>
   );
 }

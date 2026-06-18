@@ -388,9 +388,28 @@ const ContentApprovalPanelContent = () => {
   );
 };
 
+const ContentApprovalSkeleton = () => (
+  <div className="min-h-screen bg-[#F8F9FC] py-10 px-4 md:px-0 animate-pulse">
+    <div className="w-64 h-7 bg-gray-200 rounded mb-5 mx-auto md:mx-0 md:ml-8" />
+    <div className="bg-white rounded-2xl shadow-md md:p-8 p-4 mx-auto max-w-[1400px]">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-4">
+        <div className="w-32 h-5 bg-gray-200 rounded" />
+        <div className="w-72 h-10 bg-gray-200 rounded-xl" />
+      </div>
+      <div className="flex gap-2 mb-6">
+        {[1, 2, 3, 4].map(i => <div key={i} className="w-24 h-9 bg-gray-200 rounded-full" />)}
+      </div>
+      <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200">
+        <div className="bg-gray-50 h-12 w-full border-b" />
+        <TableSkeleton />
+      </div>
+    </div>
+  </div>
+);
+
 const ContentApprovalPanel = () => {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<ContentApprovalSkeleton />}>
       <ContentApprovalPanelContent />
     </Suspense>
   );

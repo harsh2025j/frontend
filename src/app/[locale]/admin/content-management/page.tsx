@@ -553,9 +553,38 @@ const ContentManagementPageContent: React.FC = () => {
   );
 };
 
+const ContentManagementSkeleton = () => (
+  <div className="animate-pulse">
+    <div className="flex justify-between items-center mb-6">
+      <div className="w-48 h-7 bg-gray-200 rounded" />
+      <div className="w-64 md:w-80 h-10 bg-gray-200 rounded-lg" />
+    </div>
+    <div className="flex min-h-screen bg-gray-50 text-gray-800">
+      <main className="flex-1">
+        <div className="mx-auto bg-white rounded-2xl shadow md:p-6 p-4">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-5 gap-4">
+            <div className="w-32 h-5 bg-gray-200 rounded" />
+            <div className="flex items-center gap-3">
+              <div className="w-32 h-10 bg-gray-200 rounded-md" />
+              <div className="w-40 h-10 bg-gray-200 rounded-md" />
+            </div>
+          </div>
+          <div className="flex gap-2 mb-6 flex-wrap">
+            {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-24 h-9 bg-gray-200 rounded-full" />)}
+          </div>
+          <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200">
+            <div className="bg-gray-50 h-12 w-full border-b" />
+            <table className="w-full text-left border-collapse"><TableSkeleton /></table>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+);
+
 const ContentManagementPage: React.FC = () => {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<ContentManagementSkeleton />}>
       <ContentManagementPageContent />
     </Suspense>
   );

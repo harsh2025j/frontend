@@ -341,9 +341,12 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
             return (
                 <Link
                     href={item.href || "#"}
-                    className={`flex items-center h-full px-1 hover:text-[#C9A227] whitespace-nowrap transition-colors relative group ${active ? "text-[#C9A227] font-semibold" : "text-gray-800"}`}
+                    className={`flex items-center h-full px-1 hover:text-[#C9A227] whitespace-nowrap transition-colors relative group ${active ? "text-[#C9A227]" : "text-gray-800"}`}
                 >
-                    {item.label}
+                    <div className="grid place-items-center">
+                        <span className={`col-start-1 row-start-1 transition-colors ${active ? "font-semibold" : "font-medium"}`}>{item.label}</span>
+                        <span className="col-start-1 row-start-1 font-semibold invisible" aria-hidden="true">{item.label}</span>
+                    </div>
                     <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A227] transform origin-left transition-transform duration-300 ${active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}></span>
                 </Link>
             );
@@ -357,8 +360,11 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                 onMouseLeave={() => setIsOpen(false)}
                 onClick={() => hasChildren && onToggle(item.label)}
             >
-                <button className={`flex items-center gap-1 px-1 hover:text-[#C9A227] whitespace-nowrap transition-colors relative ${active || showDropdown ? "text-[#C9A227] font-semibold" : "text-gray-800"}`}>
-                    {item.label}
+                <button className={`flex items-center gap-1 px-1 hover:text-[#C9A227] whitespace-nowrap transition-colors relative ${active || showDropdown ? "text-[#C9A227]" : "text-gray-800"}`}>
+                    <div className="grid place-items-center">
+                        <span className={`col-start-1 row-start-1 transition-colors ${active || showDropdown ? "font-semibold" : "font-medium"}`}>{item.label}</span>
+                        <span className="col-start-1 row-start-1 font-semibold invisible" aria-hidden="true">{item.label}</span>
+                    </div>
                     <ChevronDown size={14} className={`transition-transform duration-200 ${showDropdown ? "rotate-180" : ""}`} />
                     <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A227] transform origin-left transition-transform duration-300 ${active || showDropdown ? "scale-x-100" : "scale-x-0"}`}></span>
                 </button>

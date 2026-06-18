@@ -18,6 +18,7 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 import CategorySelect from "@/components/ui/CategorySelect";
 import FormField from "@/components/ui/FormField";
 import ImageCropperModal from "@/components/ui/ImageCropperModal";
+import TagInputWithSuggestions from "../../components/TagInputWithSuggestions";
 
 
 const EditArticlePage: React.FC = () => {
@@ -43,7 +44,7 @@ const EditArticlePage: React.FC = () => {
     } = useCreateArticleActions();
 
     const [loading, setLoading] = useState(false);
-    const [tagInput, setTagInput] = React.useState("");
+    const [isFetching, setIsFetching] = useState(true);
     const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
     const [existingDocuments, setExistingDocuments] = useState<any[]>([]);
     const [expandedUpdates, setExpandedUpdates] = useState<string[]>([]);
@@ -121,7 +122,7 @@ const EditArticlePage: React.FC = () => {
         const fetchArticleDetails = async () => {
             if (!articleId) return;
 
-            setLoading(true);
+            setIsFetching(true);
             try {
                 const response = await articleApi.fetchArticleById(articleId);
                 // findOne may return the article directly, or wrapped in { data: article }
@@ -167,7 +168,7 @@ const EditArticlePage: React.FC = () => {
                 toast.error("Failed to load article details");
                 router.push("/admin/content-management");
             } finally {
-                setLoading(false);
+                setIsFetching(false);
             }
         };
 
@@ -253,7 +254,7 @@ const EditArticlePage: React.FC = () => {
             await articleApi.updateArticle(articleId!, { ...formData, status });
 
             if (!isAutoSave) {
-                toast.success("Article updated successfully");
+                toast.success(status === "draft" ? "Draft saved successfully" : "Article requested for publishing successfully");
                 await refetch(true); // Force refresh list
                 router.push("/admin/content-management");
             }
@@ -279,7 +280,7 @@ const EditArticlePage: React.FC = () => {
     }, 3000, {
         enabled: !isFormEmpty
     });
-    
+
     // Make resetBaseline available to the fetch effect
     resetBaselineRef.current = resetBaseline;
 
@@ -306,6 +307,49 @@ const EditArticlePage: React.FC = () => {
         }
         return existingThumbnailUrl;
     }, [formData.thumbnail, existingThumbnailUrl]);
+
+    if (isFetching) {
+        return (
+            <div className="flex min-h-screen bg-gray-50 text-gray-800 p-3 sm:p-4 md:p-6 lg:p-8 animate-pulse w-full">
+                <div className="max-w-6xl mx-auto w-full">
+                    {/* Header */}
+                    <div className="flex items-center gap-4 mb-4 sm:mb-6 px-2">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full" />
+                        <div className="w-40 h-8 bg-gray-200 rounded" />
+                    </div>
+                    {/* Form Box */}
+                    <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm space-y-6 border border-gray-100">
+                        {/* 2 cols */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="space-y-2"><div className="w-24 h-4 bg-gray-200 rounded" /><div className="h-11 bg-gray-200 rounded-lg" /></div>
+                            <div className="space-y-2"><div className="w-24 h-4 bg-gray-200 rounded" /><div className="h-11 bg-gray-200 rounded-lg" /></div>
+                        </div>
+                        {/* 1 col */}
+                        <div className="space-y-2"><div className="w-24 h-4 bg-gray-200 rounded" /><div className="h-11 bg-gray-200 rounded-lg" /></div>
+                        <div className="space-y-2"><div className="w-24 h-4 bg-gray-200 rounded" /><div className="h-11 bg-gray-200 rounded-lg" /></div>
+                        {/* 2 cols */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="space-y-2"><div className="w-24 h-4 bg-gray-200 rounded" /><div className="h-11 bg-gray-200 rounded-lg" /></div>
+                            <div className="space-y-2"><div className="w-24 h-4 bg-gray-200 rounded" /><div className="h-11 bg-gray-200 rounded-lg" /></div>
+                        </div>
+                        {/* 3 cols */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                            <div className="space-y-2"><div className="w-24 h-4 bg-gray-200 rounded" /><div className="h-11 bg-gray-200 rounded-lg" /></div>
+                            <div className="space-y-2"><div className="w-24 h-4 bg-gray-200 rounded" /><div className="h-11 bg-gray-200 rounded-lg" /></div>
+                            <div className="space-y-2"><div className="w-24 h-4 bg-gray-200 rounded" /><div className="h-11 bg-gray-200 rounded-lg" /></div>
+                        </div>
+                        {/* 2 cols (Image upload) */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="h-40 bg-gray-200 rounded-lg" />
+                            <div className="h-40 bg-gray-200 rounded-lg" />
+                        </div>
+                        {/* Rich text */}
+                        <div className="space-y-2"><div className="w-24 h-4 bg-gray-200 rounded" /><div className="h-64 bg-gray-200 rounded-lg" /></div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-800">
@@ -452,58 +496,10 @@ const EditArticlePage: React.FC = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                             <div>
                                 <label className="block text-sm font-medium mb-1.5">Tags</label>
-                                <div className="space-y-2">
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={tagInput}
-                                            onChange={(e) => setTagInput(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    e.preventDefault();
-                                                    if (tagInput.trim()) {
-                                                        handleAddTag(tagInput);
-                                                        setTagInput("");
-                                                    }
-                                                }
-                                            }}
-                                            placeholder="Type tag and press Enter..."
-                                            className="flex-1 border rounded-lg px-3 py-2 bg-gray-50 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                if (tagInput.trim()) {
-                                                    handleAddTag(tagInput);
-                                                    setTagInput("");
-                                                }
-                                            }}
-                                            className="bg-primary hover:bg-primary/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                                        >
-                                            Add
-                                        </button>
-                                    </div>
-                                    {formData.tags.length > 0 && (
-                                        <div className="flex flex-wrap gap-2 p-2 border rounded-lg bg-gray-50">
-                                            {formData.tags.map((tag, i) => (
-                                                <span
-                                                    key={i}
-                                                    className="bg-blue-100 text-blue-700 text-xs sm:text-sm px-3 py-1.5 rounded-full flex items-center gap-2 group hover:bg-blue-200 transition-colors"
-                                                >
-                                                    {tag}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveTag(tag)}
-                                                        className="text-blue-600 hover:text-red-600 font-bold transition-colors"
-                                                        aria-label={`Remove ${tag} `}
-                                                    >
-                                                        ×
-                                                    </button>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                                <TagInputWithSuggestions
+                                    selectedTags={formData.tags as string[]}
+                                    onChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
+                                />
                             </div>
                             <FormField label="Location" error={errors.location} required>
                                 <input type="text"
@@ -855,14 +851,14 @@ const EditArticlePage: React.FC = () => {
 
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 mt-6 sm:mt-8 pt-4 border-t">
-                            <button
+                            {/* <button
                                 type="button"
                                 className="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 onClick={() => handleUpdate("draft")}
                                 disabled={loading}
                             >
                                 Save Draft
-                            </button>
+                            </button> */}
 
                             <button
                                 type="submit"

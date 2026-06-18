@@ -183,13 +183,7 @@ export function AdminCasesPageContent() {
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {loading ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center">
-                                            <div className="flex justify-center items-center">
-                                                <Loader size="md" text="Loading Cases..." />
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    <CasesTableSkeleton />
                                 ) : cases && cases.length > 0 ? (
                                     cases.map((c) => (
                                         <tr key={c.id} className="hover:bg-gray-50 transition-colors">
@@ -311,9 +305,66 @@ export function AdminCasesPageContent() {
     );
 }
 
+function CasesTableSkeleton() {
+    return (
+        <>
+            {[...Array(6)].map((_, i) => (
+                <tr key={i} className="animate-pulse border-b border-gray-100">
+                    <td className="px-6 py-4"><div className="h-4 w-24 bg-gray-200 rounded"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-48 bg-gray-200 rounded"></div></td>
+                    <td className="px-6 py-4"><div className="h-8 w-24 bg-gray-100 rounded-full"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-32 bg-gray-200 rounded"></div></td>
+                    <td className="px-6 py-4">
+                        <div className="flex justify-end gap-3">
+                            <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                            <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                            <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                        </div>
+                    </td>
+                </tr>
+            ))}
+        </>
+    );
+}
+
+function AdminCasesSkeleton() {
+    return (
+        <div className="p-6 space-y-6 animate-pulse w-full">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="space-y-2">
+                    <div className="h-8 w-40 bg-gray-200 rounded"></div>
+                    <div className="h-4 w-56 bg-gray-100 rounded"></div>
+                </div>
+                <div className="h-10 w-40 bg-gray-200 rounded-lg"></div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-4 border-b border-gray-200 bg-gray-50/50">
+                    <div className="h-10 w-full max-w-md bg-gray-200 rounded-lg"></div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                {[...Array(5)].map((_, i) => (
+                                    <th key={i} className="px-6 py-3 text-left"><div className="h-4 w-20 bg-gray-300 rounded"></div></th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            <CasesTableSkeleton />
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function AdminCasesPage() {
     return (
-        <Suspense fallback={<Loader />}>
+        <Suspense fallback={<AdminCasesSkeleton />}>
             <AdminCasesPageContent />
         </Suspense>
     );

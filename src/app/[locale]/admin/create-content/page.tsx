@@ -19,6 +19,7 @@ import CategorySelect from "@/components/ui/CategorySelect";
 import FormField from "@/components/ui/FormField";
 import { useState, useRef } from "react";
 import ImageCropperModal from "@/components/ui/ImageCropperModal";
+import TagInputWithSuggestions from "../components/TagInputWithSuggestions";
 
 
 
@@ -43,7 +44,6 @@ const CreateUpdatePage: React.FC = () => {
     handleRemoveTimelineUpdate,
   } = useCreateArticleActions();
 
-  const [tagInput, setTagInput] = React.useState("");
   const [expandedUpdates, setExpandedUpdates] = React.useState<string[]>([]);
   const [imageToCrop, setImageToCrop] = useState<File | null>(null);
 
@@ -117,10 +117,6 @@ const CreateUpdatePage: React.FC = () => {
 
   useEffect(() => {
     if (error) toast.error(error);
-    // Reset tagInput when form is successfully submitted
-    if (message) {
-      setTagInput("");
-    }
   }, [error, message]);
 
   useEffect(() => {
@@ -183,6 +179,16 @@ const CreateUpdatePage: React.FC = () => {
     }
   };
 
+  const handleSaveDraft = async () => {
+    try {
+      await handleCreateArticle("draft");
+      toast.success("Draft saved successfully");
+      router.push("/admin/content-management");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to save draft");
+    }
+  };
+
   // Don't auto-save if both title and content are completely empty
   const isFormEmpty = !formData.title?.trim() && !formData.content?.trim();
 
@@ -198,17 +204,17 @@ const CreateUpdatePage: React.FC = () => {
     } else {
       createPromiseRef.current = handleCreateArticle("draft");
       const result = await createPromiseRef.current;
-      
+
       if (result && result.data && result.data.id) {
         createdArticleIdRef.current = result.data.id;
         setCreatedArticleId(result.data.id);
-        
+
         // Reconstruct URL safely without appending duplicates
         const segments = window.location.pathname.split('/create-content');
         const basePath = segments[0] + '/create-content';
-        
+
         if (!window.location.pathname.includes(result.data.id)) {
-            window.history.replaceState(null, '', `${basePath}/${result.data.id}`);
+          window.history.replaceState(null, '', `${basePath}/${result.data.id}`);
         }
       }
     }
@@ -369,58 +375,10 @@ const CreateUpdatePage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div>
                 <label className="block text-sm font-medium mb-1.5">Tags</label>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          if (tagInput.trim()) {
-                            handleAddTag(tagInput);
-                            setTagInput("");
-                          }
-                        }
-                      }}
-                      placeholder="Type tag and press Enter..."
-                      className="flex-1 border rounded-lg px-3 py-2 bg-gray-50 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (tagInput.trim()) {
-                          handleAddTag(tagInput);
-                          setTagInput("");
-                        }
-                      }}
-                      className="bg-primary hover:bg-primary/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    >
-                      Add
-                    </button>
-                  </div>
-                  {formData.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 p-2 border rounded-lg bg-gray-50">
-                      {formData.tags.map((tag, i) => (
-                        <span
-                          key={i}
-                          className="bg-blue-100 text-blue-700 text-xs sm:text-sm px-3 py-1.5 rounded-full flex items-center gap-2 group hover:bg-blue-200 transition-colors"
-                        >
-                          {tag}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveTag(tag)}
-                            className="text-blue-600 hover:text-red-600 font-bold transition-colors"
-                            aria-label={`Remove ${tag}`}
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <TagInputWithSuggestions
+                  selectedTags={formData.tags as string[]}
+                  onChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
+                />
               </div>
               <FormField label="Location" error={errors.location} required>
                 <input type="text"
@@ -723,14 +681,14 @@ const CreateUpdatePage: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 mt-6 sm:mt-8 pt-4 border-t">
-              <button
+              {/* <button
                 type="button"
                 className="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => handleCreateArticle("draft")}
+                onClick={handleSaveDraft}
                 disabled={loading}
               >
                 Save Draft
-              </button>
+              </button> */}
 
               <button
                 type="submit"

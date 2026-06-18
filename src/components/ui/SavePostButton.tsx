@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Bookmark, Loader2 } from "lucide-react";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 
@@ -15,9 +15,15 @@ interface SavePostButtonProps {
 export default function SavePostButton({ postId, className = "", iconSize = 24, showText = false, text = "Save" }: SavePostButtonProps) {
     const { user, toggleSavePost } = useProfileActions();
     const [isToggling, setIsToggling] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
-    // If there is no logged-in user, do not render the button.
-    if (!user) {
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // If not mounted yet, or there is no logged-in user, do not render the button.
+    // This prevents hydration mismatches between server and client.
+    if (!mounted || !user) {
         return null;
     }
 

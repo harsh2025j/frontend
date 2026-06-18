@@ -138,11 +138,7 @@ const AdminJudgesPageContent = () => {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-50">
                             {loading ? (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center">
-                                        <Loader size="md" text="Refreshing profiles..." />
-                                    </td>
-                                </tr>
+                                <JudgesTableSkeleton />
                             ) : judges && judges.length > 0 ? (
                                 judges.map((j) => (
                                     <tr key={j.id} className="hover:bg-blue-50/30 transition-colors group">
@@ -243,9 +239,78 @@ const AdminJudgesPageContent = () => {
     );
 };
 
+function JudgesTableSkeleton() {
+    return (
+        <>
+            {[...Array(6)].map((_, i) => (
+                <tr key={i} className="animate-pulse border-b border-gray-50">
+                    <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gray-200"></div>
+                            <div className="space-y-2">
+                                <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                                <div className="h-3 w-16 bg-gray-100 rounded"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td className="px-6 py-4">
+                        <div className="space-y-2">
+                            <div className="h-4 w-40 bg-gray-200 rounded"></div>
+                            <div className="h-3 w-24 bg-gray-100 rounded"></div>
+                        </div>
+                    </td>
+                    <td className="px-6 py-4"><div className="h-5 w-16 bg-gray-200 rounded-full"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-20 bg-gray-200 rounded"></div></td>
+                    <td className="px-6 py-4">
+                        <div className="flex justify-end gap-2">
+                            <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+                            <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+                        </div>
+                    </td>
+                </tr>
+            ))}
+        </>
+    );
+}
+
+function AdminJudgesSkeleton() {
+    return (
+        <div className="p-6 space-y-6 animate-pulse w-full">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="space-y-2">
+                    <div className="h-8 w-64 bg-gray-200 rounded"></div>
+                    <div className="h-4 w-48 bg-gray-100 rounded"></div>
+                </div>
+                <div className="h-10 w-40 bg-gray-200 rounded-xl"></div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-5 border-b border-gray-50 bg-gray-50/30">
+                    <div className="h-10 w-full max-w-md bg-gray-200 rounded-xl"></div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-100">
+                        <thead className="bg-gray-50/50">
+                            <tr>
+                                {[...Array(5)].map((_, i) => (
+                                    <th key={i} className="px-6 py-4 text-left"><div className="h-3 w-24 bg-gray-300 rounded"></div></th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-50">
+                            <JudgesTableSkeleton />
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function AdminJudgesPage() {
     return (
-        <React.Suspense fallback={<Loader />}>
+        <React.Suspense fallback={<AdminJudgesSkeleton />}>
             <AdminJudgesPageContent />
         </React.Suspense>
     );

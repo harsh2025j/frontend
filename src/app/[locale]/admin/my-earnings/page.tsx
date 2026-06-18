@@ -201,6 +201,10 @@ export default function MyEarnings() {
   const balance = details?.balance || 0;
   const percentPaid = totalNet > 0 ? Math.min(Math.round((totalPaid / totalNet) * 100), 100) : 0;
 
+  if (isLoading) {
+    return <MyEarningsSkeleton />;
+  }
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       {/* Header */}
@@ -232,11 +236,7 @@ export default function MyEarnings() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center justify-between hover:shadow transition-shadow">
           <div className="space-y-1">
             <span className="text-xs uppercase tracking-wider text-gray-500 font-semibold">Net Earned</span>
-            {isLoading ? (
-              <div className="h-8 bg-gray-200 rounded w-24 animate-pulse"></div>
-            ) : (
-              <div className="text-2xl font-black text-gray-900">₹{totalNet.toLocaleString()}</div>
-            )}
+            <div className="text-2xl font-black text-gray-900">₹{totalNet.toLocaleString()}</div>
           </div>
           <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
             <TrendingUp size={22} />
@@ -247,11 +247,7 @@ export default function MyEarnings() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center justify-between hover:shadow transition-shadow">
           <div className="space-y-1">
             <span className="text-xs uppercase tracking-wider text-gray-500 font-semibold">Paid to You</span>
-            {isLoading ? (
-              <div className="h-8 bg-gray-200 rounded w-20 animate-pulse"></div>
-            ) : (
-              <div className="text-2xl font-black text-green-600">₹{totalPaid.toLocaleString()}</div>
-            )}
+            <div className="text-2xl font-black text-green-600">₹{totalPaid.toLocaleString()}</div>
           </div>
           <div className="p-3 bg-green-50 text-green-600 rounded-xl">
             <CheckCircle size={22} />
@@ -267,13 +263,9 @@ export default function MyEarnings() {
             <span className={`text-xs uppercase tracking-wider font-extrabold ${balance > 0 ? 'text-amber-800' : 'text-green-800'}`}>
               {balance > 0 ? "Pending Balance" : "Fully Settled"}
             </span>
-            {isLoading ? (
-              <div className="h-8 bg-gray-200 rounded w-28 animate-pulse"></div>
-            ) : (
-              <div className={`text-2xl font-black ${balance > 0 ? 'text-amber-900' : 'text-green-900'}`}>
-                ₹{balance.toLocaleString()}
-              </div>
-            )}
+            <div className={`text-2xl font-black ${balance > 0 ? 'text-amber-900' : 'text-green-900'}`}>
+              ₹{balance.toLocaleString()}
+            </div>
             {balance > 0 && (
               <p className="text-xs font-medium text-amber-700/80 mt-1">Will be settled shortly.</p>
             )}
@@ -289,11 +281,7 @@ export default function MyEarnings() {
         <div className="flex justify-between items-center text-sm font-semibold text-gray-700">
           <span>Settlement Progress</span>
           <span>
-            {isLoading ? (
-              <span className="h-4 bg-gray-200 rounded w-28 animate-pulse inline-block"></span>
-            ) : (
-              <span>₹{totalPaid.toLocaleString()} paid of ₹{totalNet.toLocaleString()} ({percentPaid}%)</span>
-            )}
+            <span>₹{totalPaid.toLocaleString()} paid of ₹{totalNet.toLocaleString()} ({percentPaid}%)</span>
           </span>
         </div>
         <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
@@ -334,18 +322,7 @@ export default function MyEarnings() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {isLoading ? (
-                Array.from({ length: 4 }).map((_, idx) => (
-                  <tr key={idx} className="animate-pulse">
-                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-8"></div></td>
-                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
-                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
-                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
-                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-28"></div></td>
-                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
-                  </tr>
-                ))
-              ) : appointments.length === 0 ? (
+              {appointments.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-gray-500 text-sm">
                     No paid appointments yet.
@@ -415,18 +392,7 @@ export default function MyEarnings() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {isLoading ? (
-                Array.from({ length: 4 }).map((_, idx) => (
-                  <tr key={idx} className="animate-pulse">
-                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-8"></div></td>
-                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
-                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
-                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
-                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-28"></div></td>
-                    <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
-                  </tr>
-                ))
-              ) : documents.length === 0 ? (
+              {documents.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-gray-500 text-sm">
                     No document sharing payments yet.
@@ -480,19 +446,7 @@ export default function MyEarnings() {
               onScroll={handlePayoutsScroll}
               className="p-6 overflow-auto max-h-[350px] custom-scrollbar flex-1"
             >
-              {isLoading ? (
-                <div className="space-y-5">
-                  {Array.from({ length: 3 }).map((_, idx) => (
-                    <div key={idx} className="flex gap-4 animate-pulse">
-                      <div className="w-3.5 h-3.5 bg-gray-200 rounded-full mt-1"></div>
-                      <div className="space-y-2 flex-1">
-                        <div className="h-4 bg-gray-200 rounded w-24"></div>
-                        <div className="h-3 bg-gray-200 rounded w-44"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : payouts.length === 0 ? (
+              {payouts.length === 0 ? (
                 <div className="text-center py-10 text-gray-500 text-sm">
                   No payouts received yet.
                 </div>
@@ -596,6 +550,106 @@ export default function MyEarnings() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function MyEarningsSkeleton() {
+  return (
+    <div className="p-6 max-w-6xl mx-auto space-y-6 w-full animate-pulse">
+      {/* Header Skeleton */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-gray-200 rounded-xl" />
+          <div className="space-y-2">
+            <div className="h-6 w-32 bg-gray-200 rounded" />
+            <div className="h-4 w-48 bg-gray-100 rounded" />
+          </div>
+        </div>
+        <div className="h-9 w-40 bg-gray-100 rounded-xl" />
+      </div>
+
+      {/* KPI Cards Grid Skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
+            <div className="space-y-3">
+              <div className="h-3 w-20 bg-gray-200 rounded" />
+              <div className="h-8 w-28 bg-gray-200 rounded" />
+            </div>
+            <div className="w-[46px] h-[46px] bg-gray-100 rounded-xl" />
+          </div>
+        ))}
+      </div>
+
+      {/* Progress Visualization Skeleton */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-4">
+        <div className="flex justify-between items-center">
+          <div className="h-4 w-32 bg-gray-200 rounded" />
+          <div className="h-4 w-48 bg-gray-200 rounded" />
+        </div>
+        <div className="w-full bg-gray-100 rounded-full h-3" />
+      </div>
+
+      {/* Tables Skeleton */}
+      {[1, 2].map((tableIndex) => (
+        <div key={tableIndex} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-5 border-b border-gray-100 flex justify-between items-center">
+            <div className="space-y-2">
+              <div className="h-5 w-40 bg-gray-200 rounded" />
+              <div className="h-4 w-56 bg-gray-100 rounded" />
+            </div>
+            <div className="h-4 w-24 bg-gray-100 rounded" />
+          </div>
+          <div className="p-0">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-white">
+                <tr className="border-b border-gray-100">
+                  <th className="p-4"><div className="h-3 w-8 bg-gray-200 rounded" /></th>
+                  <th className="p-4"><div className="h-3 w-16 bg-gray-200 rounded" /></th>
+                  <th className="p-4"><div className="h-3 w-20 bg-gray-200 rounded" /></th>
+                  <th className="p-4"><div className="h-3 w-16 bg-gray-200 rounded" /></th>
+                  <th className="p-4"><div className="h-3 w-24 bg-gray-200 rounded" /></th>
+                  <th className="p-4"><div className="h-3 w-16 bg-gray-200 rounded" /></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {[1, 2, 3, 4].map((i) => (
+                  <tr key={i}>
+                    <td className="p-4"><div className="h-4 bg-gray-100 rounded w-6" /></td>
+                    <td className="p-4"><div className="h-4 bg-gray-100 rounded w-20" /></td>
+                    <td className="p-4"><div className="h-4 bg-gray-100 rounded w-24" /></td>
+                    <td className="p-4"><div className="h-4 bg-gray-100 rounded w-16" /></td>
+                    <td className="p-4"><div className="h-4 bg-gray-100 rounded w-28" /></td>
+                    <td className="p-4"><div className="h-6 bg-gray-100 rounded-full w-20" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
+
+      {/* Payout History Skeleton */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-5 border-b border-gray-100">
+          <div className="h-5 w-32 bg-gray-200 rounded" />
+        </div>
+        <div className="p-6 space-y-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex gap-4 ml-2">
+              <div className="w-3 h-3 bg-gray-200 rounded-full mt-1.5 shrink-0" />
+              <div className="space-y-2 flex-1">
+                <div className="flex justify-between">
+                  <div className="h-4 w-28 bg-gray-200 rounded" />
+                  <div className="h-3 w-20 bg-gray-100 rounded" />
+                </div>
+                <div className="h-10 w-3/4 bg-gray-50 border border-gray-100 rounded-lg" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

@@ -82,11 +82,7 @@ const PlansManagementContent = () => {
     };
 
     if (loading && plans.length === 0) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <Loader text="Loading Plans..." size="lg" />
-            </div>
-        );
+        return <PlansSkeleton />;
     }
 
     return (
@@ -285,9 +281,78 @@ const PlansManagementContent = () => {
     );
 };
 
+function PlansSkeleton() {
+    return (
+        <div className="animate-pulse">
+            <div className="h-8 w-64 bg-gray-200 rounded mb-6"></div>
+            
+            <div className="bg-white md:p-6 p-4 rounded-xl border border-gray-200">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div className="h-6 w-32 bg-gray-200 rounded"></div>
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                        <div className="h-10 w-full sm:w-64 bg-gray-100 rounded-lg"></div>
+                        <div className="h-10 w-36 bg-gray-200 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:hidden gap-4 mb-6">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="bg-white p-5 rounded-xl border border-gray-100 flex flex-col gap-4">
+                            <div className="border-b border-gray-100 pb-3 space-y-3">
+                                <div className="h-4 w-16 bg-gray-200 rounded"></div>
+                                <div className="h-6 w-32 bg-gray-200 rounded"></div>
+                                <div className="h-4 w-16 bg-gray-200 rounded mt-2"></div>
+                                <div className="h-6 w-24 bg-gray-200 rounded"></div>
+                            </div>
+                            <div className="space-y-3 flex-1">
+                                <div className="h-4 w-full bg-gray-100 rounded"></div>
+                                <div className="h-4 w-3/4 bg-gray-100 rounded"></div>
+                                <div className="h-6 w-20 bg-gray-100 rounded-full mt-2"></div>
+                            </div>
+                            <div className="flex gap-3 mt-auto pt-2 border-t border-gray-50">
+                                <div className="h-10 flex-1 bg-gray-100 rounded-lg"></div>
+                                <div className="h-10 flex-1 bg-gray-100 rounded-lg"></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="hidden lg:block overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="border-b border-gray-100">
+                                {[...Array(6)].map((_, i) => (
+                                    <th key={i} className="text-left p-4"><div className="h-4 w-20 bg-gray-200 rounded"></div></th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {[...Array(5)].map((_, i) => (
+                                <tr key={i} className="border-b border-gray-50">
+                                    <td className="p-4"><div className="h-4 w-8 bg-gray-100 rounded"></div></td>
+                                    <td className="p-4"><div className="h-4 w-32 bg-gray-100 rounded"></div></td>
+                                    <td className="p-4"><div className="h-4 w-48 bg-gray-100 rounded"></div></td>
+                                    <td className="p-4"><div className="h-4 w-24 bg-gray-100 rounded"></div></td>
+                                    <td className="p-4"><div className="h-6 w-20 bg-gray-100 rounded-full"></div></td>
+                                    <td className="p-4">
+                                        <div className="flex justify-center gap-2">
+                                            <div className="h-8 w-8 bg-gray-100 rounded"></div>
+                                            <div className="h-8 w-8 bg-gray-100 rounded"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function PlansManagement() {
     return (
-        <React.Suspense fallback={<Loader />}>
+        <React.Suspense fallback={<PlansSkeleton />}>
             <PlansManagementContent />
         </React.Suspense>
     );

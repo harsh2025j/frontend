@@ -117,8 +117,56 @@ export default function PermissionMatrixPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader size="lg" text="Loading Permission Matrix..." />
+      <div className="p-4 md:p-6 max-w-7xl mx-auto animate-pulse">
+        {/* Header Skeleton */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <div className="h-8 bg-gray-200 rounded w-64 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-96"></div>
+          </div>
+        </div>
+
+        {/* Info Banner Skeleton */}
+        <div className="bg-gray-100 rounded-lg h-16 mb-6"></div>
+
+        {/* Search Skeleton */}
+        <div className="h-10 bg-gray-200 rounded-lg w-full mb-4"></div>
+
+        {/* Matrix Grid Skeleton */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-max">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="py-4 px-6 min-w-[200px]"><div className="h-5 bg-gray-200 rounded w-32"></div></th>
+                  {[...Array(4)].map((_, i) => (
+                    <th key={i} className="py-4 px-4 min-w-[150px]">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="h-5 bg-gray-200 rounded w-20"></div>
+                        <div className="h-4 bg-gray-200 rounded w-12"></div>
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[...Array(10)].map((_, i) => (
+                  <tr key={i} className="border-b border-gray-100">
+                    <td className="py-3 px-6">
+                      <div className="h-4 bg-gray-200 rounded w-48 mb-1.5"></div>
+                      <div className="h-3 bg-gray-200 rounded w-32"></div>
+                    </td>
+                    {[...Array(4)].map((_, j) => (
+                      <td key={j} className="text-center py-3 px-4">
+                        <div className="ml-9 w-10 h-10 bg-gray-200 rounded-lg"></div>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     );
   }

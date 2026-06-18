@@ -142,8 +142,14 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
 
     const user = useSelector((state: RootState) => state.auth.user);
     const subscription = useSelector((state: RootState) => state.subscription.currentSubscription);
+    const [mounted, setMounted] = useState(false);
+    
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const isPremium = useMemo(() => {
+        if (!mounted) return false;
         if (!user) return false;
         if (subscription?.status === 'active') return true;
 
@@ -153,7 +159,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
             const name = typeof r === 'string' ? r : r.name;
             return ['admin', 'superadmin', 'editor'].includes(name.toLowerCase());
         });
-    }, [user, subscription]);
+    }, [user, subscription, mounted]);
 
     const hasFullAccess = !article.isPaywalled || isPremium;
 
@@ -309,7 +315,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
 
                 {/* Mobile Social Share */}
                 <div className="flex sm:hidden items-center justify-between w-full mb-10 py-2 px-2 bg-white rounded-xl sm:rounded-full border border-gray-200 shadow-sm print:hidden">
-                    {user && (
+                    {(mounted && user) && (
                         <>
                             <SavePostButton postId={article.id || (article as any)._id} showText={true} text="Save Article" className="!bg-transparent hover:!bg-gray-50 border-none !text-gray-700 hover:!text-blue-600 px-2 py-1 flex-1 justify-center" iconSize={18} />
                             <div className="w-px h-6 bg-gray-200" />
@@ -437,7 +443,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                         }
                     `}</style>
                     <div dangerouslySetInnerHTML={{ __html: displayContent }} />
-                    {!hasFullAccess && <PaywallOverlay isLoggedIn={!!user} t={t} />}
+                    {!hasFullAccess && <PaywallOverlay isLoggedIn={mounted ? !!user : false} t={t} />}
                 </div>
 
                 {/* Related Documents */}
@@ -626,8 +632,14 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
 
     const user = useSelector((state: RootState) => state.auth.user);
     const subscription = useSelector((state: RootState) => state.subscription.currentSubscription);
+    const [mounted, setMounted] = useState(false);
+    
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const isPremium = useMemo(() => {
+        if (!mounted) return false;
         if (!user) return false;
         if (subscription?.status === 'active') return true;
 
@@ -637,7 +649,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
             const name = typeof r === 'string' ? r : r.name;
             return ['admin', 'superadmin', 'editor'].includes(name.toLowerCase());
         });
-    }, [user, subscription]);
+    }, [user, subscription, mounted]);
 
     // Re-fetch initial article if it was truncated by server-side fetch (which lacks JWT)
     useEffect(() => {

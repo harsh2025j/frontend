@@ -300,13 +300,20 @@ const RolesPermissionsPageContent = () => {
 
                             <tbody>
                                 {rolesLoading && (
-                                    <tr>
-                                        <td colSpan={5} className="py-12">
-                                            <div className="flex justify-center">
-                                                <Loader size="lg" text="Loading roles..." />
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    [...Array(10)].map((_, i) => (
+                                        <tr key={i} className="animate-pulse border-b border-gray-100">
+                                            <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                                            <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded w-48"></div></td>
+                                            <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
+                                            <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                                            <td className="px-4 py-4">
+                                                <div className="flex gap-3">
+                                                    <div className="h-5 w-5 bg-gray-200 rounded"></div>
+                                                    <div className="h-5 w-5 bg-gray-200 rounded"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
                                 )}
                                 {Array.isArray(roles) && roles.map((role) => (
                                     <tr
@@ -452,13 +459,20 @@ const RolesPermissionsPageContent = () => {
 
                             <tbody>
                                 {permsLoading && (
-                                    <tr>
-                                        <td colSpan={5} className="py-12">
-                                            <div className="flex justify-center">
-                                                <Loader size="lg" text="Loading permissions..." />
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    [...Array(10)].map((_, i) => (
+                                        <tr key={i} className="animate-pulse border-b border-gray-100">
+                                            <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                                            <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded w-48"></div></td>
+                                            <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
+                                            <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                                            <td className="px-4 py-4">
+                                                <div className="flex gap-3">
+                                                    <div className="h-5 w-5 bg-gray-200 rounded"></div>
+                                                    <div className="h-5 w-5 bg-gray-200 rounded"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
                                 )}
                                 {Array.isArray(permissions) && permissions.map((perm) => (
                                     <tr

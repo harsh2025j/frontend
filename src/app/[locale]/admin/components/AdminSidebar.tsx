@@ -458,6 +458,7 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
                               <Link
                                 key={child.name}
                                 href={child.href}
+                                prefetch={true}
                                 onClick={() => handleItemClick(child.name)}
                                 className={`
                                   group flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-200
@@ -485,6 +486,7 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
                 <Link
                   key={item.name}
                   href={item.href || "#"}
+                  prefetch={true}
                   onClick={() => handleItemClick(item.name)}
                   className={`
                   group flex items-center ${isOpen ? "gap-4" : "lg:justify-center"} px-3 py-2 rounded-xl transition-all duration-200

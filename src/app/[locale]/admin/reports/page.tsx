@@ -105,7 +105,7 @@ export function AdminReportsPageContent() {
         }
     };
 
-    if (loading) return <div className="flex justify-center items-center min-h-[400px]"><Loader size="lg" text="Loading Reports..." /></div>;
+    // removed inline loading return
 
     return (
         <div className="p-6 space-y-6">
@@ -135,7 +135,9 @@ export function AdminReportsPageContent() {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {reports.length > 0 ? (
+                            {loading ? (
+                                <ReportsTableSkeleton />
+                            ) : reports.length > 0 ? (
                                 reports.map((r) => (
                                     <tr key={r.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{r.title}</td>
@@ -205,9 +207,62 @@ export function AdminReportsPageContent() {
     );
 }
 
+function ReportsTableSkeleton() {
+    return (
+        <>
+            {[...Array(5)].map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                    <td className="px-6 py-4"><div className="h-4 w-48 bg-gray-200 rounded"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-24 bg-gray-200 rounded"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-32 bg-gray-200 rounded"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-32 bg-gray-200 rounded"></div></td>
+                    <td className="px-6 py-4">
+                        <div className="flex justify-end gap-3">
+                            <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                            <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                            <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                        </div>
+                    </td>
+                </tr>
+            ))}
+        </>
+    );
+}
+
+function AdminReportsSkeleton() {
+    return (
+        <div className="p-6 space-y-6 animate-pulse">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="space-y-2">
+                    <div className="h-8 w-48 bg-gray-200 rounded"></div>
+                    <div className="h-4 w-32 bg-gray-100 rounded"></div>
+                </div>
+                <div className="h-10 w-48 bg-gray-200 rounded-lg"></div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                {[...Array(5)].map((_, i) => (
+                                    <th key={i} className="px-6 py-3 text-left"><div className="h-3 w-24 bg-gray-300 rounded"></div></th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            <ReportsTableSkeleton />
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function AdminReportsPage() {
     return (
-        <Suspense fallback={<Loader />}>
+        <Suspense fallback={<AdminReportsSkeleton />}>
             <AdminReportsPageContent />
         </Suspense>
     );
