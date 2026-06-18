@@ -8,6 +8,7 @@ import {
     Facebook, Linkedin, Instagram, PlusCircle, UserCog
 } from "lucide-react";
 import { FaXTwitter } from "react-icons/fa6";
+import { FaTelegramPlane, FaYoutube } from "react-icons/fa";
 import Image from "next/image";
 import logo from "../../../public/logo-gold.png";
 import { usePathname, useRouter } from "@/i18n/routing";
@@ -413,6 +414,8 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                     <a target="_blank" href="https://x.com/advocatesajjad" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><FaXTwitter size={14} /></a>
                                     <a target="_blank" href="https://www.linkedin.com/in/sajjad-husain-associates-law-31715675/" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Linkedin size={14} /></a>
                                     <a target="_blank" href="https://www.instagram.com/sajjad_husain_law_associates/?hl=en" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Instagram size={14} /></a>
+                                    <a target="_blank" href="https://t.me/sajjadhusainlaw" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><FaTelegramPlane size={14} /></a>
+                                    <a target="_blank" href="https://www.youtube.com/@SajjadHusainLawAssociates" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><FaYoutube size={14} /></a>
                                 </div>
                                 <span className="hidden sm:block text-blue-400/50">|</span>
                                 <div className="flex items-center gap-2">
