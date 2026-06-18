@@ -51,6 +51,7 @@ export const useRegisterActions = () => {
     password: "",
     phone: "",
   });
+  const [isLocalLoading, setIsLocalLoading] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -66,18 +67,23 @@ export const useRegisterActions = () => {
       return;
     }
 
-    const fcmToken = await requestFcmToken();
+    setIsLocalLoading(true);
+    try {
+      const fcmToken = await requestFcmToken();
 
-    const payload: RegisterRequest = {
-      name: formData.name.trim(),
-      email: formData.email.trim(),
-      password: formData.password,
-      phone: formData.phone,
-      fcmToken: fcmToken || undefined,
-      platform: "web",
-    };
+      const payload: RegisterRequest = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        phone: formData.phone,
+        fcmToken: fcmToken || undefined,
+        platform: "web",
+      };
 
-    dispatch(registerUser(payload));
+      dispatch(registerUser(payload));
+    } finally {
+      setIsLocalLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -108,7 +114,7 @@ export const useRegisterActions = () => {
     setFormData,
     handleChange,
     handleRegister,
-    loading,
+    loading: loading || isLocalLoading,
     error,
     message,
     debugOtp,
@@ -124,6 +130,7 @@ export const useLoginActions = () => {
     email: "",
     password: "",
   });
+  const [isLocalLoading, setIsLocalLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
@@ -139,14 +146,19 @@ export const useLoginActions = () => {
       return;
     }
 
-    const fcmToken = await requestFcmToken();
+    setIsLocalLoading(true);
+    try {
+      const fcmToken = await requestFcmToken();
 
-    dispatch(loginUser({
-      ...formData,
-      email: formData.email.trim(),
-      fcmToken: fcmToken || undefined,
-      platform: "web",
-    }));
+      dispatch(loginUser({
+        ...formData,
+        email: formData.email.trim(),
+        fcmToken: fcmToken || undefined,
+        platform: "web",
+      }));
+    } finally {
+      setIsLocalLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -187,7 +199,7 @@ export const useLoginActions = () => {
     handleLogin,
     handleGoogleLogin,
 
-    loading,
+    loading: loading || isLocalLoading,
     error,
     message,
   };
