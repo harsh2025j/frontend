@@ -21,16 +21,16 @@ export default function Home() {
 
   const { ad: sidebar1, loading: loading1 } = useAdvertisement("HOME_SIDEBAR_1");
   const { ad: sidebar2, loading: loading2 } = useAdvertisement("HOME_SIDEBAR_2");
-  
+
   const { isSlotEnabled: sidebar1Enabled, settingsLoading: settingsLoading1 } = useSlotVisibility("HOME_SIDEBAR_1");
   const { isSlotEnabled: sidebar2Enabled, settingsLoading: settingsLoading2 } = useSlotVisibility("HOME_SIDEBAR_2");
 
   const showSidebar = !isPremiumOrAdmin && (
-    (sidebar1 && sidebar1.isActive) || 
-    (sidebar2 && sidebar2.isActive) || 
+    (sidebar1 && sidebar1.isActive) ||
+    (sidebar2 && sidebar2.isActive) ||
     sidebar1Enabled ||
     sidebar2Enabled ||
-    loading1 || 
+    loading1 ||
     loading2 ||
     settingsLoading1 ||
     settingsLoading2
@@ -67,6 +67,46 @@ export default function Home() {
           limit={6}
         />
 
+        {/* Allahabad High Court Section */}
+        <CategorySection
+          title={t('allahabad_high_court') || "Allahabad High Court"}
+          slug="allahabad-high-court"
+          layout="grid"
+          limit={8}
+        />
+
+        {/* Delhi High Court Section */}
+        <CategorySection
+          title={t('delhi_high_court') || "Delhi High Court"}
+          slug="delhi-high-court"
+          layout="grid"
+          limit={8}
+        />
+
+        {/* Bombay High Court Section */}
+        <CategorySection
+          title={t('bombay_high_court') || "Bombay High Court"}
+          slug="bombay-high-court"
+          layout="grid"
+          limit={8}
+        />
+
+        {/* Kerala High Court Section */}
+        <CategorySection
+          title={t('kerala_high_court') || "Kerala High Court"}
+          slug="kerala-high-court"
+          layout="grid"
+          limit={8}
+        />
+
+        {/* Andhra Pradesh High Court Section */}
+        <CategorySection
+          title={t('andhra_pradesh_high_court') || "Andhra Pradesh High Court"}
+          slug="andhra-pradesh-high-court"
+          layout="grid"
+          limit={8}
+        />
+
         {/* Main Content Grid with Sidebar */}
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -76,14 +116,14 @@ export default function Home() {
                 title={t('business')}
                 slug="business-article"
                 layout="grid"
-                limit={4}
+                limit={8}
               />
 
               <CategorySection
                 title={t('crime')}
                 slug="crime-news"
                 layout="list"
-                limit={4}
+                limit={6}
               />
             </div>
 
@@ -107,9 +147,10 @@ export default function Home() {
         {/* Judgments Section */}
         <CategorySection
           title={t('judgments')}
-          slug="judgments-content"
+          slug="judgments"
           layout="grid"
           limit={8}
+          page={2}
         />
 
         {/* Hindi News Section */}
@@ -118,6 +159,7 @@ export default function Home() {
           slug="hindi-news"
           layout="slider"
           limit={8}
+          page={2}
         />
 
         {/* More Latest News Section */}
@@ -126,6 +168,28 @@ export default function Home() {
           slug="latest-news"
           layout="grid"
           limit={8}
+          showViewMoreButton={true}
+          page={2}
+        />
+
+        {/* More Legal News Section */}
+        <CategorySection
+          title={t('more_legal_news') || "More Legal News"}
+          slug="legal-articles"
+          layout="grid"
+          limit={8}
+          showViewMoreButton={true}
+          page={2}
+        />
+
+        {/* More Judgments Section */}
+        <CategorySection
+          title={t('more_judgments') || "More Judgments"}
+          slug="judgments"
+          layout="grid"
+          limit={8}
+          showViewMoreButton={true}
+          page={3}
         />
       </div>
     </>

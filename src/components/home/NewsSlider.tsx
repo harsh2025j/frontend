@@ -18,10 +18,10 @@ export default function NewsSlider() {
 
   const articles = useMemo(() => {
     const rawLatest = homeData?.latestArticles;
-    const base = (Array.isArray(reduxArticles) && reduxArticles.length > 0) 
-      ? reduxArticles 
+    const base = (Array.isArray(reduxArticles) && reduxArticles.length > 0)
+      ? reduxArticles
       : (Array.isArray(rawLatest) ? rawLatest : []);
-    
+
     return base.filter((a: any) => a && a.status === 'published');
   }, [reduxArticles, homeData?.latestArticles]);
 
@@ -137,20 +137,20 @@ export default function NewsSlider() {
 
       {/* ─── MAIN CONTENT CONTAINER ─── */}
       <div className="container relative z-10 mx-auto h-full px-2 md:px-3 flex items-center py-6 md:py-10 lg:py-0">
-        <div className="max-w-7xl mx-auto  w-full grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-20 items-center">
+        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-20 items-center">
 
           {/* IMAGE BLOCK */}
           <div className="order-1 lg:order-1 relative flex justify-center lg:justify-start transition-all duration-700">
             <motion.div
               style={{ rotateX, rotateY, backfaceVisibility: "hidden" }}
-              className="relative w-full mx-[-20px] max-w-[100vw] md:max-w-[90vw] lg:min-h-[400px]  aspect-[16/9] rounded-[15px] md:rounded-[20px] lg:rounded-[20px] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.5)] border border-white/10 group/card isolation-isolate transform-gpu [mask-image:linear-gradient(white,white)]"
+              className="relative w-full mx-[-20px] max-w-[100vw] md:max-w-[90vw] lg:min-h-[400px] aspect-[16/9] rounded-[15px] md:rounded-[20px] lg:rounded-[20px] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.5)] border border-white/10 group/card isolation-isolate transform-gpu [mask-image:linear-gradient(white,white)]"
             >
               <AnimatePresence mode="wait" custom={direction}>
                 <motion.div
                   key={current}
-                  initial={{ opacity: 0, scale: 1.1, x: direction * -30 }}
-                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, x: direction * 30 }}
+                  initial={{ opacity: 0, x: direction * -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: direction * 30 }}
                   transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                   className="absolute inset-0"
                 >
@@ -159,7 +159,7 @@ export default function NewsSlider() {
                     src={slides[current].image}
                     alt={slides[current].title}
                     fill
-                    className="relative z-10 object-cover transition-transform duration-[10s] group-hover/card:scale-110" //object-contain or cover
+                    className="relative z-10 object-fill"
                     priority={true}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 900px"
                     quality={100}

@@ -180,11 +180,11 @@ export default async function RootLayout({
   // Parallel fetch for speed
   const [categories, latestArticles, financeArticles, legalArticles, hindiArticles, judgmentsArticles] = await Promise.all([
     getCategories(),
-    getArticles({ limit: 6, status: 'published' }), // For NewsSlider
+    getArticles({ limit: 8, status: 'published' }), // For NewsSlider and Latest News
     getArticles({ category: "finance-articles", limit: 10, status: 'published' }),
     getArticles({ category: "legal-articles", limit: 10, status: 'published' }),
-    getArticles({ category: "hindi-news", limit: 3, status: 'published' }),
-    getArticles({ category: "judgments", limit: 3, status: 'published' }),
+    getArticles({ category: "hindi-news", limit: 4, status: 'published' }),
+    getArticles({ category: "judgments", limit: 6, status: 'published' }),
   ]);
 
   const initialHomeData = {

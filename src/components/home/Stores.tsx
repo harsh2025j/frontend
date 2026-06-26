@@ -91,13 +91,6 @@ export default function Stores() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [isNavigating, setIsNavigating] = useState(false);
-
-
-  const handleNavClick = () => {
-    setIsNavigating(true);
-  };
-
 
   const homeData = useHomeData();
   const { articles: allArticles, loading: mainLoading, error } = useArticleListActions();
@@ -105,9 +98,9 @@ export default function Stores() {
     return allArticles.length > 0 ? allArticles : (homeData?.latestArticles || []);
   }, [allArticles, homeData?.latestArticles]);
 
-  const { articles: latestRaw, loading: loadingLatest } = useCategoryArticles("latest-news", 4, !!homeData?.latestArticles?.length);
-  const { articles: judgmentsRaw, loading: loadingJudgements } = useCategoryArticles("judgments", 3, !!homeData?.judgmentsArticles?.length);
-  const { articles: hindiRaw, loading: loadingHindi } = useCategoryArticles("hindi-news", 3, !!homeData?.hindiArticles?.length);
+  const { articles: latestRaw, loading: loadingLatest } = useCategoryArticles("latest-news", 8, !!homeData?.latestArticles?.length);
+  const { articles: judgmentsRaw, loading: loadingJudgements } = useCategoryArticles("judgments", 6, !!homeData?.judgmentsArticles?.length);
+  const { articles: hindiRaw, loading: loadingHindi } = useCategoryArticles("hindi-news", 4, !!homeData?.hindiArticles?.length);
   const { articles: financeRaw, loading: loadingFinance } = useCategoryArticles("finance-articles", 10, !!homeData?.financeArticles?.length);
   const { articles: legalRaw, loading: loadingLegal } = useCategoryArticles("legal-articles", 10, !!homeData?.legalArticles?.length);
 
@@ -174,13 +167,13 @@ export default function Stores() {
     // 1. Headlines
     newsHeadlines.forEach((h: string) => texts.push(h));
 
-    // 2. Latest News (Title) - Slice 4
-    const latest = LatestNewsData.slice(0, 4);
+    // 2. Latest News (Title) - Slice 8
+    const latest = LatestNewsData.slice(0, 8);
     latest.forEach(a => texts.push(a.title));
 
-    // 3. Judgments (Content/Description) - Slice 3
+    // 3. Judgments (Content/Description) - Slice 6
     // Note: Judgement component uses 'content' as description
-    const judgments = JudgementNewsData.slice(0, 3);
+    const judgments = JudgementNewsData.slice(0, 6);
     judgments.forEach(a => texts.push(a.content.replace(/<[^>]*>/g, "").substring(0, 150) + "..."));
 
     // 4. Hindi News (Title + Content) - Slice 3
@@ -211,7 +204,7 @@ export default function Stores() {
   }, [newsHeadlines, translatedText, counts, locale]);
 
   const displayLatestNews = useMemo(() => {
-    const base = LatestNewsData.slice(0, 4);
+    const base = LatestNewsData.slice(0, 8);
     if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return base;
 
     const start = counts.headlines;
@@ -222,7 +215,7 @@ export default function Stores() {
   }, [LatestNewsData, translatedText, counts, locale]);
 
   const displayJudgments = useMemo(() => {
-    const base = JudgementNewsData.slice(0, 3).map(item => ({
+    const base = JudgementNewsData.slice(0, 6).map(item => ({
       ...item,
       content: getArticleExcerpt(item)
     }));
@@ -283,8 +276,6 @@ export default function Stores() {
 
   return (
     <div className="bg-[#f6f6f7]">
-
-      {isNavigating && <Loader fullScreen text="Loading..." />}
 
       <div className="w-full">
 
@@ -515,7 +506,7 @@ export default function Stores() {
           <div className="flex justify-center mb-6 md:mb-10">
             <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {loading ? (
-                <ArticleSkeleton count={4} type="latest" noWrapper={true} />
+                <ArticleSkeleton count={8} type="latest" noWrapper={true} />
               ) : (
                 displayLatestNews.map((data: any) => (
 
@@ -535,7 +526,7 @@ export default function Stores() {
           </div>
         </div>
         <div className="flex justify-center mb-6 md:mb-10">
-          <Link href="/category/latest-news" onClick={handleNavClick}>
+          <Link href="/category/latest-news">
             <button className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 sm:px-6 py-1 sm:py-2 text-sm sm:text-base">
               View More
             </button>
@@ -557,7 +548,7 @@ export default function Stores() {
           <div className="flex justify-center px-4 mb-10">
             <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {loading ? (
-                <ArticleSkeleton count={3} type="judgement" noWrapper={true} />
+                <ArticleSkeleton count={6} type="judgement" noWrapper={true} />
               ) : (
                 displayJudgments.map((data: any) => (
 
@@ -578,7 +569,7 @@ export default function Stores() {
 
         {/*  UPDATED: View More for Judgments */}
         <div className="flex justify-center mb-6 md:mb-10">
-          <Link href="/category/judgments" onClick={handleNavClick}>
+          <Link href="/category/judgments">
             <button className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 sm:px-6 py-1 sm:py-2 text-sm sm:text-base">
               View More
             </button>
@@ -619,9 +610,11 @@ export default function Stores() {
         </div>
 
         {/*  UPDATED: View More for Hindi News */}
-        <div className="flex justify-center mb-6 md:mb-10">
-          <Link href={`/category/${"hindi-news"}`} onClick={handleNavClick}>
-            <Button lable="View More" className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 sm:px-6 py-1 sm:py-2 text-sm sm:text-base mt-4 md:mt-5" />
+        <div className="flex justify-center mb-6 md:mb-10 mt-6 md:mt-10">
+          <Link href={`/category/${"hindi-news"}`}>
+            <button className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 sm:px-6 py-1 sm:py-2 text-sm sm:text-base">
+              View More
+            </button>
           </Link>
         </div>
 

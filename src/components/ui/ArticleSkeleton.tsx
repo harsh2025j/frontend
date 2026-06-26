@@ -34,13 +34,20 @@ const LatestNewsSkeleton: React.FC = () => (
 );
 
 const JudgementSkeleton: React.FC = () => (
-  <div className="bg-white rounded-md overflow-hidden animate-pulse flex flex-col sm:flex-row justify-between border border-gray-200 gap-5 w-full">
-    <div className="bg-gray-300 rounded-l-md w-full sm:w-[150px] h-[150px] flex-shrink-0"></div>
-    <div className="flex flex-col py-3 w-full pr-4">
-      <div className="h-4 bg-gray-300 w-full mb-2 rounded"></div>
-      <div className="h-4 bg-gray-300 w-full mb-2 rounded"></div>
-      <div className="h-4 bg-gray-300 w-1/2 mb-4 rounded"></div>
-      <div className="h-3 bg-gray-200 w-1/4 rounded"></div>
+  <div className="bg-white rounded-xl overflow-hidden animate-pulse flex flex-col border border-gray-100 h-full">
+    <div className="bg-gray-300 w-full aspect-video flex-shrink-0"></div>
+    <div className="flex flex-col p-4 flex-1">
+      <div className="h-4 bg-gray-300 w-full mb-3 rounded"></div>
+      <div className="h-4 bg-gray-300 w-3/4 mb-4 rounded"></div>
+      
+      <div className="h-3 bg-gray-200 w-full mb-2 rounded"></div>
+      <div className="h-3 bg-gray-200 w-full mb-2 rounded"></div>
+      <div className="h-3 bg-gray-200 w-4/5 mb-4 rounded"></div>
+      
+      <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-50">
+        <div className="h-3 bg-gray-200 w-1/3 rounded"></div>
+        <div className="h-3 bg-gray-200 w-1/4 rounded"></div>
+      </div>
     </div>
   </div>
 );

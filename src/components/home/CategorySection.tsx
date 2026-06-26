@@ -17,21 +17,23 @@ interface CategorySectionProps {
   slug: string;
   layout: "grid" | "list" | "featured" | "slider";
   limit?: number;
+  showViewMoreButton?: boolean;
+  page?: number;
 }
 
-export default function CategorySection({ title, slug, layout, limit = 6 }: CategorySectionProps) {
+export default function CategorySection({ title, slug, layout, limit = 6, showViewMoreButton = false, page = 1 }: CategorySectionProps) {
   const homeData = useHomeData();
-  const { articles: reduxArticles, loading: reduxLoading } = useCategoryArticles(slug, limit);
+  const { articles: reduxArticles, loading: reduxLoading } = useCategoryArticles(slug, limit, false, page);
 
   // Use server articles if available for this specific category
   const initialArticles = useMemo(() => {
-    if (!homeData) return [];
+    if (page > 1 || !homeData) return [];
     if (slug === 'finance-articles') return Array.isArray(homeData.financeArticles) ? homeData.financeArticles : [];
     if (slug === 'legal-articles') return Array.isArray(homeData.legalArticles) ? homeData.legalArticles : [];
     if (slug === 'hindi-news') return Array.isArray(homeData.hindiArticles) ? homeData.hindiArticles : [];
     if (slug === 'latest-news') return Array.isArray(homeData.latestArticles) ? homeData.latestArticles : [];
     return [];
-  }, [homeData, slug]);
+  }, [homeData, slug, page]);
 
 
   const articles = useMemo(() => {
@@ -41,9 +43,24 @@ export default function CategorySection({ title, slug, layout, limit = 6 }: Cate
 
   const loading = reduxLoading && reduxArticles.length === 0 && initialArticles.length === 0;
 
-
-  if (loading) return <div className="py-10 flex justify-center"><Loader /></div>;
-
+  if (loading) {
+    return (
+      <section className="py-8 border-b border-gray-100 last:border-0">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 relative pl-4">
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#C9A227] rounded-full"></span>
+              {title}
+            </h2>
+          </div>
+          {layout === "grid" && <GridSkeleton limit={limit} />}
+          {layout === "list" && <ListLayoutSkeleton limit={limit} />}
+          {layout === "featured" && <FeaturedLayoutSkeleton />}
+          {layout === "slider" && <SliderLayoutSkeleton limit={limit} />}
+        </div>
+      </section>
+    );
+  }
   // Hide section if no articles
   if (!articles || articles.length === 0) return null;
 
@@ -56,19 +73,33 @@ export default function CategorySection({ title, slug, layout, limit = 6 }: Cate
             <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#C9A227] rounded-full"></span>
             {title}
           </h2>
-          <Link
-            href={`/category/${slug}`}
-            className="flex items-center text-sm font-semibold text-[#C9A227] hover:text-[#b39022] transition-colors group"
-          >
-            View All <ChevronRight size={16} className="ml-1 transition-transform group-hover:translate-x-1" />
-          </Link>
+          {!showViewMoreButton && (
+            <Link
+              href={`/category/${slug}`}
+              className="flex items-center text-sm font-semibold text-[#C9A227] hover:text-[#b39022] transition-colors group"
+            >
+              View All <ChevronRight size={16} className="ml-1 transition-transform group-hover:translate-x-1" />
+            </Link>
+          )}
         </div>
 
         {/* Layouts - Using articles directly */}
         {layout === "grid" && <GridLayout articles={articles} />}
         {layout === "list" && <ListLayout articles={articles} />}
         {layout === "featured" && <FeaturedLayout articles={articles} />}
-        {layout === "slider" && <SliderLayout articles={articles} />}
+        {layout === "slider" && <SliderLayout articles={articles} slug={slug} />}
+
+        {/* Bottom View More Button */}
+        {showViewMoreButton && (
+          <div className="mt-8 flex justify-center">
+            <Link
+              href={`/category/${slug}`}
+              className="px-6 py-2 border border-gray-400 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-[#C9A227] hover:border-[#C9A227] transition-all"
+            >
+              View More
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -116,6 +147,29 @@ const ArticleCard = ({ article, compact = false }: { article: any; compact?: boo
   </Link>
 );
 
+const ArticleCardSkeleton = ({ compact = false }: { compact?: boolean }) => (
+  <div className="bg-white rounded-md overflow-hidden border border-gray-100 h-full flex flex-col animate-pulse">
+    <div className="w-full aspect-video bg-gray-200" />
+    <div className="p-4 flex flex-col flex-grow">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="h-5 w-16 bg-gray-200 rounded-full" />
+        <div className="h-3 w-20 bg-gray-200 rounded" />
+      </div>
+      <div className="h-5 w-full bg-gray-200 rounded mb-2" />
+      <div className="h-5 w-3/4 bg-gray-200 rounded mb-3" />
+      {!compact && (
+        <>
+          <div className="h-3 w-full bg-gray-200 rounded mb-2" />
+          <div className="h-3 w-4/5 bg-gray-200 rounded mb-3" />
+        </>
+      )}
+      <div className="mt-auto pt-2">
+        <div className="h-3 w-1/2 bg-gray-200 rounded" />
+      </div>
+    </div>
+  </div>
+);
+
 const GridLayout = ({ articles }: { articles: any[] }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     {articles.slice(0, 8).map((article) => (
@@ -124,21 +178,27 @@ const GridLayout = ({ articles }: { articles: any[] }) => (
   </div>
 );
 
+const GridSkeleton = ({ limit }: { limit: number }) => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    {Array.from({ length: limit }).map((_, i) => (
+      <ArticleCardSkeleton key={i} compact={false} />
+    ))}
+  </div>
+);
+
 const ListLayout = ({ articles }: { articles: any[] }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
     {articles.map((article) => (
-      <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-start bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all">
-        <div className="relative w-27 h-27 flex-shrink-0 rounded-l-lg overflow-hidden">
-          <div className="w-28 h-28 relative">
-            <Image
-              src={getSafeImageUrl(article.thumbnail)}
-              alt={article.title}
-              fill
-              sizes="112px"
-              quality={100}
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          </div>
+      <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-stretch md:items-start bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all overflow-hidden">
+        <div className="relative flex-shrink-0 w-28 min-h-[112px] md:w-40 md:min-h-0 md:h-auto md:aspect-video lg:w-48 bg-gray-50 overflow-hidden md:rounded-lg md:m-3 md:mr-0">
+          <Image
+            src={getSafeImageUrl(article.thumbnail)}
+            alt={article.title}
+            fill
+            sizes="(max-width: 768px) 112px, (max-width: 1024px) 160px, 192px"
+            quality={100}
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         </div>
         <div className="flex-grow py-2 pr-3">
           <h2 className="font-bold text-gray-900 group-hover:text-[#C9A227] transition-colors line-clamp-2 mb-1">
@@ -157,6 +217,26 @@ const ListLayout = ({ articles }: { articles: any[] }) => (
           </div>
         </div>
       </Link>
+    ))}
+  </div>
+);
+
+const ListLayoutSkeleton = ({ limit }: { limit: number }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {Array.from({ length: limit }).map((_, i) => (
+      <div key={i} className="flex gap-4 items-stretch md:items-start bg-white rounded-xl border border-gray-100 overflow-hidden animate-pulse">
+        <div className="w-28 min-h-[112px] md:w-40 md:min-h-0 md:h-auto md:aspect-video lg:w-48 bg-gray-200 flex-shrink-0 md:rounded-lg md:m-3 md:mr-0" />
+        <div className="flex-grow py-3 pr-3">
+          <div className="h-4 w-full bg-gray-200 rounded mb-2" />
+          <div className="h-4 w-3/4 bg-gray-200 rounded mb-3" />
+          <div className="h-3 w-full bg-gray-200 rounded mb-2" />
+          <div className="h-3 w-5/6 bg-gray-200 rounded mb-3" />
+          <div className="flex flex-col gap-1 mt-2">
+            <div className="h-2 w-1/3 bg-gray-200 rounded" />
+            <div className="h-2 w-1/4 bg-gray-200 rounded" />
+          </div>
+        </div>
+      </div>
     ))}
   </div>
 );
@@ -199,12 +279,12 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
       <div className="lg:col-span-5 flex flex-col gap-4">
         {others.map((article) => (
           <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-center bg-white p-3 rounded-xl border border-gray-100 hover:shadow-md transition-all">
-            <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+            <div className="relative flex-shrink-0 rounded-lg overflow-hidden w-20 h-20 md:w-32 md:h-auto md:aspect-video lg:w-36">
               <Image
                 src={getSafeImageUrl(article.thumbnail)}
                 alt={article.title}
                 fill
-                sizes="120px"
+                sizes="(max-width: 768px) 80px, (max-width: 1024px) 128px, 144px"
                 quality={100}
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
@@ -229,11 +309,58 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
   );
 };
 
-const SliderLayout = ({ articles }: { articles: any[] }) => (
+const FeaturedLayoutSkeleton = () => (
+  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-pulse">
+    <div className="lg:col-span-7">
+      <div className="aspect-video w-full rounded-2xl bg-gray-200 relative overflow-hidden">
+        <div className="absolute bottom-0 left-0 p-6 md:p-8 w-full">
+           <div className="h-5 w-20 bg-gray-300 rounded-full mb-3" />
+           <div className="h-7 w-full bg-gray-300 rounded mb-2" />
+           <div className="h-7 w-3/4 bg-gray-300 rounded mb-4" />
+           <div className="h-3 w-1/3 bg-gray-300 rounded" />
+        </div>
+      </div>
+    </div>
+    <div className="lg:col-span-5 flex flex-col gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="flex gap-4 items-center bg-white p-3 rounded-xl border border-gray-100">
+          <div className="w-20 h-20 md:w-32 md:h-auto md:aspect-video lg:w-36 bg-gray-200 rounded-lg flex-shrink-0" />
+          <div className="flex-grow">
+             <div className="h-4 w-full bg-gray-200 rounded mb-2" />
+             <div className="h-4 w-3/4 bg-gray-200 rounded mb-3" />
+             <div className="h-2 w-1/3 bg-gray-200 rounded mb-1" />
+             <div className="h-2 w-1/4 bg-gray-200 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const SliderLayout = ({ articles, slug }: { articles: any[], slug: string }) => (
   <div className="flex overflow-x-auto pb-6 gap-6 snap-x scrollbar-hide">
     {articles.map((article) => (
       <div key={article.id} className="min-w-[280px] md:min-w-[320px] snap-start">
         <ArticleCard article={article} compact />
+      </div>
+    ))}
+    <Link 
+      href={`/category/${slug}`} 
+      className="min-w-[160px] md:min-w-[200px] snap-start flex flex-col items-center justify-center bg-gray-50/50 rounded-md border-2 border-dashed border-gray-200 hover:border-[#C9A227] hover:bg-gray-50 transition-all group"
+    >
+      <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform mb-3">
+        <ChevronRight className="w-6 h-6 text-[#C9A227]" />
+      </div>
+      <span className="font-semibold text-gray-600 group-hover:text-[#C9A227]">View All</span>
+    </Link>
+  </div>
+);
+
+const SliderLayoutSkeleton = ({ limit }: { limit: number }) => (
+  <div className="flex overflow-hidden pb-6 gap-6">
+    {Array.from({ length: limit }).map((_, i) => (
+      <div key={i} className="min-w-[280px] md:min-w-[320px]">
+        <ArticleCardSkeleton compact={true} />
       </div>
     ))}
   </div>

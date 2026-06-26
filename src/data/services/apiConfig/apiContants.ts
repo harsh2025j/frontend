@@ -1,5 +1,5 @@
 // export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev";
-// exsport const API_BASE_URL = "https://galliardly-pyritic-kathleen.ngrok-free.dev";
+// export const API_BASE_URL = "https://galliardly-pyritic-kathleen.ngrok-free.dev";
 export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
 // export const API_BASE_URL = "http://localhost:8000/"
 export const API_ENDPOINTS = {

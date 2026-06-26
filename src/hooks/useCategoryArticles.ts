@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { articleApi } from "@/data/services/article-service/article-service";
 import { Article } from "@/data/features/article/article.types";
 
-export const useCategoryArticles = (categorySlug: string, limit: number = 6, skipFetch: boolean = false) => {
+export const useCategoryArticles = (categorySlug: string, limit: number = 6, skipFetch: boolean = false, page: number = 1) => {
     const [articles, setArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -15,7 +15,7 @@ export const useCategoryArticles = (categorySlug: string, limit: number = 6, ski
 
         // Read from cache immediately after mount (hydration-safe)
         if (typeof window !== "undefined") {
-            const cached = localStorage.getItem(`articles_cache_${categorySlug}`);
+            const cached = localStorage.getItem(`articles_cache_${categorySlug}_page_${page}`);
             if (cached) {
                 try {
                     const parsed = JSON.parse(cached);
@@ -35,12 +35,12 @@ export const useCategoryArticles = (categorySlug: string, limit: number = 6, ski
                 if (articles.length === 0) {
                     setLoading(true);
                 }
-                const response = await articleApi.fetchArticles({ category: categorySlug, limit, status: 'published' });
+                const response = await articleApi.fetchArticles({ category: categorySlug, limit, page, status: 'published' });
                 const data = response.data.data || [];
                 setArticles(data);
 
                 if (typeof window !== "undefined") {
-                    localStorage.setItem(`articles_cache_${categorySlug}`, JSON.stringify(data));
+                    localStorage.setItem(`articles_cache_${categorySlug}_page_${page}`, JSON.stringify(data));
                 }
             } catch (err: any) {
                 setError(err.message || "Failed to fetch articles");
@@ -52,7 +52,7 @@ export const useCategoryArticles = (categorySlug: string, limit: number = 6, ski
         if (categorySlug && !skipFetch) {
             fetchData();
         }
-    }, [categorySlug, limit, skipFetch]);
+    }, [categorySlug, limit, skipFetch, page]);
 
     return { articles, loading, error };
 };
