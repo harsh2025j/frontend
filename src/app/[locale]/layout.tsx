@@ -153,7 +153,7 @@ async function getArticles(params: any = {}) {
 
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ARTICLE.FETCH_ALL}?${queryParams.toString()}`, {
       headers: {
-        // "ngrok-skip-browser-warning": "true",
+        "ngrok-skip-browser-warning": "true",
       },
       next: { revalidate: 60 } // 0 means do not cache, so it updates instantly
     });
@@ -178,13 +178,14 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   // Parallel fetch for speed
-  const [categories, latestArticles, financeArticles, legalArticles, hindiArticles, judgmentsArticles] = await Promise.all([
+  const [categories, latestArticles, financeArticles, legalArticles, hindiArticles, judgmentsArticles, bareActsArticles] = await Promise.all([
     getCategories(),
     getArticles({ limit: 8, status: 'published' }), // For NewsSlider and Latest News
     getArticles({ category: "finance-articles", limit: 10, status: 'published' }),
     getArticles({ category: "legal-articles", limit: 10, status: 'published' }),
     getArticles({ category: "hindi-news", limit: 4, status: 'published' }),
     getArticles({ category: "judgments", limit: 6, status: 'published' }),
+    getArticles({ category: "bare-acts", limit: 8, status: 'published' }),
   ]);
 
   const initialHomeData = {
@@ -192,7 +193,8 @@ export default async function RootLayout({
     financeArticles,
     legalArticles,
     hindiArticles,
-    judgmentsArticles
+    judgmentsArticles,
+    bareActsArticles
   };
 
   const siteSearchJsonLd = {

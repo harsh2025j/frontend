@@ -41,6 +41,7 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import LiveCourtSection from "../ui/LiveCourtSection";
 import LatestInformationSection from "../ui/LatestInformationSection";
 import { formatDate } from "@/utils/dateUtils";
+import CategorySection from "./CategorySection";
 // import AdsPopup from "../ads/AdsPopup";
 
 
@@ -100,6 +101,7 @@ export default function Stores() {
 
   const { articles: latestRaw, loading: loadingLatest } = useCategoryArticles("latest-news", 8, !!homeData?.latestArticles?.length);
   const { articles: judgmentsRaw, loading: loadingJudgements } = useCategoryArticles("judgments", 6, !!homeData?.judgmentsArticles?.length);
+  const { articles: bareActsRaw, loading: loadingBareActs } = useCategoryArticles("bare-acts", 8, !!homeData?.bareActsArticles?.length);
   const { articles: hindiRaw, loading: loadingHindi } = useCategoryArticles("hindi-news", 4, !!homeData?.hindiArticles?.length);
   const { articles: financeRaw, loading: loadingFinance } = useCategoryArticles("finance-articles", 10, !!homeData?.financeArticles?.length);
   const { articles: legalRaw, loading: loadingLegal } = useCategoryArticles("legal-articles", 10, !!homeData?.legalArticles?.length);
@@ -120,6 +122,10 @@ export default function Stores() {
     return judgmentsRaw.length > 0 ? judgmentsRaw : (homeData?.judgmentsArticles || []);
   }, [judgmentsRaw, homeData?.judgmentsArticles]);
 
+  const BareActsData = useMemo(() => {
+    return bareActsRaw.length > 0 ? bareActsRaw : (homeData?.bareActsArticles || []);
+  }, [bareActsRaw, homeData?.bareActsArticles]);
+
   const HindiNewsData = useMemo(() => {
     return hindiRaw.length > 0 ? hindiRaw : (homeData?.hindiArticles || []);
   }, [hindiRaw, homeData?.hindiArticles]);
@@ -127,6 +133,7 @@ export default function Stores() {
 
   const isFinanceLoading = loadingFinance && financeRaw.length === 0 && (!homeData || !homeData.financeArticles || homeData.financeArticles.length === 0);
   const isLegalLoading = loadingLegal && legalRaw.length === 0 && (!homeData || !homeData.legalArticles || homeData.legalArticles.length === 0);
+  const isBareActsLoading = loadingBareActs && BareActsData.length === 0 && (!homeData || !homeData.bareActsArticles || homeData.bareActsArticles.length === 0);
   const isHindiLoading = loadingHindi && HindiNewsData.length === 0 && (!homeData || !homeData.hindiArticles || homeData.hindiArticles.length === 0);
   const loading = mainLoading || (loadingLatest && LatestNewsData.length === 0) || (loadingJudgements && JudgementNewsData.length === 0) || isHindiLoading || isFinanceLoading || isLegalLoading;
 
@@ -157,7 +164,7 @@ export default function Stores() {
   const [textsToTranslate, setTextsToTranslate] = useState<string[]>([]);
 
   // We need to track the counts to map back correctly
-  const [counts, setCounts] = useState({ headlines: 0, latest: 0, judgments: 0, hindi: 0 });
+  const [counts, setCounts] = useState({ headlines: 0, latest: 0, judgments: 0, bareActs: 0, hindi: 0 });
 
   useEffect(() => {
     if (locale === 'en') return;
@@ -176,7 +183,11 @@ export default function Stores() {
     const judgments = JudgementNewsData.slice(0, 6);
     judgments.forEach(a => texts.push(a.content.replace(/<[^>]*>/g, "").substring(0, 150) + "..."));
 
-    // 4. Hindi News (Title + Content) - Slice 3
+    // 4. Bare Acts (Title) - Slice 8
+    const bareActs = BareActsData.slice(0, 8);
+    bareActs.forEach(a => texts.push(a.title));
+
+    // 5. Hindi News (Title + Content) - Slice 3
     const hindi = HindiNewsData.slice(0, 3);
     hindi.forEach(a => {
       texts.push(a.title);
@@ -187,11 +198,12 @@ export default function Stores() {
       headlines: newsHeadlines.length,
       latest: latest.length,
       judgments: judgments.length,
+      bareActs: bareActs.length,
       hindi: hindi.length
     });
     setTextsToTranslate(texts);
 
-  }, [newsHeadlines, LatestNewsData, JudgementNewsData, HindiNewsData, locale]);
+  }, [newsHeadlines, LatestNewsData, JudgementNewsData, BareActsData, HindiNewsData, locale]);
 
   const { translatedText } = useGoogleTranslate(
     locale !== 'en' && textsToTranslate.length > 0 ? textsToTranslate : null
@@ -228,6 +240,17 @@ export default function Stores() {
     }));
   }, [JudgementNewsData, translatedText, counts, locale]);
 
+  const displayBareActs = useMemo(() => {
+    const base = BareActsData.slice(0, 8);
+    if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return base;
+
+    const start = counts.headlines + counts.latest + counts.judgments;
+    return base.map((item, i) => ({
+      ...item,
+      title: translatedText[start + i] || item.title
+    }));
+  }, [BareActsData, translatedText, counts, locale]);
+
   const displayHindiNews = useMemo(() => {
     const rawBase = HindiNewsData.length > 0 ? HindiNewsData : (homeData?.hindiArticles || []);
     const base = rawBase.slice(0, 3).map(item => ({
@@ -236,7 +259,7 @@ export default function Stores() {
     }));
     if (locale === 'en' || !translatedText || !Array.isArray(translatedText)) return base;
 
-    const start = counts.headlines + counts.latest + counts.judgments;
+    const start = counts.headlines + counts.latest + counts.judgments + counts.bareActs;
     return base.map((item, i) => ({
       ...item,
       title: translatedText[start + i * 2] || item.title,
@@ -575,6 +598,61 @@ export default function Stores() {
             </button>
           </Link>
         </div>
+        {/* Bare Acts */}
+        <div className="w-full px-4">
+          <div className="flex items-center justify-center mt-6 md:mt-10 mb-4 md:mb-5">
+            <div className="flex-1 h-px bg-gray-400"></div>
+            <h2 className="px-3 sm:px-4 text-base sm:text-lg md:text-xl font-merriweather font-semibold text-black text-center whitespace-nowrap">
+              Bare Acts
+            </h2>
+            <div className="flex-1 h-px bg-gray-400"></div>
+          </div>
+
+          <div className="flex justify-center mb-6 md:mb-10">
+            <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              {isBareActsLoading ? (
+                <ArticleSkeleton count={8} type="latest" noWrapper={true} />
+              ) : (
+                displayBareActs.map((data: any) => (
+                  <LatestNews
+                    key={data.id}
+                    img={data.thumbnail}
+                    title={data.title}
+                    slug={data.slug}
+                    author={data.authors || data.advocateName}
+                    date={formatDate(data.createdAt)}
+                    button1Text="Read Full Case"
+                    button2Text="AI Summary"
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-center mb-6 md:mb-10">
+          <Link href="/category/bare-acts">
+            <button className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 sm:px-6 py-1 sm:py-2 text-sm sm:text-base">
+              View More
+            </button>
+          </Link>
+        </div>
+        {/* Constitutional Law */}
+        <CategorySection 
+          title="Constitutional Law" 
+          slug="constitutional-law" 
+          layout="list" 
+          limit={6} 
+          showViewMoreButton={true} 
+        />
+
+        {/* Property Law */}
+        <CategorySection 
+          title="Property Law" 
+          slug="property-law" 
+          layout="list" 
+          limit={6} 
+          showViewMoreButton={true} 
+        />
 
         {/* Hindi News */}
         <div className="w-full px-4">

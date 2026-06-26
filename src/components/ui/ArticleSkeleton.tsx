@@ -19,16 +19,20 @@ const ContentSliderCardSkeleton: React.FC = () => (
 );
 
 const LatestNewsSkeleton: React.FC = () => (
-  <div className="bg-white rounded-md overflow-hidden animate-pulse flex flex-col justify-between border border-gray-200 p-0 h-full">
-    <div className="bg-gray-300 h-60 w-full mb-0"></div>
-    <div className="flex flex-col p-3 w-full">
-      <div className="h-4 bg-gray-300 w-full mb-3 rounded"></div>
-      <div className="h-4 bg-gray-300 w-3/4 mb-4 rounded"></div>
-      <div className="flex gap-2 mb-4">
-        <div className="h-3 bg-gray-200 w-1/4 rounded"></div>
-        <div className="h-3 bg-gray-200 w-1/4 rounded"></div>
+  <div className="bg-white rounded-md overflow-hidden animate-pulse flex flex-col border border-gray-200 p-0 h-full">
+    <div className="w-full aspect-video bg-gray-300 shrink-0"></div>
+    <div className="flex flex-col p-3 sm:p-4 flex-grow">
+      <div className="h-4 sm:h-5 bg-gray-300 w-full mb-2 rounded"></div>
+      <div className="h-4 sm:h-5 bg-gray-300 w-3/4 mb-3 rounded"></div>
+      
+      <div className="flex gap-2 mb-3 mt-auto pt-2">
+        <div className="h-3 sm:h-4 bg-gray-200 w-1/3 rounded"></div>
+        <div className="h-3 sm:h-4 bg-gray-200 w-1/4 rounded"></div>
       </div>
-      <div className="h-9 bg-gray-300 w-32 rounded-md"></div>
+      
+      <div className="flex gap-3">
+        <div className="h-9 bg-gray-300 w-[120px] rounded-md"></div>
+      </div>
     </div>
   </div>
 );

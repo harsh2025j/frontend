@@ -201,8 +201,8 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
             "high court",
             "supreme court",
             "crime",
-            "article",
-            "hindi news"
+            "legal articles",
+            "bare acts"
         ];
 
         const dynamicCats = Array.isArray(categories) ? categories.map(mapToNavItem) : [];
@@ -211,9 +211,13 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
         let visible = dynamicCats.slice(0, LIMIT);
         let hidden = dynamicCats.slice(LIMIT);
 
-        const defaultCats = dynamicCats.filter(c =>
-            DEFAULT_CATEGORIES.includes(c.label?.toLowerCase())
-        );
+        const isDefaultCat = (c: NavItem) => {
+            const lbl = c.label?.toLowerCase() || "";
+            const href = c.href || "";
+            return DEFAULT_CATEGORIES.includes(lbl) || href.endsWith("legal-articles") || href.endsWith("bare-acts");
+        };
+
+        const defaultCats = dynamicCats.filter(isDefaultCat);
 
         defaultCats.forEach(defaultCat => {
             const alreadyInVisible = visible.some(v => v.label === defaultCat.label);
@@ -226,9 +230,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
 
         if (visible.length > LIMIT) {
             const excess = visible.length - LIMIT;
-            const removable = visible.filter(v =>
-                !DEFAULT_CATEGORIES.includes(v.label?.toLowerCase())
-            );
+            const removable = visible.filter(v => !isDefaultCat(v));
             const itemsToMove = removable.slice(0, excess);
 
             itemsToMove.forEach(item => {
@@ -237,9 +239,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
             });
         }
 
-        hidden = hidden.filter(h =>
-            !DEFAULT_CATEGORIES.includes(h.label?.toLowerCase())
-        );
+        hidden = hidden.filter(h => !isDefaultCat(h));
 
         const final: NavItem[] = [
             { label: t("home"), href: "/" },

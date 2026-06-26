@@ -5,27 +5,34 @@ import { toast } from "react-hot-toast";
 import { useAppDispatch } from "@/data/redux/hooks";
 import { createCategory, updateCategory } from "@/data/features/category/categoryThunks";
 import { Category } from "@/data/features/category/category.types";
+import CategorySelect from "@/components/ui/CategorySelect";
 
 export default function AddCategory({
   onClose,
   onSave,
   parentId,
   categoryToEdit,
+  categories,
 }: {
   onClose: () => void;
   onSave?: (success: boolean) => void;
   parentId?: string | null;
   categoryToEdit?: Category | null;
+  categories?: Category[];
 }) {
   const [categoryName, setCategoryName] = useState("");
+  const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (categoryToEdit) {
       setCategoryName(categoryToEdit.name);
+      setSelectedParentId(categoryToEdit.parentId || null);
+    } else {
+      setSelectedParentId(parentId || null);
     }
-  }, [categoryToEdit]);
+  }, [categoryToEdit, parentId]);
 
   const handleSave = async () => {
     if (!categoryName) {
@@ -52,12 +59,13 @@ export default function AddCategory({
           id: categoryToEdit.id,
           name: categoryName,
           slug: generatedSlug, // Updating slug as well based on new name
+          parentId: selectedParentId,
         };
         resultAction = await dispatch(updateCategory(payload));
       } else {
         const payload: any = { name: categoryName, slug: generatedSlug };
-        if (parentId) {
-          payload.parentId = parentId;
+        if (selectedParentId) {
+          payload.parentId = selectedParentId;
         }
         resultAction = await dispatch(createCategory(payload));
       }
@@ -114,6 +122,37 @@ export default function AddCategory({
           onChange={(e) => setCategoryName(e.target.value)}
         />
       </div>
+
+      {categoryToEdit && categories && (
+        <div className="space-y-3">
+          <label className="font-medium">Parent Category</label>
+          <CategorySelect
+            value={selectedParentId || ""}
+            onChange={(id) => setSelectedParentId(id || null)}
+            placeholder="None (Top Level)"
+            options={[
+              { id: "", name: "None (Top Level)" },
+              ...(() => {
+                const flatOptions: { id: string; name: string }[] = [];
+                const flatten = (cats: Category[], depth: number = 0) => {
+                  cats.forEach(cat => {
+                    if (cat.id === categoryToEdit.id) return;
+                    flatOptions.push({
+                      id: cat.id,
+                      name: "— ".repeat(depth) + cat.name
+                    });
+                    if (cat.children?.length) {
+                      flatten(cat.children, depth + 1);
+                    }
+                  });
+                };
+                flatten(categories);
+                return flatOptions;
+              })()
+            ]}
+          />
+        </div>
+      )}
 
       <div className="flex gap-3 pt-4">
         <button

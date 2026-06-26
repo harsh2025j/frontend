@@ -8,6 +8,7 @@ interface HomeData {
   legalArticles: any[];
   hindiArticles: any[];
   judgmentsArticles?: any[];
+  bareActsArticles?: any[];
 }
 
 

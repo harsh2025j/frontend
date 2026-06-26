@@ -140,6 +140,9 @@ export default function CategoryManagement() {
                 <p className="text-gray-600 max-w-2xl">
                     Manage the content tree for your platform. Subcategories inherit properties from their parent nodes.
                 </p>
+                <div className="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded-lg mt-2 text-sm font-medium flex items-center gap-2 max-w-3xl">
+                    Warning: Do not change the name of existing categories. This can break category visibility and cause articles to not be visible on the website.
+                </div>
             </header>
 
             <div className="bg-white/50 backdrop-blur-sm border border-gray-100 rounded-3xl p-6 shadow-sm">
@@ -200,6 +203,7 @@ export default function CategoryManagement() {
                             onSave={handleCategorySaved}
                             parentId={selectedParentId}
                             categoryToEdit={selectedCategory}
+                            categories={categories}
                         />
                     </div>
                 </div>

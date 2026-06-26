@@ -226,14 +226,14 @@ const ListLayoutSkeleton = ({ limit }: { limit: number }) => (
     {Array.from({ length: limit }).map((_, i) => (
       <div key={i} className="flex gap-4 items-stretch md:items-start bg-white rounded-xl border border-gray-100 overflow-hidden animate-pulse">
         <div className="w-28 min-h-[112px] md:w-40 md:min-h-0 md:h-auto md:aspect-video lg:w-48 bg-gray-200 flex-shrink-0 md:rounded-lg md:m-3 md:mr-0" />
-        <div className="flex-grow py-3 pr-3">
-          <div className="h-4 w-full bg-gray-200 rounded mb-2" />
-          <div className="h-4 w-3/4 bg-gray-200 rounded mb-3" />
-          <div className="h-3 w-full bg-gray-200 rounded mb-2" />
-          <div className="h-3 w-5/6 bg-gray-200 rounded mb-3" />
-          <div className="flex flex-col gap-1 mt-2">
-            <div className="h-2 w-1/3 bg-gray-200 rounded" />
-            <div className="h-2 w-1/4 bg-gray-200 rounded" />
+        <div className="flex-grow py-2 pr-3">
+          <div className="h-4 sm:h-5 w-full bg-gray-200 rounded mb-1" />
+          <div className="h-4 sm:h-5 w-3/4 bg-gray-200 rounded mb-2" />
+          <div className="h-3 w-full bg-gray-200 rounded mt-2 mb-1" />
+          <div className="h-3 w-5/6 bg-gray-200 rounded mb-2" />
+          <div className="flex flex-col gap-1 mt-3">
+            <div className="h-2.5 w-1/3 bg-gray-200 rounded" />
+            <div className="h-2.5 w-1/4 bg-gray-200 rounded" />
           </div>
         </div>
       </div>
