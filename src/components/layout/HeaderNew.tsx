@@ -286,14 +286,26 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
         const active = isItemOrChildActive(item);
         const isSelfActive = isLinkActive(item.href);
 
+        const handleMobileClick = (e: React.MouseEvent) => {
+            if (hasChildren && !isExpanded) {
+                e.preventDefault(); // prevent navigation on first tap
+                toggleMobileExpand(item.label);
+            } else if (!item.href || item.href === "#") {
+                e.preventDefault(); // prevent navigation for pseudo-categories like 'More'
+                toggleMobileExpand(item.label);
+            } else {
+                setMenuOpen(false); // will navigate
+            }
+        };
+
         return (
             <div className="flex flex-col">
                 <div className={`flex items-center justify-between py-2.5 ${depth > 0 ? "pl-4 border-l-2 border-[#C9A227]/20 ml-2" : ""}`}>
                     {hasChildren ? (
-                        <button onClick={() => toggleMobileExpand(item.label)} className={`flex items-center justify-between w-full hover:text-[#C9A227] ${active ? "text-[#C9A227] font-semibold" : "text-gray-800"}`}>
+                        <Link href={item.href || "#"} onClick={handleMobileClick} className={`flex items-center justify-between w-full hover:text-[#C9A227] ${active ? "text-[#C9A227] font-semibold" : "text-gray-800"}`}>
                             <span className={depth === 0 ? "font-medium" : "text-sm"}>{item.label}</span>
                             {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                        </button>
+                        </Link>
                     ) : (
                         <Link href={item.href || "#"} onClick={() => setMenuOpen(false)} className={`hover:text-[#C9A227] block w-full ${depth === 0 ? "font-medium" : "text-sm"} ${isSelfActive ? "text-[#C9A227] font-semibold" : "text-gray-700"}`}>
                             {item.label}
@@ -320,6 +332,8 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
         const [leftPos, setLeftPos] = useState<number>(0);
         const [isVisible, setIsVisible] = useState(false);
 
+        const isTouch = useRef(false);
+
         useEffect(() => {
             if (showDropdown && itemRef.current && dropdownRef.current) {
                 const itemRect = itemRef.current.getBoundingClientRect();
@@ -336,6 +350,16 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                 setIsVisible(false);
             }
         }, [showDropdown]);
+
+        useEffect(() => {
+            const handleClickOutside = (e: TouchEvent) => {
+                if (isOpen && itemRef.current && !itemRef.current.contains(e.target as Node)) {
+                    setIsOpen(false);
+                }
+            };
+            document.addEventListener('touchstart', handleClickOutside);
+            return () => document.removeEventListener('touchstart', handleClickOutside);
+        }, [isOpen]);
 
         if (!hasChildren) {
             return (
@@ -356,18 +380,33 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
             <div
                 ref={itemRef}
                 className="group h-full flex items-center"
-                onMouseEnter={() => setIsOpen(true)}
-                onMouseLeave={() => setIsOpen(false)}
-                onClick={() => hasChildren && onToggle(item.label)}
+                onTouchStart={() => { isTouch.current = true; }}
+                onMouseEnter={() => { if (!isTouch.current) setIsOpen(true); }}
+                onMouseLeave={() => { if (!isTouch.current) setIsOpen(false); }}
             >
-                <button className={`flex items-center gap-1 px-1 hover:text-[#C9A227] whitespace-nowrap transition-colors relative ${active || showDropdown ? "text-[#C9A227]" : "text-gray-800"}`}>
+                <Link
+                    href={item.href || "#"}
+                    onClick={(e) => { 
+                        if (!item.href || item.href === "#") {
+                            e.preventDefault(); 
+                            if (isTouch.current) setIsOpen(!isOpen);
+                            return;
+                        }
+                        
+                        if (isTouch.current && hasChildren && !isOpen) {
+                            e.preventDefault();
+                            setIsOpen(true);
+                        }
+                    }}
+                    className={`flex items-center gap-1 px-1 hover:text-[#C9A227] whitespace-nowrap transition-colors relative ${active || showDropdown ? "text-[#C9A227]" : "text-gray-800"}`}
+                >
                     <div className="grid place-items-center">
                         <span className={`col-start-1 row-start-1 transition-colors ${active || showDropdown ? "font-semibold" : "font-medium"}`}>{item.label}</span>
                         <span className="col-start-1 row-start-1 font-semibold invisible" aria-hidden="true">{item.label}</span>
                     </div>
                     <ChevronDown size={14} className={`transition-transform duration-200 ${showDropdown ? "rotate-180" : ""}`} />
                     <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A227] transform origin-left transition-transform duration-300 ${active || showDropdown ? "scale-x-100" : "scale-x-0"}`}></span>
-                </button>
+                </Link>
                 {showDropdown && (
                     <div
                         ref={dropdownRef}

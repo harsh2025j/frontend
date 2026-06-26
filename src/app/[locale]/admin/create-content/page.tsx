@@ -229,10 +229,9 @@ const CreateUpdatePage: React.FC = () => {
   const flattenCategories = (cats: Category[], prefix = ""): { id: string; name: string }[] => {
     let options: { id: string; name: string }[] = [];
     cats.forEach((cat) => {
+      options.push({ id: cat.id, name: prefix + cat.name });
       if (cat.children && cat.children.length > 0) {
         options = options.concat(flattenCategories(cat.children, prefix + cat.name + " > "));
-      } else {
-        options.push({ id: cat.id, name: prefix + cat.name });
       }
     });
     return options;
