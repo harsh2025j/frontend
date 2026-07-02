@@ -59,7 +59,10 @@ export interface Article {
   rejectionReason: string | null;
   language: string | null;
   isPaywalled: boolean;
+  isCommentsEnabled?: boolean;
   isTruncated?: boolean;
+  views?: number;
+  likes?: number;
   createdAt: string;
   updatedAt: string;
 
@@ -136,6 +139,7 @@ export interface CreateArticleRequest {
   language: string;
   author: string;
   isPaywalled: boolean;
+  isCommentsEnabled?: boolean;
   content: string;
   advocateName: string;
   advocates: Advocate[];

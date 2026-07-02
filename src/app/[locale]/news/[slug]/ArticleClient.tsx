@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Advocate, Article } from "@/data/features/article/article.types";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
-import { Share2, Facebook, Linkedin, Link2, Check, Printer, Sparkles, X, ChevronDown } from "lucide-react";
+import { Share2, Facebook, Linkedin, Link2, Check, Printer, Sparkles, X, ChevronDown, Heart } from "lucide-react";
 import { FaTelegramPlane } from "react-icons/fa";
 import Loader from "@/components/ui/Loader";
 import apiClient from "@/data/services/apiConfig/apiClient";
@@ -22,6 +22,9 @@ import PaywallOverlay from "@/components/ui/PaywallOverlay";
 
 import SpeechPlayer from "@/components/ui/SpeechPlayer";
 import { InFeedAd, ArticleTopAd, ArticleSidebarTopAd, ArticleSidebarBottomAd, ArticleBottomAd } from "@/components/ads/StandardAds";
+import { ViewTracker } from "@/components/article/ViewTracker";
+import ArticleStats from "@/components/article/ArticleStats";
+import CommentSection from "@/components/article/CommentSection";
 
 interface ArticleClientProps {
     initialArticle: Article;
@@ -143,7 +146,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
     const user = useSelector((state: RootState) => state.auth.user);
     const subscription = useSelector((state: RootState) => state.subscription.currentSubscription);
     const [mounted, setMounted] = useState(false);
-    
+
     useEffect(() => {
         setMounted(true);
     }, []);
@@ -196,7 +199,8 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
     };
 
     return (
-        <div className={`article-wrapper ${isPrinting ? 'print-this' : ''}`}>
+        <div className={`article-wrapper relative ${isPrinting ? 'print-this' : ''}`}>
+            <ViewTracker articleId={article.id || (article as any)._id} />
             <div>
                 {/* Title */}
                 <div className="mb-6">
@@ -226,6 +230,13 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                         <svg className="w-4 h-4 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         <span className="font-medium">{readTime} {t("minsRead")}</span>
                                     </div>
+                                    <ArticleStats
+                                        articleId={article.id || (article as any)._id}
+                                        initialLikes={(article as any).likes || 0}
+                                        initialViews={(article as any).views || 0}
+                                        hasLikedByCurrentUser={(article as any).hasLikedByCurrentUser}
+                                        className="print:hidden"
+                                    />
                                     {isTranslating && (
                                         <div className="flex items-center gap-1.5 text-[#C9A227] animate-pulse">
                                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
@@ -258,6 +269,13 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                         <svg className="w-4 h-4 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         <span className="font-medium">{readTime} {t("minsRead")}</span>
                                     </div>
+                                    <ArticleStats
+                                        articleId={article.id || (article as any)._id}
+                                        initialLikes={(article as any).likes || 0}
+                                        initialViews={(article as any).views || 0}
+                                        hasLikedByCurrentUser={(article as any).hasLikedByCurrentUser}
+                                        className="print:hidden"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -446,48 +464,9 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                     {!hasFullAccess && <PaywallOverlay isLoggedIn={mounted ? !!user : false} t={t} />}
                 </div>
 
-                {/* Related Documents */}
-                {hasFullAccess && article.documents && article.documents.length > 0 && (
-                    <div className="mb-12 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                            <svg className="w-5 h-5 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                            Related Documents
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {article.documents.map((doc) => {
-                                const isImage = doc.fileType?.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(doc.fileUrl);
-                                return (
-                                    <a key={doc.id} href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-4 p-3 bg-white border border-gray-200 rounded-xl hover:border-[#C9A227] hover:shadow-md transition-all duration-300">
-                                        {isImage ? (
-                                            <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100 bg-gray-50">
-                                                <Image src={getSafeImageUrl(doc.fileUrl)} alt={doc.fileName} fill className="object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
-                                            </div>
-                                        ) : (
-                                            <div className="w-16 h-16 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 group-hover:bg-[#C9A227]/10 transition-colors">
-                                                <svg className="w-8 h-8 text-gray-400 group-hover:text-[#C9A227] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                                            </div>
-                                        )}
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-bold text-gray-900 truncate group-hover:text-[#C9A227] transition-colors">{doc.fileName}</p>
-                                            <p className="text-xs text-gray-500 uppercase flex items-center gap-1.5 mt-0.5">
-                                                <span className="font-semibold text-[#C9A227]">{doc.fileType?.split("/")[1]?.toUpperCase() || "FILE"}</span>
-                                                <span className="inline-block w-1 h-1 rounded-full bg-gray-300" />
-                                                <span>{doc.fileSize ? (doc.fileSize / 1024 / 1024).toFixed(2) : "0.00"} MB</span>
-                                            </p>
-                                        </div>
-                                        <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#C9A227] group-hover:text-white transition-all transform group-hover:translate-x-1 shrink-0">
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                                        </div>
-                                    </a>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
                 {/* Developing Story Timeline */}
                 {hasFullAccess && article.updates && article.updates.length > 0 && (
-                    <div className="mb-16 mt-12 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                    <div className="mb-12 mt-12 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
                         <h3 className="text-xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-10 pb-4 border-b font-georgia">Developing Story Timeline</h3>
                         <div className="space-y-12 relative pl-8 border-l-[3px] border-[#2A65A4] ml-2">
                             {[...article.updates].map((update, idx) => {
@@ -514,15 +493,54 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                     </div>
                 )}
 
+                {/* Related Documents */}
+                {hasFullAccess && article.documents && article.documents.length > 0 && (
+                    <div className="mb-16 p-4 sm:p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <svg className="w-5 h-5 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                            Related Documents
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {article.documents.map((doc) => {
+                                const isImage = doc.fileType?.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(doc.fileUrl);
+                                return (
+                                    <a key={doc.id} href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-4 p-3 bg-white border border-gray-200 rounded-xl hover:border-[#C9A227] hover:shadow-md transition-all duration-300">
+                                        {isImage ? (
+                                            <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100 bg-gray-50">
+                                                <Image src={getSafeImageUrl(doc.fileUrl)} alt={doc.fileName} fill className="object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
+                                            </div>
+                                        ) : (
+                                            <div className="w-16 h-16 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 group-hover:bg-[#C9A227]/10 transition-colors">
+                                                <svg className="w-8 h-8 text-gray-400 group-hover:text-[#C9A227] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                            </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-bold text-gray-900 truncate group-hover:text-[#C9A227] transition-colors">{doc.fileName}</p>
+                                            <p className="text-xs text-gray-500 uppercase flex items-center gap-1.5 mt-0.5">
+                                                <span className="font-semibold text-[#C9A227] truncate max-w-[100px] sm:max-w-[150px]" title={doc.fileType?.split("/")[1]?.toUpperCase() || "FILE"}>{doc.fileType?.split("/")[1]?.toUpperCase() || "FILE"}</span>
+                                                <span className="inline-block w-1 h-1 rounded-full bg-gray-300 flex-shrink-0" />
+                                                <span className="flex-shrink-0 whitespace-nowrap">{doc.fileSize ? (doc.fileSize / 1024 / 1024).toFixed(2) : "0.00"} MB</span>
+                                            </p>
+                                        </div>
+                                        <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#C9A227] group-hover:text-white transition-all transform group-hover:translate-x-1 shrink-0">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                                        </div>
+                                    </a>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 {/* Advocate info */}
                 {((article.advocates && article.advocates.length > 0) || article.advocateName) && (
-                    <div className="space-y-3 md:space-y-4 mb-4 md:mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-8">
                         {(article.advocates && article.advocates.length > 0 ? article.advocates : ([{ name: article.advocateName }] as Advocate[])).map((adv, idx) => {
                             if (!adv?.name && !article.advocateName) return null;
                             const profileId = adv.userId;
                             const targetPath = adv.userId ? (advocateUsernames[adv.userId] || adv.userId) : null;
                             return targetPath ? (
-                                <Link key={idx} href={`/profile/${targetPath}`} className="flex items-center gap-3 md:gap-4 p-3 md:p-5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/advocate">
+                                <Link key={idx} href={`/profile/${targetPath}`} className="flex items-center gap-3 md:gap-4 p-2 sm:p-2 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/advocate">
                                     <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-2 ring-[#C9A227]/80 shadow-sm shrink-0 overflow-hidden relative group-hover/advocate:ring-[#C9A227]/70 transition-all">
                                         {adv?.userId && advocatePhotos[adv.userId] ? (
                                             <Image src={advocatePhotos[adv.userId]} alt={adv.name || "Advocate"} fill sizes="100px" className="object-cover" quality={90} />
@@ -539,7 +557,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                     </div>
                                 </Link>
                             ) : (
-                                <div key={idx} className="flex items-center gap-3 md:gap-4 p-3 md:p-5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
+                                <div key={idx} className="flex items-center gap-3 md:gap-4 p-2 sm:p-3 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
                                     <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative">
                                         {adv?.userId && advocatePhotos[adv.userId] ? (
                                             <Image src={advocatePhotos[adv.userId]} alt={adv.name || "Advocate"} fill sizes="100px" className="object-cover" quality={90} />
@@ -564,6 +582,13 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                 {!isPremium && (
                     <div className="w-full flex justify-center mb-8">
                         <ArticleBottomAd />
+                    </div>
+                )}
+
+                {/* Comments Section */}
+                {article.isCommentsEnabled !== false && (
+                    <div className="mt-2 print:hidden">
+                        <CommentSection articleId={article.id || (article as any)._id} />
                     </div>
                 )}
 
@@ -633,7 +658,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
     const user = useSelector((state: RootState) => state.auth.user);
     const subscription = useSelector((state: RootState) => state.subscription.currentSubscription);
     const [mounted, setMounted] = useState(false);
-    
+
     useEffect(() => {
         setMounted(true);
     }, []);

@@ -15,6 +15,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Suspense } from "react";
+import { MessageSquare, MessageSquareOff } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,7 +43,8 @@ const TableSkeleton = () => (
         <td className="py-3 px-4"><div className="h-4 w-24 bg-gray-200 rounded" /></td>
         <td className="py-3 px-4"><div className="h-4 w-20 bg-gray-200 rounded" /></td>
         <td className="py-3 px-4"><div className="h-6 w-20 bg-gray-200 rounded-full" /></td>
-        <td className="py-3 px-4"><div className="h-4 w-24 bg-gray-200 rounded" /></td>
+        <td className="py-3 px-4"><div className="h-4 w-12 bg-gray-200 rounded mx-auto" /></td>
+        <td className="py-3 px-4"><div className="h-4 w-12 bg-gray-200 rounded mx-auto" /></td>
         <td className="py-3 px-4"><div className="h-6 w-24 bg-gray-200 rounded" /></td>
       </tr>
     ))}
@@ -74,7 +76,7 @@ const RejectionReason = ({ reason }: { reason: string | null }) => {
     setPos({ top: r.bottom + 5, left });
   };
 
-  if (!reason) return <span className="text-gray-400">N/A</span>;
+  if (!reason) return null;
   return (
     <>
       <div
@@ -96,6 +98,19 @@ const RejectionReason = ({ reason }: { reason: string | null }) => {
     </>
   );
 };
+
+const formatNumber = (num: number) => {
+  if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return (num || 0).toString();
+};
+
+const StatBadge = ({ icon, value }: { icon: React.ReactNode, value: number }) => (
+  <div className="flex items-center gap-1.5 text-gray-600 bg-gray-100 px-2.5 py-1 rounded-md text-xs font-medium">
+    {icon}
+    <span>{formatNumber(value)}</span>
+  </div>
+);
 
 // ─── Sync News Modal ──────────────────────────────────────────────────────────
 
@@ -224,6 +239,30 @@ const DeleteConfirmationModal = ({
   );
 };
 
+const ToggleCommentsConfirmationModal = ({
+  isOpen, onClose, onConfirm, isToggling, isEnabling
+}: { isOpen: boolean; onClose: () => void; onConfirm: () => void; isToggling: boolean; isEnabling: boolean }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          {isEnabling ? "Enable Comments" : "Disable Comments"}
+        </h3>
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to {isEnabling ? "enable" : "disable"} comments for this article?
+        </p>
+        <div className="flex justify-end gap-3">
+          <button onClick={onClose} disabled={isToggling} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors">Cancel</button>
+          <button onClick={onConfirm} disabled={isToggling} className={`px-4 py-2 text-white rounded-md flex items-center gap-2 disabled:opacity-50 transition-colors ${isEnabling ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}`}>
+            {isToggling ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Processing...</> : (isEnabling ? "Enable" : "Disable")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 const ContentManagementPageContent: React.FC = () => {
@@ -253,6 +292,10 @@ const ContentManagementPageContent: React.FC = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [commentToggleModalOpen, setCommentToggleModalOpen] = useState(false);
+  const [articleToToggleComments, setArticleToToggleComments] = useState<{id: string, currentStatus: boolean | undefined} | null>(null);
+  const [isTogglingComments, setIsTogglingComments] = useState(false);
 
   const updateUrl = (updates: Record<string, string | number | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -316,6 +359,33 @@ const ContentManagementPageContent: React.FC = () => {
       setIsDeleting(false);
       setDeleteModalOpen(false);
       setArticleToDelete(null);
+    }
+  };
+
+  const handleToggleCommentsClick = (id: string, currentStatus: boolean | undefined) => {
+    setArticleToToggleComments({ id, currentStatus });
+    setCommentToggleModalOpen(true);
+  };
+
+  const handleConfirmToggleComments = async () => {
+    if (!articleToToggleComments) return;
+    setIsTogglingComments(true);
+    const { id, currentStatus } = articleToToggleComments;
+    const newStatus = !(currentStatus ?? true); // default to true if undefined
+
+    try {
+      // Optimistic update
+      setArticles(prev => prev.map(a => a.id === id ? { ...a, isCommentsEnabled: newStatus } : a));
+      await articleApi.toggleComments(id);
+      toast.success(newStatus ? "Comments enabled" : "Comments disabled");
+    } catch (error) {
+      // Revert on error
+      setArticles(prev => prev.map(a => a.id === id ? { ...a, isCommentsEnabled: currentStatus ?? true } : a));
+      toast.error("Failed to toggle comments");
+    } finally {
+      setIsTogglingComments(false);
+      setCommentToggleModalOpen(false);
+      setArticleToToggleComments(null);
     }
   };
 
@@ -431,15 +501,32 @@ const ContentManagementPageContent: React.FC = () => {
                         <h3 className="font-bold text-gray-900 truncate mb-2" title={item.title}>{item.title}</h3>
                         <p className="text-sm text-gray-500 mb-1">{item.category?.name || "No Category"}</p>
                         <p className="text-sm text-gray-500 mb-3 truncate">{item.authors || "Unknown"}</p>
-                        {item.rejectionReason && item.status !== "published" && (
-                          <div className="mb-3 text-xs text-red-600 bg-red-50 rounded p-2">
-                            <span className="font-medium block mb-1">Rejection Reason:</span>
+                        <div className="flex gap-3 mb-3">
+                          <StatBadge 
+                            icon={<svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>}
+                            value={item.views || 0} 
+                          />
+                          <StatBadge 
+                            icon={<svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.514" /></svg>}
+                            value={item.likes || 0} 
+                          />
+                        </div>
+                        {item.rejectionReason && item.status === "rejected" && (
+                          <div className="mb-3 text-xs text-red-600 bg-red-50 rounded p-2 border border-red-100">
+                            <span className="font-semibold block mb-1">Rejection Reason:</span>
                             {item.rejectionReason}
                           </div>
                         )}
-                        <div className={`mt-auto grid ${showDelete ? "grid-cols-3" : "grid-cols-2"} gap-2`}>
+                        <div className={`mt-auto grid ${showDelete ? "grid-cols-4" : "grid-cols-3"} gap-2`}>
                           <button onClick={() => handleView(item.id)} className="bg-blue-500 text-white py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors">View</button>
                           <button onClick={() => handleEdit(item.id)} className="bg-yellow-500 text-white py-2 rounded-lg text-sm hover:bg-yellow-600 transition-colors">Edit</button>
+                          <button 
+                            onClick={() => handleToggleCommentsClick(item.id, item.isCommentsEnabled)} 
+                            className={`py-2 rounded-lg text-sm transition-colors flex items-center justify-center ${item.isCommentsEnabled !== false ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}
+                            title={item.isCommentsEnabled !== false ? "Disable Comments" : "Enable Comments"}
+                          >
+                            {item.isCommentsEnabled !== false ? <MessageSquare size={16} /> : <MessageSquareOff size={16} />}
+                          </button>
                           {showDelete && (
                             <button onClick={() => handleDeleteClick(item.id)} className="bg-red-500 text-white py-2 rounded-lg text-sm hover:bg-red-600 transition-colors">Delete</button>
                           )}
@@ -464,7 +551,8 @@ const ContentManagementPageContent: React.FC = () => {
                     <th className="py-3 px-4 text-sm font-medium">Category</th>
                     <th className="py-3 px-4 text-sm font-medium">Authors</th>
                     <th className="py-3 px-4 text-sm font-medium">Status</th>
-                    <th className="py-3 px-4 text-sm font-medium">Rejection Reason</th>
+                    <th className="py-3 px-4 text-sm font-medium text-center">Views</th>
+                    <th className="py-3 px-4 text-sm font-medium text-center">Likes</th>
                     <th className="py-3 px-4 text-sm font-medium">Actions</th>
                   </tr>
                 </thead>
@@ -489,11 +577,28 @@ const ContentManagementPageContent: React.FC = () => {
                         <td className="py-3 px-4 truncate max-w-[200px] text-sm" title={item.title}>{item.title}</td>
                         <td className="py-3 px-4 text-sm">{item.category?.name || "No Category"}</td>
                         <td className="py-3 px-4 text-sm">{item.authors || "—"}</td>
-                        <td className="py-3 px-4"><StatusBadge status={item.status} /></td>
-                        <td className="py-3 px-4"><RejectionReason reason={item.rejectionReason} /></td>
+                        <td className="py-3 px-4">
+                          <div className="flex flex-col items-start gap-1">
+                            <StatusBadge status={item.status} />
+                            {item.status === 'rejected' && (
+                              <div className="mt-1">
+                                <RejectionReason reason={item.rejectionReason} />
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-center text-sm font-medium text-gray-600">{formatNumber(item.views || 0)}</td>
+                        <td className="py-3 px-4 text-center text-sm font-medium text-gray-600">{formatNumber(item.likes || 0)}</td>
                         <td className="py-3 px-4 flex gap-2">
                           <button onClick={() => handleView(item.id)} className="bg-blue-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-600 transition-colors">View</button>
                           <button onClick={() => handleEdit(item.id)} className="bg-yellow-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-yellow-600 transition-colors">Edit</button>
+                          <button 
+                            onClick={() => handleToggleCommentsClick(item.id, item.isCommentsEnabled)} 
+                            className={`px-3 py-1.5 rounded-md text-sm transition-colors flex items-center justify-center ${item.isCommentsEnabled !== false ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}
+                            title={item.isCommentsEnabled !== false ? "Disable Comments" : "Enable Comments"}
+                          >
+                            {item.isCommentsEnabled !== false ? <MessageSquare size={16} /> : <MessageSquareOff size={16} />}
+                          </button>
                           {item.status !== "published" && (
                             <button onClick={() => handleDeleteClick(item.id)} className="bg-red-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-red-600 transition-colors">Delete</button>
                           )}
@@ -503,7 +608,7 @@ const ContentManagementPageContent: React.FC = () => {
                   </tbody>
                 ) : (
                   <tbody>
-                    <tr><td colSpan={8} className="text-center py-12 text-gray-500">No articles found.</td></tr>
+                    <tr><td colSpan={9} className="text-center py-12 text-gray-500">No articles found.</td></tr>
                   </tbody>
                 )}
               </table>
@@ -548,6 +653,14 @@ const ContentManagementPageContent: React.FC = () => {
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleConfirmDelete}
         isDeleting={isDeleting}
+      />
+
+      <ToggleCommentsConfirmationModal
+        isOpen={commentToggleModalOpen}
+        onClose={() => setCommentToggleModalOpen(false)}
+        onConfirm={handleConfirmToggleComments}
+        isToggling={isTogglingComments}
+        isEnabling={!(articleToToggleComments?.currentStatus ?? true)}
       />
     </div>
   );

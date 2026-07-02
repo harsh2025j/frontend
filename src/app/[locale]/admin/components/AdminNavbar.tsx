@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Search, Menu, LogOut, User as UserIcon, Home, LayoutDashboard, PlusCircle } from "lucide-react";
+import { Search, Menu, LogOut, User as UserIcon, Home, LayoutDashboard, PlusCircle, Loader2 } from "lucide-react";
 import logo from "../../../../assets/logo.png";
 import AdminNotificationDropdown from "./AdminNotificationDropdown";
 // import Link from "next/link";
@@ -190,36 +190,47 @@ const AdminNavbar = ({ onToggleSidebar }: NavbarProps) => {
 };
 
 
-function LogoutModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+function LogoutModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => Promise<void> | void }) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleConfirm = async () => {
+      setIsLoading(true);
+      try {
+          await onConfirm();
+      } finally {
+          setIsLoading(false);
+      }
+  };
+
   return (
-    <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 animate-fadeIn">
-
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={onCancel} />
-
-
-      <div className="relative z-10 w-full max-w-sm bg-white rounded-xl shadow-2xl p-6 border border-gray-100 transform transition-all scale-100">
-        <div className="flex flex-col items-center text-center">
-          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <LogOut className="text-red-600" size={24} />
-          </div>
-          <h3 className="text-xl font-bold text-gray-900">Logout?</h3>
-          <p className="text-sm text-gray-500 mt-2 mb-6">
-            Are you sure you want to Logout? You will need to login again to access the dashboard.
-          </p>
-
-          <div className="flex gap-3 w-full">
-            <button
-              onClick={onCancel}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={onConfirm}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-md shadow-red-600/20 transition-colors"
-            >
-              Logout
-            </button>
+    <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity animate-in fade-in duration-200" onClick={isLoading ? undefined : onCancel} />
+      <div className="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="p-6">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <LogOut className="text-red-600" size={24} />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">Logout?</h3>
+            <p className="text-sm text-gray-500 mt-2 mb-6">
+              Are you sure you want to Logout? You will need to login again to access the dashboard.
+            </p>
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={onCancel}
+                disabled={isLoading}
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={isLoading}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isLoading ? <Loader2 size={16} className="animate-spin" /> : "Logout"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

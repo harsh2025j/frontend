@@ -13,6 +13,7 @@ export const articleApi = {
     formData.append("content", data.content);
     formData.append("subHeadline", data.subHeadline);
     formData.append("isPaywalled", String(data.isPaywalled));
+    formData.append("isCommentsEnabled", String(data.isCommentsEnabled ?? true));
     formData.append("language", data.language);
     if (data.location) formData.append("location", data.location);
     formData.append("authors", data.author);
@@ -121,6 +122,7 @@ export const articleApi = {
     formData.append("language", data.language);
     formData.append("authors", data.author);
     formData.append("isPaywalled", String(data.isPaywalled));
+    formData.append("isCommentsEnabled", String(data.isCommentsEnabled ?? true));
 
     formData.append("status", data.status || "pending");
 
@@ -176,5 +178,51 @@ export const articleApi = {
       }
     });
     return response;
+  },
+
+  trackView: async (articleId: string, userIdentifier: string) => {
+    const response = await apiClient.post<any>(
+      API_ENDPOINTS.ARTICLE.TRACK_VIEW.replace(":id", articleId),
+      { userIdentifier }
+    );
+    return response;
+  },
+
+  toggleLike: async (articleId: string) => {
+    const response = await apiClient.post<{ liked: boolean; totalLikes: number }>(
+      API_ENDPOINTS.ARTICLE.TOGGLE_LIKE.replace(":id", articleId)
+    );
+    return response;
+  },
+
+  getLikeStatus: async (articleId: string) => {
+    const response = await apiClient.get<{ hasLiked: boolean }>(
+      `/articles/${articleId}/like-status`
+    );
+    return response;
+  },
+
+  getComments: async (articleId: string, page: number = 1, limit: number = 10) => {
+    return await apiClient.get<any>(`/articles/${articleId}/comments`, { params: { page, limit } });
+  },
+
+  getReplies: async (commentId: string, page: number = 1, limit: number = 10) => {
+    return await apiClient.get<any>(`/comments/${commentId}/replies`, { params: { page, limit } });
+  },
+
+  createComment: async (articleId: string, data: { content: string; parentId?: string; mentionedUserIds?: string[] }) => {
+    return await apiClient.post<any>(`/articles/${articleId}/comments`, data);
+  },
+
+  updateComment: async (commentId: string, data: { content: string }) => {
+    return await apiClient.patch<any>(`/comments/${commentId}`, data);
+  },
+
+  deleteComment: async (commentId: string) => {
+    return await apiClient.delete<any>(`/comments/${commentId}`);
+  },
+
+  toggleComments: async (articleId: string) => {
+    return await apiClient.patch<any>(`/articles/${articleId}/toggle-comments`);
   },
 };

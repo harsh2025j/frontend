@@ -5,6 +5,7 @@ import { Bell, CheckCheck, Trash2, X, ChevronDown } from "lucide-react";
 import { notificationService, Notification } from "@/data/services/notification-service/notification.service";
 import toast from "react-hot-toast";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { useRouter } from "@/i18n/routing";
 
 interface NotificationDropdownProps {
     userId: string;
@@ -19,6 +20,7 @@ export default function NotificationDropdown({ userId }: NotificationDropdownPro
     const [isFetchingMore, setIsFetchingMore] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const isFetching = useRef(false);
+    const router = useRouter();
 
     const LIMIT = 15;
 
@@ -131,6 +133,20 @@ export default function NotificationDropdown({ userId }: NotificationDropdownPro
         }
     };
 
+    const handleNotificationClick = (notification: Notification, e: React.MouseEvent) => {
+        toggleExpand(notification._id, e);
+        
+        if (!notification.read) {
+            notificationService.markRead(notification._id).catch(() => {});
+            setNotifications(prev => prev.map(n => n._id === notification._id ? { ...n, read: true } : n));
+        }
+
+        if ((notification.type === 'comment-mention' || notification.type === 'article-comment') && notification.data?.articleSlug) {
+            router.push(`/news/${notification.data.articleSlug}#comments`);
+            setIsOpen(false);
+        }
+    };
+
     return (
         <div className="relative" ref={dropdownRef}>
             <button
@@ -196,7 +212,7 @@ export default function NotificationDropdown({ userId }: NotificationDropdownPro
                                     >
                                         <div
                                             className="p-4 cursor-pointer"
-                                            onClick={(e) => toggleExpand(notification._id, e)}
+                                            onClick={(e) => handleNotificationClick(notification, e)}
                                         >
                                             <div className="flex justify-between items-start gap-2">
                                                 <h4 className={`text-sm break-all line-clamp-1 ${!notification.read ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>

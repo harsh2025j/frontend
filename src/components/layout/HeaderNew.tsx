@@ -5,7 +5,7 @@ import { Link } from "@/i18n/routing";
 import {
     Menu, X, ChevronDown, ChevronRight, LogOut, LayoutDashboard,
     User as UserIcon, Search, Bell, Scale, Globe, Mail, Phone,
-    Facebook, Linkedin, Instagram, PlusCircle, UserCog
+    Facebook, Linkedin, Instagram, PlusCircle, UserCog, Loader2
 } from "lucide-react";
 import { FaXTwitter } from "react-icons/fa6";
 import { FaTelegramPlane, FaYoutube } from "react-icons/fa";
@@ -764,10 +764,21 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
     );
 }
 
-function LogoutModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+function LogoutModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => Promise<void> | void }) {
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleConfirm = async () => {
+        setIsLoading(true);
+        try {
+            await onConfirm();
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 animate-fadeIn">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onCancel} />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={isLoading ? undefined : onCancel} />
             <div className="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 border border-gray-100 transform transition-all scale-100">
                 <div className="flex flex-col items-center text-center">
                     <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-4">
@@ -780,15 +791,17 @@ function LogoutModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm:
                     <div className="flex gap-3 w-full">
                         <button
                             onClick={onCancel}
-                            className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                            disabled={isLoading}
+                            className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Cancel
                         </button>
                         <button
-                            onClick={onConfirm}
-                            className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-md shadow-red-600/30 transition-all"
+                            onClick={handleConfirm}
+                            disabled={isLoading}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-md shadow-red-600/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         >
-                            Logout
+                            {isLoading ? <Loader2 size={16} className="animate-spin" /> : "Logout"}
                         </button>
                     </div>
                 </div>

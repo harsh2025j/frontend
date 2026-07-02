@@ -17,6 +17,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/data/redux/store";
 import PaywallOverlay from "@/components/ui/PaywallOverlay";
 import { articleApi } from "@/data/services/article-service/article-service";
+import ArticleStats from "@/components/article/ArticleStats";
+import CommentSection from "@/components/article/CommentSection";
 
 interface ArticlePreviewClientProps {
     article: Article;
@@ -156,6 +158,15 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                         <svg className="w-4 h-4 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         <span className="font-medium">{readTime} {t("minsRead")}</span>
                                     </div>
+                                    <div className="pointer-events-none">
+                                        <ArticleStats
+                                            articleId={article.id || (article as any)._id}
+                                            initialLikes={(article as any).likes || 0}
+                                            initialViews={(article as any).views || 0}
+                                            hasLikedByCurrentUser={(article as any).hasLikedByCurrentUser}
+                                            className="print:hidden"
+                                        />
+                                    </div>
                                     {isTranslating && (
                                         <div className="flex items-center gap-1.5 text-[#C9A227] animate-pulse">
                                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
@@ -187,6 +198,15 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                     <div className="flex items-center gap-1.5">
                                         <svg className="w-4 h-4 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         <span className="font-medium">{readTime} {t("minsRead")}</span>
+                                    </div>
+                                    <div className="pointer-events-none">
+                                        <ArticleStats
+                                            articleId={article.id || (article as any)._id}
+                                            initialLikes={(article as any).likes || 0}
+                                            initialViews={(article as any).views || 0}
+                                            hasLikedByCurrentUser={(article as any).hasLikedByCurrentUser}
+                                            className="print:hidden"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -356,6 +376,28 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                 </div>
                             );
                         })}
+                    </div>
+                )}
+
+                {/* Comments Section */}
+                {article.isCommentsEnabled !== false && (
+                    <div className="mt-2 print:hidden preview-comments-wrapper">
+                        <style>{`
+                            /* Disable typing and submitting */
+                            .preview-comments-wrapper textarea,
+                            .preview-comments-wrapper button[type="submit"] {
+                                pointer-events: none !important;
+                                opacity: 0.5 !important;
+                                cursor: not-allowed !important;
+                            }
+                            /* Hide action buttons (Reply, Edit, Delete) */
+                            .preview-comments-wrapper button[class*="hover:text-blue-600"],
+                            .preview-comments-wrapper button[class*="hover:text-yellow-600"],
+                            .preview-comments-wrapper button[class*="hover:text-red-600"] {
+                                display: none !important;
+                            }
+                        `}</style>
+                        <CommentSection articleId={article.id || (article as any)._id} />
                     </div>
                 )}
             </div>

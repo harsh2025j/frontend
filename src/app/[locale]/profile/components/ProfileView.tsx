@@ -1032,15 +1032,29 @@ function EditProfileModal({ onClose, formData, setFormData, onSave, saving, isPr
 
 
 
-function LogoutOverlay({ onCancel, onConfirm }: any) {
+function LogoutOverlay({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => Promise<void> | void }) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleConfirm = async () => {
+      setIsLoading(true);
+      try {
+          await onConfirm();
+      } finally {
+          setIsLoading(false);
+      }
+  };
+
   return (
-    <div className="fixed inset-0 z-[610] flex items-center justify-center p-6 bg-[#0A2342]/80 backdrop-blur-md">
-      <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className="bg-white rounded-3xl p-12 max-w-md w-full text-center">
+    <div className="fixed inset-0 z-[610] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
+      <div className="absolute inset-0 bg-transparent" onClick={isLoading ? undefined : onCancel} />
+      <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className="relative z-10 bg-white rounded-3xl p-12 max-w-md w-full text-center">
         <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8"><LogOut size={40} /></div>
         <h3 className="text-3xl font-serif text-[#0A2342] mb-4">Logout?</h3>
         <div className="flex gap-4">
-          <button onClick={onCancel} className="flex-1 py-4 text-[10px] font-black uppercase border border-gray-100 rounded-2xl">Cancel</button>
-          <button onClick={onConfirm} className="flex-1 py-4 bg-red-500 text-white rounded-2xl shadow-xl shadow-red-500/20">Sign Out</button>
+          <button onClick={onCancel} disabled={isLoading} className="flex-1 py-4 text-[10px] font-black uppercase border border-gray-100 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed">Cancel</button>
+          <button onClick={handleConfirm} disabled={isLoading} className="flex-1 flex items-center justify-center gap-2 py-4 bg-red-500 text-white rounded-2xl shadow-xl shadow-red-500/20 disabled:opacity-70 disabled:cursor-not-allowed">
+            {isLoading ? <Loader2 size={16} className="animate-spin" /> : "Sign Out"}
+          </button>
         </div>
       </motion.div>
     </div>

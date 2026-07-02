@@ -153,7 +153,7 @@ async function getArticles(params: any = {}) {
 
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ARTICLE.FETCH_ALL}?${queryParams.toString()}`, {
       headers: {
-        "ngrok-skip-browser-warning": "true",
+        // "ngrok-skip-browser-warning": "true",
       },
       next: { revalidate: 60 } // 0 means do not cache, so it updates instantly
     });

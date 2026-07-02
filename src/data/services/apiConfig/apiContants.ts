@@ -33,6 +33,8 @@ export const API_ENDPOINTS = {
     FETCH_MULTI: "/articles/multi",
     APPROVE: "/articles/:id/approve",
     REJECT: "/articles/:id/reject",
+    TRACK_VIEW: "/articles/:id/view",
+    TOGGLE_LIKE: "/articles/:id/like",
   },
   CATEGORIES: {
     CREATE: "/categories",

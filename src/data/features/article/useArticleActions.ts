@@ -30,10 +30,11 @@ export const useCreateArticleActions = () => {
     language: "English/हिन्दी",
     author: "",
     content: "",
+    isPaywalled: false,
+    isCommentsEnabled: true,
     tags: [],
     thumbnail: null,
     documents: [],
-    isPaywalled: false,
   });
 
   const handleChange = (

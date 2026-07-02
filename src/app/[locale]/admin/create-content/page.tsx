@@ -448,6 +448,36 @@ const CreateUpdatePage: React.FC = () => {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium mb-4">Enable Comments</label>
+                <div className="flex items-center gap-3 mt-2 ml-4">
+                  <span className={`text-sm font-medium transition-colors ${!formData.isCommentsEnabled ? 'text-gray-900' : 'text-gray-500'}`}>
+                    No
+                  </span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={formData.isCommentsEnabled}
+                    onClick={() => setFormData(prev => ({ ...prev, isCommentsEnabled: !prev.isCommentsEnabled }))}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
+                                            transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                                            ${formData.isCommentsEnabled ? 'bg-blue-600' : 'bg-gray-200'} `}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`
+                                                pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0
+                                                transition duration-200 ease-in-out
+                                                ${formData.isCommentsEnabled ? 'translate-x-5' : 'translate-x-0'}
+                                            `}
+                    />
+                  </button>
+                  <span className={`text-sm font-medium transition-colors ${formData.isCommentsEnabled ? 'text-gray-900' : 'text-gray-500'}`}>
+                    Yes
+                  </span>
+                </div>
+              </div>
+
             </div>
 
             {/* Thumbnail */}

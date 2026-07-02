@@ -11,6 +11,7 @@ export interface Notification {
     createdAt: string;
     updatedAt: string;
     __v: number;
+    data?: any;
 }
 
 export const notificationService = {
