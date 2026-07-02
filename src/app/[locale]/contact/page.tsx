@@ -130,9 +130,9 @@ export default function ContactUs() {
                                 ].map((social, i) => {
                                     const Icon = social.icon;
                                     return (
-                                        <a 
-                                            key={i} 
-                                            href={social.href} 
+                                        <a
+                                            key={i}
+                                            href={social.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             aria-label={social.label}
