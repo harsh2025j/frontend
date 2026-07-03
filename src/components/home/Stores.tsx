@@ -469,29 +469,33 @@ export default function Stores() {
 
         <HighCourtsModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
+        {/* uncomment these section in future when adsense ia approved */}
+        {/* ========================================================================================== */}
 
-        {/* Live Streaming & Latest Information - SCI Style */}
-        <div className="bg-gradient-to-b from-gray-50 to-white py-12 md:py-16">
+        {/* <div className="bg-gradient-to-b from-gray-50 to-white py-12 md:py-16">
           <div className="container mx-auto px-4 sm:px-6 md:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 items-start">
 
-              {/* Live Streaming & Live Court Section (Merged) */}
+             
               <LiveCourtSection />
 
-              {/* Latest Information Section */}
+             
               <LatestInformationSection />
 
             </div>
           </div>
         </div>
 
-        {/* Top Judges & Top Advocate */}
+        
         <div className="flex justify-center mb-6 md:mb-10 pt-8">
           <div className="container mx-auto px-4 sm:px-6 md:px-8 grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 items-start">
             <TopJudges />
             <TopAdvocateSection />
           </div>
         </div>
+         */}
+
+        {/* ======================================================================================== */}
 
         {/* Membership Promotion for New Users */}
         <MembershipPromotion />
@@ -637,21 +641,21 @@ export default function Stores() {
           </Link>
         </div>
         {/* Constitutional Law */}
-        <CategorySection 
-          title="Constitutional Law" 
-          slug="constitutional-law" 
-          layout="list" 
-          limit={6} 
-          showViewMoreButton={true} 
+        <CategorySection
+          title="Constitutional Law"
+          slug="constitutional-law"
+          layout="list"
+          limit={6}
+          showViewMoreButton={true}
         />
 
         {/* Property Law */}
-        <CategorySection 
-          title="Property Law" 
-          slug="property-law" 
-          layout="list" 
-          limit={6} 
-          showViewMoreButton={true} 
+        <CategorySection
+          title="Property Law"
+          slug="property-law"
+          layout="list"
+          limit={6}
+          showViewMoreButton={true}
         />
 
         {/* Hindi News */}
