@@ -73,6 +73,9 @@ export default function Footer() {
     { name: "Careers", href: "/careers" },
     { name: "Privacy Policy", href: "/privacy-policy" },
     { name: "Terms & Conditions", href: "/terms" },
+    { name: "Cookie Policy", href: "/cookie-policy" },
+    { name: "Disclaimer", href: "/disclaimer" },
+    { name: "Editorial Policy", href: "/editorial-policy" },
   ];
 
   return (

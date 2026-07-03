@@ -425,11 +425,11 @@ export default function Stores() {
         <LeaderboardAd />
 
         {/* High Courts Section */}
-        <div className="bg-gradient-to-b from-white to-gray-50 w-full mb-8 md:mb-12 py-12 md:py-16">
+        <div className="bg-gradient-to-b from-white to-gray-50 w-full mb-8 md:mb-12 py-10 md:py-12">
           <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-10">
 
             {/* Section Title */}
-            <div className="text-center mb-10 md:mb-14">
+            <div className="text-center mb-10">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 md:mb-4">
                 High Courts of India
               </h2>
