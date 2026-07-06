@@ -253,8 +253,8 @@ const CreateUpdatePage: React.FC = () => {
       <main className="flex-1 w-full p-3 sm:p-4 md:p-6 lg:p-8">
         {/* Floating WhatsApp-Style Auto-Save Indicator */}
         {autoSaveStatus !== 'idle' && (
-          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
-            <div className="pointer-events-auto flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md shadow-sm border text-sm text-gray-700 font-medium transition-all duration-300">
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-999 pointer-events-none">
+            <div className="pointer-events-auto flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md shadow-sm border border-gray-200 text-sm text-gray-700 font-medium transition-all duration-300">
 
               {autoSaveStatus === 'unsaved' && (
                 <>
@@ -677,7 +677,7 @@ const CreateUpdatePage: React.FC = () => {
 
                             <div onClick={(e) => e.stopPropagation()}>
                               <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Update Content details</label>
-                              <div className="border rounded-lg overflow-hidden shadow-inner">
+                              <div className="border rounded-lg">
                                 <RichTextEditor
                                   value={update.content}
                                   onChange={(content) => handleUpdateTimelineUpdate(update._localId as string, 'content', content)}

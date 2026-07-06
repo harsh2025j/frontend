@@ -605,3 +605,246 @@ iframe[data-ratio="4:3"],
   aspect-ratio: 4 / 3 !important;
   height: auto !important;
 }
+
+/* --- Public Article Typography (Quill Editor Fonts) --- */
+/* These ensure the fonts selected in the admin editor are applied on the public website */
+.article-content .ql-font-arial { font-family: Arial, Helvetica, sans-serif; }
+.article-content .ql-font-times-new-roman { font-family: 'Times New Roman', Times, serif; }
+.article-content .ql-font-courier-new { font-family: 'Courier New', Courier, monospace; }
+.article-content .ql-font-georgia { font-family: Georgia, serif; }
+
+/* --- Google Docs-like Continuous Numbering for Public View --- */
+/* Hide Quill's native ordered list numbers to prevent double rendering */
+.article-content li[data-list="ordered"]>.ql-ui:before {
+  display: none !important;
+}
+
+/* Reset custom counters globally at article level to maintain continuous numbering */
+.article-content {
+  counter-reset: gdocs-list-0 gdocs-list-1 gdocs-list-2 gdocs-list-3;
+}
+
+/* Automatically restart lists at 1 after any heading */
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6 {
+  counter-set: gdocs-list-0 0 gdocs-list-1 0 gdocs-list-2 0 gdocs-list-3 0;
+}
+
+/* Completely hide native browser markers to prevent overlap */
+.article-content li {
+  list-style-type: none !important;
+}
+
+.article-content li::marker {
+  content: none !important;
+}
+
+/* Reset sub-levels when a top-level list item appears */
+.article-content li[data-list="ordered"]:not([class*="ql-indent-"]) {
+  counter-set: gdocs-list-1 0 gdocs-list-2 0 gdocs-list-3 0;
+  counter-increment: gdocs-list-0;
+  position: relative;
+}
+
+.article-content li[data-list="ordered"]:not([class*="ql-indent-"])::before {
+  content: counter(gdocs-list-0, decimal) ". ";
+  position: absolute;
+  left: 0;
+  width: 1.2em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Indent Level 1 */
+.article-content li.ql-indent-1[data-list="ordered"] {
+  counter-set: gdocs-list-2 0 gdocs-list-3 0;
+  counter-increment: gdocs-list-1;
+  position: relative;
+}
+
+.article-content li.ql-indent-1[data-list="ordered"]::before {
+  content: counter(gdocs-list-1, lower-roman) ". ";
+  position: absolute;
+  left: 0;
+  width: 4.2em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Indent Level 2 */
+.article-content li.ql-indent-2[data-list="ordered"] {
+  counter-set: gdocs-list-3 0;
+  counter-increment: gdocs-list-2;
+  position: relative;
+}
+
+.article-content li.ql-indent-2[data-list="ordered"]::before {
+  content: counter(gdocs-list-2, lower-alpha) ". ";
+  position: absolute;
+  left: 0;
+  width: 7.2em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Indent Level 3+ Fallback */
+.article-content li.ql-indent-3[data-list="ordered"],
+.article-content li.ql-indent-4[data-list="ordered"] {
+  counter-increment: gdocs-list-3;
+  position: relative;
+}
+
+.article-content li.ql-indent-3[data-list="ordered"]::before {
+  content: counter(gdocs-list-3, decimal) ". ";
+  position: absolute;
+  left: 0;
+  width: 10.2em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.article-content li.ql-indent-4[data-list="ordered"]::before {
+  content: counter(gdocs-list-3, decimal) ". ";
+  position: absolute;
+  left: 0;
+  width: 13.2em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* --- Custom List Style Overrides (Dropdown Selections) --- */
+
+/* decimal: 1., a., i. */
+.article-content li[style*="decimal"]:not([style*="paren"]):not([style*="nested"])[data-list="ordered"]:not([class*="ql-indent-"])::before {
+  content: counter(gdocs-list-0, decimal) ". ";
+}
+
+.article-content li[style*="decimal"]:not([style*="paren"]):not([style*="nested"])[data-list="ordered"].ql-indent-1::before {
+  content: counter(gdocs-list-1, lower-alpha) ". ";
+}
+
+.article-content li[style*="decimal"]:not([style*="paren"]):not([style*="nested"])[data-list="ordered"].ql-indent-2::before {
+  content: counter(gdocs-list-2, lower-roman) ". ";
+}
+
+.article-content li[style*="decimal"]:not([style*="paren"]):not([style*="nested"])[data-list="ordered"].ql-indent-3::before {
+  content: counter(gdocs-list-3, decimal) ". ";
+}
+
+/* decimal-paren: 1), a), i) */
+.article-content li[style*="decimal-paren"][data-list="ordered"]:not([class*="ql-indent-"])::before {
+  content: counter(gdocs-list-0, decimal) ") ";
+}
+
+.article-content li[style*="decimal-paren"][data-list="ordered"].ql-indent-1::before {
+  content: counter(gdocs-list-1, lower-alpha) ") ";
+}
+
+.article-content li[style*="decimal-paren"][data-list="ordered"].ql-indent-2::before {
+  content: counter(gdocs-list-2, lower-roman) ") ";
+}
+
+.article-content li[style*="decimal-paren"][data-list="ordered"].ql-indent-3::before {
+  content: counter(gdocs-list-3, decimal) ") ";
+}
+
+/* decimal-nested: 1., 1.1., 1.1.1. */
+.article-content li[style*="decimal-nested"][data-list="ordered"]:not([class*="ql-indent-"])::before {
+  content: counter(gdocs-list-0, decimal) ". ";
+}
+
+.article-content li[style*="decimal-nested"][data-list="ordered"].ql-indent-1::before {
+  content: counter(gdocs-list-0, decimal) "." counter(gdocs-list-1, decimal) ". ";
+}
+
+.article-content li[style*="decimal-nested"][data-list="ordered"].ql-indent-2::before {
+  content: counter(gdocs-list-0, decimal) "." counter(gdocs-list-1, decimal) "." counter(gdocs-list-2, decimal) ". ";
+}
+
+.article-content li[style*="decimal-nested"][data-list="ordered"].ql-indent-3::before {
+  content: counter(gdocs-list-0, decimal) "." counter(gdocs-list-1, decimal) "." counter(gdocs-list-2, decimal) "." counter(gdocs-list-3, decimal) ". ";
+}
+
+/* roman-alpha: 1., i., a., 1. */
+.article-content li[style*="roman-alpha"][data-list="ordered"]:not([class*="ql-indent-"])::before {
+  content: counter(gdocs-list-0, decimal) ". ";
+}
+
+.article-content li[style*="roman-alpha"][data-list="ordered"].ql-indent-1::before {
+  content: counter(gdocs-list-1, lower-roman) ". ";
+}
+
+.article-content li[style*="roman-alpha"][data-list="ordered"].ql-indent-2::before {
+  content: counter(gdocs-list-2, lower-alpha) ". ";
+}
+
+.article-content li[style*="roman-alpha"][data-list="ordered"].ql-indent-3::before {
+  content: counter(gdocs-list-3, decimal) ". ";
+}
+
+/* upper-alpha: A., a., i. */
+.article-content li[style*="upper-alpha"][data-list="ordered"]:not([class*="ql-indent-"])::before {
+  content: counter(gdocs-list-0, upper-alpha) ". ";
+}
+
+.article-content li[style*="upper-alpha"][data-list="ordered"].ql-indent-1::before {
+  content: counter(gdocs-list-1, lower-alpha) ". ";
+}
+
+.article-content li[style*="upper-alpha"][data-list="ordered"].ql-indent-2::before {
+  content: counter(gdocs-list-2, lower-roman) ". ";
+}
+
+.article-content li[style*="upper-alpha"][data-list="ordered"].ql-indent-3::before {
+  content: counter(gdocs-list-3, decimal) ". ";
+}
+
+/* upper-roman: I., A., 1. */
+.article-content li[style*="upper-roman"][data-list="ordered"]:not([class*="ql-indent-"])::before {
+  content: counter(gdocs-list-0, upper-roman) ". ";
+}
+
+.article-content li[style*="upper-roman"][data-list="ordered"].ql-indent-1::before {
+  content: counter(gdocs-list-1, upper-alpha) ". ";
+}
+
+.article-content li[style*="upper-roman"][data-list="ordered"].ql-indent-2::before {
+  content: counter(gdocs-list-2, decimal) ". ";
+}
+
+.article-content li[style*="upper-roman"][data-list="ordered"].ql-indent-3::before {
+  content: counter(gdocs-list-3, lower-alpha) ". ";
+}
+
+/* Basic Indentation (matching Quill's native li padding increments) */
+.article-content li {
+  padding-left: 1.5em;
+}
+
+.article-content li.ql-indent-1 {
+  padding-left: 4.5em;
+}
+
+.article-content li.ql-indent-2 {
+  padding-left: 7.5em;
+}
+
+.article-content li.ql-indent-3 {
+  padding-left: 10.5em;
+}
+
+.article-content li.ql-indent-4 {
+  padding-left: 13.5em;
+}
+
+.article-content li.ql-indent-5 {
+  padding-left: 16.5em;
+}
+
+.article-content li.ql-indent-6 {
+  padding-left: 19.5em;
+}
