@@ -252,7 +252,27 @@ const EditArticlePage: React.FC = () => {
 
         if (!isAutoSave) setLoading(true);
         try {
-            await articleApi.updateArticle(articleId!, { ...formData, status });
+            const response = await articleApi.updateArticle(articleId!, { ...formData, status });
+            
+            // Sync state after successful save (especially important for AutoSave to prevent duplicate uploads)
+            const updatedArticle = response?.data?.data;
+            if (updatedArticle) {
+                if ((formData.documents && formData.documents.length > 0) || (formData.removedDocumentIds && formData.removedDocumentIds.length > 0)) {
+                    if (updatedArticle.documents && Array.isArray(updatedArticle.documents)) {
+                        setExistingDocuments(updatedArticle.documents);
+                    } else if (updatedArticle.documents) {
+                        setExistingDocuments([updatedArticle.documents]);
+                    } else {
+                        setExistingDocuments([]);
+                    }
+                    
+                    setFormData(prev => ({
+                        ...prev,
+                        documents: [],
+                        removedDocumentIds: []
+                    }));
+                }
+            }
 
             if (!isAutoSave) {
                 toast.success(status === "draft" ? "Draft saved successfully" : "Article requested for publishing successfully");
@@ -673,8 +693,24 @@ const EditArticlePage: React.FC = () => {
                                         {existingDocuments
                                             .filter(doc => !formData.removedDocumentIds?.includes(doc.id))
                                             .map((doc, index) => {
-                                                const url = typeof doc === 'object' ? doc.fileUrl : doc;
+                                                const url = typeof doc === 'object' ? doc.fileUrl || doc.url : doc;
                                                 const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
+                                                
+                                                let fileName = `Document ${index + 1}`;
+                                                if (typeof doc === 'object') {
+                                                    if (doc.originalName) fileName = doc.originalName;
+                                                    else if (doc.name) fileName = doc.name;
+                                                    else if (doc.fileName) fileName = doc.fileName;
+                                                }
+                                                
+                                                if (fileName === `Document ${index + 1}`) {
+                                                    try {
+                                                        const parts = decodeURIComponent(url).split('/');
+                                                        fileName = parts[parts.length - 1] || fileName;
+                                                    } catch (e) {
+                                                        // ignore decode error
+                                                    }
+                                                }
                                                 return (
                                                     <div key={doc.id || index} className="flex items-center justify-between p-2 bg-gray-50 border rounded-lg gap-2">
                                                         <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 overflow-hidden flex-1 group">
@@ -682,7 +718,7 @@ const EditArticlePage: React.FC = () => {
                                                                 <div className="w-10 h-10 relative flex-shrink-0 bg-gray-200 rounded overflow-hidden">
                                                                     <img
                                                                         src={url}
-                                                                        alt={`Document ${index + 1}`}
+                                                                        alt={fileName}
                                                                         className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
                                                                     />
                                                                 </div>
@@ -691,7 +727,7 @@ const EditArticlePage: React.FC = () => {
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                                 </svg>
                                                             )}
-                                                            <span className="text-xs font-medium text-blue-600 truncate group-hover:underline">Document {index + 1}</span>
+                                                            <span className="text-xs font-medium text-blue-600 truncate group-hover:underline" title={fileName}>{fileName}</span>
                                                         </a>
                                                         <button
                                                             type="button"
@@ -718,7 +754,27 @@ const EditArticlePage: React.FC = () => {
                                     type="file"
                                     name="documents"
                                     className="hidden"
-                                    onChange={handleDocumentUpload}
+                                    onChange={(e) => {
+                                        const existingNames = existingDocuments
+                                            .filter(doc => !formData.removedDocumentIds?.includes(doc.id))
+                                            .map((doc, index) => {
+                                                const url = typeof doc === 'object' ? doc.fileUrl || doc.url : doc;
+                                                let fileName = `Document ${index + 1}`;
+                                                if (typeof doc === 'object') {
+                                                    if (doc.originalName) fileName = doc.originalName;
+                                                    else if (doc.name) fileName = doc.name;
+                                                    else if (doc.fileName) fileName = doc.fileName;
+                                                }
+                                                if (fileName === `Document ${index + 1}`) {
+                                                    try {
+                                                        const parts = decodeURIComponent(url).split('/');
+                                                        fileName = parts[parts.length - 1] || fileName;
+                                                    } catch (err) {}
+                                                }
+                                                return fileName;
+                                            });
+                                        handleDocumentUpload(e, existingNames);
+                                    }}
                                     accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
                                     multiple
                                 />

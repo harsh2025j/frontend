@@ -42,10 +42,12 @@ const CreateUpdatePage: React.FC = () => {
     handleAddTimelineUpdate,
     handleUpdateTimelineUpdate,
     handleRemoveTimelineUpdate,
+    handleRemoveExistingDocument,
   } = useCreateArticleActions();
 
   const [expandedUpdates, setExpandedUpdates] = React.useState<string[]>([]);
   const [imageToCrop, setImageToCrop] = useState<File | null>(null);
+  const [existingDocuments, setExistingDocuments] = useState<any[]>([]);
 
   const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -195,15 +197,20 @@ const CreateUpdatePage: React.FC = () => {
   const { status: autoSaveStatus } = useAutoSave(formData, async () => {
     if (!formData.title && !formData.content) return; // Skip saving completely empty forms
 
+    let responseData = null;
+
     if (createdArticleIdRef.current) {
-      await articleApi.updateArticle(createdArticleIdRef.current, { ...formData, status: "draft" });
+      const result = await articleApi.updateArticle(createdArticleIdRef.current, { ...formData, status: "draft" });
+      responseData = result?.data?.data;
     } else if (createPromiseRef.current) {
       // It's already in the process of being created. Wait for it to finish, then update it.
       const result = await createPromiseRef.current;
-      await articleApi.updateArticle(result.data.id, { ...formData, status: "draft" });
+      const updateResult = await articleApi.updateArticle(result.data.id, { ...formData, status: "draft" });
+      responseData = updateResult?.data?.data;
     } else {
       createPromiseRef.current = handleCreateArticle("draft");
       const result = await createPromiseRef.current;
+      responseData = result?.data; // handleCreateArticle returns CreateArticleResponse directly from thunk unwrapped
 
       if (result && result.data && result.data.id) {
         createdArticleIdRef.current = result.data.id;
@@ -216,6 +223,24 @@ const CreateUpdatePage: React.FC = () => {
         if (!window.location.pathname.includes(result.data.id)) {
           window.history.replaceState(null, '', `${basePath}/${result.data.id}`);
         }
+      }
+    }
+    
+    if (responseData) {
+      if ((formData.documents && formData.documents.length > 0) || (formData.removedDocumentIds && formData.removedDocumentIds.length > 0)) {
+        if (responseData.documents && Array.isArray(responseData.documents)) {
+          setExistingDocuments(responseData.documents);
+        } else if (responseData.documents) {
+          setExistingDocuments([responseData.documents]);
+        } else {
+          setExistingDocuments([]);
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          documents: [],
+          removedDocumentIds: []
+        }));
       }
     }
   }, 3000, {
@@ -538,12 +563,78 @@ const CreateUpdatePage: React.FC = () => {
             {/* Document Uploader */}
             <div>
               <label className="block text-sm font-medium mb-1.5">Related Documents (Images, PDF, DOCX, etc.)</label>
+
+              {/* Existing Documents List (populated after autosave) */}
+              {existingDocuments.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Existing Documents:</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {existingDocuments
+                      .filter(doc => !formData.removedDocumentIds?.includes(doc.id))
+                      .map((doc, index) => {
+                        const url = typeof doc === 'object' ? doc.fileUrl || doc.url : doc;
+                        let fileName = `Document ${index + 1}`;
+                        if (typeof doc === 'object') {
+                          if (doc.originalName) fileName = doc.originalName;
+                          else if (doc.name) fileName = doc.name;
+                          else if (doc.fileName) fileName = doc.fileName;
+                        }
+                        if (fileName === `Document ${index + 1}`) {
+                          try {
+                            const parts = decodeURIComponent(url).split('/');
+                            fileName = parts[parts.length - 1] || fileName;
+                          } catch (err) {}
+                        }
+                        return (
+                          <div key={doc.id || index} className="flex items-center justify-between p-2 bg-gray-50 border rounded-lg gap-2">
+                            <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 overflow-hidden flex-1 group">
+                              <svg className="w-6 h-6 text-gray-400 flex-shrink-0 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <span className="text-xs font-medium text-gray-700 truncate group-hover:text-blue-600 transition-colors" title={fileName}>
+                                {fileName}
+                              </span>
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveExistingDocument(doc.id)}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded-md transition-colors flex-shrink-0"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
               <label className="border-2 border-dashed rounded-lg p-4 sm:p-6 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-center flex-col h-32 sm:h-40">
                 <input
                   type="file"
                   name="documents"
                   className="hidden"
-                  onChange={handleDocumentUpload}
+                  onChange={(e) => {
+                    const existingNames = existingDocuments
+                      .filter(doc => !formData.removedDocumentIds?.includes(doc.id))
+                      .map((doc, index) => {
+                        const url = typeof doc === 'object' ? doc.fileUrl || doc.url : doc;
+                        let fileName = `Document ${index + 1}`;
+                        if (typeof doc === 'object') {
+                          if (doc.originalName) fileName = doc.originalName;
+                          else if (doc.name) fileName = doc.name;
+                          else if (doc.fileName) fileName = doc.fileName;
+                        }
+                        if (fileName === `Document ${index + 1}`) {
+                          try {
+                            const parts = decodeURIComponent(url).split('/');
+                            fileName = parts[parts.length - 1] || fileName;
+                          } catch (err) {}
+                        }
+                        return fileName;
+                      });
+                    handleDocumentUpload(e, existingNames);
+                  }}
                   accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
                   multiple
                 />

@@ -75,7 +75,7 @@ export const useCreateArticleActions = () => {
     }
   };
 
-  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>, additionalExistingNames: string[] = []) => {
     if (e.target.files && e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files);
       const maxSize = 10 * 1024 * 1024; // 10MB
@@ -89,10 +89,23 @@ export const useCreateArticleActions = () => {
       });
 
       if (validFiles.length > 0) {
-        setFormData((prev: CreateArticleRequest) => ({
-          ...prev,
-          documents: [...(prev.documents || []), ...validFiles],
-        }));
+        const existingNames = [...(formData.documents || []).map((f: any) => f.name || ''), ...additionalExistingNames];
+        const uniqueNewFiles = validFiles.filter(f => !existingNames.includes(f.name));
+        
+        if (uniqueNewFiles.length !== validFiles.length) {
+          toast.error("Some files were skipped because they are already added.", { id: 'duplicate-file-toast' });
+        }
+        
+        if (uniqueNewFiles.length > 0) {
+          setFormData((prev: CreateArticleRequest) => {
+            const currentExistingNames = [...(prev.documents || []).map((f: any) => f.name || ''), ...additionalExistingNames];
+            const trulyUnique = uniqueNewFiles.filter(f => !currentExistingNames.includes(f.name));
+            return {
+              ...prev,
+              documents: [...(prev.documents || []), ...trulyUnique],
+            };
+          });
+        }
       }
 
       // Reset input value to allow selecting same file again if needed
