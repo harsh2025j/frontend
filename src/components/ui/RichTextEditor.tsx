@@ -298,7 +298,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                 
                 /* --- Google Docs-like Continuous Numbering --- */
                 /* Hide Quill's native ordered list numbers to prevent double rendering */
-                .ql-editor li[data-list="ordered"] > .ql-ui:before {
+                .ql-editor li[data-list="ordered"] > .ql-ui:before,
+                .ql-editor li[data-list="bullet"] > .ql-ui {
                     display: none !important;
                 }
                 
@@ -327,38 +328,44 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                 .ql-editor li[data-list="bullet"]:not([class*="ql-indent-"])::before {
                     content: "\\2022";
                     position: absolute;
-                    left: -1.25em;
-                    font-size: 1em;
-                    line-height: inherit;
-                    color: inherit;
+                    left: 0;
+                    width: 1.2em;
+                    text-align: right;
+                    white-space: nowrap;
                 }
                 .ql-editor li.ql-indent-1[data-list="bullet"]::before {
                     content: "\\25E6";
                     position: absolute;
-                    left: -1.25em;
-                    font-size: 1em;
-                    line-height: inherit;
-                    color: inherit;
+                    left: 0;
+                    width: 4.2em;
+                    text-align: right;
+                    white-space: nowrap;
                 }
                 .ql-editor li.ql-indent-2[data-list="bullet"]::before {
                     content: "\\25AA";
                     position: absolute;
-                    left: -1.25em;
-                    font-size: 1em;
-                    line-height: inherit;
-                    color: inherit;
+                    left: 0;
+                    width: 7.2em;
+                    text-align: right;
+                    white-space: nowrap;
                 }
-                .ql-editor li.ql-indent-3[data-list="bullet"]::before,
+                .ql-editor li.ql-indent-3[data-list="bullet"]::before {
+                    content: "\\25AA";
+                    position: absolute;
+                    left: 0;
+                    width: 10.2em;
+                    text-align: right;
+                    white-space: nowrap;
+                }
                 .ql-editor li.ql-indent-4[data-list="bullet"]::before,
                 .ql-editor li.ql-indent-5[data-list="bullet"]::before {
                     content: "\\25AA";
                     position: absolute;
-                    left: -1.25em;
-                    font-size: 1em;
-                    line-height: inherit;
-                    color: inherit;
+                    left: 0;
+                    width: 13.2em;
+                    text-align: right;
+                    white-space: nowrap;
                 }
-                
 
                   /* Reset sub-levels when a top-level list item appears */
                 .ql-editor li[data-list="ordered"]:not([class*="ql-indent-"]) {

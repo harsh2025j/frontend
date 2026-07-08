@@ -626,7 +626,8 @@ iframe[data-ratio="4:3"],
 
 /* --- Google Docs-like Continuous Numbering for Public View --- */
 /* Hide Quill's native ordered list numbers to prevent double rendering */
-.article-content li[data-list="ordered"]>.ql-ui:before {
+.article-content li[data-list="ordered"]>.ql-ui:before,
+.article-content li[data-list="bullet"]>.ql-ui {
   display: none !important;
 }
 
@@ -668,42 +669,51 @@ iframe[data-ratio="4:3"],
 .article-content li[data-list="bullet"]:not([class*="ql-indent-"])::before {
   content: "\2022";
   position: absolute;
-  left: -1.25em;
-  font-size: 1em;
-  line-height: inherit;
-  color: inherit;
+  left: 0;
+  width: 1.2em;
+  text-align: right;
+  white-space: nowrap;
 }
 
 /* Level 1 → hollow circle ◦ */
 .article-content li.ql-indent-1[data-list="bullet"]::before {
   content: "\25E6";
   position: absolute;
-  left: -1.25em;
-  font-size: 1em;
-  line-height: inherit;
-  color: inherit;
+  left: 0;
+  width: 4.2em;
+  text-align: right;
+  white-space: nowrap;
 }
 
 /* Level 2 → small square ▪ */
 .article-content li.ql-indent-2[data-list="bullet"]::before {
   content: "\25AA";
   position: absolute;
-  left: -1.25em;
-  font-size: 1em;
-  line-height: inherit;
-  color: inherit;
+  left: 0;
+  width: 7.2em;
+  text-align: right;
+  white-space: nowrap;
 }
 
-/* Level 3+ → small square ▪ */
-.article-content li.ql-indent-3[data-list="bullet"]::before,
+/* Level 3 → small square ▪ */
+.article-content li.ql-indent-3[data-list="bullet"]::before {
+  content: "\25AA";
+  position: absolute;
+  left: 0;
+  width: 10.2em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Level 4+ → small square ▪ */
 .article-content li.ql-indent-4[data-list="bullet"]::before,
 .article-content li.ql-indent-5[data-list="bullet"]::before {
   content: "\25AA";
   position: absolute;
-  left: -1.25em;
-  font-size: 1em;
-  line-height: inherit;
-  color: inherit;
+  left: 0;
+  width: 13.2em;
+  text-align: right;
+  white-space: nowrap;
 }
 
 
