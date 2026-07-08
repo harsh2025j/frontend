@@ -319,7 +319,47 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                 .ql-editor li::marker {
                     content: none !important;
                 }
+
+                /* Restore bullet markers for Quill unordered lists */
+                .ql-editor li[data-list="bullet"] {
+                    position: relative;
+                }
+                .ql-editor li[data-list="bullet"]:not([class*="ql-indent-"])::before {
+                    content: "\\2022";
+                    position: absolute;
+                    left: -1.25em;
+                    font-size: 1em;
+                    line-height: inherit;
+                    color: inherit;
+                }
+                .ql-editor li.ql-indent-1[data-list="bullet"]::before {
+                    content: "\\25E6";
+                    position: absolute;
+                    left: -1.25em;
+                    font-size: 1em;
+                    line-height: inherit;
+                    color: inherit;
+                }
+                .ql-editor li.ql-indent-2[data-list="bullet"]::before {
+                    content: "\\25AA";
+                    position: absolute;
+                    left: -1.25em;
+                    font-size: 1em;
+                    line-height: inherit;
+                    color: inherit;
+                }
+                .ql-editor li.ql-indent-3[data-list="bullet"]::before,
+                .ql-editor li.ql-indent-4[data-list="bullet"]::before,
+                .ql-editor li.ql-indent-5[data-list="bullet"]::before {
+                    content: "\\25AA";
+                    position: absolute;
+                    left: -1.25em;
+                    font-size: 1em;
+                    line-height: inherit;
+                    color: inherit;
+                }
                 
+
                   /* Reset sub-levels when a top-level list item appears */
                 .ql-editor li[data-list="ordered"]:not([class*="ql-indent-"]) {
                     counter-set: gdocs-list-1 0 gdocs-list-2 0 gdocs-list-3 0;

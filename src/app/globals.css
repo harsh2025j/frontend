@@ -608,10 +608,21 @@ iframe[data-ratio="4:3"],
 
 /* --- Public Article Typography (Quill Editor Fonts) --- */
 /* These ensure the fonts selected in the admin editor are applied on the public website */
-.article-content .ql-font-arial { font-family: Arial, Helvetica, sans-serif; }
-.article-content .ql-font-times-new-roman { font-family: 'Times New Roman', Times, serif; }
-.article-content .ql-font-courier-new { font-family: 'Courier New', Courier, monospace; }
-.article-content .ql-font-georgia { font-family: Georgia, serif; }
+.article-content .ql-font-arial {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.article-content .ql-font-times-new-roman {
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.article-content .ql-font-courier-new {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.article-content .ql-font-georgia {
+  font-family: Georgia, serif;
+}
 
 /* --- Google Docs-like Continuous Numbering for Public View --- */
 /* Hide Quill's native ordered list numbers to prevent double rendering */
@@ -642,6 +653,59 @@ iframe[data-ratio="4:3"],
 .article-content li::marker {
   content: none !important;
 }
+
+/* ── Restore bullet markers for Quill unordered lists ────────────────────────
+   Quill renders bullet lists as <ol><li data-list="bullet"> (not <ul>/<li>),
+   so native browser disc/circle/square styles don't apply. We suppress ALL
+   markers above to prevent double-rendering on ordered lists, then re-add
+   bullet symbols here via ::before pseudo-elements.
+   ─────────────────────────────────────────────────────────────────────────── */
+.article-content li[data-list="bullet"] {
+  position: relative;
+}
+
+/* Level 0 → solid disc • */
+.article-content li[data-list="bullet"]:not([class*="ql-indent-"])::before {
+  content: "\2022";
+  position: absolute;
+  left: -1.25em;
+  font-size: 1em;
+  line-height: inherit;
+  color: inherit;
+}
+
+/* Level 1 → hollow circle ◦ */
+.article-content li.ql-indent-1[data-list="bullet"]::before {
+  content: "\25E6";
+  position: absolute;
+  left: -1.25em;
+  font-size: 1em;
+  line-height: inherit;
+  color: inherit;
+}
+
+/* Level 2 → small square ▪ */
+.article-content li.ql-indent-2[data-list="bullet"]::before {
+  content: "\25AA";
+  position: absolute;
+  left: -1.25em;
+  font-size: 1em;
+  line-height: inherit;
+  color: inherit;
+}
+
+/* Level 3+ → small square ▪ */
+.article-content li.ql-indent-3[data-list="bullet"]::before,
+.article-content li.ql-indent-4[data-list="bullet"]::before,
+.article-content li.ql-indent-5[data-list="bullet"]::before {
+  content: "\25AA";
+  position: absolute;
+  left: -1.25em;
+  font-size: 1em;
+  line-height: inherit;
+  color: inherit;
+}
+
 
 /* Reset sub-levels when a top-level list item appears */
 .article-content li[data-list="ordered"]:not([class*="ql-indent-"]) {
