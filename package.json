@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "dev:ngrok": "./scripts/dev-with-ngrok.sh"
+    "dev:ngrok": "./scripts/dev-with-ngrok.sh",
+    "lint": "next lint"
   },
   "dependencies": {
     "@botom/quill-resize-module": "^2.1.0",
@@ -19,6 +20,7 @@
     "date-fns": "^4.1.0",
     "firebase": "^12.7.0",
     "framer-motion": "^12.23.25",
+    "isomorphic-dompurify": "^3.18.0",
     "lodash": "^4.17.23",
     "lucide-react": "^0.544.0",
     "next": "^16.0.7",

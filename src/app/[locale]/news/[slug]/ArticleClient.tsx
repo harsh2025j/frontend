@@ -19,6 +19,7 @@ import { profileApi } from "@/data/services/profile-service/profile-service";
 import { useSelector } from "react-redux";
 import { RootState } from "@/data/redux/store";
 import PaywallOverlay from "@/components/ui/PaywallOverlay";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 
 import SpeechPlayer from "@/components/ui/SpeechPlayer";
 import { InFeedAd, ArticleTopAd, ArticleSidebarTopAd, ArticleSidebarBottomAd, ArticleBottomAd } from "@/components/ads/StandardAds";
@@ -460,7 +461,8 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                             .article-content p, .article-content li, .article-content span { font-size: 1rem !important; line-height: 1.6 !important; }
                         }
                     `}</style>
-                    <div dangerouslySetInnerHTML={{ __html: displayContent }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayContent) }} />
+
                     {!hasFullAccess && <PaywallOverlay isLoggedIn={mounted ? !!user : false} t={t} />}
                 </div>
 
@@ -484,7 +486,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                         <div className="flex flex-col gap-2 timeline-update-content">
                                             <span className="text-gray-500 text-sm font-semibold tracking-wide uppercase">{formatDate(update.updateDate as string)}</span>
                                             {update.title && <h4 className="font-bold text-[18px] sm:text-[22px] text-[#0A2342] leading-snug">{update.title}</h4>}
-                                            <div className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1 font-georgia" dangerouslySetInnerHTML={{ __html: update.content }} />
+                                            <div className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1 font-georgia" dangerouslySetInnerHTML={{ __html: sanitizeHtml(update.content) }} />
                                         </div>
                                     </div>
                                 );
@@ -653,7 +655,6 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
         window.addEventListener('wheel', handleGlobalWheel, { passive: false });
         return () => window.removeEventListener('wheel', handleGlobalWheel);
     }, []);
-    // ────────────────────────────
 
     const user = useSelector((state: RootState) => state.auth.user);
     const subscription = useSelector((state: RootState) => state.subscription.currentSubscription);

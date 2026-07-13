@@ -29,6 +29,7 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import Loader from "@/components/ui/Loader";
 import { formatDate } from "@/utils/dateUtils";
 import Image from "next/image";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 
 export default function JudgeDetailPage() {
     const router = useRouter();
@@ -189,7 +190,7 @@ export default function JudgeDetailPage() {
                             </div>
                             <div
                                 className="prose prose-base max-w-none text-gray-600 font-medium leading-relaxed"
-                                dangerouslySetInnerHTML={{ __html: judge.biography || "The professional judicial profile for this member is currently being curated for the digital registry. Full details will be available shortly." }}
+                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(judge.biography || "The professional judicial profile for this member is currently being curated for the digital registry. Full details will be available shortly.") }}
                             />
                         </div>
 

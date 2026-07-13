@@ -19,6 +19,7 @@ import PaywallOverlay from "@/components/ui/PaywallOverlay";
 import { articleApi } from "@/data/services/article-service/article-service";
 import ArticleStats from "@/components/article/ArticleStats";
 import CommentSection from "@/components/article/CommentSection";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 
 interface ArticlePreviewClientProps {
     article: Article;
@@ -283,7 +284,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                             .article-content p, .article-content li, .article-content span { font-size: 1rem !important; line-height: 1.6 !important; }
                         }
                     `}</style>
-                    <div dangerouslySetInnerHTML={{ __html: displayContent }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayContent) }} />
                     {!hasFullAccess && <PaywallOverlay isLoggedIn={!!user} t={t} />}
                 </div>
 
@@ -343,7 +344,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                         <div className="flex flex-col gap-2 timeline-update-content">
                                             <span className="text-gray-500 text-sm font-semibold tracking-wide uppercase">{formatDate(update.updateDate as string)}</span>
                                             {update.title && <h4 className="font-bold text-[18px] sm:text-[22px] text-[#0A2342] leading-snug">{update.title}</h4>}
-                                            <div className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1 font-georgia" dangerouslySetInnerHTML={{ __html: update.content }} />
+                                            <div className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1 font-georgia" dangerouslySetInnerHTML={{ __html: sanitizeHtml(update.content) }} />
                                         </div>
                                     </div>
                                 );

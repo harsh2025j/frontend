@@ -4,6 +4,7 @@ import Image, { StaticImageData } from "next/image";
 // import Link from "next/link";
 import { Link } from "@/i18n/routing";
 import { getSafeImageUrl } from "@/utils/imageUtils";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 
 interface HindiNews {
   img: StaticImageData | string;
@@ -46,7 +47,7 @@ const HindiNews: React.FC<HindiNews> = ({
         <Link href={`/news/${slug}`} className="mt-2 block">
           <p
             className="font-sans text-gray-600 text-xs sm:text-sm line-clamp-3 sm:line-clamp-4"
-            dangerouslySetInnerHTML={{ __html: description }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(description) }}
           />
         </Link>
       </div>

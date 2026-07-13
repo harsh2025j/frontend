@@ -9,6 +9,7 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 import { formatDate } from "@/utils/dateUtils";
 import Pagination from "@/components/Pagination";
 import SavePostButton from "@/components/ui/SavePostButton";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 
 function JudgmentResultPageContent() {
     useDocTitle("Judgments | Sajjad Husain Law Associates");
@@ -162,7 +163,7 @@ function JudgmentResultPageContent() {
                                         <div className="mt-4 bg-[#F8F9FA] rounded-r-lg p-4 border-l-4 border-[#C9A227]">
                                             <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
                                                 {item.summary ? (
-                                                    <span dangerouslySetInnerHTML={{ __html: item.summary }} />
+                                                    <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.summary) }} />
                                                 ) : (
                                                     <span className="italic text-gray-500">No excerpt available for this judgment.</span>
                                                 )}

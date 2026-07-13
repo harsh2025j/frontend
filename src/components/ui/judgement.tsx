@@ -5,6 +5,7 @@ import Image, { StaticImageData } from "next/image";
 import { Link } from "@/i18n/routing";
 import { Clock } from "lucide-react";
 import { getSafeImageUrl } from "@/utils/imageUtils";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 
 interface JudgementProps {
   img: StaticImageData | string;
@@ -46,7 +47,7 @@ const Judgement: React.FC<JudgementProps> = ({ img, title, description, slug, au
 
           <div
             className="line-clamp-3 text-xs text-gray-600 font-merriweather mb-4 flex-1"
-            dangerouslySetInnerHTML={{ __html: description }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(description) }}
           />
 
           <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-50">

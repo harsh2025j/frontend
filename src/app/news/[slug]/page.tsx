@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import { Article } from "@/data/features/article/article.types";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 import Image from "next/image";
 // import Link from "next/link";
 import { Link } from "@/i18n/routing";
@@ -188,7 +189,7 @@ export default function ArticleDetailPage() {
 
                         {/* Article Content */}
                         <div className="article-content mb-12">
-                            <div dangerouslySetInnerHTML={{ __html: article.content }} />
+                            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }} />
                         </div>
 
                         {/* Tags */}

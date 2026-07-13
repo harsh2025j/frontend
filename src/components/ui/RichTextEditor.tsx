@@ -8,6 +8,21 @@ interface RichTextEditorProps {
     placeholder?: string;
 }
 
+// Reads the editor's live DOM and unwraps any `.ql-html-card` (the editor-only
+// wrapper HtmlCardBlot renders around a preserved visual block) back down to its
+// original element, so `contenteditable="false"` and the ql-html-card class never
+// leak into the HTML that actually gets saved.
+const getCleanExportHtml = (editorInner: Element): string => {
+    const clone = editorInner.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('.ql-html-card').forEach((card) => {
+        const child = card.firstElementChild;
+        if (child) {
+            card.replaceWith(child);
+        }
+    });
+    return clone.innerHTML;
+};
+
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeholder }) => {
     const editorId = React.useId().replace(/:/g, '');
     const containerRef = useRef<HTMLDivElement>(null);
@@ -58,6 +73,38 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                     whitelist: ['decimal', 'decimal-paren', 'decimal-nested', 'roman-alpha', 'upper-alpha', 'upper-roman']
                 });
                 Quill.register({ 'formats/listStyle': ListStyleAttributor }, true);
+
+                // --- 4. "Visual Card" Blot ---
+                // Quill has no format for arbitrary styled <div>/<table> blocks (callout boxes,
+                // comparison tables, timelines, stat highlights, official bare-act text boxes).
+                // Without this, loading such HTML into the editor silently flattens it to a bare
+                // paragraph, discarding colors, borders, and layout. Any element carrying a
+                // `data-lt-block` attribute is instead preserved as an atomic, non-editable embed
+                // (the same technique Quill already uses for images/videos), so it survives the
+                // editor round-trip pixel-for-pixel. See prompts/SYSTEM_PROMPT.md's Visual
+                // Elements Toolkit in the article-automation project for the block markup contract.
+                const BlockEmbed = Quill.import('blots/block/embed') as any;
+                const Delta = Quill.import('delta') as any;
+
+                class HtmlCardBlot extends BlockEmbed {
+                    static blotName = 'htmlCard';
+                    static tagName = 'div';
+                    static className = 'ql-html-card';
+
+                    static create(value: string) {
+                        const node = super.create() as HTMLElement;
+                        node.setAttribute('contenteditable', 'false');
+                        node.innerHTML = value;
+                        return node;
+                    }
+
+                    static value(node: HTMLElement) {
+                        return node.innerHTML;
+                    }
+                }
+                if (!Quill.imports['formats/htmlCard']) {
+                    Quill.register(HtmlCardBlot, true);
+                }
 
                 // Use quill-blot-formatter, which is fully compatible with Quill 2.0
                 const BlotFormatter = (await import('quill-blot-formatter')).default;
@@ -139,6 +186,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                 });
 
                 quillInstance.current = quill;
+
+                // Intercept any element carrying `data-lt-block` (callout boxes, comparison
+                // tables, timelines, stat highlights, bare-act text boxes) during HTML import
+                // — both on paste and on the initial dangerouslyPasteHTML load below — and
+                // convert it into the atomic HtmlCardBlot instead of letting Quill's default
+                // matchers decompose it into a plain paragraph.
+                quill.clipboard.addMatcher('[data-lt-block]', (node) => {
+                    return new Delta().insert({ htmlCard: (node as HTMLElement).outerHTML });
+                });
 
                 const updateToolbarLabels = () => {
                     if (!containerRef.current) return;
@@ -226,7 +282,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                     if (containerRef.current) {
                         const editorInner = containerRef.current.querySelector('.ql-editor');
                         if (editorInner && onChangeRef.current) {
-                            const newHtml = editorInner.innerHTML;
+                            const newHtml = getCleanExportHtml(editorInner);
                             lastEmittedValue.current = newHtml;
                             onChangeRef.current(newHtml);
                         }
@@ -262,7 +318,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
             // Only update if the value from props is different from the last value we emitted
             // This prevents the editor from re-rendering and losing cursor position on every keystroke
             if (value !== undefined && value !== lastEmittedValue.current) {
-                const currentContent = containerRef.current.querySelector('.ql-editor')?.innerHTML || '';
+                const editorInner = containerRef.current.querySelector('.ql-editor');
+                const currentContent = editorInner ? getCleanExportHtml(editorInner) : '';
                 if (value !== currentContent) {
                     const clipboard = quillInstance.current.getModule('clipboard');
                     const selection = quillInstance.current.getSelection();
@@ -457,7 +514,22 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                     aspect-ratio: 16 / 9;
                     height: auto !important;
                 }
-                
+
+                /* --- Preserved Visual Blocks (callout/warning boxes, comparison tables,
+                   timelines, stat highlights, bare-act text) --- locked/non-editable inside
+                   the editor so their layout survives; shown with a dashed outline on hover
+                   or selection so it's clear the block is atomic (select + delete to remove). */
+                .ql-editor .ql-html-card {
+                    cursor: default;
+                    border-radius: 4px;
+                    transition: outline-color 0.15s ease;
+                    outline: 2px dashed transparent;
+                    outline-offset: 3px;
+                }
+                .ql-editor .ql-html-card:hover {
+                    outline-color: #94a3b8;
+                }
+
                 /* --- Custom Font Families --- */
                 .ql-font-arial { font-family: Arial, sans-serif; }
                 .ql-font-times-new-roman { font-family: 'Times New Roman', Times, serif; }

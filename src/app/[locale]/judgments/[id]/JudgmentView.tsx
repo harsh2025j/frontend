@@ -8,6 +8,7 @@ import Loader from "@/components/ui/Loader";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import SavePostButton from "@/components/ui/SavePostButton";
 import { formatDate } from "@/utils/dateUtils";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 
 export default function JudgmentView({ judgmentId: propId, isModal = false }: { judgmentId?: string; isModal?: boolean }) {
     useDocTitle("Legal Record | Sajjad Husain Law Associates");
@@ -217,13 +218,13 @@ export default function JudgmentView({ judgmentId: propId, isModal = false }: { 
                         {judgment.caseNotes && (
                             <div className="text-justify border-t-2 border-dashed border-gray-100 pt-6">
                                 <h3 className="font-sans font-black text-sm uppercase tracking-widest text-[#0A2342] mb-4">Editorial Headnote</h3>
-                                <div className="text-base leading-relaxed text-gray-700 italic" dangerouslySetInnerHTML={{ __html: judgment.caseNotes }} />
+                                <div className="text-base leading-relaxed text-gray-700 italic" dangerouslySetInnerHTML={{ __html: sanitizeHtml(judgment.caseNotes) }} />
                             </div>
                         )}
 
                         <div className="bg-amber-50/40 p-10 border-l-[12px] border-[#0A2342] rounded-r-3xl">
                             <h3 className="font-sans font-black text-sm uppercase tracking-widest text-[#0A2342] mb-6">Brief Summary</h3>
-                            <div className="text-lg text-justify font-medium leading-relaxed mb-6" dangerouslySetInnerHTML={{ __html: judgment.summary }} />
+                            <div className="text-lg text-justify font-medium leading-relaxed mb-6" dangerouslySetInnerHTML={{ __html: sanitizeHtml(judgment.summary) }} />
 
                             {judgment.keyPoints && judgment.keyPoints.length > 0 && (
                                 <div className="space-y-4">
@@ -269,7 +270,7 @@ export default function JudgmentView({ judgmentId: propId, isModal = false }: { 
 
                     <div className="judgment-body text-xl md:text-xl lg:text-xl leading-[2] text-gray-900 marker:text-black font-merriweather">
                         {judgment.fullText ? (
-                            <div className="article-content" dangerouslySetInnerHTML={{ __html: judgment.fullText }} />
+                            <div className="article-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(judgment.fullText) }} />
                         ) : (
                             <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100">
                                 <FileText size={48} className="mx-auto text-gray-200 mb-4" />

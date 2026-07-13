@@ -508,10 +508,10 @@ function JudgesPageContent() {
                                                         </div>
                                                         <div>
                                                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</p>
-                                                            <p className="text-sm font-bold text-emerald-600 flex items-center gap-1.5">
+                                                            <div className="text-sm font-bold text-emerald-600 flex items-center gap-1.5">
                                                                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                                                                 {judge.isServing ? 'Internal Registry' : 'Retired / Alumni'}
-                                                            </p>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
