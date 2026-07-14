@@ -1,12 +1,32 @@
 import DOMPurify from 'isomorphic-dompurify';
 
-// Add a hook to ensure all anchor tags open in a new tab and are secure
+
+// Add a hook to selectively make external links open in a new tab
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-    if ('target' in node) {
-        // Enforce opening in a new tab for all links
-        node.setAttribute('target', '_blank');
-        // Prevent tabnabbing vulnerabilities
-        node.setAttribute('rel', 'noopener noreferrer');
+    if (node.nodeName && node.nodeName.toLowerCase() === 'a') {
+        const href = node.getAttribute('href');
+        if (href) {
+            // Check if the link is internal or a special protocol
+            const hrefLower = href.toLowerCase();
+            const isInternal = href.startsWith('/') || 
+                               href.startsWith('.') || 
+                               href.startsWith('#') || 
+                               hrefLower.startsWith('mailto:') || 
+                               hrefLower.startsWith('tel:') || 
+                               hrefLower.includes('sajjadhusainlawassociates.com');
+            
+            if (!isInternal) {
+                // Enforce opening in a new tab for external links
+                node.setAttribute('target', '_blank');
+                // Prevent tabnabbing vulnerabilities
+                node.setAttribute('rel', 'noopener noreferrer');
+            } else {
+                // Ensure internal links don't have target="_blank"
+                if (node.getAttribute('target') === '_blank') {
+                    node.removeAttribute('target');
+                }
+            }
+        }
     }
 });
 
