@@ -10,7 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@botom/quill-resize-module": "^2.1.0",
+    "@enzedonline/quill-blot-formatter2": "^3.2.0",
     "@reduxjs/toolkit": "^2.9.0",
     "@tailwindcss/postcss": "^4.1.14",
     "@types/lodash": "^4.17.24",
@@ -26,7 +26,6 @@
     "next": "^16.0.7",
     "next-intl": "^4.5.8",
     "postcss": "^8.5.6",
-    "quill-blot-formatter": "^1.0.5",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-easy-crop": "^5.5.7",

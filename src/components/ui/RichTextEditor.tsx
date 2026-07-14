@@ -106,8 +106,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                     Quill.register(HtmlCardBlot, true);
                 }
 
-                // Use quill-blot-formatter, which is fully compatible with Quill 2.0
-                const BlotFormatter = (await import('quill-blot-formatter')).default;
+                // Use quill-blot-formatter2, the Quill 2.0 compatible fork
+                const BlotFormatter = (await import('@enzedonline/quill-blot-formatter2')).default;
 
                 if (!Quill.imports['modules/blotFormatter']) {
                     Quill.register('modules/blotFormatter', BlotFormatter);
