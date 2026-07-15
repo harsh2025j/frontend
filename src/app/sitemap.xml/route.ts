@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 const API_BASE = 'https://api.sajjadhusainlawassociates.com';
 const LIMIT = 50000;
 const MAX_SITEMAPS = { articles: 10000, judgments: 10000, cases: 10000, tags: 7000, categories: 2000 };
