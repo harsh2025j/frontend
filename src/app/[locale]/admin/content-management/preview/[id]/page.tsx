@@ -127,6 +127,57 @@ function ArticlePreviewPageContent() {
         }
     };
 
+    const stripHtml = (html: string) => {
+        if (!html) return '';
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return doc.body.textContent || "";
+    };
+
+    const isPublishable = Boolean(
+        article &&
+        article.category &&
+        article.title && article.title.trim() !== '' &&
+        article.location && article.location.trim() !== '' &&
+        article.content && stripHtml(article.content).trim() !== ''
+    );
+
+    const handleRequestToPublish = async () => {
+        if (!article) return;
+        setActionLoading(true);
+        try {
+            const mappedData: any = {
+                title: article.title,
+                category: (typeof article.category === 'object' ? article.category?.id : article.category) || "",
+                location: article.location || "",
+                slug: article.slug,
+                subHeadline: article.subHeadline || "",
+                advocateName: article.advocateName || "",
+                language: article.language || "English/हिन्दी",
+                author: article.authors || "",
+                content: article.content,
+                updates: article.updates || [],
+                tags: Array.isArray(article.tags)
+                    ? article.tags.map((t: any) => typeof t === 'object' ? t.name : t)
+                    : (typeof article.tags === 'string' ? (article.tags as string).split(',') : []),
+                thumbnail: null,
+                documents: [],
+                status: "pending",
+                isPaywalled: article.isPaywalled || false,
+                isCommentsEnabled: article.isCommentsEnabled ?? true,
+                advocates: article.advocates || [],
+            };
+            
+            await articleApi.updateArticle(article.id, mappedData);
+            
+            toast.success("Article requested for publishing successfully!");
+            router.push('/admin/content-management');
+        } catch (err: any) {
+            toast.error(err?.message || "Failed to request publishing");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="bg-white min-h-screen animate-pulse border-t border-gray-100 font-georgia">
@@ -143,7 +194,7 @@ function ArticlePreviewPageContent() {
                             {/* Title */}
                             <div className="h-10 sm:h-12 bg-gray-200 rounded-xl w-full mb-3" />
                             <div className="h-10 sm:h-12 bg-gray-200 rounded-xl w-3/4 mb-6" />
-                            
+
                             {/* Author box */}
                             <div className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100">
                                 <div className="h-14 w-14 rounded-full bg-gray-200 shrink-0" />
@@ -246,6 +297,35 @@ function ArticlePreviewPageContent() {
                 </div>
             )}
 
+            {/* ACTION FOOTER BAR FOR PREVIEW */}
+            {!isApprovalMode && (
+                <div className="sticky bottom-0 mt-auto bg-white/95 backdrop-blur-md border-t border-gray-200 px-6 py-4 flex flex-col sm:flex-row justify-center sm:justify-end items-center gap-3 z-50 shadow-[0_-2px_2px_-2px_rgba(0,0,0,0.05)] w-full rounded-t-sm">
+                    <div className="flex gap-3 w-full sm:w-auto max-w-3xl">
+                        <button
+                            onClick={() => router.push('/admin/content-management')}
+                            className="flex-1 sm:flex-none px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all active:scale-95"
+                        >
+                            Back
+                        </button>
+                        <button
+                            onClick={() => router.push(`/admin/create-content/${article.id}`)}
+                            className="flex-1 sm:flex-none px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-[#C9A227] rounded-xl hover:bg-[#b08d22] shadow-sm transition-all active:scale-95"
+                        >
+                            Edit
+                        </button>
+                        {article.status === 'draft' && isPublishable && (
+                            <button
+                                onClick={handleRequestToPublish}
+                                disabled={actionLoading}
+                                className="flex-1 sm:flex-none px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-[#0A2342] rounded-xl hover:bg-[#0A2342]/90 shadow-sm transition-all active:scale-95 disabled:opacity-50"
+                            >
+                                {actionLoading ? "Processing..." : "Request to Publish"}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* MODALS */}
             <ApproveModal
                 isOpen={approveModalOpen}
@@ -280,7 +360,7 @@ export default function ArticlePreviewPage() {
                             {/* Title */}
                             <div className="h-10 sm:h-12 bg-gray-200 rounded-xl w-full mb-3" />
                             <div className="h-10 sm:h-12 bg-gray-200 rounded-xl w-3/4 mb-6" />
-                            
+
                             {/* Author box */}
                             <div className="flex items-center gap-4 mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-100">
                                 <div className="h-14 w-14 rounded-full bg-gray-200 shrink-0" />
