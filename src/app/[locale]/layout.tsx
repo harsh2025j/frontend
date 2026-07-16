@@ -225,6 +225,26 @@ export default async function RootLayout({
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
+        {/* Google Analytics Script */}
+        <Script
+          id="google-analytics-src"
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=G-88RRSP2L7E`}
+        />
+        <Script
+          id="google-analytics-init"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-88RRSP2L7E', {
+                page_path: window.location.pathname,
+              });
+            `,
+          }}
+        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} antialiased`}>
         <NextIntlClientProvider messages={messages}>
