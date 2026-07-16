@@ -11,6 +11,7 @@ import { AdProvider } from "@/context/AdContext";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import Script from 'next/script';
+import GoogleAnalyticsTracker from "@/components/GoogleAnalyticsTracker";
 
 import { API_BASE_URL, API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
 
@@ -258,6 +259,7 @@ export default async function RootLayout({
                   {children}
                 </ClientLayout>
 
+                <GoogleAnalyticsTracker />
 
                 {/* <GlobalLoader /> */}
                 <Toaster
