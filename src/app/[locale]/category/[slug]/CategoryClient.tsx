@@ -54,8 +54,7 @@ export default function CategoryClient() {
 
     useDocTitle(`${categoryName || "Category"} | Sajjad Husain Law Associates`);
 
-    const cleanCategoryName = (name: string) =>
-        name.replace(/\s*\d+\s*$/g, "").replace(/\s+/g, " ").trim();
+    const cleanCategoryName = (name: string) => name.trim();
 
     const fetchData = useCallback(async () => {
         if (!slug) return;

@@ -54,8 +54,7 @@ export default function TagClient() {
 
     useDocTitle(`${tagName || "Tag"} | Sajjad Husain Law Associates`);
 
-    const cleanTagName = (name: string) =>
-        name.replace(/\s*\d+\s*$/g, "").replace(/\s+/g, " ").trim();
+    const cleanTagName = (name: string) => name.trim();
 
     const fetchData = useCallback(async () => {
         if (!slug) return;
