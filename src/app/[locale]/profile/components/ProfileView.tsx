@@ -819,7 +819,7 @@ function TonalField({ label, value, icon: Icon }: any) {
 
 function CaseBentoLink({ caseData, delay }: any) {
   return (
-    <Link href={`/cases/${caseData.id}`}>
+    <Link href={`/cases/${caseData.slug || caseData.id}`}>
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }} className="h-full bg-white/70 p-8 rounded-2xl border border-white/20 group hover:border-[#C9A227]/20 transition-all">
         <div className="flex justify-between items-start mb-6">
           <span className="text-[10px] font-black text-[#C9A227] uppercase tracking-widest">{caseData.caseType || "Case"}</span>

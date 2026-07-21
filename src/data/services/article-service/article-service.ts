@@ -164,8 +164,8 @@ export const articleApi = {
     return response;
   },
 
-  triggerDailyNews: async (max?: number) => {
-    const response = await apiClient.post<any>("/tasks/trigger-daily-news", { max });
+  triggerDailyNews: async (max?: number, authorName?: string) => {
+    const response = await apiClient.post<any>("/tasks/trigger-daily-news", { max, authorName });
     return response;
   },
 

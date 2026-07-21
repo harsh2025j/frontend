@@ -633,7 +633,7 @@ const ContentManagementPageContent: React.FC = () => {
           setSyncModalOpen(false);
           const toastId = toast.loading(`Syncing ${max} GNews article${max > 1 ? "s" : ""}...`);
           try {
-            const res = await articleApi.triggerDailyNews(max);
+            const res = await articleApi.triggerDailyNews(max, user?.name);
             const data = res.data;
             if (res.status === 200 || data?.success) {
               toast.success(`GNews sync started for ${max} article${max > 1 ? "s" : ""}! Please refresh the page in a few seconds to see new articles.`, { id: toastId, duration: 6000 });

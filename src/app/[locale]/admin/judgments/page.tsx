@@ -9,7 +9,7 @@ import { formatDate } from "@/utils/dateUtils";
 import { Trash2, Edit, Plus, Search, Gavel, Eye, X, ExternalLink } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
-import JudgmentView from "@/app/[locale]/judgments/[id]/JudgmentView";
+import JudgmentView from "@/app/[locale]/judgments/[slug]/JudgmentView";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchParams, useRouter } from "next/navigation";

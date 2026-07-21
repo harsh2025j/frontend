@@ -20,13 +20,37 @@ export default function JudgmentView({ judgmentId: propId, isModal = false }: { 
 
     useEffect(() => {
         if (finalJudgmentId) {
-            fetchJudgmentDetails(finalJudgmentId);
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(finalJudgmentId);
+            if (isUUID) {
+                fetchJudgmentDetailsById(finalJudgmentId);
+            } else {
+                fetchJudgmentDetailsBySlug(finalJudgmentId);
+            }
         }
     }, [finalJudgmentId]);
 
-    const fetchJudgmentDetails = async (id: string) => {
+    const fetchJudgmentDetailsById = async (id: string) => {
         try {
             const response = await judgmentsService.getById(id);
+            const data = response.data.data;
+            setJudgment(data);
+
+            const searchParams = new URLSearchParams(window.location.search);
+            if (searchParams.get("print") === "true") {
+                setTimeout(() => {
+                    window.print();
+                }, 800);
+            }
+        } catch (error) {
+            console.error("Error fetching judgment details:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchJudgmentDetailsBySlug = async (slug: string) => {
+        try {
+            const response = await judgmentsService.getBySlug(slug);
             const data = response.data.data;
             setJudgment(data);
 
@@ -102,7 +126,34 @@ export default function JudgmentView({ judgmentId: propId, isModal = false }: { 
                 </div>
             </div>
 
-            <div className="max-w-5xl mx-auto mt-8 bg-white shadow-2xl border border-gray-300 print:shadow-none print:border-none print:mt-0 px-10 py-12 md:px-20 md:py-20 relative overflow-hidden">
+            {judgment.pdfUrl ? (
+                <div className="max-w-7xl mx-auto mt-8 px-4 h-[92vh]">
+                    <div className="bg-white rounded-2xl shadow-xl border border-gray-200 flex flex-col h-full overflow-hidden">
+                        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 bg-gray-50 flex-shrink-0">
+                            <h3 className="font-sans font-bold text-sm uppercase tracking-widest text-[#0A2342] flex items-center gap-2">
+                                <FileText size={18} /> Official Judgment PDF
+                            </h3>
+                            <a
+                                href={judgment.pdfUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-5 py-2 bg-[#0A2342] text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-[#1a3a75] transition-colors shadow-sm"
+                            >
+                                Open in Full Screen
+                            </a>
+                        </div>
+                        <div className="flex-1 w-full bg-gray-100">
+                            <iframe 
+                                src={`${judgment.pdfUrl}#toolbar=1&navpanes=0&scrollbar=1`}
+                                className="w-full h-full border-0"
+                                title="Judgment PDF Preview"
+                            />
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <>
+                <div className="max-w-5xl mx-auto mt-8 bg-white shadow-2xl border border-gray-300 print:shadow-none print:border-none print:mt-0 px-10 py-12 md:px-20 md:py-20 relative overflow-hidden">
                 <div className="absolute top-10 right-10 opacity-[0.03] pointer-events-none select-none">
                     <Landmark size={240} className="text-black" />
                 </div>
@@ -293,35 +344,37 @@ export default function JudgmentView({ judgmentId: propId, isModal = false }: { 
                     <div className="mt-24 text-center text-gray-300 tracking-[1em] font-sans font-black text-xs">
                         DOCUMENT ENDS
                     </div>
-                </div>
-            </div>
-
-            <div className="print-hidden max-w-5xl mx-auto mt-8 mb-20 px-10 md:px-20 py-12 bg-white rounded-3xl border border-gray-200 shadow-xl ">
-                <div className="flex items-center gap-3 mb-10">
-                    <div className="p-2 bg-amber-50 rounded-lg">
-                        <Info size={24} className="text-[#C9A227]" />
                     </div>
-                    <h2 className="text-xl font-bold font-sans uppercase tracking-widest text-[#0A2342]">Record Metadata & Administrative Info</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-sm font-sans">
-                    <MetadataItem icon={<Landmark size={14} />} label="Court Level" value={judgment.case?.courtLevel || "Not Specified"} />
-                    <MetadataItem icon={<Gavel size={14} />} label="Filing Mode" value={judgment.implementationDelivery || "Standard"} />
-                    <MetadataItem icon={<Scale size={14} />} label="Bench Type" value={judgment.benchStrength || "Division"} />
-                    <MetadataItem icon={<Calendar size={14} />} label="Next List Date" value={judgment.nextListDate ? formatDate(judgment.nextListDate) : "No Date Set"} />
-                    <MetadataItem icon={<History size={14} />} label="Case History" value={judgment.historyLink} isLink />
-                    <MetadataItem icon={<LinkIcon size={14} />} label="Ref. Portal" value={judgment.citationManagementSite} isLink />
-                    <MetadataItem icon={<User size={14} />} label="Article Creator" value={judgment.articleCreator} />
-                    <MetadataItem icon={<Calendar size={14} />} label="Complied By" value={judgment.natureOfCompliance} />
-                </div>
-
-                {judgment.additionalNotes && (
-                    <div className="mt-12 p-6 bg-gray-50 rounded-2xl border border-gray-100 italic">
-                        <span className="text-[10px] font-sans font-black uppercase text-gray-400 block mb-2">Administrative Notes:</span>
-                        <p className="text-sm font-medium text-gray-600 leading-relaxed font-sans">{judgment.additionalNotes}</p>
+                <div className="print-hidden max-w-5xl mx-auto mt-8 mb-20 px-10 md:px-20 py-12 bg-white rounded-3xl border border-gray-200 shadow-xl ">
+                    <div className="flex items-center gap-3 mb-10">
+                        <div className="p-2 bg-amber-50 rounded-lg">
+                            <Info size={24} className="text-[#C9A227]" />
+                        </div>
+                        <h2 className="text-xl font-bold font-sans uppercase tracking-widest text-[#0A2342]">Record Metadata & Administrative Info</h2>
                     </div>
-                )}
-            </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-sm font-sans">
+                        <MetadataItem icon={<Landmark size={14} />} label="Court Level" value={judgment.case?.courtLevel || "Not Specified"} />
+                        <MetadataItem icon={<Gavel size={14} />} label="Filing Mode" value={judgment.implementationDelivery || "Standard"} />
+                        <MetadataItem icon={<Scale size={14} />} label="Bench Type" value={judgment.benchStrength || "Division"} />
+                        <MetadataItem icon={<Calendar size={14} />} label="Next List Date" value={judgment.nextListDate ? formatDate(judgment.nextListDate) : "No Date Set"} />
+                        <MetadataItem icon={<History size={14} />} label="Case History" value={judgment.historyLink} isLink />
+                        <MetadataItem icon={<LinkIcon size={14} />} label="Ref. Portal" value={judgment.citationManagementSite} isLink />
+                        <MetadataItem icon={<User size={14} />} label="Article Creator" value={judgment.articleCreator} />
+                        <MetadataItem icon={<Calendar size={14} />} label="Complied By" value={judgment.natureOfCompliance} />
+                    </div>
+
+                    {judgment.additionalNotes && (
+                        <div className="mt-12 p-6 bg-gray-50 rounded-2xl border border-gray-100 italic">
+                            <span className="text-[10px] font-sans font-black uppercase text-gray-400 block mb-2">Administrative Notes:</span>
+                            <p className="text-sm font-medium text-gray-600 leading-relaxed font-sans">{judgment.additionalNotes}</p>
+                        </div>
+                    )}
+                </div>
+            </>
+            )}
         </div>
     );
 }

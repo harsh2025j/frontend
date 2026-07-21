@@ -7,16 +7,17 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.sajjadhusainla
 
 interface PageProps {
     params: {
-        id: string;
+        slug: string;
         locale: string;
     };
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const { id, locale } = params;
+    const { slug, locale } = params;
     
     try {
-        const response = await casesService.getById(id);
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+        const response = isUUID ? await casesService.getById(slug) : await casesService.getBySlug(slug);
         const caseData = response.data.data;
 
         if (!caseData) {
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
                 title,
                 description,
                 type: "article",
-                url: `${SITE_URL}/${locale}/cases/${id}`,
+                url: `${SITE_URL}/${locale}/cases/${slug}`,
                 images: [`${SITE_URL}/logo-gold.png`],
             },
             twitter: {
@@ -48,14 +49,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function CaseDetailPage({ params, caseId: propId, isModal = false }: PageProps & { caseId?: string; isModal?: boolean }) {
-    const { id } = params || {};
-    const finalId = propId || id;
-
-    // Fetch data for JSON-LD structured data
+    const { slug } = params || {};
+    // If propId is passed, use getById, otherwise use getBySlug for page viewing
+    
     let caseData = null;
+
     try {
-        const response = await casesService.getById(finalId);
-        caseData = response.data.data;
+        if (propId) {
+            const response = await casesService.getById(propId);
+            caseData = response.data.data;
+        } else if (slug) {
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+            const response = isUUID ? await casesService.getById(slug) : await casesService.getBySlug(slug);
+            caseData = response.data.data;
+        }
     } catch (error) {
         console.error("Error fetching case for SEO:", error);
     }
@@ -80,7 +87,7 @@ export default async function CaseDetailPage({ params, caseId: propId, isModal =
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
                 />
             )}
-            <CaseView caseId={finalId} isModal={isModal} />
+            <CaseView caseId={propId} caseSlug={slug} isModal={isModal} />
         </>
     );
 }

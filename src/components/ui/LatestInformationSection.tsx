@@ -163,7 +163,7 @@ export default function LatestInformationSection() {
                 return (
                     <Link
                         key={id || index}
-                        href={`/cases/${id}`}
+                        href={`/cases/${item.slug || id}`}
                         className="flex items-start gap-2.5 pb-3.5 border-b border-gray-200 last:border-0 hover:bg-gray-50/50 transition-colors p-2"
                     >
                         <span className="text-[#C9A227] mt-0.5">▸</span>
@@ -207,9 +207,7 @@ export default function LatestInformationSection() {
                                 </button>
                             </div>
                             <a
-                                href={pdfUrl || `/judgments/${id}`}
-                                target={pdfUrl ? "_blank" : "_self"}
-                                rel={pdfUrl ? "noopener noreferrer" : undefined}
+                                href={`/judgments/${item.slug || id}`}
                                 className="block"
                             >
                                 <p className="text-sm text-gray-700 leading-relaxed truncate group-hover/item:text-[#0A2342] font-medium">

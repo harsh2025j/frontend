@@ -10,7 +10,7 @@ import Loader from "@/components/ui/Loader";
 import { useAppSelector } from "@/data/redux/hooks";
 import CaseTimeline from "./components/CaseTimeline";
 
-export default function CaseView({ caseId: propId, isModal = false }: { caseId?: string; isModal?: boolean }) {
+export default function CaseView({ caseId: propId, caseSlug, isModal = false }: { caseId?: string; caseSlug?: string; isModal?: boolean }) {
     useDocTitle("Case Details | Sajjad Husain Law Associates");
     const params = useParams();
     const router = useRouter();
@@ -18,20 +18,40 @@ export default function CaseView({ caseId: propId, isModal = false }: { caseId?:
     const activeTab = searchParams.get("tab") || "report";
     
     const { user } = useAppSelector((state) => state.auth);
-    const finalCaseId = propId || (params?.id as string);
+    const finalCaseId = propId;
+    const finalCaseSlug = caseSlug || (params?.slug as string);
     const [caseData, setCaseData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [unauthorized, setUnauthorized] = useState(false);
 
     useEffect(() => {
         if (finalCaseId) {
-            fetchCaseDetails(finalCaseId);
+            fetchCaseDetailsById(finalCaseId);
+        } else if (finalCaseSlug) {
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(finalCaseSlug);
+            if (isUUID) {
+                fetchCaseDetailsById(finalCaseSlug);
+            } else {
+                fetchCaseDetailsBySlug(finalCaseSlug);
+            }
         }
-    }, [finalCaseId]);
+    }, [finalCaseId, finalCaseSlug]);
 
-    const fetchCaseDetails = async (id: string) => {
+    const fetchCaseDetailsById = async (id: string) => {
         try {
             const response = await casesService.getById(id);
+            const data = response.data.data;
+            setCaseData(data);
+        } catch (error) {
+            console.error("Error fetching case details:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchCaseDetailsBySlug = async (slug: string) => {
+        try {
+            const response = await casesService.getBySlug(slug);
             const data = response.data.data;
             setCaseData(data);
         } catch (error) {
@@ -111,7 +131,7 @@ export default function CaseView({ caseId: propId, isModal = false }: { caseId?:
                     <div className="flex items-center gap-3">
                         {activeTab !== "report" && (
                             <button 
-                                onClick={() => router.push(`/cases/${finalCaseId}?tab=report`)}
+                                onClick={() => router.push(`/cases/${finalCaseSlug || finalCaseId}?tab=report`)}
                                 className="flex items-center gap-2 px-6 py-2.5 border border-gray-200 text-[#0A2342] rounded-xl hover:bg-gray-50 transition-all text-sm font-bold"
                             >
                                 View Official Report

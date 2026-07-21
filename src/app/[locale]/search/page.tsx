@@ -91,14 +91,11 @@ const SearchResultsContent = () => {
     };
 
     const getResultLink = (result: SearchResult) => {
-        if (result.type === 'judgment' && result.pdfUrl) {
-            return result.pdfUrl;
-        }
         switch (result.type) {
-            case 'judgment': return `/judgments/${result.id}`;
-            case 'case': return `/cases/${result.id}`;
-            case 'judge': return `/judges/${result.id}`;
-            case 'article': return `/news/${result.slug}`;
+            case 'judgment': return `/judgments/${result.slug || result.id}`;
+            case 'case': return `/cases/${result.slug || result.id}`;
+            case 'judge': return `/judges/${result.slug || result.id}`;
+            case 'article': return `/news/${result.slug || result.id}`;
             default: return '#';
         }
     };
@@ -117,7 +114,6 @@ const SearchResultsContent = () => {
             <div className="relative group mb-4">
                 <Link
                     href={getResultLink(result)}
-                    target={isPdf ? "_blank" : "_self"}
                     className="block bg-white rounded-2xl border border-gray-100 hover:border-[#C9A227]/30 hover:shadow-xl hover:shadow-[#C9A227]/5 transition-all duration-300 p-5"
                 >
                     <div className="flex flex-col md:flex-row gap-6">

@@ -63,6 +63,7 @@ export const API_ENDPOINTS = {
   },
   CASES: {
     BASE: "/cases",
+    BY_SLUG: "/cases/slug",
     UPCOMING_HEARINGS: "/cases/upcoming-hearings",
     BY_JUDGE: "/cases/judge",
     BY_NUMBER: "/cases/number",

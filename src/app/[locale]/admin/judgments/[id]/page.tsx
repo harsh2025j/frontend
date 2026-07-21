@@ -999,9 +999,9 @@ export default function EditJudgmentPage() {
                                 />
                             </FormField>
 
-                            <FormField label="Full Judgment Text / Content" required>
+                            <FormField label="Full Judgment Text / Content" required={!formData.pdfUrl && !formData.file}>
                                 <p className="text-[10px] text-gray-400 mb-2 px-1 uppercase font-bold">The complete verbatim text of the judgment decree</p>
-                                <div className="border border-gray-200 rounded-2xl overflow-hidden bg-gray-50">
+                                <div className={`border rounded-lg transition-all ${errors.fullText ? "border-red-500 ring-2 ring-red-500/10" : "border-gray-200"}`}>
                                     <RichTextEditor
                                         value={formData.fullText}
                                         onChange={(v) => setFormData((prev: any) => ({ ...prev, fullText: v }))}

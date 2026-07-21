@@ -9,7 +9,7 @@ import { Link } from "@/i18n/routing";
 import { Trash2, Edit, Plus, Search, FileText, Eye, X } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/ui/Loader";
-import CaseView from "@/app/[locale]/cases/[id]/CaseView";
+import CaseView from "@/app/[locale]/cases/[slug]/CaseView";
 
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useDocTitle } from "@/hooks/useDocTitle";

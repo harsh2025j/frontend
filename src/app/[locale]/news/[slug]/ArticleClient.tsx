@@ -453,6 +453,17 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                             aspect-ratio: 16 / 9;
                             height: auto !important;
                         }
+                        .article-content .ql-align-center { text-align: center !important; }
+                        .article-content .ql-align-right { text-align: right !important; }
+                        .article-content .ql-align-justify { text-align: justify !important; }
+                        .article-content .ql-indent-1 { padding-left: 3em !important; }
+                        .article-content .ql-indent-2 { padding-left: 6em !important; }
+                        .article-content .ql-indent-3 { padding-left: 9em !important; }
+                        .article-content .ql-indent-4 { padding-left: 12em !important; }
+                        .article-content .ql-indent-5 { padding-left: 15em !important; }
+                        .article-content .ql-indent-6 { padding-left: 18em !important; }
+                        .article-content .ql-indent-7 { padding-left: 21em !important; }
+                        .article-content .ql-indent-8 { padding-left: 24em !important; }
                         @media (max-width: 640px) {
                             .article-content h1 { font-size: 1.75rem !important; line-height: 1.3 !important; margin-bottom: 0.75rem !important; }
                             .article-content h2 { font-size: 1.5rem !important; line-height: 1.3 !important; margin-bottom: 0.75rem !important; }
@@ -618,6 +629,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
     const sidebarContainerRef = useRef<HTMLDivElement>(null);
     const sidebarScrollRef = useRef<HTMLDivElement>(null);
     const isHoveringSidebar = useRef(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     // ── SYNCED SCROLLING LOGIC ──
     useEffect(() => {
@@ -823,10 +835,24 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative transition-all duration-500">
+
+                    {/* ── Floating Toggle Sidebar Button (Closed State) ── */}
+                    {!isSidebarOpen && (
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="hidden lg:flex fixed right-0 top-[40vh] bg-[#0A2342] border border-[#0A2342] text-white hover:bg-[#C9A227] hover:border-[#C9A227] rounded-l-xl p-3 pl-4 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.2)] z-50 transition-colors duration-300"
+                            title="Show Related Articles"
+                        >
+                            <div className="flex flex-col items-center gap-2">
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                                <span className="text-[11px] font-bold uppercase tracking-widest text-white whitespace-nowrap" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>{t("relatedArticles")}</span>
+                            </div>
+                        </button>
+                    )}
 
                     {/* ── Main content column ── */}
-                    <div className="lg:col-span-9">
+                    <div className={`transition-all duration-500 ${isSidebarOpen ? "lg:col-span-9" : "lg:col-span-10 lg:col-start-2"}`}>
                         {articles.map((article, i) => (
                             <React.Fragment key={article.id}>
 
@@ -865,11 +891,23 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
 
                     {/* ── Sidebar (sticky, related articles from category) ── */}
                     <div
-                        className="lg:col-span-3 relative z-20 print:hidden"
+                        className={`relative z-20 print:hidden transition-all duration-500 ${isSidebarOpen ? "lg:col-span-3 opacity-100 translate-x-0" : "hidden lg:block lg:absolute lg:right-0 lg:top-0 lg:w-0 lg:opacity-0 lg:translate-x-full overflow-hidden"}`}
                         ref={sidebarContainerRef}
                         onMouseEnter={() => { isHoveringSidebar.current = true; }}
                         onMouseLeave={() => { isHoveringSidebar.current = false; }}
                     >
+                        {/* ── Close Sidebar Button (Open State) ── */}
+                        <div className="sticky top-24 z-40">
+                            {isSidebarOpen && (
+                                <button
+                                    onClick={() => setIsSidebarOpen(false)}
+                                    className="hidden lg:flex absolute -left-8 top-0 bg-[#0A2342] border border-white text-white hover:bg-[#C9A227] rounded-full w-8 h-8 items-center justify-center shadow-lg transition-colors duration-300"
+                                    title="Hide Sidebar"
+                                >
+                                    <svg className="w-4 h-4 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                                </button>
+                            )}
+                        </div>
                         <div
                             ref={sidebarScrollRef}
                             className="sticky top-24 max-h-[90vh] overflow-y-auto pr-2 scrollbar-hide pb-10"

@@ -69,6 +69,9 @@ export const judgmentsService = {
     getById: async (id: string) => {
         return await apiClient.get(`${API_ENDPOINTS.JUDGMENTS.BASE}/${id}`);
     },
+    getBySlug: async (slug: string) => {
+        return await apiClient.get(`${API_ENDPOINTS.JUDGMENTS.BASE}/slug/${slug}`);
+    },
     create: async (data: any) => {
         // If data is FormData (has files), let axios set the correct Content-Type with boundary
         const config = data instanceof FormData ? { headers: { 'Content-Type': undefined } } : {};

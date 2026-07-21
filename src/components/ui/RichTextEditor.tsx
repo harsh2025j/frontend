@@ -144,8 +144,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                                 [{ 'list': 'ordered' }, { 'listStyle': ['decimal', 'decimal-paren', 'decimal-nested', 'roman-alpha', 'upper-alpha', 'upper-roman'] }, { 'list': 'bullet' }],
                                 [{ 'indent': '-1' }, { 'indent': '+1' }, { 'align': [] }],
 
-                                // Media and clean
+                                // Media, Tables and clean
                                 ['blockquote', 'link', 'image', 'video'],
+                                [{ 'tableAction': ['insert-table', 'insert-row-above', 'insert-row-below', 'insert-column-left', 'insert-column-right', 'delete-row', 'delete-column', 'delete-table'] }],
                                 ['clean']
                             ],
                             handlers: {
@@ -177,9 +178,38 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                                         this.quill.format('list', false);
                                         this.quill.format('listStyle', false);
                                     }
+                                },
+                                'tableAction': function (this: any, value: string) {
+                                    const tableModule = this.quill.getModule('table');
+                                    if (value === 'insert-table') {
+                                        tableModule.insertTable(3, 3);
+                                    } else if (value === 'insert-row-above') {
+                                        tableModule.insertRowAbove();
+                                    } else if (value === 'insert-row-below') {
+                                        tableModule.insertRowBelow();
+                                    } else if (value === 'insert-column-left') {
+                                        tableModule.insertColumnLeft();
+                                    } else if (value === 'insert-column-right') {
+                                        tableModule.insertColumnRight();
+                                    } else if (value === 'delete-row') {
+                                        tableModule.deleteRow();
+                                    } else if (value === 'delete-column') {
+                                        tableModule.deleteColumn();
+                                    } else if (value === 'delete-table') {
+                                        tableModule.deleteTable();
+                                    }
+                                    
+                                    // Reset picker to label manually
+                                    const picker = (this.container as HTMLElement).querySelector('.ql-tableAction .ql-picker-label');
+                                    if (picker) {
+                                        picker.setAttribute('data-value', '');
+                                        picker.setAttribute('data-label', 'Table Options');
+                                    }
                                 }
                             }
                         },
+                        // Enable the Table module natively included in Quill 2.0
+                        table: true,
                         // Enable the Blot Formatter for image/video resizing
                         blotFormatter: {}
                     },
@@ -586,6 +616,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                 .ql-snow .ql-picker.ql-lineHeight .ql-picker-label[data-value="2.5"]::before,
                 .ql-snow .ql-picker.ql-lineHeight .ql-picker-item[data-value="2.5"]::before { content: "2.5"; }
                 
+                /* --- Toolbar dropdown for Table Actions --- */
+                .ql-snow .ql-picker.ql-tableAction { width: 85px; }
+                .ql-snow .ql-picker.ql-tableAction .ql-picker-label::before { content: "Table"; }
+                .ql-snow .ql-picker.ql-tableAction .ql-picker-item[data-value="insert-table"]::before { content: "Insert 3x3"; font-weight: bold; color: #2563eb; }
+                .ql-snow .ql-picker.ql-tableAction .ql-picker-item[data-value="insert-row-above"]::before { content: "Row ↑"; }
+                .ql-snow .ql-picker.ql-tableAction .ql-picker-item[data-value="insert-row-below"]::before { content: "Row ↓"; }
+                .ql-snow .ql-picker.ql-tableAction .ql-picker-item[data-value="insert-column-left"]::before { content: "Col ←"; }
+                .ql-snow .ql-picker.ql-tableAction .ql-picker-item[data-value="insert-column-right"]::before { content: "Col →"; }
+                .ql-snow .ql-picker.ql-tableAction .ql-picker-item[data-value="delete-row"]::before { content: "Delete Row"; color: #dc2626; }
+                .ql-snow .ql-picker.ql-tableAction .ql-picker-item[data-value="delete-column"]::before { content: "Delete Col"; color: #dc2626; }
+                .ql-snow .ql-picker.ql-tableAction .ql-picker-item[data-value="delete-table"]::before { content: "Delete Table"; color: #dc2626; border-top: 1px solid #e5e7eb; padding-top: 4px; margin-top: 4px; }
+                
                 /* --- Custom List Style Overrides (Dropdown Selections) --- */
                 
                 /* decimal: 1., a., i. */
@@ -747,7 +789,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                 .ql-editor td {
                     border: 1px solid #d1d5db !important;
                     padding: 0.75rem 1rem !important;
-                    text-align: left !important;
+                    text-align: left;
                 }
                 .ql-editor th {
                     background-color: #f3f4f6 !important;

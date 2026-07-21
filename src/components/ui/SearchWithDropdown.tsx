@@ -74,19 +74,10 @@ export default function SearchWithDropdown({
     const handleResultClick = (result: SearchSuggestion) => {
         let path = '';
         switch (result.type) {
-            case 'judgment': 
-                if (result.pdfUrl) {
-                    window.open(result.pdfUrl, '_blank');
-                    setQuery('');
-                    setIsOpen(false);
-                    if (onResultSelect) onResultSelect();
-                    return;
-                }
-                path = `/judgments/${result.id}`; 
-                break;
-            case 'case': path = `/cases/${result.id}`; break;
-            case 'judge': path = `/judges/${result.id}`; break;
-            default: path = `/news/${result.slug}`; break;
+            case 'judgment': path = `/judgments/${result.slug || result.id}`; break;
+            case 'case': path = `/cases/${result.slug || result.id}`; break;
+            case 'judge': path = `/judges/${result.slug || result.id}`; break;
+            default: path = `/news/${result.slug || result.id}`; break;
         }
         
         router.push(path);

@@ -8,6 +8,9 @@ export const casesService = {
     getById: async (id: string) => {
         return await apiClient.get(`${API_ENDPOINTS.CASES.BASE}/${id}`);
     },
+    getBySlug: async (slug: string) => {
+        return await apiClient.get(`${API_ENDPOINTS.CASES.BY_SLUG}/${slug}`);
+    },
     create: async (data: any) => {
         return await apiClient.post(API_ENDPOINTS.CASES.BASE, data);
     },

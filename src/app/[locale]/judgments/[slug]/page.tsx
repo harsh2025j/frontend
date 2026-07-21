@@ -8,7 +8,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.sajjadhusainla
 
 interface PageProps {
     params: {
-        id: string;
+        slug: string;
         locale: string;
     };
 }
@@ -17,10 +17,17 @@ interface PageProps {
  * Dynamic Metadata generation for Judgment pages
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const { id, locale } = params;
+    const { slug, locale } = params;
 
     try {
-        const response = await judgmentsService.getById(id);
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+        let response;
+        if (isUUID) {
+            response = await judgmentsService.getById(slug);
+        } else {
+            response = await judgmentsService.getBySlug(slug);
+        }
+        
         const judgment = response.data.data;
 
         if (!judgment) {
@@ -48,7 +55,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
                 title: seoTitle,
                 description,
                 type: "article",
-                url: `${SITE_URL}/${locale}/judgments/${id}`,
+                url: `${SITE_URL}/${locale}/judgments/${slug}`,
                 images: [`${SITE_URL}/logo-gold.png`],
             },
             twitter: {
@@ -64,13 +71,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function JudgmentDetailPage({ params: paramsPromise, judgmentId: propId, isModal = false }: PageProps & { judgmentId?: string; isModal?: boolean }) {
     const params = await paramsPromise;
-    const { id, locale } = params || {};
-    const finalId = propId || id;
+    const { slug, locale } = params || {};
+    const finalId = propId || slug;
 
     // Fetch data for JSON-LD structured data
     let judgment = null;
+
     try {
-        const response = await judgmentsService.getById(finalId);
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(finalId);
+        let response;
+        if (isUUID) {
+            response = await judgmentsService.getById(finalId);
+        } else {
+            response = await judgmentsService.getBySlug(finalId);
+        }
         judgment = response.data.data;
     } catch (error) {
         console.error("Error fetching judgment for SEO:", error);

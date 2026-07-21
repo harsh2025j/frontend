@@ -129,7 +129,7 @@ function ResultPageContent() {
                                                 </div>
 
                                                 <Link
-                                                    href={`/cases/${c.id}`}
+                                                    href={`/cases/${c.slug || c.id}`}
                                                     className="text-lg font-bold text-[#0A2342] hover:text-[#C9A227] transition-colors leading-tight block mb-4"
                                                 >
                                                     {c.title || "Untitled Case"}

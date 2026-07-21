@@ -129,23 +129,12 @@ function JudgmentResultPageContent() {
                                                     </span>
                                                 </div>
 
-                                                {item.pdfUrl ? (
-                                                    <a
-                                                        href={item.pdfUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-xl font-bold text-[#0A2342] hover:text-[#C9A227] transition-colors leading-tight"
-                                                    >
-                                                        {item.title || item.caseTitle || item.case?.title || (item.scrapedCaseNumber ? `${item.scrapedCaseType || ''} No. ${item.scrapedCaseNumber}` : "Case Title Not Available")}
-                                                    </a>
-                                                ) : (
-                                                    <Link
-                                                        href={`/judgments/${item._id || item.id}`}
-                                                        className="text-xl font-bold text-[#0A2342] hover:text-[#C9A227] transition-colors leading-tight"
-                                                    >
-                                                        {item.title || item.caseTitle || item.case?.title || (item.scrapedCaseNumber ? `${item.scrapedCaseType || ''} No. ${item.scrapedCaseNumber}` : "Case Title Not Available")}
-                                                    </Link>
-                                                )}
+                                                <Link
+                                                    href={`/judgments/${item.slug || item._id || item.id}`}
+                                                    className="text-xl font-bold text-[#0A2342] hover:text-[#C9A227] transition-colors leading-tight"
+                                                >
+                                                    {item.title || item.caseTitle || item.case?.title || (item.scrapedCaseNumber ? `${item.scrapedCaseType || ''} No. ${item.scrapedCaseNumber}` : "Case Title Not Available")}
+                                                </Link>
 
                                                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 text-sm text-gray-600">
                                                     <div className="flex items-center gap-1.5">
@@ -179,25 +168,13 @@ function JudgmentResultPageContent() {
                                                 />
                                                 <span className="text-xs text-gray-500 font-medium">Save for later</span>
                                             </div>
-                                            {item.pdfUrl ? (
-                                                <a
-                                                    href={item.pdfUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-2 text-sm font-semibold text-[#0A2342] hover:text-[#C9A227] transition-colors bg-white border border-gray-200 hover:border-[#C9A227] px-4 py-2 rounded-lg"
-                                                >
-                                                    View Original PDF
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                                </a>
-                                            ) : (
-                                                <Link
-                                                    href={`/judgments/${item._id || item.id}`}
-                                                    className="inline-flex items-center gap-2 text-sm font-semibold text-[#0A2342] hover:text-[#C9A227] transition-colors bg-white border border-gray-200 hover:border-[#C9A227] px-4 py-2 rounded-lg"
-                                                >
-                                                    Read Full Judgment
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                                </Link>
-                                            )}
+                                            <Link
+                                                href={`/judgments/${item.slug || item._id || item.id}`}
+                                                className="inline-flex items-center gap-2 text-sm font-semibold text-[#0A2342] hover:text-[#C9A227] transition-colors bg-white border border-gray-200 hover:border-[#C9A227] px-4 py-2 rounded-lg"
+                                            >
+                                                View Judgment
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                            </Link>
                                         </div>
                                     </div>
                                 ))}
