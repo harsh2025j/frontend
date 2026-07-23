@@ -203,17 +203,15 @@ export default function NewsSlider() {
               >
                 {/* 1. Category Indicator */}
                 <div className="flex items-center justify-center lg:justify-start gap-4 mb-4 lg:mb-6">
-                  <div className="px-4 py-1 rounded-full bg-[#C9A227]/10 border border-[#C9A227]/20">
-                    <span className="text-[#C9A227] font-bold tracking-[0.2em] text-[10px] uppercase">
-                      {slides[current].category}
-                    </span>
-                  </div>
+                  <span className="text-[#C9A227] font-black tracking-[0.25em] text-[10px] lg:text-xs uppercase drop-shadow-sm">
+                    {slides[current].category}
+                  </span>
                   <div className="hidden lg:block flex-1 h-[1px] bg-white/10" />
                 </div>
 
                 {/* 2. Heading Reservoir */}
                 <div className="min-h-0 lg:min-h-[170px] flex items-start mb-4 lg:mb-0">
-                  <h1 className="text-2xl md:text-4xl lg:text-[45px] font-black text-white leading-[1.1] tracking-tighter line-clamp-3">
+                  <h1 className="text-2xl md:text-4xl lg:text-[45px] font-black text-white leading-[1.3] md:leading-[1.25] tracking-tight line-clamp-3 py-2">
                     {slides[current].title}
                   </h1>
                 </div>
