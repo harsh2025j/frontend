@@ -185,9 +185,9 @@ export default function LoginPage() {
               priority
             />
           </div>
-          <h1 className="text-2xl font-semibold text-white text-center mb-8">
+          {/* <h1 className="text-2xl font-semibold text-white text-center mb-8">
             Sajjad Law Associates
-          </h1>
+          </h1> */}
 
           <h2 className="text-2xl font-semibold text-white text-center mb-8">
             India’s no.1 legal news portal
