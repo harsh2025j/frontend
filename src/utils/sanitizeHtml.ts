@@ -54,7 +54,10 @@ export const sanitizeHtml = (html: string | undefined | null): string => {
             'controls', 
             'muted', 
             'loop', 
-            'autoplay'
-        ]
+            'autoplay',
+            'style',
+            'class'
+        ],
+        ALLOW_DATA_ATTR: true
     }) as string;
 };

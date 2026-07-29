@@ -444,6 +444,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                 {/* Article Content */}
                 <div className="article-content relative">
                     <style>{`
+                        /* Remove default quill editor padding to match original layout */
                         .article-content img {
                             max-width: 100% !important;
                             height: auto !important;
@@ -456,14 +457,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                         .article-content .ql-align-center { text-align: center !important; }
                         .article-content .ql-align-right { text-align: right !important; }
                         .article-content .ql-align-justify { text-align: justify !important; }
-                        .article-content .ql-indent-1 { padding-left: 3em !important; }
-                        .article-content .ql-indent-2 { padding-left: 6em !important; }
-                        .article-content .ql-indent-3 { padding-left: 9em !important; }
-                        .article-content .ql-indent-4 { padding-left: 12em !important; }
-                        .article-content .ql-indent-5 { padding-left: 15em !important; }
-                        .article-content .ql-indent-6 { padding-left: 18em !important; }
-                        .article-content .ql-indent-7 { padding-left: 21em !important; }
-                        .article-content .ql-indent-8 { padding-left: 24em !important; }
+                        .article-content .ql-editor { padding: 0 !important; font-family: inherit !important; font-size: inherit !important; line-height: inherit !important; overflow-y: visible !important; }
                         @media (max-width: 640px) {
                             .article-content h1 { font-size: 1.75rem !important; line-height: 1.3 !important; margin-bottom: 0.75rem !important; }
                             .article-content h2 { font-size: 1.5rem !important; line-height: 1.3 !important; margin-bottom: 0.75rem !important; }
@@ -472,7 +466,10 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                             .article-content p, .article-content li, .article-content span { font-size: 1rem !important; line-height: 1.6 !important; }
                         }
                     `}</style>
-                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayContent) }} />
+                    <div 
+                        className="article-content"
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayContent) }} 
+                    />
 
                     {!hasFullAccess && <PaywallOverlay isLoggedIn={mounted ? !!user : false} t={t} />}
                 </div>

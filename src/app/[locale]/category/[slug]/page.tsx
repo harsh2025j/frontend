@@ -3,6 +3,9 @@ import { Metadata } from "next";
 import CategoryClient from "./CategoryClient";
 import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
 
+// Enable ISR caching for 1 hour to reduce SSR compute costs
+export const revalidate = 3600;
+
 interface Props {
   params: Promise<{ slug: string; locale: string }>;
 }

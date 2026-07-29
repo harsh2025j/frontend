@@ -5,8 +5,9 @@ import ArticleClient from "./ArticleClient";
 import { Article } from "@/data/features/article/article.types";
 import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
 
-// Force dynamic rendering as we depend on the slug param
-export const dynamic = "force-dynamic";
+// Revalidate the page in the background every 1 hour (3600 seconds)
+// This enables Incremental Static Regeneration (ISR) and slashes SSR costs
+export const revalidate = 3600;
 
 const SITE_URL = "https://www.sajjadhusainlawassociates.com"; // production
 // const SITE_URL = "https://unimpeded-sprung-banter.ngrok-free.dev"; // dev (url)
@@ -19,7 +20,7 @@ type Props = {
 async function getArticle(slug: string): Promise<Article | null> {
     try {
         const res = await fetch(`${API_BASE_URL}/articles/${slug}`, {
-            cache: "no-store", // Ensure fresh data
+            next: { revalidate: 3600 }, // Cache response for 1 hour to prevent constant API calls
             headers: {
                 // "ngrok-skip-browser-warning": "true",
             },

@@ -3,6 +3,9 @@ import { Metadata } from "next";
 import { casesService } from "@/data/services/cases-service/casesService";
 import CaseView from "./CaseView";
 
+// Enable ISR caching for 1 hour to reduce SSR compute costs
+export const revalidate = 3600;
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.sajjadhusainlawassociates.com";
 
 interface PageProps {

@@ -2,6 +2,9 @@ import React from "react";
 import { Metadata } from "next";
 import TagClient from "./TagClient";
 
+// Enable ISR caching for 1 hour to reduce SSR compute costs
+export const revalidate = 3600;
+
 interface Props {
   params: Promise<{ slug: string; locale: string }>;
 }

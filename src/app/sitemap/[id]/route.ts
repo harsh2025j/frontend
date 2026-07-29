@@ -63,11 +63,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       else if (type === 'categories') url = `${SITE_URL}/en/category/${item.slug}`;
 
       if (url && !url.includes('undefined')) {
-        const lastMod = new Date(item.updatedAt || new Date()).toISOString();
+        const lastModStr = item.updatedAt ? `\n    <lastmod>${new Date(item.updatedAt).toISOString()}</lastmod>` : '';
         const freq = (type === 'articles' || type === 'categories' || type === 'tags') ? 'weekly' : 'monthly';
         const priority = (type === 'tags') ? '0.7' : '0.9';
 
-        xml += `\n  <url>\n    <loc>${url}</loc>\n    <lastmod>${lastMod}</lastmod>\n    <changefreq>${freq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
+        xml += `\n  <url>\n    <loc>${url}</loc>${lastModStr}\n    <changefreq>${freq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
       }
     }
     xml += '\n</urlset>';

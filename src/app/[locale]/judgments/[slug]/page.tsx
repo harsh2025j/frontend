@@ -3,6 +3,9 @@ import { Metadata } from "next";
 import { judgmentsService } from "@/data/services/judgments-service/judgmentsService";
 import JudgmentView from "./JudgmentView";
 
+// Enable ISR caching for 1 hour to reduce SSR compute costs
+export const revalidate = 3600;
+
 // This is the constant site URL for absolute paths in SEO
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.sajjadhusainlawassociates.com";
 
