@@ -43,8 +43,8 @@ export default function TagInputWithSuggestions({
             return;
         }
 
-        if (inputValue.length > 30) {
-            setError("Tag must not exceed 30 characters");
+        if (inputValue.length > 120) {
+            setError("Tag must not exceed 120 characters");
             setSuggestions([]);
             setIsOpen(false);
             return;
@@ -90,8 +90,8 @@ export default function TagInputWithSuggestions({
     const handleAddTag = (tagName: string) => {
         const trimmed = tagName.trim();
 
-        if (trimmed.length < 3 || trimmed.length > 30) {
-            setError("Tag must be between 3 and 30 characters.");
+        if (trimmed.length < 3 || trimmed.length > 120) {
+            setError("Tag must be between 3 and 120 characters.");
             return;
         }
 

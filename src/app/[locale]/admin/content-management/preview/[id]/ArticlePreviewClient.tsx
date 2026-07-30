@@ -236,8 +236,8 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                         {article.tags && article.tags.length > 0 && (
                             <>
                                 <span className="text-sm font-bold text-gray-900 mr-2">Tags:</span>
-                                {article.tags.map((tag) => (
-                                    <span key={tag.id} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full cursor-default">
+                                {[...article.tags].sort((a, b) => a.name.length - b.name.length).map((tag) => (
+                                    <span key={tag.id} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full cursor-default max-w-full break-words whitespace-normal inline-block">
                                         {tag.name}
                                     </span>
                                 ))}

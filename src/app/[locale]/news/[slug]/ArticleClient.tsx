@@ -304,8 +304,8 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                         {article.tags && article.tags.length > 0 && (
                             <>
                                 <span className="text-sm font-bold text-gray-900 mr-2">Tags:</span>
-                                {article.tags.map((tag) => (
-                                    <Link key={tag.id} href={`/tags/${tag.slug}`} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-blue-100 hover:text-blue-700 transition-colors">
+                                {[...article.tags].sort((a, b) => a.name.length - b.name.length).map((tag) => (
+                                    <Link key={tag.id} href={`/tags/${tag.slug}`} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-blue-100 hover:text-blue-700 transition-colors max-w-full break-words whitespace-normal inline-block">
                                         {tag.name}
                                     </Link>
                                 ))}
