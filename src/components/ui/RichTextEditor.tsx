@@ -1,6 +1,7 @@
 "use client";
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import 'react-quill-new/dist/quill.snow.css';
+import DocumentRuler from './DocumentRuler';
 
 interface RichTextEditorProps {
     value: string;
@@ -29,6 +30,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     const quillInstance = useRef<any>(null);
     const onChangeRef = useRef(onChange);
     const lastEmittedValue = useRef<string>('');
+    const [margins, setMargins] = useState({ marginLeft: 0, marginRight: 0, textIndent: 0 });
+    const [toolbarHeight, setToolbarHeight] = useState(0);
+    const activeListRef = useRef({ isList: false, paddingLeft: 0 });
 
     // Always keep the latest onChange handler without triggering re-renders
     useEffect(() => {
@@ -37,6 +41,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
 
     useEffect(() => {
         let mounted = true;
+        let resizeObserver: ResizeObserver | null = null;
 
         const initEditor = async () => {
             if (typeof window === 'undefined' || !containerRef.current || quillInstance.current) return;
@@ -73,6 +78,20 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                     whitelist: ['decimal', 'decimal-paren', 'decimal-nested', 'roman-alpha', 'upper-alpha', 'upper-roman']
                 });
                 Quill.register({ 'formats/listStyle': ListStyleAttributor }, true);
+
+                // --- Ruler Margin Attributors ---
+                const MarginLeftStyle = new Parchment.StyleAttributor('marginLeft', 'margin-left', { scope: Parchment.Scope.BLOCK });
+                const MarginRightStyle = new Parchment.StyleAttributor('marginRight', 'margin-right', { scope: Parchment.Scope.BLOCK });
+                const TextIndentStyle = new Parchment.StyleAttributor('textIndent', 'text-indent', { scope: Parchment.Scope.BLOCK });
+                const PaddingLeftStyle = new Parchment.StyleAttributor('paddingLeft', 'padding-left', { scope: Parchment.Scope.BLOCK });
+                const ListGapStyle = new Parchment.StyleAttributor('listGap', '--list-gap', { scope: Parchment.Scope.BLOCK });
+                Quill.register({
+                    'formats/marginLeft': MarginLeftStyle,
+                    'formats/marginRight': MarginRightStyle,
+                    'formats/textIndent': TextIndentStyle,
+                    'formats/paddingLeft': PaddingLeftStyle,
+                    'formats/listGap': ListGapStyle,
+                }, true);
 
                 // --- 4. "Visual Card" Blot ---
                 // Quill has no format for arbitrary styled <div>/<table> blocks (callout boxes,
@@ -198,7 +217,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                                     } else if (value === 'delete-table') {
                                         tableModule.deleteTable();
                                     }
-                                    
+
                                     // Reset picker to label manually
                                     const picker = (this.container as HTMLElement).querySelector('.ql-tableAction .ql-picker-label');
                                     if (picker) {
@@ -216,6 +235,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                 });
 
                 quillInstance.current = quill;
+
+                const toolbarElem = containerRef.current?.parentElement?.querySelector('.ql-toolbar');
+                if (toolbarElem) {
+                    resizeObserver = new ResizeObserver((entries) => {
+                        for (let entry of entries) {
+                            setToolbarHeight(entry.target.getBoundingClientRect().height);
+                        }
+                    });
+                    resizeObserver.observe(toolbarElem);
+                    setToolbarHeight(toolbarElem.getBoundingClientRect().height);
+                }
 
                 // Intercept any element carrying `data-lt-block` (callout boxes, comparison
                 // tables, timelines, stat highlights, bare-act text boxes) during HTML import
@@ -296,6 +326,82 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                             lhPicker.style.setProperty('--active-line-height', `"${lineHeightStr}"`);
                         }
                     }
+
+                    // 4. Update Ruler Margins (Percentage Based)
+                    let ml = 0, mr = 0, ti = 0;
+
+                    let targetElement: HTMLElement | null = null;
+                    if (targetNode instanceof HTMLElement) {
+                        targetElement = targetNode;
+                    } else if (targetNode && targetNode.parentElement) {
+                        targetElement = targetNode.parentElement;
+                    }
+
+                    if (targetElement) {
+                        const editorElem = targetElement.closest('.ql-editor') as HTMLElement;
+                        let editorWidth = 800;
+                        if (editorElem) {
+                            const cs = window.getComputedStyle(editorElem);
+                            const plEditor = parseFloat(cs.paddingLeft) || 0;
+                            const prEditor = parseFloat(cs.paddingRight) || 0;
+                            editorWidth = editorElem.clientWidth - plEditor - prEditor;
+                        }
+
+                        const parseToPercent = (val: string) => {
+                            if (!val) return 0;
+                            if (val.includes('calc')) {
+                                const pctMatch = val.match(/(-?[\d.]+)%/);
+                                const pxMatch = val.match(/([+-]\s*[\d.]+)px/);
+                                let totalPct = 0;
+                                if (pctMatch) totalPct += parseFloat(pctMatch[1]);
+                                if (pxMatch) {
+                                    const pxStr = pxMatch[1].replace(/\s+/g, '');
+                                    totalPct += (parseFloat(pxStr) / editorWidth) * 100;
+                                }
+                                return totalPct;
+                            }
+                            if (val.includes('%')) {
+                                return parseFloat(val);
+                            }
+                            const px = parseFloat(val) || 0;
+                            return (px / editorWidth) * 100;
+                        };
+
+                        // ALWAYS read from the block element (LI, P, H1, etc)
+                        const blockNode = targetElement.closest('.ql-editor > *') as HTMLElement || targetElement;
+                        const blockComputedStyle = window.getComputedStyle(blockNode);
+
+                        const mlVal = parseToPercent(blockComputedStyle.marginLeft);
+                        const mrVal = parseToPercent(blockComputedStyle.marginRight);
+                        const tiVal = parseToPercent(blockComputedStyle.textIndent);
+                        const plVal = parseToPercent(blockComputedStyle.paddingLeft);
+                        const rawPl = parseFloat(blockComputedStyle.paddingLeft) || 0;
+
+                        if (blockNode.tagName === 'LI') {
+                            const bulletWidth = 24; // ~1.5em default
+                            let gapPx = bulletWidth;
+
+                            // Check if a custom --list-gap is applied
+                            const listGap = blockComputedStyle.getPropertyValue('--list-gap').trim();
+                            if (listGap && listGap.includes('%')) {
+                                gapPx = (parseFloat(listGap) / 100) * editorWidth;
+                            } else if (listGap && listGap.includes('px')) {
+                                gapPx = parseFloat(listGap);
+                            } else if (listGap && listGap.includes('em')) {
+                                gapPx = parseFloat(listGap) * 16;
+                            }
+                            const gapPercent = (gapPx / editorWidth) * 100;
+
+                            ml = mlVal + plVal;
+                            ti = -gapPercent;
+                            activeListRef.current = { isList: true, paddingLeft: rawPl };
+                        } else {
+                            ml = mlVal + plVal;
+                            ti = tiVal;
+                            activeListRef.current = { isList: false, paddingLeft: rawPl };
+                        }
+                    }
+                    setMargins({ marginLeft: ml, marginRight: mr, textIndent: ti });
                 };
 
                 // Set initial value
@@ -339,6 +445,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
 
         return () => {
             mounted = false;
+            if (resizeObserver) resizeObserver.disconnect();
         };
     }, []); // Only run once on mount
 
@@ -365,7 +472,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     }, [value]);
 
     return (
-        <div className={`bg-white editor-container-${editorId}`}>
+        <div className={`bg-white editor-container-${editorId} flex flex-col relative`}>
             <style>
                 {`
                 .ql-container.ql-snow {
@@ -401,125 +508,68 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                 }
                 
                 /* Completely hide native browser markers to prevent overlap */
+                /* Restore bullet markers for Quill unordered lists using dynamic inline gap */
                 .ql-editor li {
                     list-style-type: none !important;
                 }
                 .ql-editor li::marker {
                     content: none !important;
                 }
-
-                /* Restore bullet markers for Quill unordered lists */
-                .ql-editor li[data-list="bullet"] {
-                    position: relative;
-                }
-                .ql-editor li[data-list="bullet"]:not([class*="ql-indent-"])::before {
-                    content: "\\2022";
-                    position: absolute;
-                    left: 0;
+                .ql-editor li::before {
+                    display: inline-block;
+                    white-space: nowrap;
                     width: 1.2em;
                     text-align: right;
-                    white-space: nowrap;
-                }
-                .ql-editor li.ql-indent-1[data-list="bullet"]::before {
-                    content: "\\25E6";
-                    position: absolute;
-                    left: 0;
-                    width: 4.2em;
-                    text-align: right;
-                    white-space: nowrap;
-                }
-                .ql-editor li.ql-indent-2[data-list="bullet"]::before {
-                    content: "\\25AA";
-                    position: absolute;
-                    left: 0;
-                    width: 7.2em;
-                    text-align: right;
-                    white-space: nowrap;
-                }
-                .ql-editor li.ql-indent-3[data-list="bullet"]::before {
-                    content: "\\25AA";
-                    position: absolute;
-                    left: 0;
-                    width: 10.2em;
-                    text-align: right;
-                    white-space: nowrap;
-                }
-                .ql-editor li.ql-indent-4[data-list="bullet"]::before,
-                .ql-editor li.ql-indent-5[data-list="bullet"]::before {
-                    content: "\\25AA";
-                    position: absolute;
-                    left: 0;
-                    width: 13.2em;
-                    text-align: right;
-                    white-space: nowrap;
+                    /* Dynamically pull the bullet into the padding */
+                    margin-left: calc(var(--list-gap, 1.5em) * -1) !important;
+                    /* Dynamically push the text away */
+                    margin-right: calc(var(--list-gap, 1.5em) - 1.2em) !important;
                 }
 
-                  /* Reset sub-levels when a top-level list item appears */
+                .ql-editor li[data-list="bullet"]:not([class*="ql-indent-"])::before { content: "\\2022"; }
+                .ql-editor li.ql-indent-1[data-list="bullet"]::before { content: "\\25E6"; }
+                .ql-editor li.ql-indent-2[data-list="bullet"]::before { content: "\\25AA"; }
+                .ql-editor li.ql-indent-3[data-list="bullet"]::before { content: "\\25AA"; }
+                .ql-editor li.ql-indent-4[data-list="bullet"]::before,
+                .ql-editor li.ql-indent-5[data-list="bullet"]::before { content: "\\25AA"; }
+
+                /* Reset sub-levels when a top-level list item appears */
                 .ql-editor li[data-list="ordered"]:not([class*="ql-indent-"]) {
                     counter-set: gdocs-list-1 0 gdocs-list-2 0 gdocs-list-3 0;
                     counter-increment: gdocs-list-0;
-                    position: relative;
                 }
                 .ql-editor li[data-list="ordered"]:not([class*="ql-indent-"])::before {
                     content: counter(gdocs-list-0, decimal) ". ";
-                    position: absolute;
-                    left: 0;
-                    width: 1.2em;
-                    text-align: right;
-                    white-space: nowrap;
                 }
                 
                 /* Indent Level 1 (i, ii, iii) */
                 .ql-editor li.ql-indent-1[data-list="ordered"] {
                     counter-set: gdocs-list-2 0 gdocs-list-3 0;
                     counter-increment: gdocs-list-1;
-                    position: relative;
                 }
                 .ql-editor li.ql-indent-1[data-list="ordered"]::before {
                     content: counter(gdocs-list-1, lower-roman) ". ";
-                    position: absolute;
-                    left: 0;
-                    width: 4.2em;
-                    text-align: right;
-                    white-space: nowrap;
                 }
                 
                 /* Indent Level 2 (a, b, c) */
                 .ql-editor li.ql-indent-2[data-list="ordered"] {
                     counter-set: gdocs-list-3 0;
                     counter-increment: gdocs-list-2;
-                    position: relative;
                 }
                 .ql-editor li.ql-indent-2[data-list="ordered"]::before {
                     content: counter(gdocs-list-2, lower-alpha) ". ";
-                    position: absolute;
-                    left: 0;
-                    width: 7.2em;
-                    text-align: right;
-                    white-space: nowrap;
                 }
                 
                 /* Indent Level 3+ Fallback */
                 .ql-editor li.ql-indent-3[data-list="ordered"],
-                .ql-editor li.ql-indent-4[data-list="ordered"] {
+                .ql-editor li.ql-indent-4[data-list="ordered"],
+                .ql-editor li.ql-indent-5[data-list="ordered"] {
                     counter-increment: gdocs-list-3;
-                    position: relative;
                 }
-                .ql-editor li.ql-indent-3[data-list="ordered"]::before {
-                    content: counter(gdocs-list-3, decimal) ". ";
-                    position: absolute;
-                    left: 0;
-                    width: 10.2em;
-                    text-align: right;
-                    white-space: nowrap;
-                }
-                .ql-editor li.ql-indent-4[data-list="ordered"]::before {
-                    content: counter(gdocs-list-3, decimal) ". ";
-                    position: absolute;
-                    left: 0;
-                    width: 13.2em;
-                    text-align: right;
-                    white-space: nowrap;
+                .ql-editor li.ql-indent-3[data-list="ordered"]::before,
+                .ql-editor li.ql-indent-4[data-list="ordered"]::before,
+                .ql-editor li.ql-indent-5[data-list="ordered"]::before {
+                    content: counter(gdocs-list-3, lower-roman) ". ";
                 }
                 
                 .ql-editor p {
@@ -835,7 +885,52 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                 }
                 `}
             </style>
-            <div ref={containerRef} />
+            <div
+                className="order-2 border-x border-b border-[#e5e7eb] z-20 bg-white sticky px-[15px]"
+                style={{ top: `${64 + toolbarHeight}px` }}
+            >
+                <DocumentRuler
+                    marginLeft={margins.marginLeft}
+                    marginRight={margins.marginRight}
+                    textIndent={margins.textIndent}
+                    onChange={(newMargins) => {
+                        if (quillInstance.current) {
+                            let finalMl = newMargins.marginLeft;
+                            let finalTi = newMargins.textIndent;
+
+                            if (activeListRef.current.isList) {
+                                if (finalMl !== undefined && finalTi !== undefined) {
+                                    let topArrow = finalMl + finalTi;
+                                    let bottomArrow = finalMl;
+
+                                    if (topArrow <= bottomArrow) {
+                                        let gap = bottomArrow - topArrow;
+                                        quillInstance.current.format('marginLeft', `${topArrow}%`);
+                                        quillInstance.current.format('paddingLeft', `${gap}%`);
+                                        quillInstance.current.format('listGap', `${gap}%`);
+                                        quillInstance.current.format('textIndent', '0%');
+                                    } else {
+                                        quillInstance.current.format('marginLeft', `${bottomArrow}%`);
+                                        quillInstance.current.format('paddingLeft', '0%');
+                                        quillInstance.current.format('listGap', '0%');
+                                        quillInstance.current.format('textIndent', `${finalTi}%`);
+                                    }
+                                }
+                            } else {
+                                const pl = activeListRef.current.paddingLeft;
+                                if (finalMl !== undefined) finalMl = `calc(${finalMl}% - ${pl}px)` as any;
+                                if (finalTi !== undefined) finalTi = `${finalTi}%` as any;
+
+                                if (finalMl !== undefined) quillInstance.current.format('marginLeft', finalMl);
+                                if (finalTi !== undefined) quillInstance.current.format('textIndent', finalTi);
+                            }
+
+                            if (newMargins.marginRight !== undefined) quillInstance.current.format('marginRight', `${newMargins.marginRight}%`);
+                        }
+                    }}
+                />
+            </div>
+            <div ref={containerRef} className="order-3" />
         </div>
     );
 };
