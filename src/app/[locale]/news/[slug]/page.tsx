@@ -66,6 +66,13 @@ export async function generateMetadata(
     const seoSuffix = isJudgment ? " | Latest Judgment & Legal News" : " | Latest Update & News";
     const seoTitle = `${article.title}${seoSuffix} - Sajjad Husain Law Associates`;
 
+    let ogImage = `${SITE_URL}/logo.png`;
+    if (article.thumbnail) {
+        // WhatsApp does not support .webp for link previews. 
+        // We use wsrv.nl to convert it to a lightweight JPEG on the fly.
+        ogImage = `https://wsrv.nl/?url=${encodeURIComponent(article.thumbnail)}&output=jpeg&q=80&w=1200`;
+    }
+
     return {
         metadataBase: new URL(SITE_URL),
         title: seoTitle,
@@ -93,11 +100,10 @@ export async function generateMetadata(
             tags: article.tags?.map(t => t.name),
             images: [
                 {
-                    url: `${SITE_URL}/${locale}/news/${slug}/opengraph-image?format=.jpg`,
+                    url: ogImage,
                     width: 1200,
                     height: 630,
-                    alt: "News Article Preview",
-                    type: "image/jpeg"
+                    alt: article.title,
                 }
             ]
         },
@@ -105,7 +111,7 @@ export async function generateMetadata(
             card: "summary_large_image",
             title: seoTitle,
             description: description,
-            images: [`${SITE_URL}/${locale}/news/${slug}/opengraph-image`]
+            images: [ogImage]
         },
         alternates: {
             canonical: `${SITE_URL}/${locale}/news/${slug}`,
