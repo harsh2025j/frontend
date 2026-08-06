@@ -1,6 +1,5 @@
 import { ImageResponse } from 'next/og';
 import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
-import sharp from 'sharp';
 
 export const alt = 'News Article Preview';
 export const size = {
@@ -26,7 +25,7 @@ export default async function Image({ params }: { params: { slug: string; locale
   try {
     const res = await fetch(`${API_BASE_URL}/articles/${slug}`, {
       headers: {
-        // "ngrok-skip-browser-warning": "true",
+        "ngrok-skip-browser-warning": "true",
       },
     });
     if (res.ok) {
@@ -40,26 +39,17 @@ export default async function Image({ params }: { params: { slug: string; locale
 
         if (article.thumbnail) {
           try {
-            const imgRes = await fetch(article.thumbnail);
-            const contentType = imgRes.headers.get('content-type') || '';
+            // Using a free edge caching proxy (wsrv.nl) to convert WebP to JPEG on the fly
+            // because Satori does not support WebP, and Cloudflare Workers cannot run 'sharp'.
+            const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(article.thumbnail)}&output=jpeg&q=80&w=1200`;
+            const imgRes = await fetch(proxyUrl);
 
             if (imgRes.ok) {
-              const imgArrayBuffer = await imgRes.arrayBuffer();
-              const isWebp = article.thumbnail.toLowerCase().includes('.webp') || contentType.includes('webp');
-
-              if (isWebp) {
-                // Convert WebP to PNG using sharp so Satori can render it!
-                const pngBuffer = await sharp(imgArrayBuffer).png().toBuffer();
-                // Convert Node Buffer back to standard ArrayBuffer for Satori
-                thumbnailSrc = new Uint8Array(pngBuffer).buffer;
-                useFallback = false;
-              } else {
-                thumbnailSrc = imgArrayBuffer;
-                useFallback = false;
-              }
+              thumbnailSrc = await imgRes.arrayBuffer();
+              useFallback = false;
             }
           } catch (imgErr) {
-            console.error("Failed to fetch/convert image", imgErr);
+            console.error("Failed to fetch/convert image via proxy", imgErr);
           }
         }
       }
@@ -134,16 +124,5 @@ export default async function Image({ params }: { params: { slug: string; locale
     }
   );
 
-  // Read the raw uncompressed PNG buffer constructed by Satori
-  const rawPngBuffer = await satoriResponse.arrayBuffer();
-
-  // Compress it heavily using Sharp into a JPEG to bypass WhatsApp's rigid 300KB limit
-  const jpegBuffer = await sharp(rawPngBuffer).jpeg({ quality: 75 }).toBuffer();
-
-  return new Response(jpegBuffer as any, {
-    headers: {
-      'Content-Type': 'image/jpeg',
-      'Cache-Control': 'public, max-age=31536000, immutable',
-    },
-  });
+  return satoriResponse;
 }
