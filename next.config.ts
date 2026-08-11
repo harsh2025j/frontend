@@ -5,7 +5,7 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const nextConfig: NextConfig = {
   images: {
-    // unoptimized: true, // Uncomment this line to disable Vercel Image Optimization
+    unoptimized: true, // Uncomment this line to disable Vercel Image Optimization
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
