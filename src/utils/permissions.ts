@@ -41,6 +41,10 @@ export const PERMISSIONS = {
         REPORTS: "manage:reports",
         DISPLAY_BOARD: "manage:display_board",
     },
+    ACADEMY: {
+        MANAGE_ALL: "manage:academy",
+        TEACH: "teach:academy",
+    },
 
 } as const;
 
@@ -55,6 +59,8 @@ export const ROLES = {
     LEGAL_ADVISOR: "legal_advisor",
     LAW_STUDENT: "law_student",
     PARALEGAL: "paralegal",
+    ACADEMY_ADMIN: "academy-admin",
+    ACADEMY_INSTRUCTOR: "academy-instructor",
     // JUDGE: "judge",
 } as const;
 
@@ -82,7 +88,9 @@ export type PermissionType =
     | typeof PERMISSIONS.MANAGE.REPORTS
     | typeof PERMISSIONS.PAYOUT.READ_ALL
     | typeof PERMISSIONS.PAYOUT.WRITE_ALL
-    | typeof PERMISSIONS.MANAGE.DISPLAY_BOARD;
+    | typeof PERMISSIONS.MANAGE.DISPLAY_BOARD
+    | typeof PERMISSIONS.ACADEMY.MANAGE_ALL
+    | typeof PERMISSIONS.ACADEMY.TEACH;
 
 export type RoleType =
     | typeof ROLES.USER
@@ -94,7 +102,9 @@ export type RoleType =
     | typeof ROLES.LAWYER
     | typeof ROLES.LEGAL_ADVISOR
     | typeof ROLES.LAW_STUDENT
-    | typeof ROLES.PARALEGAL;
+    | typeof ROLES.PARALEGAL
+    | typeof ROLES.ACADEMY_ADMIN
+    | typeof ROLES.ACADEMY_INSTRUCTOR;
 // | typeof ROLES.JUDGE;
 
 /**
@@ -330,6 +340,24 @@ export const canAccessMyEarningsPage = (user: UserData | null): boolean => {
     return hasAnyRole(user, [ROLES.ADVOCATE, ROLES.LAWYER]);
 };
 
+/** 8. Academy Management */
+export const canAccessAcademyAdminPage = (user: UserData | null): boolean => {
+    if (!user) return false;
+    return (
+        hasAnyRole(user, [ROLES.ACADEMY_ADMIN, ROLES.ACADEMY_INSTRUCTOR]) ||
+        hasAnyPermission(user, [PERMISSIONS.ACADEMY.MANAGE_ALL, PERMISSIONS.ACADEMY.TEACH])
+    );
+};
+
+export const canAccessAcademyFinancesPage = (user: UserData | null): boolean => {
+    if (!user) return false;
+    // Strictly require full Academy Admin role or Manage All permission
+    return (
+        hasAnyRole(user, [ROLES.ACADEMY_ADMIN]) ||
+        hasAnyPermission(user, [PERMISSIONS.ACADEMY.MANAGE_ALL])
+    );
+};
+
 /**
  * ============================================================================
  * UTILS & CORE UI HELPERS
@@ -362,6 +390,10 @@ export const canSeeContentSection = (user: UserData | null): boolean => {
         canAccessCategoryManagementPage(user) ||
         canAccessContentApprovalPage(user)
     );
+};
+
+export const canSeeAcademySection = (user: UserData | null): boolean => {
+    return canAccessAcademyAdminPage(user);
 };
 
 export const isAdmin = (user: UserData | null): boolean => {
@@ -450,4 +482,22 @@ export const ROUTE_PROTECTION_MAP: Record<string, PermissionCheckFn> = {
     "/admin/payouts": canAccessPayoutsPage,
     "/admin/payouts/[advocateId]": canAccessPayoutsPage,
     "/admin/my-earnings": canAccessMyEarningsPage,
+
+    // 9. Academy
+    "/admin/academy": canAccessAcademyAdminPage,
+    "/admin/academy/courses": canAccessAcademyAdminPage,
+    "/admin/academy/courses/create": canAccessAcademyAdminPage,
+    "/admin/academy/courses/[id]": canAccessAcademyAdminPage,
+    "/admin/academy/live-sessions": canAccessAcademyAdminPage,
+    "/admin/academy/students": canAccessAcademyAdminPage,
+    "/admin/academy/enrollments": canAccessAcademyAdminPage,
+    "/admin/academy/assignments": canAccessAcademyAdminPage,
+    "/admin/academy/tests": canAccessAcademyAdminPage,
+    
+    // Restricted Academy Pages (Full Admin Only)
+    "/admin/academy/payments": canAccessAcademyFinancesPage,
+    "/admin/academy/certificates": canAccessAcademyFinancesPage,
+    "/admin/academy/coupons": canAccessAcademyFinancesPage,
+    "/admin/academy/notifications": canAccessAcademyFinancesPage,
+    "/admin/academy/reports": canAccessAcademyFinancesPage,
 };

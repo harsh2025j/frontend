@@ -109,6 +109,13 @@ export const authApi = {
     // console.log("Profile Response:", response.data);
     return response;
   },
+
+  upgradeToStudent: async () => {
+    const response = await apiClient.post(
+      API_ENDPOINTS.PROFILE.UPGRADE_STUDENT
+    );
+    return response;
+  }
 };
 
 import { auth, googleProvider } from "@/config/firebase";

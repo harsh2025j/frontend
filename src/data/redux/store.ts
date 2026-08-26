@@ -49,6 +49,9 @@ import practiceAreasReducer from "../features/practiceAreas/practiceAreasSlice"
 import matterTeamReducer from "../features/matter-team/matterTeamSlice"
 import auditLogsReducer from "../features/audit-logs/auditLogsSlice"
 import dashboardReducer from "../features/dashboard/dashboardSlice"
+import academyAuthReducer from "../features/academyAuth/academyAuthSlice"
+import courseReducer from "../features/academy/course/courseSlice"
+import enrollmentsReducer from "../features/academy/enrollments/enrollmentsSlice"
 
 
 export const store = configureStore({
@@ -68,7 +71,9 @@ export const store = configureStore({
     matterTeam: matterTeamReducer,
     auditLogs: auditLogsReducer,
     dashboard: dashboardReducer,
-
+    academyAuth: academyAuthReducer,
+    course: courseReducer,
+    enrollments: enrollmentsReducer,
   },
 
 },

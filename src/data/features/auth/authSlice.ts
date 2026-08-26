@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { loginUser, registerUser, verifyOtp, forgotPassword, resetPassword, ResendOtp, loginWithGoogle, refreshToken, logoutUserAsync } from "./authThunks";
+import { loginUser, registerUser, verifyOtp, forgotPassword, resetPassword, ResendOtp, loginWithGoogle, refreshToken, logoutUserAsync, upgradeToStudentAsync } from "./authThunks";
 import { AuthState } from "./auth.types";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 
@@ -254,9 +254,24 @@ const authSlice = createSlice({
         state.refreshToken = null;
         state.user = null;
         localStorage.clear();
+      })
+      .addCase(upgradeToStudentAsync.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(upgradeToStudentAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        const updatedUser = action.payload.data || action.payload;
+        state.user = updatedUser;
+        try {
+          if (typeof window !== "undefined") {
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+          }
+        } catch { }
+      })
+      .addCase(upgradeToStudentAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
-
-
   }
 
 });

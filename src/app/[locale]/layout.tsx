@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Geist, Geist_Mono, Merriweather, Unna } from "next/font/google";
 import "../globals.css";
 import ClientLayout from "@/components/layout/ClientWrapper";
@@ -178,6 +179,8 @@ export default async function RootLayout({
 }) {
   const { locale } = await params;
   const messages = await getMessages();
+  const headersList = await headers();
+  const isAcademySubdomain = headersList.get('x-academy-subdomain') === 'true';
 
   // Parallel fetch for speed
   const [categories, latestArticles, financeArticles, legalArticles, hindiArticles, judgmentsArticles, bareActsArticles] = await Promise.all([
@@ -256,6 +259,7 @@ export default async function RootLayout({
                 <ClientLayout
                   initialCategories={categories}
                   initialHomeData={initialHomeData}
+                  isAcademySubdomain={isAcademySubdomain}
                 >
                   {children}
                 </ClientLayout>

@@ -1,7 +1,7 @@
 // export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev";
 // export const API_BASE_URL = "https://galliardly-pyritic-kathleen.ngrok-free.dev";
-export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
-// export const API_BASE_URL = "http://localhost:8000/"
+// export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
+export const API_BASE_URL = "http://localhost:8000/"
 export const API_ENDPOINTS = {
   SEARCH: {
     JUDGES: "/search/judges",
@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
     PUBLIC: "/profile/public/:id",
     BY_USERNAME: "/profile/username/:username",
     CONSULTANCY: "/profile/consultancy",
+    UPGRADE_STUDENT: "/profile/upgrade-student",
   },
   ARTICLE: {
     CREATE: "/articles",
@@ -165,5 +166,21 @@ export const API_ENDPOINTS = {
     GET_MESSAGES: "/chats/:conversationId/messages",
     CREATE_PAYMENT_ORDER: "/chats/payment/create-order",
     VERIFY_PAYMENT_ORDER: "/chats/payment/verify",
+  },
+  ACADEMY: {
+    COURSES: "/academy/courses",
+    COURSE_BY_ID: "/academy/courses/:id",
+    MODULES: "/academy/courses/:courseId/modules",
+    CURRICULUM: "/academy/curriculum",
+    CATEGORIES: "/academy/categories",
+    ENROLLMENTS: {
+      CREATE_ORDER: "/academy/enrollments/courses/:courseId/create-order",
+      VERIFY: "/academy/enrollments/courses/:courseId/verify",
+      MY_COURSES: "/academy/enrollments/my-courses",
+      ALL: "/academy/enrollments/all",
+    },
+    PAYMENTS: {
+      ALL: "/payments/courses/all", // This goes to subscriptions-service but we can group it here for convenience
+    }
   }
 };

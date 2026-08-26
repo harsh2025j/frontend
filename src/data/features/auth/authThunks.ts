@@ -119,9 +119,9 @@ export const ResendOtp = createAsyncThunk<ResendOtpResponse, ResendOtpRequest>(
 )
 
 
-export const loginWithGoogle = createAsyncThunk<LoginResponse, void>(
+export const loginWithGoogle = createAsyncThunk<LoginResponse, { roleIds?: string[] } | void>(
   "auth/loginWithGoogle",
-  async (_, thunkAPI) => {
+  async (args, thunkAPI) => {
     try {
       const firebaseUser = await firebaseAuth.loginWithGoogle();
       const fcmToken = await requestFcmToken();
@@ -132,6 +132,7 @@ export const loginWithGoogle = createAsyncThunk<LoginResponse, void>(
         provider: "google",
         providerId: firebaseUser.uid,
         profilePicture: firebaseUser.photoURL || "",
+        roleIds: args?.roleIds,
         fcmToken: fcmToken || undefined,
         platform: "web"
       };
@@ -174,6 +175,19 @@ export const logoutUserAsync = createAsyncThunk(
     } catch (err: unknown) {
       const apiError = err as ApiError;
       return thunkAPI.rejectWithValue(apiError.message || "Logout Failed");
+    }
+  }
+);
+
+export const upgradeToStudentAsync = createAsyncThunk(
+  "auth/upgradeToStudentAsync",
+  async (_, thunkAPI) => {
+    try {
+      const response = await authApi.upgradeToStudent();
+      return response.data;
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      return thunkAPI.rejectWithValue(apiError.message || "Upgrade Failed");
     }
   }
 );

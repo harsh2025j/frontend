@@ -14,6 +14,7 @@ export interface SocialLoginRequest {
   provider: string;
   providerId: string;
   profilePicture?: string;
+  roleIds?: string[];
   fcmToken?: string;
   platform?: string;
 }

@@ -32,7 +32,11 @@ import {
   History,
   CheckCircle,
   Wallet,
-  MessageSquare
+  MessageSquare,
+  GraduationCap,
+  PlaySquare,
+  Award,
+  BookOpen
 } from "lucide-react";
 import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
@@ -71,7 +75,9 @@ import {
   canAccessPayoutsPage,
   canAccessMyEarningsPage,
   isAdmin as checkIsAdmin,
-  getUserRoles
+  getUserRoles,
+  canSeeAcademySection,
+  canAccessAcademyFinancesPage
 } from "@/utils/permissions";
 
 const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: () => void; onOpen: () => void }) => {
@@ -119,6 +125,8 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
   const showDashboard = canAccessAdminDashboardPage(user);
   const showAccessControlSection = canSeeAccessControlSection(user);
   const showContentSection = canSeeContentSection(user);
+  const showAcademySection = canSeeAcademySection(user);
+  const showAcademyFinances = canAccessAcademyFinancesPage(user);
 
   // Individual Pages
   const showManageUsers = canAccessManageUserPage(user);
@@ -358,6 +366,86 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
       icon: <Monitor size={18} />,
       href: "/admin/advertisements",
       show: showAdvertisements
+    },
+    {
+      name: "Academy",
+      icon: <GraduationCap size={18} />,
+      isDropdown: true,
+      show: showAcademySection,
+      children: [
+        {
+          name: "Dashboard",
+          icon: <BarChart size={18} />,
+          href: "/admin/academy",
+          show: showAcademySection
+        },
+        {
+          name: "Courses",
+          icon: <BookOpen size={18} />,
+          href: "/admin/academy/courses",
+          show: showAcademySection
+        },
+        {
+          name: "Live Sessions",
+          icon: <PlaySquare size={18} />,
+          href: "/admin/academy/live-sessions",
+          show: showAcademySection
+        },
+        {
+          name: "Students",
+          icon: <Users size={18} />,
+          href: "/admin/academy/students",
+          show: showAcademySection
+        },
+        {
+          name: "Enrollments",
+          icon: <CheckCircle size={18} />,
+          href: "/admin/academy/enrollments",
+          show: showAcademySection
+        },
+        {
+          name: "Payments & Revenue",
+          icon: <Wallet size={18} />,
+          href: "/admin/academy/payments",
+          show: showAcademyFinances
+        },
+        {
+          name: "Assignments",
+          icon: <ClipboardList size={18} />,
+          href: "/admin/academy/assignments",
+          show: showAcademySection
+        },
+        {
+          name: "Assessments & Tests",
+          icon: <FileText size={18} />,
+          href: "/admin/academy/tests",
+          show: showAcademySection
+        },
+        {
+          name: "Certificates",
+          icon: <Award size={18} />,
+          href: "/admin/academy/certificates",
+          show: showAcademyFinances
+        },
+        {
+          name: "Coupons",
+          icon: <Bookmark size={18} />,
+          href: "/admin/academy/coupons",
+          show: showAcademyFinances
+        },
+        {
+          name: "Notifications",
+          icon: <Bell size={18} />,
+          href: "/admin/academy/notifications",
+          show: showAcademyFinances
+        },
+        {
+          name: "Reports",
+          icon: <BarChart size={18} />,
+          href: "/admin/academy/reports",
+          show: showAcademyFinances
+        }
+      ]
     }
   ];
 
@@ -376,8 +464,9 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
     // Priority 1: Exact Match
     if (pathname === href) return true;
 
-    // Priority 2: Admin Dashboard exact match
+    // Priority 2: Admin Dashboards exact match
     if (href === "/admin" && pathname !== "/admin") return false;
+    if (href === "/admin/academy" && pathname !== "/admin/academy") return false;
 
     // Priority 3: Prefix matching with exclusion for overlapping siblings
     if (pathname.startsWith(`${href}/`)) {

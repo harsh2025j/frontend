@@ -11,6 +11,7 @@ import { resetAuthState, logoutUser } from "./authSlice";
 import { RootState } from "@/data/redux/store";
 import toast from "react-hot-toast";
 import { requestFcmToken } from "@/lib/fcmUtils";
+import { rolesApi } from "@/data/services/roles-service/roles-service";
 
 const selectAuthLoading = (state: RootState) => state.auth.loading;
 const selectAuthError = (state: RootState) => state.auth.error;
@@ -69,6 +70,12 @@ export const useRegisterActions = () => {
 
     setIsLocalLoading(true);
     try {
+      // 1. Fetch roles and find the 'user' role ID
+      const rolesResponse = await rolesApi.fetchRoles();
+      const rolesData = rolesResponse.data?.data || rolesResponse.data;
+      const userRole = rolesData?.find((r: any) => r.name.toLowerCase() === 'user' || r.slug === 'user');
+      const roleIds = userRole ? [userRole._id] : undefined;
+
       const fcmToken = await requestFcmToken();
 
       const payload: RegisterRequest = {
@@ -76,18 +83,32 @@ export const useRegisterActions = () => {
         email: formData.email.trim(),
         password: formData.password,
         phone: formData.phone,
+        roles: roleIds,
         fcmToken: fcmToken || undefined,
         platform: "web",
       };
 
       dispatch(registerUser(payload));
+    } catch (err) {
+      console.error("Registration failed", err);
+      toast.error("An error occurred during registration.");
     } finally {
       setIsLocalLoading(false);
     }
   };
 
-  const handleGoogleLogin = () => {
-    dispatch(loginWithGoogle());
+  const handleGoogleLogin = async () => {
+    try {
+      const rolesResponse = await rolesApi.fetchRoles();
+      const rolesData = rolesResponse.data?.data || rolesResponse.data;
+      const userRole = rolesData?.find((r: any) => r.name.toLowerCase() === 'user' || r.slug === 'user');
+      const roleIds = userRole ? [userRole._id] : undefined;
+
+      dispatch(loginWithGoogle({ roleIds }));
+    } catch (err) {
+      console.error("Failed to fetch roles for Google Login", err);
+      dispatch(loginWithGoogle());
+    }
   };
 
   useEffect(() => {
@@ -161,8 +182,18 @@ export const useLoginActions = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    dispatch(loginWithGoogle());
+  const handleGoogleLogin = async () => {
+    try {
+      const rolesResponse = await rolesApi.fetchRoles();
+      const rolesData = rolesResponse.data?.data || rolesResponse.data;
+      const userRole = rolesData?.find((r: any) => r.name.toLowerCase() === 'user' || r.slug === 'user');
+      const roleIds = userRole ? [userRole._id] : undefined;
+
+      dispatch(loginWithGoogle({ roleIds }));
+    } catch (err) {
+      console.error("Failed to fetch roles for Google Login", err);
+      dispatch(loginWithGoogle());
+    }
   };
 
 

@@ -25,11 +25,13 @@ export default function ClientLayout({
     latestArticles: [],
     financeArticles: [],
     legalArticles: [],
-  }
+  },
+  isAcademySubdomain = false,
 }: {
   children: React.ReactNode;
   initialCategories?: any[];
   initialHomeData?: any;
+  isAcademySubdomain?: boolean;
 }) {
 
 
@@ -106,9 +108,11 @@ export default function ClientLayout({
   }, [dispatch, initialCategories]);
 
   const isHiddenLayout =
+    isAcademySubdomain ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/admin") ||
-    pathname.startsWith("/server-error");
+    pathname.startsWith("/server-error") ||
+    pathname.startsWith("/academy");
 
   if (isHiddenLayout) {
     return <>{children}</>;
