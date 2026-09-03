@@ -187,7 +187,6 @@ export default function AcademyAssignmentsPage() {
                   <th className="p-4">Student</th>
                   <th className="p-4">Assignment Name</th>
                   <th className="p-4">Status</th>
-                  <th className="p-4">Score</th>
                   <th className="p-4">Submitted</th>
                   <th className="p-4 text-center">Action</th>
                 </tr>
@@ -204,9 +203,6 @@ export default function AcademyAssignmentsPage() {
                     </td>
                     <td className="p-4">
                       {getStatusBadge(sub.status)}
-                    </td>
-                    <td className="p-4 text-sm font-medium text-gray-900">
-                      {sub.status === 'verified' ? `${sub.marksAwarded} / ${sub.assignment?.assignmentData?.totalMarks || '-'}` : '-'}
                     </td>
                     <td className="p-4 text-sm text-gray-500">
                       {new Date(sub.submittedAt).toLocaleDateString()}

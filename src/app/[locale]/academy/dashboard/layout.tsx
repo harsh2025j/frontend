@@ -11,7 +11,6 @@ import { logoutUserAsync } from '@/data/features/auth/authThunks';
 const SIDEBAR_NAV = [
   { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={20} /> },
   { name: 'My Courses', href: '/dashboard/courses', icon: <BookOpen size={20} /> },
-  { name: 'Assignments', href: '/dashboard/assignments', icon: <ClipboardList size={20} /> },
   { name: 'Live Sessions', href: '/dashboard/live-sessions', icon: <Video size={20} /> },
   { name: 'Certificates', href: '/dashboard/certificates', icon: <Award size={20} /> },
   { name: 'Settings', href: '/dashboard/settings', icon: <Settings size={20} /> },
@@ -33,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     } else if (user) {
       const isStudent = user.roles?.some((r: any) => r.slug === 'student' || r.name === 'student');
       if (!isStudent) {
-        router.push('/academy/join');
+        router.push('/join');
       } else {
         setIsAuthChecking(false);
       }

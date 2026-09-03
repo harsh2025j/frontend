@@ -5,8 +5,9 @@ import Link from 'next/link';
 import {
   ChevronLeft, PlayCircle, CheckCircle2, FileText, MessageSquare, Download,
   Play, Pause, Maximize, Volume2, SkipForward, Video, ClipboardList, Award,
-  CheckSquare, UploadCloud, Clock, ExternalLink
+  CheckSquare, UploadCloud, Clock, ExternalLink, XCircle, Circle, FileQuestion, GraduationCap
 } from 'lucide-react';
+import AssessmentPlayer from './AssessmentPlayer';
 
 // COURSE_DATA dynamic mapping happens below
 
@@ -15,15 +16,25 @@ const getItemIcon = (type: string, active: boolean, completed: boolean) => {
   if (type === 'video') return <PlayCircle size={16} className={color} />;
   if (type === 'live') return <Video size={16} className={color} />;
   if (type === 'assignment') return <ClipboardList size={16} className={color} />;
-  if (type === 'assessment') return <CheckSquare size={16} className={color} />;
+  if (type === 'test' || type === 'assessment') return <FileQuestion size={16} className={color} />;
+  if (type === 'final_assessment') return <GraduationCap size={16} className={color} />;
   if (type === 'certificate') return <Award size={16} className={color} />;
   return <PlayCircle size={16} className={color} />;
+};
+
+const formatItemType = (type: string) => {
+  if (!type) return '';
+  return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 };
 
 import { useAppDispatch, useAppSelector } from '@/data/redux/hooks';
 import { fetchCourseById } from '@/data/features/academy/course/courseThunks';
 import { clearCurrentCourse } from '@/data/features/academy/course/courseSlice';
+import { updateCourseProgress, fetchMyEnrollments } from '@/data/features/academy/enrollments/enrollmentsThunks';
 import { Loader2 } from 'lucide-react';
+import { uploadToS3 } from '@/lib/uploadToS3';
+import apiClient from '@/data/services/apiConfig/apiClient';
+import toast from 'react-hot-toast';
 
 export default function CoursePlayerPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = React.use(params);
@@ -34,24 +45,89 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
 
   // We can fetch enrollments to get progress, but for now we'll just use a default or calculate from completed items if backend supports it.
   const { myEnrollments } = useAppSelector((state) => state.enrollments);
+  const { user } = useAppSelector((state) => state.auth);
   const currentEnrollment = myEnrollments.find(e => e.course?.slug === slug);
-  const progress = currentEnrollment?.progress || 0;
+  
+  const [studentSubmissions, setStudentSubmissions] = useState<any[]>([]);
 
+  const fetchMySubmissions = async () => {
+    if (!currentCourse?.id) return;
+    try {
+      const studentId = (user as any)?.id || 'mock-student-id';
+      const res = await apiClient.get('/academy/assignments/me', {
+        params: { studentId: studentId, courseId: currentCourse.id }
+      });
+      setStudentSubmissions(res.data);
+    } catch (err) {
+      console.error('Failed to fetch submissions', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchMySubmissions();
+  }, [(user as any)?.id, currentCourse?.id]);
+
+  const progress = React.useMemo(() => {
+    if (!currentCourse || !currentEnrollment) return 0;
+    
+    const uniqueItemIds = new Set<string>();
+    
+    if (currentCourse.modules) {
+      currentCourse.modules.forEach((mod: any) => {
+        if (mod.items) {
+          mod.items.forEach((item: any) => uniqueItemIds.add(item.id));
+        }
+        if (mod.submodules) {
+          mod.submodules.forEach((sub: any) => {
+            if (sub.items) sub.items.forEach((item: any) => uniqueItemIds.add(item.id));
+          });
+        }
+      });
+    }
+    if ((currentCourse as any).items) {
+      (currentCourse as any).items.forEach((item: any) => uniqueItemIds.add(item.id));
+    }
+    
+    const totalItems = uniqueItemIds.size;
+    if (totalItems === 0) return 100; // If no items, consider it 100% complete
+    
+    // Filter out rejected items, and inject newly verified items (since enrollments might be stale on client)
+    const validCompletedItemIds = new Set(currentEnrollment.completedItemIds || []);
+    studentSubmissions.forEach(sub => {
+      if (sub.status === 'verified') {
+        validCompletedItemIds.add(sub.assignmentId);
+      } else if (sub.status === 'rejected') {
+        validCompletedItemIds.delete(sub.assignmentId);
+      }
+    });
+
+    const completedItems = validCompletedItemIds.size;
+    return Math.min(Math.round((completedItems / totalItems) * 100), 100);
+  }, [currentCourse, currentEnrollment, studentSubmissions]);
   useEffect(() => {
     if (slug) {
       dispatch(fetchCourseById(slug));
+      if (myEnrollments.length === 0) {
+        dispatch(fetchMyEnrollments());
+      }
     }
     return () => {
       dispatch(clearCurrentCourse());
     };
-  }, [dispatch, slug]);
+  }, [dispatch, slug, myEnrollments.length]);
 
   const [activeTab, setActiveTab] = useState('qa');
   const [openModule, setOpenModule] = useState<number | null>(0);
   const [activeItem, setActiveItem] = useState<any>(null);
 
+  const activeSubmission = React.useMemo(() => {
+    if (!activeItem || activeItem.type !== 'assignment') return null;
+    return studentSubmissions.find(s => s.assignmentId === activeItem.id);
+  }, [activeItem, studentSubmissions]);
+
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isVideoEnded, setIsVideoEnded] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownload = async (e: React.MouseEvent, url: string, title: string) => {
@@ -135,10 +211,10 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
             type: item.type || 'video',
             title: item.title,
             duration: formatItemDuration(item.duration),
-            fileUrl: item.fileUrl,
-            provider: item.provider,
+            fileUrl: item.type === 'assignment' ? (item.assignmentData?.instructionsPdfUrl || item.fileUrl) : item.fileUrl,
+            assessmentId: item.assignmentData?.assessmentId,
             orderIndex: item.orderIndex || 0,
-            completed: false // Connect to user progress later
+            completed: (currentEnrollment?.completedItemIds?.includes(item.id) || studentSubmissions.find(s => s.assignmentId === item.id)?.status === 'verified') && !(studentSubmissions.find(s => s.assignmentId === item.id)?.status === 'rejected')
           })).sort((a: any, b: any) => a.orderIndex - b.orderIndex) || []
         });
       });
@@ -184,13 +260,31 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
       image: currentCourse.thumbnailUrl,
       progress: progress,
       modules: modules,
-      downloads: [] as { name: string, size: string }[] // Connect to backend resources if available
     };
-  }, [currentCourse, progress]);
+  }, [currentCourse, progress, currentEnrollment?.completedItemIds, studentSubmissions]);
+
+  const [isMarkingComplete, setIsMarkingComplete] = useState(false);
+
+
+  const handleMarkAsComplete = async (itemId: string) => {
+    if (isMarkingComplete || !currentCourse?.id) return;
+    setIsMarkingComplete(true);
+    try {
+      await dispatch(updateCourseProgress({
+        courseId: currentCourse.id,
+        itemId,
+        completed: true
+      })).unwrap();
+    } catch (err) {
+      console.error("Failed to update progress", err);
+    } finally {
+      setIsMarkingComplete(false);
+    }
+  };
 
   useEffect(() => {
-    if (mappedCourseData && !activeItem && mappedCourseData.modules.length > 0) {
-      // Flatten all items to find the correct starting point
+    if (mappedCourseData && mappedCourseData.modules.length > 0) {
+      // Flatten all items to find the correct starting point or update existing
       const allItems: any[] = [];
       mappedCourseData.modules.forEach((m: any) => {
         if (m.items) allItems.push(...m.items);
@@ -201,21 +295,31 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
         }
       });
 
-      if (allItems.length > 0) {
-        // Find the first uncompleted item
-        const firstUncompleted = allItems.find(item => !item.completed);
-        
-        // Open it, or if everything is completed, open the last item
-        setActiveItem(firstUncompleted || allItems[allItems.length - 1]);
+      if (!activeItem) {
+        if (allItems.length > 0) {
+          // Find the first uncompleted item
+          const firstUncompleted = allItems.find(item => !item.completed);
+          
+          // Open it, or if everything is completed, open the last item
+          setActiveItem(firstUncompleted || allItems[allItems.length - 1]);
+          setIsVideoEnded(false);
+        } else {
+          // Fallback if the course has modules but no lessons yet
+          setActiveItem({
+            id: 'fallback',
+            type: 'video',
+            title: 'No content available yet',
+            duration: '00:00',
+            completed: false
+          });
+          setIsVideoEnded(false);
+        }
       } else {
-        // Fallback if the course has modules but no lessons yet
-        setActiveItem({
-          id: 'fallback',
-          type: 'video',
-          title: 'No content available yet',
-          duration: '00:00',
-          completed: false
-        });
+        // If activeItem already exists, just update it with the latest data from mappedCourseData
+        const latestActiveItem = allItems.find(item => item.id === activeItem.id);
+        if (latestActiveItem && latestActiveItem.completed !== activeItem.completed) {
+          setActiveItem(latestActiveItem);
+        }
       }
     }
   }, [mappedCourseData, activeItem]);
@@ -281,64 +385,95 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
 
           {/* Dynamic Render based on item type */}
           {activeItem.type === 'video' && (
-            <div className="mt-2 sm:mt-2 mx-auto w-[95%] max-w-5xl bg-black max-h-[490px] aspect-video relative group flex shrink-0 rounded-xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-[#122340]/10">
-              {activeItem.fileUrl ? (
-                (activeItem.provider === 'youtube' || activeItem.fileUrl.includes('youtube') || activeItem.fileUrl.includes('youtu.be')) ? (
-                  <iframe 
-                    src={activeItem.fileUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                ) : (
-                  <div className="relative w-full h-full group">
-                    <video 
-                      ref={videoRef}
-                      src={activeItem.fileUrl} 
-                      controls 
-                      controlsList="nodownload"
-                      className="w-full h-full object-contain bg-black"
-                      onPlay={() => setIsPlaying(true)}
-                      onPause={() => setIsPlaying(false)}
+            <div className="mt-2 sm:mt-4 mx-auto w-[95%] max-w-5xl relative flex flex-col shrink-0 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-[#122340]/10 bg-black">
+              <div className="bg-white border-b border-[#122340]/10 p-4 flex justify-between items-center shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#C9A227]/10 text-[#C9A227] rounded-full flex items-center justify-center">
+                    <Video size={20} />
+                  </div>
+                  <h2 className="font-bold text-[#122340] text-lg">{activeItem.title}</h2>
+                </div>
+                <div className="flex gap-2">
+                  {activeItem.completed ? (
+                    <div className="bg-green-600 text-white px-5 py-2 rounded-xl font-bold text-sm flex items-center gap-2 cursor-default select-none">
+                      <CheckCircle2 size={16} /> Completed
+                    </div>
+                  ) : activeItem.fileUrl ? (
+                    <button 
+                      onClick={() => handleMarkAsComplete(activeItem.id)}
+                      disabled={isMarkingComplete}
+                      className="bg-[#C9A227] text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-[#b08d20] hover:shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
                     >
-                      Your browser does not support the video tag.
-                    </video>
-                    {!isPlaying && (
-                      <div 
-                        className="absolute inset-0 flex items-center justify-center bg-black/10 cursor-pointer"
-                        onClick={() => videoRef.current?.play()}
+                      {isMarkingComplete ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />} 
+                      Mark as Complete
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="w-full max-h-[490px] aspect-video relative group flex shrink-0">
+                {activeItem.fileUrl ? (
+                  (activeItem.provider === 'youtube' || activeItem.fileUrl.includes('youtube') || activeItem.fileUrl.includes('youtu.be')) ? (
+                    <iframe 
+                      src={activeItem.fileUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <div className="relative w-full h-full group bg-black">
+                      <video 
+                        ref={videoRef}
+                        src={activeItem.fileUrl} 
+                        controls 
+                        controlsList="nodownload"
+                        className="w-full h-full object-contain"
+                        onPlay={() => setIsPlaying(true)}
+                        onPause={() => setIsPlaying(false)}
+                        onTimeUpdate={(e) => {
+                          const video = e.currentTarget;
+                          if (!activeItem.completed && video.duration > 0) {
+                            if (video.currentTime / video.duration > 0.9) {
+                              handleMarkAsComplete(activeItem.id);
+                            }
+                          }
+                        }}
+                        onEnded={() => {
+                          setIsVideoEnded(true);
+                          if (!activeItem.completed) {
+                            handleMarkAsComplete(activeItem.id);
+                          }
+                        }}
                       >
-                        <div className="w-20 h-20 bg-[#C9A227]/90 rounded-full flex items-center justify-center shadow-2xl transition-transform transform scale-100 hover:scale-110">
-                          <Play className="text-[#0a1628] ml-2" size={40} fill="currentColor" />
+                        Your browser does not support the video tag.
+                      </video>
+                      {!isPlaying && !isVideoEnded && (
+                        <div 
+                          className="absolute inset-0 flex items-center justify-center bg-black/10 cursor-pointer"
+                          onClick={() => videoRef.current?.play()}
+                        >
+                          <div className="w-20 h-20 bg-[#C9A227]/90 rounded-full flex items-center justify-center shadow-2xl transition-transform transform scale-100 hover:scale-110">
+                            <Play className="text-[#0a1628] ml-2" size={40} fill="currentColor" />
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+                  )
+                ) : (
+                  <div className="w-full h-full relative">
+                    <img
+                      src={COURSE_DATA.image || "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=1200&auto=format&fit=crop"}
+                      alt="Video Thumbnail"
+                      className="w-full h-full object-contain opacity-60 bg-black"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center flex-col text-white">
+                      <Video size={48} className="mx-auto mb-4 opacity-50" />
+                      <p className="font-bold text-lg">Video is not available right now</p>
+                      <p className="text-sm opacity-70">We will upload the video for this lesson in the future.</p>
+                    </div>
                   </div>
-                )
-              ) : (
-                <>
-                  <img
-                    src={COURSE_DATA.image || "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=1200&auto=format&fit=crop"}
-                    alt="Video Thumbnail"
-                    className="w-full h-full object-contain opacity-60"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center text-white text-center p-4">
-                    {activeItem.id === 'fallback' ? (
-                      <div>
-                        <Video size={48} className="mx-auto mb-4 opacity-50" />
-                        <p className="font-bold text-lg">{activeItem.title}</p>
-                        <p className="text-sm opacity-70">Please check back later</p>
-                      </div>
-                    ) : (
-                      <div>
-                        <Video size={48} className="mx-auto mb-4 opacity-50" />
-                        <p className="font-bold text-lg">Video is not available right now</p>
-                        <p className="text-sm opacity-70">We will upload the video for this lesson in the future.</p>
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
+                )}
+              </div>
             </div>
           )}
 
@@ -347,21 +482,40 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
               {activeItem.fileUrl ? (
                 <>
                   <div className="bg-white border-b border-[#122340]/10 p-4 flex justify-between items-center shrink-0">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#C9A227]/10 text-[#C9A227] rounded-full flex items-center justify-center">
-                        <FileText size={20} />
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[#C9A227]/10 text-[#C9A227] rounded-full flex items-center justify-center">
+                          <FileText size={20} />
+                        </div>
+                        <h2 className="font-bold text-[#122340] text-lg">{activeItem.title}</h2>
                       </div>
-                      <h2 className="font-bold text-[#122340] text-lg">{activeItem.title}</h2>
+                      <div className="flex gap-2">
+                        {activeItem.completed ? (
+                          <div 
+                            className="bg-green-600 text-white px-5 py-2 rounded-xl font-bold text-sm flex items-center gap-2 cursor-default select-none"
+                          >
+                            <CheckCircle2 size={16} /> 
+                            Completed
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => handleMarkAsComplete(activeItem.id)}
+                            disabled={isMarkingComplete}
+                            className="bg-[#C9A227] text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-[#b08d20] hover:shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+                          >
+                            {isMarkingComplete ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />} 
+                            Mark as Complete
+                          </button>
+                        )}
+                        <button 
+                          onClick={(e) => activeItem.fileUrl && handleDownload(e, activeItem.fileUrl, activeItem.title)}
+                          disabled={isDownloading}
+                          className="bg-[#122340] text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-[#0a1628] hover:shadow-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} 
+                          {isDownloading ? 'Downloading...' : 'Download Document'}
+                        </button>
+                      </div>
                     </div>
-                    <button 
-                      onClick={(e) => activeItem.fileUrl && handleDownload(e, activeItem.fileUrl, activeItem.title)}
-                      disabled={isDownloading}
-                      className="bg-[#122340] text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-[#0a1628] hover:shadow-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} 
-                      {isDownloading ? 'Downloading...' : 'Download Document'}
-                    </button>
-                  </div>
                   <div className="flex-1 w-full bg-[#e5e7eb]">
                     <iframe 
                       src={activeItem.fileUrl.toLowerCase().includes('.pdf') ? `${activeItem.fileUrl}#toolbar=0` : `https://docs.google.com/viewer?url=${encodeURIComponent(activeItem.fileUrl)}&embedded=true`} 
@@ -403,38 +557,150 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
             <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-5xl bg-[#f8f9fa] border border-[#122340]/10 rounded-2xl p-10 flex flex-col items-center justify-center shrink-0 text-[#122340] shadow-sm">
               <ClipboardList size={48} className="text-[#C9A227] mb-6" />
               <h2 className="text-2xl font-extrabold mb-2 text-center">{activeItem.title}</h2>
-              <p className="text-[#122340]/60 mb-8 font-medium">Please review the instructions below and upload your completed work.</p>
-              <div className="w-full max-w-md bg-white border-2 border-dashed border-[#122340]/20 rounded-2xl p-10 flex flex-col items-center justify-center text-center hover:border-[#C9A227]/50 hover:bg-[#C9A227]/5 transition-colors cursor-pointer group">
-                <UploadCloud size={32} className="text-[#122340]/40 group-hover:text-[#C9A227] mb-4 transition-colors" />
-                <p className="font-bold text-sm mb-1 group-hover:text-[#122340]">Drag & drop your PDF here</p>
-                <p className="text-xs text-[#122340]/50">Maximum file size: 10MB</p>
-              </div>
+              <p className="text-[#122340]/60 mb-6 font-medium">Please review the instructions below and upload your completed work.</p>
+              
+              {activeItem.fileUrl && (
+                <button 
+                  onClick={(e) => handleDownload(e, activeItem.fileUrl, activeItem.title)}
+                  disabled={isDownloading}
+                  className="mb-8 bg-[#C9A227] text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-[#b08d20] hover:shadow-lg transition-all flex items-center gap-3 shadow-md disabled:opacity-50"
+                >
+                  {isDownloading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+                  {isDownloading ? 'Downloading...' : 'Download Assignment Instructions'}
+                </button>
+              )}
+              
+              {!activeItem.fileUrl ? (
+                <div className="w-full max-w-md bg-white border-2 border-dashed border-[#122340]/20 rounded-2xl p-10 flex flex-col items-center justify-center text-center cursor-not-allowed mb-8 relative opacity-70">
+                  <FileText size={32} className="text-[#122340]/20 mb-4" />
+                  <p className="font-bold text-sm mb-1 text-[#122340]/50">Assignment Instructions Unavailable</p>
+                  <p className="text-xs text-[#122340]/40">You cannot submit until instructions are provided.</p>
+                </div>
+              ) : (
+                <div 
+                  className={`w-full max-w-md bg-white border-2 border-dashed ${
+                    activeSubmission?.status === 'verified' || activeSubmission?.status === 'pending' || activeSubmission?.status === 'resubmitted' || (activeItem.completed && !activeSubmission)
+                      ? 'border-green-400 bg-green-50/50 cursor-default'
+                      : activeSubmission?.status === 'rejected'
+                      ? 'border-red-400 hover:border-red-500 hover:bg-red-50 cursor-pointer'
+                      : 'border-[#122340]/20 hover:border-[#C9A227]/50 hover:bg-[#C9A227]/5 cursor-pointer'
+                  } rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-colors group mb-8 relative`}
+                  onClick={() => {
+                    const isCompletedButLocked = activeSubmission?.status === 'verified' || activeSubmission?.status === 'pending' || activeSubmission?.status === 'resubmitted' || (activeItem.completed && activeSubmission?.status !== 'rejected');
+                    if (!isCompletedButLocked && !isMarkingComplete) {
+                      const el = document.getElementById(`file-upload-${activeItem.id}`);
+                      if (el) el.click();
+                    }
+                  }}
+                >
+                  <input 
+                    type="file" 
+                    id={`file-upload-${activeItem.id}`} 
+                    className="hidden" 
+                    accept=".pdf"
+                    onChange={async (e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const file = e.target.files[0];
+                        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                          toast.error("Only PDF files are allowed for assignments.");
+                          e.target.value = ''; // Reset input
+                          return;
+                        }
+                        setIsMarkingComplete(true);
+                        try {
+                          // 1. Upload file to S3
+                          const s3Url = await uploadToS3(file);
+                          
+                          // 2. Submit to backend
+                          await apiClient.post(`/academy/assignments/${activeItem.id}/submit`, {
+                            submissionPdfUrl: s3Url,
+                            studentName: (user as any)?.name || (user as any)?.firstName || 'Student',
+                            studentEmail: (user as any)?.email || 'student@example.com',
+                            studentId: (user as any)?._id || (user as any)?.id
+                          });
+
+                          // We do NOT mark as complete locally until verified by admin
+                          // await handleMarkAsComplete(activeItem.id);
+                          await fetchMySubmissions();
+                          toast.success("Assignment submitted successfully!");
+                        } catch (err) {
+                          console.error("Assignment upload error:", err);
+                          toast.error("Failed to submit assignment. Please try again.");
+                        } finally {
+                          setIsMarkingComplete(false);
+                        }
+                      }
+                    }}
+                  />
+                  
+                  {isMarkingComplete ? (
+                    <>
+                      <Loader2 size={32} className="text-[#C9A227] mb-4 animate-spin" />
+                      <p className="font-bold text-sm mb-1 text-[#C9A227]">Uploading Document...</p>
+                    </>
+                  ) : activeSubmission?.status === 'verified' ? (
+                    <>
+                      <CheckCircle2 size={32} className="text-green-500 mb-4" />
+                      <p className="font-bold text-sm mb-1 text-green-700">Assignment Verified</p>
+                      {activeSubmission.feedback && <p className="text-xs text-green-600 font-medium bg-green-100/80 px-4 py-2 rounded-lg mt-3 text-left w-full border border-green-200">{activeSubmission.feedback}</p>}
+                    </>
+                  ) : activeSubmission?.status === 'rejected' ? (
+                    <>
+                      <XCircle size={32} className="text-red-500 mb-4" />
+                      <p className="font-bold text-sm mb-1 text-red-700">Submission Rejected</p>
+                      {activeSubmission.feedback && <p className="text-xs text-red-600 font-medium bg-red-100/80 px-4 py-2 rounded-lg mt-3 text-left w-full border border-red-200">{activeSubmission.feedback}</p>}
+                      <p className="text-xs text-red-600/70 mt-4 flex items-center justify-center gap-1"><UploadCloud size={14}/> Click to re-upload your assignment</p>
+                    </>
+                  ) : activeSubmission?.status === 'pending' || activeSubmission?.status === 'resubmitted' || activeItem.completed ? (
+                    <>
+                      <Clock size={32} className="text-blue-500 mb-4" />
+                      <p className="font-bold text-sm mb-1 text-blue-700">Document Uploaded Successfully</p>
+                      <p className="text-xs text-blue-600/70">Pending review</p>
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud size={32} className="text-[#122340]/40 group-hover:text-[#C9A227] mb-4 transition-colors" />
+                      <p className="font-bold text-sm mb-1 group-hover:text-[#122340]">Click or drag & drop your PDF here</p>
+                      <p className="text-xs text-[#122340]/50">Maximum file size: 10MB</p>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
-          {activeItem.type === 'assessment' && (
-            <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-5xl bg-[#f8f9fa] border border-[#122340]/10 rounded-2xl p-10 flex flex-col items-center justify-center shrink-0 text-[#122340] shadow-sm">
-              <CheckSquare size={48} className="text-[#C9A227] mb-6" />
-              <h2 className="text-2xl font-extrabold mb-2 text-center">{activeItem.title}</h2>
-              <p className="text-[#122340]/60 mb-8 font-medium max-w-lg text-center">
-                This assessment is strictly timed for {activeItem.duration}. Ensure you have a stable connection before beginning.
-              </p>
-              <button className="bg-[#122340] text-white px-10 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
-                Start Assessment
-              </button>
-            </div>
-          )}
+          {(activeItem.type === 'test' || activeItem.type === 'final_assessment' || activeItem.type === 'assessment') && (() => {
+            console.log('activeItem', activeItem);
+            return (
+              <AssessmentPlayer
+                key={activeItem.id}
+                courseId={currentCourse?.id || ''}
+                itemId={activeItem.id}
+                assessmentId={activeItem.assessmentId} 
+                title={activeItem.title}
+                onComplete={() => handleMarkAsComplete(activeItem.id)}
+              />
+            );
+          })()}
 
           {activeItem.type === 'certificate' && (
             <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-5xl bg-gradient-to-br from-[#122340] to-[#0a1628] border border-[#122340]/10 rounded-2xl p-10 flex flex-col items-center justify-center shrink-0 text-white min-h-[400px] shadow-sm">
               <Award size={64} className="text-[#C9A227] mb-6" />
               <h2 className="text-3xl font-extrabold mb-4 text-center">Course Complete!</h2>
               <p className="text-blue-100/70 mb-8 font-medium text-center max-w-lg">
-                Congratulations on completing the apprenticeship program. Your verifiable certificate is locked until the final assessment is passed.
+                {COURSE_DATA.progress === 100
+                  ? "Congratulations! You have completed all requirements, including the final assessment. Your certificate is ready to download."
+                  : "Congratulations on reaching this far. Your verifiable certificate is locked until all course requirements and the final assessment are passed."}
               </p>
-              <button disabled className="bg-[#122340] border border-white/10 text-white/50 px-10 py-4 rounded-xl font-bold transition-all flex items-center gap-2">
-                <Download size={18} /> Download Certificate (Locked)
-              </button>
+              {COURSE_DATA.progress === 100 ? (
+                <button className="bg-[#C9A227] text-[#0a1628] px-10 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                  <Download size={18} /> Download Certificate
+                </button>
+              ) : (
+                <button disabled className="bg-[#122340] border border-white/10 text-white/50 px-10 py-4 rounded-xl font-bold transition-all flex items-center gap-2">
+                  <Download size={18} /> Certificate Locked
+                </button>
+              )}
             </div>
           )}
 
@@ -497,26 +763,36 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
                       return (
                         <div
                           key={item.id}
-                          onClick={() => setActiveItem(item)}
+                          onClick={() => { setActiveItem(item); setIsVideoEnded(false); }}
                           className={`flex gap-3 p-3 pl-4 cursor-pointer hover:bg-[#122340]/5 transition-colors ${isActive ? 'bg-[#C9A227]/10 border-l-4 border-[#C9A227]' : 'border-l-4 border-transparent'}`}
                         >
                           <div className="mt-0.5 shrink-0 flex items-center justify-center">
-                            {item.completed ? (
-                              <CheckCircle2 size={16} className="text-green-500" />
-                            ) : (
-                              <div className="w-4 h-4 rounded-full border-2 border-[#122340]/20 flex items-center justify-center">
-                                {isActive && <div className="w-1.5 h-1.5 bg-[#C9A227] rounded-full"></div>}
-                              </div>
-                            )}
+                            {(() => {
+                              const submission = item.type === 'assignment' ? studentSubmissions.find(s => s.assignmentId === item.id) : null;
+                              if (submission?.status === 'rejected') {
+                                return <XCircle size={16} className="text-red-500" />;
+                              }
+                              if (submission?.status === 'pending' || submission?.status === 'resubmitted') {
+                                return <Circle size={16} className="text-green-500" />;
+                              }
+                              if (item.completed) {
+                                return <CheckCircle2 size={16} className="text-green-500" />;
+                              }
+                              return (
+                                <div className="w-4 h-4 rounded-full border-2 border-[#122340]/20 flex items-center justify-center">
+                                  {isActive && <div className="w-1.5 h-1.5 bg-[#C9A227] rounded-full"></div>}
+                                </div>
+                              );
+                            })()}
                           </div>
                           <div>
                             <p className={`text-sm ${isActive ? 'font-bold text-[#122340]' : 'font-medium text-[#122340]/80'}`}>
                               {item.title}
                             </p>
-                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#122340]/50 mt-1.5">
-                              {getItemIcon(item.type, isActive, item.completed)}
-                              <span className="uppercase tracking-wider">{item.type}</span>
-                            </div>
+                                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#122340]/50 mt-1.5">
+                                    {getItemIcon(item.type, isActive, item.completed)}
+                                    <span className="uppercase tracking-wider">{formatItemType(item.type)}</span>
+                                  </div>
                           </div>
                         </div>
                       );
@@ -534,17 +810,27 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
                             return (
                               <div
                                 key={item.id}
-                                onClick={() => setActiveItem(item)}
+                                onClick={() => { setActiveItem(item); setIsVideoEnded(false); }}
                                 className={`flex gap-3 p-3 pl-6 cursor-pointer hover:bg-[#122340]/5 transition-colors ${isActive ? 'bg-[#C9A227]/10 border-l-4 border-[#C9A227]' : 'border-l-4 border-transparent'}`}
                               >
                                 <div className="mt-0.5 shrink-0 flex items-center justify-center">
-                                  {item.completed ? (
-                                    <CheckCircle2 size={16} className="text-green-500" />
-                                  ) : (
-                                    <div className="w-4 h-4 rounded-full border-2 border-[#122340]/20 flex items-center justify-center">
-                                      {isActive && <div className="w-1.5 h-1.5 bg-[#C9A227] rounded-full"></div>}
-                                    </div>
-                                  )}
+                                  {(() => {
+                                    const submission = item.type === 'assignment' ? studentSubmissions.find(s => s.assignmentId === item.id) : null;
+                                    if (submission?.status === 'rejected') {
+                                      return <XCircle size={16} className="text-red-500" />;
+                                    }
+                                    if (submission?.status === 'pending' || submission?.status === 'resubmitted') {
+                                      return <Circle size={16} className="text-green-500" />;
+                                    }
+                                    if (item.completed) {
+                                      return <CheckCircle2 size={16} className="text-green-500" />;
+                                    }
+                                    return (
+                                      <div className="w-4 h-4 rounded-full border-2 border-[#122340]/20 flex items-center justify-center">
+                                        {isActive && <div className="w-1.5 h-1.5 bg-[#C9A227] rounded-full"></div>}
+                                      </div>
+                                    );
+                                  })()}
                                 </div>
                                 <div>
                                   <p className={`text-sm ${isActive ? 'font-bold text-[#122340]' : 'font-medium text-[#122340]/80'}`}>
@@ -552,7 +838,7 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
                                   </p>
                                   <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#122340]/50 mt-1.5">
                                     {getItemIcon(item.type, isActive, item.completed)}
-                                    <span className="uppercase tracking-wider">{item.type}</span>
+                                    <span className="uppercase tracking-wider">{formatItemType(item.type)}</span>
                                   </div>
                                 </div>
                               </div>

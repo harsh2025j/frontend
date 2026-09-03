@@ -8,6 +8,7 @@ export const usersApi = {
 
         const params = new URLSearchParams();
         if (filters) {
+            if (filters.search) params.append("search", filters.search);
             if (filters.name) params.append("name", filters.name);
             if (filters.email) params.append("email", filters.email);
             if (filters.isActive !== undefined && filters.isActive !== "")
@@ -15,6 +16,7 @@ export const usersApi = {
             if (filters.isVerified !== undefined && filters.isVerified !== "")
                 params.append("isVerified", String(filters.isVerified));
             if (filters.roleId) params.append("roleId", filters.roleId);
+            if (filters.roleName) params.append("roleName", filters.roleName);
             if (filters.createdBy) params.append("createdBy", filters.createdBy);
             if (filters.officeId) params.append("officeId", filters.officeId);
             if (filters.practiceAreaId) params.append("practiceAreaId", filters.practiceAreaId);

@@ -15,12 +15,12 @@ import toast from "react-hot-toast";
 import ContentEditorDrawer from "./ContentEditorDrawer";
 import { 
   Plus, Edit2, Trash2, Video, FileText, PlaySquare, 
-  FileCheck, GripVertical, Loader2, ChevronDown, ChevronRight, FolderPlus
+  FileCheck, GripVertical, Loader2, ChevronDown, ChevronRight, FolderPlus, FileQuestion, GraduationCap
 } from "lucide-react";
 
 type CurriculumItem = {
   id: string;
-  type: "video" | "document" | "live" | "assignment" | "test";
+  type: "video" | "document" | "live" | "assignment" | "test" | "final_assessment";
   title: string;
   orderIndex: number;
   moduleId: string;
@@ -52,15 +52,18 @@ const SortableItem = ({ item, onDelete, onClick }: { item: CurriculumItem, onDel
           item.type === 'video' ? 'bg-indigo-50 text-indigo-600' :
           item.type === 'document' ? 'bg-emerald-50 text-emerald-600' :
           item.type === 'live' ? 'bg-red-50 text-red-600' :
-          'bg-orange-50 text-orange-600'
+          item.type === 'assignment' ? 'bg-orange-50 text-orange-600' :
+          'bg-purple-50 text-purple-600'
         }`}>
           {item.type === 'video' && <Video size={16} />}
           {item.type === 'document' && <FileText size={16} />}
           {item.type === 'live' && <PlaySquare size={16} />}
           {item.type === 'assignment' && <FileCheck size={16} />}
+          {item.type === 'test' && <FileQuestion size={16} />}
+          {item.type === 'final_assessment' && <GraduationCap size={16} />}
         </div>
         <p className="text-sm font-semibold text-gray-900">{item.title}</p>
-        {(item.fileUrl || item.assignmentData?.instructionsPdfUrl) && <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-green-100 text-green-700 rounded-full ml-2">Content Added</span>}
+        {(item.fileUrl || item.assignmentData?.instructionsPdfUrl || item.assignmentData?.assessmentId) && <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-green-100 text-green-700 rounded-full ml-2">Content Added</span>}
       </div>
       <button onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} className="text-gray-400 hover:text-red-600 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <Trash2 size={16} />
@@ -148,6 +151,8 @@ const ModuleNode = ({
           <button onClick={() => onAddItem(module.id, "document")} className="p-1.5 text-gray-500 hover:bg-emerald-100 hover:text-emerald-700 rounded" title="Add Document"><FileText size={16} /></button>
           <button onClick={() => onAddItem(module.id, "live")} className="p-1.5 text-gray-500 hover:bg-red-100 hover:text-red-700 rounded" title="Add Live Session"><PlaySquare size={16} /></button>
           <button onClick={() => onAddItem(module.id, "assignment")} className="p-1.5 text-gray-500 hover:bg-orange-100 hover:text-orange-700 rounded" title="Add Assignment"><FileCheck size={16} /></button>
+          <button onClick={() => onAddItem(module.id, "test")} className="p-1.5 text-gray-500 hover:bg-purple-100 hover:text-purple-700 rounded" title="Add Test"><FileQuestion size={16} /></button>
+          <button onClick={() => onAddItem(module.id, "final_assessment")} className="p-1.5 text-gray-500 hover:bg-pink-100 hover:text-pink-700 rounded" title="Add Final Assessment"><GraduationCap size={16} /></button>
           <button onClick={() => onDelete(module.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded ml-2">
             <Trash2 size={16} />
           </button>
@@ -203,7 +208,7 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
   // Item Modal State
   const [showItemModal, setShowItemModal] = useState(false);
   const [activeModuleForAdd, setActiveModuleForAdd] = useState<string | null>(null);
-  const [itemType, setItemType] = useState<"video" | "document" | "live" | "assignment" | "test">("video");
+  const [itemType, setItemType] = useState<"video" | "document" | "live" | "assignment" | "test" | "final_assessment">("video");
   const [newItemTitle, setNewItemTitle] = useState("");
 
   // Confirmation Modal State

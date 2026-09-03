@@ -55,11 +55,13 @@ export interface User {
 }
 
 export interface UserFilter {
+    search?: string;
     name?: string;
     email?: string;
     isActive?: boolean | string;
     isVerified?: boolean | string;
     roleId?: string;
+    roleName?: string;
     createdBy?: string;
     officeId?: string;
     practiceAreaId?: string;

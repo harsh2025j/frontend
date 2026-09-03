@@ -1,244 +1,174 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Plus, Save, Trash2, Settings, GripVertical, CheckCircle2, Circle } from "lucide-react";
+import { useRouter } from "@/i18n/routing";
+import { ArrowLeft, Save, FileText, CheckCircle2 } from "lucide-react";
+import { Link } from "@/i18n/routing";
+import { toast } from "react-hot-toast";
+import apiClient from "@/data/services/apiConfig/apiClient";
 
 export default function CreateTestPage() {
-  const [testTitle, setTestTitle] = useState("");
-  const [course, setCourse] = useState("");
-  const [duration, setDuration] = useState("");
-  const [passPercentage, setPassPercentage] = useState("50");
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    marksPerQuestion: 1 as number | "",
+    passingPercentage: 50 as number | "",
+    maxRetries: 50 as number | "",
+  });
 
-  const [questions, setQuestions] = useState([
-    {
-      id: 1,
-      text: "What is the primary function of a writ of habeas corpus?",
-      options: [
-        { id: "A", text: "To transfer a case to a higher court" },
-        { id: "B", text: "To compel a public official to perform a duty" },
-        { id: "C", text: "To bring a prisoner or detainee before the court" },
-        { id: "D", text: "To stop a lower court from exceeding its jurisdiction" }
-      ],
-      correctOptionId: "C",
-      marks: 1
-    }
-  ]);
-
-  const handleAddQuestion = () => {
-    setQuestions([
-      ...questions,
-      {
-        id: Date.now(),
-        text: "",
-        options: [
-          { id: "A", text: "" },
-          { id: "B", text: "" },
-          { id: "C", text: "" },
-          { id: "D", text: "" }
-        ],
-        correctOptionId: "A",
-        marks: 1
-      }
-    ]);
-  };
-
-  const handleRemoveQuestion = (id: number) => {
-    setQuestions(questions.filter(q => q.id !== id));
-  };
-
-  const updateQuestionText = (id: number, text: string) => {
-    setQuestions(questions.map(q => q.id === id ? { ...q, text } : q));
-  };
-
-  const updateOptionText = (questionId: number, optionId: string, text: string) => {
-    setQuestions(questions.map(q => {
-      if (q.id === questionId) {
-        return {
-          ...q,
-          options: q.options.map(opt => opt.id === optionId ? { ...opt, text } : opt)
-        };
-      }
-      return q;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: (name === 'title' || name === 'description') 
+        ? value 
+        : (value === "" ? "" : Number(value))
     }));
   };
 
-  const setCorrectOption = (questionId: number, optionId: string) => {
-    setQuestions(questions.map(q => q.id === questionId ? { ...q, correctOptionId: optionId } : q));
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+    
+    if (formData.marksPerQuestion === "" || formData.marksPerQuestion <= 0) {
+      toast.error("Marks per question must be greater than 0");
+      return;
+    }
 
-  const handleSave = () => {
-    // Mock save
-    console.log("Saving test:", { testTitle, course, duration, passPercentage, questions });
+    if (formData.passingPercentage === "" || formData.passingPercentage <= 0 || formData.passingPercentage > 100) {
+      toast.error("Passing percentage must be between 1 and 100");
+      return;
+    }
+
+    if (formData.maxRetries === "" || formData.maxRetries < 0) {
+      toast.error("Max retries cannot be negative");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await apiClient.post("/academy/assessments", formData);
+
+      if (res.status === 200 || res.status === 201) {
+        const data = res.data?.data || res.data;
+        toast.success("Test created successfully!");
+        // Redirect to the detail page where they can add questions
+        router.push(`/admin/academy/tests/${data.id}`);
+      } else {
+        toast.error("Failed to create test");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("An error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-20">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/academy/tests" className="p-2 hover:bg-gray-100 rounded-full transition text-gray-500">
-            <ArrowLeft size={20} />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Create Assessment</h1>
-            <p className="text-gray-500 text-sm mt-1">Build a quiz or final test for a course.</p>
-          </div>
-        </div>
-        <div className="flex gap-3">
-          <button className="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition">
-            Save as Draft
-          </button>
-          <button onClick={handleSave} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2">
-            <Save size={18} /> Publish Test
-          </button>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center gap-4">
+        <Link href="/admin/academy/tests" className="p-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 transition">
+          <ArrowLeft size={20} />
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Create Assessment</h1>
+          <p className="text-sm text-gray-500">Configure the basic settings for your new test.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Left Col - Settings */}
-        <div className="md:col-span-1 space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <div className="flex items-center gap-2 mb-4 text-gray-900 font-bold border-b border-gray-100 pb-3">
-              <Settings size={18} />
-              <h3>Test Settings</h3>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Test Title *</label>
-                <input 
-                  type="text" 
-                  value={testTitle}
-                  onChange={(e) => setTestTitle(e.target.value)}
-                  placeholder="e.g. Mid-Term Quiz" 
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Target Course *</label>
-                <select 
-                  value={course}
-                  onChange={(e) => setCourse(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                >
-                  <option value="">Select a course...</option>
-                  <option value="course1">Legal Research Apprenticeship</option>
-                  <option value="course2">Drafting Commercial Contracts</option>
-                  <option value="course3">Intellectual Property Rights</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Duration (Minutes)</label>
-                <input 
-                  type="number" 
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  placeholder="e.g. 60" 
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Passing Percentage (%)</label>
-                <input 
-                  type="number" 
-                  max="100"
-                  min="0"
-                  value={passPercentage}
-                  onChange={(e) => setPassPercentage(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 text-sm text-blue-800">
-            <p className="font-bold mb-1">Summary</p>
-            <ul className="list-disc pl-4 space-y-1">
-              <li>{questions.length} Questions</li>
-              <li>Total Marks: {questions.reduce((acc, q) => acc + q.marks, 0)}</li>
-              <li>Pass: {passPercentage}%</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Right Col - Question Builder */}
-        <div className="md:col-span-2 space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-6 space-y-6">
           
-          {questions.map((q, index) => (
-            <div key={q.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              {/* Question Header */}
-              <div className="flex justify-between items-center bg-gray-50/80 p-4 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  <GripVertical size={16} className="text-gray-400 cursor-grab active:cursor-grabbing" />
-                  <span className="font-bold text-gray-700 text-sm">Question {index + 1}</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500 font-medium">Marks</span>
-                    <input type="number" className="w-16 px-2 py-1 border border-gray-200 rounded-md text-center focus:outline-none" defaultValue={q.marks} />
-                  </div>
-                  <button onClick={() => handleRemoveQuestion(q.id)} className="text-gray-400 hover:text-red-600 transition p-1" title="Delete Question">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Question Body */}
-              <div className="p-5 space-y-5">
-                <div>
-                  <textarea 
-                    rows={2} 
-                    value={q.text}
-                    onChange={(e) => updateQuestionText(q.id, e.target.value)}
-                    placeholder="Type the question here..." 
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none font-medium"
-                  ></textarea>
-                </div>
-
-                {/* Options */}
-                <div className="space-y-3 pl-2 border-l-2 border-gray-100">
-                  {q.options.map(opt => (
-                    <div key={opt.id} className="flex items-center gap-3">
-                      <button 
-                        onClick={() => setCorrectOption(q.id, opt.id)}
-                        className={`shrink-0 transition ${q.correctOptionId === opt.id ? 'text-green-500' : 'text-gray-300 hover:text-gray-400'}`}
-                        title={q.correctOptionId === opt.id ? "Correct Answer" : "Mark as Correct"}
-                      >
-                        {q.correctOptionId === opt.id ? <CheckCircle2 size={22} /> : <Circle size={22} />}
-                      </button>
-                      <div className="flex-1 relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 select-none">{opt.id}.</span>
-                        <input 
-                          type="text" 
-                          value={opt.text}
-                          onChange={(e) => updateOptionText(q.id, opt.id, e.target.value)}
-                          placeholder={`Option ${opt.id}`} 
-                          className={`w-full pl-8 pr-4 py-2 border rounded-lg text-sm focus:outline-none transition ${
-                            q.correctOptionId === opt.id ? 'border-green-300 bg-green-50/30 text-green-900 focus:border-green-500 focus:ring-2 focus:ring-green-500/20' : 'border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
-                          }`}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Test Title <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                placeholder="e.g., Final Module Assessment"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+              />
             </div>
-          ))}
 
-          {/* Add New Question Button */}
-          <button 
-            onClick={handleAddQuestion}
-            className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition"
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Description</label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Brief instructions or summary for the students..."
+                rows={3}
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition resize-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-100">
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Marks Per Question</label>
+              <input
+                type="number"
+                name="marksPerQuestion"
+                min="1"
+                value={formData.marksPerQuestion}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Passing Percentage (%)</label>
+              <input
+                type="number"
+                name="passingPercentage"
+                min="1"
+                max="100"
+                value={formData.passingPercentage}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Max Retries</label>
+              <input
+                type="number"
+                name="maxRetries"
+                min="1"
+                value={formData.maxRetries}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+              />
+            </div>
+          </div>
+
+        </div>
+
+        <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-sm disabled:opacity-50"
           >
-            <Plus size={18} /> Add Another Question
+            {loading ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+            ) : (
+              <>
+                <Save size={18} />
+                Save & Continue
+              </>
+            )}
           </button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

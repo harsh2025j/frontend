@@ -36,7 +36,8 @@ import {
   GraduationCap,
   PlaySquare,
   Award,
-  BookOpen
+  BookOpen,
+  FileQuestion
 } from "lucide-react";
 import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
@@ -386,6 +387,12 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
           show: showAcademySection
         },
         {
+          name: "Assessments & Tests",
+          icon: <FileQuestion size={18} />,
+          href: "/admin/academy/tests",
+          show: showAcademySection
+        },
+        {
           name: "Live Sessions",
           icon: <PlaySquare size={18} />,
           href: "/admin/academy/live-sessions",
@@ -397,12 +404,12 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
           href: "/admin/academy/students",
           show: showAcademySection
         },
-        {
-          name: "Enrollments",
-          icon: <CheckCircle size={18} />,
-          href: "/admin/academy/enrollments",
-          show: showAcademySection
-        },
+        // {
+        //   name: "Enrollments",
+        //   icon: <CheckCircle size={18} />,
+        //   href: "/admin/academy/enrollments",
+        //   show: showAcademySection
+        // },
         {
           name: "Payments & Revenue",
           icon: <Wallet size={18} />,
@@ -413,12 +420,6 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
           name: "Assignments",
           icon: <ClipboardList size={18} />,
           href: "/admin/academy/assignments",
-          show: showAcademySection
-        },
-        {
-          name: "Assessments & Tests",
-          icon: <FileText size={18} />,
-          href: "/admin/academy/tests",
           show: showAcademySection
         },
         {
@@ -437,12 +438,6 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
           name: "Notifications",
           icon: <Bell size={18} />,
           href: "/admin/academy/notifications",
-          show: showAcademyFinances
-        },
-        {
-          name: "Reports",
-          icon: <BarChart size={18} />,
-          href: "/admin/academy/reports",
           show: showAcademyFinances
         }
       ]

@@ -28,9 +28,9 @@ export default function AcademyFooter() {
               <span className="absolute bottom-0 left-0 w-8 h-0.5 bg-gradient-to-r from-blue-400 to-transparent"></span>
             </h3>
             <ul className="space-y-2.5 text-sm">
-              <li><Link href="/academy/courses" className="text-blue-100 hover:text-white transition-colors">All Courses</Link></li>
-              <li><Link href="/academy" className="text-blue-100 hover:text-white transition-colors">Learning Paths</Link></li>
-              <li><Link href="/academy" className="text-blue-100 hover:text-white transition-colors">Certifications</Link></li>
+              <li><Link href="/courses" className="text-blue-100 hover:text-white transition-colors">All Courses</Link></li>
+              <li><Link href="/" className="text-blue-100 hover:text-white transition-colors">Learning Paths</Link></li>
+              <li><Link href="/" className="text-blue-100 hover:text-white transition-colors">Certifications</Link></li>
             </ul>
           </div>
 
@@ -40,9 +40,9 @@ export default function AcademyFooter() {
               <span className="absolute bottom-0 left-0 w-8 h-0.5 bg-gradient-to-r from-blue-400 to-transparent"></span>
             </h3>
             <ul className="space-y-2.5 text-sm">
-              <li><Link href="/academy" className="text-blue-100 hover:text-white transition-colors">Discussions</Link></li>
-              <li><Link href="/academy" className="text-blue-100 hover:text-white transition-colors">Blog</Link></li>
-              <li><Link href="/academy" className="text-blue-100 hover:text-white transition-colors">Events</Link></li>
+              <li><Link href="/" className="text-blue-100 hover:text-white transition-colors">Discussions</Link></li>
+              <li><Link href="/" className="text-blue-100 hover:text-white transition-colors">Blog</Link></li>
+              <li><Link href="/" className="text-blue-100 hover:text-white transition-colors">Events</Link></li>
             </ul>
           </div>
 

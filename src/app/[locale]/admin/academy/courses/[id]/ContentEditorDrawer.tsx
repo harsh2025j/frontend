@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { X, Save, Video, Link as LinkIcon, FileText, CheckCircle, UploadCloud, Loader2 } from "lucide-react";
+import { X, Save, Video, Link as LinkIcon, FileText, CheckCircle, UploadCloud, Loader2, RefreshCw } from "lucide-react";
 import Uppy from '@uppy/core';
 import AwsS3 from '@uppy/aws-s3';
 import Dashboard from '@uppy/react/dashboard';
@@ -10,6 +10,7 @@ import '@uppy/dashboard/css/style.min.css';
 import apiClient from "@/data/services/apiConfig/apiClient";
 import toast from "react-hot-toast";
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 
 import { uploadToS3 } from "@/lib/uploadToS3";
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
@@ -17,7 +18,7 @@ import 'react-quill-new/dist/quill.snow.css';
 
 type CurriculumItem = {
   id: string;
-  type: "video" | "document" | "live" | "assignment" | "test";
+  type: "video" | "document" | "live" | "assignment" | "test" | "final_assessment";
   title: string;
   orderIndex: number;
   moduleId: string;
@@ -25,7 +26,7 @@ type CurriculumItem = {
   fileUrl?: string;
   duration?: number;
   content?: string;
-  assignmentData?: { totalMarks?: number; passingMarks?: number; instructionsPdfUrl?: string; };
+  assignmentData?: { totalMarks?: number; passingMarks?: number; instructionsPdfUrl?: string; assessmentId?: string; };
 };
 
 export default function ContentEditorDrawer({
@@ -39,14 +40,35 @@ export default function ContentEditorDrawer({
   onClose: () => void;
   onSave: (id: string, data: any) => Promise<void>;
 }) {
-  const [activeTab, setActiveTab] = useState<"upload" | "external" | "assignment">("upload");
+  const [activeTab, setActiveTab] = useState<"upload" | "external" | "assignment" | "assessment">("upload");
   const [externalUrl, setExternalUrl] = useState(item?.fileUrl || "");
   const [localFileUrl, setLocalFileUrl] = useState(item?.fileUrl || "");
   const [localProvider, setLocalProvider] = useState(item?.provider || "");
   const [isSaving, setIsSaving] = useState(false);
   
   // Assignment specific state
-  const [assignmentData, setAssignmentData] = useState(item?.assignmentData || { totalMarks: 100, passingMarks: 50, instructionsPdfUrl: "" });
+  const [assignmentData, setAssignmentData] = useState<any>(item?.assignmentData || { totalMarks: 100, passingMarks: 50, instructionsPdfUrl: "", assessmentId: "" });
+  const [assessments, setAssessments] = useState<any[]>([]);
+
+  const fetchAssessments = () => {
+    apiClient.get(`/academy/assessments?t=${Date.now()}`)
+    .then(res => {
+      console.log('fetchAssessments res.data:', res.data);
+      const data = res.data?.data || res.data;
+      if(Array.isArray(data)) {
+        setAssessments(data);
+      } else {
+        console.warn('fetchAssessments data is not an array:', data);
+      }
+    })
+    .catch(err => console.error("Failed to fetch assessments", err));
+  };
+
+  useEffect(() => {
+    if (activeTab === "assessment" && isOpen) {
+      fetchAssessments();
+    }
+  }, [activeTab, isOpen]);
 
   // Sync external url state when item changes
   useEffect(() => {
@@ -72,6 +94,8 @@ export default function ContentEditorDrawer({
     
     if (item?.type === 'assignment') {
       setActiveTab("assignment");
+    } else if (item?.type === 'test' || item?.type === 'final_assessment') {
+      setActiveTab("assessment");
     } else if (item?.type === 'live') {
       setActiveTab("external");
     } else if (item?.provider === 'youtube' || item?.provider === 'gmeet') {
@@ -136,7 +160,7 @@ export default function ContentEditorDrawer({
       const s3Url = response.uploadURL || response.body?.location;
       if (s3Url && item) {
         if (item.type === 'assignment') {
-          setAssignmentData(prev => ({ ...prev, instructionsPdfUrl: s3Url }));
+          setAssignmentData((prev: any) => ({ ...prev, instructionsPdfUrl: s3Url }));
           toast.promise(
             onSave(item.id, { assignmentData: { ...(item.assignmentData || { totalMarks: 100, passingMarks: 50 }), instructionsPdfUrl: s3Url } }),
             {
@@ -214,7 +238,7 @@ export default function ContentEditorDrawer({
         <div className="flex-1 overflow-y-auto p-6">
 
           {/* Tabs */}
-          {item.type !== 'assignment' && (
+          {item.type !== 'assignment' && item.type !== 'test' && item.type !== 'final_assessment' && (
             <div className="flex bg-gray-100 p-1 rounded-lg mb-6 overflow-x-auto no-scrollbar">
               {item.type !== 'live' && (
                 <button
@@ -344,7 +368,7 @@ export default function ContentEditorDrawer({
                       </div>
                     </div>
                     <button 
-                      onClick={() => setAssignmentData(prev => ({ ...prev, instructionsPdfUrl: "" }))}
+                      onClick={() => setAssignmentData((prev: any) => ({ ...prev, instructionsPdfUrl: "" }))}
                       className="text-xs font-bold text-red-600 hover:text-red-700 self-start bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 transition"
                     >
                       Replace Document
@@ -355,6 +379,60 @@ export default function ContentEditorDrawer({
                     {uppy && <Dashboard uppy={uppy} width="100%" height={350} proudlyDisplayPoweredByUppy={false} />}
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Assessment Tab */}
+          {activeTab === "assessment" && (
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Select Assessment</label>
+                <div className="bg-purple-50 text-purple-800 p-3 rounded-lg text-xs font-medium mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-purple-200">
+                  <div className="flex gap-2">
+                    <span className="mt-0.5 shrink-0 text-purple-600">💡</span>
+                    <span>Select an assessment that you have created in the Tests & Assessments section.</span>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <button onClick={fetchAssessments} title="Refresh Assessments" className="p-2 text-purple-600 bg-purple-100/50 hover:bg-purple-200 rounded-lg transition shrink-0">
+                      <RefreshCw size={18} />
+                    </button>
+                    <Link href="/admin/academy/tests/create" className="bg-purple-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-purple-700 transition shrink-0 text-center shadow-sm whitespace-nowrap">
+                      Create New
+                    </Link>
+                  </div>
+                </div>
+                
+                <select
+                  value={assignmentData.assessmentId || ""}
+                  onChange={(e) => setAssignmentData((prev: any) => ({ ...prev, assessmentId: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition mb-4"
+                >
+                  <option value="">-- Choose an Assessment --</option>
+                  {assessments.map((a: any) => (
+                    <option key={a.id} value={a.id}>{a.title}</option>
+                  ))}
+                </select>
+
+                <button
+                  onClick={async () => {
+                    if(!assignmentData.assessmentId) return toast.error("Please select an assessment");
+                    setIsSaving(true);
+                    try {
+                      await onSave(item.id, { assignmentData: { ...item.assignmentData, assessmentId: assignmentData.assessmentId } });
+                      toast.success("Assessment linked successfully!");
+                      onClose();
+                    } catch(e) {
+                      toast.error("Failed to link assessment");
+                    } finally {
+                      setIsSaving(false);
+                    }
+                  }}
+                  disabled={isSaving}
+                  className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition disabled:opacity-50 flex justify-center items-center gap-2"
+                >
+                  <Save size={18} /> {isSaving ? "Saving..." : "Link Assessment"}
+                </button>
               </div>
             </div>
           )}

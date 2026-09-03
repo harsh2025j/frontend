@@ -8,6 +8,7 @@ export interface Enrollment {
   progress: number;
   expiryDate?: string;
   createdAt: string;
+  completedItemIds?: string[];
   course?: any; // You can import Course from course.types.ts if available
 }
 
@@ -24,6 +25,7 @@ export interface CoursePayment {
 export interface EnrollmentsState {
   myEnrollments: Enrollment[];
   allEnrollments: { data: Enrollment[], total: number, page: number, limit: number, totalPages: number };
+  studentsSummary: { data: any[], total: number, page: number, limit: number, totalPages: number };
   allPayments: { data: CoursePayment[], total: number, page: number, limit: number, totalPages: number };
   isLoading: boolean;
   error: string | null;

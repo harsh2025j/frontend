@@ -241,7 +241,7 @@ export default function OverviewTab({ course, setCourse, mockStats }: OverviewTa
           <p className="text-3xl font-bold text-gray-900 mt-2">{mockStats.studentsCount}</p>
         </div>
         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <p className="text-gray-500 text-sm font-medium">Completion Rate</p>
+          <p className="text-gray-500 text-sm font-medium">Avg Progress</p>
           <p className="text-3xl font-bold text-blue-600 mt-2">{mockStats.completionRate}</p>
         </div>
         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">

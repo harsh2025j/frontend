@@ -162,7 +162,7 @@ export default function DashboardOverview() {
           ) : (
             <div className="bg-white rounded-3xl p-8 border border-[#122340]/5 shadow-sm text-center">
               <p className="text-[#122340]/60 mb-4">You have not enrolled in any courses yet.</p>
-              <Link href="/academy/courses">
+              <Link href="/courses">
                 <button className="bg-[#C9A227] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-[#b39022] transition-colors">
                   Browse Courses
                 </button>

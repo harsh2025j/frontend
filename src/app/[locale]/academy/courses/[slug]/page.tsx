@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/data/redux/hooks';
 import { fetchCourseById } from '@/data/features/academy/course/courseThunks';
 import { clearCurrentCourse } from '@/data/features/academy/course/courseSlice';
-import { createCoursePaymentOrder, verifyCoursePayment } from '@/data/features/academy/enrollments/enrollmentsThunks';
+import { createCoursePaymentOrder, verifyCoursePayment, fetchMyEnrollments } from '@/data/features/academy/enrollments/enrollmentsThunks';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
@@ -168,6 +168,9 @@ export function VideoCourseLayout({ course }: { course: any }) {
   const [isPaying, setIsPaying] = useState(false);
   const dispatch = useAppDispatch();
   const { user } = useAppSelector(state => state.auth);
+  const { myEnrollments } = useAppSelector(state => state.enrollments);
+
+  const isEnrolled = myEnrollments?.some(e => e.course?.slug === course.slug || e.courseId === course.id);
 
   // Load Razorpay checkout.js script dynamically
   const loadRazorpayScript = (): Promise<boolean> => {
@@ -590,15 +593,25 @@ export function VideoCourseLayout({ course }: { course: any }) {
               <div className="p-6">
                 <h2 className="text-3xl font-extrabold text-[#0B1B3D] mb-5">{course.price || "Free"}</h2>
                 <div className="space-y-3 mb-6">
-                  <button 
-                    onClick={handlePayNow}
-                    disabled={isPaying}
-                    className="w-full bg-[#D4AF37] text-white py-3.5 rounded-lg font-bold hover:bg-[#c4a132] transition-colors text-[15px] flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
-                    {isPaying ? <Loader2 size={18} className="animate-spin" /> : "Enroll Now"}
-                  </button>
-                  <button className="w-full bg-white border border-gray-300 text-[#0B1B3D] py-3.5 rounded-lg font-bold hover:bg-gray-50 transition-colors text-[15px] flex items-center justify-center gap-2">
-                    <Heart size={18} /> Add to Wishlist
-                  </button>
+                  {isEnrolled ? (
+                    <Link href={`/dashboard/learn/${course.slug}`}>
+                      <button className="w-full bg-[#122340] text-white py-3.5 rounded-lg font-bold hover:bg-[#0a1628] transition-colors text-[15px] flex justify-center items-center gap-2">
+                        <CheckCircle2 size={18} className="text-green-400" /> Already Enrolled • Go to Course
+                      </button>
+                    </Link>
+                  ) : (
+                    <button 
+                      onClick={handlePayNow}
+                      disabled={isPaying}
+                      className="w-full bg-[#D4AF37] text-white py-3.5 rounded-lg font-bold hover:bg-[#c4a132] transition-colors text-[15px] flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                      {isPaying ? <Loader2 size={18} className="animate-spin" /> : "Enroll Now"}
+                    </button>
+                  )}
+                  {!isEnrolled && (
+                    <button className="w-full bg-white border border-gray-300 text-[#0B1B3D] py-3.5 rounded-lg font-bold hover:bg-gray-50 transition-colors text-[15px] flex items-center justify-center gap-2">
+                      <Heart size={18} /> Add to Wishlist
+                    </button>
+                  )}
                 </div>
 
                 <h4 className="font-bold text-[#0B1B3D] mb-4 text-sm">This programme includes:</h4>
@@ -888,15 +901,23 @@ export default function CourseDetail({ params }: { params: Promise<{ slug: strin
 
   const dispatch = useAppDispatch();
   const { currentCourse, isLoading, error } = useAppSelector((state) => state.course);
+  const { user } = useAppSelector((state) => state.auth);
+  const { myEnrollments } = useAppSelector((state) => state.enrollments);
 
   useEffect(() => {
     if (slug) {
       dispatch(fetchCourseById(slug));
     }
+    
+    // Fetch enrollments if user is logged in and they haven't been fetched yet
+    if (user && (!myEnrollments || myEnrollments.length === 0)) {
+      dispatch(fetchMyEnrollments());
+    }
+
     return () => {
       dispatch(clearCurrentCourse());
     };
-  }, [dispatch, slug]);
+  }, [dispatch, slug, user]);
 
   if (isLoading || (!currentCourse && !error)) {
     return (
@@ -911,7 +932,7 @@ export default function CourseDetail({ params }: { params: Promise<{ slug: strin
       <div className="bg-[#fcfcfa] min-h-screen font-sans pt-32 pb-20 text-center">
         <h2 className="text-2xl font-bold text-gray-800 mb-2">Course not found</h2>
         <p className="text-gray-500 mb-6">{error || "The course you are looking for does not exist."}</p>
-        <Link href="/academy/courses">
+        <Link href="/courses">
           <button className="bg-[#C9A227] text-white px-6 py-2.5 rounded hover:bg-[#b39022] transition-colors">
             Browse All Courses
           </button>
@@ -924,6 +945,7 @@ export default function CourseDetail({ params }: { params: Promise<{ slug: strin
   // Fallbacks are provided for fields that might be missing from the backend yet
   const mappedCourse = {
     id: currentCourse.id,
+    slug: currentCourse.slug,
     type: "video",
     title: currentCourse.title || "",
     subtitle: currentCourse.subtitle || currentCourse.description?.substring(0, 100),

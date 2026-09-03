@@ -13,7 +13,9 @@ import { courseApi } from "@/data/services/academy-service/course.service";
 import CurriculumBuilder from "./CurriculumBuilder";
 import OverviewTab from "./OverviewTab";
 import AssignmentsTab from "./AssignmentsTab";
+import StudentsTab from "./StudentsTab";
 import toast from "react-hot-toast";
+import apiClient from "@/data/services/apiConfig/apiClient";
 
 export default function CourseUnifiedDashboard() {
   const params = useParams();
@@ -21,6 +23,12 @@ export default function CourseUnifiedDashboard() {
   
   const [loading, setLoading] = useState(true);
   const [course, setCourse] = useState<any>(null);
+  const [stats, setStats] = useState({
+    studentsCount: 0,
+    completionRate: "0%",
+    revenue: "₹0",
+    assignmentsPending: 0,
+  });
   
   const [activeTab, setActiveTab] = useState("overview");
   
@@ -38,6 +46,41 @@ export default function CourseUnifiedDashboard() {
       setLoading(true);
       const res = await courseApi.fetchCourseById(courseId);
       setCourse(res.data);
+      
+      try {
+        const statsRes = await apiClient.get('/academy/enrollments/students-summary', { params: { courseId, limit: 1000 } });
+        const enrollmentsData = statsRes.data?.data || [];
+        const totalStudents = statsRes.data?.total || 0;
+        
+        let totalProgress = 0;
+        
+        enrollmentsData.forEach((student: any) => {
+           let enrollment = student.enrollments.find((e: any) => e.courseId === courseId);
+           if (!enrollment && student.enrollments.length > 0) enrollment = student.enrollments[0]; // fallback
+           totalProgress += (enrollment?.progress || 0);
+        });
+        
+        const completionRate = totalStudents > 0 ? Math.round(totalProgress / totalStudents) : 0;
+
+        let pendingAssignmentsCount = 0;
+        try {
+          const assignmentsRes = await apiClient.get('/academy/assignments', { params: { courseId } });
+          const assignmentsData = assignmentsRes.data || [];
+          pendingAssignmentsCount = assignmentsData.filter((a: any) => a.status === 'pending').length;
+        } catch (aErr) {
+          console.error("Failed to fetch pending assignments count", aErr);
+        }
+        
+        setStats({
+          studentsCount: totalStudents,
+          completionRate: `${completionRate}%`,
+          revenue: `₹${(totalStudents * (res.data.price || 0)).toLocaleString()}`,
+          assignmentsPending: pendingAssignmentsCount,
+        });
+      } catch (statsErr) {
+        console.error("Failed to fetch course stats", statsErr);
+      }
+      
     } catch (error) {
       console.error("Failed to fetch course details", error);
     } finally {
@@ -61,12 +104,6 @@ export default function CourseUnifiedDashboard() {
   };
 
   // Mock Data for other tabs (until APIs are ready)
-  const mockStats = {
-    studentsCount: 0,
-    completionRate: "0%",
-    revenue: "₹0",
-    assignmentsPending: 0,
-  };
 
   const students = [
     { id: "STU-001", name: "Ravi Kumar", email: "ravi.kumar@example.com", progress: 68, status: "Active" },
@@ -208,7 +245,7 @@ export default function CourseUnifiedDashboard() {
           
           {/* 1. OVERVIEW TAB */}
           {activeTab === "overview" && (
-            <OverviewTab course={course} setCourse={setCourse} mockStats={mockStats} />
+            <OverviewTab course={course} setCourse={setCourse} mockStats={stats} />
           )}
 
           {/* 2. CURRICULUM TAB */}
@@ -218,11 +255,7 @@ export default function CourseUnifiedDashboard() {
 
           {/* 3. STUDENTS TAB */}
           {activeTab === "students" && (
-            <div className="bg-white rounded-xl border border-gray-100">
-              {/* Similar to existing table, omitted here for brevity to keep file clean. 
-                  In a real app, this would also be a separate component like StudentsTab.tsx */}
-               <div className="p-8 text-center text-gray-500">Students list will appear here once the course is published.</div>
-            </div>
+            <StudentsTab courseId={courseId} />
           )}
 
           {/* 4. ASSIGNMENTS TAB */}

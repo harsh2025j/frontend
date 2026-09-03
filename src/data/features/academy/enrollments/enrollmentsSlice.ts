@@ -6,11 +6,14 @@ import {
   fetchMyEnrollments,
   fetchAllEnrollments,
   fetchAllCoursePayments,
+  updateCourseProgress,
+  fetchStudentsSummary,
 } from "./enrollmentsThunks";
 
 const initialState: EnrollmentsState = {
   myEnrollments: [],
   allEnrollments: { data: [], total: 0, page: 1, limit: 10, totalPages: 1 },
+  studentsSummary: { data: [], total: 0, page: 1, limit: 10, totalPages: 1 },
   allPayments: { data: [], total: 0, page: 1, limit: 10, totalPages: 1 },
   isLoading: false,
   error: null,
@@ -98,6 +101,36 @@ const enrollmentsSlice = createSlice({
       .addCase(fetchAllCoursePayments.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || "Failed to fetch payments";
+      })
+
+      // fetchStudentsSummary
+      .addCase(fetchStudentsSummary.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchStudentsSummary.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.studentsSummary = action.payload;
+      })
+      .addCase(fetchStudentsSummary.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || "Failed to fetch students summary";
+      })
+
+      // updateCourseProgress
+      .addCase(updateCourseProgress.fulfilled, (state, action) => {
+        // Update the specific enrollment in myEnrollments
+        const updatedEnrollment = action.payload;
+        if (updatedEnrollment && updatedEnrollment.id) {
+          const index = state.myEnrollments.findIndex(e => e.id === updatedEnrollment.id);
+          if (index !== -1) {
+            state.myEnrollments[index] = {
+              ...state.myEnrollments[index],
+              progress: updatedEnrollment.progress,
+              completedItemIds: updatedEnrollment.completedItemIds
+            };
+          }
+        }
       });
   },
 });

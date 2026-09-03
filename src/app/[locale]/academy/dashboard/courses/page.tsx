@@ -46,7 +46,7 @@ export default function MyCoursesPage() {
           </div>
           <h3 className="text-xl font-bold text-[#122340] mb-2">No Active Enrollments</h3>
           <p className="text-[#122340]/60 mb-6 max-w-md mx-auto">You have not enrolled in any courses yet. Explore our academy to start learning today.</p>
-          <Link href="/academy/courses">
+          <Link href="/courses">
             <button className="bg-[#C9A227] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#b39022] transition-colors shadow-md">
               Browse Courses
             </button>
