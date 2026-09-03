@@ -162,12 +162,12 @@ export const fetchStudentsSummary = createAsyncThunk<
           total: users.total || 0,
           page: params.page || 1,
           limit: params.limit || 10,
-          totalPages: users.totalPages || 1
+          totalPages: (users as any).totalPages || Math.ceil((users.total || 0) / (params.limit || 10)) || 1
         };
       } else {
         // Fetch only students enrolled in this specific course
         let userIds: string[] | undefined;
-        let queryParams = { ...params };
+        let queryParams: Record<string, any> = { ...params };
         
         if (params.search) {
           const usersRes = await usersApi.fetchUsers({ 

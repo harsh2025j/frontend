@@ -27,7 +27,7 @@ export default function middleware(request: NextRequest) {
     if (!pathname.includes('/academy')) {
       if (hasLocale) {
         // Example: /hi/auth/login -> /hi/academy/auth/login
-        url.pathname = pathname.replace(/^\/(en|hi)/, '$$&/academy');
+        url.pathname = pathname.replace(/^\/(en|hi)/, (match) => `${match}/academy`);
       } else {
         // Example: /auth/login -> /en/academy/auth/login (Defaults to 'en')
         url.pathname = `/en/academy${pathname === '/' ? '' : pathname}`;

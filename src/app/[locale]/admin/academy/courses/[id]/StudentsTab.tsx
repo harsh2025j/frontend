@@ -188,8 +188,7 @@ export default function StudentsTab({ courseId }: { courseId: string }) {
         <div className="p-4 border-t border-gray-100">
           <Pagination
             currentPage={filters.page}
-            totalItems={total}
-            itemsPerPage={limit || 10}
+            totalPages={Math.ceil(total / (limit || 10)) || 1}
             onPageChange={handlePageChange}
           />
         </div>
