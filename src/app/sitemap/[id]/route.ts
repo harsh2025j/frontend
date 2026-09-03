@@ -14,14 +14,37 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   if (rawId === 'static') {
-    const staticRoutes = [
-      '/en', '/en/news', '/en/judgments', '/en/cases',
-      '/en/about', '/en/contact', '/en/privacy-policy', '/en/terms',
-      '/en/cookie-policy', '/en/disclaimer', '/en/editorial-policy'
+    const staticPaths = [
+      '',
+      '/about',
+      '/contact',
+      '/supreme-court',
+      '/high-court',
+      '/judgments',
+      '/cases',
+      '/judges',
+      '/top-stories',
+      '/know-the-law',
+      '/privacy-policy',
+      '/terms',
+      '/cookie-policy',
+      '/disclaimer',
+      '/editorial-policy'
     ];
+
+    const locales = ['en', 'hi'];
+    const staticUrls = [SITE_URL]; // Root URL
+
+    for (const locale of locales) {
+      for (const path of staticPaths) {
+        staticUrls.push(`${SITE_URL}/${locale}${path}`);
+      }
+    }
+
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
-    for (const route of staticRoutes) {
-      xml += `\n  <url>\n    <loc>${SITE_URL}${route}</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>`;
+    for (const url of staticUrls) {
+      const isHome = url === SITE_URL || url === `${SITE_URL}/en` || url === `${SITE_URL}/hi`;
+      xml += `\n  <url>\n    <loc>${url}</loc>\n    <changefreq>${isHome ? 'daily' : 'weekly'}</changefreq>\n    <priority>${isHome ? '1.0' : '0.8'}</priority>\n  </url>`;
     }
     xml += '\n</urlset>';
     return new NextResponse(xml, { headers: { 'Content-Type': 'text/xml' } });

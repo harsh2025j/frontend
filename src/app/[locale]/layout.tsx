@@ -202,14 +202,15 @@ export default async function RootLayout({
     bareActsArticles
   };
 
+  const siteUrl = "https://www.sajjadhusainlawassociates.com";
   const siteSearchJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Sajjad Husain Law Associates",
-    "url": METADATA_BASE.toString(),
+    "url": siteUrl,
     "potentialAction": {
       "@type": "SearchAction",
-      "target": `${METADATA_BASE}/${locale}/search?q={search_term_string}`,
+      "target": `${siteUrl}/${locale}/search?q={search_term_string}`,
       "query-input": "required name=search_term_string"
     }
   };

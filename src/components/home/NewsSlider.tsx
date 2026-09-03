@@ -63,7 +63,7 @@ export default function NewsSlider() {
         image: getSafeImageUrl(article.thumbnail),
         title: article.title,
         category: article.category?.name || "Premium Insight",
-        description: article.content.replace(/<[^>]*>/g, '').substring(0, 150) + "...",
+        description: (article.content || "").replace(/<[^>]*>/g, '').substring(0, 150) + "...",
         link: `/news/${article.slug}`,
       }));
     }

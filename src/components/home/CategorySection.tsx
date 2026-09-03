@@ -134,7 +134,7 @@ const ArticleCard = ({ article, compact = false }: { article: any; compact?: boo
 
         {!compact && (
           <p className="text-sm text-gray-500 mt-2 line-clamp-2">
-            {article.subHeadline || article.content.replace(/<[^>]*>/g, "").substring(0, 100)}...
+            {article.subHeadline || (article.content || "").replace(/<[^>]*>/g, "").substring(0, 100)}...
           </p>
         )}
         <div className="flex items-center gap-2 mt-1">
@@ -205,7 +205,7 @@ const ListLayout = ({ articles }: { articles: any[] }) => (
             {article.title}
           </h2>
           <p className="text-xs text-gray-500 line-clamp-1">
-            {article.subHeadline || article.content.replace(/<[^>]*>/g, "").substring(0, 80)}...
+            {article.subHeadline || (article.content || "").replace(/<[^>]*>/g, "").substring(0, 80)}...
           </p>
           <div className="flex flex-col gap-0.5 mt-2">
             <span className="text-[10px] text-gray-500">
