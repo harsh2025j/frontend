@@ -1,241 +1,447 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Play, Pause, Volume2, MoreVertical, RotateCcw, FastForward } from "lucide-react";
+import { Play, Pause, Volume2 } from "lucide-react";
 import { Article, TimelineUpdate } from "@/data/features/article/article.types";
 
 interface SpeechPlayerProps {
     article: Article;
 }
 
-type VoiceGender = "male" | "female" | "auto";
+interface SpeechChunk {
+    text: string;
+    gender: "female" | "male";
+}
+
+/**
+ * Splits text into natural, safe sentence chunks (maximum ~220 characters).
+ * Keeps sentences complete while preventing browser audio stream timeouts.
+ */
+function splitTextIntoSafeChunks(text: string, maxLength = 220): string[] {
+    const cleanText = text.trim();
+    if (!cleanText) return [];
+    if (cleanText.length <= maxLength) return [cleanText];
+
+    // Split on sentence terminators (. ! ?)
+    const sentenceDelimiters = /([.?!]+[\s]+)/;
+    const tokens = cleanText.split(sentenceDelimiters);
+    const sentences: string[] = [];
+
+    for (let i = 0; i < tokens.length; i += 2) {
+        const s = (tokens[i] || "") + (tokens[i + 1] || "");
+        if (s.trim()) sentences.push(s.trim());
+    }
+
+    const chunks: string[] = [];
+
+    for (const sentence of sentences) {
+        if (sentence.length <= maxLength) {
+            chunks.push(sentence);
+        } else {
+            // Split long sentences on punctuation like comma, semicolon, colon, dash
+            const clauseDelimiters = /([,;:—–-]+[\s]+)/;
+            const subTokens = sentence.split(clauseDelimiters);
+            let current = "";
+
+            for (let j = 0; j < subTokens.length; j += 2) {
+                const clause = (subTokens[j] || "") + (subTokens[j + 1] || "");
+                if (!clause.trim()) continue;
+
+                if ((current + " " + clause).trim().length <= maxLength) {
+                    current = (current + " " + clause).trim();
+                } else {
+                    if (current) chunks.push(current);
+                    if (clause.length > maxLength) {
+                        const words = clause.split(/\s+/);
+                        let wordChunk = "";
+                        for (const w of words) {
+                            if ((wordChunk + " " + w).trim().length <= maxLength) {
+                                wordChunk = (wordChunk + " " + w).trim();
+                            } else {
+                                if (wordChunk) chunks.push(wordChunk);
+                                wordChunk = w;
+                            }
+                        }
+                        if (wordChunk) current = wordChunk;
+                        else current = "";
+                    } else {
+                        current = clause;
+                    }
+                }
+            }
+            if (current) chunks.push(current);
+        }
+    }
+
+    return chunks.filter((c) => c.length > 0);
+}
+
+type VoiceMode = "both" | "female" | "male";
 
 export default function SpeechPlayer({ article }: SpeechPlayerProps) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
-    const [gender] = useState<VoiceGender>("female");
-    const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+    const [voiceMode, setVoiceMode] = useState<VoiceMode>("both");
     const [currentUtteranceIndex, setCurrentUtteranceIndex] = useState(0);
 
+    // References
     const synth = useRef<SpeechSynthesis | null>(null);
-    const textChunks = useRef<{ text: string; gender: "male" | "female" }[]>([]);
-    const activeUtterance = useRef<SpeechSynthesisUtterance | null>(null);
+    const textChunks = useRef<SpeechChunk[]>([]);
+    const selectedFemaleVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
+    const selectedMaleVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
+    const isPlayingRef = useRef(false);
+    const voiceModeRef = useRef<VoiceMode>("both");
+    const currentUtteranceIndexRef = useRef(0);
+    const playbackSpeedRef = useRef(1);
+    const playTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-    // 1. Clean and Prepare Text
+    // 1. Select the best voice for each gender (Female & Male co-anchors)
+    const selectVoiceByGender = useCallback((
+        availableVoices: SpeechSynthesisVoice[],
+        targetLang: string,
+        targetGender: "female" | "male"
+    ): SpeechSynthesisVoice | null => {
+        if (!availableVoices || availableVoices.length === 0) return null;
+
+        const isHindi = targetLang.toLowerCase().startsWith("hi");
+        const langPrefix = isHindi ? "hi" : "en";
+
+        const langVoices = availableVoices.filter((v) => v.lang.toLowerCase().startsWith(langPrefix));
+        const pool = langVoices.length > 0 ? langVoices : availableVoices;
+
+        const femaleKeywords = ["female", "woman", "girl", "zira", "samantha", "victoria", "aria", "stefanie", "sangeeta", "veena", "hazel", "isha", "kalpana"];
+        const maleKeywords = ["male", "guy", "david", "mark", "james", "andrew", "alex", "daniel", "ravi", "george", "rishi"];
+
+        const targetKeywords = targetGender === "female" ? femaleKeywords : maleKeywords;
+        const oppositeKeywords = targetGender === "female" ? maleKeywords : femaleKeywords;
+
+        // Priority 1: Google / Natural + Target Gender
+        const topTier = pool.find((v) => {
+            const name = v.name.toLowerCase();
+            const isGoogleOrNatural = name.includes("google") || name.includes("natural") || name.includes("online");
+            const hasTarget = targetKeywords.some((k) => name.includes(k));
+            const hasOpposite = oppositeKeywords.some((k) => name.includes(k));
+            return isGoogleOrNatural && hasTarget && !hasOpposite;
+        });
+        if (topTier) return topTier;
+
+        // Priority 2: Any voice explicitly matching target gender
+        const genderTier = pool.find((v) => {
+            const name = v.name.toLowerCase();
+            const hasTarget = targetKeywords.some((k) => name.includes(k));
+            const hasOpposite = oppositeKeywords.some((k) => name.includes(k));
+            return hasTarget && !hasOpposite;
+        });
+        if (genderTier) return genderTier;
+
+        // Priority 3: Google voice not explicitly tagged with opposite gender
+        const naturalFallback = pool.find((v) => {
+            const name = v.name.toLowerCase();
+            const hasOpposite = oppositeKeywords.some((k) => name.includes(k));
+            return (name.includes("google") || name.includes("natural")) && !hasOpposite;
+        });
+        if (naturalFallback) return naturalFallback;
+
+        // Priority 4: Any voice not tagged with opposite gender
+        const neutralVoice = pool.find((v) => {
+            const name = v.name.toLowerCase();
+            return !oppositeKeywords.some((k) => name.includes(k));
+        });
+        if (neutralVoice) return neutralVoice;
+
+        return pool[0];
+    }, []);
+
+    // 2. Clean and chunk text into dual-voice alternating structure:
+    // Title -> Female
+    // Paragraph 1 (all chunks) -> Female
+    // Paragraph 2 (all chunks) -> Male
+    // Paragraph 3 (all chunks) -> Female
+    // Paragraph 4 (all chunks) -> Male
     const prepareText = useCallback(() => {
-        const chunks: { text: string; gender: "male" | "female" }[] = [];
+        const finalChunks: SpeechChunk[] = [];
 
         const clean = (html: string) => {
-            // Strip HTML
-            let text = html.replace(/<[^>]*>?/gm, " ");
-            // Strip URLs
+            if (!html) return "";
+            let text = html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n");
+            text = text.replace(/<[^>]*>?/gm, " ");
             text = text.replace(/https?:\/\/\S+/g, "");
-            return text.trim();
+            text = text.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"');
+            return text.replace(/\s+/g, " ").trim();
         };
 
-        // Add Title
-        chunks.push({ text: `Article Title: ${article.title}`, gender: "female" });
+        // Title -> Always Female
+        if (article.title) {
+            const titleParts = splitTextIntoSafeChunks(clean(article.title) + ".", 220);
+            titleParts.forEach((p) => finalChunks.push({ text: p, gender: "female" }));
+        }
 
-        // Add Subheadline
+        // Subheadline -> Female
         if (article.subHeadline) {
-            chunks.push({ text: clean(article.subHeadline), gender: "female" });
-        }
-        if (article.content) {
-            chunks.push({ text: clean(article.content), gender: "female" });
+            const sub = clean(article.subHeadline);
+            if (sub) {
+                const subParts = splitTextIntoSafeChunks(sub + ".", 220);
+                subParts.forEach((p) => finalChunks.push({ text: p, gender: "female" }));
+            }
         }
 
-        // Add Timeline
+        // Timeline Updates -> Alternates
         if (article.updates && article.updates.length > 0) {
-            article.updates.forEach((update: TimelineUpdate) => {
+            article.updates.forEach((update: TimelineUpdate, uIdx) => {
                 const dateStr = new Date(update.updateDate).toLocaleDateString("en-US", {
-                    month: "long", day: "numeric"
+                    month: "long",
+                    day: "numeric",
                 });
-                chunks.push({
-                    text: `Update for ${dateStr}: ${update.title ? update.title + "." : ""} ${clean(update.content)}`,
-                    gender: "female"
-                });
+                const title = update.title ? `${clean(update.title)}.` : "";
+                const content = clean(update.content);
+                const fullText = `Update for ${dateStr}. ${title} ${content}`;
+                const updateGender: "female" | "male" = uIdx % 2 === 0 ? "female" : "male";
+                const parts = splitTextIntoSafeChunks(fullText, 220);
+                parts.forEach((p) => finalChunks.push({ text: p, gender: updateGender }));
             });
         }
 
-        // Add Main Content (split by paragraphs)
-        const paragraphs = article.content.split(/<\/p>|<br\s*\/?>/).map(p => clean(p)).filter(p => p.length > 10);
-        paragraphs.forEach((p) => {
-            chunks.push({
-                text: p,
-                gender: "female"
-            });
-        });
+        // Main Content Paragraphs -> Alternate by Paragraph!
+        // Paragraph 1 (index 0) -> Female
+        // Paragraph 2 (index 1) -> Male
+        // Paragraph 3 (index 2) -> Female
+        // Paragraph 4 (index 3) -> Male
+        if (article.content) {
+            const paragraphs = article.content.split(/<\/p>|<br\s*\/?>/i);
+            let validParagraphCount = 0;
 
-        textChunks.current = chunks;
+            for (const p of paragraphs) {
+                const cleanedP = clean(p);
+                if (cleanedP.length > 5) {
+                    const paraGender: "female" | "male" = validParagraphCount % 2 === 0 ? "female" : "male";
+                    validParagraphCount++;
 
-        // Estimate duration (~150 words per minute)
-        const totalWords = chunks.reduce((acc, c) => acc + c.text.split(/\s+/).length, 0);
-        setDuration(Math.ceil((totalWords / 150) * 60));
+                    const parts = splitTextIntoSafeChunks(cleanedP, 220);
+                    parts.forEach((part) => {
+                        finalChunks.push({ text: part, gender: paraGender });
+                    });
+                }
+            }
+        }
+
+        textChunks.current = finalChunks;
+
+        // Estimate duration (~140 words per minute)
+        const totalWords = finalChunks.reduce((acc, c) => acc + c.text.split(/\s+/).filter(Boolean).length, 0);
+        setDuration(Math.max(10, Math.ceil((totalWords / 140) * 60)));
     }, [article]);
 
-    // 2. Load Voices with enhanced refresh for premium engines (Chrome/Edge)
+    // 3. Load voices and set up Female & Male anchors
     useEffect(() => {
-        if (typeof window === "undefined") return;
+        if (typeof window === "undefined" || !window.speechSynthesis) return;
 
         synth.current = window.speechSynthesis;
 
         const updateVoices = () => {
-            const availableVoices = window.speechSynthesis.getVoices();
-            if (availableVoices.length > 0) {
-                setVoices(availableVoices);
+            const avail = window.speechSynthesis.getVoices();
+            if (avail && avail.length > 0) {
+                const artLang = article.language || "en";
+                selectedFemaleVoiceRef.current = selectVoiceByGender(avail, artLang, "female");
+                selectedMaleVoiceRef.current = selectVoiceByGender(avail, artLang, "male");
             }
         };
 
-        // Initial call
         updateVoices();
 
-        // Browser event for dynamic loading
         if (window.speechSynthesis.onvoiceschanged !== undefined) {
             window.speechSynthesis.onvoiceschanged = updateVoices;
         }
 
-        // Polling fallback for browsers that don't fire voiceschanged reliably
-        // or for Chrome where Google voices are loaded asynchronously
         const intervalId = setInterval(() => {
-            const currentVoices = window.speechSynthesis.getVoices();
-            const hasGoogleVoice = currentVoices.some(v => v.name.toLowerCase().includes("google"));
-
-            if (currentVoices.length !== voices.length || hasGoogleVoice) {
+            const avail = window.speechSynthesis.getVoices();
+            if (avail && avail.length > 0) {
                 updateVoices();
-                if (hasGoogleVoice) clearInterval(intervalId); // Stop once we have the good ones
+                clearInterval(intervalId);
             }
-        }, 500);
+        }, 300);
 
-        const timeoutId = setTimeout(() => clearInterval(intervalId), 5000); // Stop after 5s anyway
+        const timeoutId = setTimeout(() => clearInterval(intervalId), 3000);
 
         prepareText();
 
         return () => {
-            if (synth.current) synth.current.cancel();
             clearInterval(intervalId);
             clearTimeout(timeoutId);
         };
-    }, [prepareText, voices.length]);
+    }, [prepareText, selectVoiceByGender, article.language]);
 
-    const getVoice = (targetGender: "male" | "female", targetLang: string) => {
-        // High-quality voice candidates
-        const premiumKeywords = ["google", "natural", "neural", "online", "premium"];
+    // 4. Sequential chunk player with alternating Female & Male voices
+    const playChunk = useCallback((index: number, shouldCancel = false) => {
+        if (!synth.current) return;
 
-        // Extended Gender-specific indicators
-        const maleKeywords = ["male", "guy", "david", "mark", "james", "andrew", "alex", "daniel", "ravi", "rishi", "desktop", "heera", "madhur"];
-        const femaleKeywords = ["female", "girl", "zira", "samantha", "victoria", "aria", "stefanie", "sangeeta", "veena", "hazel", "isha", "kalpana", "hi-in"];
-
-        const genderKeywords = targetGender === "male" ? maleKeywords : femaleKeywords;
-        const oppositeKeywords = targetGender === "male" ? femaleKeywords : maleKeywords;
-
-        // Filter voices by target language (Hindi vs English)
-        const isHindi = targetLang.toLowerCase().startsWith("hi");
-        const langCode = isHindi ? "hi" : "en";
-
-        const langVoices = voices.filter(v => v.lang.toLowerCase().startsWith(langCode));
-
-        // Sub-filter for IN (India) locale if possible
-        const localVoices = langVoices.filter(v => v.lang.toLowerCase().includes("in"));
-
-        // Final search pool: Try Indian-Specific first, then all for that language
-        const voicePools = [localVoices, langVoices];
-
-        for (const pool of voicePools) {
-            if (pool.length === 0) continue;
-
-            // Tier 1: Pool + Premium + Gender
-            let selection = pool.find(v =>
-                premiumKeywords.some(pk => v.name.toLowerCase().includes(pk)) &&
-                genderKeywords.some(gk => v.name.toLowerCase().includes(gk)) &&
-                !oppositeKeywords.some(ok => v.name.toLowerCase().includes(ok))
-            );
-
-            // Tier 2: Pool + Premium
-            if (!selection) {
-                selection = pool.find(v =>
-                    premiumKeywords.some(pk => v.name.toLowerCase().includes(pk))
-                );
-            }
-
-            // Tier 3: Pool + Gender
-            if (!selection) {
-                selection = pool.find(v =>
-                    genderKeywords.some(gk => v.name.toLowerCase().includes(gk))
-                );
-            }
-
-            // Tier 4: Pool Fallback
-            if (!selection && pool.length > 0) {
-                selection = targetGender === "male" ? pool[0] : pool[pool.length - 1];
-            }
-
-            if (selection) return selection;
-        }
-
-        return null;
-    };
-
-    const speakChunk = (index: number) => {
-        if (!synth.current || index >= textChunks.current.length) {
+        if (index < 0 || index >= textChunks.current.length) {
+            isPlayingRef.current = false;
             setIsPlaying(false);
             setCurrentUtteranceIndex(0);
+            currentUtteranceIndexRef.current = 0;
             setCurrentTime(0);
             return;
         }
 
+        if (shouldCancel) {
+            synth.current.cancel();
+        }
+
+        setCurrentUtteranceIndex(index);
+        currentUtteranceIndexRef.current = index;
+
         const chunk = textChunks.current[index];
         const utterance = new SpeechSynthesisUtterance(chunk.text);
 
-        // Determine language
         const artLang = article.language || "en";
-        utterance.lang = artLang.startsWith("hi") ? "hi-IN" : "en-IN";
+        utterance.lang = artLang.startsWith("hi") ? "hi-IN" : "en-US";
 
-        // Determine voice
-        let targetVoiceGender: "male" | "female" = chunk.gender;
-        if (gender === "male") targetVoiceGender = "male";
-        if (gender === "female") targetVoiceGender = "female";
+        // Assign voice according to user's voiceMode selection (Both / Female / Male)
+        let targetGender: "female" | "male";
+        if (voiceModeRef.current === "female") {
+            targetGender = "female";
+        } else if (voiceModeRef.current === "male") {
+            targetGender = "male";
+        } else {
+            // "both" (dual host): alternates by paragraph
+            targetGender = chunk.gender;
+        }
 
-        utterance.voice = getVoice(targetVoiceGender, utterance.lang);
-        utterance.rate = playbackSpeed;
-        utterance.pitch = 1; // Natural anchor pitch
+        const targetVoice = targetGender === "male"
+            ? (selectedMaleVoiceRef.current || selectedFemaleVoiceRef.current)
+            : (selectedFemaleVoiceRef.current || selectedMaleVoiceRef.current);
 
-        console.log(`[SpeechPlayer] Speaking with: ${utterance.voice?.name || "System Default"} (${targetVoiceGender})`);
+        if (targetVoice) {
+            utterance.voice = targetVoice;
+        }
+
+        utterance.rate = playbackSpeedRef.current;
+        // Pitch variation ensures clear vocal distinction between co-anchors
+        utterance.pitch = targetGender === "female" ? 1.05 : 0.95;
+
+        // Keep reference to prevent Chrome garbage collection
+        activeUtteranceRef.current = utterance;
+        if (typeof window !== "undefined") {
+            (window as any).__activeSpeechUtterance = utterance;
+        }
+
+        let hasHandledEnd = false;
 
         utterance.onstart = () => {
             setIsPlaying(true);
+            isPlayingRef.current = true;
         };
 
         utterance.onend = () => {
+            if (hasHandledEnd) return;
+            hasHandledEnd = true;
+
             if (index + 1 < textChunks.current.length) {
-                setCurrentUtteranceIndex(index + 1);
-                speakChunk(index + 1);
+                if (isPlayingRef.current) {
+                    playChunk(index + 1, false);
+                }
             } else {
+                isPlayingRef.current = false;
                 setIsPlaying(false);
                 setCurrentUtteranceIndex(0);
+                currentUtteranceIndexRef.current = 0;
                 setCurrentTime(0);
             }
         };
 
-        utterance.onerror = (err) => {
-            console.error("[SpeechPlayer] Utterance error:", err);
-            setIsPlaying(false);
+        utterance.onerror = (e) => {
+            if (hasHandledEnd) return;
+
+            if (e.error === "canceled" || e.error === "interrupted") {
+                return;
+            }
+
+            console.warn("[SpeechPlayer] Utterance error:", e.error);
+            hasHandledEnd = true;
+
+            if (isPlayingRef.current && index + 1 < textChunks.current.length) {
+                playTimeoutRef.current = setTimeout(() => {
+                    if (isPlayingRef.current) {
+                        playChunk(index + 1, false);
+                    }
+                }, 50);
+            } else {
+                isPlayingRef.current = false;
+                setIsPlaying(false);
+            }
         };
 
-        activeUtterance.current = utterance;
-        if (synth.current) {
-            synth.current.cancel(); // Clear any existing queue
-            synth.current.speak(utterance);
+        synth.current.speak(utterance);
+    }, [article.language]);
+
+    // 5. Play / Pause logic
+    const handlePlayPause = () => {
+        if (!synth.current) return;
+
+        if (isPlaying) {
+            isPlayingRef.current = false;
+            setIsPlaying(false);
+            if (playTimeoutRef.current) clearTimeout(playTimeoutRef.current);
+            synth.current.cancel();
+        } else {
+            isPlayingRef.current = true;
+            setIsPlaying(true);
+            playChunk(currentUtteranceIndexRef.current, true);
         }
     };
 
-    // 3. Real-time Progress Timer
+    // 6. Seek bar click
+    const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (textChunks.current.length === 0) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+        const targetIndex = Math.min(
+            textChunks.current.length - 1,
+            Math.floor(ratio * textChunks.current.length)
+        );
+
+        currentUtteranceIndexRef.current = targetIndex;
+        setCurrentUtteranceIndex(targetIndex);
+        setCurrentTime(Math.floor(ratio * duration));
+
+        if (isPlayingRef.current) {
+            if (playTimeoutRef.current) clearTimeout(playTimeoutRef.current);
+            playChunk(targetIndex, true);
+        }
+    };
+
+    // 7. Playback Speed Change
+    const handleSpeedChange = (speed: number) => {
+        setPlaybackSpeed(speed);
+        playbackSpeedRef.current = speed;
+
+        if (isPlayingRef.current) {
+            if (playTimeoutRef.current) clearTimeout(playTimeoutRef.current);
+            playChunk(currentUtteranceIndexRef.current, true);
+        }
+    };
+
+    // 8. Voice Mode Change (Both / Female / Male)
+    const handleVoiceModeChange = (mode: VoiceMode) => {
+        setVoiceMode(mode);
+        voiceModeRef.current = mode;
+
+        if (isPlayingRef.current) {
+            if (playTimeoutRef.current) clearTimeout(playTimeoutRef.current);
+            playChunk(currentUtteranceIndexRef.current, true);
+        }
+    };
+
+    // 8. Progress Timer
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (isPlaying) {
             timer = setInterval(() => {
-                setCurrentTime(prev => {
+                setCurrentTime((prev) => {
                     if (prev < duration) return prev + 1;
                     return prev;
                 });
@@ -244,30 +450,15 @@ export default function SpeechPlayer({ article }: SpeechPlayerProps) {
         return () => clearInterval(timer);
     }, [isPlaying, duration]);
 
-    const handlePlayPause = () => {
-        if (!synth.current) return;
-
-        if (isPlaying) {
-            synth.current.pause();
-            setIsPlaying(false);
-        } else {
-            if (synth.current.paused) {
-                synth.current.resume();
-            } else {
-                speakChunk(currentUtteranceIndex);
+    // 9. Cleanup
+    useEffect(() => {
+        return () => {
+            if (playTimeoutRef.current) clearTimeout(playTimeoutRef.current);
+            if (typeof window !== "undefined" && window.speechSynthesis) {
+                window.speechSynthesis.cancel();
             }
-            setIsPlaying(true);
-        }
-    };
-
-    const handleStop = () => {
-        if (synth.current) {
-            synth.current.cancel();
-            setIsPlaying(false);
-            setCurrentUtteranceIndex(0);
-            setCurrentTime(0);
-        }
-    };
+        };
+    }, []);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -275,18 +466,25 @@ export default function SpeechPlayer({ article }: SpeechPlayerProps) {
         return `${mins}:${secs.toString().padStart(2, "0")}`;
     };
 
-    // Calculate progress
-    const progressPercent = (currentUtteranceIndex / (textChunks.current.length || 1)) * 100;
+    const progressPercent = textChunks.current.length > 0
+        ? (currentUtteranceIndex / textChunks.current.length) * 100
+        : 0;
 
     return (
         <div className="my-8 w-full">
-            <p className="text-sm font-semibold text-gray-500 mb-2 ml-1">Listen to this Article</p>
+            <div className="flex items-center justify-between mb-2 ml-1">
+                <p className="text-sm font-semibold text-gray-500">Listen to this Article</p>
+                <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full">
+                    {voiceMode === "both" ? "Dual Host (Female & Male)" : voiceMode === "female" ? "Female Voice" : "Male Voice"}
+                </span>
+            </div>
 
             <div className="flex items-center gap-4 bg-[#F2F4F7] p-4 rounded-full shadow-sm border border-gray-100">
                 {/* Play/Pause Button */}
                 <button
                     onClick={handlePlayPause}
-                    className="w-10 h-10 flex items-center justify-center bg-transparent text-gray-800 hover:bg-gray-200 rounded-full transition-colors"
+                    className="w-10 h-10 flex items-center justify-center bg-transparent text-gray-800 hover:bg-gray-200 rounded-full transition-colors cursor-pointer"
+                    aria-label={isPlaying ? "Pause" : "Play"}
                 >
                     {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1" />}
                 </button>
@@ -296,10 +494,14 @@ export default function SpeechPlayer({ article }: SpeechPlayerProps) {
                     {formatTime(currentTime)} / {formatTime(duration)}
                 </div>
 
-                {/* Seek Bar */}
-                <div className="flex-1 h-1 bg-gray-300 rounded-full overflow-hidden relative group cursor-pointer">
+                {/* Interactive Seek Bar */}
+                <div
+                    onClick={handleSeek}
+                    className="flex-1 h-2 bg-gray-300 rounded-full overflow-hidden relative group cursor-pointer"
+                    title="Click to seek"
+                >
                     <div
-                        className="absolute h-full bg-gray-600 transition-all duration-300"
+                        className="absolute h-full bg-[#0A2342] transition-all duration-300 group-hover:bg-blue-700"
                         style={{ width: `${progressPercent}%` }}
                     />
                 </div>
@@ -309,22 +511,34 @@ export default function SpeechPlayer({ article }: SpeechPlayerProps) {
                     <Volume2 size={20} />
                 </div>
 
-                {/* More Options / Speed / Voice */}
-                <div className="flex items-center gap-3 pr-2">
+                {/* Voice Mode & Speed Selectors */}
+                <div className="flex items-center gap-2 pr-2">
+                    {/* Voice Mode Selector */}
+                    <select
+                        value={voiceMode}
+                        onChange={(e) => handleVoiceModeChange(e.target.value as VoiceMode)}
+                        className="bg-transparent text-xs font-semibold text-gray-700 outline-none cursor-pointer hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-200 transition-colors"
+                        aria-label="Select narrator voice"
+                    >
+                        <option value="both">Both (Dual)</option>
+                        <option value="female">Female</option>
+                        <option value="male">Male</option>
+                    </select>
+
+                    <div className="w-px h-4 bg-gray-300" />
+
+                    {/* Speed Selector */}
                     <select
                         value={playbackSpeed}
-                        onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
-                        className="bg-transparent text-xs font-bold text-gray-600 outline-none cursor-pointer hover:text-gray-900"
+                        onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+                        className="bg-transparent text-xs font-bold text-gray-700 outline-none cursor-pointer hover:text-gray-900 px-1 py-1 rounded hover:bg-gray-200 transition-colors"
+                        aria-label="Playback speed"
                     >
                         <option value="1">1x</option>
                         <option value="1.25">1.25x</option>
                         <option value="1.5">1.5x</option>
                         <option value="2">2x</option>
                     </select>
-
-                    <button className="text-gray-500 hover:text-gray-900">
-                        <MoreVertical size={18} />
-                    </button>
                 </div>
             </div>
         </div>

@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Advocate, Article } from "@/data/features/article/article.types";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
-import { X } from "lucide-react";
+import { X, Share2, Facebook, Linkedin, Link2, Check, Printer } from "lucide-react";
+import { FaTelegramPlane } from "react-icons/fa";
 import Loader from "@/components/ui/Loader";
 import apiClient from "@/data/services/apiConfig/apiClient";
 import { useTranslations, useLocale } from "next-intl";
@@ -70,6 +71,35 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
     }, [article.authorId, article.advocates]);
 
     const [isTranslating, setIsTranslating] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [isPrinting, setIsPrinting] = useState(false);
+    const [showShareSheet, setShowShareSheet] = useState(false);
+
+    const handleShare = (platform: string) => {
+        const articleUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/news/${article.slug}`;
+        const encodedUrl = encodeURIComponent(articleUrl);
+        const encodedText = encodeURIComponent(article.title || "");
+        if (platform === "copy") { navigator.clipboard.writeText(articleUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); return; }
+        if (platform === "print") {
+            setIsPrinting(true);
+            document.body.classList.add("is-printing");
+            setTimeout(() => {
+                window.print();
+                setIsPrinting(false);
+                document.body.classList.remove("is-printing");
+            }, 100);
+            return;
+        }
+        const urls: Record<string, string> = {
+            facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+            twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(`Sajjad Husain Law Associates\n\n${article.title}\n\n`)}`,
+            whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(`Sajjad Husain Law Associates\n\n${article.title}\n\nClick to Read Complete News\n${articleUrl}`)}`,
+            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+            telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodeURIComponent(`Sajjad Husain Law Associates\n\n${article.title}\n\nClick to Read Complete News\n${articleUrl}`)}`,
+            email: `mailto:?subject=${encodedText}&body=${encodedUrl}`,
+        };
+        if (urls[platform]) window.open(urls[platform], "_blank");
+    };
 
     const handleSummaryClick = async () => {
         const next = !showSummary;
@@ -263,6 +293,95 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                         )}
                     </div>
                 </div>
+
+                {/* Social Share (Only if published) */}
+                {article.status === 'published' && (
+                    <>
+                        {/* Mobile Social Share */}
+                        <div className="flex sm:hidden items-center justify-between w-full mb-10 py-2 px-2 bg-white rounded-xl sm:rounded-full border border-gray-200 shadow-sm print:hidden">
+                            <button onClick={() => setShowShareSheet(true)} className="flex flex-1 items-center justify-center gap-2 text-blue-600 font-medium px-2 py-1 hover:bg-gray-50 rounded-lg transition-colors">
+                                <Link2 size={18} className="text-blue-600" />
+                                <span className="text-sm">Share</span>
+                            </button>
+                        </div>
+
+                        {/* Desktop & Tablet Social Share */}
+                        <div className="hidden sm:flex flex-row items-center gap-6 mb-10 py-3 px-6 bg-white rounded-full border border-gray-200 w-fit mx-0 shadow-sm relative print:hidden">
+                            <div className="flex items-center gap-3 text-[#0A2342] font-bold min-w-fit">
+                                <Share2 size={20} className="text-[#0A2342]" />
+                                <span className="text-sm tracking-wider">SHARE ARTICLE</span>
+                            </div>
+                            <div className="w-px h-8 bg-gray-200" />
+
+                            <div className="flex flex-wrap items-center gap-3">
+                                <button onClick={() => handleShare("facebook")} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0A2342] text-white hover:text-[#C9A227] transition-all duration-300"><Facebook size={18} /></button>
+                                <button onClick={() => handleShare("twitter")} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0A2342] text-white hover:text-[#C9A227] transition-all duration-300">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                                </button>
+                                <button onClick={() => handleShare("whatsapp")} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0A2342] text-white hover:text-[#C9A227] transition-all duration-300">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
+                                </button>
+                                <button onClick={() => handleShare("linkedin")} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0077b5] text-white hover:-translate-y-1 hover:shadow-lg transition-all duration-300"><Linkedin size={18} /></button>
+                                <button onClick={() => handleShare("telegram")} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#0088cc] text-white hover:-translate-y-1 hover:shadow-lg transition-all duration-300"><FaTelegramPlane size={18} /></button>
+                                <button onClick={() => handleShare("email")} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#dd4b39] text-white hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+                                </button>
+                                
+                                <div className="w-px h-8 bg-gray-200 mx-1" />
+                                
+                                <button onClick={() => handleShare("copy")} className={`w-10 h-10 flex items-center justify-center rounded-full ${copied ? "bg-green-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"} transition-all duration-300 hover:-translate-y-1`}>
+                                    {copied ? <Check size={18} /> : <Link2 size={18} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Mobile Share Bottom Sheet */}
+                        {showShareSheet && (
+                            <div className="sm:hidden">
+                                <div className="fixed inset-0 bg-black/40 z-40 transition-opacity" onClick={() => setShowShareSheet(false)} />
+                                <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-transform transform translate-y-0 duration-300 ease-out">
+                                    <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h3 className="text-xl font-bold text-center w-full text-gray-900">Share Article</h3>
+                                    </div>
+                                    <p className="text-sm text-gray-500 text-center mb-8">Share this article with your friends and colleagues</p>
+                                    <div className="grid grid-cols-4 gap-y-6 gap-x-2 mb-8">
+                                        <button onClick={() => handleShare("whatsapp")} className="flex flex-col items-center gap-2 group">
+                                            <div className="w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg></div>
+                                            <span className="text-xs text-gray-600 font-medium">WhatsApp</span>
+                                        </button>
+                                        <button onClick={() => handleShare("telegram")} className="flex flex-col items-center gap-2 group">
+                                            <div className="w-14 h-14 rounded-full bg-[#0088cc] text-white flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all"><FaTelegramPlane size={26} /></div>
+                                            <span className="text-xs text-gray-600 font-medium">Telegram</span>
+                                        </button>
+                                        <button onClick={() => handleShare("twitter")} className="flex flex-col items-center gap-2 group">
+                                            <div className="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg></div>
+                                            <span className="text-xs text-gray-600 font-medium">X (Twitter)</span>
+                                        </button>
+                                        <button onClick={() => handleShare("linkedin")} className="flex flex-col items-center gap-2 group">
+                                            <div className="w-14 h-14 rounded-full bg-[#0077b5] text-white flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all"><Linkedin size={24} fill="currentColor" className="text-white" /></div>
+                                            <span className="text-xs text-gray-600 font-medium">LinkedIn</span>
+                                        </button>
+                                        <button onClick={() => handleShare("facebook")} className="flex flex-col items-center gap-2 group">
+                                            <div className="w-14 h-14 rounded-full bg-[#1877F2] text-white flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all"><Facebook size={26} fill="currentColor" className="text-white" /></div>
+                                            <span className="text-xs text-gray-600 font-medium">Facebook</span>
+                                        </button>
+                                        <button onClick={() => handleShare("email")} className="flex flex-col items-center gap-2 group">
+                                            <div className="w-14 h-14 rounded-full bg-[#dd4b39] text-white flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg></div>
+                                            <span className="text-xs text-gray-600 font-medium">Email</span>
+                                        </button>
+                                        <button onClick={() => handleShare("copy")} className="flex flex-col items-center gap-2 group">
+                                            <div className={`w-14 h-14 rounded-full flex items-center justify-center group-hover:-translate-y-1 group-hover:shadow-lg transition-all ${copied ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700'}`}>
+                                                {copied ? <Check size={26} /> : <Link2 size={26} />}
+                                            </div>
+                                            <span className="text-xs text-gray-600 font-medium">{copied ? "Copied" : "Copy Link"}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
 
                 {/* Article Content */}
                 <div className="article-content relative mt-6">

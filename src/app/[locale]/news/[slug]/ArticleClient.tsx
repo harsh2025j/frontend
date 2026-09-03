@@ -438,7 +438,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                 {/* if not need then remove this  and also SpeechPlayer.tsx  which is in sre/components/ui/SpeechPlayer.tsx*/}
                 {/* Speech Player */}
 
-                {/* <SpeechPlayer article={article} /> */}
+                <SpeechPlayer article={article} />
 
 
                 {/* Article Content */}
@@ -479,9 +479,9 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                             .article-content p, .article-content li, .article-content span { font-size: 1rem !important; line-height: 1.6 !important; }
                         }
                     `}</style>
-                    <div 
+                    <div
                         className="article-content"
-                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayContent) }} 
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayContent) }}
                     />
 
                     {!hasFullAccess && <PaywallOverlay isLoggedIn={mounted ? !!user : false} t={t} />}
