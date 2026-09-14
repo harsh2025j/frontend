@@ -15,8 +15,8 @@ import Script from 'next/script';
 import GoogleAnalyticsTracker from "@/components/GoogleAnalyticsTracker";
 
 import { API_BASE_URL, API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+// import { Analytics } from "@vercel/analytics/next";
+// import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -266,8 +266,8 @@ export default async function RootLayout({
                 </ClientLayout>
 
                 <GoogleAnalyticsTracker />
-                <Analytics />
-                <SpeedInsights />
+                {/* <Analytics />
+                <SpeedInsights /> */}
 
                 {/* <GlobalLoader /> */}
                 <Toaster
