@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Edit2, X, CheckCircle, UploadCloud, Loader2 } from "lucide-react";
+import { Edit2, X, CheckCircle, UploadCloud, Loader2, Award } from "lucide-react";
 import toast from "react-hot-toast";
 import { courseApi } from "@/data/services/academy-service/course.service";
+import apiClient from "@/data/services/apiConfig/apiClient";
 import { uploadToS3 } from "@/lib/uploadToS3";
 import CreatableSelect from 'react-select/creatable';
 import Cropper from 'react-easy-crop';
@@ -44,6 +45,19 @@ export default function OverviewTab({ course, setCourse, mockStats }: OverviewTa
     };
     fetchCats();
   }, []);
+
+  const [courseTests, setCourseTests] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    if (course?.id) {
+      apiClient.get("/academy/assessments", { params: { courseId: course.id } })
+        .then((res) => {
+          const data = res.data?.data || res.data || [];
+          setCourseTests(Array.isArray(data) ? data : []);
+        })
+        .catch((err) => console.error("Failed to load assessments in OverviewTab:", err));
+    }
+  }, [course?.id]);
 
   const handleCategoryCreate = async (inputValue: string) => {
     try {
@@ -89,6 +103,24 @@ export default function OverviewTab({ course, setCourse, mockStats }: OverviewTa
       startDate: course.startDate || "",
       endDate: course.endDate || "",
       thumbnailUrl: course.thumbnailUrl || "",
+      finalAssessmentUnlockPct: course.finalAssessmentUnlockPct !== undefined && course.finalAssessmentUnlockPct !== null
+        ? course.finalAssessmentUnlockPct
+        : 100,
+      certificateRules: {
+        requireCourseComplete: course.certificateRules?.requireCourseComplete !== undefined
+          ? Boolean(course.certificateRules.requireCourseComplete)
+          : true,
+        minProgressPct: course.certificateRules?.minProgressPct !== undefined && course.certificateRules?.minProgressPct !== null
+          ? course.certificateRules.minProgressPct
+          : 100,
+        requireFinalAssessmentPass: course.certificateRules?.requireFinalAssessmentPass !== undefined
+          ? Boolean(course.certificateRules.requireFinalAssessmentPass)
+          : true,
+        finalAssessmentId: course.certificateRules?.finalAssessmentId || (courseTests.length > 0 ? courseTests[0].id : ""),
+        minAssessmentScorePct: course.certificateRules?.minAssessmentScorePct !== undefined && course.certificateRules?.minAssessmentScorePct !== null
+          ? course.certificateRules.minAssessmentScorePct
+          : (courseTests.length > 0 ? (courseTests[0].passingPercentage || 50) : 50),
+      },
     });
     setArrays({
       requirements: course.requirements?.length ? course.requirements : [""],
@@ -117,9 +149,35 @@ export default function OverviewTab({ course, setCourse, mockStats }: OverviewTa
         inclusions: arrays.inclusions.filter(i => i.trim() !== ""),
         hasCertificate: Boolean(form.hasCertificate),
         hasLifetimeAccess: Boolean(form.hasLifetimeAccess),
+        finalAssessmentUnlockPct: form.finalAssessmentUnlockPct !== undefined ? Number(form.finalAssessmentUnlockPct) : 100,
+        certificateRules: {
+          requireCourseComplete: form.certificateRules?.requireCourseComplete !== undefined
+            ? Boolean(form.certificateRules.requireCourseComplete)
+            : true,
+          minProgressPct: form.certificateRules?.minProgressPct !== undefined
+            ? Number(form.certificateRules.minProgressPct)
+            : 100,
+          requireFinalAssessmentPass: form.certificateRules?.requireFinalAssessmentPass !== undefined
+            ? Boolean(form.certificateRules.requireFinalAssessmentPass)
+            : true,
+          finalAssessmentId: form.certificateRules?.finalAssessmentId || null,
+          minAssessmentScorePct: form.certificateRules?.minAssessmentScorePct !== undefined
+            ? Number(form.certificateRules.minAssessmentScorePct)
+            : 50,
+        },
         faqs: arrays.faqs.filter(f => f.q.trim() !== "" && f.a.trim() !== ""),
         instructors: arrays.instructors.filter(i => i.name.trim() !== ""),
       };
+      if (editingSection === 'rules' && form.certificateRules?.finalAssessmentId && form.certificateRules?.minAssessmentScorePct) {
+        try {
+          await apiClient.put(`/academy/assessments/${form.certificateRules.finalAssessmentId}`, {
+            passingPercentage: Number(form.certificateRules.minAssessmentScorePct),
+          });
+          setCourseTests(prev => prev.map(t => t.id === form.certificateRules.finalAssessmentId ? { ...t, passingPercentage: Number(form.certificateRules.minAssessmentScorePct) } : t));
+        } catch (tErr) {
+          console.error("Could not update assessment passing percentage:", tErr);
+        }
+      }
       await courseApi.updateCourse(course.id, payload);
       setCourse({ ...course, ...payload });
       toast.success("Section updated successfully!");
@@ -429,6 +487,245 @@ export default function OverviewTab({ course, setCourse, mockStats }: OverviewTa
              <div><p className="text-sm text-gray-500">Schedule Note</p><p className="font-semibold text-gray-900 mt-1">{course?.scheduleNote || "N/A"}</p></div>
              <div><p className="text-sm text-gray-500">Certificate</p><p className="font-semibold text-gray-900 mt-1">{course?.hasCertificate ? "Yes" : "No"}</p></div>
              <div><p className="text-sm text-gray-500">Lifetime Access</p><p className="font-semibold text-gray-900 mt-1">{course?.hasLifetimeAccess ? "Yes" : "No"}</p></div>
+          </div>
+        )}
+      </div>
+
+      {/* SECTION: ASSESSMENT UNLOCK & CERTIFICATE ROLLOUT RULES */}
+      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+        <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
+              <Award size={18} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Assessment Unlock & Certificate Rollout Rules</h2>
+              <p className="text-xs text-gray-500">Configure prerequisites to unlock the final assessment and conditions required for automatic certificate generation.</p>
+            </div>
+          </div>
+          {editingSection !== 'rules' ? (
+            <button onClick={() => startEditing('rules')} className="text-sm flex items-center gap-1 text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition font-medium"><Edit2 size={14} /> Edit</button>
+          ) : (
+            <div className="flex gap-2">
+              <button onClick={cancelEditing} className="text-sm px-3 py-1.5 font-medium text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+              <button onClick={handleSave} disabled={isSaving} className="text-sm px-4 py-1.5 font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">{isSaving ? "Saving..." : "Save"}</button>
+            </div>
+          )}
+        </div>
+
+        {editingSection === 'rules' ? (
+          <div className="space-y-6">
+            {/* Rule 1: Final Assessment Unlock Percentage */}
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/80">
+              <label className="block text-sm font-bold text-gray-800 mb-1">
+                Final Assessment Unlock Threshold ({form.finalAssessmentUnlockPct ?? 100}%)
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                Students must complete this percentage of all prerequisite lessons, documents, assignments, and tests before the final assessment is unlocked. Default is 100%.
+              </p>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={form.finalAssessmentUnlockPct ?? 100}
+                  onChange={(e) => setForm({ ...form, finalAssessmentUnlockPct: Number(e.target.value) })}
+                  className="w-full accent-blue-600 cursor-pointer"
+                />
+                <div className="flex items-center gap-1 min-w-[70px]">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={form.finalAssessmentUnlockPct ?? 100}
+                    onChange={(e) => {
+                      const val = Math.max(0, Math.min(100, Number(e.target.value) || 0));
+                      setForm({ ...form, finalAssessmentUnlockPct: val });
+                    }}
+                    className="w-16 border border-gray-300 rounded-lg px-2 py-1 text-sm font-semibold text-center focus:outline-none focus:border-blue-500"
+                  />
+                  <span className="text-sm font-bold text-gray-600">%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Rule 2: Certificate Rollout Criteria */}
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/80">
+              <label className="block text-sm font-bold text-gray-800 mb-1">
+                Certificate Rollout Criteria
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                Select the requirements needed to automatically issue a verified certificate to the student. If unconfigured, both rules are required by default.
+              </p>
+              <div className="space-y-4">
+                {/* 1. Course Complete */}
+                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.certificateRules?.requireCourseComplete ?? true}
+                      onChange={(e) => setForm({
+                        ...form,
+                        certificateRules: {
+                          ...form.certificateRules,
+                          requireCourseComplete: e.target.checked
+                        }
+                      })}
+                      className="w-4 h-4 text-blue-600 rounded border-gray-300 mt-0.5"
+                    />
+                    <div>
+                      <span className="text-sm font-bold text-gray-800 block">Require Course Progress / Completion</span>
+                      <span className="text-xs text-gray-500 block mt-0.5">Student must complete the required percentage of course curriculum.</span>
+                    </div>
+                  </label>
+
+                  {form.certificateRules?.requireCourseComplete && (
+                    <div className="ml-7 mt-3 flex items-center gap-3">
+                      <label className="text-xs font-bold text-gray-600">Minimum Progress (%):</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={form.certificateRules?.minProgressPct ?? 100}
+                        onChange={(e) => setForm({
+                          ...form,
+                          certificateRules: {
+                            ...form.certificateRules,
+                            minProgressPct: Math.max(1, Math.min(100, Number(e.target.value) || 1))
+                          }
+                        })}
+                        className="w-20 border border-gray-300 rounded-lg px-2 py-1 text-sm font-bold text-center focus:outline-none focus:border-blue-500"
+                      />
+                      <span className="text-xs text-gray-400 font-medium">% required for certificate</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Final Assessment Pass */}
+                <div className="p-3 bg-white rounded-lg border border-gray-200 space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.certificateRules?.requireFinalAssessmentPass ?? true}
+                      onChange={(e) => setForm({
+                        ...form,
+                        certificateRules: {
+                          ...form.certificateRules,
+                          requireFinalAssessmentPass: e.target.checked
+                        }
+                      })}
+                      className="w-4 h-4 text-blue-600 rounded border-gray-300 mt-0.5"
+                    />
+                    <div>
+                      <span className="text-sm font-bold text-gray-800 block">Require Final Assessment Passed</span>
+                      <span className="text-xs text-gray-500 block mt-0.5">Student must achieve the passing percentage on the assigned course test.</span>
+                    </div>
+                  </label>
+
+                  {form.certificateRules?.requireFinalAssessmentPass && (
+                    <div className="ml-7 space-y-3 pt-2 border-t border-gray-100">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Select Final Assessment Test</label>
+                        {courseTests.length === 0 ? (
+                          <div className="p-2.5 bg-amber-50 text-amber-800 text-xs rounded-lg border border-amber-200">
+                            No tests found for this course. Create one in the Tests & Final Assessment tab.
+                          </div>
+                        ) : (
+                          <select
+                            value={form.certificateRules?.finalAssessmentId || ""}
+                            onChange={(e) => {
+                              const aid = e.target.value;
+                              const chosen = courseTests.find(t => t.id === aid);
+                              setForm({
+                                ...form,
+                                certificateRules: {
+                                  ...form.certificateRules,
+                                  finalAssessmentId: aid,
+                                  minAssessmentScorePct: chosen?.passingPercentage || form.certificateRules?.minAssessmentScorePct || 50,
+                                }
+                              });
+                            }}
+                            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white font-medium text-gray-800 focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">-- Select Course Test --</option>
+                            {courseTests.map((t) => (
+                              <option key={t.id} value={t.id}>
+                                {t.title} ({t.questions?.length || 0} Qs • Pass: {t.passingPercentage || 50}%)
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <label className="text-xs font-bold text-gray-600">Final Assessment Pass Score (%):</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={form.certificateRules?.minAssessmentScorePct ?? 50}
+                          onChange={(e) => setForm({
+                            ...form,
+                            certificateRules: {
+                              ...form.certificateRules,
+                              minAssessmentScorePct: Math.max(1, Math.min(100, Number(e.target.value) || 1))
+                            }
+                          })}
+                          className="w-20 border border-gray-300 rounded-lg px-2 py-1 text-sm font-bold text-center focus:outline-none focus:border-blue-500"
+                        />
+                        <span className="text-xs text-gray-400 font-medium">% required on final exam</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-1">Final Assessment Unlock Rule</span>
+              <p className="text-xl font-extrabold text-gray-900">
+                {course?.finalAssessmentUnlockPct !== undefined && course?.finalAssessmentUnlockPct !== null ? course.finalAssessmentUnlockPct : 100}% Course Completion
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {(course?.finalAssessmentUnlockPct ?? 100) === 100
+                  ? "Students must complete 100% of prior course content before taking the final assessment."
+                  : (course?.finalAssessmentUnlockPct === 0)
+                  ? "Final assessment is immediately unlocked upon enrollment."
+                  : `Students can attempt the final exam once they reach ${course?.finalAssessmentUnlockPct}% progress.`
+                }
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-1">Certificate Rollout Requirements</span>
+              <div className="flex flex-col gap-1.5 mt-2">
+                {(() => {
+                  const assignedTest = courseTests.find(t => t.id === course?.certificateRules?.finalAssessmentId);
+                  const passScoreToDisplay = assignedTest?.passingPercentage || course?.certificateRules?.minAssessmentScorePct || 50;
+                  const reqProgress = course?.certificateRules?.minProgressPct !== undefined && course?.certificateRules?.minProgressPct !== null ? course.certificateRules.minProgressPct : 100;
+                  
+                  return (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${course?.certificateRules?.requireCourseComplete !== false ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                        <span className="text-sm font-semibold text-gray-800">
+                          Course {reqProgress}% Completed: <span className={course?.certificateRules?.requireCourseComplete !== false ? "text-emerald-600 font-bold" : "text-gray-400"}>{course?.certificateRules?.requireCourseComplete !== false ? "Required" : "Optional"}</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${course?.certificateRules?.requireFinalAssessmentPass !== false ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                        <span className="text-sm font-semibold text-gray-800">
+                          Final Assessment Passed {assignedTest ? `(${assignedTest.title} • ${passScoreToDisplay}% pass)` : `(${passScoreToDisplay}% pass)`}: <span className={course?.certificateRules?.requireFinalAssessmentPass !== false ? "text-emerald-600 font-bold" : "text-gray-400"}>{course?.certificateRules?.requireFinalAssessmentPass !== false ? "Required" : "Optional"}</span>
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
           </div>
         )}
       </div>

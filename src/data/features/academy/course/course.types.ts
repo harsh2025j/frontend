@@ -43,6 +43,14 @@ export interface Course {
   inclusions?: string[];
   hasCertificate?: boolean;
   hasLifetimeAccess?: boolean;
+  finalAssessmentUnlockPct?: number;
+  certificateRules?: {
+    requireCourseComplete?: boolean;
+    requireFinalAssessmentPass?: boolean;
+    minProgressPct?: number;
+    finalAssessmentId?: string;
+    minAssessmentScorePct?: number;
+  };
   faqs?: {q: string, a: string}[];
   modules?: CourseModule[];
   createdAt?: string;

@@ -1,21 +1,27 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/routing";
-import { ArrowLeft, Upload, FileSpreadsheet, Check, AlertCircle, Download, Trash2, Edit, X } from "lucide-react";
+import { ArrowLeft, Upload, FileSpreadsheet, Check, AlertCircle, Download, Trash2, Edit, X, GraduationCap } from "lucide-react";
 import { toast } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import Loader from "@/components/ui/Loader";
 import apiClient from "@/data/services/apiConfig/apiClient";
+import { courseApi } from "@/data/services/academy-service/course.service";
 
 export default function AssessmentDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [assessment, setAssessment] = useState<any>(null);
+  const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  const returnUrl = searchParams?.get("returnUrl") || (course?.id ? `/admin/academy/courses/${course.id}?tab=tests` : "");
+  const backHref = returnUrl || "/admin/academy/tests";
 
   // CSV Upload State
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -50,7 +56,17 @@ export default function AssessmentDetailPage() {
     try {
       const res = await apiClient.get(`/academy/assessments/${id}`);
       const data = res.data?.data || res.data;
-      if (res.status === 200) setAssessment(data);
+      if (res.status === 200) {
+        setAssessment(data);
+        if (data.courseId) {
+          try {
+            const cRes = await courseApi.fetchCourseById(data.courseId);
+            setCourse(cRes.data);
+          } catch (cErr) {
+            console.error("Failed to load course for test", cErr);
+          }
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -256,16 +272,26 @@ export default function AssessmentDetailPage() {
   return (
     <>
       <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Link href="/admin/academy/tests" className="p-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 transition">
+          <Link href={backHref} className="p-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 transition">
             <ArrowLeft size={20} />
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{assessment.title}</h1>
-            <p className="text-sm text-gray-500">{assessment.questions?.length || 0} Questions • {assessment.marksPerQuestion} Marks each</p>
+            <p className="text-sm text-gray-500">{assessment.questions?.length || 0} Questions • Pass Requirement: {assessment.passingPercentage || 50}%</p>
           </div>
         </div>
+
+        {course && (
+          <Link 
+            href={returnUrl || `/admin/academy/courses/${course.id}?tab=tests`}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-100 text-blue-800 rounded-xl text-xs font-semibold transition self-start sm:self-auto shadow-xs"
+          >
+            <GraduationCap size={16} className="text-blue-600" />
+            <span>Course: <span className="font-bold underline">{course.title}</span></span>
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

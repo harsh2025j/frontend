@@ -25,6 +25,13 @@ export interface CreateCourseDto {
   features?: string[];
   faqs?: {q: string, a: string}[];
   slug?: string;
+  hasCertificate?: boolean;
+  hasLifetimeAccess?: boolean;
+  finalAssessmentUnlockPct?: number;
+  certificateRules?: {
+    requireCourseComplete?: boolean;
+    requireFinalAssessmentPass?: boolean;
+  };
 }
 
 export const courseApi = {
@@ -80,5 +87,22 @@ export const courseApi = {
   },
   deleteCurriculumItem: async (itemId: string) => {
     return await apiClient.delete<any>(`/academy/curriculum/${itemId}`);
+  },
+
+  // Live Sessions
+  fetchLiveSessions: async (params?: {
+    status?: string;
+    courseId?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    return await apiClient.get<any>(`/academy/live-sessions`, { params });
+  },
+  updateLiveStatus: async (itemId: string, status: 'scheduled' | 'live' | 'completed') => {
+    return await apiClient.patch<any>(`/academy/curriculum/${itemId}/live-status`, { status });
+  },
+  updateLiveRecording: async (itemId: string, recordingUrl: string) => {
+    return await apiClient.patch<any>(`/academy/curriculum/${itemId}/recording`, { recordingUrl });
   }
 };

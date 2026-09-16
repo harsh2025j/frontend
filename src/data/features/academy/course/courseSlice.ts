@@ -16,7 +16,34 @@ const courseSlice = createSlice({
     clearCurrentCourse: (state) => {
       state.currentCourse = null;
       state.error = null;
-    }
+    },
+    updateCourseItemData: (
+      state,
+      action: PayloadAction<{ itemId: string; liveData?: any; [key: string]: any }>
+    ) => {
+      if (!state.currentCourse?.modules) return;
+      const { itemId, liveData, ...rest } = action.payload;
+      state.currentCourse.modules.forEach((mod: any) => {
+        if (mod.items) {
+          const found = mod.items.find((it: any) => it.id === itemId);
+          if (found) {
+            if (liveData) found.liveData = { ...found.liveData, ...liveData };
+            Object.assign(found, rest);
+          }
+        }
+        if (mod.submodules) {
+          mod.submodules.forEach((sub: any) => {
+            if (sub.items) {
+              const found = sub.items.find((it: any) => it.id === itemId);
+              if (found) {
+                if (liveData) found.liveData = { ...found.liveData, ...liveData };
+                Object.assign(found, rest);
+              }
+            }
+          });
+        }
+      });
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -49,5 +76,5 @@ const courseSlice = createSlice({
   },
 });
 
-export const { clearCurrentCourse } = courseSlice.actions;
+export const { clearCurrentCourse, updateCourseItemData } = courseSlice.actions;
 export default courseSlice.reducer;

@@ -22,6 +22,7 @@ import HighCourtsModal from "../ui/HighCourtsModal";
 import Loader from "../ui/Loader";
 import { useHomeData } from "@/context/HomeDataContext";
 import SearchWithDropdown from "../ui/SearchWithDropdown";
+import { capitalizeFirstChar } from "@/utils/textUtils";
 
 import icon2 from '../../assets/icon2.png';
 import icon3 from '../../assets/icon3.png';
@@ -70,21 +71,30 @@ export function getArticlesBySlugs(articles: Article[], slugs: string[]) {
 }
 
 export function getArticleExcerpt(item: any, maxLength = 150) {
-  if (!item.content) return "";
-  const stripped = item.content.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
-  if (stripped.length > 0) {
-    return stripped.substring(0, maxLength) + (stripped.length > maxLength ? "..." : "");
-  }
+  let text = "";
   if (item.subHeadline && item.subHeadline.trim().length > 0) {
-    return item.subHeadline.trim();
+    text = item.subHeadline.trim();
+  } else if (item.aiSummary && item.aiSummary.trim().length > 0) {
+    text = item.aiSummary.trim();
+  } else if (item.content) {
+    const stripped = item.content
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (stripped.length > 0) {
+      text = stripped.substring(0, maxLength) + (stripped.length > maxLength ? "..." : "");
+    }
   }
-  if (item.aiSummary && item.aiSummary.trim().length > 0) {
-    return item.aiSummary.trim();
+
+  if (!text) {
+    const isJudgment = item.category?.slug === "judgments" || item.category?.parentId === "judgments";
+    return isJudgment
+      ? "Click to view the full judgment details, neutral citations, and complete court order."
+      : "Click to read the full article, view dynamic updates, and watch the embedded media.";
   }
-  const isJudgment = item.category?.slug === "judgments" || item.category?.parentId === "judgments";
-  return isJudgment
-    ? "Click to view the full judgment details, neutral citations, and complete court order."
-    : "Click to read the full article, view dynamic updates, and watch the embedded media.";
+
+  return capitalizeFirstChar(text);
 }
 
 export default function Stores() {

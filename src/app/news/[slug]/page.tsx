@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useArticleListActions } from "@/data/features/article/useArticleActions";
 import { Article } from "@/data/features/article/article.types";
 import { sanitizeHtml } from "@/utils/sanitizeHtml";
+import { capitalizeFirstChar, capitalizeFirstCharInHtml } from "@/utils/textUtils";
 import Image from "next/image";
 // import Link from "next/link";
 import { Link } from "@/i18n/routing";
@@ -126,8 +127,8 @@ export default function ArticleDetailPage() {
                     <div className="lg:col-span-8">
                         {/* Header */}
                         <div className="mb-6">
-                            <h1 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight font-georgia">
-                                {article.title}
+                            <h1 className="sm:text-4xl text-3xl font-bold text-gray-900 mb-6 leading-tight font-georgia first-letter:uppercase word-justify text-justify [text-align-last:left] [text-justify:inter-word] tracking-tight break-words">
+                                {capitalizeFirstChar(article.title)}
                             </h1>
                             {/* Metadata */}
                             <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-4">
@@ -189,7 +190,7 @@ export default function ArticleDetailPage() {
 
                         {/* Article Content */}
                         <div className="article-content mb-12">
-                            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }} />
+                            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(capitalizeFirstCharInHtml(article.content)) }} />
                         </div>
 
                         {/* Tags */}

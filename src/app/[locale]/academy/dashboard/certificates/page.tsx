@@ -1,22 +1,32 @@
 "use client";
 
-import React from 'react';
-import { DownloadCloud, Award, Share2, Eye, ShieldCheck } from 'lucide-react';
-
-const CERTIFICATES = [
-  {
-    id: "CERT-2026-0814",
-    course: "Constitutional Law: Landmark Judgments Discussion",
-    dateEarned: "August 10, 2026",
-    instructor: "Justice (Retd.) K. Singh",
-    image: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=600&auto=format&fit=crop" // Abstract texture
-  }
-];
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { DownloadCloud, Award, Share2, ShieldCheck, Copy, Loader2 } from 'lucide-react';
+import { certificateApi, Certificate } from '@/data/services/academy-service/certificate.service';
+import { ShareCertificateModal, formatCertificateFilename } from './ShareCertificateModal';
+import toast from 'react-hot-toast';
 
 export default function CertificatesPage() {
+  const [items, setItems] = useState<Certificate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [shareCert, setShareCert] = useState<Certificate | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res: any = await certificateApi.mine();
+        setItems(((res?.data ?? res) as Certificate[]) || []);
+      } catch (e: any) {
+        toast.error(e?.message || 'Failed to load certificates');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700 ease-out">
-      
+    <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-[#122340] mb-2 tracking-tight">My Credentials</h1>
@@ -24,79 +34,152 @@ export default function CertificatesPage() {
         </div>
       </div>
 
-      {CERTIFICATES.length === 0 ? (
+      {loading ? (
+        <div className="p-16 text-center text-gray-400 text-sm">Loading…</div>
+      ) : items.length === 0 ? (
         <div className="bg-white border border-[#122340]/5 rounded-3xl p-16 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
           <div className="w-24 h-24 bg-[#f0f2f5] rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-[#122340]/5">
             <Award size={40} className="text-[#122340]/20" />
           </div>
           <h3 className="text-xl font-extrabold text-[#122340] mb-3">No certificates yet</h3>
           <p className="text-[#122340]/50 max-w-md mx-auto font-medium">
-            Complete your first course to unlock a digitally verified certificate of completion from Sajjad Husain Legal Academy.
+            Complete your first course to unlock a digitally verified certificate of completion.
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {CERTIFICATES.map((cert) => (
-            <div key={cert.id} className="group perspective-1000">
-              
-              {/* Certificate Card (3D hover effect container) */}
-              <div className="bg-white rounded-3xl overflow-hidden shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-[#122340]/5 transition-transform duration-500 ease-out group-hover:-translate-y-2 group-hover:shadow-[0_20px_60px_rgb(0,0,0,0.12)]">
-                
-                {/* Visual Preview Banner */}
-                <div className="h-72 relative bg-gradient-to-br from-[#0a1628] to-[#1a2f4d] p-8 flex flex-col items-center justify-center text-center overflow-hidden border-b-4 border-[#C9A227]">
-                  <div className="absolute inset-0 opacity-10 mix-blend-overlay">
-                    <img src={cert.image} className="w-full h-full object-cover" alt="texture" />
-                  </div>
-                  
-                  {/* Glowing effect behind badge */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-[#C9A227]/20 blur-3xl rounded-full"></div>
-                  
-                  <div className="relative z-10 w-full border border-[#C9A227]/40 p-6 h-full flex flex-col items-center justify-center bg-black/10 backdrop-blur-sm shadow-2xl">
-                    <div className="mb-4">
-                      <Award size={48} className="text-[#C9A227] drop-shadow-lg" />
-                    </div>
-                    <h4 className="text-blue-100/70 font-serif italic text-xs tracking-[0.2em] uppercase mb-3">Certificate of Completion</h4>
-                    <h2 className="text-white font-extrabold text-xl leading-tight mb-4 max-w-[90%] drop-shadow-md">{cert.course}</h2>
-                    <p className="text-[#C9A227] text-xs font-bold tracking-widest uppercase">Student User</p>
-                  </div>
-                </div>
-
-                {/* Details & Actions */}
-                <div className="p-8">
-                  <div className="flex justify-between items-start mb-8 bg-[#fcfcfa] p-4 rounded-xl border border-[#122340]/5">
-                    <div>
-                      <p className="text-[10px] font-bold text-[#122340]/40 uppercase tracking-widest mb-1.5">Issue Date</p>
-                      <p className="font-extrabold text-[#122340] text-sm">{cert.dateEarned}</p>
-                    </div>
-                    <div className="w-px bg-[#122340]/10"></div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-[#122340]/40 uppercase tracking-widest mb-1.5">Credential ID</p>
-                      <p className="font-extrabold text-[#122340] text-sm flex items-center justify-end gap-1.5">
-                        <ShieldCheck size={14} className="text-green-500" />
-                        {cert.id}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <button className="flex-1 bg-[#122340] text-white py-3.5 rounded-xl font-bold shadow-[0_4px_14px_0_rgb(18,35,64,0.39)] hover:shadow-[0_6px_20px_rgba(18,35,64,0.23)] hover:-translate-y-0.5 transition-all duration-200 text-sm flex items-center justify-center gap-2">
-                      <DownloadCloud size={18} /> Download
-                    </button>
-                    <button className="w-14 shrink-0 border border-[#122340]/10 text-[#122340] rounded-xl flex items-center justify-center hover:bg-[#122340]/5 transition-colors group/btn" title="View Full Screen">
-                      <Eye size={20} className="text-[#122340]/60 group-hover/btn:text-[#122340] transition-colors" />
-                    </button>
-                    <button className="w-14 shrink-0 border border-[#C9A227]/30 text-[#C9A227] rounded-xl flex items-center justify-center hover:bg-[#C9A227]/10 transition-colors group/btn" title="Share to LinkedIn">
-                      <Share2 size={20} className="text-[#C9A227]/80 group-hover/btn:text-[#C9A227] transition-colors" />
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-            </div>
+          {items.map((cert) => (
+            <CertificateCard
+              key={cert.id}
+              cert={cert}
+              onShare={() => setShareCert(cert)}
+            />
           ))}
         </div>
       )}
 
+      {/* Social Share & Export Modal */}
+      {shareCert && (
+        <ShareCertificateModal
+          cert={shareCert}
+          isOpen={!!shareCert}
+          onClose={() => setShareCert(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function CertificateCard({
+  cert,
+  onShare,
+}: {
+  cert: Certificate;
+  onShare: () => void;
+}) {
+  const [downloading, setDownloading] = useState(false);
+  const verifyUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/academy/certificates/verify/${cert.certificateId}`;
+
+  const handleDownload = async () => {
+    if (downloading) return;
+    setDownloading(true);
+    const filename = formatCertificateFilename(cert.studentName, cert.courseName, 'pdf');
+    try {
+      const res = await fetch(cert.pdfUrl);
+      if (!res.ok) throw new Error('Failed to fetch certificate file');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success('Certificate downloaded successfully');
+    } catch (err) {
+      console.error('Download error:', err);
+      // Fallback
+      const a = document.createElement('a');
+      a.href = cert.pdfUrl;
+      a.setAttribute('download', filename);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="bg-white rounded-3xl overflow-hidden shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-[#122340]/5">
+        {/* Certificate image preview (strictly images on web, never heavy PDF iframe) */}
+        <div className="h-72 relative bg-gradient-to-br from-[#0a1628] to-[#1a2f4d] border-b-4 border-[#C9A227] overflow-hidden">
+          <img
+            src={cert.imageUrl || `/academy/certificates/image/${cert.certificateId}`}
+            alt={cert.courseName}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+        </div>
+
+        <div className="p-8">
+          <p className="font-extrabold text-[#122340] text-lg mb-1 truncate">{cert.courseName}</p>
+          <div className="flex justify-between items-start mb-6 mt-4 bg-[#fcfcfa] p-4 rounded-xl border border-[#122340]/5">
+            <div>
+              <p className="text-[10px] font-bold text-[#122340]/40 uppercase tracking-widest mb-1.5">Issue Date</p>
+              <p className="font-extrabold text-[#122340] text-sm">
+                {new Date(cert.issueDate).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold text-[#122340]/40 uppercase tracking-widest mb-1.5">Credential ID</p>
+              <p className="font-mono font-extrabold text-[#122340] text-sm flex items-center justify-end gap-1.5">
+                <ShieldCheck size={14} className="text-green-500" />
+                {cert.certificateId}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="flex-1 bg-[#122340] text-white py-3.5 rounded-xl font-bold hover:bg-[#0a1628] transition-colors text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+            >
+              {downloading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin text-[#C9A227]" /> Downloading...
+                </>
+              ) : (
+                <>
+                  <DownloadCloud size={18} /> Download PDF
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(verifyUrl);
+                toast.success('Verify URL copied');
+              }}
+              className="w-14 shrink-0 border border-[#122340]/10 text-[#122340] rounded-xl flex items-center justify-center hover:bg-[#122340]/5 cursor-pointer transition-colors"
+              title="Copy verify URL"
+            >
+              <Copy size={18} />
+            </button>
+            <button
+              onClick={onShare}
+              className="px-4 border border-[#C9A227]/40 bg-[#C9A227]/10 text-[#122340] rounded-xl flex items-center justify-center gap-1.5 hover:bg-[#C9A227]/20 cursor-pointer transition-colors text-sm font-bold"
+              title="Share Certificate"
+            >
+              <Share2 size={17} className="text-[#C9A227]" />
+              <span>Share</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

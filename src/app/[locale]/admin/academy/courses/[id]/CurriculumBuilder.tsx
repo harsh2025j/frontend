@@ -11,6 +11,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { courseApi } from "@/data/services/academy-service/course.service";
+import apiClient from "@/data/services/apiConfig/apiClient";
 import toast from "react-hot-toast";
 import ContentEditorDrawer from "./ContentEditorDrawer";
 import { 
@@ -26,6 +27,7 @@ type CurriculumItem = {
   moduleId: string;
   fileUrl?: string;
   assignmentData?: any;
+  liveData?: any;
 };
 
 type CourseModule = {
@@ -38,13 +40,44 @@ type CourseModule = {
 };
 
 // SORTABLE ITEM COMPONENT
-const SortableItem = ({ item, onDelete, onClick }: { item: CurriculumItem, onDelete: (id: string) => void, onClick: () => void }) => {
+const SortableItem = ({ 
+  item, 
+  assessmentsMap,
+  onDelete, 
+  onClick 
+}: { 
+  item: CurriculumItem; 
+  assessmentsMap?: Map<string, any>;
+  onDelete: (id: string) => void; 
+  onClick: () => void;
+}) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
 
+  const isLive = item.type === 'live';
+  const liveData = item.liveData || {};
+  const liveStatus = liveData.status;
+  const isLiveNow = liveStatus === 'live';
+  const isConcluded = liveStatus === 'completed';
+  const isScheduled = Boolean(liveData.scheduledDate && liveData.scheduledTime && liveStatus !== 'not_scheduled');
+  const livePlatform = liveData.platform || (item as any).provider || '';
+
+  const isTestItem = item.type === 'test' || item.type === 'final_assessment';
+  const linkedAssessment = isTestItem && item.assignmentData?.assessmentId && assessmentsMap ? assessmentsMap.get(item.assignmentData.assessmentId) : null;
+
+  const getPlatformLabel = (platform: string) => {
+    switch (platform) {
+      case 'youtube': return '📺 YouTube Live';
+      case 'gmeet': return '🟢 Google Meet';
+      case 'zoom': return '🔷 Zoom';
+      case 'jitsi': return '📹 Jitsi';
+      default: return '📹 Live Class';
+    }
+  };
+
   return (
     <div ref={setNodeRef} style={style} onClick={onClick} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-lg hover:border-blue-200 group ml-8 mb-2 shadow-sm cursor-pointer">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <button {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
           <GripVertical size={16} />
         </button>
@@ -63,7 +96,50 @@ const SortableItem = ({ item, onDelete, onClick }: { item: CurriculumItem, onDel
           {item.type === 'final_assessment' && <GraduationCap size={16} />}
         </div>
         <p className="text-sm font-semibold text-gray-900">{item.title}</p>
-        {(item.fileUrl || item.assignmentData?.instructionsPdfUrl || item.assignmentData?.assessmentId) && <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-green-100 text-green-700 rounded-full ml-2">Content Added</span>}
+
+        {isLive ? (
+          <div className="flex items-center gap-1.5 ml-2">
+            {isLiveNow ? (
+              <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-red-100 text-red-700 rounded-full flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping"></span> Live Now
+              </span>
+            ) : isConcluded ? (
+              <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
+                {liveData.recordingUrl ? '▶️ Replay Ready' : 'Concluded'}
+              </span>
+            ) : !isScheduled ? (
+              <span className="px-2 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-600 rounded-full border border-gray-200">
+                ⏳ Not Scheduled
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 rounded-full border border-blue-100">
+                {getPlatformLabel(livePlatform)} • {liveData.scheduledDate}
+              </span>
+            )}
+          </div>
+        ) : isTestItem ? (
+          item.assignmentData?.assessmentId ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 rounded-full ml-2">
+              <FileQuestion size={13} className="text-purple-600 shrink-0" />
+              <span className="font-bold">{linkedAssessment?.title || "Test Linked"}</span>
+              {linkedAssessment && (
+                <span className="bg-purple-200/80 text-purple-900 px-1.5 py-0.2 rounded text-[10px] font-bold">
+                  {linkedAssessment.questions?.length ?? 0} Qs • {linkedAssessment.passingPercentage ?? 50}% pass
+                </span>
+              )}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-full ml-2">
+              <span>⚠️ No test linked (Click to select)</span>
+            </span>
+          )
+        ) : (
+          (item.fileUrl || item.assignmentData?.instructionsPdfUrl) && (
+            <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-green-100 text-green-700 rounded-full ml-2">
+              Content Added
+            </span>
+          )
+        )}
       </div>
       <button onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} className="text-gray-400 hover:text-red-600 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <Trash2 size={16} />
@@ -75,6 +151,7 @@ const SortableItem = ({ item, onDelete, onClick }: { item: CurriculumItem, onDel
 // RECURSIVE MODULE NODE COMPONENT
 const ModuleNode = ({ 
   module, 
+  assessmentsMap,
   onAddSubModule, 
   onAddItem, 
   onRename, 
@@ -83,6 +160,7 @@ const ModuleNode = ({
   onEditItem
 }: { 
   module: CourseModule, 
+  assessmentsMap?: Map<string, any>,
   onAddSubModule: (parentId: string) => void,
   onAddItem: (moduleId: string, type: any) => void,
   onRename: (id: string, newTitle: string) => void,
@@ -171,6 +249,7 @@ const ModuleNode = ({
                   <ModuleNode 
                     key={child.id} 
                     module={child} 
+                    assessmentsMap={assessmentsMap}
                     onAddSubModule={onAddSubModule}
                     onAddItem={onAddItem}
                     onRename={onRename}
@@ -188,7 +267,13 @@ const ModuleNode = ({
             <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
               <div className="mt-3">
                 {module.items.map(item => (
-                  <SortableItem key={item.id} item={item} onDelete={onDeleteItem} onClick={() => onEditItem(item)} />
+                  <SortableItem 
+                    key={item.id} 
+                    item={item} 
+                    assessmentsMap={assessmentsMap}
+                    onDelete={onDeleteItem} 
+                    onClick={() => onEditItem(item)} 
+                  />
                 ))}
               </div>
             </SortableContext>
@@ -210,6 +295,32 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
   const [activeModuleForAdd, setActiveModuleForAdd] = useState<string | null>(null);
   const [itemType, setItemType] = useState<"video" | "document" | "live" | "assignment" | "test" | "final_assessment">("video");
   const [newItemTitle, setNewItemTitle] = useState("");
+  const [selectedAssessmentIdForAdd, setSelectedAssessmentIdForAdd] = useState("");
+
+  // Course-specific assessments
+  const [courseAssessments, setCourseAssessments] = useState<any[]>([]);
+
+  const fetchCourseAssessments = async () => {
+    try {
+      const res = await apiClient.get('/academy/assessments', { params: { courseId } });
+      const data = res.data?.data || res.data || [];
+      setCourseAssessments(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error("Failed to load course assessments", e);
+    }
+  };
+
+  useEffect(() => {
+    if (courseId) {
+      fetchCourseAssessments();
+    }
+  }, [courseId]);
+
+  const assessmentsMap = React.useMemo(() => {
+    const map = new Map<string, any>();
+    courseAssessments.forEach((a) => map.set(a.id, a));
+    return map;
+  }, [courseAssessments]);
 
   // Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState<{
@@ -331,6 +442,7 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
     setActiveModuleForAdd(moduleId);
     setItemType(type);
     setNewItemTitle("");
+    setSelectedAssessmentIdForAdd("");
     setShowItemModal(true);
   };
 
@@ -341,11 +453,31 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
       const targetModule = modulesMap.get(activeModuleForAdd);
       const newOrderIndex = targetModule?.items?.length || 0;
 
+      const defaultLiveData = itemType === 'live' ? {
+        platform: '',
+        status: 'not_scheduled',
+        scheduledDate: '',
+        scheduledTime: '',
+        durationMinutes: 60,
+        jitsiRoomId: `sajjad-husain-legal-academy-live-${Math.random().toString(36).substring(2, 10)}`,
+        jitsiPassword: '',
+        recordingUrl: '',
+      } : undefined;
+
+      const selectedA = courseAssessments.find((a: any) => a.id === selectedAssessmentIdForAdd);
+      const defaultAssignmentData = (itemType === 'test' || itemType === 'final_assessment') && selectedAssessmentIdForAdd ? {
+        assessmentId: selectedAssessmentIdForAdd,
+        totalMarks: selectedA?.marksPerQuestion ? selectedA.marksPerQuestion * (selectedA.questions?.length || 1) : 100,
+        passingMarks: selectedA?.passingPercentage || 50,
+      } : undefined;
+
       await courseApi.createCurriculumItem(courseId, {
         moduleId: activeModuleForAdd,
         type: itemType,
         title: newItemTitle,
-        orderIndex: newOrderIndex
+        orderIndex: newOrderIndex,
+        ...(defaultLiveData ? { liveData: defaultLiveData } : {}),
+        ...(defaultAssignmentData ? { assignmentData: defaultAssignmentData } : {})
       });
 
       toast.success("Item added!", { id: toastId });
@@ -467,14 +599,19 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex justify-between items-center bg-blue-50 p-4 rounded-xl border border-blue-100">
+      <div className="flex justify-between items-center bg-blue-50 p-4 rounded-xl border border-blue-100 flex-wrap gap-4">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">Course Curriculum</h2>
-          <p className="text-sm text-gray-500 mt-1">Create modules and nested sub-sections. Use drag handles to reorder within the same level.</p>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold text-gray-900">Course Curriculum</h2>
+            <span className="px-2.5 py-0.5 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full border border-purple-200">
+              {courseAssessments.length} Course {courseAssessments.length === 1 ? "Test" : "Tests"} Available
+            </span>
+          </div>
+          <p className="text-sm text-gray-500 mt-1">Create modules and lessons. Tests and quizzes attached here are strictly specific to this course.</p>
         </div>
         <button 
           onClick={() => handleAddModule(null)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 shadow-sm font-semibold"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 shadow-sm font-semibold cursor-pointer"
         >
           <Plus size={18} /> Add Root Module
         </button>
@@ -487,6 +624,7 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
               <ModuleNode 
                 key={module.id} 
                 module={module}
+                assessmentsMap={assessmentsMap}
                 onAddSubModule={handleAddModule}
                 onAddItem={handleAddItemModalOpen}
                 onRename={handleRenameModule}
@@ -508,15 +646,48 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
       {showItemModal && (
         <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 capitalize">Add {itemType} Lesson</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4 capitalize">Add {itemType.replace('_', ' ')} Lesson</h2>
             <div className="space-y-4">
+              {(itemType === 'test' || itemType === 'final_assessment') && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">
+                    Select Course Test <span className="text-gray-400 font-normal">(Optional)</span>
+                  </label>
+                  {courseAssessments.length === 0 ? (
+                    <div className="p-3 bg-purple-50 text-purple-800 text-xs rounded-lg border border-purple-200">
+                      No tests created for this course yet. You can create this lesson now and link a test later from the Tests tab.
+                    </div>
+                  ) : (
+                    <select
+                      value={selectedAssessmentIdForAdd}
+                      onChange={(e) => {
+                        const aid = e.target.value;
+                        setSelectedAssessmentIdForAdd(aid);
+                        if (aid && !newItemTitle.trim()) {
+                          const a = courseAssessments.find((x: any) => x.id === aid);
+                          if (a) setNewItemTitle(a.title);
+                        }
+                      }}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 bg-white"
+                    >
+                      <option value="">-- Choose an Existing Course Test --</option>
+                      {courseAssessments.map((a: any) => (
+                        <option key={a.id} value={a.id}>
+                          {a.title} ({a.questions?.length || 0} Qs • {a.passingPercentage || 50}% pass)
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Title *</label>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Lesson Title *</label>
                 <input 
                   type="text" 
                   value={newItemTitle}
                   onChange={(e) => setNewItemTitle(e.target.value)}
-                  placeholder={`e.g. Introduction to ${itemType}...`} 
+                  placeholder={`e.g. Introduction to ${itemType.replace('_', ' ')}...`} 
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" 
                   autoFocus
                   onKeyDown={e => e.key === 'Enter' && handleAddItemSubmit()}
@@ -562,11 +733,13 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
       {/* Content Editor Drawer */}
       <ContentEditorDrawer 
         item={editorItem}
+        courseId={courseId}
         isOpen={!!editorItem}
         onClose={() => setEditorItem(null)}
         onSave={async (id, data) => {
           await courseApi.updateCurriculumItem(id, data);
           await fetchCurriculum(true); // refresh the UI silently so "Content Added" pill shows up without unmounting
+          await fetchCourseAssessments();
         }}
       />
     </div>

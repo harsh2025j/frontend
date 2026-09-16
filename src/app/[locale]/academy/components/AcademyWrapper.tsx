@@ -8,6 +8,7 @@ import AcademyFooter from './AcademyFooter';
 export default function AcademyWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || '';
   const hideNavigation = pathname.includes('/dashboard') || pathname.includes('/learn') || pathname.includes('/auth');
+  const hideFooter = hideNavigation || pathname.includes('/certificates/verify') || pathname.includes('/verify-certificate');
 
   return (
     <div className="ac-root min-h-screen selection:bg-yellow-500/20 flex flex-col" style={{ background: 'var(--ac-bg-base)', color: 'var(--ac-text-primary)', fontFamily: "'Inter', sans-serif" }}>
@@ -15,7 +16,7 @@ export default function AcademyWrapper({ children }: { children: React.ReactNode
       <main className={`flex-grow flex flex-col ${!hideNavigation ? 'pt-16' : ''}`}>
         {children}
       </main>
-      {!hideNavigation && <AcademyFooter />}
+      {!hideFooter && <AcademyFooter />}
     </div>
   );
 }

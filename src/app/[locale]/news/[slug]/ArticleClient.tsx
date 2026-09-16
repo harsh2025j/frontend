@@ -20,6 +20,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/data/redux/store";
 import PaywallOverlay from "@/components/ui/PaywallOverlay";
 import { sanitizeHtml } from "@/utils/sanitizeHtml";
+import { capitalizeFirstChar, capitalizeFirstCharInHtml } from "@/utils/textUtils";
 
 import SpeechPlayer from "@/components/ui/SpeechPlayer";
 import { InFeedAd, ArticleTopAd, ArticleSidebarTopAd, ArticleSidebarBottomAd, ArticleBottomAd } from "@/components/ads/StandardAds";
@@ -168,8 +169,8 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
     const hasFullAccess = !article.isPaywalled || isPremium;
 
     const readTime = Math.ceil(article.content.replace(/<[^>]*>/g, "").split(/\s+/).length / 200);
-    const displayTitle = translatedData?.title || article.title;
-    const displayContent = translatedData?.content || article.content;
+    const displayTitle = capitalizeFirstChar(translatedData?.title || article.title);
+    const displayContent = capitalizeFirstCharInHtml(translatedData?.content || article.content);
 
     const handleShare = (platform: string) => {
         const articleUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/news/${article.slug}`;
@@ -205,7 +206,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
             <div>
                 {/* Title */}
                 <div className="mb-6">
-                    <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight font-georgia">{displayTitle}</h2>
+                    <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight font-georgia first-letter:uppercase word-justify text-justify [text-align-last:left] [text-justify:inter-word] tracking-tight break-words">{displayTitle}</h2>
 
                     {/* Author metadata */}
                     {(authorUsername || article.authorId) && article.authorId !== 'system-auto-bot' ? (
@@ -456,7 +457,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                         }
                         .article-content .ql-align-center { text-align: center !important; }
                         .article-content .ql-align-right { text-align: right !important; }
-                        .article-content .ql-align-justify { text-align: justify !important; }
+                        .article-content .ql-align-justify { text-align: justify !important; text-justify: inter-word !important; text-align-last: left !important; }
                         .article-content .ql-editor { padding: 0 !important; font-family: inherit !important; font-size: inherit !important; line-height: inherit !important; overflow-y: visible !important; }
                         
                         /* Fix massive list gaps caused by absolute positioning in globals.css */
@@ -471,6 +472,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                             position: static !important;
                         }
 
+                        .article-content > :first-child::first-letter { text-transform: uppercase; }
                         @media (max-width: 640px) {
                             .article-content h1 { font-size: 1.75rem !important; line-height: 1.3 !important; margin-bottom: 0.75rem !important; }
                             .article-content h2 { font-size: 1.5rem !important; line-height: 1.3 !important; margin-bottom: 0.75rem !important; }

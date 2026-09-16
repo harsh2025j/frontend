@@ -9,6 +9,15 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
     return {
         locale,
-        messages: (await import(`../../messages/${locale}.json`)).default
+        messages: (await import(`../../messages/${locale}.json`)).default,
+        onError(error) {
+            // Prevent SSR crash on missing translations
+            if (process.env.NODE_ENV === 'development') {
+                console.error(error);
+            }
+        },
+        getMessageFallback({ key, namespace }) {
+            return namespace ? `${namespace}.${key}` : key;
+        }
     };
 });

@@ -73,13 +73,15 @@ export default function AssessmentPlayer({ courseId, itemId, assessmentId, title
       } else {
         toast.error("Failed to start assessment");
       }
-    } catch (e) {
-      console.error(e);
-      toast.error("An error occurred");
+    } catch (e: any) {
+      console.error("Start assessment error:", e);
+      const message = e?.message || e?.response?.data?.message || "Failed to start assessment";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
+
 
   const submitAssessment = async () => {
     setSubmitting(true);
@@ -105,9 +107,10 @@ export default function AssessmentPlayer({ courseId, itemId, assessmentId, title
       } else {
         toast.error("Failed to submit assessment");
       }
-    } catch (e) {
-      console.error(e);
-      toast.error("An error occurred");
+    } catch (e: any) {
+      console.error("Submit assessment error:", e);
+      const message = e?.message || e?.response?.data?.message || "Failed to submit assessment";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

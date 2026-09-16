@@ -181,6 +181,18 @@ export const API_ENDPOINTS = {
     },
     PAYMENTS: {
       ALL: "/payments/courses/all", // This goes to subscriptions-service but we can group it here for convenience
-    }
+    },
+    CERTIFICATES: {
+      BASE: "/academy/certificates",
+      TEMPLATES: "/academy/certificates/templates",
+      TEMPLATE_BY_ID: "/academy/certificates/templates/:id",
+      TEMPLATE_PREVIEW: "/academy/certificates/templates/:id/preview",
+      ISSUE: "/academy/certificates/issue",
+      MANUAL_ISSUE: "/academy/certificates/manual-issue",
+      REVOKE: "/academy/certificates/:id/revoke",
+      REISSUE: "/academy/certificates/:id/reissue",
+      MINE: "/academy/certificates/mine",
+      VERIFY: "/academy/certificates/verify/:certificateId",
+    },
   }
 };

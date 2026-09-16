@@ -2,24 +2,30 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { 
   ArrowLeft, Users, FileCheck, Calendar, Settings, 
   BookOpen, Eye, BarChart3, Loader2, X, CheckCircle,
-  MonitorPlay, Infinity
+  MonitorPlay, Infinity, FileCheck2
 } from "lucide-react";
 import { VideoCourseLayout } from "@/app/[locale]/academy/courses/[slug]/page";
 import { courseApi } from "@/data/services/academy-service/course.service";
 import CurriculumBuilder from "./CurriculumBuilder";
 import OverviewTab from "./OverviewTab";
 import AssignmentsTab from "./AssignmentsTab";
+import AcademyTestsPage from "@/app/[locale]/admin/academy/tests/page";
 import StudentsTab from "./StudentsTab";
+import CourseSettingsTab from "./CourseSettingsTab";
+import AcademyLiveSessionsPage from "@/app/[locale]/admin/academy/live-sessions/page";
 import toast from "react-hot-toast";
 import apiClient from "@/data/services/apiConfig/apiClient";
 
 export default function CourseUnifiedDashboard() {
   const params = useParams();
   const courseId = params?.id as string;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams?.get("tab");
   
   const [loading, setLoading] = useState(true);
   const [course, setCourse] = useState<any>(null);
@@ -30,7 +36,40 @@ export default function CourseUnifiedDashboard() {
     assignmentsPending: 0,
   });
   
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState<string>("overview");
+
+  // Restore tab on mount from URL query or localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabQuery = urlParams.get("tab");
+      const storedTab = localStorage.getItem(`course_active_tab_${courseId}`);
+      const targetTab = tabQuery || storedTab;
+      if (targetTab) {
+        setActiveTab(targetTab);
+        if (!tabQuery) {
+          urlParams.set("tab", targetTab);
+          window.history.replaceState(null, "", `?${urlParams.toString()}`);
+        }
+      }
+    }
+  }, [courseId]);
+
+  useEffect(() => {
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`course_active_tab_${courseId}`, tabId);
+      const currentParams = new URLSearchParams(window.location.search);
+      currentParams.set("tab", tabId);
+      window.history.replaceState(null, "", `?${currentParams.toString()}`);
+    }
+  };
   
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -223,12 +262,13 @@ export default function CourseUnifiedDashboard() {
             { id: 'curriculum', label: 'Curriculum', icon: BookOpen },
             { id: 'students', label: 'Students', icon: Users },
             { id: 'assignments', label: 'Assignments', icon: FileCheck },
+            { id: 'tests', label: 'Tests & Final Assessment', icon: FileCheck2 },
             { id: 'sessions', label: 'Live Sessions', icon: Calendar },
             { id: 'settings', label: 'Settings', icon: Settings },
           ].map((tab) => (
             <button 
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
                 activeTab === tab.id 
                   ? 'border-blue-600 text-blue-600 bg-blue-50/30' 
@@ -263,39 +303,19 @@ export default function CourseUnifiedDashboard() {
             <AssignmentsTab courseId={courseId} />
           )}
 
+          {/* 5. TESTS & FINAL ASSESSMENT TAB */}
+          {activeTab === "tests" && (
+            <AcademyTestsPage initialCourseId={courseId} isCourseScoped={true} />
+          )}
+
           {/* 5. LIVE SESSIONS TAB */}
           {activeTab === "sessions" && (
-            <div className="bg-white rounded-xl border border-gray-100">
-               <div className="p-8 text-center text-gray-500">Live sessions management will appear here.</div>
-            </div>
+            <AcademyLiveSessionsPage initialCourseId={courseId} isCourseScoped={true} />
           )}
 
           {/* 6. SETTINGS TAB */}
           {activeTab === "settings" && (
-            <div className="space-y-6 max-w-2xl bg-white p-6 rounded-xl border border-gray-100">
-              <h2 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3">Course Certificate Rules</h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Minimum Course Progress (%)</label>
-                  <input type="number" defaultValue="90" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none" />
-                </div>
-                
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="w-5 h-5 rounded text-blue-600" />
-                  <div>
-                    <p className="text-sm font-bold text-gray-900">Require Final Test Passed</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Student must score above 50% to get certificate.</p>
-                  </div>
-                </label>
-
-                <div className="pt-4 border-t border-gray-100">
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
-                    Save Settings
-                  </button>
-                </div>
-              </div>
-            </div>
+            <CourseSettingsTab course={course} setCourse={setCourse} courseId={courseId} />
           )}
         </div>
       </div>

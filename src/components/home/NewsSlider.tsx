@@ -9,6 +9,7 @@ import Loader from "../ui/Loader";
 import { useHomeData } from "@/context/HomeDataContext";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { getSafeImageUrl } from "@/utils/imageUtils";
+import { capitalizeFirstChar } from "@/utils/textUtils";
 
 import headerBg from '../../assets/svgimage/header.png';
 
@@ -59,13 +60,32 @@ export default function NewsSlider() {
   const slides = useMemo(() => {
     const latestArticles = articles.slice(0, 5);
     if (latestArticles.length > 0) {
-      return latestArticles.map((article: any) => ({
-        image: getSafeImageUrl(article.thumbnail),
-        title: article.title,
-        category: article.category?.name || "Premium Insight",
-        description: (article.content || "").replace(/<[^>]*>/g, '').substring(0, 150) + "...",
-        link: `/news/${article.slug}`,
-      }));
+      return latestArticles.map((article: any) => {
+        let desc = "";
+        if (article.subHeadline && article.subHeadline.trim()) {
+          desc = article.subHeadline.trim();
+        } else if (article.aiSummary && article.aiSummary.trim()) {
+          desc = article.aiSummary.trim();
+        } else if (article.content) {
+          const cleanText = article.content
+            .replace(/<[^>]+>/g, " ")
+            .replace(/&nbsp;/g, " ")
+            .replace(/&amp;/g, "&")
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/\s+/g, " ")
+            .trim();
+          desc = cleanText.length > 150 ? cleanText.substring(0, 150) + "..." : cleanText;
+        }
+
+        return {
+          image: getSafeImageUrl(article.thumbnail),
+          title: capitalizeFirstChar(article.title),
+          category: article.category?.name || "Premium Insight",
+          description: capitalizeFirstChar(desc),
+          link: `/news/${article.slug}`,
+        };
+      });
     }
     return [
       {
@@ -210,17 +230,19 @@ export default function NewsSlider() {
                 </div>
 
                 {/* 2. Heading Reservoir */}
-                <div className="min-h-0 lg:min-h-[170px] flex items-start mb-4 lg:mb-0">
-                  <h1 className="text-2xl md:text-4xl lg:text-[45px] font-black text-white leading-[1.3] md:leading-[1.25] tracking-tight line-clamp-3 py-2">
+                <div className="min-h-0 lg:min-h-[170px] flex items-start mb-4 lg:mb-3">
+                  <h1 className="text-2xl md:text-4xl lg:text-[45px] font-black text-white leading-[1.3] md:leading-[1.25] tracking-tight line-clamp-3 first-letter:uppercase">
                     {slides[current].title}
                   </h1>
                 </div>
 
                 {/* 3. Description Reservoir */}
                 <div className="min-h-0 lg:min-h-[80px] mb-2 lg:mb-6">
-                  <p className="text-gray-400 text-sm md:text-lg leading-relaxed font-medium max-w-xl mx-auto lg:mx-0 line-clamp-3">
-                    {slides[current].description}
-                  </p>
+                  {slides[current].description && (
+                    <p className="text-gray-400 text-sm md:text-lg leading-relaxed font-medium max-w-xl mx-auto lg:mx-0 line-clamp-3 first-letter:uppercase">
+                      {slides[current].description}
+                    </p>
+                  )}
                 </div>
 
                 {/* 4. PINNED BOTTOM ACTION GROUP */}

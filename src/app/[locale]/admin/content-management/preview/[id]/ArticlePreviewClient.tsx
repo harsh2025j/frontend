@@ -21,6 +21,7 @@ import { articleApi } from "@/data/services/article-service/article-service";
 import ArticleStats from "@/components/article/ArticleStats";
 import CommentSection from "@/components/article/CommentSection";
 import { sanitizeHtml } from "@/utils/sanitizeHtml";
+import { capitalizeFirstChar, capitalizeFirstCharInHtml } from "@/utils/textUtils";
 
 interface ArticlePreviewClientProps {
     article: Article;
@@ -155,15 +156,15 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
 
     const hasFullAccess = !article.isPaywalled || isPremium;
     const readTime = Math.ceil(article.content.replace(/<[^>]*>/g, "").split(/\s+/).length / 200);
-    const displayTitle = translatedData?.title || article.title;
-    const displayContent = translatedData?.content || article.content;
+    const displayTitle = capitalizeFirstChar(translatedData?.title || article.title);
+    const displayContent = capitalizeFirstCharInHtml(translatedData?.content || article.content);
 
     return (
         <div className="article-wrapper">
             <div>
                 {/* Title */}
                 <div className="mb-6">
-                    <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight font-georgia">{displayTitle}</h2>
+                    <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight font-georgia first-letter:uppercase word-justify text-justify [text-align-last:left] [text-justify:inter-word] tracking-tight break-words">{displayTitle}</h2>
 
                     {/* Author metadata */}
                     {(authorUsername || article.authorId) && article.authorId !== 'system-auto-bot' ? (
@@ -326,9 +327,9 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                 <button onClick={() => handleShare("email")} className="w-10 h-10 flex items-center justify-center rounded-full bg-[#dd4b39] text-white hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
                                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
                                 </button>
-                                
+
                                 <div className="w-px h-8 bg-gray-200 mx-1" />
-                                
+
                                 <button onClick={() => handleShare("copy")} className={`w-10 h-10 flex items-center justify-center rounded-full ${copied ? "bg-green-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"} transition-all duration-300 hover:-translate-y-1`}>
                                     {copied ? <Check size={18} /> : <Link2 size={18} />}
                                 </button>
@@ -397,7 +398,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                         }
                         .article-content .ql-align-center { text-align: center !important; }
                         .article-content .ql-align-right { text-align: right !important; }
-                        .article-content .ql-align-justify { text-align: justify !important; }
+                        .article-content .ql-align-justify { text-align: justify !important; text-justify: inter-word !important; text-align-last: left !important; }
                         
                         /* Fix massive list gaps caused by absolute positioning in globals.css */
                         .article-content ol, .article-content ul { padding-left: 3em !important; }
@@ -411,6 +412,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                             position: static !important;
                         }
 
+                        .article-content > :first-child::first-letter { text-transform: uppercase; }
                         @media (max-width: 640px) {
                             .article-content h1 { font-size: 1.75rem !important; line-height: 1.3 !important; margin-bottom: 0.75rem !important; }
                             .article-content h2 { font-size: 1.5rem !important; line-height: 1.3 !important; margin-bottom: 0.75rem !important; }
@@ -419,9 +421,9 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                             .article-content p, .article-content li, .article-content span { font-size: 1rem !important; line-height: 1.6 !important; }
                         }
                     `}</style>
-                    <div 
+                    <div
                         className="article-content"
-                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayContent) }} 
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayContent) }}
                     />
                     {!hasFullAccess && <PaywallOverlay isLoggedIn={!!user} t={t} />}
                 </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin, ShieldCheck } from 'lucide-react';
 
 export default function AcademyFooter() {
   return (
@@ -49,6 +49,12 @@ export default function AcademyFooter() {
             <ul className="space-y-3 text-sm text-blue-100/70">
               <li><Link href="/" className="hover:text-[#C9A227] transition-colors">Home</Link></li>
               <li><Link href="/courses" className="hover:text-[#C9A227] transition-colors">Courses</Link></li>
+              <li>
+                <Link href="/academy/certificates/verify" className="hover:text-[#C9A227] transition-colors flex items-center gap-1.5 text-white/90 font-medium">
+                  <ShieldCheck size={15} className="text-[#C9A227]" />
+                  <span>Verify Certificate</span>
+                </Link>
+              </li>
               <li><Link href="/courses/1" className="hover:text-[#C9A227] transition-colors">Internships</Link></li>
               <li><Link href="/about" className="hover:text-[#C9A227] transition-colors">About Us</Link></li>
               <li><Link href="/contact" className="hover:text-[#C9A227] transition-colors">Contact Us</Link></li>
@@ -58,6 +64,12 @@ export default function AcademyFooter() {
           <div>
             <h3 className="text-white font-serif font-bold mb-4">Resources</h3>
             <ul className="space-y-3 text-sm text-blue-100/70">
+              <li>
+                <Link href="/academy/certificates/verify" className="hover:text-[#C9A227] transition-colors flex items-center gap-1.5 font-medium">
+                  <ShieldCheck size={14} className="text-[#C9A227]" />
+                  <span>Verify Certificate</span>
+                </Link>
+              </li>
               <li><Link href="/" className="hover:text-[#C9A227] transition-colors">Events</Link></li>
               <li><Link href="/" className="hover:text-[#C9A227] transition-colors">Legal Updates</Link></li>
               <li><Link href="/" className="hover:text-[#C9A227] transition-colors">Study Materials</Link></li>
@@ -90,9 +102,14 @@ export default function AcademyFooter() {
           </div>
         </div>
         
-        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-sm text-blue-100/50">
+        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-sm text-blue-100/50 gap-4">
           <p>&copy; {new Date().getFullYear()} Sajjad Husain Legal Academy. All Rights Reserved.</p>
-          <div className="flex gap-4 mt-4 md:mt-0">
+          <div className="flex gap-4 items-center flex-wrap">
+            <Link href="/academy/certificates/verify" className="hover:text-[#C9A227] transition-colors flex items-center gap-1.5 text-xs text-white/80">
+              <ShieldCheck size={14} className="text-[#C9A227]" />
+              <span>Verify Certificate</span>
+            </Link>
+            <span className="hidden md:inline">|</span>
             <Link href="/privacy-policy" className="hover:text-[#C9A227] transition-colors">Privacy Policy</Link>
             <span className="hidden md:inline">|</span>
             <Link href="/terms" className="hover:text-[#C9A227] transition-colors">Terms & Conditions</Link>

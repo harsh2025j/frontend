@@ -24,6 +24,26 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     qualities: [75, 90, 100],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/certificates/verify',
+        destination: '/academy/certificates/verify',
+      },
+      {
+        source: '/:locale/certificates/verify',
+        destination: '/:locale/academy/certificates/verify',
+      },
+      {
+        source: '/certificates/verify/:id',
+        destination: '/academy/certificates/verify/:id',
+      },
+      {
+        source: '/:locale/certificates/verify/:id',
+        destination: '/:locale/academy/certificates/verify/:id',
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);

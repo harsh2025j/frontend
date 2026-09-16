@@ -1,18 +1,72 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Play, PlayCircle, CheckCircle2, Award, Clock, Flame, TrendingUp, CalendarDays, Loader2 } from 'lucide-react';
+import { Play, PlayCircle, CheckCircle2, Award, Clock, Flame, TrendingUp, CalendarDays, Loader2, Radio, ExternalLink, Calendar } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/data/redux/hooks';
 import { fetchMyEnrollments } from '@/data/features/academy/enrollments/enrollmentsThunks';
+import { courseApi } from '@/data/services/academy-service/course.service';
+import { certificateApi } from '@/data/services/academy-service/certificate.service';
+import { formatTime12HourIST } from '@/lib/utils';
 
 export default function DashboardOverview() {
   const dispatch = useAppDispatch();
   const { myEnrollments, isLoading } = useAppSelector(state => state.enrollments);
+  const [liveSessions, setLiveSessions] = useState<any[]>([]);
+  const [certificatesCount, setCertificatesCount] = useState<number>(0);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res: any = await certificateApi.mine();
+        const list = (res?.data ?? res) || [];
+        setCertificatesCount(Array.isArray(list) ? list.length : 0);
+      } catch {
+        setCertificatesCount(0);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     dispatch(fetchMyEnrollments());
   }, [dispatch]);
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        const res = await courseApi.fetchLiveSessions();
+        const data = res.data?.data || res.data || [];
+        setLiveSessions(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error("Error fetching live sessions for dashboard", e);
+      }
+    };
+    fetchSessions();
+  }, []);
+
+  // Filter only sessions belonging to courses the student is actually enrolled in
+  const enrolledCourseIds = new Set(myEnrollments.map((e) => e.courseId || e.course?.id));
+  const enrolledLiveSessions = liveSessions.filter((s) => enrolledCourseIds.has(s.courseId));
+
+  const currentlyLiveSession = enrolledLiveSessions.find((s) => s.liveData?.status === 'live');
+  const upcomingSessions = enrolledLiveSessions.filter((s) => {
+    const st = s.liveData?.status || 'scheduled';
+    return st === 'scheduled';
+  }).slice(0, 3);
+
+  const formatMonthDay = (dateStr?: string) => {
+    if (!dateStr) return { month: 'TBD', day: '--' };
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return { month: 'TBD', day: '--' };
+      return {
+        month: d.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+        day: d.getDate().toString()
+      };
+    } catch {
+      return { month: 'TBD', day: '--' };
+    }
+  };
 
   const activeCoursesCount = myEnrollments.length;
   const recentEnrollment = myEnrollments[0]; // Assuming sorted by latest
@@ -34,6 +88,35 @@ export default function DashboardOverview() {
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         </div>
       </div>
+
+      {/* Urgent Live Now Banner (Appears whenever any instructor starts a class) */}
+      {currentlyLiveSession && (
+        <div className="bg-gradient-to-r from-red-600 via-red-500 to-rose-600 text-white rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-5 animate-pulse border border-red-400">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 shadow-inner">
+              <Radio size={24} className="text-white animate-ping" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-black uppercase tracking-wider mb-1">
+                <span className="w-2 h-2 rounded-full bg-white animate-ping"></span> Live Class In Progress
+              </div>
+              <h3 className="font-black text-xl text-white">{currentlyLiveSession.title}</h3>
+              <p className="text-xs text-white/80 mt-0.5">{currentlyLiveSession.course?.title || "Your Enrolled Course"}</p>
+            </div>
+          </div>
+          <Link
+            href={
+              currentlyLiveSession.course?.slug
+                ? `/academy/dashboard/learn/${currentlyLiveSession.course.slug}`
+                : '/academy/dashboard/live-sessions'
+            }
+          >
+            <button className="bg-white text-red-600 hover:bg-white/95 px-7 py-3 rounded-xl font-extrabold shadow-lg hover:shadow-xl transition-all text-sm flex items-center gap-2 cursor-pointer shrink-0">
+              Join Live Classroom <ExternalLink size={16} />
+            </button>
+          </Link>
+        </div>
+      )}
 
       {/* Stats Grid - Premium Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -97,7 +180,9 @@ export default function DashboardOverview() {
           </div>
           <div>
             <p className="text-sm font-bold tracking-wide text-blue-200/50 uppercase mb-1">Certificates Earned</p>
-            <p className="text-4xl font-black text-white">1</p>
+            <Link href="/academy/dashboard/certificates" className="inline-block hover:opacity-80 transition">
+              <p className="text-4xl font-black text-white">{certificatesCount}</p>
+            </Link>
           </div>
         </div>
 
@@ -181,27 +266,47 @@ export default function DashboardOverview() {
               Upcoming Live Sessions
             </h3>
             <div className="space-y-4">
-              {[
-                { title: "BNS Definitions Discussion", time: "Today, 6:00 PM", tag: "Live Class" },
-                { title: "Doubt Clearing: Arrest Rules", time: "Tomorrow, 5:00 PM", tag: "Q&A" }
-              ].map((session, i) => (
-                <Link key={i} href="/dashboard/learn/criminal-law-package" className="flex gap-4 p-4 rounded-xl bg-[#f8f9fa] border border-[#122340]/5 hover:border-[#C9A227]/30 transition-colors group cursor-pointer block">
-                  <div className="w-12 h-12 rounded-lg bg-[#122340]/5 flex flex-col items-center justify-center shrink-0 border border-[#122340]/10">
-                    <span className="text-[10px] font-bold text-[#122340]/50 uppercase">Oct</span>
-                    <span className="text-lg font-extrabold text-[#122340] leading-none">1{4+i}</span>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-[#122340] text-sm mb-1 group-hover:text-[#C9A227] transition-colors">{session.title}</h4>
-                    <p className="text-xs font-semibold text-[#122340]/50 flex items-center gap-2">
-                      <Clock size={12} /> {session.time}
-                    </p>
-                  </div>
-                </Link>
-              ))}
+              {upcomingSessions.length === 0 ? (
+                <div className="text-center py-8 text-[#122340]/40 text-xs font-semibold">
+                  <Calendar size={28} className="mx-auto mb-2 opacity-30 text-[#122340]" />
+                  No upcoming live sessions right now.
+                </div>
+              ) : (
+                upcomingSessions.map((session) => {
+                  const dateInfo = formatMonthDay(session.liveData?.scheduledDate);
+                  const targetHref = session.course?.slug
+                    ? `/academy/dashboard/learn/${session.course.slug}`
+                    : '/academy/dashboard/live-sessions';
+
+                  return (
+                    <Link
+                      key={session.id}
+                      href={targetHref}
+                      className="flex gap-4 p-3.5 rounded-2xl bg-[#f8f9fa] border border-[#122340]/5 hover:border-[#C9A227]/40 hover:bg-white transition-all group cursor-pointer block shadow-sm"
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-[#122340]/5 flex flex-col items-center justify-center shrink-0 border border-[#122340]/10">
+                        <span className="text-[10px] font-extrabold text-[#C9A227] uppercase">{dateInfo.month}</span>
+                        <span className="text-base font-black text-[#122340] leading-none">{dateInfo.day}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-[#122340] text-sm mb-1 group-hover:text-[#C9A227] transition-colors truncate">
+                          {session.title}
+                        </h4>
+                        <p className="text-xs font-semibold text-[#122340]/50 flex items-center gap-1.5">
+                          <Clock size={12} className="text-[#C9A227]" />
+                          {formatTime12HourIST(session.liveData?.scheduledTime)} ({session.liveData?.durationMinutes || 60}m)
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })
+              )}
             </div>
-            <button className="w-full mt-6 py-3 rounded-xl font-bold text-[#122340] bg-[#f0f2f5] hover:bg-[#122340]/5 transition-colors text-xs uppercase tracking-widest">
-              View Calendar
-            </button>
+            <Link href="/academy/dashboard/live-sessions" className="block mt-6">
+              <button className="w-full py-3 rounded-xl font-bold text-[#122340] bg-[#f0f2f5] hover:bg-[#C9A227] hover:text-white transition-colors text-xs uppercase tracking-widest cursor-pointer shadow-sm">
+                View All Live Classes
+              </button>
+            </Link>
           </div>
 
         </div>

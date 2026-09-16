@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Search, Edit, Trash2, Eye, BookOpen, Loader2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, BookOpen, Loader2 } from "lucide-react";
 import { courseApi } from "@/data/services/academy-service/course.service";
 import toast from "react-hot-toast";
 
@@ -12,7 +12,6 @@ export default function AcademyCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [courseToDelete, setCourseToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCourses();
@@ -58,14 +57,17 @@ export default function AcademyCoursesPage() {
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Courses</h1>
           <p className="text-gray-500 text-sm mt-1">Manage your academy courses and curriculum.</p>
         </div>
-        <Link href="/admin/academy/courses/create">
-          <button className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2 shadow-sm">
-            <Plus size={18} /> Add New Course
-          </button>
+        <Link
+          href="/admin/academy/courses/create"
+          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md shadow-blue-500/10 transition"
+        >
+          <Plus size={18} />
+          <span>Add New Course</span>
         </Link>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Main Content Card */}
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
         {/* Toolbar */}
         <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
           <div className="relative w-full md:w-96">
@@ -130,25 +132,21 @@ export default function AcademyCoursesPage() {
                     </td>
                     <td className="p-4 text-right text-sm text-gray-900 font-bold">₹{course.price}</td>
                     <td className="p-4 text-center">
-                      <div className="flex justify-center items-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                        <button 
-                          onClick={() => setPreviewUrl(`/academy/courses/${course.slug || course.id}`)}
-                          className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" 
-                          title="Preview Course"
+                      <div className="flex justify-center items-center gap-2">
+                        <Link
+                          href={`/admin/academy/courses/${course.id}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition border border-blue-200 shadow-2xs"
+                          title="Manage Course"
                         >
-                          <Eye size={18} />
-                        </button>
-                        <Link href={`/admin/academy/courses/${course.id}`}>
-                          <button className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition" title="Manage Course">
-                            <Edit size={18} />
-                          </button>
+                          <Edit size={14} />
+                          <span>Manage Course</span>
                         </Link>
                         <button
                           onClick={() => setCourseToDelete(course.id)}
-                          className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
                           title="Delete Course"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -182,47 +180,6 @@ export default function AcademyCoursesPage() {
                 {isDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                 {isDeleting ? "Deleting..." : "Delete Course"}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Preview Modal */}
-      {previewUrl && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80">
-              <div className="flex items-center gap-2 text-gray-700">
-                <Eye size={18} className="text-blue-600" />
-                <h3 className="font-bold text-gray-900">Course Preview</h3>
-              </div>
-              <div className="flex gap-2">
-                <a 
-                  href={previewUrl} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                >
-                  Open in New Tab
-                </a>
-                <button 
-                  onClick={() => setPreviewUrl(null)}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg transition"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 bg-white relative">
-              {/* Optional: Add a subtle loading pulse behind the iframe */}
-              <div className="absolute inset-0 flex justify-center items-center -z-10">
-                <Loader2 className="animate-spin text-gray-300" size={32} />
-              </div>
-              <iframe 
-                src={previewUrl} 
-                className="w-full h-full border-0 relative z-10 bg-white"
-                title="Course Preview"
-              />
             </div>
           </div>
         </div>

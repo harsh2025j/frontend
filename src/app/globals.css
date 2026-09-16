@@ -254,10 +254,17 @@ body {
 }
 */
 
+.text-balance {
+  text-wrap: balance;
+}
+
+.word-justify {
+  text-align: justify;
+  text-justify: inter-word;
+  text-align-last: left;
+}
+
 /* @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
   .no-copy {
     -webkit-user-select: none;
     -moz-user-select: none;

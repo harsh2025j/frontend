@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "@/i18n/routing";
 import AdminNavbar from "./components/AdminNavbar";
 import AdminSidebar from "./components/AdminSidebar";
@@ -16,7 +16,16 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    if (typeof window !== "undefined") {
+      if (window.innerWidth < 1024) return false;
+      if (window.location.pathname.includes("/academy/certificates/templates/")) return false;
+    }
+    return true;
+  });
+
+  // Track previous path to collapse sidebar when entering template editor, and restore when leaving
+  const prevPathRef = useRef<string | null>(null);
 
   const { user: reduxUser, loading } = useProfileActions();
   const user = reduxUser as UserData;
@@ -75,16 +84,38 @@ export default function DashboardLayout({
     }
   }, [user, loading, router, pathname]);
 
+  // Auto-collapse sidebar when entering certificate template editor, and restore when leaving
+  useEffect(() => {
+    const isEditorPage = pathname.includes("/academy/certificates/templates/");
+    const wasEditorPage = prevPathRef.current?.includes("/academy/certificates/templates/") ?? false;
+
+    if (isEditorPage && (!wasEditorPage || prevPathRef.current === null)) {
+      // Just entered the template editor: collapse sidebar to maximize canvas workspace
+      setIsSidebarOpen(false);
+    } else if (!isEditorPage && wasEditorPage) {
+      // Navigated away / went back: restore sidebar on desktop screens
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(true);
+      }
+    }
+
+    prevPathRef.current = pathname;
+  }, [pathname]);
+
   useEffect(() => {
     const handleResize = () => {
+      const isEditorPage = pathname.includes("/academy/certificates/templates/");
       // On mobile/tablet (< 1024), default to closed
-      if (window.innerWidth < 1024) setIsSidebarOpen(false);
-      else setIsSidebarOpen(true);
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false);
+      } else if (!isEditorPage && prevPathRef.current !== null && !prevPathRef.current.includes("/academy/certificates/templates/")) {
+        setIsSidebarOpen(true);
+      }
     };
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [pathname]);
 
   if (!isAuthorized) {
     return (
@@ -120,7 +151,7 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onOpen={() => setIsSidebarOpen(true)} />
-      <div 
+      <div
         className={`flex flex-col flex-1 transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : "lg:ml-20"} ml-0`}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
