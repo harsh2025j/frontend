@@ -50,7 +50,7 @@ export default function AcademyFooter() {
               <li><Link href="/" className="hover:text-[#C9A227] transition-colors">Home</Link></li>
               <li><Link href="/courses" className="hover:text-[#C9A227] transition-colors">Courses</Link></li>
               <li>
-                <Link href="/academy/certificates/verify" className="hover:text-[#C9A227] transition-colors flex items-center gap-1.5 text-white/90 font-medium">
+                <Link href="/certificates/verify" className="hover:text-[#C9A227] transition-colors flex items-center gap-1.5 text-white/90 font-medium">
                   <ShieldCheck size={15} className="text-[#C9A227]" />
                   <span>Verify Certificate</span>
                 </Link>
@@ -65,7 +65,7 @@ export default function AcademyFooter() {
             <h3 className="text-white font-serif font-bold mb-4">Resources</h3>
             <ul className="space-y-3 text-sm text-blue-100/70">
               <li>
-                <Link href="/academy/certificates/verify" className="hover:text-[#C9A227] transition-colors flex items-center gap-1.5 font-medium">
+                <Link href="/certificates/verify" className="hover:text-[#C9A227] transition-colors flex items-center gap-1.5 font-medium">
                   <ShieldCheck size={14} className="text-[#C9A227]" />
                   <span>Verify Certificate</span>
                 </Link>
@@ -105,7 +105,7 @@ export default function AcademyFooter() {
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-sm text-blue-100/50 gap-4">
           <p>&copy; {new Date().getFullYear()} Sajjad Husain Legal Academy. All Rights Reserved.</p>
           <div className="flex gap-4 items-center flex-wrap">
-            <Link href="/academy/certificates/verify" className="hover:text-[#C9A227] transition-colors flex items-center gap-1.5 text-xs text-white/80">
+            <Link href="/certificates/verify" className="hover:text-[#C9A227] transition-colors flex items-center gap-1.5 text-xs text-white/80">
               <ShieldCheck size={14} className="text-[#C9A227]" />
               <span>Verify Certificate</span>
             </Link>

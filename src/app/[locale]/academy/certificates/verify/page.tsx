@@ -203,12 +203,12 @@ function ThreeBoxSegmentedInput({
   const formattedDisplay = [part1, part2, part3].filter(Boolean).join("-");
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* 3-Box Segmented Inputs Container: [ SHLA (4) ] - [ TES (3) ] - [ 9GDB4C (6) ] */}
-      <div className="flex items-center justify-center gap-1.5 sm:gap-3 p-3.5 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200">
+      <div className="flex items-center justify-center gap-1.5 sm:gap-2.5 p-2 sm:p-3 rounded-xl bg-slate-50/80 border border-slate-200">
 
         {/* Box 1: Prefix (strictly 4 chars, e.g. SHLA) */}
-        <div className="flex-1 max-w-[110px] sm:max-w-[140px]">
+        <div className="flex-1 max-w-[100px] sm:max-w-[120px]">
           <input
             ref={ref1}
             type="text"
@@ -218,7 +218,7 @@ function ThreeBoxSegmentedInput({
             onPaste={handlePaste}
             placeholder="SHLA"
             maxLength={4}
-            className="w-full text-center py-3.5 sm:py-4 px-2 sm:px-3 rounded-2xl border-2 border-slate-200 focus:border-[#C9A227] focus:ring-4 focus:ring-[#C9A227]/15 focus:bg-white bg-white font-mono font-black text-base sm:text-xl md:text-2xl text-[#122340] placeholder:text-slate-300 placeholder:font-bold tracking-wider uppercase transition-all shadow-xs outline-none"
+            className="w-full text-center py-2 sm:py-2.5 px-1.5 sm:px-2 rounded-xl border-2 border-slate-200 focus:border-[#C9A227] focus:ring-2 focus:ring-[#C9A227]/20 focus:bg-white bg-white font-mono font-bold text-base sm:text-lg md:text-xl text-[#122340] placeholder:text-slate-300 tracking-wider uppercase transition-all outline-none"
             autoCapitalize="characters"
             autoCorrect="off"
             spellCheck="false"
@@ -227,12 +227,12 @@ function ThreeBoxSegmentedInput({
         </div>
 
         {/* Dash 1 */}
-        <div className="flex items-center justify-center select-none text-slate-400 font-mono font-black text-2xl sm:text-3xl px-0.5">
+        <div className="flex items-center justify-center select-none text-slate-400 font-mono font-bold text-xl px-0.5">
           -
         </div>
 
         {/* Box 2: Course / Category Code (strictly 3 chars, e.g. TES) */}
-        <div className="flex-1 max-w-[95px] sm:max-w-[125px]">
+        <div className="flex-1 max-w-[85px] sm:max-w-[105px]">
           <input
             ref={ref2}
             type="text"
@@ -242,7 +242,7 @@ function ThreeBoxSegmentedInput({
             onPaste={handlePaste}
             placeholder="TES"
             maxLength={3}
-            className="w-full text-center py-3.5 sm:py-4 px-2 sm:px-3 rounded-2xl border-2 border-slate-200 focus:border-[#C9A227] focus:ring-4 focus:ring-[#C9A227]/15 focus:bg-white bg-white font-mono font-black text-base sm:text-xl md:text-2xl text-[#122340] placeholder:text-slate-300 placeholder:font-bold tracking-wider uppercase transition-all shadow-xs outline-none"
+            className="w-full text-center py-2 sm:py-2.5 px-1.5 sm:px-2 rounded-xl border-2 border-slate-200 focus:border-[#C9A227] focus:ring-2 focus:ring-[#C9A227]/20 focus:bg-white bg-white font-mono font-bold text-base sm:text-lg md:text-xl text-[#122340] placeholder:text-slate-300 tracking-wider uppercase transition-all outline-none"
             autoCapitalize="characters"
             autoCorrect="off"
             spellCheck="false"
@@ -250,12 +250,12 @@ function ThreeBoxSegmentedInput({
         </div>
 
         {/* Dash 2 */}
-        <div className="flex items-center justify-center select-none text-slate-400 font-mono font-black text-2xl sm:text-3xl px-0.5">
+        <div className="flex items-center justify-center select-none text-slate-400 font-mono font-bold text-xl px-0.5">
           -
         </div>
 
         {/* Box 3: Unique Identifier (strictly 6 chars, e.g. 9GDB4C) */}
-        <div className="flex-1 max-w-[145px] sm:max-w-[185px]">
+        <div className="flex-1 max-w-[125px] sm:max-w-[155px]">
           <input
             ref={ref3}
             type="text"
@@ -265,7 +265,7 @@ function ThreeBoxSegmentedInput({
             onPaste={handlePaste}
             placeholder="9GDB4C"
             maxLength={6}
-            className="w-full text-center py-3.5 sm:py-4 px-2 sm:px-3 rounded-2xl border-2 border-slate-200 focus:border-[#C9A227] focus:ring-4 focus:ring-[#C9A227]/15 focus:bg-white bg-white font-mono font-black text-base sm:text-xl md:text-2xl text-[#122340] placeholder:text-slate-300 placeholder:font-bold tracking-wider uppercase transition-all shadow-xs outline-none"
+            className="w-full text-center py-2 sm:py-2.5 px-1.5 sm:px-2 rounded-xl border-2 border-slate-200 focus:border-[#C9A227] focus:ring-2 focus:ring-[#C9A227]/20 focus:bg-white bg-white font-mono font-bold text-base sm:text-lg md:text-xl text-[#122340] placeholder:text-slate-300 tracking-wider uppercase transition-all outline-none"
             autoCapitalize="characters"
             autoCorrect="off"
             spellCheck="false"
@@ -277,9 +277,9 @@ function ThreeBoxSegmentedInput({
       <div className="flex items-center justify-between text-xs px-1 text-slate-500">
         <div>
           {hasContent ? (
-            <span className="font-mono text-[12px] font-bold text-slate-700">
+            <span className="font-mono text-[11px] font-bold text-slate-700">
               Certificate ID:{" "}
-              <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+              <span className="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
                 {formattedDisplay}
               </span>
             </span>
@@ -294,9 +294,9 @@ function ThreeBoxSegmentedInput({
           <button
             type="button"
             onClick={clearAll}
-            className="text-red-600 hover:text-red-700 font-semibold flex items-center gap-1 cursor-pointer transition-colors text-xs"
+            className="text-red-600 hover:text-red-700 font-semibold flex items-center gap-1 cursor-pointer transition-colors text-[11px]"
           >
-            <RotateCcw size={12} /> Clear
+            <RotateCcw size={11} /> Clear
           </button>
         )}
       </div>
@@ -335,24 +335,24 @@ function VerifyCertificateContent() {
   const isIdComplete = certId.trim().length === 15 && certId.split("-").length === 3;
 
   return (
-    <div className="h-[calc(100dvh-64px)] max-h-[calc(100dvh-64px)] w-full overflow-y-auto overflow-x-hidden flex flex-col justify-between items-center bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9] to-[#e2e8f0] px-4 py-3 sm:py-4">
+    <div className="min-h-[calc(100vh-64px)] w-full flex flex-col justify-center items-center bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9] to-[#e2e8f0] px-4 py-2 sm:py-3">
       
-      {/* Micro top header space */}
-      <div className="w-full max-w-xl text-center py-1 text-slate-400 text-xs font-semibold shrink-0 select-none">
+      {/* Micro top header */}
+      <div className="w-full max-w-lg text-center mb-2 text-slate-400 text-[11px] font-semibold shrink-0 select-none">
         Sajjad Husain Legal Academy · Credential Verification
       </div>
 
-      <div className="max-w-xl w-full my-auto bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300">
+      <div className="max-w-lg w-full bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
         {/* Header Banner */}
-        <div className="bg-gradient-to-br from-[#0a1628] via-[#122340] to-[#1e3a5f] p-5 sm:p-6 text-center text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#0a1628] via-[#122340] to-[#1e3a5f] px-5 py-3.5 sm:py-4 text-center text-white relative overflow-hidden">
           <div className="absolute -right-16 -top-16 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
           <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
 
-          <div className="inline-flex items-center justify-center p-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 mb-2.5 shadow-inner">
-            <ShieldCheck size={28} className="text-[#C9A227]" />
+          <div className="inline-flex items-center justify-center p-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 mb-1.5 shadow-inner">
+            <ShieldCheck size={24} className="text-[#C9A227]" />
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-serif font-extrabold tracking-tight mb-1">
+          <h1 className="text-lg sm:text-xl font-serif font-extrabold tracking-tight mb-0.5">
             Verify Certificate
           </h1>
           <p className="text-blue-100/75 text-xs max-w-sm mx-auto leading-relaxed">
@@ -361,10 +361,10 @@ function VerifyCertificateContent() {
         </div>
 
         {/* Form Body */}
-        <div className="p-4 sm:p-6 space-y-4">
-          <form onSubmit={handleVerify} className="space-y-4">
+        <div className="p-4 sm:p-5 space-y-3">
+          <form onSubmit={handleVerify} className="space-y-3">
             <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-2">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                 Certificate ID
               </label>
 
@@ -375,7 +375,7 @@ function VerifyCertificateContent() {
                 initialValue={certId}
               />
 
-              <p className="text-[11px] text-slate-500 mt-2 flex items-center gap-1.5">
+              <p className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#C9A227] shrink-0" />
                 The Certificate ID is found at the bottom right of the document.
               </p>
@@ -384,36 +384,36 @@ function VerifyCertificateContent() {
             <button
               type="submit"
               disabled={isSubmitting || !isIdComplete}
-              className="w-full bg-[#122340] hover:bg-[#0a1628] text-white py-3.5 rounded-2xl font-bold text-sm shadow-md hover:shadow-lg active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 group cursor-pointer"
+              className="w-full bg-[#122340] hover:bg-[#0a1628] text-white py-2.5 sm:py-3 rounded-xl font-bold text-sm shadow hover:shadow-md active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 group cursor-pointer"
             >
               <span>{isSubmitting ? "Verifying Record…" : "Verify Certificate"}</span>
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
 
           {/* Value Props & Trust Badges */}
-          <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100">
-            <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50/70 border border-slate-100">
-              <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+          <div className="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-100">
+            <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-50/70 border border-slate-100">
+              <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
               <div className="min-w-0">
-                <h4 className="text-[11px] font-bold text-slate-800 truncate">Instant Check</h4>
-                <p className="text-[10px] text-slate-500 truncate">Registry direct</p>
+                <h4 className="text-[10px] font-bold text-slate-800 truncate">Instant Check</h4>
+                <p className="text-[9px] text-slate-500 truncate">Registry direct</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50/70 border border-slate-100">
-              <Award size={16} className="text-[#C9A227] shrink-0" />
+            <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-50/70 border border-slate-100">
+              <Award size={15} className="text-[#C9A227] shrink-0" />
               <div className="min-w-0">
-                <h4 className="text-[11px] font-bold text-slate-800 truncate">Tamper-Proof</h4>
-                <p className="text-[10px] text-slate-500 truncate">15-char hash</p>
+                <h4 className="text-[10px] font-bold text-slate-800 truncate">Tamper-Proof</h4>
+                <p className="text-[9px] text-slate-500 truncate">15-char hash</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50/70 border border-slate-100">
-              <FileCheck2 size={16} className="text-blue-600 shrink-0" />
+            <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-50/70 border border-slate-100">
+              <FileCheck2 size={15} className="text-blue-600 shrink-0" />
               <div className="min-w-0">
-                <h4 className="text-[11px] font-bold text-slate-800 truncate">Original PDF</h4>
-                <p className="text-[10px] text-slate-500 truncate">Official replica</p>
+                <h4 className="text-[10px] font-bold text-slate-800 truncate">Original PDF</h4>
+                <p className="text-[9px] text-slate-500 truncate">Official replica</p>
               </div>
             </div>
           </div>
@@ -430,7 +430,7 @@ function VerifyCertificateContent() {
       </div>
 
       {/* Micro Institutional Footer Note */}
-      <div className="w-full text-center text-[11px] text-slate-400 py-1 shrink-0 select-none">
+      <div className="w-full text-center text-[10px] sm:text-[11px] text-slate-400 mt-2 shrink-0 select-none">
         Official Institutional Registry · Cryptographically Authenticated · Sajjad Husain Legal Academy
       </div>
     </div>
