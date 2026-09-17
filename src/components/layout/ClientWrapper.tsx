@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname } from "@/i18n/routing";
-import { HomeDataProvider } from "@/context/HomeDataContext";
 import HeaderNew from "@/components/layout/HeaderNew";
 
 // import Header from "@/components/layout/Header";
@@ -109,6 +108,7 @@ export default function ClientLayout({
 
   const isHiddenLayout =
     isAcademySubdomain ||
+    (typeof window !== 'undefined' && window.location.hostname.startsWith('academy.')) ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/server-error") ||
@@ -124,7 +124,7 @@ export default function ClientLayout({
     pathname.startsWith("/messages");
 
   return (
-    <HomeDataProvider data={initialHomeData}>
+    <>
       <HeaderNew initialCategories={initialCategories} />
       <AdPopup slotId="HOME_POPUP" />
 
@@ -132,7 +132,6 @@ export default function ClientLayout({
         {children}
       </div>
       {!hiddenFooter && <Footer />}
-    </HomeDataProvider>
-
+    </>
   );
 }

@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';
+// Revalidate sitemap index every 6 hours (21600 seconds) on Vercel Edge CDN
+export const revalidate = 21600;
 
 const API_BASE = 'https://api.sajjadhusainlawassociates.com';
-const LIMIT = 50000;
+const LIMIT = 2000;
 const MAX_SITEMAPS = { articles: 10000, judgments: 10000, cases: 10000, tags: 7000, categories: 2000 };
 
 export async function GET() {
@@ -22,7 +23,9 @@ export async function GET() {
 
   for (const ep of endpoints) {
     try {
-      const res = await fetch(`${API_BASE}${ep.path}?limit=${LIMIT}`);
+      const res = await fetch(`${API_BASE}${ep.path}?limit=${LIMIT}`, {
+        next: { revalidate: 21600 },
+      });
       if (res.ok) {
         const json = await res.json();
         const responseData = json.data || {};
@@ -41,5 +44,10 @@ export async function GET() {
   }
 
   xml += '\n</sitemapindex>';
-  return new NextResponse(xml, { headers: { 'Content-Type': 'text/xml' } });
+  return new NextResponse(xml, {
+    headers: {
+      'Content-Type': 'text/xml',
+      'Cache-Control': 'public, max-age=3600, s-maxage=21600, stale-while-revalidate=86400',
+    },
+  });
 }

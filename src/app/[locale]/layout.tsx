@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { Geist, Geist_Mono, Merriweather, Unna } from "next/font/google";
 import "../globals.css";
 import ClientLayout from "@/components/layout/ClientWrapper";
@@ -136,7 +135,7 @@ async function getCategories() {
       headers: {
         // "ngrok-skip-browser-warning": "true",
       },
-      next: { revalidate: 3600 }
+      next: { revalidate: 86400 } // Cache categories for 24 hours on Edge CDN
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -147,29 +146,6 @@ async function getCategories() {
   }
 }
 
-async function getArticles(params: any = {}) {
-  try {
-    const queryParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) queryParams.append(key, String(value));
-    });
-
-    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ARTICLE.FETCH_ALL}?${queryParams.toString()}`, {
-      headers: {
-        // "ngrok-skip-browser-warning": "true",
-      },
-      next: { revalidate: 60 } // 0 means do not cache, so it updates instantly
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data.data) ? data.data : [];
-  } catch (e) {
-    console.error("Failed to fetch articles on server:", e);
-    return [];
-  }
-}
-
-
 export default async function RootLayout({
   children,
   params
@@ -179,28 +155,7 @@ export default async function RootLayout({
 }) {
   const { locale } = await params;
   const messages = await getMessages();
-  const headersList = await headers();
-  const isAcademySubdomain = headersList.get('x-academy-subdomain') === 'true';
-
-  // Parallel fetch for speed
-  const [categories, latestArticles, financeArticles, legalArticles, hindiArticles, judgmentsArticles, bareActsArticles] = await Promise.all([
-    getCategories(),
-    getArticles({ limit: 8, status: 'published' }), // For NewsSlider and Latest News
-    getArticles({ category: "finance-articles", limit: 10, status: 'published' }),
-    getArticles({ category: "legal-articles", limit: 10, status: 'published' }),
-    getArticles({ category: "hindi-news", limit: 4, status: 'published' }),
-    getArticles({ category: "judgments", limit: 6, status: 'published' }),
-    getArticles({ category: "bare-acts", limit: 8, status: 'published' }),
-  ]);
-
-  const initialHomeData = {
-    latestArticles,
-    financeArticles,
-    legalArticles,
-    hindiArticles,
-    judgmentsArticles,
-    bareActsArticles
-  };
+  const categories = await getCategories();
 
   const siteUrl = "https://www.sajjadhusainlawassociates.com";
   const siteSearchJsonLd = {
@@ -259,8 +214,6 @@ export default async function RootLayout({
               <AdProvider>
                 <ClientLayout
                   initialCategories={categories}
-                  initialHomeData={initialHomeData}
-                  isAcademySubdomain={isAcademySubdomain}
                 >
                   {children}
                 </ClientLayout>

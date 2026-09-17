@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';
+// Revalidate sub-sitemaps every 6 hours (21600 seconds) on Vercel Edge CDN
+export const revalidate = 21600;
 
 const API_BASE = 'https://api.sajjadhusainlawassociates.com';
-const LIMIT = 50000;
+const LIMIT = 2000;
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const SITE_URL = 'https://www.sajjadhusainlawassociates.com';
@@ -47,7 +48,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       xml += `\n  <url>\n    <loc>${url}</loc>\n    <changefreq>${isHome ? 'daily' : 'weekly'}</changefreq>\n    <priority>${isHome ? '1.0' : '0.8'}</priority>\n  </url>`;
     }
     xml += '\n</urlset>';
-    return new NextResponse(xml, { headers: { 'Content-Type': 'text/xml' } });
+    return new NextResponse(xml, {
+      headers: {
+        'Content-Type': 'text/xml',
+        'Cache-Control': 'public, max-age=3600, s-maxage=21600, stale-while-revalidate=86400',
+      },
+    });
   }
 
   const [type, pageStr] = rawId.split('-');
@@ -69,7 +75,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!endpointPath) return new NextResponse('Not found', { status: 404 });
 
   try {
-    const res = await fetch(`${API_BASE}${endpointPath}?page=${page}&limit=${LIMIT}`);
+    const res = await fetch(`${API_BASE}${endpointPath}?page=${page}&limit=${LIMIT}`, {
+      next: { revalidate: 21600 },
+    });
     if (!res.ok) return new NextResponse('Error fetching data', { status: 500 });
 
     const json = await res.json();
@@ -95,7 +103,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
     xml += '\n</urlset>';
 
-    return new NextResponse(xml, { headers: { 'Content-Type': 'text/xml' } });
+    return new NextResponse(xml, {
+      headers: {
+        'Content-Type': 'text/xml',
+        'Cache-Control': 'public, max-age=3600, s-maxage=21600, stale-while-revalidate=86400',
+      },
+    });
   } catch (e) {
     return new NextResponse('Error', { status: 500 });
   }

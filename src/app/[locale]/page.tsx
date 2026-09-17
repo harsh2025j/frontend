@@ -1,197 +1,53 @@
-"use client"
-import { useTranslations } from "next-intl";
-import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/data/redux/store";
-import { isAdmin as checkIsAdmin } from "@/utils/permissions";
-import CategorySection from "@/components/home/CategorySection";
-import NewsSlider from "@/components/home/NewsSlider";
-import Stores from "@/components/home/Stores";
-import { AdBanner, AdSidebar, useAdvertisement, useSlotVisibility } from "@/components/ads/StandardAds";
-import { useDocTitle } from "@/hooks/useDocTitle";
+import HomeClient from "./HomeClient";
+import { HomeDataProvider } from "@/context/HomeDataContext";
+import { API_BASE_URL, API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
 
-export default function Home() {
-  useDocTitle("Sajjad Husain Law Associates");
-  const t = useTranslations('Home');
+// Cache homepage at Edge CDN for 5 minutes (300 seconds)
+// This eliminates repeated serverless executions on the homepage while keeping content fresh
+export const revalidate = 300;
 
-  // Ad Sidebar Visibility Logic
-  const { currentSubscription } = useSelector((state: RootState) => state.subscription);
-  const { user } = useSelector((state: RootState) => state.auth);
-  const isPremiumOrAdmin = currentSubscription?.status === 'active' || checkIsAdmin(user as any);
+async function getArticles(params: Record<string, any> = {}) {
+  try {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) queryParams.append(key, String(value));
+    });
 
-  const { ad: sidebar1, loading: loading1 } = useAdvertisement("HOME_SIDEBAR_1");
-  const { ad: sidebar2, loading: loading2 } = useAdvertisement("HOME_SIDEBAR_2");
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ARTICLE.FETCH_ALL}?${queryParams.toString()}`, {
+      next: { revalidate: 300 }
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data.data) ? data.data : [];
+  } catch (e) {
+    console.error("Failed to fetch articles on server for home:", e);
+    return [];
+  }
+}
 
-  const { isSlotEnabled: sidebar1Enabled, settingsLoading: settingsLoading1 } = useSlotVisibility("HOME_SIDEBAR_1");
-  const { isSlotEnabled: sidebar2Enabled, settingsLoading: settingsLoading2 } = useSlotVisibility("HOME_SIDEBAR_2");
+export default async function Home() {
+  // Parallel fetch strictly for the Homepage
+  const [latestArticles, financeArticles, legalArticles, hindiArticles, judgmentsArticles, bareActsArticles] = await Promise.all([
+    getArticles({ limit: 8, status: 'published' }),
+    getArticles({ category: "finance-articles", limit: 10, status: 'published' }),
+    getArticles({ category: "legal-articles", limit: 10, status: 'published' }),
+    getArticles({ category: "hindi-news", limit: 4, status: 'published' }),
+    getArticles({ category: "judgments", limit: 6, status: 'published' }),
+    getArticles({ category: "bare-acts", limit: 8, status: 'published' }),
+  ]);
 
-  const showSidebar = !isPremiumOrAdmin && (
-    (sidebar1 && sidebar1.isActive) ||
-    (sidebar2 && sidebar2.isActive) ||
-    sidebar1Enabled ||
-    sidebar2Enabled ||
-    loading1 ||
-    loading2 ||
-    settingsLoading1 ||
-    settingsLoading2
-  );
+  const initialHomeData = {
+    latestArticles,
+    financeArticles,
+    legalArticles,
+    hindiArticles,
+    judgmentsArticles,
+    bareActsArticles
+  };
 
   return (
-    <>
-      <div className="bg-gray-50 min-h-screen">
-        {/* Hero Section - NewsSlider */}
-        <NewsSlider />
-
-        {/* Stores Section */}
-        <Stores />
-
-        {/* Top Banner Ads */}
-        <div className="container mx-auto px-4 py-8 space-y-4">
-          {/* <AdBanner slotId="HOME_BANNER_TOP_1" /> */}
-          <AdBanner slotId="HOME_BANNER_TOP_2" />
-        </div>
-
-        {/* Supreme Court Section */}
-        <CategorySection
-          title={t('supreme_court')}
-          slug="supreme-court"
-          layout="featured"
-          limit={5}
-        />
-
-        {/* High Court Section */}
-        <CategorySection
-          title={t('high_court')}
-          slug="high-court"
-          layout="list"
-          limit={6}
-        />
-
-        {/* Allahabad High Court Section */}
-        <CategorySection
-          title={t('allahabad_high_court') || "Allahabad High Court"}
-          slug="allahabad-high-court"
-          layout="grid"
-          limit={8}
-        />
-
-        {/* Delhi High Court Section */}
-        <CategorySection
-          title={t('delhi_high_court') || "Delhi High Court"}
-          slug="delhi-high-court"
-          layout="grid"
-          limit={8}
-        />
-
-        {/* Bombay High Court Section */}
-        <CategorySection
-          title={t('bombay_high_court') || "Bombay High Court"}
-          slug="bombay-high-court"
-          layout="grid"
-          limit={8}
-        />
-
-        {/* Kerala High Court Section */}
-        <CategorySection
-          title={t('kerala_high_court') || "Kerala High Court"}
-          slug="kerala-high-court"
-          layout="grid"
-          limit={8}
-        />
-
-        {/* Andhra Pradesh High Court Section */}
-        <CategorySection
-          title={t('andhra_pradesh_high_court') || "Andhra Pradesh High Court"}
-          slug="andhra-pradesh-high-court"
-          layout="grid"
-          limit={8}
-        />
-
-        {/* Main Content Grid with Sidebar */}
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content Column */}
-            <div className={`space-y-12 ${showSidebar ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
-              <CategorySection
-                title={t('business')}
-                slug="business-article"
-                layout="grid"
-                limit={8}
-              />
-
-              <CategorySection
-                title={t('crime')}
-                slug="crime-news"
-                layout="list"
-                limit={6}
-              />
-            </div>
-
-            {/* Sidebar Column */}
-            {showSidebar && (
-              <div className="space-y-6 lg:col-span-1">
-                <div className="sticky top-24 space-y-6">
-                  {/* Sponsored Ad */}
-                  <AdSidebar slotId="HOME_SIDEBAR_1" withContainer />
-
-                  {/* Trending Ad */}
-                  <AdSidebar slotId="HOME_SIDEBAR_2" withContainer />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-
-
-        {/* Judgments Section */}
-        <CategorySection
-          title={t('judgments')}
-          slug="judgments"
-          layout="grid"
-          limit={8}
-          page={2}
-        />
-
-        {/* Hindi News Section */}
-        <CategorySection
-          title={t('hindi_news')}
-          slug="hindi-news"
-          layout="slider"
-          limit={8}
-          page={2}
-        />
-
-        {/* More Latest News Section */}
-        <CategorySection
-          title={t('more_latest_news')}
-          slug="latest-news"
-          layout="grid"
-          limit={8}
-          showViewMoreButton={true}
-          page={2}
-        />
-
-        {/* More Legal News Section */}
-        <CategorySection
-          title={t('more_legal_news') || "More Legal News"}
-          slug="legal-articles"
-          layout="grid"
-          limit={8}
-          showViewMoreButton={true}
-          page={2}
-        />
-
-        {/* More Judgments Section */}
-        <CategorySection
-          title={t('more_judgments') || "More Judgments"}
-          slug="judgments"
-          layout="grid"
-          limit={8}
-          showViewMoreButton={true}
-          page={3}
-        />
-      </div>
-    </>
+    <HomeDataProvider data={initialHomeData}>
+      <HomeClient />
+    </HomeDataProvider>
   );
 }
