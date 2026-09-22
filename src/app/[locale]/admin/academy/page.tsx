@@ -13,8 +13,8 @@ export default function AcademyAdminDashboard() {
   const [statsData, setStatsData] = useState({
     totalStudents: 0,
     activeCourses: 0,
-    certificatesIssued: 450, // MOCK
-    revenue: "₹00000", // MOCK
+    certificatesIssued: 0,
+    revenue: "₹0",
   });
   const [recentEnrollments, setRecentEnrollments] = useState<any[]>([]);
 
@@ -63,10 +63,34 @@ export default function AcademyAdminDashboard() {
         console.error(err);
       }
 
+      // Fetch real MTD revenue from paid course payments
+      let mtdRevenue = 0;
+      let certificatesCount = 0;
+      try {
+        const now = new Date();
+        const paymentsRes = await apiClient.get('/payments/courses/all', { params: { limit: 1000, status: 'paid' } });
+        const rawPayments = paymentsRes.data?.data || paymentsRes.data || [];
+        const paymentsArr = Array.isArray(rawPayments) ? rawPayments : [];
+        paymentsArr.forEach((p: any) => {
+          if (p.status === 'paid' || p.status === 'COMPLETED') {
+            const pd = new Date(p.createdAt);
+            if (pd.getFullYear() === now.getFullYear() && pd.getMonth() === now.getMonth()) {
+              mtdRevenue += Number(p.amount) || 0;
+            }
+          }
+        });
+        // Certificates ≈ paid payments (1 per paid enrollment)
+        certificatesCount = paymentsArr.filter((p: any) => p.status === 'paid' || p.status === 'COMPLETED').length;
+      } catch (err) {
+        console.error('Failed to fetch revenue data', err);
+      }
+
       setStatsData(prev => ({
         ...prev,
         totalStudents,
-        activeCourses: activeCoursesCount
+        activeCourses: activeCoursesCount,
+        revenue: `₹${mtdRevenue.toLocaleString()}`,
+        certificatesIssued: certificatesCount,
       }));
       setRecentEnrollments(recent);
     } catch (e) {

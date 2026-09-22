@@ -48,7 +48,7 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
   const [copyingImage, setCopyingImage] = useState(false);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const verifyUrl = `${origin}/academy/certificates/verify/${cert.certificateId}`;
+  const verifyUrl = `${origin}/certificates/verify/${cert.certificateId}`;
 
   // Fetch or generate image URL if not already present on the certificate
   useEffect(() => {
@@ -96,8 +96,16 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
     setDownloadingPdf(true);
     const filename = formatCertificateFilename(cert.studentName, cert.courseName, 'pdf');
     try {
-      const res = await fetch(cert.pdfUrl);
-      if (!res.ok) throw new Error('Failed to fetch certificate PDF');
+      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(cert.pdfUrl)}&filename=${encodeURIComponent(filename)}`;
+      let res: Response;
+      try {
+        res = await fetch(cert.pdfUrl, { mode: 'cors' });
+        if (!res.ok) throw new Error('Direct fetch failed');
+      } catch {
+        res = await fetch(proxyUrl);
+        if (!res.ok) throw new Error(`Download failed (${res.status})`);
+      }
+
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -110,12 +118,14 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
       toast.success('Certificate PDF downloaded');
     } catch (err) {
       console.error('PDF download error:', err);
+      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(cert.pdfUrl)}&filename=${encodeURIComponent(filename)}`;
       const a = document.createElement('a');
-      a.href = cert.pdfUrl;
-      a.setAttribute('download', filename);
+      a.href = proxyUrl;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      toast('Starting PDF download...', { icon: '📥' });
     } finally {
       setDownloadingPdf(false);
     }
@@ -136,8 +146,16 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
 
       if (!targetImg) throw new Error('Image URL is not available');
 
-      const res = await fetch(targetImg);
-      if (!res.ok) throw new Error('Failed to download image file');
+      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(targetImg)}&filename=${encodeURIComponent(filename)}`;
+      let res: Response;
+      try {
+        res = await fetch(targetImg, { mode: 'cors' });
+        if (!res.ok) throw new Error('Direct fetch failed');
+      } catch {
+        res = await fetch(proxyUrl);
+        if (!res.ok) throw new Error(`Download failed (${res.status})`);
+      }
+
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -149,7 +167,27 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
       window.URL.revokeObjectURL(url);
       toast.success('Certificate image downloaded');
     } catch (err: any) {
-      console.error('Image download error:', err);
+      // Direct anchor fallback
+      try {
+        let targetImg = imageUrl;
+        if (!targetImg) {
+          const res = await certificateApi.getImageUrl(cert.certificateId);
+          targetImg = res?.imageUrl;
+        }
+        if (targetImg) {
+          const proxyUrl = `/api/academy/download?url=${encodeURIComponent(targetImg)}&filename=${encodeURIComponent(filename)}`;
+          const a = document.createElement('a');
+          a.href = proxyUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          toast('Starting image download...', { icon: '📥' });
+          return;
+        }
+      } catch (proxyErr) {
+        console.error('Image proxy download error:', proxyErr);
+      }
       toast.error(err?.message || 'Could not download certificate image');
     } finally {
       setDownloadingImage(false);
@@ -169,19 +207,52 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
 
       if (!targetImg) throw new Error('Image not available');
 
-      const response = await fetch(targetImg);
-      const blob = await response.blob();
+      // 1. Fetch image blob (try direct CORS fetch first, fallback to download proxy to bypass CORS)
+      let rawBlob: Blob;
+      try {
+        const response = await fetch(targetImg, { mode: 'cors' });
+        if (!response.ok) throw new Error('Direct fetch failed');
+        rawBlob = await response.blob();
+      } catch {
+        const proxyUrl = `/api/academy/download?url=${encodeURIComponent(targetImg)}&filename=cert.png`;
+        const proxyRes = await fetch(proxyUrl);
+        if (!proxyRes.ok) throw new Error('Failed to fetch certificate image');
+        rawBlob = await proxyRes.blob();
+      }
 
-      // Ensure blob is image/png
-      const pngBlob = blob.type === 'image/png' ? blob : new Blob([blob], { type: 'image/png' });
+      // 2. Convert to a genuine PNG blob via Canvas (Browser Clipboard API strictly requires true PNG format)
+      let pngBlob: Blob | null = null;
+      try {
+        if (typeof createImageBitmap !== 'undefined') {
+          const bitmap = await createImageBitmap(rawBlob);
+          const canvas = document.createElement('canvas');
+          canvas.width = bitmap.width;
+          canvas.height = bitmap.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(bitmap, 0, 0);
+            pngBlob = await new Promise<Blob | null>((resolve) =>
+              canvas.toBlob(resolve, 'image/png')
+            );
+          }
+        }
+      } catch (canvasErr) {
+        console.warn('Canvas conversion fallback:', canvasErr);
+      }
 
+      // Fallback to rawBlob if canvas failed and rawBlob is already png
+      if (!pngBlob) {
+        pngBlob = rawBlob.type === 'image/png' ? rawBlob : new Blob([rawBlob], { type: 'image/png' });
+      }
+
+      // 3. Write genuine PNG to system clipboard
       if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
         await navigator.clipboard.write([
           new ClipboardItem({
             'image/png': pngBlob,
           }),
         ]);
-        toast.success('Certificate image copied to clipboard! You can paste (Ctrl+V) directly into WhatsApp or LinkedIn.');
+        toast.success('Certificate image copied to clipboard! You can paste (Ctrl+V) directly into WhatsApp, LinkedIn, or Slack.');
       } else {
         throw new Error('Clipboard image copy not supported in this browser');
       }
@@ -233,7 +304,7 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm animate-fadeIn"
       onClick={onClose}
     >
       <div
@@ -288,10 +359,6 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
                     loading="lazy"
                   />
                 )}
-                <div className="absolute top-2 right-2 bg-black/60 px-2 py-0.5 rounded text-[10px] font-mono text-[#C9A227] flex items-center gap-1 backdrop-blur-xs">
-                  <ShieldCheck size={11} className="text-green-400" />
-                  Verified
-                </div>
               </div>
 
               {/* Text Info */}
@@ -390,9 +457,9 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
           {/* Add to LinkedIn Profile banner */}
           <div className="bg-[#f0f4f9] rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 border border-[#0A66C2]/20">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#0A66C2] text-white flex items-center justify-center shrink-0">
+              {/* <div className="w-9 h-9 rounded-xl bg-[#0A66C2] text-white flex items-center justify-center shrink-0">
                 <Sparkles size={18} />
-              </div>
+              </div> */}
               <div>
                 <p className="text-xs font-extrabold text-[#122340]">Add to LinkedIn Profile</p>
                 <p className="text-[11px] text-[#122340]/60">
@@ -406,7 +473,7 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
               rel="noreferrer"
               className="bg-[#0A66C2] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#084e96] transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer"
             >
-              Add Credential <ExternalLink size={13} />
+              Add Credential
             </a>
           </div>
 

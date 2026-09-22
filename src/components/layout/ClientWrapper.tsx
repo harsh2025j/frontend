@@ -112,7 +112,12 @@ export default function ClientLayout({
     pathname.startsWith("/auth") ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/server-error") ||
-    pathname.startsWith("/academy");
+    pathname.startsWith("/academy") ||
+    pathname.startsWith("/courses") ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/certificates") ||
+    pathname.startsWith("/join") ||
+    pathname.startsWith("/verify-certificate");
 
   if (isHiddenLayout) {
     return <>{children}</>;

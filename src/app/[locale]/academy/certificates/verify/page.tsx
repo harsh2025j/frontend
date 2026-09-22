@@ -318,17 +318,17 @@ function VerifyCertificateContent() {
       const normalized = normalizeCertificateId(paramId);
       if (normalized) {
         setCertId(normalized);
-        router.replace(`/${locale}/academy/certificates/verify/${encodeURIComponent(normalized)}`);
+        router.replace(`/certificates/verify/${encodeURIComponent(normalized)}`);
       }
     }
-  }, [searchParams, router, locale]);
+  }, [searchParams, router]);
 
   const handleVerify = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const normalized = normalizeCertificateId(certId);
     if (normalized && normalized.length === 15) {
       setIsSubmitting(true);
-      router.push(`/${locale}/academy/certificates/verify/${encodeURIComponent(normalized)}`);
+      router.push(`/certificates/verify/${encodeURIComponent(normalized)}`);
     }
   };
 

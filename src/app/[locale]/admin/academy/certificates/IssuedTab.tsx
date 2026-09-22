@@ -272,6 +272,63 @@ export default function IssuedTab() {
     });
   }, [enrolledStudents, studentSearchQuery]);
 
+  const [existingCertPrompt, setExistingCertPrompt] = useState<{
+    open: boolean;
+    certificateId?: string;
+    studentName?: string;
+    studentEmail?: string;
+  }>({ open: false });
+
+  const executeIssue = async (updateExisting = false) => {
+    setIsGenerating(true);
+    try {
+      await certificateApi.manualIssue({
+        courseId: generateForm.courseId,
+        studentName: generateForm.studentName.trim(),
+        studentEmail: generateForm.studentEmail.trim() || undefined,
+        instructorName: generateForm.instructorName.trim() || undefined,
+        issueDate: generateForm.issueDate || undefined,
+        grade: generateForm.grade ? generateForm.grade : undefined,
+        enrollmentId: generateMode === "enrolled" ? generateForm.enrollmentId : undefined,
+        userId: generateMode === "enrolled" ? generateForm.userId : undefined,
+        mode: generateMode,
+        sendEmail: generateForm.sendEmail !== false,
+        updateExisting,
+      });
+
+      if (updateExisting) {
+        toast.success("Certificate updated and re-issued successfully!");
+      } else if (generateForm.sendEmail && generateForm.studentEmail) {
+        toast.success("Certificate issued & sent to student's email!");
+      } else {
+        toast.success("Certificate generated and issued successfully!");
+      }
+
+      setExistingCertPrompt({ open: false });
+      setGenerateModalOpen(false);
+      if (selectedCourseId !== generateForm.courseId) {
+        setSelectedCourseId(generateForm.courseId);
+      } else {
+        load();
+      }
+    } catch (err: any) {
+      console.error("Failed to generate certificate:", err);
+      const isConflict = err?.response?.status === 409 || err?.response?.data?.alreadyExists;
+      if (isConflict) {
+        setExistingCertPrompt({
+          open: true,
+          certificateId: err?.response?.data?.certificateId,
+          studentName: err?.response?.data?.studentName || generateForm.studentName,
+          studentEmail: err?.response?.data?.studentEmail || generateForm.studentEmail,
+        });
+      } else {
+        toast.error(err?.response?.data?.message || err?.message || "Failed to generate certificate");
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleGenerateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!generateForm.courseId) {
@@ -296,39 +353,26 @@ export default function IssuedTab() {
       return;
     }
 
-    setIsGenerating(true);
-    try {
-      await certificateApi.manualIssue({
-        courseId: generateForm.courseId,
-        studentName: generateForm.studentName.trim(),
-        studentEmail: generateForm.studentEmail.trim() || undefined,
-        instructorName: generateForm.instructorName.trim() || undefined,
-        issueDate: generateForm.issueDate || undefined,
-        grade: generateForm.grade ? generateForm.grade : undefined,
-        enrollmentId: generateMode === "enrolled" ? generateForm.enrollmentId : undefined,
-        userId: generateMode === "enrolled" ? generateForm.userId : undefined,
-        mode: generateMode,
-        sendEmail: generateForm.sendEmail !== false,
+    // Check if certificate already exists in current course certificate list
+    const normalizedEmail = generateForm.studentEmail.trim().toLowerCase();
+    const existingCertInList = items.find(
+      (c) =>
+        c.courseId === generateForm.courseId &&
+        ((normalizedEmail && c.studentEmail?.toLowerCase() === normalizedEmail) ||
+          (generateForm.userId && c.userId === generateForm.userId))
+    );
+
+    if (existingCertInList) {
+      setExistingCertPrompt({
+        open: true,
+        certificateId: existingCertInList.certificateId,
+        studentName: existingCertInList.studentName,
+        studentEmail: existingCertInList.studentEmail || generateForm.studentEmail,
       });
-
-      if (generateForm.sendEmail && generateForm.studentEmail) {
-        toast.success("Certificate issued & sent to student's email!");
-      } else {
-        toast.success("Certificate generated and issued successfully!");
-      }
-
-      setGenerateModalOpen(false);
-      if (selectedCourseId !== generateForm.courseId) {
-        setSelectedCourseId(generateForm.courseId);
-      } else {
-        load();
-      }
-    } catch (err: any) {
-      console.error("Failed to generate certificate:", err);
-      toast.error(err?.response?.data?.message || err?.message || "Failed to generate certificate");
-    } finally {
-      setIsGenerating(false);
+      return;
     }
+
+    await executeIssue(false);
   };
 
   return (
@@ -500,9 +544,8 @@ export default function IssuedTab() {
                         <Eye size={18} />
                       </button>
                       <a
-                        href={c.pdfUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                        href={`/api/academy/download?url=${encodeURIComponent(c.pdfUrl)}&filename=${encodeURIComponent((c.studentName || 'Certificate').replace(/[^a-zA-Z0-9_-]/g, '_') + '_' + (c.courseName || 'Course').replace(/[^a-zA-Z0-9_-]/g, '_') + '.pdf')}`}
+                        download={`${(c.studentName || 'Certificate').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(c.courseName || 'Course').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`}
                         className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
                         title="Download PDF"
                       >
@@ -972,6 +1015,29 @@ export default function IssuedTab() {
                     <p className="text-[11px] text-gray-500 mt-1">
                       The certificate PDF and verification link will be automatically sent to this email address.
                     </p>
+                    {(() => {
+                      const emailInput = generateForm.studentEmail.trim().toLowerCase();
+                      const existingCert = emailInput
+                        ? items.find(
+                            (c) =>
+                              c.courseId === generateForm.courseId &&
+                              c.studentEmail?.toLowerCase() === emailInput
+                          )
+                        : null;
+                      if (!existingCert) return null;
+                      return (
+                        <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-amber-900 text-xs">
+                          <AlertCircle size={15} className="shrink-0 mt-0.5 text-amber-600" />
+                          <div>
+                            <p className="font-bold">Certificate already generated for this email</p>
+                            <p className="text-[11px] text-amber-800 mt-0.5">
+                              Certificate <strong>{existingCert.certificateId}</strong> was already issued to{" "}
+                              <strong>{existingCert.studentName}</strong> for this course. Submitting will prompt to update the existing certificate.
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   <div className="p-3 bg-gray-50 rounded-xl border border-gray-200/60 flex items-center justify-between">
@@ -1103,6 +1169,49 @@ export default function IssuedTab() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Update Confirmation Modal when Certificate Already Exists */}
+      {existingCertPrompt.open && (
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4 shadow-xs">
+              <AlertCircle size={26} />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 text-center">Certificate Already Generated</h3>
+            <p className="text-sm text-gray-600 text-center mt-2 leading-relaxed">
+              A certificate has already been generated for{" "}
+              <strong className="text-gray-900">{existingCertPrompt.studentEmail || generateForm.studentEmail}</strong> in this course.
+              {existingCertPrompt.certificateId && (
+                <span className="block text-xs font-mono text-gray-500 mt-1">
+                  Existing Certificate ID: {existingCertPrompt.certificateId}
+                </span>
+              )}
+            </p>
+            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3 text-center">
+              Do you want to update the existing certificate instead of creating a duplicate?
+            </p>
+            <div className="grid grid-cols-2 gap-3 mt-6">
+              <button
+                type="button"
+                disabled={isGenerating}
+                onClick={() => setExistingCertPrompt({ open: false })}
+                className="w-full py-2.5 px-4 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isGenerating}
+                onClick={() => executeIssue(true)}
+                className="w-full py-2.5 px-4 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isGenerating ? <Loader2 size={14} className="animate-spin" /> : null}
+                Yes, Update Certificate
+              </button>
+            </div>
           </div>
         </div>
       )}

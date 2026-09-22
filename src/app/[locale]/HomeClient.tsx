@@ -109,7 +109,7 @@ export default function HomeClient() {
         />
 
         {/* Main Content Grid with Sidebar */}
-        <div className="container mx-auto px-4 py-12">
+        <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content Column */}
             <div className={`space-y-12 ${showSidebar ? 'lg:col-span-2' : 'lg:col-span-3'}`}>

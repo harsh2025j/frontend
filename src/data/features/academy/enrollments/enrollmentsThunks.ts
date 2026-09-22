@@ -6,14 +6,16 @@ import { Enrollment, CoursePayment } from "./enrollments.types";
 
 export const createCoursePaymentOrder = createAsyncThunk<
   any,
-  string, // courseId
+  string | { courseId: string; couponCode?: string },
   { rejectValue: string }
 >(
   "enrollments/createCoursePaymentOrder",
-  async (courseId, { rejectWithValue }) => {
+  async (arg, { rejectWithValue }) => {
     try {
+      const courseId = typeof arg === "string" ? arg : arg.courseId;
+      const couponCode = typeof arg === "object" ? arg.couponCode : undefined;
       const endpoint = API_ENDPOINTS.ACADEMY.ENROLLMENTS.CREATE_ORDER.replace(":courseId", courseId);
-      const response = await axiosInstance.post(endpoint);
+      const response = await axiosInstance.post(endpoint, { couponCode });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to create payment order");
@@ -112,101 +114,43 @@ export const fetchAllCoursePayments = createAsyncThunk<
 );
 
 export const fetchStudentsSummary = createAsyncThunk<
-  { data: any[], total: number, page: number, limit: number, totalPages: number },
-  { page?: number; limit?: number; search?: string; courseId?: string },
+  { data: any[]; total: number; page: number; limit: number; totalPages: number; platformCount?: number; externalCount?: number },
+  { page?: number; limit?: number; search?: string; courseId?: string; source?: string },
   { rejectValue: string }
 >(
   "enrollments/fetchStudentsSummary",
   async (params, { rejectWithValue }) => {
     try {
-      if (!params.courseId || params.courseId === 'all') {
-        // Fetch ALL students from user-service regardless of enrollments
-        const usersRes = await usersApi.fetchUsers({ 
-          roleName: 'student', 
-          page: params.page, 
-          limit: params.limit, 
-          search: params.search 
-        });
-        const users = usersRes.data || usersRes;
-        const userIds = users.data ? users.data.map((u: any) => u.id || u._id) : [];
+      const queryParams: Record<string, any> = {
+        page: params.page || 1,
+        limit: params.limit || 10,
+      };
+      if (params.search) queryParams.search = params.search;
+      if (params.courseId && params.courseId !== "all") queryParams.courseId = params.courseId;
+      if (params.source && params.source !== "all") queryParams.source = params.source;
 
-        // Fetch their enrollments in batch
-        let enrollments: any[] = [];
-        if (userIds.length > 0) {
-          const encRes = await axiosInstance.get('/academy/enrollments/by-users', { params: { userIds: userIds.join(',') } });
-          enrollments = encRes.data || [];
-        }
+      const response = await axiosInstance.get("/academy/enrollments/students-summary", { params: queryParams });
+      const data = response.data;
 
-        // Merge users and enrollments
-        const mergedData = (users.data || []).map((u: any) => {
-          const uId = u.id || u._id;
-          const userEnrolls = enrollments.filter((e: any) => e.userId === uId);
-          return {
-            userId: uId,
-            studentName: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.name || 'Unknown Student',
-            studentEmail: u.email,
-            joinedAt: u.createdAt,
-            enrollments: userEnrolls.map((e: any) => ({
-              id: e.id,
-              courseId: e.courseId,
-              courseName: e.course?.title || 'Unknown Course',
-              progress: e.progress,
-              status: e.status,
-              enrolledAt: e.createdAt
-            }))
-          };
-        });
-
-        return {
-          data: mergedData,
-          total: users.total || 0,
-          page: params.page || 1,
-          limit: params.limit || 10,
-          totalPages: (users as any).totalPages || Math.ceil((users.total || 0) / (params.limit || 10)) || 1
-        };
-      } else {
-        // Fetch only students enrolled in this specific course
-        let userIds: string[] | undefined;
-        let queryParams: Record<string, any> = { ...params };
-        
-        if (params.search) {
-          const usersRes = await usersApi.fetchUsers({ 
-            roleName: 'student', 
-            search: params.search,
-            limit: 100 // Get up to 100 matching users
-          });
-          const users = usersRes.data || usersRes;
-          userIds = users.data ? users.data.map((u: any) => u.id || u._id) : [];
-          
-          if (userIds.length === 0) {
-            return { data: [], total: 0, page: params.page || 1, limit: params.limit || 10, totalPages: 0 };
-          }
-          
-          queryParams.userIds = userIds.join(',');
-          delete queryParams.search; // Backend shouldn't search by string if userIds provided
-        }
-
-        const response = await axiosInstance.get('/academy/enrollments/students-summary', { params: queryParams });
-        const data = response.data;
-        
-        // Fetch missing names from user-service
-        const merged = await Promise.all((data.data || []).map(async (s: any) => {
-          if (!s.studentName || s.studentName === 'Unknown Student') {
+      // Fetch missing names from user-service if any
+      const merged = await Promise.all(
+        (data.data || []).map(async (s: any) => {
+          if (!s.studentName || s.studentName === "Unknown Student") {
             try {
               const userRes = await usersApi.getUserById(s.userId);
               const u: any = userRes.data || userRes;
-              s.studentName = `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.name || 'Unknown Student';
+              s.studentName = `${u.firstName || "" } ${u.lastName || ""}`.trim() || u.name || "Unknown Student";
               s.studentEmail = u.email;
             } catch (e) {
               // Ignore failure to fetch single user
             }
           }
           return s;
-        }));
-        
-        data.data = merged;
-        return data;
-      }
+        })
+      );
+
+      data.data = merged;
+      return data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch students summary");
     }

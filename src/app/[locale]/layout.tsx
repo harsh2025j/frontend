@@ -14,6 +14,7 @@ import Script from 'next/script';
 import GoogleAnalyticsTracker from "@/components/GoogleAnalyticsTracker";
 
 import { API_BASE_URL, API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
+import { headers } from "next/headers";
 // import { Analytics } from "@vercel/analytics/next";
 // import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -171,6 +172,11 @@ export default async function RootLayout({
   };
 
 
+  const headerList = await headers();
+  const host = headerList.get("host") || "";
+  const isAcademyHeader = headerList.get("x-academy-subdomain") === "true";
+  const isAcademySubdomain = isAcademyHeader || host.startsWith("academy.");
+
   return (
     <html lang={locale}>
       <head>
@@ -214,6 +220,7 @@ export default async function RootLayout({
               <AdProvider>
                 <ClientLayout
                   initialCategories={categories}
+                  isAcademySubdomain={isAcademySubdomain}
                 >
                   {children}
                 </ClientLayout>

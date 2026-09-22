@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { UserData } from "@/data/features/profile/profile.types";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 import {
@@ -26,7 +26,7 @@ import {
   ClipboardList,
   BriefcaseMedical,
   ClipboardCheck,
-  Bookmark,
+  TicketPercent,
   UserCircle,
   Calendar,
   History,
@@ -387,15 +387,22 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
           show: showAcademySection
         },
         {
+          name: "Live Sessions",
+          icon: <PlaySquare size={18} />,
+          href: "/admin/academy/live-sessions",
+          show: showAcademySection
+        },
+        {
           name: "Assessments & Tests",
           icon: <FileQuestion size={18} />,
           href: "/admin/academy/tests",
           show: showAcademySection
         },
+
         {
-          name: "Live Sessions",
-          icon: <PlaySquare size={18} />,
-          href: "/admin/academy/live-sessions",
+          name: "Assignments",
+          icon: <ClipboardList size={18} />,
+          href: "/admin/academy/assignments",
           show: showAcademySection
         },
         {
@@ -417,23 +424,19 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
           show: showAcademyFinances
         },
         {
-          name: "Assignments",
-          icon: <ClipboardList size={18} />,
-          href: "/admin/academy/assignments",
-          show: showAcademySection
+          name: "Coupons",
+          icon: <TicketPercent size={18} />,
+          href: "/admin/academy/coupons",
+          show: showAcademyFinances
         },
+
         {
           name: "Certificates",
           icon: <Award size={18} />,
           href: "/admin/academy/certificates",
           show: showAcademyFinances
         },
-        {
-          name: "Coupons",
-          icon: <Bookmark size={18} />,
-          href: "/admin/academy/coupons",
-          show: showAcademyFinances
-        },
+
         {
           name: "Notifications",
           icon: <Bell size={18} />,
@@ -478,6 +481,59 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
     return false;
   };
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Auto-expand active dropdown when current route matches a child link
+  useEffect(() => {
+    for (const item of allNavItems) {
+      if (item.isDropdown && item.children?.some((child: any) => isLinkActive(child.href))) {
+        setOpenDropdown(item.name);
+        setTimeout(() => {
+          const el = dropdownRefs.current[item.name];
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        }, 150);
+        break;
+      }
+    }
+  }, [pathname]);
+
+  const handleDropdownClick = (item: any) => {
+    const isCurrentlyExpanded = openDropdown === item.name;
+    const willExpand = !isCurrentlyExpanded;
+
+    if (!isOpen) {
+      onOpen();
+      setOpenDropdown(item.name);
+    } else {
+      setOpenDropdown(willExpand ? item.name : null);
+    }
+
+    if (willExpand) {
+      setTimeout(() => {
+        const el = dropdownRefs.current[item.name];
+        const container = scrollContainerRef.current;
+        if (!el || !container) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+
+        const childCount = item.children?.filter((child: any) => child.show).length || 0;
+        const estimatedHeight = 44 + childCount * 38;
+
+        // If expanded items will overflow past the bottom of the sidebar,
+        // smoothly scroll the section header to the top of the container
+        if (elRect.top + estimatedHeight > containerRect.bottom - 20) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      }, 80);
+    }
+  };
+
   return (
     <>
       {isOpen && (
@@ -495,7 +551,7 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
         ${isOpen ? "translate-x-0 w-72" : "-translate-x-full lg:translate-x-0 lg:w-20"}
       `}
       >
-        <div className="flex-1 overflow-y-auto py-3 px-3 custom-scrollbar">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto py-3 px-3 pb-24 custom-scrollbar">
           <nav className="space-y-1">
 
             {navItems.map((item) => {
@@ -506,16 +562,15 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
                 const isChildActive = item.children?.some((child: any) => isLinkActive(child.href));
 
                 return (
-                  <div key={item.name} className="space-y-1">
+                  <div
+                    key={item.name}
+                    ref={(el) => {
+                      dropdownRefs.current[item.name] = el;
+                    }}
+                    className="space-y-1"
+                  >
                     <div
-                      onClick={() => {
-                        if (!isOpen) {
-                          onOpen();
-                          setOpenDropdown(item.name);
-                        } else {
-                          setOpenDropdown(isExpanded ? null : item.name);
-                        }
-                      }}
+                      onClick={() => handleDropdownClick(item)}
                       className={`
                         flex items-center w-full ${isOpen ? "gap-4" : "lg:justify-center"} 
                         px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-100
@@ -533,7 +588,7 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
                     </div>
 
                     {(isExpanded || (!isOpen && isChildActive)) && (
-                      <div className={`${isOpen ? "ml-4 border-l-2 border-gray-100 pl-2" : "hidden"} space-y-1`}>
+                      <div className={`${isOpen ? "ml-4 border-l-2 border-gray-100 pl-2" : "hidden"} space-y-1 animate-in fade-in slide-in-from-top-1 duration-200`}>
                         {item.children
                           .filter((child: any) => child.show)
                           .map((child: any) => {

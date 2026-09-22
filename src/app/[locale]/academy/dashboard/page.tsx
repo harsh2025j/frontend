@@ -107,8 +107,8 @@ export default function DashboardOverview() {
           <Link
             href={
               currentlyLiveSession.course?.slug
-                ? `/academy/dashboard/learn/${currentlyLiveSession.course.slug}`
-                : '/academy/dashboard/live-sessions'
+                ? `/dashboard/learn/${currentlyLiveSession.course.slug}`
+                : '/dashboard/live-sessions'
             }
           >
             <button className="bg-white text-red-600 hover:bg-white/95 px-7 py-3 rounded-xl font-extrabold shadow-lg hover:shadow-xl transition-all text-sm flex items-center gap-2 cursor-pointer shrink-0">
@@ -180,7 +180,7 @@ export default function DashboardOverview() {
           </div>
           <div>
             <p className="text-sm font-bold tracking-wide text-blue-200/50 uppercase mb-1">Certificates Earned</p>
-            <Link href="/academy/dashboard/certificates" className="inline-block hover:opacity-80 transition">
+            <Link href="/dashboard/certificates" className="inline-block hover:opacity-80 transition">
               <p className="text-4xl font-black text-white">{certificatesCount}</p>
             </Link>
           </div>
@@ -200,7 +200,7 @@ export default function DashboardOverview() {
           {recentEnrollment ? (
             <div className="bg-white rounded-3xl p-4 border border-[#122340]/5 shadow-[0_8px_40px_rgb(0,0,0,0.06)] relative overflow-hidden flex flex-col md:flex-row items-center gap-8 group">
               {/* Image section */}
-              <div className="w-full md:w-64 h-48 rounded-2xl overflow-hidden relative shrink-0">
+              <div className="w-full md:w-72 aspect-video rounded-2xl overflow-hidden relative shrink-0">
                 <img src={recentEnrollment.course?.thumbnailUrl || "https://images.unsplash.com/photo-1505664177922-9283892047d6?q=80&w=600&auto=format&fit=crop"} alt="Course" className="w-full h-full object-cover transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#122340]/80 via-transparent to-transparent"></div>
                 <div className="absolute bottom-4 left-4 flex items-center gap-2 text-white">
@@ -275,8 +275,8 @@ export default function DashboardOverview() {
                 upcomingSessions.map((session) => {
                   const dateInfo = formatMonthDay(session.liveData?.scheduledDate);
                   const targetHref = session.course?.slug
-                    ? `/academy/dashboard/learn/${session.course.slug}`
-                    : '/academy/dashboard/live-sessions';
+                    ? `/dashboard/learn/${session.course.slug}`
+                    : '/dashboard/live-sessions';
 
                   return (
                     <Link
@@ -302,7 +302,7 @@ export default function DashboardOverview() {
                 })
               )}
             </div>
-            <Link href="/academy/dashboard/live-sessions" className="block mt-6">
+            <Link href="/dashboard/live-sessions" className="block mt-6">
               <button className="w-full py-3 rounded-xl font-bold text-[#122340] bg-[#f0f2f5] hover:bg-[#C9A227] hover:text-white transition-colors text-xs uppercase tracking-widest cursor-pointer shadow-sm">
                 View All Live Classes
               </button>

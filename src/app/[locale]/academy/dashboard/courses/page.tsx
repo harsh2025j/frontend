@@ -110,7 +110,7 @@ export default function MyCoursesPage() {
               <div key={course.slug} className="group relative bg-white rounded-3xl overflow-hidden border border-[#122340]/5 flex flex-col h-full hover:border-[#C9A227] hover:shadow-[0_20px_60px_rgba(18,35,64,0.12)] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
                 
                 {/* Image Section (Clickable) */}
-                <Link href={`/dashboard/learn/${course.slug}`} className="block h-56 relative overflow-hidden bg-[#122340]/5 cursor-pointer">
+                <Link href={`/dashboard/learn/${course.slug}`} className="block relative aspect-video w-full overflow-hidden bg-[#122340]/5 cursor-pointer">
                   <img 
                     src={course.thumbnailUrl || "https://images.unsplash.com/photo-1505664177922-9283892047d6?q=80&w=600&auto=format&fit=crop"} 
                     alt={course.title} 

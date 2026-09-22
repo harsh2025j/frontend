@@ -6,7 +6,7 @@ import {
   ChevronLeft, PlayCircle, CheckCircle2, FileText, MessageSquare, Download,
   Play, Pause, Maximize, Volume2, SkipForward, Video, ClipboardList, Award,
   CheckSquare, UploadCloud, Clock, ExternalLink, XCircle, Circle, FileQuestion, GraduationCap,
-  Lock, ArrowRight
+  Lock, ArrowRight, Star
 } from 'lucide-react';
 import AssessmentPlayer from './AssessmentPlayer';
 import LiveClassViewer from '@/components/academy/live/LiveClassViewer';
@@ -38,6 +38,11 @@ import { Loader2 } from 'lucide-react';
 import { uploadToS3 } from '@/lib/uploadToS3';
 import apiClient from '@/data/services/apiConfig/apiClient';
 import toast from 'react-hot-toast';
+import ReviewModal from '@/components/academy/reviews/ReviewModal';
+import CourseReviewMilestonePrompt from '@/components/academy/reviews/CourseReviewMilestonePrompt';
+import CourseReviewsSection from '@/components/academy/reviews/CourseReviewsSection';
+import { reviewApi } from '@/data/services/academy-service/review.service';
+import { CourseReview } from '@/data/features/academy/course/course.types';
 
 export default function CoursePlayerPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = React.use(params);
@@ -47,11 +52,50 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
   const { currentCourse, isLoading, error } = useAppSelector((state) => state.course);
 
   // We can fetch enrollments to get progress, but for now we'll just use a default or calculate from completed items if backend supports it.
-  const { myEnrollments } = useAppSelector((state) => state.enrollments);
+  const { myEnrollments, isLoading: isEnrollmentsLoading } = useAppSelector((state) => state.enrollments);
   const { user } = useAppSelector((state) => state.auth);
-  const currentEnrollment = myEnrollments.find(e => e.course?.slug === slug);
+  const currentEnrollment = React.useMemo(() => {
+    return myEnrollments.find(
+      e => (e.course?.slug && e.course.slug.toLowerCase() === slug.toLowerCase()) || 
+           (currentCourse?.id && (e.courseId === currentCourse.id || e.course?.id === currentCourse.id))
+    ) || null;
+  }, [myEnrollments, slug, currentCourse?.id]);
 
   const [studentSubmissions, setStudentSubmissions] = useState<any[]>([]);
+
+  // Review states inside learn page
+  const [activeTab, setActiveTab] = useState<'qa' | 'reviews'>('qa');
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [selectedRating, setSelectedRating] = useState<number | undefined>(undefined);
+  const [myReview, setMyReview] = useState<CourseReview | null>(null);
+  const [canReview, setCanReview] = useState(false);
+  const [reviewRefreshKey, setReviewRefreshKey] = useState(0);
+
+  const handleOpenReviewWithRating = (initialRating?: number) => {
+    setSelectedRating(initialRating);
+    setIsReviewModalOpen(true);
+  };
+
+  // Fetch student review status
+  useEffect(() => {
+    if (!currentCourse?.id || !user) return;
+    reviewApi.getMyReviewEligibility(currentCourse.id)
+      .then((res) => {
+        setCanReview(Boolean(res?.canReview));
+        if (res?.hasReviewed && res?.review) {
+          setMyReview(res.review);
+        } else {
+          setMyReview(null);
+        }
+      })
+      .catch(() => {});
+  }, [currentCourse?.id, user, reviewRefreshKey]);
+
+  const handleReviewSuccess = (savedReview: CourseReview) => {
+    setMyReview(savedReview);
+    setIsReviewModalOpen(false);
+    setReviewRefreshKey((k) => k + 1);
+  };
 
   const fetchMySubmissions = async () => {
     if (!currentCourse?.id) return;
@@ -128,9 +172,39 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
     };
   }, [dispatch, slug, myEnrollments.length]);
 
-  const [activeTab, setActiveTab] = useState('qa');
   const [openModule, setOpenModule] = useState<number | null>(0);
   const [activeItem, setActiveItem] = useState<any>(null);
+  const hasUserManuallySelected = React.useRef(false);
+  const sidebarScrollRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    hasUserManuallySelected.current = false;
+    setActiveItem(null);
+  }, [slug]);
+
+  // Automatically scroll syllabus sidebar so the active / last completed item is visible
+  useEffect(() => {
+    if (!activeItem?.id || !sidebarScrollRef.current) return;
+
+    const timer = setTimeout(() => {
+      const container = sidebarScrollRef.current;
+      if (!container) return;
+
+      const activeEl = container.querySelector<HTMLElement>(`#syllabus-item-${activeItem.id}`);
+      if (activeEl) {
+        const containerTop = container.getBoundingClientRect().top;
+        const elemTop = activeEl.getBoundingClientRect().top;
+        const offset = elemTop - containerTop + container.scrollTop - (container.clientHeight / 2) + (activeEl.clientHeight / 2);
+
+        container.scrollTo({
+          top: Math.max(0, offset),
+          behavior: 'smooth'
+        });
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [activeItem?.id, openModule]);
 
   const activeSubmission = React.useMemo(() => {
     if (!activeItem || activeItem.type !== 'assignment') return null;
@@ -396,17 +470,70 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
 
   useEffect(() => {
     if (mappedCourseData && mappedCourseData.modules.length > 0) {
-      if (!activeItem) {
-        if (allCourseItems.length > 0) {
-          // Find the first uncompleted playable item that is unlocked
-          const firstPlayable = allCourseItems.find(
-            item => !item.completed && !getItemLockStatus(item).isLocked
-          );
+      if (allCourseItems.length > 0) {
+        const completedItems = allCourseItems.filter((item: any) => item.completed);
 
-          // Open it, or if everything is completed/locked, open the first item
-          setActiveItem(firstPlayable || allCourseItems[0]);
+        // Find the item that was completed last:
+        let lastCompletedItem: any = null;
+
+        if (completedItems.length > 0) {
+          // Priority 1: Check completedItemIds in reverse (the most recently completed item is at the end)
+          if (currentEnrollment?.completedItemIds && Array.isArray(currentEnrollment.completedItemIds)) {
+            for (let i = currentEnrollment.completedItemIds.length - 1; i >= 0; i--) {
+              const cid = currentEnrollment.completedItemIds[i];
+              const found = allCourseItems.find((item: any) => item.id === cid && item.completed);
+              if (found) {
+                lastCompletedItem = found;
+                break;
+              }
+            }
+          }
+
+          // Priority 2: Fallback to the last completed item in course curriculum order
+          if (!lastCompletedItem) {
+            lastCompletedItem = completedItems[completedItems.length - 1];
+          }
+        }
+
+        // If at least one item was completed, show the last completed item; if none completed, show the first item
+        const targetItem = lastCompletedItem || allCourseItems[0];
+
+        if (!activeItem) {
+          setActiveItem(targetItem);
           setIsVideoEnded(false);
+
+          // Automatically expand the parent module of the active item in syllabus
+          const parentModuleIndex = mappedCourseData.modules.findIndex((mod: any) => {
+            if (mod.items?.some((it: any) => it.id === targetItem.id)) return true;
+            if (mod.submodules?.some((sub: any) => sub.items?.some((it: any) => it.id === targetItem.id))) return true;
+            return false;
+          });
+          if (parentModuleIndex !== -1) {
+            setOpenModule(parentModuleIndex);
+          }
+        } else if (!hasUserManuallySelected.current && lastCompletedItem && activeItem.id === allCourseItems[0].id && !activeItem.completed) {
+          // If activeItem was initialized to the first item before enrollments finished loading,
+          // automatically switch to the last completed item once enrollments arrive
+          setActiveItem(lastCompletedItem);
+          setIsVideoEnded(false);
+
+          const parentModuleIndex = mappedCourseData.modules.findIndex((mod: any) => {
+            if (mod.items?.some((it: any) => it.id === lastCompletedItem.id)) return true;
+            if (mod.submodules?.some((sub: any) => sub.items?.some((it: any) => it.id === lastCompletedItem.id))) return true;
+            return false;
+          });
+          if (parentModuleIndex !== -1) {
+            setOpenModule(parentModuleIndex);
+          }
         } else {
+          // Active item already chosen, sync any updated properties (e.g. newly marked complete)
+          const latestActiveItem = allCourseItems.find(item => item.id === activeItem.id);
+          if (latestActiveItem && (latestActiveItem.completed !== activeItem.completed || JSON.stringify(latestActiveItem.liveData) !== JSON.stringify(activeItem.liveData))) {
+            setActiveItem(latestActiveItem);
+          }
+        }
+      } else {
+        if (!activeItem) {
           // Fallback if the course has modules but no lessons yet
           setActiveItem({
             id: 'fallback',
@@ -417,17 +544,11 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
           });
           setIsVideoEnded(false);
         }
-      } else {
-        // If activeItem already exists, just update it with the latest data from mappedCourseData
-        const latestActiveItem = allCourseItems.find(item => item.id === activeItem.id);
-        if (latestActiveItem && (latestActiveItem.completed !== activeItem.completed || JSON.stringify(latestActiveItem.liveData) !== JSON.stringify(activeItem.liveData))) {
-          setActiveItem(latestActiveItem);
-        }
       }
     }
-  }, [mappedCourseData, activeItem, allCourseItems, getItemLockStatus]);
+  }, [mappedCourseData, activeItem, allCourseItems, currentEnrollment?.completedItemIds]);
 
-  if (isLoading || !mappedCourseData) {
+  if (isLoading || (myEnrollments.length === 0 && isEnrollmentsLoading) || !mappedCourseData) {
     return (
       <div className="fixed inset-0 z-[100] bg-white flex items-center justify-center">
         <Loader2 size={48} className="animate-spin text-[#C9A227]" />
@@ -470,10 +591,32 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="hidden sm:flex items-center gap-3 mr-4">
-            <span className="text-xs text-white/70 font-semibold uppercase tracking-wider">Your Progress</span>
-            <div className="w-32 bg-white/20 rounded-full h-2">
-              <div className="bg-[#C9A227] h-2 rounded-full" style={{ width: `${COURSE_DATA.progress}%` }}></div>
+          {(progress >= 30 || myReview || canReview) && (
+            <button
+              onClick={() => setIsReviewModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C9A227]/15 hover:bg-[#C9A227]/25 text-[#C9A227] border border-[#C9A227]/30 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+              title={myReview ? "Edit your review" : "Leave a review"}
+            >
+              <Star size={13} className="fill-[#C9A227]" />
+              <span>{myReview ? "Edit Review" : "Write Review"}</span>
+            </button>
+          )}
+
+          <div className="hidden sm:flex items-center gap-3 mr-4 relative group cursor-pointer py-1">
+            <span className="text-xs text-white/70 font-semibold uppercase tracking-wider group-hover:text-white transition-colors">
+              Your Progress
+            </span>
+            <div className="w-32 bg-white/20 rounded-full h-2 overflow-hidden relative">
+              <div
+                className="bg-[#C9A227] h-2 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${COURSE_DATA.progress}%` }}
+              />
+            </div>
+
+            {/* Hover Tooltip */}
+            <div className="absolute top-full right-0 mt-2 px-3 py-1.5 bg-[#122340] text-white text-xs font-bold rounded-xl shadow-2xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 flex items-center whitespace-nowrap">
+              <span>{COURSE_DATA.progress}% Completed</span>
+              <div className="absolute bottom-full right-8 border-4 border-transparent border-b-[#122340]" />
             </div>
           </div>
           <div className="w-8 h-8 rounded-full bg-[#C9A227] flex items-center justify-center font-bold text-sm text-[#0a1628]">
@@ -853,6 +996,7 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
               {firstIncompleteItem && (
                 <button
                   onClick={() => {
+                    hasUserManuallySelected.current = true;
                     setActiveItem(firstIncompleteItem);
                     setIsVideoEnded(false);
                   }}
@@ -889,9 +1033,25 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
                   : "Congratulations on reaching this far. Your verifiable certificate is locked until all course requirements and the final assessment are passed."}
               </p>
               {COURSE_DATA.progress === 100 ? (
-                <button className="bg-[#C9A227] text-[#0a1628] px-10 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2">
-                  <Download size={18} /> Download Certificate
-                </button>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    onClick={() => {
+                      const certBtn = document.getElementById('cert-download-btn');
+                      if (certBtn) certBtn.click();
+                      else window.location.href = '/dashboard/certificates';
+                    }}
+                    className="bg-[#C9A227] text-[#0a1628] px-8 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <Download size={18} /> Download Certificate
+                  </button>
+                  <button
+                    onClick={() => setIsReviewModalOpen(true)}
+                    className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-8 py-3.5 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <Star size={18} className="fill-[#C9A227] text-[#C9A227]" />
+                    {myReview ? "Edit Your Review" : "Rate & Review Course"}
+                  </button>
+                </div>
               ) : (
                 <button disabled className="bg-[#122340] border border-white/10 text-white/50 px-10 py-4 rounded-xl font-bold transition-all flex items-center gap-2">
                   <Download size={18} /> Certificate Locked
@@ -905,27 +1065,56 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
 
             <h2 className="text-2xl font-bold text-[#122340] mb-6">{activeItem.title}</h2>
 
-            <div className="flex border-b border-[#122340]/10 mb-8 overflow-x-auto">
+            <div className="flex border-b border-[#122340]/10 mb-8 overflow-x-auto gap-2">
               <button
-                className="px-6 py-4 text-sm font-bold whitespace-nowrap transition-colors border-b-2 flex items-center gap-2 border-[#C9A227] text-[#C9A227]"
+                onClick={() => setActiveTab('qa')}
+                className={`px-6 py-4 text-sm font-bold whitespace-nowrap transition-colors border-b-2 flex items-center gap-2 cursor-pointer ${
+                  activeTab === 'qa'
+                    ? 'border-[#C9A227] text-[#C9A227]'
+                    : 'border-transparent text-[#122340]/60 hover:text-[#122340]'
+                }`}
               >
                 <MessageSquare size={16} /> Q&A
               </button>
+              <button
+                onClick={() => setActiveTab('reviews')}
+                className={`px-6 py-4 text-sm font-bold whitespace-nowrap transition-colors border-b-2 flex items-center gap-2 cursor-pointer ${
+                  activeTab === 'reviews'
+                    ? 'border-[#C9A227] text-[#C9A227]'
+                    : 'border-transparent text-[#122340]/60 hover:text-[#122340]'
+                }`}
+              >
+                <Star size={16} className={activeTab === 'reviews' ? 'fill-[#C9A227]' : ''} /> Course Reviews
+              </button>
             </div>
 
-            <div className="text-[#122340]/80 leading-relaxed">
-              <div className="space-y-6">
-                <div className="bg-white border border-[#122340]/10 p-4 rounded-lg flex gap-4 shadow-sm">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-bold text-[#122340] shrink-0">JD</div>
-                  <div className="w-full">
-                    <textarea placeholder="Ask a new question about this specific item..." className="w-full border-none outline-none resize-none bg-transparent" rows={2}></textarea>
-                    <div className="flex justify-end border-t border-[#122340]/5 pt-2 mt-2">
-                      <button className="bg-[#122340] text-white px-4 py-1.5 rounded text-xs font-bold">Post Question</button>
+            {activeTab === 'qa' ? (
+              <div className="text-[#122340]/80 leading-relaxed">
+                <div className="space-y-6">
+                  <div className="bg-white border border-[#122340]/10 p-4 rounded-lg flex gap-4 shadow-sm">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-bold text-[#122340] shrink-0">JD</div>
+                    <div className="w-full">
+                      <textarea placeholder="Ask a new question about this specific item..." className="w-full border-none outline-none resize-none bg-transparent" rows={2}></textarea>
+                      <div className="flex justify-end border-t border-[#122340]/5 pt-2 mt-2">
+                        <button className="bg-[#122340] text-white px-4 py-1.5 rounded text-xs font-bold">Post Question</button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div>
+                {currentCourse?.id ? (
+                  <CourseReviewsSection
+                    key={reviewRefreshKey}
+                    courseId={currentCourse.id}
+                    courseTitle={currentCourse.title}
+                  />
+                ) : (
+                  <p className="text-slate-500 text-sm py-4">Loading reviews...</p>
+                )}
+              </div>
+            )}
 
           </div>
         </div>
@@ -936,7 +1125,7 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
             <h3 className="font-bold text-[#122340]">Course Syllabus</h3>
           </div>
 
-          <div className="overflow-y-auto flex-grow pb-20">
+          <div ref={sidebarScrollRef} className="overflow-y-auto flex-grow pb-20 scroll-smooth">
             {COURSE_DATA.modules.map((mod, i) => (
               <div key={i} className="border-b border-[#122340]/10">
                 <button
@@ -961,7 +1150,12 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
                       return (
                         <div
                           key={item.id}
-                          onClick={() => { setActiveItem(item); setIsVideoEnded(false); }}
+                          id={`syllabus-item-${item.id}`}
+                          onClick={() => {
+                            hasUserManuallySelected.current = true;
+                            setActiveItem(item);
+                            setIsVideoEnded(false);
+                          }}
                           title={lockStatus.tooltip || undefined}
                           className={`group/item relative flex gap-3 p-3 pl-4 cursor-pointer hover:bg-[#122340]/5 transition-colors ${isActive ? 'bg-[#C9A227]/10 border-l-4 border-[#C9A227]' : 'border-l-4 border-transparent'}`}
                         >
@@ -1048,7 +1242,12 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
                             return (
                               <div
                                 key={item.id}
-                                onClick={() => { setActiveItem(item); setIsVideoEnded(false); }}
+                                id={`syllabus-item-${item.id}`}
+                                onClick={() => {
+                                  hasUserManuallySelected.current = true;
+                                  setActiveItem(item);
+                                  setIsVideoEnded(false);
+                                }}
                                 title={lockStatus.tooltip || undefined}
                                 className={`group/item relative flex gap-3 p-3 pl-6 cursor-pointer hover:bg-[#122340]/5 transition-colors ${isActive ? 'bg-[#C9A227]/10 border-l-4 border-[#C9A227]' : 'border-l-4 border-transparent'}`}
                               >
@@ -1128,16 +1327,58 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
               </div>
             ))}
 
-            <CertificateCTA courseId={currentCourse?.id} progress={progress} />
+            <CertificateCTA
+              courseId={currentCourse?.id}
+              progress={progress}
+              courseSlug={slug}
+              onOpenReview={() => setIsReviewModalOpen(true)}
+              hasReviewed={Boolean(myReview)}
+            />
           </div>
         </div>
 
       </div>
+
+      {currentCourse?.id && (
+        <>
+          <ReviewModal
+            isOpen={isReviewModalOpen}
+            onClose={() => {
+              setIsReviewModalOpen(false);
+              setSelectedRating(undefined);
+            }}
+            courseIdOrSlug={currentCourse.id}
+            courseTitle={currentCourse.title}
+            existingReview={myReview}
+            initialRating={selectedRating}
+            onSuccess={handleReviewSuccess}
+          />
+          <CourseReviewMilestonePrompt
+            courseId={currentCourse.id}
+            courseTitle={currentCourse.title}
+            progress={progress}
+            hasReviewed={Boolean(myReview)}
+            onOpenReview={handleOpenReviewWithRating}
+          />
+        </>
+      )}
     </div>
   );
 }
 
-function CertificateCTA({ courseId, progress }: { courseId?: string; progress: number }) {
+function CertificateCTA({
+  courseId,
+  progress,
+  courseSlug,
+  onOpenReview,
+  hasReviewed,
+}: {
+  courseId?: string;
+  progress: number;
+  courseSlug?: string;
+  onOpenReview?: () => void;
+  hasReviewed?: boolean;
+}) {
   const [cert, setCert] = useState<Certificate | null>(null);
   const [loading, setLoading] = useState(false);
   const [polling, setPolling] = useState(false);
@@ -1199,8 +1440,16 @@ function CertificateCTA({ courseId, progress }: { courseId?: string; progress: n
     setDownloading(true);
     const filename = formatFilename('pdf');
     try {
-      const res = await fetch(cert.pdfUrl);
-      if (!res.ok) throw new Error('Failed to fetch certificate file');
+      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(cert.pdfUrl)}&filename=${encodeURIComponent(filename)}`;
+      let res: Response;
+      try {
+        res = await fetch(cert.pdfUrl, { mode: 'cors' });
+        if (!res.ok) throw new Error('Direct fetch failed');
+      } catch {
+        res = await fetch(proxyUrl);
+        if (!res.ok) throw new Error(`Download failed (${res.status})`);
+      }
+
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1213,12 +1462,14 @@ function CertificateCTA({ courseId, progress }: { courseId?: string; progress: n
       toast.success('Certificate downloaded successfully');
     } catch (err) {
       console.error('Download error:', err);
+      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(cert.pdfUrl)}&filename=${encodeURIComponent(filename)}`;
       const a = document.createElement('a');
-      a.href = cert.pdfUrl;
-      a.setAttribute('download', filename);
+      a.href = proxyUrl;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      toast('Starting PDF download...', { icon: '📥' });
     } finally {
       setDownloading(false);
     }
@@ -1244,6 +1495,7 @@ function CertificateCTA({ courseId, progress }: { courseId?: string; progress: n
         </p>
         <div className="flex flex-col gap-2">
           <button
+            id="cert-download-btn"
             onClick={handleDownload}
             disabled={downloading}
             className="w-full bg-[#C9A227] text-[#122340] py-2.5 rounded-lg text-sm font-black uppercase tracking-wide flex items-center justify-center gap-2 hover:brightness-110 transition cursor-pointer disabled:opacity-75"
@@ -1259,11 +1511,19 @@ function CertificateCTA({ courseId, progress }: { courseId?: string; progress: n
             )}
           </button>
           <Link
-            href="/academy/dashboard/certificates"
+            href="/dashboard/certificates"
             className="w-full border border-white/20 text-white py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-white/5 transition"
           >
             <ExternalLink size={16} /> View in My Credentials
           </Link>
+          {onOpenReview && (
+            <button
+              onClick={onOpenReview}
+              className="w-full border border-[#C9A227]/40 bg-[#C9A227]/10 text-[#C9A227] py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#C9A227]/20 transition cursor-pointer"
+            >
+              <Star size={16} className="fill-[#C9A227]" /> {hasReviewed ? "Edit Your Review" : "Rate & Review Course"}
+            </button>
+          )}
         </div>
       </div>
     );

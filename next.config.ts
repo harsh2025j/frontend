@@ -42,6 +42,22 @@ const nextConfig: NextConfig = {
         source: '/:locale/certificates/verify/:id',
         destination: '/:locale/academy/certificates/verify/:id',
       },
+      {
+        source: '/courses',
+        destination: '/academy/courses',
+      },
+      {
+        source: '/:locale/courses',
+        destination: '/:locale/academy/courses',
+      },
+      {
+        source: '/courses/:slug',
+        destination: '/academy/courses/:slug',
+      },
+      {
+        source: '/:locale/courses/:slug',
+        destination: '/:locale/academy/courses/:slug',
+      },
     ];
   },
 };

@@ -14,38 +14,56 @@ import {
   Scale,
   Users,
   Award,
-  Loader2
+  Loader2,
+  Star,
+  Heart
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/data/redux/hooks';
 import { fetchAllCourses } from '@/data/features/academy/course/courseThunks';
+import { useWishlist } from '@/context/WishlistContext';
 
 const COURSES = [
   {
     id: 1,
     title: "Certificate Course in Legal Research & Writing",
-    desc: "Build strong research and writing skills for academic and professional success.",
+    subtitle: "Build strong research and writing skills for academic and professional success.",
     duration: "4 Weeks",
-    mode: "Online",
-    price: "₹4,999",
-    image: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=600&auto=format&fit=crop",
+    category: "Online",
+    level: "Beginner",
+    price: 4999,
+    originalPrice: 7999,
+    thumbnailUrl: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=600&auto=format&fit=crop",
+    slug: "legal-research-and-writing",
+    averageRating: 4.8,
+    totalReviews: 24,
   },
   {
     id: 2,
     title: "Diploma in Corporate Law",
-    desc: "Understand corporate laws and regulations with practical insights.",
+    subtitle: "Understand corporate laws and regulations with practical insights.",
     duration: "3 Months",
-    mode: "Online",
-    price: "₹14,999",
-    image: "https://images.unsplash.com/photo-1505664177922-9283892047d6?q=80&w=600&auto=format&fit=crop",
+    category: "Corporate Law",
+    level: "Intermediate",
+    price: 14999,
+    originalPrice: 19999,
+    thumbnailUrl: "https://images.unsplash.com/photo-1505664177922-9283892047d6?q=80&w=600&auto=format&fit=crop",
+    slug: "corporate-law-diploma",
+    averageRating: 4.9,
+    totalReviews: 42,
   },
   {
     id: 3,
     title: "Certificate Course in Contract Drafting",
-    desc: "Learn to draft effective and enforceable contracts with confidence.",
+    subtitle: "Learn to draft effective and enforceable contracts with confidence.",
     duration: "4 Weeks",
-    mode: "Online",
-    price: "₹4,999",
-    image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=600&auto=format&fit=crop",
+    category: "Drafting",
+    level: "All Levels",
+    price: 4999,
+    originalPrice: 6999,
+    thumbnailUrl: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=600&auto=format&fit=crop",
+    slug: "contract-drafting-certificate",
+    averageRating: 4.7,
+    totalReviews: 19,
   }
 ];
 
@@ -98,6 +116,7 @@ export default function AcademyLandingPage() {
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
   const dispatch = useAppDispatch();
   const { courses, isLoading } = useAppSelector((state) => state.course);
+  const { isInWishlist, toggleWishlist } = useWishlist();
 
   React.useEffect(() => {
     dispatch(fetchAllCourses());
@@ -240,31 +259,100 @@ export default function AcademyLandingPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.filter(c => c.status === 'published' && c.slug).slice(0, 3).map(course => (
-              <Link href={`/courses/${course.slug}`} key={course.id} className="block group">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:border-[#C9A227] transition-colors duration-300 flex flex-col h-full">
-                  <div className="h-40 relative overflow-hidden bg-gray-100">
-                    {course.thumbnailUrl ? (
-                      <Image src={course.thumbnailUrl} alt={course.title} layout="fill" objectFit="cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-300"><BookOpen size={32} /></div>
-                    )}
-                  </div>
-                  <div className="p-5 flex flex-col flex-grow">
-                    <h3 className="font-serif font-bold text-[15px] text-gray-900 mb-2 leading-tight group-hover:text-[#C9A227] transition-colors line-clamp-2">{course.title}</h3>
-                    <p className="text-gray-500 text-xs mb-5 flex-grow leading-relaxed line-clamp-3">{course.subtitle || 'Learn from expert legal professionals with practical insights.'}</p>
-                    <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-auto">
-                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
+            {(courses.filter(c => c.status === 'published' && c.slug).length > 0
+              ? courses.filter(c => c.status === 'published' && c.slug).slice(0, 3)
+              : (COURSES as any[]).slice(0, 3)
+            ).map((course: any) => {
+              const reviewsCount = Number(course.totalReviews || 0);
+              const avgScore = Number(course.averageRating || 0);
+
+              return (
+                <Link href={`/courses/${course.slug}`} key={course.id} className="block group">
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:border-[#C9A227] transition-colors duration-300 flex flex-col h-full">
+                    <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
+                      {course.thumbnailUrl ? (
+                        <Image src={course.thumbnailUrl} alt={course.title} layout="fill" objectFit="cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-300"><BookOpen size={32} /></div>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleWishlist({
+                            id: String(course.id || course.slug),
+                            slug: course.slug,
+                            title: course.title,
+                            thumbnailUrl: course.thumbnailUrl,
+                            price: course.price,
+                            originalPrice: course.originalPrice,
+                            instructor: course.instructor || "Legal Academy",
+                          });
+                        }}
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-sm transition text-gray-400 hover:text-red-500 z-10"
+                        aria-label="Wishlist course"
+                        title={isInWishlist(course.slug) ? "Remove from wishlist" : "Add to wishlist"}
+                      >
+                        <Heart
+                          size={15}
+                          className={isInWishlist(course.slug) ? "fill-red-500 text-red-500" : ""}
+                        />
+                      </button>
+                    </div>
+                    <div className="p-5 flex flex-col flex-grow">
+                      <h3 className="font-serif font-bold text-[15px] text-gray-900 mb-2 leading-tight group-hover:text-[#C9A227] transition-colors line-clamp-2">{course.title}</h3>
+                      <p className="text-gray-500 text-xs mb-3 leading-relaxed line-clamp-2">{course.subtitle || 'Learn from expert legal professionals with practical insights.'}</p>
+
+                      {/* Course Rating & Review Count */}
+                      <div className="flex items-center gap-1.5 mb-3 text-xs">
+                        {reviewsCount > 0 ? (
+                          <>
+                            <div className="flex items-center text-[#C9A227]">
+                              <Star size={13} className="fill-[#C9A227] text-[#C9A227]" />
+                              <span className="font-bold ml-1 text-slate-800">
+                                {avgScore.toFixed(1)}
+                              </span>
+                            </div>
+                            <span className="text-slate-400 text-[11px]">
+                              ({reviewsCount} {reviewsCount === 1 ? "review" : "reviews"})
+                            </span>
+                          </>
+                        ) : (
+                          <div className="flex items-center text-slate-400 text-[11px]">
+                            <Star size={12} className="text-slate-300 mr-1" />
+                            <span>New (0 reviews)</span>
+                          </div>
+                        )}
+                      </div>
+                    <div className="border-t border-gray-100 pt-3 mt-auto">
+                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 mb-2">
                         <span>{course.level || 'Beginner'}</span>
                         <span className="w-1 h-1 rounded-full bg-gray-300"></span>
                         <span>{course.category || 'Online'}</span>
                       </div>
-                      <span className="font-bold text-[#C9A227] text-sm">{course.price ? `₹${course.price}` : 'Free'}</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="font-bold text-[#C9A227] text-sm">
+                            {course.price ? `₹${course.price}` : 'Free'}
+                          </span>
+                          {course.originalPrice && (
+                            <span className="text-[#122340]/40 line-through text-xs font-medium">
+                              ₹{course.originalPrice}
+                            </span>
+                          )}
+                        </div>
+                        {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
+                          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                            {Math.round(((Number(course.originalPrice) - Number(course.price)) / Number(course.originalPrice)) * 100)}% OFF
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </Link>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

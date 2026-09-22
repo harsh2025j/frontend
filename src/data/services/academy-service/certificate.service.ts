@@ -141,6 +141,7 @@ export const certificateApi = {
     userId?: string;
     mode?: "enrolled" | "external";
     sendEmail?: boolean;
+    updateExisting?: boolean;
   }) => {
     return apiClient.post<any>((T as any).MANUAL_ISSUE || `${T.BASE}/manual-issue`, data);
   },

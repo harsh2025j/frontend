@@ -929,3 +929,15 @@ iframe[data-ratio="4:3"],
 .article-content li.ql-indent-6 {
   padding-left: 19.5em;
 }
+
+/* Hide spin buttons / up & down arrows on number inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

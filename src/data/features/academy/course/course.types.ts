@@ -18,6 +18,7 @@ export interface Course {
   title: string;
   description: string;
   price: number;
+  originalPrice?: number;
   status: string;
   thumbnailUrl: string;
   subtitle: string;
@@ -53,6 +54,8 @@ export interface Course {
   };
   faqs?: {q: string, a: string}[];
   modules?: CourseModule[];
+  averageRating?: number;
+  totalReviews?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -62,4 +65,63 @@ export interface CourseState {
   courses: Course[];
   isLoading: boolean;
   error: string | null;
+}
+
+export interface CourseReview {
+  id: string;
+  courseId: string;
+  userId: string;
+  studentName: string;
+  studentEmail?: string;
+  studentAvatar?: string;
+  rating: number; // 1 - 5
+  reviewText: string;
+  isVerified: boolean;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+  course?: {
+    id: string;
+    title: string;
+    slug?: string;
+  };
+}
+
+export interface CourseReviewSummary {
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution: {
+    5: number;
+    4: number;
+    3: number;
+    2: number;
+    1: number;
+  };
+  ratingPercentages: {
+    5: number;
+    4: number;
+    3: number;
+    2: number;
+    1: number;
+  };
+}
+
+export interface CourseReviewsResponse {
+  reviews: CourseReview[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+  summary: CourseReviewSummary;
+}
+
+export interface MyReviewEligibility {
+  isEnrolled: boolean;
+  canReview: boolean;
+  hasReviewed: boolean;
+  progress: number;
+  reason?: string;
+  review?: CourseReview | null;
 }

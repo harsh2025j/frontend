@@ -1,7 +1,7 @@
 // export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev";
 // export const API_BASE_URL = "https://galliardly-pyritic-kathleen.ngrok-free.dev";
-export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
-// export const API_BASE_URL = "http://localhost:8000/"
+// export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
+export const API_BASE_URL = "http://localhost:8000/"
 export const API_ENDPOINTS = {
   SEARCH: {
     JUDGES: "/search/judges",
@@ -169,6 +169,7 @@ export const API_ENDPOINTS = {
   },
   ACADEMY: {
     COURSES: "/academy/courses",
+    SEARCH_COURSES: "/academy/courses/search",
     COURSE_BY_ID: "/academy/courses/:id",
     MODULES: "/academy/courses/:courseId/modules",
     CURRICULUM: "/academy/curriculum",
@@ -178,6 +179,11 @@ export const API_ENDPOINTS = {
       VERIFY: "/academy/enrollments/courses/:courseId/verify",
       MY_COURSES: "/academy/enrollments/my-courses",
       ALL: "/academy/enrollments/all",
+    },
+    COUPONS: {
+      BASE: "/academy/coupons",
+      BY_ID: "/academy/coupons/:id",
+      VALIDATE: "/academy/coupons/validate",
     },
     PAYMENTS: {
       ALL: "/payments/courses/all", // This goes to subscriptions-service but we can group it here for convenience
@@ -193,6 +199,13 @@ export const API_ENDPOINTS = {
       REISSUE: "/academy/certificates/:id/reissue",
       MINE: "/academy/certificates/mine",
       VERIFY: "/academy/certificates/verify/:certificateId",
+    },
+    REVIEWS: {
+      BY_COURSE: "/academy/courses/:courseId/reviews",
+      MY_REVIEW: "/academy/courses/:courseId/reviews/my-review",
+      ACTION: "/academy/courses/:courseId/reviews",
+      ADMIN_ALL: "/academy/admin/reviews",
+      ADMIN_DELETE: "/academy/admin/reviews/:reviewId",
     },
   }
 };

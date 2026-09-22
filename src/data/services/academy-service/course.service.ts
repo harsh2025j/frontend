@@ -39,6 +39,13 @@ export const courseApi = {
     return await apiClient.get<any>(API_ENDPOINTS.ACADEMY.COURSES);
   },
 
+  searchCourses: async (query: string) => {
+    return await apiClient.get<{ id: string; title: string; slug: string }[]>(
+      API_ENDPOINTS.ACADEMY.SEARCH_COURSES,
+      { params: { q: query } }
+    );
+  },
+
   fetchCourseById: async (id: string) => {
     return await apiClient.get<any>(`${API_ENDPOINTS.ACADEMY.COURSES}/${id}`);
   },

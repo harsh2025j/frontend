@@ -6,7 +6,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { 
   ArrowLeft, Users, FileCheck, Calendar, Settings, 
   BookOpen, Eye, BarChart3, Loader2, X, CheckCircle,
-  MonitorPlay, Infinity, FileCheck2
+  MonitorPlay, Infinity, FileCheck2, Star
 } from "lucide-react";
 import { VideoCourseLayout } from "@/app/[locale]/academy/courses/[slug]/page";
 import { courseApi } from "@/data/services/academy-service/course.service";
@@ -17,6 +17,7 @@ import AcademyTestsPage from "@/app/[locale]/admin/academy/tests/page";
 import StudentsTab from "./StudentsTab";
 import CourseSettingsTab from "./CourseSettingsTab";
 import AcademyLiveSessionsPage from "@/app/[locale]/admin/academy/live-sessions/page";
+import ReviewsTab from "./ReviewsTab";
 import toast from "react-hot-toast";
 import apiClient from "@/data/services/apiConfig/apiClient";
 
@@ -31,6 +32,8 @@ export default function CourseUnifiedDashboard() {
   const [course, setCourse] = useState<any>(null);
   const [stats, setStats] = useState({
     studentsCount: 0,
+    platformCount: 0,
+    externalCount: 0,
     completionRate: "0%",
     revenue: "₹0",
     assignmentsPending: 0,
@@ -91,11 +94,22 @@ export default function CourseUnifiedDashboard() {
         const enrollmentsData = statsRes.data?.data || [];
         const totalStudents = statsRes.data?.total || 0;
         
+        let platformCount = statsRes.data?.platformCount;
+        let externalCount = statsRes.data?.externalCount;
+
+        if (platformCount === undefined || externalCount === undefined) {
+          platformCount = enrollmentsData.filter((s: any) => {
+            const courseEnrollment = s.enrollments?.find((e: any) => e.courseId === courseId) || s.enrollments?.[0];
+            return courseEnrollment?.source === 'platform' || (!courseEnrollment?.source && !!courseEnrollment?.razorpayOrderId);
+          }).length;
+          externalCount = Math.max(0, totalStudents - platformCount);
+        }
+
         let totalProgress = 0;
         
         enrollmentsData.forEach((student: any) => {
-           let enrollment = student.enrollments.find((e: any) => e.courseId === courseId);
-           if (!enrollment && student.enrollments.length > 0) enrollment = student.enrollments[0]; // fallback
+           let enrollment = student.enrollments?.find((e: any) => e.courseId === courseId);
+           if (!enrollment && student.enrollments?.length > 0) enrollment = student.enrollments[0]; // fallback
            totalProgress += (enrollment?.progress || 0);
         });
         
@@ -110,10 +124,30 @@ export default function CourseUnifiedDashboard() {
           console.error("Failed to fetch pending assignments count", aErr);
         }
         
+        let courseRevenue = 0;
+        try {
+          const paymentsRes = await apiClient.get('/payments/courses/all', { params: { limit: 1000, courseId } });
+          const raw = paymentsRes.data;
+          const rawData = raw?.data ?? raw;
+          if (rawData?.totalRevenue !== undefined) {
+            courseRevenue = Number(rawData.totalRevenue);
+          } else {
+            const rawPayments = rawData?.data ?? (Array.isArray(rawData) ? rawData : []);
+            const paidForThisCourse = (Array.isArray(rawPayments) ? rawPayments : []).filter(
+              (p: any) => p.referenceId === courseId && (p.status === 'paid' || p.status === 'COMPLETED')
+            );
+            courseRevenue = paidForThisCourse.reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0);
+          }
+        } catch (pErr) {
+          console.error("Failed to fetch payments for course revenue", pErr);
+        }
+
         setStats({
           studentsCount: totalStudents,
+          platformCount,
+          externalCount,
           completionRate: `${completionRate}%`,
-          revenue: `₹${(totalStudents * (res.data.price || 0)).toLocaleString()}`,
+          revenue: `₹${courseRevenue.toLocaleString()}`,
           assignmentsPending: pendingAssignmentsCount,
         });
       } catch (statsErr) {
@@ -261,6 +295,7 @@ export default function CourseUnifiedDashboard() {
             { id: 'overview', label: 'Overview', icon: BarChart3 },
             { id: 'curriculum', label: 'Curriculum', icon: BookOpen },
             { id: 'students', label: 'Students', icon: Users },
+            { id: 'reviews', label: 'Reviews', icon: Star },
             { id: 'assignments', label: 'Assignments', icon: FileCheck },
             { id: 'tests', label: 'Tests & Final Assessment', icon: FileCheck2 },
             { id: 'sessions', label: 'Live Sessions', icon: Calendar },
@@ -298,22 +333,27 @@ export default function CourseUnifiedDashboard() {
             <StudentsTab courseId={courseId} />
           )}
 
-          {/* 4. ASSIGNMENTS TAB */}
+          {/* 4. REVIEWS & RATINGS TAB */}
+          {activeTab === "reviews" && (
+            <ReviewsTab courseId={courseId} />
+          )}
+
+          {/* 5. ASSIGNMENTS TAB */}
           {activeTab === "assignments" && (
             <AssignmentsTab courseId={courseId} />
           )}
 
-          {/* 5. TESTS & FINAL ASSESSMENT TAB */}
+          {/* 6. TESTS & FINAL ASSESSMENT TAB */}
           {activeTab === "tests" && (
             <AcademyTestsPage initialCourseId={courseId} isCourseScoped={true} />
           )}
 
-          {/* 5. LIVE SESSIONS TAB */}
+          {/* 7. LIVE SESSIONS TAB */}
           {activeTab === "sessions" && (
             <AcademyLiveSessionsPage initialCourseId={courseId} isCourseScoped={true} />
           )}
 
-          {/* 6. SETTINGS TAB */}
+          {/* 8. SETTINGS TAB */}
           {activeTab === "settings" && (
             <CourseSettingsTab course={course} setCourse={setCourse} courseId={courseId} />
           )}

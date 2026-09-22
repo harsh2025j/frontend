@@ -25,7 +25,7 @@ export interface CoursePayment {
 export interface EnrollmentsState {
   myEnrollments: Enrollment[];
   allEnrollments: { data: Enrollment[], total: number, page: number, limit: number, totalPages: number };
-  studentsSummary: { data: any[], total: number, page: number, limit: number, totalPages: number };
+  studentsSummary: { data: any[], total: number, page: number, limit: number, totalPages: number, platformCount?: number, externalCount?: number };
   allPayments: { data: CoursePayment[], total: number, page: number, limit: number, totalPages: number };
   isLoading: boolean;
   error: string | null;

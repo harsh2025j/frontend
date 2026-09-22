@@ -148,8 +148,16 @@ function SuccessCard({ cert }: { cert: NonNullable<VerifyResult["certificate"]> 
     setDownloadingPdf(true);
     const filename = formatCertificateFilename(cert.studentName, cert.courseName, "pdf");
     try {
-      const res = await fetch(cert.pdfUrl);
-      if (!res.ok) throw new Error("Download failed");
+      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(cert.pdfUrl)}&filename=${encodeURIComponent(filename)}`;
+      let res: Response;
+      try {
+        res = await fetch(cert.pdfUrl, { mode: "cors" });
+        if (!res.ok) throw new Error("CORS or direct fetch failed");
+      } catch {
+        res = await fetch(proxyUrl);
+        if (!res.ok) throw new Error(`Download failed (${res.status})`);
+      }
+
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -161,12 +169,14 @@ function SuccessCard({ cert }: { cert: NonNullable<VerifyResult["certificate"]> 
       window.URL.revokeObjectURL(url);
       toast.success("Certificate PDF downloaded");
     } catch {
+      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(cert.pdfUrl)}&filename=${encodeURIComponent(filename)}`;
       const a = document.createElement("a");
-      a.href = cert.pdfUrl;
-      a.setAttribute("download", filename);
+      a.href = proxyUrl;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      toast("Starting PDF download...", { icon: "📥" });
     } finally {
       setDownloadingPdf(false);
     }
@@ -177,8 +187,16 @@ function SuccessCard({ cert }: { cert: NonNullable<VerifyResult["certificate"]> 
     setDownloadingPng(true);
     const filename = formatCertificateFilename(cert.studentName, cert.courseName, "png");
     try {
-      const res = await fetch(cert.imageUrl);
-      if (!res.ok) throw new Error("Image download failed");
+      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(cert.imageUrl)}&filename=${encodeURIComponent(filename)}`;
+      let res: Response;
+      try {
+        res = await fetch(cert.imageUrl, { mode: "cors" });
+        if (!res.ok) throw new Error("CORS or direct fetch failed");
+      } catch {
+        res = await fetch(proxyUrl);
+        if (!res.ok) throw new Error(`Download failed (${res.status})`);
+      }
+
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -190,7 +208,14 @@ function SuccessCard({ cert }: { cert: NonNullable<VerifyResult["certificate"]> 
       window.URL.revokeObjectURL(url);
       toast.success("Certificate image downloaded");
     } catch {
-      window.open(cert.imageUrl, "_blank");
+      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(cert.imageUrl)}&filename=${encodeURIComponent(filename)}`;
+      const a = document.createElement("a");
+      a.href = proxyUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast("Starting image download...", { icon: "📥" });
     } finally {
       setDownloadingPng(false);
     }

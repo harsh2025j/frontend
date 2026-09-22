@@ -78,15 +78,23 @@ function CertificateCard({
   onShare: () => void;
 }) {
   const [downloading, setDownloading] = useState(false);
-  const verifyUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/academy/certificates/verify/${cert.certificateId}`;
+  const verifyUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/certificates/verify/${cert.certificateId}`;
 
   const handleDownload = async () => {
     if (downloading) return;
     setDownloading(true);
     const filename = formatCertificateFilename(cert.studentName, cert.courseName, 'pdf');
     try {
-      const res = await fetch(cert.pdfUrl);
-      if (!res.ok) throw new Error('Failed to fetch certificate file');
+      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(cert.pdfUrl)}&filename=${encodeURIComponent(filename)}`;
+      let res: Response;
+      try {
+        res = await fetch(cert.pdfUrl, { mode: 'cors' });
+        if (!res.ok) throw new Error('Direct fetch failed');
+      } catch {
+        res = await fetch(proxyUrl);
+        if (!res.ok) throw new Error(`Download failed (${res.status})`);
+      }
+
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -99,13 +107,14 @@ function CertificateCard({
       toast.success('Certificate downloaded successfully');
     } catch (err) {
       console.error('Download error:', err);
-      // Fallback
+      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(cert.pdfUrl)}&filename=${encodeURIComponent(filename)}`;
       const a = document.createElement('a');
-      a.href = cert.pdfUrl;
-      a.setAttribute('download', filename);
+      a.href = proxyUrl;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      toast('Starting PDF download...', { icon: '📥' });
     } finally {
       setDownloading(false);
     }

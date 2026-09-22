@@ -2,13 +2,15 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, BookOpen, LayoutDashboard, LogOut, ChevronDown, AlertTriangle, Search, ShoppingCart } from 'lucide-react';
+import { Menu, X, BookOpen, LayoutDashboard, LogOut, ChevronDown, AlertTriangle, Heart } from 'lucide-react';
 import Image from 'next/image';
 import logo from "../../../../../public/logo.png";
 import { useAuth } from '@/data/features/auth/useAuthActions';
 import { useAppDispatch } from '@/data/redux/hooks';
 import { logoutUserAsync } from '@/data/features/auth/authThunks';
 import { useRouter } from 'next/navigation';
+import { useWishlist } from '@/context/WishlistContext';
+import AcademySearch from './AcademySearch';
 
 export default function AcademyNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,6 +18,7 @@ export default function AcademyNavbar() {
   const { user } = useAuth();
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { wishlist, openWishlist } = useWishlist();
 
   const handleLogout = async () => {
     await dispatch(logoutUserAsync());
@@ -39,26 +42,40 @@ export default function AcademyNavbar() {
           </Link>
 
           {/* Center Search Bar */}
-          <div className="hidden md:flex flex-1 justify-center px-8">
-            <div className="relative w-full max-w-md hidden lg:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                type="text"
-                placeholder="Search for courses..."
-                className="w-full pl-9 pr-4 py-2 rounded-full bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227] transition-all text-sm text-gray-900 placeholder-gray-500"
-              />
-            </div>
+          <div className="hidden md:flex flex-1 justify-center px-4 lg:px-8 max-w-lg mx-auto">
+            <AcademySearch />
           </div>
 
           {/* Desktop Right Side */}
-          <div className="hidden md:flex items-center gap-8 h-full">
+          <div className="hidden md:flex items-center gap-6 h-full">
+            {/* 1. Courses Navigation */}
             <Link
               href="/courses"
-              className="flex items-center gap-2 h-full hover:text-[#C9A227] whitespace-nowrap transition-colors text-[#122340]/80 font-medium"
+              className="flex items-center gap-1.5 h-full hover:text-[#C9A227] whitespace-nowrap transition-colors text-[#122340]/80 font-medium text-sm"
             >
-              <ShoppingCart size={20} />
-              Courses
+              <BookOpen size={18} />
+              <span>Courses</span>
             </Link>
+
+            {/* 2. Wishlist Button */}
+            <button
+              onClick={openWishlist}
+              className="group relative flex items-center gap-1.5 h-full hover:text-[#C9A227] whitespace-nowrap transition-colors text-[#122340]/80 font-medium text-sm py-2"
+              aria-label="View Wishlist"
+            >
+              <div className="relative flex items-center justify-center mr-1">
+                <Heart
+                  size={18}
+                  className="transition-colors group-hover:text-[#C9A227]"
+                />
+                {wishlist.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-[#122340] text-white text-[9px] font-bold h-4 min-w-4 px-1 rounded-full flex items-center justify-center shadow-xs border border-white">
+                    {wishlist.length}
+                  </span>
+                )}
+              </div>
+              <span className="group-hover:text-[#C9A227] transition-colors">Wishlist</span>
+            </button>
 
             <div className="flex items-center gap-4 relative">
             {user ? (
@@ -108,9 +125,21 @@ export default function AcademyNavbar() {
             </div>
           </div>
 
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center gap-3">
+            <button
+              onClick={openWishlist}
+              className="relative p-1.5 text-[#122340] hover:text-[#C9A227] transition-colors"
+              aria-label="View Wishlist"
+            >
+              <Heart size={22} />
+              {wishlist.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#122340] text-white text-[9px] font-semibold h-4 min-w-4 px-1 rounded-full flex items-center justify-center shadow-xs border border-white">
+                  {wishlist.length}
+                </span>
+              )}
+            </button>
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-[#122340] hover:text-[#C9A227] transition-colors">
-              {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+              {isMenuOpen ? <X size={26} /> : <Menu size={26} />}
             </button>
           </div>
         </div>
@@ -134,9 +163,32 @@ export default function AcademyNavbar() {
                   </div>
                 </div>
               )}
+
+              {/* Mobile Search Bar */}
+              <div className="mb-3">
+                <AcademySearch onSelectCourse={() => setIsMenuOpen(false)} />
+              </div>
+
               <Link href="/courses" className="flex items-center gap-2 py-3 text-sm font-medium text-gray-700 hover:text-[#C9A227]" onClick={() => setIsMenuOpen(false)}>
                 <BookOpen size={16} /> Browse Courses
               </Link>
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  openWishlist();
+                }}
+                className="flex items-center justify-between py-3 text-sm font-medium text-gray-700 hover:text-[#C9A227] text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Heart size={16} />
+                  <span>My Wishlist</span>
+                </div>
+                {wishlist.length > 0 && (
+                  <span className="bg-[#122340] text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                    {wishlist.length}
+                  </span>
+                )}
+              </button>
               <Link href="/dashboard" className="flex items-center gap-2 py-3 text-sm font-medium text-gray-700 hover:text-[#C9A227]" onClick={() => setIsMenuOpen(false)}>
                 <LayoutDashboard size={16} /> My Learning
               </Link>

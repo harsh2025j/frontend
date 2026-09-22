@@ -1,19 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft, Star, Share2, CalendarDays, Clock, Globe,
   Users, GraduationCap, Sparkles, CheckCircle2, Heart,
   PlayCircle, Video, BarChart, Infinity, Award, FileText,
-  Plus, Minus, ChevronDown, ChevronUp, MonitorPlay, Loader2, ChevronLeft
+  Plus, Minus, ChevronDown, ChevronUp, MonitorPlay, Loader2, ChevronLeft,
+  Tag, AlertCircle, Check
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/data/redux/hooks';
 import { fetchCourseById } from '@/data/features/academy/course/courseThunks';
 import { clearCurrentCourse } from '@/data/features/academy/course/courseSlice';
 import { createCoursePaymentOrder, verifyCoursePayment, fetchMyEnrollments } from '@/data/features/academy/enrollments/enrollmentsThunks';
+import apiClient from '@/data/services/apiConfig/apiClient';
+import { API_ENDPOINTS } from '@/data/services/apiConfig/apiContants';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import CourseReviewsSection from '@/components/academy/reviews/CourseReviewsSection';
+import { useWishlist } from '@/context/WishlistContext';
 
 // ── Mock Data ───────────────────────────────────────────────────
 
@@ -29,6 +34,8 @@ const LIVE_HYBRID_COURSE = {
   },
   price: "₹8,499",
   originalPrice: "₹12,000",
+  rawPrice: 8499,
+  rawOriginalPrice: 12000,
   image: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=800&auto=format&fit=crop",
   tags: ["Live Sessions", "Recordings Included", "Certificate Included"],
   schedule: {
@@ -119,6 +126,8 @@ const TEST_SERIES = {
   validity: "180 days",
   price: "₹199",
   originalPrice: null,
+  rawPrice: 199,
+  rawOriginalPrice: null,
   image: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=400&auto=format&fit=crop",
   description: `
     <p>The Judiciary Prep Booster Test - 3rd Edition by Sajjad Husain Legal Academy is a specialized, examination-oriented test program designed for judiciary aspirants.</p>
@@ -166,11 +175,113 @@ export function VideoCourseLayout({ course }: { course: any }) {
 
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [isPaying, setIsPaying] = useState(false);
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
+  // ── Decoupled independent column scroll ─────────────────────────
+  const gridRef = useRef<HTMLDivElement>(null);
+  const leftColRef = useRef<HTMLDivElement>(null);
+  const rightColRef = useRef<HTMLDivElement>(null);
+  const mouseOnRight = useRef(false);
+
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    // Lock body scroll on desktop so footer doesn't peek through
+    const lockScroll = () => {
+      if (window.innerWidth >= 1024) {
+        document.body.style.overflow = 'hidden';
+      }
+    };
+    lockScroll();
+    window.addEventListener('resize', lockScroll);
+
+    const onWheel = (e: WheelEvent) => {
+      // Only intercept on desktop (lg = 1024px+)
+      if (window.innerWidth < 1024) return;
+
+      const leftCol = leftColRef.current;
+      const rightCol = rightColRef.current;
+      if (!leftCol || !rightCol) return;
+
+      e.preventDefault();
+
+      const delta = e.deltaY;
+      const primaryCol = mouseOnRight.current ? rightCol : leftCol;
+      const secondaryCol = mouseOnRight.current ? leftCol : rightCol;
+
+      const { scrollTop: pTop, scrollHeight: pHeight, clientHeight: pClient } = primaryCol;
+      const atBottom = pTop + pClient >= pHeight - 2;
+      const atTop = pTop <= 2;
+
+      // Scroll primary column if it can move in this direction
+      if ((delta > 0 && !atBottom) || (delta < 0 && !atTop)) {
+        primaryCol.scrollBy({ top: delta, behavior: 'auto' });
+      } else {
+        // Primary col hit boundary — overflow scroll transfers to secondary col
+        secondaryCol.scrollBy({ top: delta, behavior: 'auto' });
+      }
+    };
+
+    // non-passive so we can call preventDefault() and block native page scroll on desktop
+    grid.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      grid.removeEventListener('wheel', onWheel);
+      window.removeEventListener('resize', lockScroll);
+      // Restore body scroll when leaving the course page
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  const { isInWishlist, toggleWishlist } = useWishlist();
+
+
   const dispatch = useAppDispatch();
   const { user } = useAppSelector(state => state.auth);
   const { myEnrollments } = useAppSelector(state => state.enrollments);
 
   const isEnrolled = myEnrollments?.some(e => e.course?.slug === course.slug || e.courseId === course.id);
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) {
+      setCouponError("Please enter a coupon code");
+      return;
+    }
+    if (!course.id) {
+      setCouponError("Invalid course");
+      return;
+    }
+
+    setIsValidatingCoupon(true);
+    setCouponError(null);
+    try {
+      const res: any = await apiClient.post(API_ENDPOINTS.ACADEMY.COUPONS.VALIDATE, {
+        code: couponInput.trim().toUpperCase(),
+        courseId: course.id,
+        userId: user?._id || (user as any)?.id,
+      });
+
+      const data = res.data || res;
+      setAppliedCoupon(data);
+      toast.success(`Coupon "${data.coupon?.code}" applied! You saved ₹${data.discountAmount}`);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || "Invalid coupon code";
+      setCouponError(msg);
+      toast.error(msg);
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError(null);
+    setCouponInput("");
+    toast("Coupon removed");
+  };
 
   // Load Razorpay checkout.js script dynamically
   const loadRazorpayScript = (): Promise<boolean> => {
@@ -198,8 +309,21 @@ export function VideoCourseLayout({ course }: { course: any }) {
 
     setIsPaying(true);
     try {
-      const res = await dispatch(createCoursePaymentOrder(course.id)).unwrap();
+      const orderArg = appliedCoupon
+        ? { courseId: course.id, couponCode: appliedCoupon.coupon?.code }
+        : course.id;
+
+      const res = await dispatch(createCoursePaymentOrder(orderArg)).unwrap();
       const orderData = res.data || res;
+
+      // Handle 100% Free Coupon Bypass (no payment gateway needed)
+      if (orderData.isFree) {
+        toast.success(orderData.message || 'Payment waived! You are now enrolled.');
+        await dispatch(fetchMyEnrollments());
+        router.push(`/dashboard/learn/${course.slug}`);
+        setIsPaying(false);
+        return;
+      }
 
       const loaded = await loadRazorpayScript();
       if (!loaded) {
@@ -236,8 +360,8 @@ export function VideoCourseLayout({ course }: { course: any }) {
             })).unwrap();
 
             toast.success('Payment successful! You are now enrolled.');
-            // Optionally redirect to student dashboard
-            router.push('/dashboard');
+            await dispatch(fetchMyEnrollments());
+            router.push(`/dashboard/learn/${course.slug}`);
           } catch (err: any) {
             toast.error(err || 'Payment verification failed. Please contact support.');
           } finally {
@@ -254,25 +378,36 @@ export function VideoCourseLayout({ course }: { course: any }) {
     }
   };
 
-  // Ratings dummy
-  const rating = course.rating || 0;
-  const reviews = course.reviews || 0;
+  // Live synced rating and review count
+  const [liveSummary, setLiveSummary] = useState<{ averageRating: number; totalReviews: number } | null>(null);
+
+  // Real ratings from live review summary or initial course data
+  const rating = liveSummary?.averageRating !== undefined ? liveSummary.averageRating : (Number(course.averageRating) || 0);
+  const totalReviews = liveSummary?.totalReviews !== undefined ? liveSummary.totalReviews : (Number(course.totalReviews) || 0);
 
   // Instructors
   const instructors = course.instructors || [];
 
   return (
-    <div className="max-w-[1200px] mx-auto py-8">
+    <div className="max-w-[1200px] mx-auto lg:overflow-hidden lg:h-[calc(100vh-64px)] lg:flex lg:flex-col pt-4 pb-2 lg:pb-0">
       {/* ── BREADCRUMB ── */}
-      <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-6 font-medium">
+      <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-3 font-medium shrink-0">
         <ArrowLeft size={16} /> Back
       </button>
 
       {/* ── MAIN CONTENT GRID ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12">
+      <div
+        ref={gridRef}
+        className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 lg:flex-1 lg:min-h-0"
+      >
 
         {/* ── LEFT COLUMN ── */}
-        <div className="space-y-6 lg:space-y-8">
+        <div
+          ref={leftColRef}
+          className="space-y-6 lg:space-y-8 lg:overflow-y-auto lg:h-full no-scrollbar"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+          onMouseEnter={() => { mouseOnRight.current = false; }}
+        >
 
           {/* Header Info */}
           <div>
@@ -292,15 +427,15 @@ export function VideoCourseLayout({ course }: { course: any }) {
               {course.subtitle || course.description || "Description not available"}
             </p>
             <div className="flex items-center gap-6 mb-6">
-              <div className="flex items-center gap-2">
+              <a href="#reviews-section" className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer group">
                 <div className="flex text-[#F59E0B]">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} size={18} fill={i < Math.floor(rating) ? "currentColor" : "none"} strokeWidth={i < Math.floor(rating) ? 0 : 2} className={i >= Math.floor(rating) ? "text-gray-300" : ""} />
                   ))}
                 </div>
-                <span className="font-bold text-[#0B1B3D]">{rating}</span>
-                <span className="text-gray-500 text-sm">({reviews} reviews)</span>
-              </div>
+                <span className="font-bold text-[#0B1B3D]">{rating > 0 ? rating.toFixed(1) : "New"}</span>
+                <span className="text-gray-500 text-sm group-hover:text-[#C9A227] transition-colors underline">({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})</span>
+              </a>
               <button className="flex items-center gap-2 text-gray-500 hover:text-gray-800 text-sm font-medium">
                 <Share2 size={16} /> Share
               </button>
@@ -569,29 +704,184 @@ export function VideoCourseLayout({ course }: { course: any }) {
             )}
           </div>
 
+          {/* ── COURSE REVIEWS & RATINGS (Option C Hybrid) ── */}
+          <CourseReviewsSection
+            courseId={course.id || course.slug}
+            courseTitle={course.title}
+            initialAverageRating={rating}
+            initialTotalReviews={totalReviews}
+            onSummaryChange={(summary) => {
+              setLiveSummary({
+                averageRating: summary.averageRating,
+                totalReviews: summary.totalReviews,
+              });
+            }}
+          />
+
         </div>
 
-        {/* ── RIGHT COLUMN (Sticky Card) ── */}
-        <div>
-          <div className="sticky top-24 space-y-6 pt-0">
+        {/* ── RIGHT COLUMN (Independent Scroll) ── */}
+        <div
+          ref={rightColRef}
+          className="lg:overflow-y-auto lg:h-full no-scrollbar"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+          onMouseEnter={() => { mouseOnRight.current = true; }}
+        >
+          <div className="space-y-6 pt-0 pb-8">
 
             {/* Main Buy Card */}
             <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
-              <div className="relative aspect-video bg-gray-100 flex items-center justify-center">
+              <div className="relative aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
                 {course.image ? (
                   <img src={course.image} alt="Course Cover" className="w-full h-full object-cover" />
                 ) : (
                   <Video size={48} className="text-gray-300" />
                 )}
-                <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-2 shadow-lg cursor-pointer hover:scale-105 transition-transform">
-                    <PlayCircle size={36} className="text-[#0B1B3D]" fill="white" strokeWidth={1} />
-                  </div>
-                  <span className="text-white font-bold text-sm">Preview this course</span>
-                </div>
               </div>
               <div className="p-6">
-                <h2 className="text-3xl font-extrabold text-[#0B1B3D] mb-5">{course.price || "Free"}</h2>
+                {/* Rating Mini Bar in Sticky Card */}
+                <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-100">
+                  <a href="#reviews-section" className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-[#C9A227] transition-colors font-bold">
+                    <Star size={14} className="text-[#C9A227] fill-[#C9A227]" />
+                    <span>{rating > 0 ? rating.toFixed(1) : "New"}</span>
+                    <span className="text-slate-400 font-normal">({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})</span>
+                  </a>
+                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    Verified Course
+                  </span>
+                </div>
+
+                {/* PhysicsWallah Pricing Hero */}
+                {(() => {
+                  const numPrice = course.rawPrice !== undefined ? course.rawPrice : (Number(String(course.price || "").replace(/[^0-9.]/g, "")) || 0);
+                  const numOriginalPrice = course.rawOriginalPrice !== undefined ? course.rawOriginalPrice : (Number(String(course.originalPrice || "").replace(/[^0-9.]/g, "")) || 0);
+                  const hasDiscount = numOriginalPrice > numPrice;
+                  const discountPct = hasDiscount ? Math.round(((numOriginalPrice - numPrice) / numOriginalPrice) * 100) : null;
+
+                  return (
+                    <div className="mb-5">
+                      <div className="flex items-baseline flex-wrap gap-2.5">
+                        <span className="text-3xl font-extrabold text-[#0B1B3D]">
+                          {appliedCoupon
+                            ? (appliedCoupon.isFree ? "FREE" : `₹${appliedCoupon.finalAmount}`)
+                            : (course.price || "Free")}
+                        </span>
+                        {(hasDiscount || appliedCoupon) && (
+                          <span className="text-base text-gray-400 line-through font-medium">
+                            {appliedCoupon ? (course.price || `₹${numPrice}`) : course.originalPrice}
+                          </span>
+                        )}
+                        {appliedCoupon ? (
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                            Save ₹{appliedCoupon.discountAmount}
+                          </span>
+                        ) : discountPct ? (
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                            {discountPct}% OFF
+                          </span>
+                        ) : null}
+                      </div>
+                      {hasDiscount && !appliedCoupon && (
+                        <p className="text-[11px] text-amber-700 font-medium mt-1 flex items-center gap-1">
+                          ⚡ Limited period offer
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Coupon Code Section */}
+                {!isEnrolled && (
+                  <div className="mb-5 bg-slate-50 border border-slate-200/80 rounded-xl p-3.5">
+                    {!appliedCoupon ? (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                            <Tag size={13} className="text-[#C9A227]" /> Have a Coupon Code?
+                          </label>
+                          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">e.g. DIWALI20</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Enter coupon code"
+                            value={couponInput}
+                            spellCheck={false}
+                            autoComplete="off"
+                            autoCapitalize="characters"
+                            onChange={(e) => {
+                              setCouponInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""));
+                              setCouponError(null);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleApplyCoupon();
+                              }
+                            }}
+                            style={{ color: "#0f172a" }}
+                            className="w-full bg-white !text-slate-900 border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono font-extrabold uppercase placeholder:!text-slate-400 placeholder:normal-case placeholder:font-normal placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-[#0B1B3D]/20 focus:border-[#0B1B3D] tracking-wider shadow-sm"
+                          />
+                          <button
+                            onClick={handleApplyCoupon}
+                            disabled={isValidatingCoupon || !couponInput.trim()}
+                            className="bg-[#0B1B3D] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#152a54] transition disabled:opacity-50 shrink-0 flex items-center gap-1 shadow-sm"
+                          >
+                            {isValidatingCoupon ? <Loader2 size={13} className="animate-spin" /> : "Apply"}
+                          </button>
+                        </div>
+                        {couponError && (
+                          <p className="text-[11px] text-red-600 mt-2 font-medium flex items-center gap-1">
+                            <AlertCircle size={12} className="shrink-0" /> {couponError}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                              <Check size={12} />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-emerald-800 font-mono">
+                                {appliedCoupon.coupon?.code} applied
+                              </p>
+                              <p className="text-[11px] text-emerald-700 font-medium">
+                                You save ₹{appliedCoupon.discountAmount}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={handleRemoveCoupon}
+                            className="text-xs text-red-500 hover:text-red-700 hover:underline font-semibold"
+                          >
+                            Remove
+                          </button>
+                        </div>
+
+                        {/* Order breakdown */}
+                        <div className="mt-3 pt-2.5 border-t border-slate-200/80 space-y-1 text-xs text-slate-600">
+                          <div className="flex justify-between">
+                            <span>Course Fee</span>
+                            <span>₹{appliedCoupon.coursePrice}</span>
+                          </div>
+                          <div className="flex justify-between text-emerald-600 font-medium">
+                            <span>Coupon Discount</span>
+                            <span>- ₹{appliedCoupon.discountAmount}</span>
+                          </div>
+                          <div className="flex justify-between text-slate-900 font-bold pt-1 border-t border-slate-200">
+                            <span>Final Payable</span>
+                            <span className="text-[#0B1B3D] text-sm font-extrabold">
+                              {appliedCoupon.isFree ? "FREE" : `₹${appliedCoupon.finalAmount}`}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-3 mb-6">
                   {isEnrolled ? (
                     <Link href={`/dashboard/learn/${course.slug}`}>
@@ -600,16 +890,44 @@ export function VideoCourseLayout({ course }: { course: any }) {
                       </button>
                     </Link>
                   ) : (
-                    <button 
+                    <button
                       onClick={handlePayNow}
                       disabled={isPaying}
                       className="w-full bg-[#D4AF37] text-white py-3.5 rounded-lg font-bold hover:bg-[#c4a132] transition-colors text-[15px] flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
-                      {isPaying ? <Loader2 size={18} className="animate-spin" /> : "Enroll Now"}
+                      {isPaying ? (
+                        <Loader2 size={18} className="animate-spin" />
+                      ) : appliedCoupon?.isFree ? (
+                        "Enroll for Free"
+                      ) : appliedCoupon ? (
+                        `Pay ₹${appliedCoupon.finalAmount} & Enroll`
+                      ) : (
+                        "Enroll Now"
+                      )}
                     </button>
                   )}
                   {!isEnrolled && (
-                    <button className="w-full bg-white border border-gray-300 text-[#0B1B3D] py-3.5 rounded-lg font-bold hover:bg-gray-50 transition-colors text-[15px] flex items-center justify-center gap-2">
-                      <Heart size={18} /> Add to Wishlist
+                    <button
+                      onClick={() => {
+                        toggleWishlist({
+                          id: course.id,
+                          slug: course.slug,
+                          title: course.title,
+                          thumbnailUrl: course.image || course.thumbnailUrl,
+                          price: course.price,
+                          originalPrice: course.originalPrice,
+                          instructor: typeof course.instructor === 'string' ? course.instructor : (course.instructors?.[0]?.name || course.instructor?.name || "Legal Academy"),
+                        });
+                      }}
+                      className={`w-full py-3.5 rounded-lg font-bold transition-colors text-[15px] flex items-center justify-center gap-2 border ${isInWishlist(course.slug || course.id)
+                          ? "bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100/70"
+                          : "bg-white border-gray-300 text-[#0B1B3D] hover:bg-gray-50"
+                        }`}
+                    >
+                      <Heart
+                        size={18}
+                        className={isInWishlist(course.slug || course.id) ? "fill-red-500 text-red-500" : "text-[#0B1B3D]"}
+                      />
+                      {isInWishlist(course.slug || course.id) ? "Saved in Wishlist" : "Add to Wishlist"}
                     </button>
                   )}
                 </div>
@@ -723,7 +1041,9 @@ function TestSeriesLayout({ course }: { course: typeof TEST_SERIES }) {
       <div className="bg-white border border-[#122340]/10 rounded-xl p-6 sm:p-10 flex flex-col md:flex-row gap-10 shadow-sm">
         {/* Cover Image */}
         <div className="w-full md:w-1/3 shrink-0">
-          <img src={course.image} alt={course.title} className="w-full h-auto rounded-lg shadow-md border border-[#122340]/5 object-cover" />
+          <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-md border border-[#122340]/5 bg-[#122340]/5">
+            <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+          </div>
         </div>
 
         {/* Details */}
@@ -736,8 +1056,18 @@ function TestSeriesLayout({ course }: { course: typeof TEST_SERIES }) {
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-6 mt-auto">
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-extrabold text-[#C9A227]">{course.price}</span>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-baseline gap-2.5 flex-wrap">
+                <span className="text-4xl font-extrabold text-[#C9A227]">{course.price}</span>
+                {course.originalPrice && (
+                  <span className="text-lg text-[#122340]/40 line-through font-medium">{course.originalPrice}</span>
+                )}
+                {course.rawOriginalPrice && course.rawPrice && course.rawOriginalPrice > course.rawPrice && (
+                  <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                    {Math.round(((course.rawOriginalPrice - course.rawPrice) / course.rawOriginalPrice) * 100)}% OFF
+                  </span>
+                )}
+              </div>
               <span className="text-xs text-[#122340]/50 uppercase tracking-widest font-semibold">Including 18% GST</span>
             </div>
             <button className="bg-[#122340] text-white px-8 py-3.5 rounded-lg font-bold hover:bg-[#0a1628] transition-colors shadow-md text-sm whitespace-nowrap">
@@ -787,7 +1117,9 @@ function TestSeriesLayout({ course }: { course: typeof TEST_SERIES }) {
           <div className="flex flex-col gap-4">
             {course.otherCourses.map((oc) => (
               <div key={oc.id} className="bg-white rounded-lg border border-[#122340]/10 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-                <img src={oc.img} alt={oc.title} className="w-full h-24 object-cover border-b border-[#122340]/5" />
+                <div className="relative aspect-video w-full overflow-hidden border-b border-[#122340]/5 bg-[#122340]/5">
+                  <img src={oc.img} alt={oc.title} className="w-full h-full object-cover" />
+                </div>
                 <div className="p-3">
                   <h4 className="font-bold text-xs text-[#122340] mb-2 leading-tight">{oc.title}</h4>
                   <p className="text-[#122340]/60 text-[10px] mb-2">Sajjad Husain Legal Academy</p>
@@ -880,7 +1212,13 @@ function CourseSkeletonLayout() {
         {/* ── RIGHT COLUMN (Sticky Card) ── */}
         <div>
           <div className="sticky top-24 space-y-6 pt-0">
-            <div className="border border-gray-100 rounded-2xl overflow-hidden bg-gray-50 shadow-sm animate-pulse h-[400px]"></div>
+            <div className="border border-gray-100 rounded-2xl overflow-hidden bg-white shadow-sm animate-pulse">
+              <div className="aspect-video w-full bg-gray-200"></div>
+              <div className="p-6 space-y-4">
+                <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+                <div className="h-12 bg-gray-200 rounded"></div>
+              </div>
+            </div>
             <div className="grid gap-4">
               {[1, 2, 3, 4].map(i => (
                 <div key={i} className="bg-gray-50 border border-gray-100 rounded-xl p-5 h-20 animate-pulse"></div>
@@ -908,16 +1246,17 @@ export default function CourseDetail({ params }: { params: Promise<{ slug: strin
     if (slug) {
       dispatch(fetchCourseById(slug));
     }
-    
+    return () => {
+      dispatch(clearCurrentCourse());
+    };
+  }, [dispatch, slug]);
+
+  useEffect(() => {
     // Fetch enrollments if user is logged in and they haven't been fetched yet
     if (user && (!myEnrollments || myEnrollments.length === 0)) {
       dispatch(fetchMyEnrollments());
     }
-
-    return () => {
-      dispatch(clearCurrentCourse());
-    };
-  }, [dispatch, slug, user]);
+  }, [dispatch, user, myEnrollments]);
 
   if (isLoading || (!currentCourse && !error)) {
     return (
@@ -951,9 +1290,13 @@ export default function CourseDetail({ params }: { params: Promise<{ slug: strin
     subtitle: currentCourse.subtitle || currentCourse.description?.substring(0, 100),
     instructors: (currentCourse.instructors && currentCourse.instructors.length > 0) ? currentCourse.instructors : [],
     price: currentCourse.price ? `₹${currentCourse.price}` : null,
-    originalPrice: null,
+    originalPrice: currentCourse.originalPrice ? `₹${currentCourse.originalPrice}` : null,
+    rawPrice: currentCourse.price !== undefined ? Number(currentCourse.price) : 0,
+    rawOriginalPrice: currentCourse.originalPrice ? Number(currentCourse.originalPrice) : null,
     image: currentCourse.thumbnailUrl || "",
     tags: currentCourse.tags?.length ? currentCourse.tags : [currentCourse.level, currentCourse.category].filter(Boolean),
+    averageRating: Number(currentCourse.averageRating) || 0,
+    totalReviews: Number(currentCourse.totalReviews) || 0,
     schedule: (currentCourse.startDate || currentCourse.endDate || currentCourse.timings) ? {
       startDate: currentCourse.startDate,
       endDate: currentCourse.endDate,

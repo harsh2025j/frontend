@@ -86,7 +86,7 @@ export default function LiveSessionsPage() {
                 const isLive = liveData.status === "live";
                 const platform = liveData.platform || item.provider || (item.fileUrl?.includes("meet.google.com") ? "gmeet" : item.fileUrl?.includes("zoom.us") ? "zoom" : item.fileUrl?.includes("youtube") ? "youtube" : "jitsi");
                 const meetingUrl = liveData.meetingUrl || (platform === "gmeet" || platform === "zoom" ? item.fileUrl : "");
-                const targetUrl = item.course?.slug ? `/academy/dashboard/learn/${item.course.slug}` : "/academy/dashboard/courses";
+                const targetUrl = item.course?.slug ? `/dashboard/learn/${item.course.slug}` : "/dashboard/courses";
 
                 return (
                   <div
@@ -195,7 +195,7 @@ export default function LiveSessionsPage() {
             ) : (
               recordingSessions.map((item) => {
                 const liveData = item.liveData || {};
-                const targetUrl = item.course?.slug ? `/academy/dashboard/learn/${item.course.slug}` : "/academy/dashboard/courses";
+                const targetUrl = item.course?.slug ? `/dashboard/learn/${item.course.slug}` : "/dashboard/courses";
 
                 return (
                   <div
