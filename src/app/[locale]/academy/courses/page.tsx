@@ -63,7 +63,7 @@ export default function CoursesPage() {
   );
 
   return (
-    <div className="bg-[#fcfcfa] min-h-screen font-sans pt-10 pb-20">
+    <div className="ac-student bg-[color:var(--sa-cream)] min-h-screen font-sans pt-10 pb-20">
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
 

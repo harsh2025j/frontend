@@ -107,7 +107,7 @@ export default function MyCoursesPage() {
             const isCompleted = progress === 100;
             
             return (
-              <div key={course.slug} className="group relative bg-white rounded-3xl overflow-hidden border border-[#122340]/5 flex flex-col h-full hover:border-[#C9A227] hover:shadow-[0_20px_60px_rgba(18,35,64,0.12)] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+              <div key={course.slug} className="group relative bg-white rounded-xl overflow-hidden border border-[#122340]/5 flex flex-col h-full hover:border-[#C9A227]  transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
                 
                 {/* Image Section (Clickable) */}
                 <Link href={`/dashboard/learn/${course.slug}`} className="block relative aspect-video w-full overflow-hidden bg-[#122340]/5 cursor-pointer">
@@ -116,7 +116,7 @@ export default function MyCoursesPage() {
                     alt={course.title} 
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/40 to-transparent opacity-90 transition-opacity duration-500 group-hover:opacity-100"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/40 to-transparent opacity-70 transition-opacity duration-500 group-hover:opacity-80"></div>
                   
                   {/* Progress Ring Overlay */}
                   <div className="absolute bottom-5 right-5 flex items-center justify-center">
@@ -137,7 +137,7 @@ export default function MyCoursesPage() {
                   
                   {/* Course Title (Clickable) */}
                   <Link href={`/dashboard/learn/${course.slug}`}>
-                    <h3 className="font-extrabold text-[#122340] text-xl leading-tight line-clamp-2 mb-5 group-hover:text-[#C9A227] transition-colors duration-300 cursor-pointer">
+                    <h3 className="font-extrabold text-[#122340] text-xl leading-tight line-clamp-2 mb-5  transition-colors duration-300 cursor-pointer">
                       {course.title}
                     </h3>
                   </Link>
@@ -160,7 +160,7 @@ export default function MyCoursesPage() {
                   {/* Always allow viewing course content */}
                   <div className="mt-auto">
                     <Link href={`/dashboard/learn/${course.slug}`}>
-                      <button className="w-full bg-[#122340] text-white py-3.5 rounded-xl font-bold hover:bg-[#0a1628] transition-all text-sm flex items-center justify-center gap-2 shadow-[0_4px_14px_0_rgba(18,35,64,0.39)] hover:shadow-[0_6px_20px_rgba(18,35,64,0.23)] hover:-translate-y-0.5 relative overflow-hidden group/btn cursor-pointer">
+                      <button className="w-full bg-[#122340] text-white py-3.5 rounded-xl font-bold hover:bg-[#0a1628] transition-all text-sm flex items-center justify-center gap-2 shadow-[0_4px_14px_0_rgba(18,35,64,0.39)] hover:shadow-[0_6px_20px_rgba(18,35,64,0.23)]  relative overflow-hidden group/btn cursor-pointer">
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover/btn:animate-[shimmer_1.5s_infinite]"></div>
                         {isCompleted ? (
                           <>

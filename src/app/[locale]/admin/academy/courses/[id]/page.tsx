@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { 
-  ArrowLeft, Users, FileCheck, Calendar, Settings, 
+import {
+  ArrowLeft, Users, FileCheck, Calendar, Settings,
   BookOpen, Eye, BarChart3, Loader2, X, CheckCircle,
-  MonitorPlay, Infinity, FileCheck2, Star
+  MonitorPlay, Infinity, FileCheck2, Star, MessageSquare
 } from "lucide-react";
 import { VideoCourseLayout } from "@/app/[locale]/academy/courses/[slug]/page";
 import { courseApi } from "@/data/services/academy-service/course.service";
@@ -18,6 +18,7 @@ import StudentsTab from "./StudentsTab";
 import CourseSettingsTab from "./CourseSettingsTab";
 import AcademyLiveSessionsPage from "@/app/[locale]/admin/academy/live-sessions/page";
 import ReviewsTab from "./ReviewsTab";
+import AdminCourseQATab from "./AdminCourseQATab";
 import toast from "react-hot-toast";
 import apiClient from "@/data/services/apiConfig/apiClient";
 
@@ -27,7 +28,7 @@ export default function CourseUnifiedDashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams?.get("tab");
-  
+
   const [loading, setLoading] = useState(true);
   const [course, setCourse] = useState<any>(null);
   const [stats, setStats] = useState({
@@ -38,7 +39,7 @@ export default function CourseUnifiedDashboard() {
     revenue: "₹0",
     assignmentsPending: 0,
   });
-  
+
   const [activeTab, setActiveTab] = useState<string>("overview");
 
   // Restore tab on mount from URL query or localStorage
@@ -73,7 +74,7 @@ export default function CourseUnifiedDashboard() {
       window.history.replaceState(null, "", `?${currentParams.toString()}`);
     }
   };
-  
+
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
 
@@ -88,12 +89,12 @@ export default function CourseUnifiedDashboard() {
       setLoading(true);
       const res = await courseApi.fetchCourseById(courseId);
       setCourse(res.data);
-      
+
       try {
         const statsRes = await apiClient.get('/academy/enrollments/students-summary', { params: { courseId, limit: 1000 } });
         const enrollmentsData = statsRes.data?.data || [];
         const totalStudents = statsRes.data?.total || 0;
-        
+
         let platformCount = statsRes.data?.platformCount;
         let externalCount = statsRes.data?.externalCount;
 
@@ -106,13 +107,13 @@ export default function CourseUnifiedDashboard() {
         }
 
         let totalProgress = 0;
-        
+
         enrollmentsData.forEach((student: any) => {
-           let enrollment = student.enrollments?.find((e: any) => e.courseId === courseId);
-           if (!enrollment && student.enrollments?.length > 0) enrollment = student.enrollments[0]; // fallback
-           totalProgress += (enrollment?.progress || 0);
+          let enrollment = student.enrollments?.find((e: any) => e.courseId === courseId);
+          if (!enrollment && student.enrollments?.length > 0) enrollment = student.enrollments[0]; // fallback
+          totalProgress += (enrollment?.progress || 0);
         });
-        
+
         const completionRate = totalStudents > 0 ? Math.round(totalProgress / totalStudents) : 0;
 
         let pendingAssignmentsCount = 0;
@@ -123,7 +124,7 @@ export default function CourseUnifiedDashboard() {
         } catch (aErr) {
           console.error("Failed to fetch pending assignments count", aErr);
         }
-        
+
         let courseRevenue = 0;
         try {
           const paymentsRes = await apiClient.get('/payments/courses/all', { params: { limit: 1000, courseId } });
@@ -153,7 +154,7 @@ export default function CourseUnifiedDashboard() {
       } catch (statsErr) {
         console.error("Failed to fetch course stats", statsErr);
       }
-      
+
     } catch (error) {
       console.error("Failed to fetch course details", error);
     } finally {
@@ -255,7 +256,7 @@ export default function CourseUnifiedDashboard() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-20 mt-8">
-      
+
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4">
@@ -265,9 +266,8 @@ export default function CourseUnifiedDashboard() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-gray-900">{course?.title}</h1>
-              <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
-                course?.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-              }`}>
+              <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${course?.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                }`}>
                 {course?.status ? course.status.charAt(0).toUpperCase() + course.status.slice(1) : "Draft"}
               </span>
             </div>
@@ -275,40 +275,39 @@ export default function CourseUnifiedDashboard() {
           </div>
         </div>
         <div>
-          <button 
+          <button
             onClick={() => setShowPublishModal(true)}
-            className={`px-4 py-2 font-medium text-sm rounded-lg shadow-sm transition flex items-center gap-2 ${
-              course?.status === 'published' ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
+            className={`px-4 py-2 font-medium text-sm rounded-lg shadow-sm transition flex items-center gap-2 ${course?.status === 'published' ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
           >
-            {course?.status === 'published' ? 'Unpublish Course' : <><Eye size={16}/> Preview & Publish</>}
+            {course?.status === 'published' ? 'Unpublish Course' : <><Eye size={16} /> Preview & Publish</>}
           </button>
         </div>
       </div>
 
       {/* Tabs Layout */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        
+
         {/* Tab Navigation */}
         <div className="flex overflow-x-auto border-b border-gray-100 no-scrollbar">
           {[
             { id: 'overview', label: 'Overview', icon: BarChart3 },
             { id: 'curriculum', label: 'Curriculum', icon: BookOpen },
             { id: 'students', label: 'Students', icon: Users },
+            { id: 'qa', label: 'Doubts', icon: MessageSquare },
             { id: 'reviews', label: 'Reviews', icon: Star },
             { id: 'assignments', label: 'Assignments', icon: FileCheck },
-            { id: 'tests', label: 'Tests & Final Assessment', icon: FileCheck2 },
+            { id: 'tests', label: 'Tests', icon: FileCheck2 },
             { id: 'sessions', label: 'Live Sessions', icon: Calendar },
             { id: 'settings', label: 'Settings', icon: Settings },
           ].map((tab) => (
-            <button 
+            <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
-                activeTab === tab.id 
-                  ? 'border-blue-600 text-blue-600 bg-blue-50/30' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-              }`}
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === tab.id
+                ? 'border-blue-600 text-blue-600 bg-blue-50/30'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
             >
               <tab.icon size={16} /> {tab.label}
             </button>
@@ -317,7 +316,7 @@ export default function CourseUnifiedDashboard() {
 
         {/* Tab Content Areas */}
         <div className="p-6 md:p-8 min-h-[500px] bg-gray-50/30">
-          
+
           {/* 1. OVERVIEW TAB */}
           {activeTab === "overview" && (
             <OverviewTab course={course} setCourse={setCourse} mockStats={stats} />
@@ -333,27 +332,35 @@ export default function CourseUnifiedDashboard() {
             <StudentsTab courseId={courseId} />
           )}
 
-          {/* 4. REVIEWS & RATINGS TAB */}
+          {/* 4. DOUBTS & Q&A TAB */}
+          {activeTab === "qa" && (
+            <AdminCourseQATab
+              courseId={courseId}
+              onNavigateToCurriculum={() => handleTabChange('curriculum')}
+            />
+          )}
+
+          {/* 5. REVIEWS & RATINGS TAB */}
           {activeTab === "reviews" && (
             <ReviewsTab courseId={courseId} />
           )}
 
-          {/* 5. ASSIGNMENTS TAB */}
+          {/* 6. ASSIGNMENTS TAB */}
           {activeTab === "assignments" && (
             <AssignmentsTab courseId={courseId} />
           )}
 
-          {/* 6. TESTS & FINAL ASSESSMENT TAB */}
+          {/* 7. TESTS & FINAL ASSESSMENT TAB */}
           {activeTab === "tests" && (
             <AcademyTestsPage initialCourseId={courseId} isCourseScoped={true} />
           )}
 
-          {/* 7. LIVE SESSIONS TAB */}
+          {/* 8. LIVE SESSIONS TAB */}
           {activeTab === "sessions" && (
             <AcademyLiveSessionsPage initialCourseId={courseId} isCourseScoped={true} />
           )}
 
-          {/* 8. SETTINGS TAB */}
+          {/* 9. SETTINGS TAB */}
           {activeTab === "settings" && (
             <CourseSettingsTab course={course} setCourse={setCourse} courseId={courseId} />
           )}
@@ -364,7 +371,7 @@ export default function CourseUnifiedDashboard() {
       {showPublishModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-[90vw] max-w-[90vw] h-[90vh] flex flex-col overflow-hidden">
-            
+
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <div>
@@ -383,13 +390,13 @@ export default function CourseUnifiedDashboard() {
             {/* Modal Body (Preview Iframe or Dummy Content) */}
             <div className="flex-1 overflow-y-auto bg-gray-100 p-6">
               {course?.status === 'published' ? (
-                 <div className="bg-white p-8 rounded-xl text-center max-w-lg mx-auto mt-12 shadow-sm border border-red-100">
-                    <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <X size={32} />
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">Unpublish this course?</h3>
-                    <p className="text-gray-500 mb-6">It will be removed from the public academy page immediately. Students who already purchased it will still have access.</p>
-                 </div>
+                <div className="bg-white p-8 rounded-xl text-center max-w-lg mx-auto mt-12 shadow-sm border border-red-100">
+                  <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <X size={32} />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Unpublish this course?</h3>
+                  <p className="text-gray-500 mb-6">It will be removed from the public academy page immediately. Students who already purchased it will still have access.</p>
+                </div>
               ) : (
                 <div className="bg-[#fcfcfa] rounded-xl overflow-hidden font-sans border border-gray-200">
                   <div className="p-4 sm:p-8 pointer-events-none">
@@ -401,18 +408,17 @@ export default function CourseUnifiedDashboard() {
 
             {/* Modal Footer */}
             <div className="px-6 py-4 border-t border-gray-100 bg-white flex justify-end gap-3">
-              <button 
+              <button
                 onClick={() => setShowPublishModal(false)}
                 className="px-5 py-2.5 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 rounded-xl border border-gray-200 transition"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={handleTogglePublish}
                 disabled={isPublishing}
-                className={`px-6 py-2.5 text-white text-sm font-medium rounded-xl transition flex items-center gap-2 shadow-sm ${
-                  course?.status === 'published' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
-                }`}
+                className={`px-6 py-2.5 text-white text-sm font-medium rounded-xl transition flex items-center gap-2 shadow-sm ${course?.status === 'published' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
+                  }`}
               >
                 {isPublishing ? <Loader2 size={18} className="animate-spin" /> : null}
                 {course?.status === 'published' ? 'Yes, Unpublish' : 'Looks Good, Publish Now!'}

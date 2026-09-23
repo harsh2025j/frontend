@@ -76,7 +76,7 @@ export default function DashboardOverview() {
   }
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700 ease-out">
-      
+
       {/* Header Row */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
         <div>
@@ -120,9 +120,9 @@ export default function DashboardOverview() {
 
       {/* Stats Grid - Premium Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        
+
         {/* Stat 1 */}
-        <div className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#122340]/5 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+        <div className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#122340]/5 relative overflow-hidden group  transition-transform duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full -z-10 group-hover:bg-blue-500/10 transition-colors"></div>
           <div className="flex justify-between items-start mb-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-600 shadow-inner">
@@ -137,7 +137,7 @@ export default function DashboardOverview() {
         </div>
 
         {/* Stat 2 */}
-        <div className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#122340]/5 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+        <div className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#122340]/5 relative overflow-hidden group transition-transform duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-bl-full -z-10 group-hover:bg-orange-500/10 transition-colors"></div>
           <div className="flex justify-between items-start mb-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center text-orange-500 shadow-inner">
@@ -154,7 +154,7 @@ export default function DashboardOverview() {
         </div>
 
         {/* Stat 3 */}
-        <div className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#122340]/5 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+        <div className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#122340]/5 relative overflow-hidden group transition-transform duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-bl-full -z-10 group-hover:bg-purple-500/10 transition-colors"></div>
           <div className="flex justify-between items-start mb-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center text-purple-600 shadow-inner">
@@ -171,7 +171,7 @@ export default function DashboardOverview() {
         </div>
 
         {/* Stat 4 */}
-        <div className="bg-gradient-to-br from-[#122340] to-[#0a1628] rounded-2xl p-6 shadow-xl border border-[#122340]/10 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+        <div className="bg-gradient-to-br from-[#122340] to-[#0a1628] rounded-2xl p-6 shadow-xl border border-[#122340]/10 relative overflow-hidden group transition-transform duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full -z-10 group-hover:bg-white/10 transition-colors"></div>
           <div className="flex justify-between items-start mb-4">
             <div className="w-12 h-12 rounded-xl bg-[#C9A227]/20 flex items-center justify-center text-[#C9A227] shadow-inner border border-[#C9A227]/30">
@@ -189,67 +189,101 @@ export default function DashboardOverview() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        
+
         {/* Main Resume Block */}
         <div className="xl:col-span-2">
-          <h2 className="text-lg font-extrabold text-[#122340] mb-6 flex items-center gap-3">
-            <span className="w-1.5 h-6 bg-gradient-to-b from-[#C9A227] to-yellow-600 rounded-full shadow-sm"></span>
-            Continue Learning
-          </h2>
-          
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-extrabold text-[#122340] flex items-center gap-2.5">
+              <span className="w-1.5 h-5 bg-[#C9A227] rounded-full shadow-xs"></span>
+              Continue Learning
+            </h2>
+          </div>
+
           {recentEnrollment ? (
-            <div className="bg-white rounded-3xl p-4 border border-[#122340]/5 shadow-[0_8px_40px_rgb(0,0,0,0.06)] relative overflow-hidden flex flex-col md:flex-row items-center gap-8 group">
-              {/* Image section */}
-              <div className="w-full md:w-72 aspect-video rounded-2xl overflow-hidden relative shrink-0">
-                <img src={recentEnrollment.course?.thumbnailUrl || "https://images.unsplash.com/photo-1505664177922-9283892047d6?q=80&w=600&auto=format&fit=crop"} alt="Course" className="w-full h-full object-cover transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#122340]/80 via-transparent to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center gap-2 text-white">
-                  <div className="w-8 h-8 rounded-full bg-[#C9A227] flex items-center justify-center shadow-lg">
-                    <Play size={14} fill="currentColor" className="ml-0.5 text-[#0a1628]" />
+            <div className="bg-white rounded-2xl p-5 sm:p-6 border border-[#122340]/8 shadow-[0_4px_24px_-4px_rgba(18,35,64,0.06)] hover:shadow-[0_8px_32px_-4px_rgba(18,35,64,0.1)] transition-all duration-300 relative overflow-hidden flex flex-col md:flex-row items-stretch gap-6 lg:gap-7 group">
+              {/* Thumbnail Section */}
+              <div className="w-full md:w-72 lg:w-80 aspect-video md:aspect-auto rounded-xl overflow-hidden relative shrink-0 bg-slate-900 border border-black/5 shadow-xs">
+                <img
+                  src={recentEnrollment.course?.thumbnailUrl || "https://images.unsplash.com/photo-1505664177922-9283892047d6?q=80&w=600&auto=format&fit=crop"}
+                  alt={recentEnrollment.course?.title || "Course"}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                {/* High-contrast gradient vignette so text/buttons are 100% readable even over light certificate images */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10 pointer-events-none" />
+
+                {/* Bottom Overlay Info Pill */}
+                <div className="absolute bottom-3 left-3 flex items-center gap-2 text-white">
+                  <div className="w-8 h-8 rounded-full bg-[#C9A227] flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                    <Play size={13} fill="currentColor" className="ml-0.5 text-[#0a1628]" />
                   </div>
-                  <span className="text-xs font-bold tracking-wide">Video Lesson</span>
+                  <span className="text-xs font-bold tracking-wide text-white drop-shadow-md">Video Lesson</span>
                 </div>
               </div>
-              
-              {/* Content section */}
-              <div className="flex-1 w-full pr-4 pb-4 md:pb-0">
-                <div className="inline-block bg-[#122340]/5 text-[#122340] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-3 border border-[#122340]/10">
-                  {recentEnrollment.course?.category || "Course"}
-                </div>
-                <h3 className="font-extrabold text-[#122340] text-xl md:text-2xl mb-2 leading-tight">
-                  {recentEnrollment.course?.title || "Untitled Course"}
-                </h3>
-                <p className="text-sm font-medium text-[#122340]/50 mb-6 flex items-center gap-2">
-                  <Clock size={16} className="text-[#C9A227]" /> Status: {recentEnrollment.status}
-                </p>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm font-bold text-[#122340]">
-                    <span>Overall Progress</span>
-                    <span className="text-[#C9A227]">{recentEnrollment.progress || 0}%</span>
+
+              {/* Content Section */}
+              <div className="flex-1 w-full flex flex-col justify-between py-0.5 min-w-0">
+                <div>
+                  {/* Category & Status Row */}
+                  <div className="flex items-center justify-between gap-3 mb-2.5 flex-wrap">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-[#122340]/5 text-[#122340] text-[11px] font-bold uppercase tracking-wider border border-[#122340]/10">
+                      {recentEnrollment.course?.category || "Course"}
+                    </span>
+                    {recentEnrollment.status === 'completed' || recentEnrollment.progress === 100 ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200/70">
+                        <CheckCircle2 size={13} className="text-emerald-600" /> Completed
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 text-xs font-semibold border border-amber-200/70">
+                        <Clock size={13} className="text-amber-600" /> In Progress
+                      </span>
+                    )}
                   </div>
-                  <div className="w-full bg-[#f0f2f5] rounded-full h-2.5 overflow-hidden shadow-inner">
-                    <div className="bg-gradient-to-r from-[#C9A227] to-yellow-500 h-full rounded-full relative" style={{ width: `${recentEnrollment.progress || 0}%` }}>
-                      <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-r from-transparent to-white/30 animate-[shimmer_2s_infinite]"></div>
-                    </div>
-                  </div>
+
+                  {/* Course Title */}
+                  <h3 className="font-extrabold text-[#122340] text-xl lg:text-2xl mb-1 leading-snug group-hover:text-[#C9A227] transition-colors line-clamp-2">
+                    {recentEnrollment.course?.title || "Untitled Course"}
+                  </h3>
+
+                  {/* Instructor/Subtitle */}
+                  <p className="text-xs text-[#122340]/55 font-medium mb-5">
+                    {recentEnrollment.course?.instructor || "Legal Academy Faculty"}
+                  </p>
                 </div>
 
-                <div className="mt-8 flex gap-4">
-                  <Link href={`/dashboard/learn/${recentEnrollment.course?.slug || ''}`}>
-                    <button className="bg-[#122340] text-white px-8 py-3.5 rounded-xl font-bold shadow-[0_4px_14px_0_rgb(18,35,64,0.39)] hover:shadow-[0_6px_20px_rgba(18,35,64,0.23)] hover:-translate-y-0.5 transition-all duration-200 text-sm">
-                      Resume Course
-                    </button>
-                  </Link>
+                {/* Progress & CTA Area */}
+                <div className="space-y-4 pt-3 border-t border-[#122340]/8">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-xs font-bold text-[#122340]">
+                      <span className="text-[#122340]/70 font-semibold">Course Completion</span>
+                      <span className="text-[#C9A227] font-mono text-sm font-extrabold">{recentEnrollment.progress || 0}%</span>
+                    </div>
+                    <div className="w-full bg-[#f0f2f5] rounded-full h-2.5 overflow-hidden shadow-inner border border-slate-200/50">
+                      <div
+                        className="bg-gradient-to-r from-[#C9A227] to-amber-500 h-full rounded-full relative transition-all duration-500"
+                        style={{ width: `${Math.min(100, Math.max(0, recentEnrollment.progress || 0))}%` }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-1 flex items-center gap-3">
+                    <Link href={`/dashboard/learn/${recentEnrollment.course?.slug || ''}`}>
+                      <button className="bg-[#122340] hover:bg-[#1c3763] text-white px-7 py-3 rounded-xl font-bold transition-all duration-200 text-xs sm:text-sm flex items-center gap-2 shadow-[0_4px_14px_rgba(18,35,64,0.22)] hover:shadow-[0_6px_20px_rgba(18,35,64,0.3)] hover:-translate-y-0.5 cursor-pointer">
+                        <span>{recentEnrollment.status === 'completed' || recentEnrollment.progress === 100 ? 'Review Course' : 'Resume Course'}</span>
+                        <span className="text-[#C9A227] font-bold">&rarr;</span>
+                      </button>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="bg-white rounded-3xl p-8 border border-[#122340]/5 shadow-sm text-center">
-              <p className="text-[#122340]/60 mb-4">You have not enrolled in any courses yet.</p>
+            <div className="bg-white rounded-2xl p-8 border border-[#122340]/8 shadow-sm text-center">
+              <p className="text-[#122340]/60 mb-4 font-medium">You have not enrolled in any courses yet.</p>
               <Link href="/courses">
-                <button className="bg-[#C9A227] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-[#b39022] transition-colors">
-                  Browse Courses
+                <button className="bg-[#C9A227] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#b39022] transition-colors shadow-sm cursor-pointer">
+                  Browse Courses &rarr;
                 </button>
               </Link>
             </div>
@@ -258,9 +292,9 @@ export default function DashboardOverview() {
 
         {/* Sidebar Widgets */}
         <div className="space-y-8">
-          
+
           {/* Upcoming Live Classes Widget */}
-          <div className="bg-white rounded-3xl p-6 border border-[#122340]/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+          <div className="bg-white rounded-xl p-6 border border-[#122340]/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             <h3 className="text-lg font-bold text-[#122340] mb-6 flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-red-500 animate-ping"></div>
               Upcoming Live Sessions

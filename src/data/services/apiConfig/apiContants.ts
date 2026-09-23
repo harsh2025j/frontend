@@ -1,7 +1,7 @@
 // export const API_BASE_URL = "https://shellproof-ka-noncorrelative.ngrok-free.dev";
 // export const API_BASE_URL = "https://galliardly-pyritic-kathleen.ngrok-free.dev";
-// export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
-export const API_BASE_URL = "http://localhost:8000/"
+export const API_BASE_URL = "https://api.sajjadhusainlawassociates.com/";
+// export const API_BASE_URL = "http://localhost:8000/"
 export const API_ENDPOINTS = {
   SEARCH: {
     JUDGES: "/search/judges",
@@ -206,6 +206,16 @@ export const API_ENDPOINTS = {
       ACTION: "/academy/courses/:courseId/reviews",
       ADMIN_ALL: "/academy/admin/reviews",
       ADMIN_DELETE: "/academy/admin/reviews/:reviewId",
+    },
+    QA: {
+      BY_COURSE: "/academy/courses/:courseId/qa",
+      STATS: "/academy/courses/:courseId/qa/stats",
+      BY_QUESTION: "/academy/courses/:courseId/qa/:questionId",
+      ANSWERS: "/academy/courses/:courseId/qa/:questionId/answers",
+      UPVOTE: "/academy/courses/:courseId/qa/:questionId/upvote",
+      MARK_ANSWERED_LIVE: "/academy/courses/:courseId/qa/:questionId/answered-live",
+      EDIT_QUESTION: "/academy/courses/:courseId/qa/:questionId",
+      EDIT_ANSWER: "/academy/courses/:courseId/qa/:questionId/answers/:answerId",
     },
   }
 };

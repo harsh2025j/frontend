@@ -144,7 +144,7 @@ export default function AcademySearch({
           }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="w-full pl-9 pr-9 py-2 rounded-full bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227] transition-all text-sm text-gray-900 placeholder-gray-500"
+          className="w-full pl-9 pr-9 py-2 rounded-full bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227] transition-all text-sm text-gray-900 placeholder-gray-500"
           autoComplete="off"
           aria-label="Search courses"
         />

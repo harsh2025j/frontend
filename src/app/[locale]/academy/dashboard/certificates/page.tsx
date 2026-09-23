@@ -122,7 +122,7 @@ function CertificateCard({
 
   return (
     <div>
-      <div className="bg-white rounded-3xl overflow-hidden shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-[#122340]/5">
+      <div className="bg-white rounded-xl overflow-hidden shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-[#122340]/5">
         {/* Certificate image preview (strictly images on web, never heavy PDF iframe) */}
         <div className="h-72 relative bg-gradient-to-br from-[#0a1628] to-[#1a2f4d] border-b-4 border-[#C9A227] overflow-hidden">
           <img

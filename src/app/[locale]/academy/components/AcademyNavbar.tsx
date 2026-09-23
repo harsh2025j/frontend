@@ -29,7 +29,7 @@ export default function AcademyNavbar() {
 
   return (
     <>
-      <header className="w-full border-b border-gray-100 bg-white z-[100] fixed top-0 left-0 shadow-sm">
+      <header className="w-full border-b border-[#122340]/10 bg-[#F7F3EA] z-[100] fixed top-0 left-0 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
 
           {/* Logo */}
@@ -146,7 +146,7 @@ export default function AcademyNavbar() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-200 w-full h-[calc(100vh-64px)] overflow-y-auto shadow-lg absolute top-16 left-0 z-40 pb-20">
+          <div className="md:hidden bg-[#F7F3EA] border-t border-gray-200/60 w-full h-[calc(100vh-64px)] overflow-y-auto shadow-lg absolute top-16 left-0 z-40 pb-20">
             <div className="flex flex-col p-5 gap-2">
               {user && (
                 <div className="flex items-center gap-4 mb-4 pb-4 border-b border-gray-100">

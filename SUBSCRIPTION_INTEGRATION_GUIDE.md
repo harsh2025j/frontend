@@ -249,11 +249,11 @@ NEXT_PUBLIC_API_BASE_URL=https://api.sajjadhusainlawassociates.com/
 -  Success/failure notifications
 
 ### Profile Integration (Next Step)
-- ⏳ Fetch user subscription on profile page
-- ⏳ Display subscription details
-- ⏳ Show subscription status (active/inactive/expired)
-- ⏳ Display expiry date
-- ⏳ Show auto-renew status
+- ""Fetch user subscription on profile page
+- ""Display subscription details
+- ""Show subscription status (active/inactive/expired)
+- ""Display expiry date
+- ""Show auto-renew status
 
 ---
 

@@ -131,12 +131,12 @@ export default function AcademyLandingPage() {
   };
 
   return (
-    <div className="bg-white min-h-screen font-sans overflow-x-hidden">
+    <div className="ac-student bg-[color:var(--sa-cream)] min-h-screen font-sans overflow-x-hidden">
 
       {/* ─────────────────────────────────────────────────────────────
           HERO SECTION
       ────────────────────────────────────────────────────────────── */}
-      <section className="relative bg-[#FAFAFA] pt-10 pb-20 lg:pt-12 lg:pb-32">
+      <section className="relative bg-[color:var(--sa-cream)] pt-10 pb-20 lg:pt-12 lg:pb-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center justify-between">
             {/* Left Content */}
@@ -168,7 +168,7 @@ export default function AcademyLandingPage() {
             <div className="hidden lg:block w-[55%] absolute right-0 top-0 bottom-0">
               <div className="relative w-full h-full rounded-l-[12rem] overflow-hidden ml-4 shadow-inner">
                 <Image
-                  src="/academy-hero.jpg"
+                  src="/academy-hero.png"
                   alt="Legal Academy Students"
                   layout="fill"
                   objectFit="cover"
@@ -377,7 +377,7 @@ export default function AcademyLandingPage() {
               </Link>
             </div>
 
-            <div className="w-full lg:w-[55%] bg-[#FAFAFA] rounded-xl p-8 lg:p-12 border border-gray-100/50">
+            <div className="w-full lg:w-[55%] bg-[color:var(--sa-cream)] rounded-xl p-8 lg:p-12 border border-gray-100/50">
               <div className="grid grid-cols-2 gap-y-10 gap-x-6 text-center">
 
                 <div className="flex flex-col items-center">
@@ -414,7 +414,7 @@ export default function AcademyLandingPage() {
       {/* ─────────────────────────────────────────────────────────────
           INTERNSHIP OPPORTUNITIES
       ────────────────────────────────────────────────────────────── */}
-      <section className="py-16 bg-[#FAFAFA]">
+      <section className="py-16 bg-[color:var(--sa-cream)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-end mb-10 gap-4">
             <div>
@@ -530,7 +530,7 @@ export default function AcademyLandingPage() {
       ────────────────────────────────────────────────────────────── */}
       <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-[#FAFAFA] rounded-xl border border-gray-100 p-8 flex flex-col md:flex-row items-center justify-between shadow-sm">
+          <div className="bg-[color:var(--sa-cream)] rounded-xl border border-gray-100 p-8 flex flex-col md:flex-row items-center justify-between shadow-sm">
             <div className="flex flex-col md:flex-row items-center gap-5 text-center md:text-left mb-6 md:mb-0">
               <div className="w-12 h-12 rounded-full border border-[#C9A227] flex items-center justify-center flex-shrink-0 bg-white">
                 <Image src="/logo-gold.png" alt="Logo" width={24} height={24} className="object-contain" />

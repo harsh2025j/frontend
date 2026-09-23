@@ -34,6 +34,14 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       // state.message = "Session restored";
     },
+    updateAuthUser: (state, action) => {
+      state.user = { ...state.user, ...action.payload };
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("user", JSON.stringify(state.user));
+        }
+      } catch {}
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -276,5 +284,5 @@ const authSlice = createSlice({
 
 });
 
-export const { resetAuthState, logoutUser, restoreSession } = authSlice.actions;
+export const { resetAuthState, logoutUser, restoreSession, updateAuthUser } = authSlice.actions;
 export default authSlice.reducer;

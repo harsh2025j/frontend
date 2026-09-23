@@ -115,6 +115,14 @@ export const authApi = {
       API_ENDPOINTS.PROFILE.UPGRADE_STUDENT
     );
     return response;
+  },
+
+  changePassword: async (data: { oldPassword: string; newPassword: string }) => {
+    const response = await apiClient.post<{ message: string }>(
+      '/auth/change-password',
+      data
+    );
+    return response.data;
   }
 };
 

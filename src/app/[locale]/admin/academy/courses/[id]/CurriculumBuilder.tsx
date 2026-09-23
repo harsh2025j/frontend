@@ -1,21 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  DndContext, closestCenter, KeyboardSensor, PointerSensor, 
-  useSensor, useSensors, DragEndEvent 
+import {
+  DndContext, closestCenter, KeyboardSensor, PointerSensor,
+  useSensor, useSensors, DragEndEvent
 } from "@dnd-kit/core";
-import { 
-  arrayMove, SortableContext, sortableKeyboardCoordinates, 
-  verticalListSortingStrategy, useSortable 
+import {
+  arrayMove, SortableContext, sortableKeyboardCoordinates,
+  verticalListSortingStrategy, useSortable
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { courseApi } from "@/data/services/academy-service/course.service";
 import apiClient from "@/data/services/apiConfig/apiClient";
 import toast from "react-hot-toast";
 import ContentEditorDrawer from "./ContentEditorDrawer";
-import { 
-  Plus, Edit2, Trash2, Video, FileText, PlaySquare, 
+import {
+  Plus, Edit2, Trash2, Video, FileText, PlaySquare,
   FileCheck, GripVertical, Loader2, ChevronDown, ChevronRight, FolderPlus, FileQuestion, GraduationCap
 } from "lucide-react";
 
@@ -40,15 +40,15 @@ type CourseModule = {
 };
 
 // SORTABLE ITEM COMPONENT
-const SortableItem = ({ 
-  item, 
+const SortableItem = ({
+  item,
   assessmentsMap,
-  onDelete, 
-  onClick 
-}: { 
-  item: CurriculumItem; 
+  onDelete,
+  onClick
+}: {
+  item: CurriculumItem;
   assessmentsMap?: Map<string, any>;
-  onDelete: (id: string) => void; 
+  onDelete: (id: string) => void;
   onClick: () => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
@@ -81,13 +81,12 @@ const SortableItem = ({
         <button {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
           <GripVertical size={16} />
         </button>
-        <div className={`p-2 rounded-lg ${
-          item.type === 'video' ? 'bg-indigo-50 text-indigo-600' :
-          item.type === 'document' ? 'bg-emerald-50 text-emerald-600' :
-          item.type === 'live' ? 'bg-red-50 text-red-600' :
-          item.type === 'assignment' ? 'bg-orange-50 text-orange-600' :
-          'bg-purple-50 text-purple-600'
-        }`}>
+        <div className={`p-2 rounded-lg ${item.type === 'video' ? 'bg-indigo-50 text-indigo-600' :
+            item.type === 'document' ? 'bg-emerald-50 text-emerald-600' :
+              item.type === 'live' ? 'bg-red-50 text-red-600' :
+                item.type === 'assignment' ? 'bg-orange-50 text-orange-600' :
+                  'bg-purple-50 text-purple-600'
+          }`}>
           {item.type === 'video' && <Video size={16} />}
           {item.type === 'document' && <FileText size={16} />}
           {item.type === 'live' && <PlaySquare size={16} />}
@@ -109,7 +108,7 @@ const SortableItem = ({
               </span>
             ) : !isScheduled ? (
               <span className="px-2 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-600 rounded-full border border-gray-200">
-                ⏳ Not Scheduled
+                Not Scheduled
               </span>
             ) : (
               <span className="px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 rounded-full border border-blue-100">
@@ -149,17 +148,17 @@ const SortableItem = ({
 };
 
 // RECURSIVE MODULE NODE COMPONENT
-const ModuleNode = ({ 
-  module, 
+const ModuleNode = ({
+  module,
   assessmentsMap,
-  onAddSubModule, 
-  onAddItem, 
-  onRename, 
+  onAddSubModule,
+  onAddItem,
+  onRename,
   onDelete,
   onDeleteItem,
   onEditItem
-}: { 
-  module: CourseModule, 
+}: {
+  module: CourseModule,
   assessmentsMap?: Map<string, any>,
   onAddSubModule: (parentId: string) => void,
   onAddItem: (moduleId: string, type: any) => void,
@@ -193,13 +192,13 @@ const ModuleNode = ({
           <button {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-gray-600 p-1">
             <GripVertical size={18} />
           </button>
-          
+
           <button onClick={() => setIsExpanded(!isExpanded)} className="text-gray-500 hover:bg-gray-200 p-1 rounded">
             {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
           </button>
 
           {isEditing ? (
-            <input 
+            <input
               autoFocus
               className="font-bold text-gray-900 text-base bg-white border border-blue-400 rounded px-2 py-1 focus:outline-none flex-1"
               value={editTitle}
@@ -210,7 +209,7 @@ const ModuleNode = ({
           ) : (
             <div className="flex items-center gap-2 flex-1 group cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
               <span className="font-bold text-gray-900 text-base">{module.title}</span>
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
                 className="text-gray-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 p-1 transition-opacity"
               >
@@ -240,15 +239,15 @@ const ModuleNode = ({
       {/* Children & Items */}
       {isExpanded && (
         <div className="mt-3 ml-6 border-l-2 border-gray-100 pl-4">
-          
+
           {/* Sub Modules Sortable Context */}
           {childModuleIds.length > 0 && (
             <SortableContext items={childModuleIds} strategy={verticalListSortingStrategy}>
               <div className="space-y-3">
                 {module.children?.map(child => (
-                  <ModuleNode 
-                    key={child.id} 
-                    module={child} 
+                  <ModuleNode
+                    key={child.id}
+                    module={child}
                     assessmentsMap={assessmentsMap}
                     onAddSubModule={onAddSubModule}
                     onAddItem={onAddItem}
@@ -267,12 +266,12 @@ const ModuleNode = ({
             <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
               <div className="mt-3">
                 {module.items.map(item => (
-                  <SortableItem 
-                    key={item.id} 
-                    item={item} 
+                  <SortableItem
+                    key={item.id}
+                    item={item}
                     assessmentsMap={assessmentsMap}
-                    onDelete={onDeleteItem} 
-                    onClick={() => onEditItem(item)} 
+                    onDelete={onDeleteItem}
+                    onClick={() => onEditItem(item)}
                   />
                 ))}
               </div>
@@ -328,7 +327,7 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
     title: string;
     message: string;
     onConfirm: () => void;
-  }>({ isOpen: false, title: "", message: "", onConfirm: () => {} });
+  }>({ isOpen: false, title: "", message: "", onConfirm: () => { } });
 
   const confirmAction = (title: string, message: string, onConfirm: () => void) => {
     setConfirmModal({ isOpen: true, title, message, onConfirm });
@@ -347,11 +346,11 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
       if (!silent) setLoading(true);
       const res = await courseApi.fetchCourseById(courseId);
       const flatModules = res.data.modules || [];
-      
+
       // Build Tree
       const map = new Map<string, CourseModule>();
       flatModules.forEach((m: any) => map.set(m.id, { ...m, children: [] }));
-      
+
       const roots: CourseModule[] = [];
       flatModules.forEach((m: any) => {
         if (m.parentId) {
@@ -370,7 +369,7 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
           if (n.children) sortRecursive(n.children);
         });
       };
-      
+
       sortRecursive(roots);
       setRootModules(roots);
       setModulesMap(map);
@@ -389,7 +388,7 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
     try {
       const parentName = parentId ? "Sub-section" : "Module";
       const toastId = toast.loading(`Adding ${parentName}...`);
-      
+
       let newOrderIndex = 0;
       if (parentId) {
         const parent = modulesMap.get(parentId);
@@ -398,12 +397,12 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
         newOrderIndex = rootModules.length;
       }
 
-      await courseApi.createModule(courseId, { 
-        title: `New ${parentName}`, 
+      await courseApi.createModule(courseId, {
+        title: `New ${parentName}`,
         orderIndex: newOrderIndex,
         parentId: parentId || undefined
       });
-      
+
       toast.success(`${parentName} added!`, { id: toastId });
       fetchCurriculum(true);
     } catch (e) {
@@ -541,15 +540,15 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
         return;
       }
 
-      const siblings = activeModule!.parentId 
-        ? modulesMap.get(activeModule!.parentId!)!.children! 
+      const siblings = activeModule!.parentId
+        ? modulesMap.get(activeModule!.parentId!)!.children!
         : rootModules;
-      
+
       const oldIndex = siblings.findIndex(m => m.id === activeId);
       const newIndex = siblings.findIndex(m => m.id === overId);
-      
+
       const newArray = arrayMove(siblings, oldIndex, newIndex);
-      
+
       if (activeModule!.parentId) {
         const p = modulesMap.get(activeModule!.parentId!);
         p!.children = newArray;
@@ -559,12 +558,12 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
       }
 
       try {
-        await Promise.all(newArray.map((m, index) => 
+        await Promise.all(newArray.map((m, index) =>
           courseApi.updateModule(courseId, m.id, { orderIndex: index })
         ));
       } catch (e) {
         toast.error("Failed to save new order");
-        fetchCurriculum(true); 
+        fetchCurriculum(true);
       }
 
     } else if (activeType === 'item') {
@@ -609,7 +608,7 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
           </div>
           <p className="text-sm text-gray-500 mt-1">Create modules and lessons. Tests and quizzes attached here are strictly specific to this course.</p>
         </div>
-        <button 
+        <button
           onClick={() => handleAddModule(null)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 shadow-sm font-semibold cursor-pointer"
         >
@@ -621,8 +620,8 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
         <SortableContext items={rootModuleIds} strategy={verticalListSortingStrategy}>
           <div className="space-y-4">
             {rootModules.map(module => (
-              <ModuleNode 
-                key={module.id} 
+              <ModuleNode
+                key={module.id}
                 module={module}
                 assessmentsMap={assessmentsMap}
                 onAddSubModule={handleAddModule}
@@ -683,12 +682,12 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Lesson Title *</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={newItemTitle}
                   onChange={(e) => setNewItemTitle(e.target.value)}
-                  placeholder={`e.g. Introduction to ${itemType.replace('_', ' ')}...`} 
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" 
+                  placeholder={`e.g. Introduction to ${itemType.replace('_', ' ')}...`}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
                   autoFocus
                   onKeyDown={e => e.key === 'Enter' && handleAddItemSubmit()}
                 />
@@ -708,19 +707,19 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-2">{confirmModal.title}</h2>
             <p className="text-sm text-gray-600 mb-6">{confirmModal.message}</p>
-            
+
             <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })} 
+              <button
+                onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
                 className="px-4 py-2 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 rounded-lg border border-gray-200 transition"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setConfirmModal({ ...confirmModal, isOpen: false });
                   confirmModal.onConfirm();
-                }} 
+                }}
                 className="px-4 py-2 bg-red-600 text-white text-sm font-medium hover:bg-red-700 rounded-lg transition"
               >
                 Yes, Delete
@@ -731,7 +730,7 @@ export default function CurriculumBuilder({ courseId }: { courseId: string }) {
       )}
 
       {/* Content Editor Drawer */}
-      <ContentEditorDrawer 
+      <ContentEditorDrawer
         item={editorItem}
         courseId={courseId}
         isOpen={!!editorItem}

@@ -841,7 +841,7 @@ export default function AcademyLiveSessionsPage({
                           </span>
                         ) : (!liveData.scheduledDate || !liveData.scheduledTime || sessionStatus === "not_scheduled") ? (
                           <span className="px-2 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-600 rounded-full border border-gray-200">
-                            ⏳ Not Scheduled
+                            Not Scheduled
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-700 rounded-full">
@@ -915,7 +915,7 @@ export default function AcademyLiveSessionsPage({
 
                     {(!liveData.scheduledDate || !liveData.scheduledTime || sessionStatus === "not_scheduled") && sessionStatus !== "live" && sessionStatus !== "completed" && (
                       <span className="px-3 py-1.5 bg-gray-100 text-gray-500 rounded-xl text-xs font-medium border border-gray-200">
-                        ⏳ Not Scheduled
+                        Not Scheduled
                       </span>
                     )}
 
@@ -1638,13 +1638,12 @@ export default function AcademyLiveSessionsPage({
             <div className="p-6 border-b border-gray-100 flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                    startLinkModal.platform === "youtube"
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center ${startLinkModal.platform === "youtube"
                       ? "bg-red-50 text-red-600"
                       : startLinkModal.platform === "gmeet"
-                      ? "bg-emerald-50 text-emerald-600"
-                      : "bg-sky-50 text-sky-600"
-                  }`}
+                        ? "bg-emerald-50 text-emerald-600"
+                        : "bg-sky-50 text-sky-600"
+                    }`}
                 >
                   {startLinkModal.platform === "youtube" ? (
                     <Tv size={24} />
@@ -1657,8 +1656,8 @@ export default function AcademyLiveSessionsPage({
                     {startLinkModal.platform === "youtube"
                       ? "Enter YouTube Live Link"
                       : startLinkModal.platform === "gmeet"
-                      ? "Enter Google Meet Link"
-                      : "Enter Zoom Meeting Link"}
+                        ? "Enter Google Meet Link"
+                        : "Enter Zoom Meeting Link"}
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
                     Start &quot;{startLinkModal.session?.title}&quot; &amp; connect your students
@@ -1693,25 +1692,24 @@ export default function AcademyLiveSessionsPage({
                     startLinkModal.platform === "youtube"
                       ? "https://studio.youtube.com/channel/live/livestreaming"
                       : startLinkModal.platform === "gmeet"
-                      ? "https://meet.google.com/new"
-                      : "https://zoom.us/start/videomeeting"
+                        ? "https://meet.google.com/new"
+                        : "https://zoom.us/start/videomeeting"
                   }
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-white flex items-center gap-1.5 transition cursor-pointer ${
-                    startLinkModal.platform === "youtube"
+                  className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-white flex items-center gap-1.5 transition cursor-pointer ${startLinkModal.platform === "youtube"
                       ? "bg-red-600 hover:bg-red-700"
                       : startLinkModal.platform === "gmeet"
-                      ? "bg-emerald-600 hover:bg-emerald-700"
-                      : "bg-sky-600 hover:bg-sky-700"
-                  }`}
+                        ? "bg-emerald-600 hover:bg-emerald-700"
+                        : "bg-sky-600 hover:bg-sky-700"
+                    }`}
                 >
                   <ExternalLink size={13} />
                   {startLinkModal.platform === "youtube"
                     ? "Open Studio"
                     : startLinkModal.platform === "gmeet"
-                    ? "New Meet"
-                    : "Open Zoom"}
+                      ? "New Meet"
+                      : "Open Zoom"}
                 </a>
               </div>
 
@@ -1720,8 +1718,8 @@ export default function AcademyLiveSessionsPage({
                   {startLinkModal.platform === "youtube"
                     ? "YouTube Live Stream URL *"
                     : startLinkModal.platform === "gmeet"
-                    ? "Google Meet URL *"
-                    : "Zoom Meeting Invite URL *"}
+                      ? "Google Meet URL *"
+                      : "Zoom Meeting Invite URL *"}
                 </label>
                 <input
                   type="url"
@@ -1731,8 +1729,8 @@ export default function AcademyLiveSessionsPage({
                     startLinkModal.platform === "youtube"
                       ? "https://www.youtube.com/watch?v=... or https://youtu.be/..."
                       : startLinkModal.platform === "gmeet"
-                      ? "https://meet.google.com/xxx-yyyy-zzz"
-                      : "https://us02web.zoom.us/j/1234567890?pwd=..."
+                        ? "https://meet.google.com/xxx-yyyy-zzz"
+                        : "https://us02web.zoom.us/j/1234567890?pwd=..."
                   }
                   value={startLinkModal.url}
                   onChange={(e) => setStartLinkModal((prev) => ({ ...prev, url: e.target.value }))}
@@ -1765,13 +1763,12 @@ export default function AcademyLiveSessionsPage({
                 </button>
                 <button
                   type="submit"
-                  className={`px-5 py-2.5 text-xs font-bold text-white rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer ${
-                    startLinkModal.platform === "youtube"
+                  className={`px-5 py-2.5 text-xs font-bold text-white rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer ${startLinkModal.platform === "youtube"
                       ? "bg-red-600 hover:bg-red-700"
                       : startLinkModal.platform === "gmeet"
-                      ? "bg-emerald-600 hover:bg-emerald-700"
-                      : "bg-sky-600 hover:bg-sky-700"
-                  }`}
+                        ? "bg-emerald-600 hover:bg-emerald-700"
+                        : "bg-sky-600 hover:bg-sky-700"
+                    }`}
                 >
                   <Play size={14} className="fill-current" />
                   Save &amp; Start Class

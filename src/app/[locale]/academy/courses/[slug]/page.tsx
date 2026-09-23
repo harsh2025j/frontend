@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  ArrowLeft, Star, Share2, CalendarDays, Clock, Globe,
-  Users, GraduationCap, Sparkles, CheckCircle2, Heart,
-  PlayCircle, Video, BarChart, Infinity, Award, FileText,
-  Plus, Minus, ChevronDown, ChevronUp, MonitorPlay, Loader2, ChevronLeft,
-  Tag, AlertCircle, Check
+  ArrowLeft, Star, Share2, CalendarDays, Clock,
+  Users, CheckCircle2, Heart,
+  PlayCircle, Award, FileText,
+  ChevronDown, MonitorPlay, Loader2,
+  Tag, AlertCircle, Infinity, Minus, Plus
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/data/redux/hooks';
-import { fetchCourseById } from '@/data/features/academy/course/courseThunks';
+import { fetchCourseById, fetchAllCourses } from '@/data/features/academy/course/courseThunks';
 import { clearCurrentCourse } from '@/data/features/academy/course/courseSlice';
 import { createCoursePaymentOrder, verifyCoursePayment, fetchMyEnrollments } from '@/data/features/academy/enrollments/enrollmentsThunks';
 import apiClient from '@/data/services/apiConfig/apiClient';
@@ -20,142 +20,7 @@ import { useRouter } from 'next/navigation';
 import CourseReviewsSection from '@/components/academy/reviews/CourseReviewsSection';
 import { useWishlist } from '@/context/WishlistContext';
 
-// ── Mock Data ───────────────────────────────────────────────────
-
-const LIVE_HYBRID_COURSE = {
-  type: "video",
-  title: "Core Criminal Law Course Package (Live + Recorded)",
-  subtitle: "A structured reading of India's substantive and procedural criminal law. Build a strong foundation through interactive live sessions.",
-  instructor: {
-    name: "Dr. Rajesh Nair",
-    title: "Senior Criminal Litigator & Educator",
-    bio: "Dr. Nair is a renowned legal educator and former practicing advocate with over 20 years of experience in criminal litigation.",
-    image: "https://images.unsplash.com/photo-1505664177922-9283892047d6?q=80&w=200&auto=format&fit=crop"
-  },
-  price: "₹8,499",
-  originalPrice: "₹12,000",
-  rawPrice: 8499,
-  rawOriginalPrice: 12000,
-  image: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=800&auto=format&fit=crop",
-  tags: ["Live Sessions", "Recordings Included", "Certificate Included"],
-  schedule: {
-    startDate: "15th November, 2026",
-    endDate: "20th December, 2026",
-    timings: "Sat & Sun: 6:00 PM - 8:30 PM (IST)",
-    note: "Missed a class? No problem. All live classes are recorded and made available for revision within 24 hours on your dashboard."
-  },
-  whoShouldEnrol: ["Law Students (LL.B & LL.M)", "Junior Advocates", "Judiciary Aspirants", "Police Officers"],
-  whatYouWillLearn: [
-    "In-depth understanding of Bharatiya Nyaya Sanhita (BNS) provisions.",
-    "Mastering the investigative procedures and trial stages.",
-    "Appreciation of electronic and documentary evidence.",
-    "Drafting of criminal complaints, bail applications."
-  ],
-  modules: [
-    { title: "Module 1: Introduction to Bharatiya Nyaya Sanhita (BNS)", lectures: 5, duration: "2h 30m" },
-    { title: "Module 2: Key changes in investigative procedures under BNSS", lectures: 8, duration: "4h 15m" },
-  ],
-  features: [
-    { icon: <Video size={18} />, text: "Live Interactive Weekend Classes" },
-    { icon: <MonitorPlay size={18} />, text: "Recordings available for revision" },
-    { icon: <FileText size={18} />, text: "25 downloadable resources & drafts" },
-    { icon: <Infinity size={18} />, text: "Full lifetime access to recordings" },
-    { icon: <Award size={18} />, text: "Certificate of completion" },
-  ],
-  glance: [
-    { label: "Duration", value: "40+ Hours" },
-    { label: "Format", value: "Live Classes + Recorded Video" },
-    { label: "Language", value: "English" },
-    { label: "Validity", value: "Lifetime Access" },
-  ],
-  faqs: [
-    { q: "What if I miss a live session?", a: "All live sessions are recorded and uploaded to your dashboard within 24 hours so you can revise at your own pace." },
-    { q: "Is the course material accessible on mobile?", a: "Yes, you can access all video lectures via our mobile platform." },
-  ]
-};
-
-const RECORDED_COURSE = {
-  type: "video",
-  title: "Previous Year Question (PYQ) Discussion Masterclass",
-  subtitle: "Self-paced complete discussion and analysis of previous year questions for judiciary aspirants. Available immediately.",
-  instructor: {
-    name: "Adv. Priya Mehta",
-    title: "Judiciary Preparation Expert",
-    bio: "Adv. Mehta has mentored thousands of students to success in various state judicial service examinations.",
-    image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop"
-  },
-  price: "₹2,999",
-  originalPrice: "₹5,000",
-  image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=800&auto=format&fit=crop",
-  tags: ["Pre-Recorded", "Self-Paced", "PYQ Discussion"],
-  schedule: null, // No schedule for recorded courses
-  whoShouldEnrol: ["Judiciary Aspirants", "Law Students preparing for competitive exams"],
-  whatYouWillLearn: [
-    "Pattern analysis of previous year papers across 5 major states.",
-    "Techniques to eliminate wrong options in objective questions.",
-    "Structuring perfect answers for subjective mains questions.",
-    "Time management during the examination."
-  ],
-  modules: [
-    { title: "Module 1: Constitutional Law PYQs (2018-2023)", lectures: 10, duration: "8h 00m" },
-    { title: "Module 2: Criminal Procedure Code PYQs", lectures: 12, duration: "9h 30m" },
-  ],
-  features: [
-    { icon: <MonitorPlay size={18} />, text: "Start instantly, learn anywhere" },
-    { icon: <Clock size={18} />, text: "Learn at your own pace" },
-    { icon: <FileText size={18} />, text: "Downloadable PDF notes of solutions" },
-    { icon: <Infinity size={18} />, text: "Full lifetime access" },
-  ],
-  glance: [
-    { label: "Duration", value: "25+ Hours" },
-    { label: "Format", value: "Pre-recorded Video (Self-paced)" },
-    { label: "Language", value: "English & Hindi Mix" },
-    { label: "Validity", value: "Lifetime Access" },
-  ],
-  faqs: [
-    { q: "Are there any live classes?", a: "No, this course is entirely pre-recorded so you can start studying immediately at your own pace." },
-    { q: "Can I ask questions if I have doubts?", a: "Yes, you can post questions in the course discussion forum, and our mentors will reply within 48 hours." },
-  ]
-};
-
-const TEST_SERIES = {
-  type: "test",
-  title: "Judiciary Prep Booster Test 3rd Edition : Constitution of India",
-  instructor: "Sajjad Husain Legal Academy",
-  language: "English",
-  validity: "180 days",
-  price: "₹199",
-  originalPrice: null,
-  rawPrice: 199,
-  rawOriginalPrice: null,
-  image: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=400&auto=format&fit=crop",
-  description: `
-    <p>The Judiciary Prep Booster Test - 3rd Edition by Sajjad Husain Legal Academy is a specialized, examination-oriented test program designed for judiciary aspirants.</p>
-    <br/>
-    <h3 class="font-bold">COURSE HIGHLIGHTS</h3>
-    <ul class="list-disc pl-5 mt-2 space-y-1">
-      <li>Comprehensive Objective & Subjective testing</li>
-      <li>Coverage of Landmark and Recent Constitutional Developments</li>
-      <li>Live Open House Discussion Sessions</li>
-      <li>Model Answers & Strategy Discussions</li>
-    </ul>
-    <br/>
-    <h3 class="font-bold">TEST PATTERN</h3>
-    <p class="mt-2 font-semibold">Objective Test</p>
-    <ul class="list-disc pl-5">
-      <li>Total Marks: 200</li>
-      <li>Total Questions: 100</li>
-      <li>Negative Marking: ¼ deduction</li>
-    </ul>
-  `,
-  otherCourses: [
-    { id: 1, title: "Judiciary Prep Booster Test 3rd Edition: Criminal Law", price: "₹199", img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=150&auto=format&fit=crop" },
-    { id: 2, title: "Judiciary Prep Booster Test 3rd Edition: Civil Law-I", price: "₹199", img: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=150&auto=format&fit=crop" },
-    { id: 3, title: "Judiciary Prep Booster Test 3rd Edition: Family Law", price: "₹199", img: "https://images.unsplash.com/photo-1505664177922-9283892047d6?q=80&w=150&auto=format&fit=crop" },
-  ]
-};
-
-// ── Layout Components ───────────────────────────────────────────
+// ── Main Video Course Layout ────────────────────────────────────
 
 export function VideoCourseLayout({ course }: { course: any }) {
   const router = useRouter();
@@ -180,70 +45,39 @@ export function VideoCourseLayout({ course }: { course: any }) {
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
 
-  // ── Decoupled independent column scroll ─────────────────────────
-  const gridRef = useRef<HTMLDivElement>(null);
-  const leftColRef = useRef<HTMLDivElement>(null);
-  const rightColRef = useRef<HTMLDivElement>(null);
-  const mouseOnRight = useRef(false);
-
-  useEffect(() => {
-    const grid = gridRef.current;
-    if (!grid) return;
-
-    // Lock body scroll on desktop so footer doesn't peek through
-    const lockScroll = () => {
-      if (window.innerWidth >= 1024) {
-        document.body.style.overflow = 'hidden';
-      }
-    };
-    lockScroll();
-    window.addEventListener('resize', lockScroll);
-
-    const onWheel = (e: WheelEvent) => {
-      // Only intercept on desktop (lg = 1024px+)
-      if (window.innerWidth < 1024) return;
-
-      const leftCol = leftColRef.current;
-      const rightCol = rightColRef.current;
-      if (!leftCol || !rightCol) return;
-
-      e.preventDefault();
-
-      const delta = e.deltaY;
-      const primaryCol = mouseOnRight.current ? rightCol : leftCol;
-      const secondaryCol = mouseOnRight.current ? leftCol : rightCol;
-
-      const { scrollTop: pTop, scrollHeight: pHeight, clientHeight: pClient } = primaryCol;
-      const atBottom = pTop + pClient >= pHeight - 2;
-      const atTop = pTop <= 2;
-
-      // Scroll primary column if it can move in this direction
-      if ((delta > 0 && !atBottom) || (delta < 0 && !atTop)) {
-        primaryCol.scrollBy({ top: delta, behavior: 'auto' });
-      } else {
-        // Primary col hit boundary — overflow scroll transfers to secondary col
-        secondaryCol.scrollBy({ top: delta, behavior: 'auto' });
-      }
-    };
-
-    // non-passive so we can call preventDefault() and block native page scroll on desktop
-    grid.addEventListener('wheel', onWheel, { passive: false });
-    return () => {
-      grid.removeEventListener('wheel', onWheel);
-      window.removeEventListener('resize', lockScroll);
-      // Restore body scroll when leaving the course page
-      document.body.style.overflow = '';
-    };
-  }, []);
-
   const { isInWishlist, toggleWishlist } = useWishlist();
-
+  const isWishlisted = isInWishlist(course.id || course.slug);
 
   const dispatch = useAppDispatch();
   const { user } = useAppSelector(state => state.auth);
   const { myEnrollments } = useAppSelector(state => state.enrollments);
+  const { courses } = useAppSelector(state => state.course);
 
   const isEnrolled = myEnrollments?.some(e => e.course?.slug === course.slug || e.courseId === course.id);
+
+  // ── Related Courses: Same category first; if not enough, backfill with others; max 3 or 6 courses; NO dummy data
+  const relatedCourses = (() => {
+    if (!courses || courses.length === 0) return [];
+    const otherPublished = courses.filter((c: any) => c.status === 'published' && c.slug && c.slug !== course.slug);
+
+    const getCat = (c: any) => (typeof c?.category === 'string' ? c.category : c?.category?.name || '').trim().toLowerCase();
+    const currentCat = getCat(course);
+
+    // 1. Same category courses first
+    const sameCategory = currentCat
+      ? otherPublished.filter((c: any) => getCat(c) === currentCat)
+      : [];
+
+    // 2. Different category courses to backfill if needed
+    const diffCategory = otherPublished.filter((c: any) => !currentCat || getCat(c) !== currentCat);
+
+    // 3. Combined with same category prioritized at the front
+    const combined = [...sameCategory, ...diffCategory];
+
+    // 4. Max 3 or 6: Show 6 if at least 6 are available (2 full rows of 3); otherwise up to 3 (1 row)
+    const limit = combined.length >= 6 ? 6 : Math.min(combined.length, 3);
+    return combined.slice(0, limit);
+  })();
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) {
@@ -343,7 +177,7 @@ export function VideoCourseLayout({ course }: { course: any }) {
           name: user.name,
           email: user.email,
         },
-        theme: { color: '#0B1B3D' },
+        theme: { color: '#0B1220' },
         modal: {
           ondismiss: () => {
             setIsPaying(false);
@@ -378,759 +212,631 @@ export function VideoCourseLayout({ course }: { course: any }) {
     }
   };
 
+  const handleShare = () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({ title: course.title, url: window.location.href }).catch(() => { });
+    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard");
+    }
+  };
+
   // Live synced rating and review count
   const [liveSummary, setLiveSummary] = useState<{ averageRating: number; totalReviews: number } | null>(null);
-
-  // Real ratings from live review summary or initial course data
   const rating = liveSummary?.averageRating !== undefined ? liveSummary.averageRating : (Number(course.averageRating) || 0);
   const totalReviews = liveSummary?.totalReviews !== undefined ? liveSummary.totalReviews : (Number(course.totalReviews) || 0);
 
-  // Instructors
   const instructors = course.instructors || [];
+  const numPrice = course.rawPrice !== undefined ? course.rawPrice : (Number(String(course.price || "").replace(/[^0-9.]/g, "")) || 0);
+  const numOriginalPrice = course.rawOriginalPrice !== undefined ? course.rawOriginalPrice : (Number(String(course.originalPrice || "").replace(/[^0-9.]/g, "")) || 0);
+  const hasDiscount = numOriginalPrice > numPrice;
+  const discountPct = hasDiscount ? Math.round(((numOriginalPrice - numPrice) / numOriginalPrice) * 100) : null;
 
   return (
-    <div className="max-w-[1200px] mx-auto lg:overflow-hidden lg:h-[calc(100vh-64px)] lg:flex lg:flex-col pt-4 pb-2 lg:pb-0">
+    <div className="w-full">
       {/* ── BREADCRUMB ── */}
-      <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-3 font-medium shrink-0">
-        <ArrowLeft size={16} /> Back
+      <button
+        onClick={() => router.back()}
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[color:var(--sa-ink-3)] hover:text-[color:var(--sa-gold)] mb-6 transition-colors group cursor-pointer"
+      >
+        <ArrowLeft size={15} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Courses
       </button>
 
-      {/* ── MAIN CONTENT GRID ── */}
-      <div
-        ref={gridRef}
-        className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 lg:flex-1 lg:min-h-0"
-      >
+      {/* ── TWO-COLUMN EDITORIAL CASE BRIEF GRID ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_380px] gap-8 xl:gap-12 items-start mb-16 w-full">
 
-        {/* ── LEFT COLUMN ── */}
-        <div
-          ref={leftColRef}
-          className="space-y-6 lg:space-y-8 lg:overflow-y-auto lg:h-full no-scrollbar"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
-          onMouseEnter={() => { mouseOnRight.current = false; }}
-        >
+        {/* ── MAIN ARTICLE COLUMN (min-w-0 prevents grid blowout) ── */}
+        <div className="min-w-0 w-full overflow-hidden space-y-10">
 
-          {/* Header Info */}
-          <div>
-            {course.tags?.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {course.tags.map((tag: string, i: number) => (
-                  <span key={i} className="bg-gray-100 text-gray-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                    {tag}
-                  </span>
-                ))}
-              </div>
+          {/* Top Fold / Case Header */}
+          <div className="min-w-0 w-full overflow-hidden">
+            {(course.category || (course.tags && course.tags.length > 0)) && (
+              <p className="ac-eyebrow mb-2">
+                {course.category || course.tags[0]}
+              </p>
             )}
-            <h1 className="text-4xl font-extrabold text-[#0B1B3D] mb-3">
-              {course.title || "Title not available"}
+
+            <h1 className="ac-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[color:var(--sa-ink)] leading-tight tracking-tight mb-4 min-w-0 break-words [overflow-wrap:anywhere]">
+              {course.title || "Course"}
             </h1>
-            <p className="text-gray-600 text-lg mb-4">
-              {course.subtitle || course.description || "Description not available"}
-            </p>
-            <div className="flex items-center gap-6 mb-6">
-              <a href="#reviews-section" className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer group">
-                <div className="flex text-[#F59E0B]">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={18} fill={i < Math.floor(rating) ? "currentColor" : "none"} strokeWidth={i < Math.floor(rating) ? 0 : 2} className={i >= Math.floor(rating) ? "text-gray-300" : ""} />
+
+            {(course.subtitle || course.description) && (
+              <p className="text-[color:var(--sa-ink-2)] text-base sm:text-lg leading-relaxed max-w-[62ch] mb-4 min-w-0 break-words [overflow-wrap:anywhere]">
+                {course.subtitle || course.description}
+              </p>
+            )}
+
+            {/* Citation Meta Strip (Rendered ONLY if real data exists — NO dummy data) */}
+            {(() => {
+              const metaItems: string[] = [];
+              if (course.level) metaItems.push(course.level);
+              if (course.teachingHours) metaItems.push(course.teachingHours);
+              if (course.language) metaItems.push(course.language);
+              if (course.hasCertificate) metaItems.push("Verifiable Certificate");
+
+              if (metaItems.length === 0) return null;
+
+              return (
+                <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-[color:var(--sa-ink-3)] mb-4">
+                  {metaItems.map((item, idx) => (
+                    <React.Fragment key={idx}>
+                      {idx > 0 && <span className="text-[color:var(--sa-gold)]">·</span>}
+                      <span className={item === "Verifiable Certificate" ? "text-emerald-800 font-medium" : ""}>
+                        {item}
+                      </span>
+                    </React.Fragment>
                   ))}
                 </div>
-                <span className="font-bold text-[#0B1B3D]">{rating > 0 ? rating.toFixed(1) : "New"}</span>
-                <span className="text-gray-500 text-sm group-hover:text-[#C9A227] transition-colors underline">({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})</span>
+              );
+            })()}
+
+            {/* Plain Inline Rating Row */}
+            <div className="flex items-center gap-4 text-xs sm:text-sm">
+              <a href="#reviews-section" className="inline-flex items-center gap-1.5 text-[color:var(--sa-ink)] hover:text-[color:var(--sa-gold)] transition-colors">
+                <Star size={15} className="fill-[color:var(--sa-gold)] text-[color:var(--sa-gold)]" />
+                <span className="font-bold text-[color:var(--sa-ink)]">{rating > 0 ? rating.toFixed(1) : "New"}</span>
+                <span className="text-[color:var(--sa-ink-3)] underline">
+                  ({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})
+                </span>
               </a>
-              <button className="flex items-center gap-2 text-gray-500 hover:text-gray-800 text-sm font-medium">
-                <Share2 size={16} /> Share
+              <span className="text-[color:var(--sa-line)]">|</span>
+              <button
+                onClick={handleShare}
+                className="inline-flex items-center gap-1.5 text-[color:var(--sa-ink-3)] hover:text-[color:var(--sa-ink)] transition-colors cursor-pointer"
+              >
+                <Share2 size={14} />
+                <span>Share</span>
               </button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
-              {instructors.length > 0 ? instructors.map((inst: any, idx: number) => (
-                <div key={idx} className="flex items-start gap-3 p-3 border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
-                  {inst.image ? (
-                    <img src={inst.image} alt={inst.name} className="w-12 h-12 rounded-full object-cover shrink-0 border border-gray-100" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 shrink-0 border border-gray-100">
-                      <Users size={20} />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0 pt-0.5">
-                    <p className="font-bold text-[#0B1B3D] truncate text-sm">{inst.name || "Instructor not available"}</p>
-                    {(inst.title || inst.bio) && (
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed" title={inst.title || inst.bio}>{inst.title || inst.bio}</p>
-                    )}
-                  </div>
-                </div>
-              )) : (
-                <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
-                  <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 shrink-0 border border-gray-100">
-                    <Users size={20} />
-                  </div>
-                  <div>
-                    <p className="font-bold text-[#0B1B3D] text-sm">Instructor not available</p>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Live Batch Schedule */}
-          {course.schedule && (
-            <div className="border border-gray-200 rounded-2xl p-6 relative overflow-hidden bg-white">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="text-red-500 bg-red-50 p-2 rounded-lg">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                    <circle cx="12" cy="12" r="4" fill="currentColor" />
-                  </svg>
-                </div>
-                <h3 className="font-bold text-xl text-[#0B1B3D]">Live Batch Schedule</h3>
+          {/* Hero Thumbnail Banner with warm duotone overlay (Rendered ONLY if image exists — NO fake captions) */}
+          {course.image && (
+            <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden bg-[color:var(--sa-cream-2)] border border-[color:var(--sa-line)] shadow-sm">
+              <img
+                src={course.image}
+                alt={course.title || "Course Cover"}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-[color:var(--sa-gold)] mix-blend-multiply opacity-10 pointer-events-none" />
+            </div>
+          )}
+
+          {/* Live Batch Schedule (Rendered ONLY if real schedule exists) */}
+          {course.schedule && (course.schedule.startDate || course.schedule.timings || course.schedule.note) && (
+            <div className="ac-card bg-[color:var(--sa-paper)] p-6 sm:p-7 border border-[color:var(--sa-line)] rounded-2xl min-w-0 w-full overflow-hidden">
+              <div className="flex items-center gap-2 mb-4">
+                <CalendarDays size={20} className="text-[color:var(--sa-gold)]" />
+                <h3 className="ac-display text-xl font-bold text-[color:var(--sa-ink)]">Live Batch Schedule</h3>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm min-w-0">
+                {course.schedule.startDate && (
+                  <div className="min-w-0">
+                    <p className="text-xs text-[color:var(--sa-ink-3)] uppercase tracking-wider mb-1">Timeline</p>
+                    <p className="font-semibold text-[color:var(--sa-ink)] min-w-0 break-words [overflow-wrap:anywhere]">
+                      {course.schedule.startDate}{course.schedule.endDate ? ` – ${course.schedule.endDate}` : ''}
+                    </p>
+                  </div>
+                )}
+                {course.schedule.timings && (
+                  <div className="min-w-0">
+                    <p className="text-xs text-[color:var(--sa-ink-3)] uppercase tracking-wider mb-1">Live Timings</p>
+                    <p className="font-semibold text-[color:var(--sa-ink)] min-w-0 break-words [overflow-wrap:anywhere]">{course.schedule.timings}</p>
+                  </div>
+                )}
+              </div>
+              {course.schedule.note && (
+                <p className="text-xs text-[color:var(--sa-ink-2)] mt-4 pt-3 border-t border-[color:var(--sa-line)] leading-relaxed min-w-0 break-words [overflow-wrap:anywhere]">
+                  {course.schedule.note}
+                </p>
+              )}
+            </div>
+          )}
 
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_1.3fr] gap-6">
-                <div className="space-y-6">
-                  <div className="flex gap-4 items-start">
-                    <CalendarDays size={20} className="text-[#D4AF37] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Timeline</p>
-                      <p className="text-sm font-semibold text-[#0B1B3D]">
-                        {course.schedule?.startDate ? `${course.schedule.startDate} – ${course.schedule.endDate || 'TBD'}` : 'Not available'}
-                      </p>
-                    </div>
+          {/* What You'll Learn / Practice (Rendered ONLY if real items exist — with word-break guard) */}
+          {course.whatYouWillLearn?.length > 0 && (
+            <div className="min-w-0 w-full overflow-hidden">
+              <h2 className="ac-display text-2xl font-bold text-[color:var(--sa-ink)] mb-4">
+                What You'll Learn
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 min-w-0">
+                {course.whatYouWillLearn.map((item: string, i: number) => (
+                  <div key={i} className="flex items-start gap-2.5 min-w-0 overflow-hidden">
+                    <CheckCircle2 size={16} className="text-[color:var(--sa-gold)] shrink-0 mt-0.5" />
+                    <span className="text-sm text-[color:var(--sa-ink)] leading-relaxed min-w-0 break-words [overflow-wrap:anywhere] [word-break:break-word]">{item}</span>
                   </div>
-                  <div className="flex gap-4 items-start">
-                    <Clock size={20} className="text-[#D4AF37] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Live Timing</p>
-                      <p className="text-sm font-semibold text-[#0B1B3D]">
-                        {course.schedule?.timings || 'Not available'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4 items-start">
-                    <Globe size={20} className="text-[#D4AF37] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Language</p>
-                      <p className="text-sm font-semibold text-[#0B1B3D]">
-                        {course.language || 'English'}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-[#0B1B3D] font-medium pt-2">Check course modules for details</p>
-                </div>
-
-                <div className="h-full">
-                  <div className="bg-[#FFF9E6] rounded-xl p-6 h-full flex flex-col justify-center relative overflow-hidden">
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4AF37]"></div>
-                    <div className="flex items-center gap-2 mb-3 font-bold text-[#0B1B3D] text-[15px]">
-                      <Video size={20} className="text-[#D4AF37]" fill="currentColor" /> Recordings Included
-                    </div>
-                    <p className="text-sm text-gray-700 leading-relaxed">{course.schedule?.note || 'Recordings and assignments are included.'}</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* 3 Info Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            {/* Who should enroll */}
-            <div className="border border-gray-200 rounded-xl p-6 bg-white">
-              <h3 className="font-bold text-lg text-[#0B1B3D] mb-5 flex items-center gap-2">
-                <Users size={20} className="text-[#D4AF37]" /> Who should enroll
-              </h3>
-              {course.whoShouldEnrol?.length > 0 ? (
-                <ul className="space-y-4">
-                  {course.whoShouldEnrol.map((item: string, i: number) => (
-                    <li key={i} className="flex gap-3 items-start text-sm text-gray-700">
-                      <CheckCircle2 size={18} className="text-green-500 shrink-0" />
-                      <span className="leading-snug break-words max-w-full overflow-hidden">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-gray-500 italic">Not available</p>
-              )}
-            </div>
-
-            {/* What you will learn */}
-            <div className="border border-gray-200 rounded-xl p-6 bg-white">
-              <h3 className="font-bold text-lg text-[#0B1B3D] mb-5 flex items-center gap-2">
-                <GraduationCap size={20} className="text-[#D4AF37]" /> What you will learn
-              </h3>
-              {course.whatYouWillLearn?.length > 0 ? (
-                <ul className="space-y-4">
-                  {course.whatYouWillLearn.map((item: string, i: number) => (
-                    <li key={i} className="flex gap-3 items-start text-sm text-gray-700">
-                      <CheckCircle2 size={18} className="text-green-500 shrink-0" />
-                      <span className="leading-snug break-words max-w-full overflow-hidden">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-gray-500 italic">Not available</p>
-              )}
-            </div>
-
-            {/* Course features */}
-            <div className="border border-gray-200 rounded-xl p-6 bg-white md:col-span-2">
-              <h3 className="font-bold text-lg text-[#0B1B3D] mb-5 flex items-center gap-2">
-                <Sparkles size={20} className="text-[#D4AF37]" /> Course features
-              </h3>
-              {course.features?.length > 0 ? (
-                <ul className="space-y-4">
-                  {course.features.map((item: any, i: number) => (
-                    <li key={i} className="flex gap-3 items-start text-sm text-gray-700">
-                      <CheckCircle2 size={18} className="text-green-500 shrink-0" />
-                      <span className="leading-snug break-words max-w-full overflow-hidden">{typeof item === 'string' ? item : item.text}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-gray-500 italic">Not available</p>
-              )}
-            </div>
-
-          </div>
-
-          {/* Course Curriculum */}
-          <div className="border border-gray-200 rounded-xl p-6 bg-white">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-3">
-                <div className="bg-[#FFF9E6] p-2.5 rounded-lg">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                    <line x1="8" y1="21" x2="16" y2="21" />
-                    <line x1="12" y1="17" x2="12" y2="21" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-bold text-xl text-[#0B1B3D]">Course Curriculum</h3>
-                  <p className="text-xs text-gray-500">{course.modules?.length || 4} Modules</p>
-                </div>
+          {/* Target Audience / Who Should Enroll (Rendered ONLY if real items exist — with word-break guard) */}
+          {course.whoShouldEnrol?.length > 0 && (
+            <div className="min-w-0 w-full overflow-hidden">
+              <h2 className="ac-display text-2xl font-bold text-[color:var(--sa-ink)] mb-4">
+                Who Should Enroll
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+                {course.whoShouldEnrol.map((item: string, i: number) => (
+                  <div key={i} className="flex items-start gap-2.5 min-w-0 overflow-hidden">
+                    <CheckCircle2 size={16} className="text-[color:var(--sa-gold)] shrink-0 mt-0.5" />
+                    <span className="text-sm text-[color:var(--sa-ink)] leading-relaxed min-w-0 break-words [overflow-wrap:anywhere] [word-break:break-word]">{item}</span>
+                  </div>
+                ))}
               </div>
-              <button onClick={toggleAllModules} className="text-sm font-semibold text-[#0B1B3D] hover:text-black">
-                {course.modules && openModules.length === course.modules.length && course.modules.length > 0 ? "Collapse All" : "Expand All"}
-              </button>
             </div>
+          )}
 
-            {course.modules?.length > 0 ? (
-              <div className="space-y-3">
-                {course.modules.map((mod: any, i: number) => (
-                  <div key={i} className="border border-gray-200 rounded-lg overflow-hidden">
-                    <button onClick={() => toggleModule(i)} className="w-full px-5 py-4 flex justify-between items-center text-left hover:bg-gray-50 transition-colors">
-                      <span className="font-bold text-[#0B1B3D] text-sm">{mod.title}</span>
-                      <div className="flex items-center gap-4 text-gray-500 text-xs">
-                        <span>{mod.lectures} Lectures{mod.duration ? ` • ${mod.duration}` : ''}</span>
-                        {openModules.includes(i) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </div>
-                    </button>
-                    {openModules.includes(i) && (
-                      <div className="px-5 py-4 border-t border-gray-200 bg-gray-50">
-                        <ul className="space-y-3">
+          {/* Course Features (Rendered ONLY if real items exist — with word-break guard) */}
+          {course.features?.length > 0 && (
+            <div className="min-w-0 w-full overflow-hidden">
+              <h2 className="ac-display text-2xl font-bold text-[color:var(--sa-ink)] mb-4">
+                Course Features
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+                {course.features.map((feat: any, i: number) => (
+                  <div key={i} className="flex items-start gap-2.5 min-w-0 overflow-hidden">
+                    <CheckCircle2 size={16} className="text-[color:var(--sa-gold)] shrink-0 mt-0.5" />
+                    <span className="text-sm text-[color:var(--sa-ink)] leading-relaxed min-w-0 break-words [overflow-wrap:anywhere] [word-break:break-word]">
+                      {typeof feat === 'string' ? feat : feat.text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Syllabus & Curriculum (Rendered ONLY if real modules exist — uses real semantic SVG icons & word-break guard) */}
+          {course.modules?.length > 0 && (
+            <div className="min-w-0 w-full overflow-hidden">
+              <div className="flex justify-between items-baseline mb-6 pb-2 border-b border-[color:var(--sa-line)]">
+                <div>
+                  <h2 className="ac-display text-2xl font-bold text-[color:var(--sa-ink)]">
+                    Course Curriculum
+                  </h2>
+                  <p className="text-xs text-[color:var(--sa-ink-3)] mt-0.5">
+                    {course.modules.length} {course.modules.length === 1 ? 'Module' : 'Modules'}
+                  </p>
+                </div>
+                <button
+                  onClick={toggleAllModules}
+                  className="text-xs font-semibold text-[color:var(--sa-ink-2)] hover:text-[color:var(--sa-gold)] transition-colors cursor-pointer shrink-0 ml-4"
+                >
+                  {openModules.length === course.modules.length ? "Collapse all" : "Expand all"}
+                </button>
+              </div>
+
+              <div className="space-y-4 min-w-0">
+                {course.modules.map((mod: any, i: number) => {
+                  const isOpen = openModules.includes(i);
+                  const totalItems = (mod.items?.length || 0) + (mod.subModules?.reduce((acc: number, s: any) => acc + (s.items?.length || 0), 0) || 0);
+
+                  return (
+                    <div key={i} className="border-b border-[color:var(--sa-line)] pb-4 last:border-b-0 min-w-0">
+                      <button
+                        onClick={() => toggleModule(i)}
+                        className="w-full flex items-center justify-between text-left py-2 group cursor-pointer gap-4"
+                      >
+                        <div className="pr-4 min-w-0 flex-1">
+                          <span className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--sa-gold)] font-bold block mb-0.5">
+                            Module {i + 1}
+                          </span>
+                          <h3 className="ac-display text-lg sm:text-xl font-bold text-[color:var(--sa-ink)] group-hover:text-[color:var(--sa-gold-2)] transition-colors min-w-0 break-words [overflow-wrap:anywhere]">
+                            {mod.title}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-[color:var(--sa-ink-3)] font-mono shrink-0">
+                          <span>
+                            {totalItems} lessons{mod.duration ? ` · ${mod.duration}` : ''}
+                          </span>
+                          <ChevronDown size={16} className={`transition-transform duration-200 ${isOpen ? 'rotate-180 text-[color:var(--sa-gold)]' : ''}`} />
+                        </div>
+                      </button>
+
+                      {isOpen && (
+                        <div className="mt-3 pl-4 sm:pl-6 border-l-2 border-[color:var(--sa-line)] space-y-2.5 py-1 min-w-0">
+                          {/* Submodules */}
                           {mod.subModules?.length > 0 && mod.subModules.map((sub: any, subIdx: number) => (
-                            <div key={subIdx} className="mb-4 last:mb-0">
-                              <h5 className="font-bold text-sm text-gray-800 mb-2">{sub.title}</h5>
-                              <ul className="space-y-2 pl-4 border-l-2 border-gray-200 ml-1">
-                                {sub.items?.length > 0 ? sub.items.map((item: any, idx: number) => (
-                                  <li key={idx} className="flex items-center gap-3 text-sm text-gray-600">
-                                    {item.type === 'video' ? <PlayCircle size={16} className="text-indigo-500 shrink-0" /> :
-                                      item.type === 'document' ? <FileText size={16} className="text-emerald-500 shrink-0" /> :
-                                        item.type === 'live' ? <MonitorPlay size={16} className="text-red-500 shrink-0" /> :
-                                          item.type === 'assignment' ? <CheckCircle2 size={16} className="text-orange-500 shrink-0" /> :
-                                            <PlayCircle size={16} className="text-gray-400 shrink-0" />}
-                                    <span>{item.title}</span>
+                            <div key={subIdx} className="mb-3 min-w-0">
+                              <h5 className="font-semibold text-xs text-[color:var(--sa-ink)] mb-2 uppercase tracking-wide min-w-0 break-words [overflow-wrap:anywhere]">
+                                {sub.title}
+                              </h5>
+                              <ul className="space-y-2 pl-3 min-w-0">
+                                {sub.items?.map((item: any, idx: number) => (
+                                  <li key={idx} className="flex items-center gap-2.5 text-xs sm:text-sm text-[color:var(--sa-ink-2)] min-w-0">
+                                    {item.type === 'video' ? (
+                                      <PlayCircle size={15} className="text-indigo-500 shrink-0" />
+                                    ) : item.type === 'document' || item.type === 'pdf' || item.type === 'doc' ? (
+                                      <FileText size={15} className="text-emerald-600 shrink-0" />
+                                    ) : item.type === 'live' ? (
+                                      <MonitorPlay size={15} className="text-rose-500 shrink-0" />
+                                    ) : item.type === 'assignment' || item.type === 'assessment' ? (
+                                      <CheckCircle2 size={15} className="text-amber-600 shrink-0" />
+                                    ) : (
+                                      <PlayCircle size={15} className="text-[color:var(--sa-gold)] shrink-0" />
+                                    )}
+                                    <span className="min-w-0 break-words [overflow-wrap:anywhere]">{item.title}</span>
                                   </li>
-                                )) : (
-                                  <li className="text-sm italic text-gray-400">No lessons in this sub-section.</li>
-                                )}
+                                ))}
                               </ul>
                             </div>
                           ))}
 
-                          {/* Direct items in root module */}
-                          {mod.items?.length > 0 && mod.items.map((item: any, idx: number) => (
-                            <li key={idx} className="flex items-center gap-3 text-sm text-gray-600">
-                              {item.type === 'video' ? <PlayCircle size={16} className="text-indigo-500 shrink-0" /> :
-                                item.type === 'document' ? <FileText size={16} className="text-emerald-500 shrink-0" /> :
-                                  item.type === 'live' ? <MonitorPlay size={16} className="text-red-500 shrink-0" /> :
-                                    item.type === 'assignment' ? <CheckCircle2 size={16} className="text-orange-500 shrink-0" /> :
-                                      <PlayCircle size={16} className="text-gray-400 shrink-0" />}
-                              <span>{item.title}</span>
-                            </li>
+                          {/* Direct Items */}
+                          {mod.items?.map((item: any, idx: number) => (
+                            <div key={idx} className="flex items-center gap-2.5 text-xs sm:text-sm text-[color:var(--sa-ink-2)] min-w-0">
+                              {item.type === 'video' ? (
+                                <PlayCircle size={15} className="text-indigo-500 shrink-0" />
+                              ) : item.type === 'document' || item.type === 'pdf' || item.type === 'doc' ? (
+                                <FileText size={15} className="text-emerald-600 shrink-0" />
+                              ) : item.type === 'live' ? (
+                                <MonitorPlay size={15} className="text-rose-500 shrink-0" />
+                              ) : item.type === 'assignment' || item.type === 'assessment' ? (
+                                <CheckCircle2 size={15} className="text-amber-600 shrink-0" />
+                              ) : (
+                                <PlayCircle size={15} className="text-[color:var(--sa-gold)] shrink-0" />
+                              )}
+                              <span className="min-w-0 break-words [overflow-wrap:anywhere]">{item.title}</span>
+                            </div>
                           ))}
 
-                          {(!mod.items?.length && !mod.subModules?.length) && (
-                            <li className="text-sm italic text-gray-400">No lessons in this module.</li>
+                          {!mod.items?.length && !mod.subModules?.length && (
+                            <p className="text-xs italic text-[color:var(--sa-ink-3)]">No lessons listed in this module.</p>
                           )}
-                        </ul>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Appearances & Faculty (Rendered ONLY if real instructors exist — NO fake stats) */}
+          {instructors.length > 0 && (
+            <div className="min-w-0 w-full overflow-hidden">
+              <h2 className="ac-display text-2xl font-bold text-[color:var(--sa-ink)] mb-6">
+                Appearances & Faculty
+              </h2>
+              <div className="space-y-6 min-w-0">
+                {instructors.map((inst: any, idx: number) => (
+                  <div key={idx} className="flex flex-col sm:flex-row items-start gap-5 p-6 rounded-2xl bg-[color:var(--sa-paper)] border border-[color:var(--sa-line)] min-w-0 overflow-hidden">
+                    {inst.image ? (
+                      <img
+                        src={inst.image}
+                        alt={inst.name || "Instructor"}
+                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-[color:var(--sa-gold)] shrink-0 shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[color:var(--sa-cream-2)] border-2 border-[color:var(--sa-gold)] flex items-center justify-center text-[color:var(--sa-gold)] shrink-0">
+                        <Users size={32} strokeWidth={1.5} />
                       </div>
                     )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="ac-display text-xl font-bold text-[color:var(--sa-ink)] min-w-0 break-words [overflow-wrap:anywhere]">
+                        {inst.name || "Faculty Member"}
+                      </h3>
+                      {inst.title && (
+                        <p className="text-xs font-semibold text-[color:var(--sa-gold)] uppercase tracking-wider mt-0.5 mb-2 min-w-0 break-words [overflow-wrap:anywhere]">
+                          {inst.title}
+                        </p>
+                      )}
+                      {inst.bio && (
+                        <p className="text-xs sm:text-sm text-[color:var(--sa-ink-2)] leading-relaxed min-w-0 break-words [overflow-wrap:anywhere]">
+                          {inst.bio}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-sm text-gray-500 italic mt-4">Curriculum not available.</p>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* FAQs */}
-          <div className="border border-gray-200 rounded-xl p-6 bg-white">
-            <h3 className="font-bold text-xl text-[#0B1B3D] mb-6 flex items-center gap-3">
-              <div className="bg-[#FFF9E6] p-2.5 rounded-lg">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  <path d="M9 9h6" />
-                  <path d="M9 13h6" />
-                </svg>
-              </div>
-              Frequently Asked Questions
-            </h3>
-            {course.faqs?.length > 0 ? (
-              <div className="space-y-3">
-                {course.faqs.map((faq: any, i: number) => (
-                  <div key={i} className="border border-gray-200 rounded-lg overflow-hidden">
-                    <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full px-5 py-4 flex justify-between items-center text-left hover:bg-gray-50 transition-colors">
-                      <span className="font-bold text-[#0B1B3D] text-sm">{faq.q}</span>
-                      {openFaq === i ? <Minus size={16} className="text-gray-500" /> : <Plus size={16} className="text-gray-500" />}
-                    </button>
-                    {openFaq === i && (
-                      <div className="px-5 py-4 border-t border-gray-200 bg-gray-50">
-                        <p className="text-sm text-gray-600 leading-relaxed">{faq.a}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500 italic mt-4">FAQs not available.</p>
-            )}
-          </div>
-
-          {/* ── COURSE REVIEWS & RATINGS (Option C Hybrid) ── */}
-          <CourseReviewsSection
-            courseId={course.id || course.slug}
-            courseTitle={course.title}
-            initialAverageRating={rating}
-            initialTotalReviews={totalReviews}
-            onSummaryChange={(summary) => {
-              setLiveSummary({
-                averageRating: summary.averageRating,
-                totalReviews: summary.totalReviews,
-              });
-            }}
-          />
-
-        </div>
-
-        {/* ── RIGHT COLUMN (Independent Scroll) ── */}
-        <div
-          ref={rightColRef}
-          className="lg:overflow-y-auto lg:h-full no-scrollbar"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
-          onMouseEnter={() => { mouseOnRight.current = true; }}
-        >
-          <div className="space-y-6 pt-0 pb-8">
-
-            {/* Main Buy Card */}
-            <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
-              <div className="relative aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
-                {course.image ? (
-                  <img src={course.image} alt="Course Cover" className="w-full h-full object-cover" />
-                ) : (
-                  <Video size={48} className="text-gray-300" />
-                )}
-              </div>
-              <div className="p-6">
-                {/* Rating Mini Bar in Sticky Card */}
-                <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-100">
-                  <a href="#reviews-section" className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-[#C9A227] transition-colors font-bold">
-                    <Star size={14} className="text-[#C9A227] fill-[#C9A227]" />
-                    <span>{rating > 0 ? rating.toFixed(1) : "New"}</span>
-                    <span className="text-slate-400 font-normal">({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})</span>
-                  </a>
-                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                    Verified Course
-                  </span>
-                </div>
-
-                {/* PhysicsWallah Pricing Hero */}
-                {(() => {
-                  const numPrice = course.rawPrice !== undefined ? course.rawPrice : (Number(String(course.price || "").replace(/[^0-9.]/g, "")) || 0);
-                  const numOriginalPrice = course.rawOriginalPrice !== undefined ? course.rawOriginalPrice : (Number(String(course.originalPrice || "").replace(/[^0-9.]/g, "")) || 0);
-                  const hasDiscount = numOriginalPrice > numPrice;
-                  const discountPct = hasDiscount ? Math.round(((numOriginalPrice - numPrice) / numOriginalPrice) * 100) : null;
-
+          {/* Frequently Asked Questions (Rendered ONLY if real FAQs exist) */}
+          {course.faqs?.length > 0 && (
+            <div className="min-w-0 w-full overflow-hidden">
+              <h2 className="ac-display text-2xl font-bold text-[color:var(--sa-ink)] mb-4">
+                Frequently Asked Questions
+              </h2>
+              <div className="space-y-3 min-w-0">
+                {course.faqs.map((faq: any, i: number) => {
+                  const isOpen = openFaq === i;
                   return (
-                    <div className="mb-5">
-                      <div className="flex items-baseline flex-wrap gap-2.5">
-                        <span className="text-3xl font-extrabold text-[#0B1B3D]">
-                          {appliedCoupon
-                            ? (appliedCoupon.isFree ? "FREE" : `₹${appliedCoupon.finalAmount}`)
-                            : (course.price || "Free")}
-                        </span>
-                        {(hasDiscount || appliedCoupon) && (
-                          <span className="text-base text-gray-400 line-through font-medium">
-                            {appliedCoupon ? (course.price || `₹${numPrice}`) : course.originalPrice}
-                          </span>
-                        )}
-                        {appliedCoupon ? (
-                          <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
-                            Save ₹{appliedCoupon.discountAmount}
-                          </span>
-                        ) : discountPct ? (
-                          <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
-                            {discountPct}% OFF
-                          </span>
-                        ) : null}
-                      </div>
-                      {hasDiscount && !appliedCoupon && (
-                        <p className="text-[11px] text-amber-700 font-medium mt-1 flex items-center gap-1">
-                          ⚡ Limited period offer
+                    <div key={i} className="border-b border-[color:var(--sa-line)] pb-3 min-w-0">
+                      <button
+                        onClick={() => setOpenFaq(isOpen ? null : i)}
+                        className="w-full flex items-center justify-between text-left py-2 font-medium text-sm sm:text-base text-[color:var(--sa-ink)] hover:text-[color:var(--sa-gold)] transition-colors cursor-pointer gap-4"
+                      >
+                        <span className="min-w-0 break-words [overflow-wrap:anywhere]">{faq.q}</span>
+                        {isOpen ? <Minus size={16} className="text-[color:var(--sa-gold)] shrink-0" /> : <Plus size={16} className="text-[color:var(--sa-ink-3)] shrink-0" />}
+                      </button>
+                      {isOpen && (
+                        <p className="text-xs sm:text-sm text-[color:var(--sa-ink-2)] leading-relaxed pt-1 pb-2 min-w-0 break-words [overflow-wrap:anywhere]">
+                          {faq.a}
                         </p>
                       )}
                     </div>
                   );
-                })()}
+                })}
+              </div>
+            </div>
+          )}
 
-                {/* Coupon Code Section */}
-                {!isEnrolled && (
-                  <div className="mb-5 bg-slate-50 border border-slate-200/80 rounded-xl p-3.5">
-                    {!appliedCoupon ? (
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                            <Tag size={13} className="text-[#C9A227]" /> Have a Coupon Code?
-                          </label>
-                          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">e.g. DIWALI20</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="Enter coupon code"
-                            value={couponInput}
-                            spellCheck={false}
-                            autoComplete="off"
-                            autoCapitalize="characters"
-                            onChange={(e) => {
-                              setCouponInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""));
-                              setCouponError(null);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                handleApplyCoupon();
-                              }
-                            }}
-                            style={{ color: "#0f172a" }}
-                            className="w-full bg-white !text-slate-900 border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono font-extrabold uppercase placeholder:!text-slate-400 placeholder:normal-case placeholder:font-normal placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-[#0B1B3D]/20 focus:border-[#0B1B3D] tracking-wider shadow-sm"
-                          />
-                          <button
-                            onClick={handleApplyCoupon}
-                            disabled={isValidatingCoupon || !couponInput.trim()}
-                            className="bg-[#0B1B3D] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#152a54] transition disabled:opacity-50 shrink-0 flex items-center gap-1 shadow-sm"
-                          >
-                            {isValidatingCoupon ? <Loader2 size={13} className="animate-spin" /> : "Apply"}
-                          </button>
-                        </div>
-                        {couponError && (
-                          <p className="text-[11px] text-red-600 mt-2 font-medium flex items-center gap-1">
-                            <AlertCircle size={12} className="shrink-0" /> {couponError}
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                              <Check size={12} />
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold text-emerald-800 font-mono">
-                                {appliedCoupon.coupon?.code} applied
-                              </p>
-                              <p className="text-[11px] text-emerald-700 font-medium">
-                                You save ₹{appliedCoupon.discountAmount}
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={handleRemoveCoupon}
-                            className="text-xs text-red-500 hover:text-red-700 hover:underline font-semibold"
-                          >
-                            Remove
-                          </button>
-                        </div>
+        </div>
 
-                        {/* Order breakdown */}
-                        <div className="mt-3 pt-2.5 border-t border-slate-200/80 space-y-1 text-xs text-slate-600">
-                          <div className="flex justify-between">
-                            <span>Course Fee</span>
-                            <span>₹{appliedCoupon.coursePrice}</span>
-                          </div>
-                          <div className="flex justify-between text-emerald-600 font-medium">
-                            <span>Coupon Discount</span>
-                            <span>- ₹{appliedCoupon.discountAmount}</span>
-                          </div>
-                          <div className="flex justify-between text-slate-900 font-bold pt-1 border-t border-slate-200">
-                            <span>Final Payable</span>
-                            <span className="text-[#0B1B3D] text-sm font-extrabold">
-                              {appliedCoupon.isFree ? "FREE" : `₹${appliedCoupon.finalAmount}`}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+        {/* ── RIGHT RAIL (Sticky Purchase & Enrollment Panel) ── */}
+        <div className="lg:sticky lg:top-24 space-y-6 w-full max-w-[360px] xl:max-w-[380px] min-w-0 self-start">
+          <div className="ac-card bg-[color:var(--sa-paper)] p-6 sm:p-7 border border-[color:var(--sa-line)] shadow-xl rounded-2xl w-full min-w-0 overflow-hidden">
+
+            {/* Price Row */}
+            <div className="mb-4 min-w-0">
+              <div className="flex items-baseline flex-wrap gap-2.5">
+                <span className="ac-display text-3xl sm:text-4xl font-bold text-[color:var(--sa-gold)]">
+                  {appliedCoupon
+                    ? (appliedCoupon.isFree ? "FREE" : `₹${appliedCoupon.finalAmount}`)
+                    : (course.price || "Free")}
+                </span>
+                {(hasDiscount || appliedCoupon) && (
+                  <span className="text-sm sm:text-base text-[color:var(--sa-ink-3)] line-through font-medium">
+                    {appliedCoupon ? (course.price || `₹${numPrice}`) : course.originalPrice}
+                  </span>
+                )}
+                {appliedCoupon ? (
+                  <span className="ac-tag ac-tag-sage">
+                    Save ₹{appliedCoupon.discountAmount}
+                  </span>
+                ) : discountPct ? (
+                  <span className="ac-tag ac-tag-sage">
+                    {discountPct}% OFF
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-xs text-[color:var(--sa-ink-3)] mt-2">
+                One-time payment · Lifetime access{course.hasCertificate ? " · Verifiable certificate" : ""}
+              </p>
+            </div>
+
+            {/* Coupon Code Section (Hidden if already enrolled) */}
+            {!isEnrolled && (
+              <div className="mb-5 p-3 rounded-xl bg-[color:var(--sa-cream)] border border-[color:var(--sa-line)] min-w-0">
+                {!appliedCoupon ? (
+                  <div>
+                    <label className="text-xs font-bold text-[color:var(--sa-ink)] flex items-center gap-1.5 mb-2">
+                      <Tag size={13} className="text-[color:var(--sa-gold)]" /> Have a Coupon Code?
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="ENTER CODE"
+                        value={couponInput}
+                        spellCheck={false}
+                        autoComplete="off"
+                        autoCapitalize="characters"
+                        onChange={(e) => {
+                          setCouponInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""));
+                          setCouponError(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleApplyCoupon();
+                          }
+                        }}
+                        className="w-full bg-white text-[color:var(--sa-ink)] border border-[color:var(--sa-line)] rounded-lg px-3 py-2 text-xs font-mono font-bold uppercase placeholder:text-gray-400 focus:outline-none focus:border-[color:var(--sa-gold)] min-w-0"
+                      />
+                      <button
+                        onClick={handleApplyCoupon}
+                        disabled={isValidatingCoupon || !couponInput.trim()}
+                        className="ac-btn ac-btn-primary px-4 py-2 text-xs font-bold disabled:opacity-50 shrink-0 cursor-pointer"
+                      >
+                        {isValidatingCoupon ? <Loader2 size={13} className="animate-spin" /> : "Apply"}
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="text-[11px] text-red-600 mt-1.5 font-medium flex items-center gap-1 min-w-0 break-words [overflow-wrap:anywhere]">
+                        <AlertCircle size={12} className="shrink-0" /> {couponError}
+                      </p>
                     )}
                   </div>
-                )}
-
-                <div className="space-y-3 mb-6">
-                  {isEnrolled ? (
-                    <Link href={`/dashboard/learn/${course.slug}`}>
-                      <button className="w-full bg-[#122340] text-white py-3.5 rounded-lg font-bold hover:bg-[#0a1628] transition-colors text-[15px] flex justify-center items-center gap-2">
-                        <CheckCircle2 size={18} className="text-green-400" /> Already Enrolled • Go to Course
-                      </button>
-                    </Link>
-                  ) : (
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-emerald-800 font-mono tracking-wider">
+                          {appliedCoupon.coupon?.code}
+                        </span>
+                        <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">
+                          APPLIED
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-emerald-700 mt-0.5">
+                        {appliedCoupon.isFree ? "100% discount applied" : `Saved ₹${appliedCoupon.discountAmount}`}
+                      </p>
+                    </div>
                     <button
-                      onClick={handlePayNow}
-                      disabled={isPaying}
-                      className="w-full bg-[#D4AF37] text-white py-3.5 rounded-lg font-bold hover:bg-[#c4a132] transition-colors text-[15px] flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
-                      {isPaying ? (
-                        <Loader2 size={18} className="animate-spin" />
-                      ) : appliedCoupon?.isFree ? (
-                        "Enroll for Free"
-                      ) : appliedCoupon ? (
-                        `Pay ₹${appliedCoupon.finalAmount} & Enroll`
-                      ) : (
-                        "Enroll Now"
-                      )}
-                    </button>
-                  )}
-                  {!isEnrolled && (
-                    <button
-                      onClick={() => {
-                        toggleWishlist({
-                          id: course.id,
-                          slug: course.slug,
-                          title: course.title,
-                          thumbnailUrl: course.image || course.thumbnailUrl,
-                          price: course.price,
-                          originalPrice: course.originalPrice,
-                          instructor: typeof course.instructor === 'string' ? course.instructor : (course.instructors?.[0]?.name || course.instructor?.name || "Legal Academy"),
-                        });
-                      }}
-                      className={`w-full py-3.5 rounded-lg font-bold transition-colors text-[15px] flex items-center justify-center gap-2 border ${isInWishlist(course.slug || course.id)
-                          ? "bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100/70"
-                          : "bg-white border-gray-300 text-[#0B1B3D] hover:bg-gray-50"
-                        }`}
+                      onClick={handleRemoveCoupon}
+                      className="text-xs text-red-600 hover:text-red-800 font-medium cursor-pointer"
                     >
-                      <Heart
-                        size={18}
-                        className={isInWishlist(course.slug || course.id) ? "fill-red-500 text-red-500" : "text-[#0B1B3D]"}
-                      />
-                      {isInWishlist(course.slug || course.id) ? "Saved in Wishlist" : "Add to Wishlist"}
+                      Remove
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
+              </div>
+            )}
 
-                <h4 className="font-bold text-[#0B1B3D] mb-4 text-sm">This programme includes:</h4>
-                {course.inclusions?.length > 0 ? (
-                  <ul className="space-y-4">
-                    {course.inclusions.map((item: string, i: number) => (
-                      <li key={i} className="flex items-center gap-3 text-sm text-gray-700">
-                        <CheckCircle2 size={18} className="text-[#D4AF37]" /> {item}
+            {/* CTA Actions */}
+            <div className="space-y-3 mb-6">
+              {isEnrolled ? (
+                <button
+                  onClick={() => router.push(`/dashboard/learn/${course.slug}`)}
+                  className="ac-btn ac-btn-primary w-full py-3.5 text-sm font-bold shadow-md cursor-pointer"
+                >
+                  <CheckCircle2 size={18} className="text-emerald-400" />
+                  Go to Classroom
+                </button>
+              ) : (
+                <button
+                  onClick={handlePayNow}
+                  disabled={isPaying}
+                  className="ac-btn ac-btn-primary w-full py-3.5 text-sm font-bold shadow-md cursor-pointer disabled:opacity-60"
+                >
+                  {isPaying ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Processing...
+                    </>
+                  ) : appliedCoupon?.isFree ? (
+                    "Enroll for Free"
+                  ) : (
+                    "Enroll Now"
+                  )}
+                </button>
+              )}
+
+              {/* Add to Wishlist: ONLY shown if course is NOT purchased/enrolled */}
+              {!isEnrolled && (
+                <button
+                  onClick={() => toggleWishlist(course.id || course.slug)}
+                  className={`ac-btn ac-btn-ghost w-full py-2.5 text-xs font-semibold cursor-pointer ${isWishlisted ? "text-rose-600 border-rose-200 bg-rose-50/50" : ""
+                    }`}
+                >
+                  <Heart size={14} className={isWishlisted ? "fill-rose-500 text-rose-500" : ""} />
+                  {isWishlisted ? "In Your Wishlist" : "Add to Wishlist"}
+                </button>
+              )}
+            </div>
+
+            {/* Course Inclusions (Rendered ONLY if real data exists — NO fake bullet points) */}
+            {(() => {
+              const inclusions: { icon: React.ReactNode; text: string }[] = [];
+              if (course.teachingHours) {
+                inclusions.push({ icon: <Clock size={15} className="text-[color:var(--sa-gold)] shrink-0" />, text: `${course.teachingHours} of course content` });
+              }
+              if (course.hasCertificate) {
+                inclusions.push({ icon: <Award size={15} className="text-[color:var(--sa-gold)] shrink-0" />, text: "Verifiable Certificate of Completion" });
+              }
+              if (course.hasLifetimeAccess) {
+                inclusions.push({ icon: <Infinity size={15} className="text-[color:var(--sa-gold)] shrink-0" />, text: "Full lifetime access with updates" });
+              }
+              if (course.inclusions?.length > 0) {
+                course.inclusions.forEach((inc: string) => {
+                  inclusions.push({ icon: <CheckCircle2 size={15} className="text-[color:var(--sa-gold)] shrink-0" />, text: inc });
+                });
+              }
+
+              if (inclusions.length === 0) return null;
+
+              return (
+                <div className="pt-4 border-t border-[color:var(--sa-line)] min-w-0">
+                  <p className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--sa-ink-3)] font-semibold mb-3">
+                    This Course Includes
+                  </p>
+                  <ul className="space-y-2.5 text-xs text-[color:var(--sa-ink-2)] min-w-0">
+                    {inclusions.map((item, idx) => (
+                      <li key={idx} className="flex items-center gap-2.5 min-w-0">
+                        {item.icon}
+                        <span className="min-w-0 break-words [overflow-wrap:anywhere]">{item.text}</span>
                       </li>
                     ))}
                   </ul>
-                ) : (
-                  <p className="text-sm text-gray-500 italic">Not available</p>
-                )}
-              </div>
-            </div>
-
-            {/* Info Boxes */}
-            {course.glance?.find((g: any) => g.label === 'Level')?.value && course.glance.find((g: any) => g.label === 'Level').value !== "All Levels" && (
-              <div className="bg-white border border-gray-200 rounded-xl p-5 flex gap-4 items-center shadow-sm">
-                <div className="text-gray-500 p-1">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="20" x2="18" y2="10" />
-                    <line x1="12" y1="20" x2="12" y2="4" />
-                    <line x1="6" y1="20" x2="6" y2="14" />
-                    <polyline points="4 14 12 4 18 10 22 2" />
-                  </svg>
                 </div>
-                <div>
-                  <h4 className="font-bold text-sm text-[#0B1B3D]">{course.glance.find((g: any) => g.label === 'Level').value} Level</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Designed for new learners</p>
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
-            {course.glance?.find((g: any) => g.label === 'Teaching Hours')?.value && course.glance.find((g: any) => g.label === 'Teaching Hours').value !== "Self-paced" && (
-              <div className="bg-white border border-gray-200 rounded-xl p-5 flex gap-4 items-center shadow-sm">
-                <div className="text-gray-500 p-1"><CalendarDays size={28} strokeWidth={1.5} /></div>
-                <div>
-                  <h4 className="font-bold text-sm text-[#0B1B3D]">{course.glance.find((g: any) => g.label === 'Teaching Hours').value}</h4>
-                  {course.schedule?.startDate ? (
-                    <p className="text-xs text-gray-500 mt-0.5">Start: {course.schedule.startDate}</p>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── COURSE REVIEWS & RATINGS (Inside 7xl Container) ── */}
+      <div id="reviews-section" className="border-t border-[color:var(--sa-line)] pt-12 mt-12 mb-16 w-full min-w-0 overflow-hidden">
+        <CourseReviewsSection
+          courseId={course.id || course.slug}
+          courseTitle={course.title}
+          initialAverageRating={rating}
+          initialTotalReviews={totalReviews}
+          onSummaryChange={(summary) => {
+            setLiveSummary({
+              averageRating: summary.averageRating,
+              totalReviews: summary.totalReviews,
+            });
+          }}
+        />
+      </div>
+
+      {/* ── RELATED COURSES (Category prioritized, max 3 or 6 courses — Inside 7xl Container) ── */}
+      {relatedCourses.length > 0 && (
+        <div className="border-t border-[color:var(--sa-line)] pt-12 mt-12 w-full min-w-0 overflow-hidden">
+          <div className="mb-6">
+            <p className="ac-eyebrow mb-1">CONTINUE YOUR TRACK</p>
+            <h3 className="ac-display text-2xl font-bold text-[color:var(--sa-ink)]">
+              Related Courses
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {relatedCourses.map((rc: any) => (
+              <Link
+                key={rc.slug}
+                href={`/academy/courses/${rc.slug}`}
+                className="group flex flex-col bg-[color:var(--sa-paper)] border border-[color:var(--sa-line)] rounded-xl overflow-hidden hover:border-[color:var(--sa-gold)] transition-all duration-300"
+              >
+                <div className="relative aspect-video w-full overflow-hidden bg-[color:var(--sa-cream-2)]">
+                  {rc.thumbnailUrl ? (
+                    <img
+                      src={rc.thumbnailUrl}
+                      alt={rc.title}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <p className="text-xs text-gray-500 mt-0.5">Self-paced</p>
+                    <div className="w-full h-full flex items-center justify-center text-[color:var(--sa-gold)]">
+                      <PlayCircle size={32} />
+                    </div>
                   )}
                 </div>
-              </div>
-            )}
-
-            {course.glance?.find((g: any) => g.label === 'Teaching Hours')?.value && course.glance.find((g: any) => g.label === 'Teaching Hours').value !== "Self-paced" && (
-              <div className="bg-white border border-gray-200 rounded-xl p-5 flex gap-4 items-center shadow-sm">
-                <div className="text-gray-500 p-1"><Clock size={28} strokeWidth={1.5} /></div>
-                <div>
-                  <h4 className="font-bold text-sm text-[#0B1B3D]">Live & Recorded</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Interactive sessions</p>
-                </div>
-              </div>
-            )}
-
-            {course.hasCertificate && (
-              <div className="bg-white border border-gray-200 rounded-xl p-5 flex gap-4 items-center shadow-sm">
-                <div className="text-gray-500 p-1">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="4" width="18" height="16" rx="2" />
-                    <circle cx="12" cy="10" r="3" />
-                    <path d="M12 13v4" />
-                    <path d="M9 17h6" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm text-[#0B1B3D]">Certificate</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Shareable certificate</p>
-                </div>
-              </div>
-            )}
-
-            {course.hasLifetimeAccess && (
-              <div className="bg-white border border-gray-200 rounded-xl p-5 flex gap-4 items-center shadow-sm">
-                <div className="text-gray-500 p-1"><Infinity size={28} strokeWidth={1.5} /></div>
-                <div>
-                  <h4 className="font-bold text-sm text-[#0B1B3D]">Lifetime Access</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Learn at your own pace</p>
-                </div>
-              </div>
-            )}
-
-          </div>
-        </div>
-
-      </div>
-    </div>
-  );
-}
-
-function TestSeriesLayout({ course }: { course: typeof TEST_SERIES }) {
-  const [activeTab, setActiveTab] = useState("description");
-
-  return (
-    <div className="space-y-10">
-
-      {/* ── BREADCRUMBS ── */}
-      <div className="text-sm text-[#122340]/60">
-        <Link href="/" className="hover:text-[#122340]">Academy</Link> <span className="mx-2">/</span>
-        <Link href="/courses" className="hover:text-[#122340]">Courses</Link> <span className="mx-2">/</span>
-        <span className="text-[#122340] font-medium">Judiciary Preparation</span>
-      </div>
-
-      {/* ── HERO BANNER ── */}
-      <div className="bg-white border border-[#122340]/10 rounded-xl p-6 sm:p-10 flex flex-col md:flex-row gap-10 shadow-sm">
-        {/* Cover Image */}
-        <div className="w-full md:w-1/3 shrink-0">
-          <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-md border border-[#122340]/5 bg-[#122340]/5">
-            <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
-          </div>
-        </div>
-
-        {/* Details */}
-        <div className="w-full md:w-2/3 flex flex-col justify-center">
-          <h1 className="text-3xl font-extrabold text-[#122340] mb-4 leading-snug">{course.title}</h1>
-          <div className="space-y-2 mb-8 text-sm text-[#122340]/70">
-            <p><span className="font-medium text-[#122340]">Instructor:</span> {course.instructor}</p>
-            <p><span className="font-medium text-[#122340]">Language:</span> {course.language}</p>
-            <p><span className="font-medium text-[#122340]">Validity Period:</span> {course.validity}</p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center gap-6 mt-auto">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-baseline gap-2.5 flex-wrap">
-                <span className="text-4xl font-extrabold text-[#C9A227]">{course.price}</span>
-                {course.originalPrice && (
-                  <span className="text-lg text-[#122340]/40 line-through font-medium">{course.originalPrice}</span>
-                )}
-                {course.rawOriginalPrice && course.rawPrice && course.rawOriginalPrice > course.rawPrice && (
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
-                    {Math.round(((course.rawOriginalPrice - course.rawPrice) / course.rawOriginalPrice) * 100)}% OFF
+                <div className="p-4 flex flex-col flex-1 min-w-0">
+                  <span className="text-[10px] font-bold text-[color:var(--sa-gold)] uppercase tracking-wider mb-1 truncate">
+                    {rc.category || "Course"}
                   </span>
-                )}
-              </div>
-              <span className="text-xs text-[#122340]/50 uppercase tracking-widest font-semibold">Including 18% GST</span>
-            </div>
-            <button className="bg-[#122340] text-white px-8 py-3.5 rounded-lg font-bold hover:bg-[#0a1628] transition-colors shadow-md text-sm whitespace-nowrap">
-              Buy now for {course.price}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── BOTTOM TWO COLUMNS ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
-
-        {/* Left Col (Tabs & Content) */}
-        <div className="lg:col-span-3">
-
-          {/* Tabs */}
-          <div className="flex border-b border-[#122340]/10 mb-8 overflow-x-auto">
-            {['Description', 'Course Content', 'How to Use'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab.toLowerCase())}
-                className={`px-8 py-4 text-sm font-bold whitespace-nowrap transition-colors border-b-2 ${activeTab === tab.toLowerCase() ? 'border-[#C9A227] text-[#C9A227]' : 'border-transparent text-[#122340]/60 hover:text-[#122340]'}`}
-              >
-                {tab}
-              </button>
+                  <h4 className="ac-display font-bold text-base text-[color:var(--sa-ink)] group-hover:text-[color:var(--sa-gold-2)] transition-colors mb-2 line-clamp-2">
+                    {rc.title}
+                  </h4>
+                  <div className="mt-auto pt-3 border-t border-[color:var(--sa-line)] flex items-center justify-between">
+                    <span className="font-bold text-sm text-[color:var(--sa-gold)]">
+                      {rc.price ? `₹${rc.price}` : "Free"}
+                    </span>
+                    <span className="text-xs text-[color:var(--sa-ink-3)] font-medium group-hover:text-[color:var(--sa-ink)] transition-colors">
+                      View Course &rarr;
+                    </span>
+                  </div>
+                </div>
+              </Link>
             ))}
           </div>
-
-          {/* Tab Content */}
-          <div className="bg-white p-8 rounded-xl border border-[#122340]/10 shadow-sm text-[#122340]/80 leading-relaxed text-sm">
-            {activeTab === 'description' && (
-              <div dangerouslySetInnerHTML={{ __html: course.description }} className="prose prose-sm max-w-none text-[#122340]/80 prose-headings:text-[#122340]" />
-            )}
-            {activeTab === 'course content' && (
-              <p>Course content index goes here.</p>
-            )}
-            {activeTab === 'how to use' && (
-              <p>Instructions on how to access and take the tests.</p>
-            )}
-          </div>
         </div>
+      )}
 
-        {/* Right Col (Other Courses) */}
-        <div className="lg:col-span-1 space-y-6">
-          <h3 className="font-bold text-[#122340] border-b border-[#122340]/10 pb-2">Other Courses</h3>
-
-          <div className="flex flex-col gap-4">
-            {course.otherCourses.map((oc) => (
-              <div key={oc.id} className="bg-white rounded-lg border border-[#122340]/10 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-                <div className="relative aspect-video w-full overflow-hidden border-b border-[#122340]/5 bg-[#122340]/5">
-                  <img src={oc.img} alt={oc.title} className="w-full h-full object-cover" />
-                </div>
-                <div className="p-3">
-                  <h4 className="font-bold text-xs text-[#122340] mb-2 leading-tight">{oc.title}</h4>
-                  <p className="text-[#122340]/60 text-[10px] mb-2">Sajjad Husain Legal Academy</p>
-                  <p className="font-bold text-[#C9A227] text-sm">{oc.price}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </div>
     </div>
   );
 }
@@ -1139,108 +845,32 @@ function TestSeriesLayout({ course }: { course: typeof TEST_SERIES }) {
 
 function CourseSkeletonLayout() {
   return (
-    <div className="max-w-[1200px] mx-auto py-8">
-      {/* ── BREADCRUMB ── */}
-      <div className="w-32 h-4 bg-gray-200 rounded animate-pulse mb-6"></div>
-
-      {/* ── MAIN CONTENT GRID ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12">
-
-        {/* ── LEFT COLUMN ── */}
-        <div className="space-y-6 lg:space-y-8">
-
-          {/* Header Info */}
-          <div>
-            <div className="flex gap-2 mb-4">
-              <div className="w-20 h-6 bg-gray-200 rounded-full animate-pulse"></div>
-              <div className="w-24 h-6 bg-gray-200 rounded-full animate-pulse"></div>
-            </div>
-            <div className="w-3/4 h-10 bg-gray-200 rounded animate-pulse mb-3"></div>
-            <div className="w-full h-6 bg-gray-200 rounded animate-pulse mb-4"></div>
-
-            <div className="flex items-center gap-6 mb-6">
-              <div className="w-32 h-5 bg-gray-200 rounded animate-pulse"></div>
-              <div className="w-16 h-5 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-
-            <div className="flex items-center gap-6 mb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gray-200 animate-pulse"></div>
-                <div>
-                  <div className="w-32 h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="w-24 h-3 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Live Batch Schedule */}
-          <div className="border border-gray-100 rounded-2xl p-6 bg-gray-50 animate-pulse">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
-              <div className="w-48 h-6 bg-gray-200 rounded"></div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_1.3fr] gap-6">
-              <div className="space-y-6">
-                <div className="flex gap-4">
-                  <div className="w-5 h-5 bg-gray-200 rounded"></div>
-                  <div className="flex-1">
-                    <div className="w-16 h-3 bg-gray-200 rounded mb-2"></div>
-                    <div className="w-32 h-4 bg-gray-200 rounded"></div>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="w-5 h-5 bg-gray-200 rounded"></div>
-                  <div className="flex-1">
-                    <div className="w-24 h-3 bg-gray-200 rounded mb-2"></div>
-                    <div className="w-40 h-4 bg-gray-200 rounded"></div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-200 rounded-xl p-5 h-24"></div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="border border-gray-100 rounded-xl p-6 bg-gray-50 animate-pulse h-48"></div>
-            <div className="border border-gray-100 rounded-xl p-6 bg-gray-50 animate-pulse h-48"></div>
-          </div>
-          <div className="border border-gray-100 rounded-xl p-6 bg-gray-50 animate-pulse h-32"></div>
-          <div className="border border-gray-100 rounded-xl p-6 bg-gray-50 animate-pulse h-64"></div>
+    <div className="w-full animate-pulse">
+      <div className="h-4 bg-gray-200 rounded w-28 mb-8" />
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_380px] gap-8 xl:gap-12">
+        <div className="space-y-6">
+          <div className="h-4 bg-gray-200 rounded w-20" />
+          <div className="h-10 bg-gray-200 rounded w-3/4" />
+          <div className="h-4 bg-gray-200 rounded w-full" />
+          <div className="h-4 bg-gray-200 rounded w-2/3" />
+          <div className="aspect-[16/9] bg-gray-200 rounded-2xl w-full" />
+          <div className="h-32 bg-gray-200 rounded-2xl w-full" />
         </div>
-
-        {/* ── RIGHT COLUMN (Sticky Card) ── */}
-        <div>
-          <div className="sticky top-24 space-y-6 pt-0">
-            <div className="border border-gray-100 rounded-2xl overflow-hidden bg-white shadow-sm animate-pulse">
-              <div className="aspect-video w-full bg-gray-200"></div>
-              <div className="p-6 space-y-4">
-                <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-                <div className="h-12 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-            <div className="grid gap-4">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="bg-gray-50 border border-gray-100 rounded-xl p-5 h-20 animate-pulse"></div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <div className="h-96 bg-gray-200 rounded-2xl" />
       </div>
     </div>
   );
 }
 
-// ── Main Page Component ─────────────────────────────────────────
+// ── Main Page Component ──────────────────────────────────────────
 
 export default function CourseDetail({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = React.use(params);
-  const slug = resolvedParams.slug?.toLowerCase() || '';
-
+  const slug = resolvedParams.slug;
   const dispatch = useAppDispatch();
-  const { currentCourse, isLoading, error } = useAppSelector((state) => state.course);
-  const { user } = useAppSelector((state) => state.auth);
-  const { myEnrollments } = useAppSelector((state) => state.enrollments);
+  const { currentCourse, courses, isLoading, error } = useAppSelector((state) => state.course);
+  const { user } = useAppSelector(state => state.auth);
+  const { myEnrollments } = useAppSelector(state => state.enrollments);
 
   useEffect(() => {
     if (slug) {
@@ -1252,7 +882,12 @@ export default function CourseDetail({ params }: { params: Promise<{ slug: strin
   }, [dispatch, slug]);
 
   useEffect(() => {
-    // Fetch enrollments if user is logged in and they haven't been fetched yet
+    if (!courses || courses.length === 0) {
+      dispatch(fetchAllCourses());
+    }
+  }, [dispatch, courses]);
+
+  useEffect(() => {
     if (user && (!myEnrollments || myEnrollments.length === 0)) {
       dispatch(fetchMyEnrollments());
     }
@@ -1260,48 +895,54 @@ export default function CourseDetail({ params }: { params: Promise<{ slug: strin
 
   if (isLoading || (!currentCourse && !error)) {
     return (
-      <div className="bg-[#fcfcfa] min-h-screen font-sans pt-24 pb-20 px-4 sm:px-6 lg:px-8">
-        <CourseSkeletonLayout />
+      <div className="ac-student bg-[color:var(--sa-cream)] min-h-screen font-sans pt-10 pb-20 w-full overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <CourseSkeletonLayout />
+        </div>
       </div>
     );
   }
 
   if (error || !currentCourse) {
     return (
-      <div className="bg-[#fcfcfa] min-h-screen font-sans pt-32 pb-20 text-center">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Course not found</h2>
-        <p className="text-gray-500 mb-6">{error || "The course you are looking for does not exist."}</p>
-        <Link href="/courses">
-          <button className="bg-[#C9A227] text-white px-6 py-2.5 rounded hover:bg-[#b39022] transition-colors">
-            Browse All Courses
-          </button>
-        </Link>
+      <div className="ac-student bg-[color:var(--sa-cream)] min-h-screen font-sans pt-32 pb-20 text-center w-full overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <h2 className="ac-display text-2xl font-bold text-[color:var(--sa-ink)] mb-2">Course not found</h2>
+          <p className="text-[color:var(--sa-ink-3)] mb-6">{error || "The course you are looking for does not exist."}</p>
+          <Link href="/academy/courses">
+            <button className="ac-btn ac-btn-primary px-6 py-2.5 rounded hover:bg-[#b39022] transition-colors cursor-pointer">
+              Browse All Courses
+            </button>
+          </Link>
+        </div>
       </div>
     );
   }
 
   // Map backend Course entity to the VideoCourseLayout format
-  // Fallbacks are provided for fields that might be missing from the backend yet
+  // Strict condition mapping ensuring no dummy data fallback
   const mappedCourse = {
     id: currentCourse.id,
     slug: currentCourse.slug,
     type: "video",
     title: currentCourse.title || "",
-    subtitle: currentCourse.subtitle || currentCourse.description?.substring(0, 100),
+    subtitle: currentCourse.subtitle || null,
+    description: currentCourse.description || null,
+    category: currentCourse.category || null,
     instructors: (currentCourse.instructors && currentCourse.instructors.length > 0) ? currentCourse.instructors : [],
     price: currentCourse.price ? `₹${currentCourse.price}` : null,
     originalPrice: currentCourse.originalPrice ? `₹${currentCourse.originalPrice}` : null,
     rawPrice: currentCourse.price !== undefined ? Number(currentCourse.price) : 0,
     rawOriginalPrice: currentCourse.originalPrice ? Number(currentCourse.originalPrice) : null,
-    image: currentCourse.thumbnailUrl || "",
+    image: currentCourse.thumbnailUrl || null,
     tags: currentCourse.tags?.length ? currentCourse.tags : [currentCourse.level, currentCourse.category].filter(Boolean),
     averageRating: Number(currentCourse.averageRating) || 0,
     totalReviews: Number(currentCourse.totalReviews) || 0,
-    schedule: (currentCourse.startDate || currentCourse.endDate || currentCourse.timings) ? {
-      startDate: currentCourse.startDate,
-      endDate: currentCourse.endDate,
-      timings: currentCourse.timings,
-      note: currentCourse.scheduleNote
+    schedule: (currentCourse.startDate || currentCourse.endDate || currentCourse.timings || currentCourse.scheduleNote) ? {
+      startDate: currentCourse.startDate || null,
+      endDate: currentCourse.endDate || null,
+      timings: currentCourse.timings || null,
+      note: currentCourse.scheduleNote || null
     } : null,
     whoShouldEnrol: currentCourse.targetAudience?.length ? currentCourse.targetAudience : [],
     whatYouWillLearn: currentCourse.whatYouWillLearn?.length ? currentCourse.whatYouWillLearn : [],
@@ -1326,7 +967,7 @@ export default function CourseDetail({ params }: { params: Promise<{ slug: strin
           const parent = moduleMap.get(m.parentId);
           if (parent) {
             parent.subModules.push(mod);
-            parent.lectures += mod.lectures; // Aggregate lectures count
+            parent.lectures += mod.lectures;
           } else {
             rootModules.push(mod);
           }
@@ -1335,7 +976,6 @@ export default function CourseDetail({ params }: { params: Promise<{ slug: strin
         }
       });
 
-      // Sort subModules and rootModules by orderIndex
       rootModules.forEach(rm => {
         rm.subModules.sort((a: any, b: any) => (a.orderIndex || 0) - (b.orderIndex || 0));
       });
@@ -1345,17 +985,15 @@ export default function CourseDetail({ params }: { params: Promise<{ slug: strin
     inclusions: currentCourse.inclusions?.length ? currentCourse.inclusions : [],
     hasCertificate: currentCourse.hasCertificate || false,
     hasLifetimeAccess: currentCourse.hasLifetimeAccess || false,
-    glance: [
-      { label: "Teaching Hours", value: currentCourse.teachingHours || currentCourse.duration || "Self-paced" },
-      { label: "Language", value: currentCourse.language || "English" },
-      { label: "Level", value: currentCourse.level || "All Levels" },
-    ],
+    teachingHours: currentCourse.teachingHours || currentCourse.duration || null,
+    language: currentCourse.language || null,
+    level: currentCourse.level || null,
     faqs: currentCourse.faqs || []
   };
 
   return (
-    <div className="bg-[#fcfcfa] min-h-screen font-sans pt-4 pb-20">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="ac-student bg-[color:var(--sa-cream)] min-h-screen font-sans pt-6 pb-20 w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <VideoCourseLayout course={mappedCourse as any} />
       </div>
     </div>

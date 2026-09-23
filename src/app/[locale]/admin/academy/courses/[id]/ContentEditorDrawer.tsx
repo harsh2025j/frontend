@@ -64,7 +64,7 @@ export default function ContentEditorDrawer({
   const [localProvider, setLocalProvider] = useState(item?.provider || "");
   const [isSaving, setIsSaving] = useState(false);
   const isConcluded = item?.liveData?.status === "completed";
-  
+
   // Live session specific state - strictly empty by default so new items are "not_scheduled"
   const [liveData, setLiveData] = useState<any>({
     platform: "",
@@ -90,16 +90,16 @@ export default function ContentEditorDrawer({
       params.courseId = courseId;
     }
     apiClient.get('/academy/assessments', { params })
-    .then(res => {
-      console.log('fetchAssessments res.data:', res.data);
-      const data = res.data?.data || res.data;
-      if(Array.isArray(data)) {
-        setAssessments(data);
-      } else {
-        console.warn('fetchAssessments data is not an array:', data);
-      }
-    })
-    .catch(err => console.error("Failed to fetch assessments", err));
+      .then(res => {
+        console.log('fetchAssessments res.data:', res.data);
+        const data = res.data?.data || res.data;
+        if (Array.isArray(data)) {
+          setAssessments(data);
+        } else {
+          console.warn('fetchAssessments data is not an array:', data);
+        }
+      })
+      .catch(err => console.error("Failed to fetch assessments", err));
   };
 
   useEffect(() => {
@@ -117,7 +117,7 @@ export default function ContentEditorDrawer({
       setExternalUrl("");
       setLocalFileUrl("");
     }
-    
+
     if (item?.provider) {
       setLocalProvider(item.provider);
     } else {
@@ -162,7 +162,7 @@ export default function ContentEditorDrawer({
         recordingUrl: "",
       });
     }
-    
+
     if (item?.type === 'assignment') {
       setActiveTab("assignment");
     } else if (item?.type === 'test' || item?.type === 'final_assessment') {
@@ -192,9 +192,9 @@ export default function ContentEditorDrawer({
     const u = new Uppy({
       id: 'uppy-s3',
       autoProceed: false,
-      restrictions: { 
+      restrictions: {
         maxNumberOfFiles: 1,
-        allowedFileTypes 
+        allowedFileTypes
       },
     });
 
@@ -287,7 +287,7 @@ export default function ContentEditorDrawer({
 
   const handleSaveExternal = async () => {
     if (!externalUrl.trim()) return toast.error("Please enter a valid URL");
-    
+
     let provider = "link";
     if (externalUrl.includes("youtube.com") || externalUrl.includes("youtu.be")) provider = "youtube";
     else if (externalUrl.includes("meet.google.com")) provider = "gmeet";
@@ -324,8 +324,8 @@ export default function ContentEditorDrawer({
         liveData.platform === "youtube"
           ? liveData.youtubeUrl?.trim()
           : (liveData.platform === "gmeet" || liveData.platform === "zoom")
-          ? liveData.meetingUrl?.trim()
-          : (liveData.recordingUrl || "");
+            ? liveData.meetingUrl?.trim()
+            : (liveData.recordingUrl || "");
 
       const payload = {
         provider: liveData.platform || null,
@@ -446,16 +446,16 @@ export default function ContentEditorDrawer({
                   <p className="text-xs text-green-700 mt-1 truncate max-w-[380px]">Type: {localProvider === 's3' ? 'Direct Upload' : localProvider}</p>
                 </div>
               </div>
-              
+
               {/* Preview */}
               {item.type === 'video' && (localProvider === 'youtube' || localFileUrl.includes('youtube') || localFileUrl.includes('youtu.be')) ? (
                 <div className="aspect-video w-full mt-2 rounded-lg overflow-hidden bg-black shadow-sm border border-gray-900/10">
-                  <iframe 
-                    width="100%" 
-                    height="100%" 
-                    src={localFileUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')} 
-                    frameBorder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={localFileUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   ></iframe>
                 </div>
@@ -473,9 +473,9 @@ export default function ContentEditorDrawer({
                   </object>
                 </div>
               ) : item.type === 'document' && (localFileUrl.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/) != null) ? (
-                 <div className="w-full mt-2 rounded-lg overflow-hidden border border-gray-900/10 bg-gray-100 flex items-center justify-center p-2">
-                   <img src={localFileUrl} alt="Document Preview" className="max-w-full max-h-[400px] object-contain" />
-                 </div>
+                <div className="w-full mt-2 rounded-lg overflow-hidden border border-gray-900/10 bg-gray-100 flex items-center justify-center p-2">
+                  <img src={localFileUrl} alt="Document Preview" className="max-w-full max-h-[400px] object-contain" />
+                </div>
               ) : (
                 <a href={localFileUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline inline-block truncate max-w-[380px]">{localFileUrl}</a>
               )}
@@ -554,13 +554,11 @@ export default function ContentEditorDrawer({
                   {/* Jitsi Meet Option */}
                   <div
                     onClick={() => !isConcluded && setLiveData((prev: any) => ({ ...prev, platform: "jitsi" }))}
-                    className={`p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between ${
-                      isConcluded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
-                    } ${
-                      liveData.platform === "jitsi" 
-                        ? "border-blue-600 bg-blue-50/50 shadow-sm" 
+                    className={`p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between ${isConcluded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                      } ${liveData.platform === "jitsi"
+                        ? "border-blue-600 bg-blue-50/50 shadow-sm"
                         : "border-gray-200 hover:border-gray-300 bg-white"
-                    }`}
+                      }`}
                   >
                     <div>
                       <div className="flex items-center justify-between mb-2">
@@ -584,13 +582,11 @@ export default function ContentEditorDrawer({
                   {/* Google Meet Option */}
                   <div
                     onClick={() => !isConcluded && setLiveData((prev: any) => ({ ...prev, platform: "gmeet" }))}
-                    className={`p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between ${
-                      isConcluded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
-                    } ${
-                      liveData.platform === "gmeet" 
-                        ? "border-emerald-600 bg-emerald-50/50 shadow-sm" 
+                    className={`p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between ${isConcluded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                      } ${liveData.platform === "gmeet"
+                        ? "border-emerald-600 bg-emerald-50/50 shadow-sm"
                         : "border-gray-200 hover:border-gray-300 bg-white"
-                    }`}
+                      }`}
                   >
                     <div>
                       <div className="flex items-center justify-between mb-2">
@@ -614,13 +610,11 @@ export default function ContentEditorDrawer({
                   {/* Zoom Meeting Option */}
                   <div
                     onClick={() => !isConcluded && setLiveData((prev: any) => ({ ...prev, platform: "zoom" }))}
-                    className={`p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between ${
-                      isConcluded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
-                    } ${
-                      liveData.platform === "zoom" 
-                        ? "border-sky-600 bg-sky-50/50 shadow-sm" 
+                    className={`p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between ${isConcluded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                      } ${liveData.platform === "zoom"
+                        ? "border-sky-600 bg-sky-50/50 shadow-sm"
                         : "border-gray-200 hover:border-gray-300 bg-white"
-                    }`}
+                      }`}
                   >
                     <div>
                       <div className="flex items-center justify-between mb-2">
@@ -644,13 +638,11 @@ export default function ContentEditorDrawer({
                   {/* YouTube Live Option */}
                   <div
                     onClick={() => !isConcluded && setLiveData((prev: any) => ({ ...prev, platform: "youtube" }))}
-                    className={`p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between ${
-                      isConcluded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
-                    } ${
-                      liveData.platform === "youtube" 
-                        ? "border-red-600 bg-red-50/50 shadow-sm" 
+                    className={`p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between ${isConcluded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                      } ${liveData.platform === "youtube"
+                        ? "border-red-600 bg-red-50/50 shadow-sm"
                         : "border-gray-200 hover:border-gray-300 bg-white"
-                    }`}
+                      }`}
                   >
                     <div>
                       <div className="flex items-center justify-between mb-2">
@@ -678,7 +670,7 @@ export default function ContentEditorDrawer({
                 <h4 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
                   <Calendar size={16} className="text-gray-500" /> Schedule Timing
                 </h4>
-                
+
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Class Date</label>
@@ -742,7 +734,7 @@ export default function ContentEditorDrawer({
                     ) : (
                       <>
                         <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                        <span className="text-xs font-bold text-amber-800">⏳ Not Scheduled</span>
+                        <span className="text-xs font-bold text-amber-800">Not Scheduled</span>
                         <span className="text-[11px] text-gray-400 ml-auto">Pick date & time to schedule</span>
                       </>
                     )}
@@ -856,7 +848,7 @@ export default function ContentEditorDrawer({
                   <div className="text-xs font-mono bg-white p-2.5 rounded border border-gray-200 text-gray-600 break-all select-all">
                     {(liveData.jitsiRoomId || `sajjad-husain-legal-academy-live-${(item.id || '').replace(/-/g, '').slice(0, 8)}`).replace(/^legalacademy-live-/, 'sajjad-husain-legal-academy-live-')}
                   </div>
-                  
+
                   <div className="pt-2 border-t border-gray-200/60">
                     <label className="flex items-center gap-2 cursor-pointer select-none">
                       <input
@@ -931,7 +923,7 @@ export default function ContentEditorDrawer({
               <div>
                 <label className="block text-sm font-bold text-gray-800 mb-1">Class Recording (Replay)</label>
                 <p className="text-xs text-gray-500 mb-4">
-                  {liveData.platform === "youtube" 
+                  {liveData.platform === "youtube"
                     ? "YouTube Live automatically saves your recording at the same stream URL. You can also paste an alternative replay link below."
                     : "Upload the recorded MP4 file from Google Meet, Zoom, or Jitsi, or paste a video link so students can replay the class."}
                 </p>
@@ -1018,7 +1010,7 @@ export default function ContentEditorDrawer({
                   <span className="mt-0.5 shrink-0 text-yellow-600">💡</span>
                   <span>Make sure your document includes clear instructions on how the student should complete and submit their assignment.</span>
                 </div>
-                
+
                 {assignmentData.instructionsPdfUrl ? (
                   <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex flex-col gap-3">
                     <div className="flex items-start gap-3">
@@ -1030,7 +1022,7 @@ export default function ContentEditorDrawer({
                         </a>
                       </div>
                     </div>
-                    <button 
+                    <button
                       onClick={() => setAssignmentData((prev: any) => ({ ...prev, instructionsPdfUrl: "" }))}
                       className="text-xs font-bold text-red-600 hover:text-red-700 self-start bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 transition"
                     >
@@ -1128,21 +1120,21 @@ export default function ContentEditorDrawer({
 
                 <button
                   onClick={async () => {
-                    if(!assignmentData.assessmentId) return toast.error("Please select an assessment");
+                    if (!assignmentData.assessmentId) return toast.error("Please select an assessment");
                     const selectedA = assessments.find((a: any) => a.id === assignmentData.assessmentId);
                     setIsSaving(true);
                     try {
-                      await onSave(item.id, { 
-                        assignmentData: { 
-                          ...item.assignmentData, 
+                      await onSave(item.id, {
+                        assignmentData: {
+                          ...item.assignmentData,
                           assessmentId: assignmentData.assessmentId,
                           totalMarks: selectedA?.marksPerQuestion ? selectedA.marksPerQuestion * (selectedA.questions?.length || 1) : 100,
                           passingMarks: selectedA?.passingPercentage || 50,
-                        } 
+                        }
                       });
                       toast.success("Assessment linked successfully!");
                       onClose();
-                    } catch(e) {
+                    } catch (e) {
                       toast.error("Failed to link assessment");
                     } finally {
                       setIsSaving(false);

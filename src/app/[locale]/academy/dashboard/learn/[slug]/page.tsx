@@ -6,7 +6,7 @@ import {
   ChevronLeft, PlayCircle, CheckCircle2, FileText, MessageSquare, Download,
   Play, Pause, Maximize, Volume2, SkipForward, Video, ClipboardList, Award,
   CheckSquare, UploadCloud, Clock, ExternalLink, XCircle, Circle, FileQuestion, GraduationCap,
-  Lock, ArrowRight, Star
+  Lock, ArrowRight, Star, AlertCircle, ChevronDown, BookOpen
 } from 'lucide-react';
 import AssessmentPlayer from './AssessmentPlayer';
 import LiveClassViewer from '@/components/academy/live/LiveClassViewer';
@@ -43,6 +43,7 @@ import CourseReviewMilestonePrompt from '@/components/academy/reviews/CourseRevi
 import CourseReviewsSection from '@/components/academy/reviews/CourseReviewsSection';
 import { reviewApi } from '@/data/services/academy-service/review.service';
 import { CourseReview } from '@/data/features/academy/course/course.types';
+import CourseQATab from '@/components/academy/qa/CourseQATab';
 
 export default function CoursePlayerPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = React.use(params);
@@ -56,8 +57,8 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
   const { user } = useAppSelector((state) => state.auth);
   const currentEnrollment = React.useMemo(() => {
     return myEnrollments.find(
-      e => (e.course?.slug && e.course.slug.toLowerCase() === slug.toLowerCase()) || 
-           (currentCourse?.id && (e.courseId === currentCourse.id || e.course?.id === currentCourse.id))
+      e => (e.course?.slug && e.course.slug.toLowerCase() === slug.toLowerCase()) ||
+        (currentCourse?.id && (e.courseId === currentCourse.id || e.course?.id === currentCourse.id))
     ) || null;
   }, [myEnrollments, slug, currentCourse?.id]);
 
@@ -88,7 +89,7 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
           setMyReview(null);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [currentCourse?.id, user, reviewRefreshKey]);
 
   const handleReviewSuccess = (savedReview: CourseReview) => {
@@ -440,18 +441,18 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
     const contentMissing = isItemContentMissing(item);
 
     if (item.type === 'final_assessment') {
-      if (contentMissing) {
-        return {
-          isLocked: true,
-          reason: 'content_missing',
-          tooltip: 'Content not added in this section'
-        };
-      }
       if (!isFinalAssessmentUnlocked) {
         return {
           isLocked: true,
           reason: 'prerequisites_not_met',
           tooltip: `Complete ${unlockPctRequired}% of prior lessons to unlock (${currentProgressPct}% completed)`
+        };
+      }
+      if (contentMissing) {
+        return {
+          isLocked: true,
+          reason: 'content_missing',
+          tooltip: 'Content not added in this section'
         };
       }
       return { isLocked: false, reason: '', tooltip: '' };
@@ -467,6 +468,36 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
 
     return { isLocked: false, reason: '', tooltip: '' };
   }, [isItemContentMissing, isFinalAssessmentUnlocked, unlockPctRequired, currentProgressPct]);
+
+  // Compute the parent module title for the currently active item
+  const activeItemModuleTitle = React.useMemo(() => {
+    if (!activeItem || !mappedCourseData?.modules) return '';
+    for (const m of mappedCourseData.modules) {
+      if (m.items?.some((it: any) => it.id === activeItem.id)) return m.title;
+      if (m.submodules) {
+        for (const sub of m.submodules) {
+          if (sub.items?.some((it: any) => it.id === activeItem.id)) return `${m.title} — ${sub.title}`;
+        }
+      }
+    }
+    return '';
+  }, [activeItem, mappedCourseData]);
+
+  // Find the next available (unlocked) lesson to skip to
+  const nextAvailableItem = React.useMemo(() => {
+    if (!activeItem || !allCourseItems.length) return null;
+    const currentIndex = allCourseItems.findIndex((it: any) => it.id === activeItem.id);
+    if (currentIndex !== -1) {
+      for (let i = currentIndex + 1; i < allCourseItems.length; i++) {
+        const candidate = allCourseItems[i];
+        if (!getItemLockStatus(candidate).isLocked) {
+          return candidate;
+        }
+      }
+    }
+    // If not found ahead, find first incomplete and unlocked item
+    return allCourseItems.find((it: any) => it.id !== activeItem.id && !getItemLockStatus(it).isLocked && !it.completed) || null;
+  }, [activeItem, allCourseItems, getItemLockStatus]);
 
   useEffect(() => {
     if (mappedCourseData && mappedCourseData.modules.length > 0) {
@@ -577,24 +608,38 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
   // to create a true distraction-free learning environment.
   return (
     <div className="fixed inset-0 z-[100] bg-white flex flex-col font-sans animate-in fade-in duration-500">
+      <style>{`
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+        @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .learn-sidebar-scroll::-webkit-scrollbar { width: 6px; }
+        .learn-sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+        .learn-sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(18,35,64,0.15); border-radius: 999px; }
+        .learn-sidebar-scroll::-webkit-scrollbar-thumb:hover { background: rgba(18,35,64,0.3); }
+      `}</style>
 
       {/* ── TOP BAR ── */}
-      <div className="h-16 bg-[#0a1628] text-white flex items-center justify-between px-4 shrink-0 shadow-md">
+      <div className="h-16 bg-gradient-to-r from-[#0a1628] via-[#0d1b32] to-[#0a1628] text-white flex items-center justify-between px-4 shrink-0 shadow-[0_2px_16px_-4px_rgba(10,22,40,0.6)] relative border-b border-[#C9A227]/15">
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#C9A227]/40 to-transparent pointer-events-none" />
         <div className="flex items-center gap-4">
           <Link href="/dashboard/courses">
-            <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
+            <button className="p-2 hover:bg-white/10 rounded-full transition-all hover:-translate-x-0.5 active:scale-95 cursor-pointer">
               <ChevronLeft size={24} />
             </button>
           </Link>
-          <div className="hidden sm:block h-6 w-px bg-white/20"></div>
-          <h1 className="font-bold text-sm sm:text-base truncate max-w-md">{COURSE_DATA.title}</h1>
+          <div className="hidden sm:block h-6 w-px bg-white/15"></div>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="hidden md:flex w-8 h-8 rounded-lg bg-[#C9A227]/15 border border-[#C9A227]/25 items-center justify-center shrink-0">
+              <BookOpen size={15} className="text-[#C9A227]" />
+            </div>
+            <h1 className="font-bold text-sm sm:text-base truncate max-w-md tracking-tight">{COURSE_DATA.title}</h1>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
           {(progress >= 30 || myReview || canReview) && (
             <button
               onClick={() => setIsReviewModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C9A227]/15 hover:bg-[#C9A227]/25 text-[#C9A227] border border-[#C9A227]/30 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C9A227]/15 hover:bg-[#C9A227]/25 text-[#C9A227] border border-[#C9A227]/30 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-[0_4px_12px_-2px_rgba(201,162,39,0.35)] hover:-translate-y-0.5"
               title={myReview ? "Edit your review" : "Leave a review"}
             >
               <Star size={13} className="fill-[#C9A227]" />
@@ -606,12 +651,15 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
             <span className="text-xs text-white/70 font-semibold uppercase tracking-wider group-hover:text-white transition-colors">
               Your Progress
             </span>
-            <div className="w-32 bg-white/20 rounded-full h-2 overflow-hidden relative">
+            <div className="w-32 bg-white/10 rounded-full h-2 overflow-hidden relative ring-1 ring-white/5">
               <div
-                className="bg-[#C9A227] h-2 rounded-full transition-all duration-500 ease-out"
+                className="bg-gradient-to-r from-[#C9A227] via-[#e0b93a] to-[#C9A227] h-2 rounded-full transition-all duration-700 ease-out relative overflow-hidden shadow-[0_0_8px_rgba(201,162,39,0.5)]"
                 style={{ width: `${COURSE_DATA.progress}%` }}
-              />
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_2.5s_infinite]" style={{ animation: 'shimmer 2.5s infinite' }} />
+              </div>
             </div>
+            <span className="text-xs font-extrabold text-[#C9A227] tabular-nums w-9 text-right">{COURSE_DATA.progress}%</span>
 
             {/* Hover Tooltip */}
             <div className="absolute top-full right-0 mt-2 px-3 py-1.5 bg-[#122340] text-white text-xs font-bold rounded-xl shadow-2xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 flex items-center whitespace-nowrap">
@@ -619,7 +667,7 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
               <div className="absolute bottom-full right-8 border-4 border-transparent border-b-[#122340]" />
             </div>
           </div>
-          <div className="w-8 h-8 rounded-full bg-[#C9A227] flex items-center justify-center font-bold text-sm text-[#0a1628]">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#e0b93a] to-[#C9A227] flex items-center justify-center font-bold text-sm text-[#0a1628] ring-2 ring-[#C9A227]/40 ring-offset-2 ring-offset-[#0a1628] shadow-md">
             {(() => {
               const u = user as any;
               const fullName = u?.name || u?.firstName || u?.email || '';
@@ -638,469 +686,545 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
         {/* LEFT COLUMN: Dynamic Content Area */}
         <div className="flex-1 flex flex-col h-full overflow-y-auto bg-[#fcfcfa]">
 
-          {/* Section Locked Screen (Content Not Added) */}
-          {activeItemLock.isLocked && activeItemLock.reason === 'content_missing' && (
-            <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-4xl bg-white border border-[#122340]/15 rounded-3xl p-8 sm:p-12 shadow-sm flex flex-col items-center text-center relative overflow-hidden">
-              <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-600 flex items-center justify-center mb-6 shadow-inner">
-                <Lock size={38} className="animate-pulse" />
-              </div>
+          {/* ── LOCKED SECTION SCREEN ── */}
+          {activeItemLock.isLocked ? (
+            activeItemLock.reason === 'prerequisites_not_met' ? (
+              /* Prerequisites Incomplete (Assessment locked until prior requirements met) */
+              <div className="my-6 sm:my-8 mx-auto w-[95%] max-w-4xl bg-white border border-[#E5DDCB] rounded-2xl p-8 sm:p-12 shadow-[0_20px_50px_-20px_rgba(11,18,32,0.08)] flex flex-col items-center text-center shrink-0 relative">
+                {/* <div className="w-20 h-20 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-[#B7913A] flex items-center justify-center mb-6 shadow-inner">
+                  <Lock size={38} className="animate-pulse" strokeWidth={1.75} />
+                </div> */}
 
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold uppercase tracking-wider mb-4">
-                <Lock size={12} /> Section Locked
-              </div>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-bold uppercase tracking-wider mb-4">
+                  <Lock size={13} className="text-amber-700" />
+                  <span>Prerequisites Incomplete · Assessment Locked</span>
+                </div>
 
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#122340] mb-3">
-                {activeItem.title}
-              </h2>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0B1220] tracking-tight mb-3 font-serif">
+                  {activeItem.title || "Final Course Assessment"}
+                </h2>
 
-              <p className="text-sm sm:text-base text-[#122340]/70 max-w-xl mx-auto mb-6 leading-relaxed">
-                Content not added in this section. The instructor has not uploaded the material for this section yet. It will automatically unlock once the material is added.
-              </p>
+                <p className="text-sm sm:text-base text-[#4B5468] max-w-xl mx-auto mb-8 leading-relaxed">
+                  This assessment is the capstone requirement to complete the course and earn your official verifiable certificate. You must complete at least <strong className="text-[#0B1220]">{unlockPctRequired}%</strong> of prior coursework and requirements before this examination unlocks.
+                </p>
 
-              <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl text-xs font-semibold text-amber-900 flex items-center gap-2">
-                <Lock size={14} className="text-amber-600 shrink-0" />
-                <span>Section locked: Content not added in this section</span>
-              </div>
-            </div>
-          )}
-
-          {/* Dynamic Render based on item type (Only when content exists) */}
-          {activeItem.type === 'video' && (!activeItemLock.isLocked || activeItemLock.reason !== 'content_missing') && (
-            <div className="mt-2 sm:mt-4 mx-auto w-[95%] max-w-5xl relative flex flex-col shrink-0 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-[#122340]/10 bg-black">
-              <div className="bg-white border-b border-[#122340]/10 p-4 flex justify-between items-center shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#C9A227]/10 text-[#C9A227] rounded-full flex items-center justify-center">
-                    <Video size={20} />
+                {/* Progress Summary Card */}
+                <div className="w-full max-w-lg bg-[#FDFBF5] border border-[#E5DDCB] rounded-2xl p-6 mb-8 text-left shadow-xs">
+                  <div className="flex justify-between items-center mb-2.5">
+                    <span className="text-xs font-bold text-[#4B5468] uppercase tracking-wider">
+                      Curriculum Prerequisites
+                    </span>
+                    <span className="text-xs font-extrabold text-[#B7913A]">
+                      {completedPrerequisites} of {totalPrerequisites} Completed ({currentProgressPct}% / {unlockPctRequired}% required)
+                    </span>
                   </div>
-                  <h2 className="font-bold text-[#122340] text-lg">{activeItem.title}</h2>
-                </div>
-                <div className="flex gap-2">
-                  {activeItem.completed ? (
-                    <div className="bg-green-600 text-white px-5 py-2 rounded-xl font-bold text-sm flex items-center gap-2 cursor-default select-none">
-                      <CheckCircle2 size={16} /> Completed
-                    </div>
-                  ) : activeItem.fileUrl ? (
-                    <button
-                      onClick={() => handleMarkAsComplete(activeItem.id)}
-                      disabled={isMarkingComplete}
-                      className="bg-[#C9A227] text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-[#b08d20] hover:shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
-                    >
-                      {isMarkingComplete ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-                      Mark as Complete
-                    </button>
-                  ) : null}
-                </div>
-              </div>
 
-              <div className="w-full max-h-[490px] aspect-video relative group flex shrink-0">
-                {activeItem.fileUrl ? (
-                  (activeItem.provider === 'youtube' || activeItem.fileUrl.includes('youtube') || activeItem.fileUrl.includes('youtu.be')) ? (
-                    <iframe
-                      src={activeItem.fileUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
-                      className="w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
+                  <div className="w-full bg-[#E5DDCB]/60 h-3 rounded-full overflow-hidden relative">
+                    <div
+                      className="bg-gradient-to-r from-[#B7913A] to-[#8F6F22] h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, currentProgressPct)}%` }}
                     />
-                  ) : (
-                    <div className="relative w-full h-full group bg-black">
-                      <video
-                        ref={videoRef}
-                        src={activeItem.fileUrl}
-                        controls
-                        controlsList="nodownload"
-                        className="w-full h-full object-contain"
-                        onPlay={() => setIsPlaying(true)}
-                        onPause={() => setIsPlaying(false)}
-                        onTimeUpdate={(e) => {
-                          const video = e.currentTarget;
-                          if (!activeItem.completed && video.duration > 0) {
-                            if (video.currentTime / video.duration > 0.9) {
-                              handleMarkAsComplete(activeItem.id);
-                            }
-                          }
-                        }}
-                        onEnded={() => {
-                          setIsVideoEnded(true);
-                          if (!activeItem.completed) {
-                            handleMarkAsComplete(activeItem.id);
-                          }
-                        }}
-                      >
-                        Your browser does not support the video tag.
-                      </video>
-                      {!isPlaying && !isVideoEnded && (
-                        <div
-                          className="absolute inset-0 flex items-center justify-center bg-black/10 cursor-pointer"
-                          onClick={() => videoRef.current?.play()}
-                        >
-                          <div className="w-20 h-20 bg-[#C9A227]/90 rounded-full flex items-center justify-center shadow-2xl transition-transform transform scale-100 hover:scale-110">
-                            <Play className="text-[#0a1628] ml-2" size={40} fill="currentColor" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )
+                  </div>
+
+                  <div className="mt-3.5 pt-3 border-t border-[#E5DDCB]/60 flex items-start gap-2 text-xs text-[#4B5468]">
+                    <AlertCircle size={15} className="text-amber-600 shrink-0 mt-0.5" />
+                    <span>
+                      {Math.max(1, Math.ceil((unlockPctRequired / 100) * totalPrerequisites) - completedPrerequisites)} more required lesson(s) or test(s) must be completed to reach {unlockPctRequired}% and unlock this final assessment.
+                    </span>
+                  </div>
+                </div>
+
+                {/* Resume Learning Action */}
+                {firstIncompleteItem ? (
+                  <button
+                    onClick={() => {
+                      hasUserManuallySelected.current = true;
+                      setActiveItem(firstIncompleteItem);
+                      setIsVideoEnded(false);
+                    }}
+                    className="bg-[#0B1220] hover:bg-[#141B2E] text-[#F7F3EA] px-8 py-3.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2.5 cursor-pointer transform hover:-translate-y-0.5"
+                  >
+                    <span>Continue Course: {firstIncompleteItem.title}</span>
+                    <ArrowRight size={16} />
+                  </button>
                 ) : (
-                  <div className="w-full h-full relative">
-                    <img
-                      src={COURSE_DATA.image || "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=1200&auto=format&fit=crop"}
-                      alt="Video Thumbnail"
-                      className="w-full h-full object-contain opacity-60 bg-black"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center flex-col text-white">
-                      <Video size={48} className="mx-auto mb-4 opacity-50" />
-                      <p className="font-bold text-lg">Video is not available right now</p>
-                      <p className="text-sm opacity-70">We will upload the video for this lesson in the future.</p>
-                    </div>
+                  <p className="text-xs font-semibold text-[#4B5468]">
+                    Please review your syllabus on the right for any pending tasks.
+                  </p>
+                )}
+              </div>
+            ) : (
+              /* Content Missing / Not Uploaded Yet by Faculty */
+              <div className="my-6 sm:my-8 mx-auto w-[95%] max-w-4xl bg-white border border-[#E5DDCB] rounded-2xl p-8 sm:p-12 shadow-[0_20px_50px_-20px_rgba(11,18,32,0.08)] flex flex-col items-center text-center shrink-0 relative">
+                {/* <div className="w-20 h-20 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-[#B7913A] flex items-center justify-center mb-6 shadow-inner">
+                  <Clock size={38} className="animate-pulse" strokeWidth={1.75} />
+                </div> */}
+
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-bold uppercase tracking-wider mb-4">
+                  <Lock size={13} className="text-amber-700" />
+                  <span>Section Locked · Content Under Preparation</span>
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0B1220] tracking-tight mb-3 font-serif">
+                  {activeItem.title}
+                </h2>
+
+                <p className="text-sm sm:text-base text-[#4B5468] max-w-xl mx-auto mb-6 leading-relaxed">
+                  The curriculum material for this section has not been uploaded yet by the instructor. It will automatically unlock and become available as soon as the faculty publishes the content.
+                </p>
+
+                {/* Section Meta Card */}
+                <div className="w-full max-w-md bg-[#FDFBF5] border border-[#E5DDCB] rounded-2xl p-4 sm:p-5 mb-8 text-left text-xs space-y-2.5 shadow-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#E5DDCB]/60">
+                    <span className="text-[#4B5468] font-medium">Curriculum Section</span>
+                    <span className="text-[#0B1220] font-bold truncate max-w-[220px]">{activeItemModuleTitle || COURSE_DATA.title}</span>
+                  </div>
+                  <div className="flex items-center justify-between pb-2 border-b border-[#E5DDCB]/60">
+                    <span className="text-[#4B5468] font-medium">Content Format</span>
+                    <span className="text-[#0B1220] font-bold capitalize">{formatItemType(activeItem.type)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#4B5468] font-medium">Availability</span>
+                    <span className="text-amber-800 font-bold inline-flex items-center gap-1.5">
+                      <Clock size={13} className="text-amber-600" /> Pending instructor upload
+                    </span>
+                  </div>
+                </div>
+
+                {/* Skip to Next Lesson or Resume */}
+                {nextAvailableItem ? (
+                  <button
+                    onClick={() => {
+                      hasUserManuallySelected.current = true;
+                      setActiveItem(nextAvailableItem);
+                      setIsVideoEnded(false);
+                    }}
+                    className="bg-[#0B1220] hover:bg-[#141B2E] text-[#F7F3EA] px-8 py-3.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2.5 cursor-pointer transform hover:-translate-y-0.5"
+                  >
+                    <span>Skip to Available Lesson: {nextAvailableItem.title}</span>
+                    <ArrowRight size={16} />
+                  </button>
+                ) : firstIncompleteItem ? (
+                  <button
+                    onClick={() => {
+                      hasUserManuallySelected.current = true;
+                      setActiveItem(firstIncompleteItem);
+                      setIsVideoEnded(false);
+                    }}
+                    className="bg-[#0B1220] hover:bg-[#141B2E] text-[#F7F3EA] px-8 py-3.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2.5 cursor-pointer transform hover:-translate-y-0.5"
+                  >
+                    <span>Go to Next Uncompleted: {firstIncompleteItem.title}</span>
+                    <ArrowRight size={16} />
+                  </button>
+                ) : (
+                  <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl text-xs font-semibold text-amber-900 flex items-center gap-2">
+                    <Lock size={14} className="text-amber-600 shrink-0" />
+                    <span>This section will become active once material is uploaded.</span>
                   </div>
                 )}
               </div>
-            </div>
-          )}
-
-          {activeItem.type === 'document' && (!activeItemLock.isLocked || activeItemLock.reason !== 'content_missing') && (
-            <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-5xl bg-[#f8f9fa] max-h-[700px] h-[700px] relative flex flex-col shrink-0 rounded-2xl overflow-hidden shadow-sm border border-[#122340]/10">
-              {activeItem.fileUrl ? (
-                <>
-                  <div className="bg-white border-b border-[#122340]/10 p-4 flex justify-between items-center shrink-0">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#C9A227]/10 text-[#C9A227] rounded-full flex items-center justify-center">
-                        <FileText size={20} />
+            )
+          ) : (
+            <>
+              {/* Dynamic Render based on item type (Only when unlocked) */}
+              {activeItem.type === 'video' && (
+                <div className="mt-2 sm:mt-4 mx-auto w-[95%] max-w-5xl relative flex flex-col shrink-0 rounded-2xl overflow-hidden shadow-[0_12px_40px_-8px_rgba(10,22,40,0.25)] border border-[#122340]/10 bg-black ring-1 ring-black/5">
+                  <div className="bg-gradient-to-b from-white to-[#fafaf7] border-b border-[#122340]/10 p-4 flex justify-between items-center shrink-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 bg-gradient-to-br from-[#C9A227]/20 to-[#C9A227]/10 text-[#C9A227] rounded-xl flex items-center justify-center shadow-inner border border-[#C9A227]/20 shrink-0">
+                        <Video size={20} />
                       </div>
-                      <h2 className="font-bold text-[#122340] text-lg">{activeItem.title}</h2>
+                      <h2 className="font-bold text-[#122340] text-lg tracking-tight truncate">{activeItem.title}</h2>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 shrink-0">
                       {activeItem.completed ? (
-                        <div
-                          className="bg-green-600 text-white px-5 py-2 rounded-xl font-bold text-sm flex items-center gap-2 cursor-default select-none"
-                        >
-                          <CheckCircle2 size={16} />
-                          Completed
+                        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white px-5 py-2 rounded-xl font-bold text-sm flex items-center gap-2 cursor-default select-none shadow-[0_4px_12px_-2px_rgba(34,197,94,0.4)]">
+                          <CheckCircle2 size={16} /> Completed
                         </div>
-                      ) : (
+                      ) : activeItem.fileUrl ? (
                         <button
                           onClick={() => handleMarkAsComplete(activeItem.id)}
                           disabled={isMarkingComplete}
-                          className="bg-[#C9A227] text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-[#b08d20] hover:shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+                          className="bg-gradient-to-br from-[#C9A227] to-[#b08d20] text-white px-5 py-2 rounded-xl font-bold text-sm hover:shadow-[0_4px_14px_-2px_rgba(201,162,39,0.5)] hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer shadow-sm"
                         >
                           {isMarkingComplete ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
                           Mark as Complete
                         </button>
-                      )}
-                      <button
-                        onClick={(e) => activeItem.fileUrl && handleDownload(e, activeItem.fileUrl, activeItem.title)}
-                        disabled={isDownloading}
-                        className="bg-[#122340] text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-[#0a1628] hover:shadow-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-                        {isDownloading ? 'Downloading...' : 'Download Document'}
-                      </button>
+                      ) : null}
                     </div>
                   </div>
-                  <div className="flex-1 w-full bg-[#e5e7eb]">
-                    <iframe
-                      src={activeItem.fileUrl.toLowerCase().includes('.pdf') ? `${activeItem.fileUrl}#toolbar=0` : `https://docs.google.com/viewer?url=${encodeURIComponent(activeItem.fileUrl)}&embedded=true`}
-                      className="w-full h-full border-none"
-                      title={activeItem.title}
-                    />
+
+                  <div className="w-full max-h-[490px] aspect-video relative group flex shrink-0">
+                    {activeItem.fileUrl ? (
+                      (activeItem.provider === 'youtube' || activeItem.fileUrl.includes('youtube') || activeItem.fileUrl.includes('youtu.be')) ? (
+                        <iframe
+                          src={activeItem.fileUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <div className="relative w-full h-full group bg-black">
+                          <video
+                            ref={videoRef}
+                            src={activeItem.fileUrl}
+                            controls
+                            controlsList="nodownload"
+                            className="w-full h-full object-contain"
+                            onPlay={() => setIsPlaying(true)}
+                            onPause={() => setIsPlaying(false)}
+                            onTimeUpdate={(e) => {
+                              const video = e.currentTarget;
+                              if (!activeItem.completed && video.duration > 0) {
+                                if (video.currentTime / video.duration > 0.9) {
+                                  handleMarkAsComplete(activeItem.id);
+                                }
+                              }
+                            }}
+                            onEnded={() => {
+                              setIsVideoEnded(true);
+                              if (!activeItem.completed) {
+                                handleMarkAsComplete(activeItem.id);
+                              }
+                            }}
+                          >
+                            Your browser does not support the video tag.
+                          </video>
+                          {!isPlaying && !isVideoEnded && (
+                            <div
+                              className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/40 via-black/10 to-transparent cursor-pointer group/play"
+                              onClick={() => videoRef.current?.play()}
+                            >
+                              <div className="relative">
+                                <div className="absolute inset-0 rounded-full bg-[#C9A227]/40 blur-2xl scale-110 animate-pulse" />
+                                <div className="relative w-20 h-20 bg-gradient-to-br from-[#e0b93a] to-[#C9A227] rounded-full flex items-center justify-center shadow-2xl transition-all transform group-hover/play:scale-110 ring-4 ring-white/20">
+                                  <Play className="text-[#0a1628] ml-2" size={40} fill="currentColor" />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    ) : (
+                      <div className="w-full h-full relative">
+                        <img
+                          src={COURSE_DATA.image || "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=1200&auto=format&fit=crop"}
+                          alt="Video Thumbnail"
+                          className="w-full h-full object-contain opacity-60 bg-black"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center flex-col text-white">
+                          <Video size={48} className="mx-auto mb-4 opacity-50" />
+                          <p className="font-bold text-lg">Video is not available right now</p>
+                          <p className="text-sm opacity-70">We will upload the video for this lesson in the future.</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </>
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-white">
-                  <FileText size={64} className="text-[#122340]/20 mb-6" />
-                  <h2 className="text-2xl font-extrabold mb-2 text-[#122340]">Document Unavailable</h2>
-                  <p className="text-[#122340]/60 mb-8 font-medium max-w-lg">
-                    The document for this lesson has not been uploaded yet. Please check back later.
-                  </p>
                 </div>
               )}
-            </div>
-          )}
 
-          {activeItem.type === 'live' && (!activeItemLock.isLocked || activeItemLock.reason !== 'content_missing') && (
-            <LiveClassViewer
-              item={activeItem}
-              user={user}
-              courseTitle={COURSE_DATA.title}
-              onMarkComplete={handleMarkAsComplete}
-              onStatusChange={(updated) => {
-                setActiveItem((prev: any) => ({ ...prev, ...updated }));
-                if (updated?.id) {
-                  dispatch(updateCourseItemData({ itemId: updated.id, liveData: updated.liveData }));
-                }
-              }}
-            />
-          )}
-
-          {activeItem.type === 'assignment' && (!activeItemLock.isLocked || activeItemLock.reason !== 'content_missing') && (
-            <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-5xl bg-[#f8f9fa] border border-[#122340]/10 rounded-2xl p-10 flex flex-col items-center justify-center shrink-0 text-[#122340] shadow-sm">
-              <ClipboardList size={48} className="text-[#C9A227] mb-6" />
-              <h2 className="text-2xl font-extrabold mb-2 text-center">{activeItem.title}</h2>
-              <p className="text-[#122340]/60 mb-6 font-medium">Please review the instructions below and upload your completed work.</p>
-
-              {activeItem.fileUrl && (
-                <button
-                  onClick={(e) => handleDownload(e, activeItem.fileUrl, activeItem.title)}
-                  disabled={isDownloading}
-                  className="mb-8 bg-[#C9A227] text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-[#b08d20] hover:shadow-lg transition-all flex items-center gap-3 shadow-md disabled:opacity-50"
-                >
-                  {isDownloading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
-                  {isDownloading ? 'Downloading...' : 'Download Assignment Instructions'}
-                </button>
-              )}
-
-              {!activeItem.fileUrl ? (
-                <div className="w-full max-w-md bg-white border-2 border-dashed border-[#122340]/20 rounded-2xl p-10 flex flex-col items-center justify-center text-center cursor-not-allowed mb-8 relative opacity-70">
-                  <FileText size={32} className="text-[#122340]/20 mb-4" />
-                  <p className="font-bold text-sm mb-1 text-[#122340]/50">Assignment Instructions Unavailable</p>
-                  <p className="text-xs text-[#122340]/40">You cannot submit until instructions are provided.</p>
-                </div>
-              ) : (
-                <div
-                  className={`w-full max-w-md bg-white border-2 border-dashed ${activeSubmission?.status === 'verified' || activeSubmission?.status === 'pending' || activeSubmission?.status === 'resubmitted' || (activeItem.completed && !activeSubmission)
-                    ? 'border-green-400 bg-green-50/50 cursor-default'
-                    : activeSubmission?.status === 'rejected'
-                      ? 'border-red-400 hover:border-red-500 hover:bg-red-50 cursor-pointer'
-                      : 'border-[#122340]/20 hover:border-[#C9A227]/50 hover:bg-[#C9A227]/5 cursor-pointer'
-                    } rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-colors group mb-8 relative`}
-                  onClick={() => {
-                    const isCompletedButLocked = activeSubmission?.status === 'verified' || activeSubmission?.status === 'pending' || activeSubmission?.status === 'resubmitted' || (activeItem.completed && activeSubmission?.status !== 'rejected');
-                    if (!isCompletedButLocked && !isMarkingComplete) {
-                      const el = document.getElementById(`file-upload-${activeItem.id}`);
-                      if (el) el.click();
-                    }
-                  }}
-                >
-                  <input
-                    type="file"
-                    id={`file-upload-${activeItem.id}`}
-                    className="hidden"
-                    accept=".pdf"
-                    onChange={async (e) => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        const file = e.target.files[0];
-                        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-                          toast.error("Only PDF files are allowed for assignments.");
-                          e.target.value = ''; // Reset input
-                          return;
-                        }
-                        setIsMarkingComplete(true);
-                        try {
-                          // 1. Upload file to S3
-                          const s3Url = await uploadToS3(file);
-
-                          // 2. Submit to backend
-                          await apiClient.post(`/academy/assignments/${activeItem.id}/submit`, {
-                            submissionPdfUrl: s3Url,
-                            studentName: (user as any)?.name || (user as any)?.firstName || 'Student',
-                            studentEmail: (user as any)?.email || 'student@example.com',
-                            studentId: (user as any)?._id || (user as any)?.id
-                          });
-
-                          // We do NOT mark as complete locally until verified by admin
-                          // await handleMarkAsComplete(activeItem.id);
-                          await fetchMySubmissions();
-                          toast.success("Assignment submitted successfully!");
-                        } catch (err) {
-                          console.error("Assignment upload error:", err);
-                          toast.error("Failed to submit assignment. Please try again.");
-                        } finally {
-                          setIsMarkingComplete(false);
-                        }
-                      }
-                    }}
-                  />
-
-                  {isMarkingComplete ? (
+              {activeItem.type === 'document' && (
+                <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-5xl bg-[#f8f9fa] max-h-[700px] h-[700px] relative flex flex-col shrink-0 rounded-2xl overflow-hidden shadow-[0_12px_40px_-8px_rgba(10,22,40,0.2)] border border-[#122340]/10 ring-1 ring-black/5">
+                  {activeItem.fileUrl ? (
                     <>
-                      <Loader2 size={32} className="text-[#C9A227] mb-4 animate-spin" />
-                      <p className="font-bold text-sm mb-1 text-[#C9A227]">Uploading Document...</p>
-                    </>
-                  ) : activeSubmission?.status === 'verified' ? (
-                    <>
-                      <CheckCircle2 size={32} className="text-green-500 mb-4" />
-                      <p className="font-bold text-sm mb-1 text-green-700">Assignment Verified</p>
-                      {activeSubmission.feedback && <p className="text-xs text-green-600 font-medium bg-green-100/80 px-4 py-2 rounded-lg mt-3 text-left w-full border border-green-200">{activeSubmission.feedback}</p>}
-                    </>
-                  ) : activeSubmission?.status === 'rejected' ? (
-                    <>
-                      <XCircle size={32} className="text-red-500 mb-4" />
-                      <p className="font-bold text-sm mb-1 text-red-700">Submission Rejected</p>
-                      {activeSubmission.feedback && <p className="text-xs text-red-600 font-medium bg-red-100/80 px-4 py-2 rounded-lg mt-3 text-left w-full border border-red-200">{activeSubmission.feedback}</p>}
-                      <p className="text-xs text-red-600/70 mt-4 flex items-center justify-center gap-1"><UploadCloud size={14} /> Click to re-upload your assignment</p>
-                    </>
-                  ) : activeSubmission?.status === 'pending' || activeSubmission?.status === 'resubmitted' || activeItem.completed ? (
-                    <>
-                      <Clock size={32} className="text-blue-500 mb-4" />
-                      <p className="font-bold text-sm mb-1 text-blue-700">Document Uploaded Successfully</p>
-                      <p className="text-xs text-blue-600/70">Pending review</p>
+                      <div className="bg-gradient-to-b from-white to-[#fafaf7] border-b border-[#122340]/10 p-4 flex justify-between items-center shrink-0">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 bg-gradient-to-br from-[#C9A227]/20 to-[#C9A227]/10 text-[#C9A227] rounded-xl flex items-center justify-center shadow-inner border border-[#C9A227]/20 shrink-0">
+                            <FileText size={20} />
+                          </div>
+                          <h2 className="font-bold text-[#122340] text-lg tracking-tight truncate">{activeItem.title}</h2>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                          {activeItem.completed ? (
+                            <div
+                              className="bg-gradient-to-br from-green-500 to-green-600 text-white px-5 py-2 rounded-xl font-bold text-sm flex items-center gap-2 cursor-default select-none shadow-[0_4px_12px_-2px_rgba(34,197,94,0.4)]"
+                            >
+                              <CheckCircle2 size={16} />
+                              Completed
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleMarkAsComplete(activeItem.id)}
+                              disabled={isMarkingComplete}
+                              className="bg-gradient-to-br from-[#C9A227] to-[#b08d20] text-white px-5 py-2 rounded-xl font-bold text-sm hover:shadow-[0_4px_14px_-2px_rgba(201,162,39,0.5)] hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer shadow-sm"
+                            >
+                              {isMarkingComplete ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                              Mark as Complete
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => activeItem.fileUrl && handleDownload(e, activeItem.fileUrl, activeItem.title)}
+                            disabled={isDownloading}
+                            className="bg-gradient-to-br from-[#122340] to-[#0a1628] text-white px-5 py-2 rounded-xl font-bold text-sm hover:shadow-[0_4px_14px_-2px_rgba(10,22,40,0.5)] hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer shadow-sm"
+                          >
+                            {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+                            {isDownloading ? 'Downloading...' : 'Download Document'}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex-1 w-full bg-[#e5e7eb]">
+                        <iframe
+                          src={activeItem.fileUrl.toLowerCase().includes('.pdf') ? `${activeItem.fileUrl}#toolbar=0` : `https://docs.google.com/viewer?url=${encodeURIComponent(activeItem.fileUrl)}&embedded=true`}
+                          className="w-full h-full border-none"
+                          title={activeItem.title}
+                        />
+                      </div>
                     </>
                   ) : (
-                    <>
-                      <UploadCloud size={32} className="text-[#122340]/40 group-hover:text-[#C9A227] mb-4 transition-colors" />
-                      <p className="font-bold text-sm mb-1 group-hover:text-[#122340]">Click or drag & drop your PDF here</p>
-                      <p className="text-xs text-[#122340]/50">Maximum file size: 10MB</p>
-                    </>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-white">
+                      <FileText size={64} className="text-[#122340]/20 mb-6" />
+                      <h2 className="text-2xl font-extrabold mb-2 text-[#122340]">Document Unavailable</h2>
+                      <p className="text-[#122340]/60 mb-8 font-medium max-w-lg">
+                        The document for this lesson has not been uploaded yet. Please check back later.
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
-            </div>
-          )}
 
-          {/* Final Assessment Locked Screen (Prerequisites Not Met) */}
-          {activeItem.type === 'final_assessment' && !isFinalAssessmentUnlocked && activeItemLock.reason === 'prerequisites_not_met' && (
-            <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-4xl bg-white border border-[#122340]/15 rounded-3xl p-8 sm:p-12 shadow-sm flex flex-col items-center text-center relative overflow-hidden">
-              <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-600 flex items-center justify-center mb-6 shadow-inner">
-                <Lock size={38} className="animate-pulse" />
-              </div>
-
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold uppercase tracking-wider mb-4">
-                <Lock size={12} /> Final Assessment Locked
-              </div>
-
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#122340] mb-3">
-                {activeItem.title || "Final Course Assessment"}
-              </h2>
-
-              <p className="text-sm sm:text-base text-[#122340]/70 max-w-xl mx-auto mb-8 leading-relaxed">
-                The final assessment is the culminating requirement to complete this course and unlock your official verifiable certificate. You must complete at least {unlockPctRequired}% of prior course requirements before taking this exam.
-              </p>
-
-              {/* Progress Summary Card */}
-              <div className="w-full max-w-lg bg-[#f8f9fa] border border-[#122340]/10 rounded-2xl p-6 mb-8 text-left shadow-sm">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-[#122340]/70 uppercase tracking-wider">
-                    Prerequisites Progress
-                  </span>
-                  <span className="text-xs font-extrabold text-[#C9A227]">
-                    {completedPrerequisites} of {totalPrerequisites} Completed ({currentProgressPct}% / {unlockPctRequired}% required)
-                  </span>
-                </div>
-
-                <div className="w-full bg-[#122340]/10 h-3 rounded-full overflow-hidden">
-                  <div
-                    className="bg-gradient-to-r from-[#C9A227] to-amber-500 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(100, currentProgressPct)}%` }}
-                  />
-                </div>
-
-                <p className="text-xs text-[#122340]/60 mt-3 flex items-center gap-1.5">
-                  <span className="font-bold text-amber-600">⚠️</span>
-                  <span>
-                    {Math.max(1, Math.ceil((unlockPctRequired / 100) * totalPrerequisites) - completedPrerequisites)} more lesson(s) or test(s) must be completed to reach {unlockPctRequired}% and unlock the final assessment.
-                  </span>
-                </p>
-              </div>
-
-              {/* Resume Learning Action */}
-              {firstIncompleteItem && (
-                <button
-                  onClick={() => {
-                    hasUserManuallySelected.current = true;
-                    setActiveItem(firstIncompleteItem);
-                    setIsVideoEnded(false);
+              {activeItem.type === 'live' && (
+                <LiveClassViewer
+                  item={activeItem}
+                  user={user}
+                  courseTitle={COURSE_DATA.title}
+                  onMarkComplete={handleMarkAsComplete}
+                  onStatusChange={(updated) => {
+                    setActiveItem((prev: any) => ({ ...prev, ...updated }));
+                    if (updated?.id) {
+                      dispatch(updateCourseItemData({ itemId: updated.id, liveData: updated.liveData }));
+                    }
                   }}
-                  className="bg-[#122340] hover:bg-[#0a1628] text-white px-8 py-3.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2.5 cursor-pointer transform hover:-translate-y-0.5"
-                >
-                  <span>Continue Course: {firstIncompleteItem.title}</span>
-                  <ArrowRight size={16} />
-                </button>
+                />
               )}
-            </div>
-          )}
 
-          {/* Test & Unlocked Final Assessment Player (Only when content exists and unlocked) */}
-          {(activeItem.type === 'test' || activeItem.type === 'assessment' || (activeItem.type === 'final_assessment' && isFinalAssessmentUnlocked)) && (!activeItemLock.isLocked || activeItemLock.reason !== 'content_missing') && (() => {
-            return (
-              <AssessmentPlayer
-                key={activeItem.id}
-                courseId={currentCourse?.id || ''}
-                itemId={activeItem.id}
-                assessmentId={activeItem.assessmentId}
-                title={activeItem.title}
-                onComplete={() => handleMarkAsComplete(activeItem.id)}
-              />
-            );
-          })()}
+              {activeItem.type === 'assignment' && (
+                <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-5xl bg-[#f8f9fa] border border-[#122340]/10 rounded-2xl p-10 flex flex-col items-center justify-center shrink-0 text-[#122340] shadow-sm">
+                  <ClipboardList size={48} className="text-[#C9A227] mb-6" />
+                  <h2 className="text-2xl font-extrabold mb-2 text-center">{activeItem.title}</h2>
+                  <p className="text-[#122340]/60 mb-6 font-medium">Please review the instructions below and upload your completed work.</p>
 
-          {activeItem.type === 'certificate' && (
-            <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-5xl bg-gradient-to-br from-[#122340] to-[#0a1628] border border-[#122340]/10 rounded-2xl p-10 flex flex-col items-center justify-center shrink-0 text-white min-h-[400px] shadow-sm">
-              <Award size={64} className="text-[#C9A227] mb-6" />
-              <h2 className="text-3xl font-extrabold mb-4 text-center">Course Complete!</h2>
-              <p className="text-blue-100/70 mb-8 font-medium text-center max-w-lg">
-                {COURSE_DATA.progress === 100
-                  ? "Congratulations! You have completed all requirements, including the final assessment. Your certificate is ready to download."
-                  : "Congratulations on reaching this far. Your verifiable certificate is locked until all course requirements and the final assessment are passed."}
-              </p>
-              {COURSE_DATA.progress === 100 ? (
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <button
-                    onClick={() => {
-                      const certBtn = document.getElementById('cert-download-btn');
-                      if (certBtn) certBtn.click();
-                      else window.location.href = '/dashboard/certificates';
-                    }}
-                    className="bg-[#C9A227] text-[#0a1628] px-8 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 cursor-pointer"
-                  >
-                    <Download size={18} /> Download Certificate
-                  </button>
-                  <button
-                    onClick={() => setIsReviewModalOpen(true)}
-                    className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-8 py-3.5 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer"
-                  >
-                    <Star size={18} className="fill-[#C9A227] text-[#C9A227]" />
-                    {myReview ? "Edit Your Review" : "Rate & Review Course"}
-                  </button>
+                  {activeItem.fileUrl && (
+                    <button
+                      onClick={(e) => handleDownload(e, activeItem.fileUrl, activeItem.title)}
+                      disabled={isDownloading}
+                      className="mb-8 bg-[#C9A227] text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-[#b08d20] hover:shadow-lg transition-all flex items-center gap-3 shadow-md disabled:opacity-50"
+                    >
+                      {isDownloading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+                      {isDownloading ? 'Downloading...' : 'Download Assignment Instructions'}
+                    </button>
+                  )}
+
+                  {!activeItem.fileUrl ? (
+                    <div className="w-full max-w-md bg-white border-2 border-dashed border-[#122340]/20 rounded-2xl p-10 flex flex-col items-center justify-center text-center cursor-not-allowed mb-8 relative opacity-70">
+                      <FileText size={32} className="text-[#122340]/20 mb-4" />
+                      <p className="font-bold text-sm mb-1 text-[#122340]/50">Assignment Instructions Unavailable</p>
+                      <p className="text-xs text-[#122340]/40">You cannot submit until instructions are provided.</p>
+                    </div>
+                  ) : (
+                    <div
+                      className={`w-full max-w-md bg-white border-2 border-dashed ${activeSubmission?.status === 'verified' || activeSubmission?.status === 'pending' || activeSubmission?.status === 'resubmitted' || (activeItem.completed && !activeSubmission)
+                        ? 'border-green-400 bg-green-50/50 cursor-default'
+                        : activeSubmission?.status === 'rejected'
+                          ? 'border-red-400 hover:border-red-500 hover:bg-red-50 cursor-pointer'
+                          : 'border-[#122340]/20 hover:border-[#C9A227]/50 hover:bg-[#C9A227]/5 cursor-pointer'
+                        } rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-colors group mb-8 relative`}
+                      onClick={() => {
+                        const isCompletedButLocked = activeSubmission?.status === 'verified' || activeSubmission?.status === 'pending' || activeSubmission?.status === 'resubmitted' || (activeItem.completed && activeSubmission?.status !== 'rejected');
+                        if (!isCompletedButLocked && !isMarkingComplete) {
+                          const el = document.getElementById(`file-upload-${activeItem.id}`);
+                          if (el) el.click();
+                        }
+                      }}
+                    >
+                      <input
+                        type="file"
+                        id={`file-upload-${activeItem.id}`}
+                        className="hidden"
+                        accept=".pdf"
+                        onChange={async (e) => {
+                          if (e.target.files && e.target.files.length > 0) {
+                            const file = e.target.files[0];
+                            if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                              toast.error("Only PDF files are allowed for assignments.");
+                              e.target.value = ''; // Reset input
+                              return;
+                            }
+                            setIsMarkingComplete(true);
+                            try {
+                              // 1. Upload file to S3
+                              const s3Url = await uploadToS3(file);
+
+                              // 2. Submit to backend
+                              await apiClient.post(`/academy/assignments/${activeItem.id}/submit`, {
+                                submissionPdfUrl: s3Url,
+                                studentName: (user as any)?.name || (user as any)?.firstName || 'Student',
+                                studentEmail: (user as any)?.email || 'student@example.com',
+                                studentId: (user as any)?._id || (user as any)?.id
+                              });
+
+                              // We do NOT mark as complete locally until verified by admin
+                              // await handleMarkAsComplete(activeItem.id);
+                              await fetchMySubmissions();
+                              toast.success("Assignment submitted successfully!");
+                            } catch (err) {
+                              console.error("Assignment upload error:", err);
+                              toast.error("Failed to submit assignment. Please try again.");
+                            } finally {
+                              setIsMarkingComplete(false);
+                            }
+                          }
+                        }}
+                      />
+
+                      {isMarkingComplete ? (
+                        <>
+                          <Loader2 size={32} className="text-[#C9A227] mb-4 animate-spin" />
+                          <p className="font-bold text-sm mb-1 text-[#C9A227]">Uploading Document...</p>
+                        </>
+                      ) : activeSubmission?.status === 'verified' ? (
+                        <>
+                          <CheckCircle2 size={32} className="text-green-500 mb-4" />
+                          <p className="font-bold text-sm mb-1 text-green-700">Assignment Verified</p>
+                          {activeSubmission.feedback && <p className="text-xs text-green-600 font-medium bg-green-100/80 px-4 py-2 rounded-lg mt-3 text-left w-full border border-green-200">{activeSubmission.feedback}</p>}
+                        </>
+                      ) : activeSubmission?.status === 'rejected' ? (
+                        <>
+                          <XCircle size={32} className="text-red-500 mb-4" />
+                          <p className="font-bold text-sm mb-1 text-red-700">Submission Rejected</p>
+                          {activeSubmission.feedback && <p className="text-xs text-red-600 font-medium bg-red-100/80 px-4 py-2 rounded-lg mt-3 text-left w-full border border-red-200">{activeSubmission.feedback}</p>}
+                          <p className="text-xs text-red-600/70 mt-4 flex items-center justify-center gap-1"><UploadCloud size={14} /> Click to re-upload your assignment</p>
+                        </>
+                      ) : activeSubmission?.status === 'pending' || activeSubmission?.status === 'resubmitted' || activeItem.completed ? (
+                        <>
+                          <Clock size={32} className="text-blue-500 mb-4" />
+                          <p className="font-bold text-sm mb-1 text-blue-700">Document Uploaded Successfully</p>
+                          <p className="text-xs text-blue-600/70">Pending review</p>
+                        </>
+                      ) : (
+                        <>
+                          <UploadCloud size={32} className="text-[#122340]/40 group-hover:text-[#C9A227] mb-4 transition-colors" />
+                          <p className="font-bold text-sm mb-1 group-hover:text-[#122340]">Click or drag & drop your PDF here</p>
+                          <p className="text-xs text-[#122340]/50">Maximum file size: 10MB</p>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <button disabled className="bg-[#122340] border border-white/10 text-white/50 px-10 py-4 rounded-xl font-bold transition-all flex items-center gap-2">
-                  <Download size={18} /> Certificate Locked
-                </button>
               )}
-            </div>
+
+              {/* Test & Assessment Player */}
+              {(activeItem.type === 'test' || activeItem.type === 'assessment' || activeItem.type === 'final_assessment') && (() => {
+                return (
+                  <AssessmentPlayer
+                    key={activeItem.id}
+                    courseId={currentCourse?.id || ''}
+                    itemId={activeItem.id}
+                    assessmentId={activeItem.assessmentId}
+                    title={activeItem.title}
+                    onComplete={() => handleMarkAsComplete(activeItem.id)}
+                  />
+                );
+              })()}
+
+              {activeItem.type === 'certificate' && (
+                <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-5xl bg-gradient-to-br from-[#122340] to-[#0a1628] border border-[#122340]/10 rounded-2xl p-10 flex flex-col items-center justify-center shrink-0 text-white min-h-[400px] shadow-sm">
+                  <Award size={64} className="text-[#C9A227] mb-6" />
+                  <h2 className="text-3xl font-extrabold mb-4 text-center">Course Complete!</h2>
+                  <p className="text-blue-100/70 mb-8 font-medium text-center max-w-lg">
+                    {COURSE_DATA.progress === 100
+                      ? "Congratulations! You have completed all requirements, including the final assessment. Your certificate is ready to download."
+                      : "Congratulations on reaching this far. Your verifiable certificate is locked until all course requirements and the final assessment are passed."}
+                  </p>
+                  {COURSE_DATA.progress === 100 ? (
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                      <button
+                        onClick={() => {
+                          const certBtn = document.getElementById('cert-download-btn');
+                          if (certBtn) certBtn.click();
+                          else window.location.href = '/dashboard/certificates';
+                        }}
+                        className="bg-[#C9A227] text-[#0a1628] px-8 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 cursor-pointer"
+                      >
+                        <Download size={18} /> Download Certificate
+                      </button>
+                      <button
+                        onClick={() => setIsReviewModalOpen(true)}
+                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-8 py-3.5 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer"
+                      >
+                        <Star size={18} className="fill-[#C9A227] text-[#C9A227]" />
+                        {myReview ? "Edit Your Review" : "Rate & Review Course"}
+                      </button>
+                    </div>
+                  ) : (
+                    <button disabled className="bg-[#122340] border border-white/10 text-white/50 px-10 py-4 rounded-xl font-bold transition-all flex items-center gap-2">
+                      <Download size={18} /> Certificate Locked
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           {/* Content Tabs Below Media Area */}
           <div className="p-6 md:p-10 max-w-4xl w-full mx-auto pb-32">
 
-            <h2 className="text-2xl font-bold text-[#122340] mb-6">{activeItem.title}</h2>
+            {!activeItemLock.isLocked && (
+              <h2 className="text-2xl font-bold text-[#122340] mb-6">{activeItem.title}</h2>
+            )}
 
-            <div className="flex border-b border-[#122340]/10 mb-8 overflow-x-auto gap-2">
+            <div className="flex border-b border-[#122340]/10 mb-8 overflow-x-auto gap-1 relative">
               <button
                 onClick={() => setActiveTab('qa')}
-                className={`px-6 py-4 text-sm font-bold whitespace-nowrap transition-colors border-b-2 flex items-center gap-2 cursor-pointer ${
-                  activeTab === 'qa'
-                    ? 'border-[#C9A227] text-[#C9A227]'
-                    : 'border-transparent text-[#122340]/60 hover:text-[#122340]'
-                }`}
+                className={`px-6 py-4 text-sm font-bold whitespace-nowrap transition-all border-b-2 flex items-center gap-2 cursor-pointer relative -mb-px ${activeTab === 'qa'
+                  ? 'border-[#C9A227] text-[#C9A227]'
+                  : 'border-transparent text-[#122340]/55 hover:text-[#122340] hover:bg-[#122340]/[0.02]'
+                  }`}
               >
                 <MessageSquare size={16} /> Q&A
               </button>
               <button
                 onClick={() => setActiveTab('reviews')}
-                className={`px-6 py-4 text-sm font-bold whitespace-nowrap transition-colors border-b-2 flex items-center gap-2 cursor-pointer ${
-                  activeTab === 'reviews'
-                    ? 'border-[#C9A227] text-[#C9A227]'
-                    : 'border-transparent text-[#122340]/60 hover:text-[#122340]'
-                }`}
+                className={`px-6 py-4 text-sm font-bold whitespace-nowrap transition-all border-b-2 flex items-center gap-2 cursor-pointer relative -mb-px ${activeTab === 'reviews'
+                  ? 'border-[#C9A227] text-[#C9A227]'
+                  : 'border-transparent text-[#122340]/55 hover:text-[#122340] hover:bg-[#122340]/[0.02]'
+                  }`}
               >
                 <Star size={16} className={activeTab === 'reviews' ? 'fill-[#C9A227]' : ''} /> Course Reviews
               </button>
             </div>
 
             {activeTab === 'qa' ? (
-              <div className="text-[#122340]/80 leading-relaxed">
-                <div className="space-y-6">
-                  <div className="bg-white border border-[#122340]/10 p-4 rounded-lg flex gap-4 shadow-sm">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-bold text-[#122340] shrink-0">JD</div>
-                    <div className="w-full">
-                      <textarea placeholder="Ask a new question about this specific item..." className="w-full border-none outline-none resize-none bg-transparent" rows={2}></textarea>
-                      <div className="flex justify-end border-t border-[#122340]/5 pt-2 mt-2">
-                        <button className="bg-[#122340] text-white px-4 py-1.5 rounded text-xs font-bold">Post Question</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div>
+                {currentCourse?.id ? (
+                  <CourseQATab
+                    courseId={currentCourse.id}
+                    activeItemId={activeItem?.id}
+                    activeModuleId={activeItem?.moduleId}
+                    activeItemTitle={activeItem?.title}
+                    currentUser={
+                      user
+                        ? {
+                          id: (user as any).id || user._id || '',
+                          name: user.name || (user as any).fullName || 'Student',
+                          avatar: (user as any).avatar || user.profilePicture || undefined,
+                        }
+                        : null
+                    }
+                    isAdmin={
+                      Boolean(
+                        (user as any)?.role === 'admin' ||
+                        (user as any)?.role === 'ADMIN' ||
+                        user?.roles?.some((r: any) =>
+                          typeof r === 'string'
+                            ? r.toLowerCase() === 'admin'
+                            : r?.name?.toLowerCase() === 'admin'
+                        )
+                      )
+                    }
+                  />
+                ) : (
+                  <p className="text-slate-500 text-sm py-4">Loading Q&A...</p>
+                )}
               </div>
             ) : (
               <div>
@@ -1120,212 +1244,259 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
         </div>
 
         {/* RIGHT COLUMN: Sequential Syllabus Accordion */}
-        <div className="w-full lg:w-96 bg-white border-l border-[#122340]/10 h-full flex flex-col shrink-0 relative z-10 shadow-xl lg:shadow-none">
-          <div className="p-4 border-b border-[#122340]/10 bg-[#122340]/[0.02]">
-            <h3 className="font-bold text-[#122340]">Course Syllabus</h3>
+        <div className="w-full lg:w-96 bg-white border-l border-[#122340]/10 h-full flex flex-col shrink-0 relative z-10 shadow-xl lg:shadow-[inset_1px_0_0_rgba(18,35,64,0.05)]">
+          <div className="p-4 border-b border-[#122340]/10 bg-gradient-to-b from-[#f9f7f0] to-white relative">
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#C9A227]/30 to-transparent" />
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-[#122340] flex items-center justify-center shadow-sm">
+                  <BookOpen size={14} className="text-[#C9A227]" />
+                </div>
+                <h3 className="font-extrabold text-[#122340] text-sm tracking-tight">Course Syllabus</h3>
+              </div>
+              <span className="text-[10px] font-bold text-[#122340]/60 uppercase tracking-wider bg-[#122340]/5 px-2 py-0.5 rounded-full">
+                {COURSE_DATA.modules.length} {COURSE_DATA.modules.length === 1 ? 'Module' : 'Modules'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 bg-[#122340]/8 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[#C9A227] to-[#e0b93a] rounded-full transition-all duration-700 ease-out shadow-[0_0_6px_rgba(201,162,39,0.5)]"
+                  style={{ width: `${COURSE_DATA.progress}%` }}
+                />
+              </div>
+              <span className="text-[11px] font-extrabold text-[#122340] tabular-nums">{COURSE_DATA.progress}%</span>
+            </div>
           </div>
 
-          <div ref={sidebarScrollRef} className="overflow-y-auto flex-grow pb-20 scroll-smooth">
-            {COURSE_DATA.modules.map((mod, i) => (
-              <div key={i} className="border-b border-[#122340]/10">
-                <button
-                  onClick={() => setOpenModule(openModule === i ? null : i)}
-                  className="w-full p-4 flex justify-between items-start text-left bg-white hover:bg-[#122340]/[0.02] transition-colors"
-                >
-                  <div>
-                    <h4 className="font-bold text-[#122340] text-sm mb-1 pr-4 leading-tight">{mod.title}</h4>
-                    <p className="text-xs text-[#122340]/50">
-                      {mod.items.filter((item: any) => item.completed).length + mod.submodules.reduce((acc: number, sub: any) => acc + sub.items.filter((item: any) => item.completed).length, 0)} / {mod.items.length + mod.submodules.reduce((acc: number, sub: any) => acc + sub.items.length, 0)} Completed
-                    </p>
-                  </div>
-                </button>
-
-                {openModule === i && (
-                  <div className="bg-[#122340]/[0.02] py-2">
-                    {/* Root Level Items */}
-                    {mod.items.map((item: any) => {
-                      const isActive = activeItem?.id === item.id;
-                      const lockStatus = getItemLockStatus(item);
-                      const isItemLocked = lockStatus.isLocked;
-                      return (
-                        <div
-                          key={item.id}
-                          id={`syllabus-item-${item.id}`}
-                          onClick={() => {
-                            hasUserManuallySelected.current = true;
-                            setActiveItem(item);
-                            setIsVideoEnded(false);
-                          }}
-                          title={lockStatus.tooltip || undefined}
-                          className={`group/item relative flex gap-3 p-3 pl-4 cursor-pointer hover:bg-[#122340]/5 transition-colors ${isActive ? 'bg-[#C9A227]/10 border-l-4 border-[#C9A227]' : 'border-l-4 border-transparent'}`}
-                        >
-                          {/* Floating tooltip on hover when locked */}
-                          {lockStatus.isLocked && (
-                            <div className="absolute right-3 top-2 hidden group-hover/item:flex items-center gap-1.5 px-2.5 py-1 bg-gray-900/95 text-white text-[10px] font-semibold rounded-lg shadow-xl z-20 pointer-events-none whitespace-nowrap border border-gray-700/60 animate-in fade-in duration-150">
-                              <Lock size={10} className="text-amber-400 shrink-0" />
-                              <span>{lockStatus.tooltip}</span>
-                            </div>
-                          )}
-
-                          <div className="mt-0.5 shrink-0 flex items-center justify-center">
-                            {(() => {
-                              const submission = item.type === 'assignment' ? studentSubmissions.find(s => s.assignmentId === item.id) : null;
-                              if (submission?.status === 'rejected') {
-                                return <XCircle size={16} className="text-red-500" />;
-                              }
-                              if (submission?.status === 'pending' || submission?.status === 'resubmitted') {
-                                return <Circle size={16} className="text-green-500" />;
-                              }
-                              if (item.completed) {
-                                return <CheckCircle2 size={16} className="text-green-500" />;
-                              }
-                              if (isItemLocked) {
-                                return <Lock size={16} className="text-amber-500" />;
-                              }
-                              return (
-                                <div className="w-4 h-4 rounded-full border-2 border-[#122340]/20 flex items-center justify-center">
-                                  {isActive && <div className="w-1.5 h-1.5 bg-[#C9A227] rounded-full"></div>}
-                                </div>
-                              );
-                            })()}
-                          </div>
-                          <div>
-                            <p className={`text-sm ${isActive ? 'font-bold text-[#122340]' : 'font-medium text-[#122340]/80'}`}>
-                              {item.title}
-                            </p>
-                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#122340]/50 mt-1.5">
-                              {isItemLocked ? (
-                                <Lock size={14} className="text-amber-500" />
-                              ) : (
-                                getItemIcon(item.type, isActive, item.completed)
-                              )}
-                              <span className="uppercase tracking-wider">{formatItemType(item.type)}</span>
-                              {item.type === 'live' && item.liveData?.status === 'live' && (
-                                <span className="px-1.5 py-0.2 text-[9px] bg-red-100 text-red-700 font-extrabold rounded-full animate-pulse">LIVE</span>
-                              )}
-                              {isItemLocked && (
-                                <div className="relative group/badge inline-flex">
-                                  <span
-                                    className="px-1.5 py-0.5 text-[9px] bg-amber-100 text-amber-800 font-extrabold rounded flex items-center gap-0.5 cursor-pointer"
-                                    title={lockStatus.tooltip}
-                                  >
-                                    <Lock size={9} /> LOCKED
-                                  </span>
-                                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover/badge:flex items-center gap-1 px-2.5 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-xl z-50 pointer-events-none whitespace-nowrap border border-gray-700">
-                                    <Lock size={10} className="text-amber-400 shrink-0" />
-                                    <span>{lockStatus.tooltip}</span>
-                                  </div>
-                                </div>
-                              )}
-                              {item.type === 'final_assessment' && isFinalAssessmentUnlocked && !item.completed && (
-                                <span className="px-1.5 py-0.5 text-[9px] bg-emerald-100 text-emerald-800 font-extrabold rounded">
-                                  READY
-                                </span>
-                              )}
-                            </div>
-                          </div>
+          <div ref={sidebarScrollRef} className="learn-sidebar-scroll overflow-y-auto flex-grow pb-20 scroll-smooth">
+            {COURSE_DATA.modules.map((mod, i) => {
+              const modCompleted = mod.items.filter((item: any) => item.completed).length + mod.submodules.reduce((acc: number, sub: any) => acc + sub.items.filter((item: any) => item.completed).length, 0);
+              const modTotal = mod.items.length + mod.submodules.reduce((acc: number, sub: any) => acc + sub.items.length, 0);
+              const modPct = modTotal > 0 ? Math.round((modCompleted / modTotal) * 100) : 0;
+              const modFullyDone = modTotal > 0 && modCompleted === modTotal;
+              const isOpen = openModule === i;
+              return (
+                <div key={i} className="border-b border-[#122340]/8">
+                  <button
+                    onClick={() => setOpenModule(openModule === i ? null : i)}
+                    className={`w-full p-4 flex justify-between items-start text-left transition-all cursor-pointer ${isOpen ? 'bg-[#122340]/[0.03]' : 'bg-white hover:bg-[#122340]/[0.02]'}`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start gap-2.5">
+                        <div className={`mt-0.5 w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-extrabold shrink-0 transition-colors ${modFullyDone ? 'bg-green-500 text-white shadow-sm' : isOpen ? 'bg-[#C9A227] text-white shadow-sm' : 'bg-[#122340]/8 text-[#122340]/70'}`}>
+                          {modFullyDone ? <CheckCircle2 size={13} /> : (i + 1).toString().padStart(2, '0')}
                         </div>
-                      );
-                    })}
-
-                    {/* Submodules rendering */}
-                    {mod.submodules.map((sub: any) => (
-                      <div key={sub.id} className="mt-2 mb-1">
-                        <div className="px-4 py-2 bg-[#122340]/5 border-y border-[#122340]/5 flex items-center justify-between">
-                          <h5 className="font-bold text-[#122340] text-xs uppercase tracking-wider">{sub.title}</h5>
-                        </div>
-                        <div className="bg-white/50">
-                          {sub.items.map((item: any) => {
-                            const isActive = activeItem?.id === item.id;
-                            const lockStatus = getItemLockStatus(item);
-                            const isItemLocked = lockStatus.isLocked;
-                            return (
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-[#122340] text-sm mb-1.5 pr-2 leading-tight">{mod.title}</h4>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1 bg-[#122340]/8 rounded-full overflow-hidden max-w-[120px]">
                               <div
-                                key={item.id}
-                                id={`syllabus-item-${item.id}`}
-                                onClick={() => {
-                                  hasUserManuallySelected.current = true;
-                                  setActiveItem(item);
-                                  setIsVideoEnded(false);
-                                }}
-                                title={lockStatus.tooltip || undefined}
-                                className={`group/item relative flex gap-3 p-3 pl-6 cursor-pointer hover:bg-[#122340]/5 transition-colors ${isActive ? 'bg-[#C9A227]/10 border-l-4 border-[#C9A227]' : 'border-l-4 border-transparent'}`}
-                              >
-                                {/* Floating tooltip on hover when locked */}
-                                {lockStatus.isLocked && (
-                                  <div className="absolute right-3 top-2 hidden group-hover/item:flex items-center gap-1.5 px-2.5 py-1 bg-gray-900/95 text-white text-[10px] font-semibold rounded-lg shadow-xl z-20 pointer-events-none whitespace-nowrap border border-gray-700/60 animate-in fade-in duration-150">
-                                    <Lock size={10} className="text-amber-400 shrink-0" />
-                                    <span>{lockStatus.tooltip}</span>
-                                  </div>
-                                )}
-
-                                <div className="mt-0.5 shrink-0 flex items-center justify-center">
-                                  {(() => {
-                                    const submission = item.type === 'assignment' ? studentSubmissions.find(s => s.assignmentId === item.id) : null;
-                                    if (submission?.status === 'rejected') {
-                                      return <XCircle size={16} className="text-red-500" />;
-                                    }
-                                    if (submission?.status === 'pending' || submission?.status === 'resubmitted') {
-                                      return <Circle size={16} className="text-green-500" />;
-                                    }
-                                    if (item.completed) {
-                                      return <CheckCircle2 size={16} className="text-green-500" />;
-                                    }
-                                    if (isItemLocked) {
-                                      return <Lock size={16} className="text-amber-500" />;
-                                    }
-                                    return (
-                                      <div className="w-4 h-4 rounded-full border-2 border-[#122340]/20 flex items-center justify-center">
-                                        {isActive && <div className="w-1.5 h-1.5 bg-[#C9A227] rounded-full"></div>}
-                                      </div>
-                                    );
-                                  })()}
-                                </div>
-                                <div>
-                                  <p className={`text-sm ${isActive ? 'font-bold text-[#122340]' : 'font-medium text-[#122340]/80'}`}>
-                                    {item.title}
-                                  </p>
-                                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#122340]/50 mt-1.5">
-                                    {isItemLocked ? (
-                                      <Lock size={14} className="text-amber-500" />
-                                    ) : (
-                                      getItemIcon(item.type, isActive, item.completed)
-                                    )}
-                                    <span className="uppercase tracking-wider">{formatItemType(item.type)}</span>
-                                    {item.type === 'live' && item.liveData?.status === 'live' && (
-                                      <span className="px-1.5 py-0.2 text-[9px] bg-red-100 text-red-700 font-extrabold rounded-full animate-pulse">LIVE</span>
-                                    )}
-                                    {isItemLocked && (
-                                      <div className="relative group/badge inline-flex">
-                                        <span
-                                          className="px-1.5 py-0.5 text-[9px] bg-amber-100 text-amber-800 font-extrabold rounded flex items-center gap-0.5 cursor-pointer"
-                                          title={lockStatus.tooltip}
-                                        >
-                                          <Lock size={9} /> LOCKED
-                                        </span>
-                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover/badge:flex items-center gap-1 px-2.5 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-xl z-50 pointer-events-none whitespace-nowrap border border-gray-700">
-                                          <Lock size={10} className="text-amber-400 shrink-0" />
-                                          <span>{lockStatus.tooltip}</span>
-                                        </div>
-                                      </div>
-                                    )}
-                                    {item.type === 'final_assessment' && isFinalAssessmentUnlocked && !item.completed && (
-                                      <span className="px-1.5 py-0.5 text-[9px] bg-emerald-100 text-emerald-800 font-extrabold rounded">
-                                        READY
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
+                                className={`h-full rounded-full transition-all duration-500 ${modFullyDone ? 'bg-green-500' : 'bg-[#C9A227]'}`}
+                                style={{ width: `${modPct}%` }}
+                              />
+                            </div>
+                            <p className="text-[11px] font-semibold text-[#122340]/55 tabular-nums">
+                              {modCompleted}/{modTotal}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+                    </div>
+                    <ChevronDown size={16} className={`text-[#122340]/40 shrink-0 mt-1 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#C9A227]' : ''}`} />
+                  </button>
+
+                  {openModule === i && (
+                    <div className="bg-[#122340]/[0.02] py-2">
+                      {/* Root Level Items */}
+                      {mod.items.map((item: any) => {
+                        const isActive = activeItem?.id === item.id;
+                        const lockStatus = getItemLockStatus(item);
+                        const isItemLocked = lockStatus.isLocked;
+                        return (
+                          <div
+                            key={item.id}
+                            id={`syllabus-item-${item.id}`}
+                            onClick={() => {
+                              hasUserManuallySelected.current = true;
+                              setActiveItem(item);
+                              setIsVideoEnded(false);
+                            }}
+                            title={lockStatus.tooltip || undefined}
+                            className={`group/item relative flex gap-3 p-3 pl-4 cursor-pointer transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-[#C9A227]/15 via-[#C9A227]/8 to-transparent border-l-4 border-[#C9A227] shadow-[inset_0_0_0_1px_rgba(201,162,39,0.12)]' : 'border-l-4 border-transparent hover:bg-[#122340]/[0.04] hover:border-[#122340]/15'}`}
+                          >
+                            {/* Floating tooltip on hover when locked */}
+                            {lockStatus.isLocked && (
+                              <div className="absolute right-3 top-2 hidden group-hover/item:flex items-center gap-1.5 px-2.5 py-1 bg-gray-900/95 text-white text-[10px] font-semibold rounded-lg shadow-xl z-20 pointer-events-none whitespace-nowrap border border-gray-700/60 animate-in fade-in duration-150">
+                                <Lock size={10} className="text-amber-400 shrink-0" />
+                                <span>{lockStatus.tooltip}</span>
+                              </div>
+                            )}
+
+                            <div className="mt-0.5 shrink-0 flex items-center justify-center">
+                              {(() => {
+                                const submission = item.type === 'assignment' ? studentSubmissions.find(s => s.assignmentId === item.id) : null;
+                                if (submission?.status === 'rejected') {
+                                  return <XCircle size={16} className="text-red-500" />;
+                                }
+                                if (submission?.status === 'pending' || submission?.status === 'resubmitted') {
+                                  return <Circle size={16} className="text-green-500" />;
+                                }
+                                if (item.completed) {
+                                  return <CheckCircle2 size={16} className="text-green-500" />;
+                                }
+                                if (isItemLocked) {
+                                  return <Lock size={16} className="text-amber-500" />;
+                                }
+                                return (
+                                  <div className="w-4 h-4 rounded-full border-2 border-[#122340]/20 flex items-center justify-center">
+                                    {isActive && <div className="w-1.5 h-1.5 bg-[#C9A227] rounded-full"></div>}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                            <div>
+                              <p className={`text-sm ${isActive ? 'font-bold text-[#122340]' : 'font-medium text-[#122340]/80'}`}>
+                                {item.title}
+                              </p>
+                              <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#122340]/50 mt-1.5">
+                                {isItemLocked ? (
+                                  // <Lock size={14} className="text-amber-500" />
+                                  <></>
+                                ) : (
+                                  getItemIcon(item.type, isActive, item.completed)
+                                )}
+                                <span className="uppercase tracking-wider">{formatItemType(item.type)}</span>
+                                {item.type === 'live' && item.liveData?.status === 'live' && (
+                                  <span className="px-1.5 py-0.2 text-[9px] bg-red-100 text-red-700 font-extrabold rounded-full animate-pulse">LIVE</span>
+                                )}
+                                {isItemLocked && (
+                                  <div className="relative group/badge inline-flex">
+                                    <span
+                                      className="px-1.5 py-0.5 text-[9px] bg-amber-100 text-amber-800 font-extrabold rounded flex items-center gap-0.5 cursor-pointer"
+                                      title={lockStatus.tooltip}
+                                    >
+                                      <Lock size={9} /> LOCKED
+                                    </span>
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover/badge:flex items-center gap-1 px-2.5 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-xl z-50 pointer-events-none whitespace-nowrap border border-gray-700">
+                                      <Lock size={10} className="text-amber-400 shrink-0" />
+                                      <span>{lockStatus.tooltip}</span>
+                                    </div>
+                                  </div>
+                                )}
+                                {item.type === 'final_assessment' && isFinalAssessmentUnlocked && !item.completed && (
+                                  <span className="px-1.5 py-0.5 text-[9px] bg-emerald-100 text-emerald-800 font-extrabold rounded">
+                                    READY
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* Submodules rendering */}
+                      {mod.submodules.map((sub: any) => (
+                        <div key={sub.id} className="mt-2 mb-1">
+                          <div className="px-4 py-2 bg-gradient-to-r from-[#122340]/8 to-[#122340]/4 border-y border-[#122340]/8 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-1 h-3.5 bg-[#C9A227] rounded-full"></div>
+                              <h5 className="font-extrabold text-[#122340] text-[11px] uppercase tracking-wider">{sub.title}</h5>
+                            </div>
+                          </div>
+                          <div className="bg-white/50">
+                            {sub.items.map((item: any) => {
+                              const isActive = activeItem?.id === item.id;
+                              const lockStatus = getItemLockStatus(item);
+                              const isItemLocked = lockStatus.isLocked;
+                              return (
+                                <div
+                                  key={item.id}
+                                  id={`syllabus-item-${item.id}`}
+                                  onClick={() => {
+                                    hasUserManuallySelected.current = true;
+                                    setActiveItem(item);
+                                    setIsVideoEnded(false);
+                                  }}
+                                  title={lockStatus.tooltip || undefined}
+                                  className={`group/item relative flex gap-3 p-3 pl-6 cursor-pointer transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-[#C9A227]/15 via-[#C9A227]/8 to-transparent border-l-4 border-[#C9A227] shadow-[inset_0_0_0_1px_rgba(201,162,39,0.12)]' : 'border-l-4 border-transparent hover:bg-[#122340]/[0.04] hover:border-[#122340]/15'}`}
+                                >
+                                  {/* Floating tooltip on hover when locked */}
+                                  {lockStatus.isLocked && (
+                                    <div className="absolute right-3 top-2 hidden group-hover/item:flex items-center gap-1.5 px-2.5 py-1 bg-gray-900/95 text-white text-[10px] font-semibold rounded-lg shadow-xl z-20 pointer-events-none whitespace-nowrap border border-gray-700/60 animate-in fade-in duration-150">
+                                      <Lock size={10} className="text-amber-400 shrink-0" />
+                                      <span>{lockStatus.tooltip}</span>
+                                    </div>
+                                  )}
+
+                                  <div className="mt-0.5 shrink-0 flex items-center justify-center">
+                                    {(() => {
+                                      const submission = item.type === 'assignment' ? studentSubmissions.find(s => s.assignmentId === item.id) : null;
+                                      if (submission?.status === 'rejected') {
+                                        return <XCircle size={16} className="text-red-500" />;
+                                      }
+                                      if (submission?.status === 'pending' || submission?.status === 'resubmitted') {
+                                        return <Circle size={16} className="text-green-500" />;
+                                      }
+                                      if (item.completed) {
+                                        return <CheckCircle2 size={16} className="text-green-500" />;
+                                      }
+                                      if (isItemLocked) {
+                                        return <Lock size={16} className="text-amber-500" />;
+                                      }
+                                      return (
+                                        <div className="w-4 h-4 rounded-full border-2 border-[#122340]/20 flex items-center justify-center">
+                                          {isActive && <div className="w-1.5 h-1.5 bg-[#C9A227] rounded-full"></div>}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                  <div>
+                                    <p className={`text-sm ${isActive ? 'font-bold text-[#122340]' : 'font-medium text-[#122340]/80'}`}>
+                                      {item.title}
+                                    </p>
+                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#122340]/50 mt-1.5">
+                                      {isItemLocked ? (
+                                        <Lock size={14} className="text-amber-500" />
+                                      ) : (
+                                        getItemIcon(item.type, isActive, item.completed)
+                                      )}
+                                      <span className="uppercase tracking-wider">{formatItemType(item.type)}</span>
+                                      {item.type === 'live' && item.liveData?.status === 'live' && (
+                                        <span className="px-1.5 py-0.2 text-[9px] bg-red-100 text-red-700 font-extrabold rounded-full animate-pulse">LIVE</span>
+                                      )}
+                                      {isItemLocked && (
+                                        <div className="relative group/badge inline-flex">
+                                          <span
+                                            className="px-1.5 py-0.5 text-[9px] bg-amber-100 text-amber-800 font-extrabold rounded flex items-center gap-0.5 cursor-pointer"
+                                            title={lockStatus.tooltip}
+                                          >
+                                            <Lock size={9} /> LOCKED
+                                          </span>
+                                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover/badge:flex items-center gap-1 px-2.5 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-xl z-50 pointer-events-none whitespace-nowrap border border-gray-700">
+                                            <Lock size={10} className="text-amber-400 shrink-0" />
+                                            <span>{lockStatus.tooltip}</span>
+                                          </div>
+                                        </div>
+                                      )}
+                                      {item.type === 'final_assessment' && isFinalAssessmentUnlocked && !item.completed && (
+                                        <span className="px-1.5 py-0.5 text-[9px] bg-emerald-100 text-emerald-800 font-extrabold rounded">
+                                          READY
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             <CertificateCTA
               courseId={currentCourse?.id}

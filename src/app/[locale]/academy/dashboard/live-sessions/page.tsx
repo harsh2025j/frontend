@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Video, Calendar, Clock, ExternalLink, PlayCircle, Users, Tv, Loader2, Film, Radio } from "lucide-react";
+import { Video, Calendar, Clock, ExternalLink, PlayCircle, Users, Tv, Loader2, Radio } from "lucide-react";
 import Link from "next/link";
 import { courseApi } from "@/data/services/academy-service/course.service";
 import { formatTime12HourIST } from "@/lib/utils";
 
 export default function LiveSessionsPage() {
-  const [activeTab, setActiveTab] = useState<"upcoming" | "recordings">("upcoming");
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,36 +32,14 @@ export default function LiveSessionsPage() {
     return status === "live" || status === "scheduled";
   });
 
-  const recordingSessions = sessions.filter((s) => {
-    const status = s.liveData?.status || "scheduled";
-    return status === "completed" || s.liveData?.recordingUrl || s.fileUrl;
-  });
-
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700 ease-out">
       {/* Header Row */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-[#122340] mb-2 tracking-tight">Live Classes & Virtual Sessions</h1>
-          <p className="text-[#122340]/60">Join live interactive classroom sessions or watch archived recordings.</p>
+          <p className="text-[#122340]/60">Join live interactive classroom sessions with your instructors.</p>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex space-x-1 p-1 bg-[#122340]/5 rounded-xl max-w-sm">
-        {(["upcoming", "recordings"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2.5 text-sm font-bold rounded-lg capitalize transition-all cursor-pointer ${
-              activeTab === tab
-                ? "bg-white text-[#122340] shadow-sm"
-                : "text-[#122340]/60 hover:text-[#122340] hover:bg-[#122340]/5"
-            }`}
-          >
-            {tab === "upcoming" ? `Upcoming (${upcomingSessions.length})` : `Recordings (${recordingSessions.length})`}
-          </button>
-        ))}
       </div>
 
       {/* Content */}
@@ -72,7 +49,7 @@ export default function LiveSessionsPage() {
             <Loader2 size={36} className="animate-spin text-[#C9A227] mb-3" />
             <p className="text-sm font-bold">Loading live sessions...</p>
           </div>
-        ) : activeTab === "upcoming" ? (
+        ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {upcomingSessions.length === 0 ? (
               <div className="col-span-full text-center py-20 text-[#122340]/40 font-medium">
@@ -137,7 +114,7 @@ export default function LiveSessionsPage() {
                         </div>
                       </div>
 
-                      <h3 className="font-extrabold text-[#122340] text-xl mb-1.5 group-hover:text-[#C9A227] transition-colors">
+                      <h3 className="font-extrabold text-[#122340] text-xl mb-1.5  transition-colors">
                         {item.title}
                       </h3>
                       <p className="text-sm font-semibold text-[#122340]/50 mb-6">
@@ -176,58 +153,6 @@ export default function LiveSessionsPage() {
                           >
                             {isLive ? "Enter Class" : "Class Room"} <ExternalLink size={14} />
                           </button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recordingSessions.length === 0 ? (
-              <div className="col-span-full text-center py-20 text-[#122340]/40 font-medium">
-                <Film size={48} className="mx-auto mb-3 opacity-30 text-[#122340]" />
-                <p className="text-base font-bold text-[#122340]">No recordings available yet</p>
-                <p className="text-xs text-[#122340]/60 mt-1">Concluded class replays will appear here automatically.</p>
-              </div>
-            ) : (
-              recordingSessions.map((item) => {
-                const liveData = item.liveData || {};
-                const targetUrl = item.course?.slug ? `/dashboard/learn/${item.course.slug}` : "/dashboard/courses";
-
-                return (
-                  <div
-                    key={item.id}
-                    className="rounded-2xl border border-[#122340]/10 overflow-hidden hover:border-[#C9A227]/50 transition-all group cursor-pointer bg-[#f8f9fa] flex flex-col"
-                  >
-                    <div className="h-44 w-full relative overflow-hidden bg-black flex items-center justify-center">
-                      <PlayCircle size={44} className="text-white/80 group-hover:text-[#C9A227] group-hover:scale-110 transition-all duration-300" />
-                      <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/60 text-white text-[11px] font-bold backdrop-blur-sm">
-                        Class Replay
-                      </div>
-                      <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-black/70 text-white text-[10px] font-mono">
-                        {liveData.durationMinutes || 60}m
-                      </div>
-                    </div>
-
-                    <div className="p-5 flex-1 flex flex-col justify-between">
-                      <div>
-                        <h4 className="font-bold text-[#122340] text-base mb-1 group-hover:text-[#C9A227] transition-colors line-clamp-1">
-                          {item.title}
-                        </h4>
-                        <p className="text-xs text-[#122340]/50 font-semibold mb-4 line-clamp-1">
-                          {item.course?.title || "Legal Academy Course"}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between border-t border-gray-200/50 pt-3">
-                        <span className="text-[11px] font-medium text-gray-500">
-                          {liveData.scheduledDate || "Concluded"}
-                        </span>
-                        <Link href={targetUrl} className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                          Watch Replay →
                         </Link>
                       </div>
                     </div>
