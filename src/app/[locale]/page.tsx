@@ -1,10 +1,8 @@
 import HomeClient from "./HomeClient";
 import { HomeDataProvider } from "@/context/HomeDataContext";
-import { API_BASE_URL, API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
+import { API_BASE_URL, API_ENDPOINTS, IS_NGROK } from "@/data/services/apiConfig/apiContants";
 
-// Cache homepage at Edge CDN for 5 minutes (300 seconds)
-// This eliminates repeated serverless executions on the homepage while keeping content fresh
-export const revalidate = 300;
+export const revalidate = 600;
 
 async function getArticles(params: Record<string, any> = {}) {
   try {
@@ -14,7 +12,10 @@ async function getArticles(params: Record<string, any> = {}) {
     });
 
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ARTICLE.FETCH_ALL}?${queryParams.toString()}`, {
-      next: { revalidate: 300 }
+      headers: {
+        ...(IS_NGROK && { "ngrok-skip-browser-warning": "true" }),
+      },
+      next: { revalidate: 600 }
     });
     if (!res.ok) return [];
     const data = await res.json();

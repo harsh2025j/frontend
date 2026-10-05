@@ -9,44 +9,192 @@ import { courseApi } from '@/data/services/academy-service/course.service';
 import { certificateApi } from '@/data/services/academy-service/certificate.service';
 import { formatTime12HourIST } from '@/lib/utils';
 
+function DashboardOverviewSkeleton() {
+  return (
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {/* Header Row Skeleton */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
+        <div>
+          <div className="h-9 w-40 bg-slate-200 rounded-xl animate-pulse mb-2.5" />
+          <div className="h-4 w-72 bg-slate-200/60 rounded-lg animate-pulse" />
+        </div>
+        <div className="bg-white px-5 py-2.5 rounded-full border border-[#122340]/10 shadow-sm flex items-center gap-3">
+          <div className="w-4 h-4 rounded-full bg-[#C9A227]/40 animate-pulse" />
+          <div className="h-4 w-44 bg-slate-200/80 rounded animate-pulse" />
+        </div>
+      </div>
+
+      {/* Stats Grid Skeletons */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Stat 1 */}
+        <div className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#122340]/5">
+          <div className="flex justify-between items-start mb-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-50 animate-pulse" />
+            <div className="w-20 h-5 rounded-full bg-green-50 animate-pulse" />
+          </div>
+          <div className="h-3.5 w-24 bg-slate-200/70 rounded animate-pulse mb-2.5" />
+          <div className="h-9 w-16 bg-slate-200 rounded-lg animate-pulse" />
+        </div>
+
+        {/* Stat 2 */}
+        <div className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#122340]/5">
+          <div className="flex justify-between items-start mb-4">
+            <div className="w-12 h-12 rounded-xl bg-orange-50 animate-pulse" />
+          </div>
+          <div className="h-3.5 w-24 bg-slate-200/70 rounded animate-pulse mb-2.5" />
+          <div className="h-9 w-20 bg-slate-200 rounded-lg animate-pulse" />
+        </div>
+
+        {/* Stat 3 */}
+        <div className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#122340]/5">
+          <div className="flex justify-between items-start mb-4">
+            <div className="w-12 h-12 rounded-xl bg-purple-50 animate-pulse" />
+          </div>
+          <div className="h-3.5 w-24 bg-slate-200/70 rounded animate-pulse mb-2.5" />
+          <div className="h-9 w-20 bg-slate-200 rounded-lg animate-pulse" />
+        </div>
+
+        {/* Stat 4 - Dark Navy */}
+        <div className="bg-gradient-to-br from-[#122340] to-[#0a1628] rounded-2xl p-6 shadow-xl border border-[#122340]/10">
+          <div className="flex justify-between items-start mb-4">
+            <div className="w-12 h-12 rounded-xl bg-[#C9A227]/20 border border-[#C9A227]/30 animate-pulse" />
+          </div>
+          <div className="h-3.5 w-28 bg-white/20 rounded animate-pulse mb-2.5" />
+          <div className="h-9 w-14 bg-white/30 rounded-lg animate-pulse" />
+        </div>
+      </div>
+
+      {/* Main 2-Column Grid Skeletons */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Continue Learning Skeleton */}
+        <div className="xl:col-span-2">
+          <div className="flex items-center gap-2.5 mb-4">
+            <span className="w-1.5 h-5 bg-[#C9A227] rounded-full" />
+            <div className="h-5 w-40 bg-slate-200 rounded animate-pulse" />
+          </div>
+
+          <div className="bg-white rounded-2xl p-5 sm:p-6 border border-[#122340]/8 shadow-[0_4px_24px_-4px_rgba(18,35,64,0.06)] flex flex-col md:flex-row gap-6 lg:gap-7">
+            {/* Thumbnail skeleton */}
+            <div className="w-full md:w-72 lg:w-80 aspect-video md:aspect-auto h-48 rounded-xl bg-slate-200/80 animate-pulse shrink-0 relative flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-slate-300/80 animate-pulse" />
+            </div>
+
+            {/* Content skeleton */}
+            <div className="flex-1 flex flex-col justify-between py-1">
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="h-5 w-24 bg-slate-200/70 rounded-md animate-pulse" />
+                  <div className="h-5 w-24 bg-slate-200/50 rounded-full animate-pulse" />
+                </div>
+                <div className="h-6 w-5/6 bg-slate-200 rounded-lg animate-pulse mb-2" />
+                <div className="h-4 w-1/2 bg-slate-200/60 rounded animate-pulse mb-5" />
+              </div>
+
+              <div className="space-y-4 pt-3 border-t border-[#122340]/8">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <div className="h-3.5 w-28 bg-slate-200/60 rounded animate-pulse" />
+                    <div className="h-3.5 w-10 bg-slate-200/80 rounded animate-pulse" />
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                    <div className="bg-slate-200 h-full w-1/3 rounded-full animate-pulse" />
+                  </div>
+                </div>
+                <div className="h-11 w-40 bg-slate-200 rounded-xl animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Upcoming Live Sessions Skeleton */}
+        <div>
+          <div className="bg-white rounded-xl p-6 border border-[#122340]/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-2 h-2 rounded-full bg-red-400 animate-ping" />
+              <div className="h-5 w-44 bg-slate-200 rounded animate-pulse" />
+            </div>
+
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex gap-4 p-3.5 rounded-2xl bg-[#f8f9fa] border border-[#122340]/5">
+                  <div className="w-12 h-12 rounded-xl bg-slate-200/70 shrink-0 animate-pulse" />
+                  <div className="flex-1 space-y-2 py-1">
+                    <div className="h-4 w-3/4 bg-slate-200 rounded animate-pulse" />
+                    <div className="h-3 w-1/2 bg-slate-200/60 rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="h-11 w-full rounded-xl bg-[#f0f2f5] animate-pulse mt-6" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardOverview() {
   const dispatch = useAppDispatch();
   const { myEnrollments, isLoading } = useAppSelector(state => state.enrollments);
   const [liveSessions, setLiveSessions] = useState<any[]>([]);
   const [certificatesCount, setCertificatesCount] = useState<number>(0);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
+    let isMounted = true;
+    const loadAll = async () => {
       try {
-        const res: any = await certificateApi.mine();
-        const list = (res?.data ?? res) || [];
-        setCertificatesCount(Array.isArray(list) ? list.length : 0);
-      } catch {
-        setCertificatesCount(0);
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    dispatch(fetchMyEnrollments());
-  }, [dispatch]);
-
-  useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        const res = await courseApi.fetchLiveSessions();
-        const data = res.data?.data || res.data || [];
-        setLiveSessions(Array.isArray(data) ? data : []);
+        await Promise.allSettled([
+          dispatch(fetchMyEnrollments()),
+          certificateApi.mine().then((res: any) => {
+            const list = (res?.data ?? res) || [];
+            if (isMounted) setCertificatesCount(Array.isArray(list) ? list.length : 0);
+          }),
+          courseApi.fetchLiveSessions().then((res: any) => {
+            const data = res.data?.data || res.data || [];
+            if (isMounted) setLiveSessions(Array.isArray(data) ? data : []);
+          }),
+        ]);
       } catch (e) {
-        console.error("Error fetching live sessions for dashboard", e);
+        console.error("Dashboard overview data loading error:", e);
+      } finally {
+        if (isMounted) {
+          setIsInitialLoading(false);
+        }
       }
     };
-    fetchSessions();
-  }, []);
+
+    loadAll();
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch]);
 
   // Filter only sessions belonging to courses the student is actually enrolled in
-  const enrolledCourseIds = new Set(myEnrollments.map((e) => e.courseId || e.course?.id));
-  const enrolledLiveSessions = liveSessions.filter((s) => enrolledCourseIds.has(s.courseId));
+  const enrolledCourseIdentifiers = new Set<string>();
+  myEnrollments.forEach((e) => {
+    const status = (e.status || '').toLowerCase();
+    if (status !== 'suspended' && status !== 'expired') {
+      if (e.courseId) enrolledCourseIdentifiers.add(String(e.courseId).toLowerCase());
+      if (e.course?.id) enrolledCourseIdentifiers.add(String(e.course.id).toLowerCase());
+      if (e.course?._id) enrolledCourseIdentifiers.add(String(e.course._id).toLowerCase());
+      if (e.course?.slug) enrolledCourseIdentifiers.add(String(e.course.slug).toLowerCase());
+    }
+  });
+
+  const enrolledLiveSessions = liveSessions.filter((s) => {
+    if (enrolledCourseIdentifiers.size === 0) return false;
+    const sessionCourseId = s.courseId ? String(s.courseId).toLowerCase() : null;
+    const nestedCourseId = s.course?.id ? String(s.course.id).toLowerCase() : (s.course?._id ? String(s.course._id).toLowerCase() : null);
+    const sessionCourseSlug = s.course?.slug ? String(s.course.slug).toLowerCase() : null;
+
+    return (
+      (sessionCourseId && enrolledCourseIdentifiers.has(sessionCourseId)) ||
+      (nestedCourseId && enrolledCourseIdentifiers.has(nestedCourseId)) ||
+      (sessionCourseSlug && enrolledCourseIdentifiers.has(sessionCourseSlug))
+    );
+  });
 
   const currentlyLiveSession = enrolledLiveSessions.find((s) => s.liveData?.status === 'live');
   const upcomingSessions = enrolledLiveSessions.filter((s) => {
@@ -71,8 +219,8 @@ export default function DashboardOverview() {
   const activeCoursesCount = myEnrollments.length;
   const recentEnrollment = myEnrollments[0]; // Assuming sorted by latest
 
-  if (isLoading && myEnrollments.length === 0) {
-    return <div className="flex justify-center items-center h-64"><Loader2 size={32} className="animate-spin text-[#C9A227]" /></div>;
+  if (isInitialLoading || (isLoading && myEnrollments.length === 0)) {
+    return <DashboardOverviewSkeleton />;
   }
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700 ease-out">

@@ -34,8 +34,14 @@ export default function AdminNotificationDropdown({ userId }: AdminNotificationD
 
         try {
             const currentPage = isLoadMore ? page + 1 : 1;
-            const response = await notificationService.getNotifications(userId, currentPage, LIMIT);
-            const data = Array.isArray(response.data?.data) ? response.data.data : [];
+            const response = await notificationService.getNotifications(userId, currentPage, LIMIT, "admin");
+            const rawData = Array.isArray(response.data?.data) ? response.data.data : [];
+            // Filter out personal student alerts from admin console
+            const data = rawData.filter((n: any) => {
+                if (n.portal === "academy") return false;
+                const type = (n.type || "").toLowerCase();
+                return !type.startsWith("academy_welcome") && !type.startsWith("academy_live");
+            });
             const meta = response.data?.meta;
 
             if (isLoadMore) {
@@ -97,7 +103,7 @@ export default function AdminNotificationDropdown({ userId }: AdminNotificationD
         if (unreadCount === 0) return;
 
         try {
-            await notificationService.markAllRead(userId);
+            await notificationService.markAllRead(userId, "admin");
             setNotifications(prev => prev.map(n => ({ ...n, read: true })));
             setShowReadAllConfirm(false);
             toast.success("All notifications marked as read");
@@ -138,8 +144,24 @@ export default function AdminNotificationDropdown({ userId }: AdminNotificationD
             setNotifications(prev => prev.map(n => n._id === notification._id ? { ...n, read: true } : n));
         }
 
-        if ((notification.type === 'comment-mention' || notification.type === 'article-comment') && notification.data?.articleSlug) {
+        const type = (notification.type || "").toLowerCase();
+        if (type.includes("approval") || type.includes("article-submit")) {
+            router.push("/admin/content-approval");
+            setIsOpen(false);
+        } else if (type.includes("appointment") || type.includes("consult")) {
+            router.push("/admin/appointments");
+            setIsOpen(false);
+        } else if (type.includes("permission") || type.includes("role")) {
+            router.push("/admin/requests");
+            setIsOpen(false);
+        } else if (type.includes("academy") || type.includes("course")) {
+            router.push("/admin/academy");
+            setIsOpen(false);
+        } else if ((notification.type === 'comment-mention' || notification.type === 'article-comment') && notification.data?.articleSlug) {
             router.push(`/news/${notification.data.articleSlug}#comments`);
+            setIsOpen(false);
+        } else if (notification.data?.url) {
+            router.push(notification.data.url);
             setIsOpen(false);
         }
     };

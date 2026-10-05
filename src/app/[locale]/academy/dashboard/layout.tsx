@@ -8,6 +8,9 @@ import { LayoutDashboard, BookOpen, Award, Settings, Menu, X, Bell, Video, Chevr
 import { useAuth } from '@/data/features/auth/useAuthActions';
 import { useAppDispatch } from '@/data/redux/hooks';
 import { logoutUserAsync } from '@/data/features/auth/authThunks';
+import { authApi } from '@/data/services/auth-service/auth-service';
+import { restoreSession, updateAuthUser } from '@/data/features/auth/authSlice';
+import AcademyNotificationDropdown from '../components/AcademyNotificationDropdown';
 
 const SIDEBAR_NAV = [
   { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={18} /> },
@@ -22,39 +25,147 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  // Check session synchronously on mount so verified students never see a blank/black screen
+  const [isAuthChecking, setIsAuthChecking] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+    try {
+      const storedStr = localStorage.getItem("user");
+      if (storedStr) {
+        const storedUser = JSON.parse(storedStr);
+        const hasStudent = storedUser?.roles?.some((r: any) => 
+          r?.slug === 'student' || 
+          r?.name?.toLowerCase() === 'student' || 
+          r?.slug?.toLowerCase() === 'student' || 
+          r === 'student' ||
+          (typeof r === 'string' && r.toLowerCase() === 'student')
+        );
+        if (hasStudent) return false; // Already verified student! No blocking screen at all!
+      }
+    } catch {}
+    return true;
+  });
+
   const { user } = useAuth();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
     if (!token) {
       router.push("/auth/login");
-    } else if (user) {
-      const isStudent = user.roles?.some((r: any) => r.slug === 'student' || r.name === 'student');
-      if (!isStudent) {
+      return;
+    }
+
+    const checkStudentRole = (u: any): boolean => {
+      return Boolean(u?.roles?.some((r: any) => 
+        r?.slug === 'student' || 
+        r?.name?.toLowerCase() === 'student' || 
+        r?.slug?.toLowerCase() === 'student' || 
+        r === 'student' ||
+        (typeof r === 'string' && r.toLowerCase() === 'student')
+      ));
+    };
+
+    // 1. If Redux already has user, check student role
+    if (user && user.roles && user.roles.length > 0) {
+      if (!checkStudentRole(user)) {
         router.push('/join');
       } else {
         setIsAuthChecking(false);
       }
+      return;
     }
-  }, [router, user]);
+
+    // 2. If localStorage has cached user, restore and check
+    if (typeof window !== 'undefined') {
+      try {
+        const storedStr = localStorage.getItem("user");
+        if (storedStr) {
+          const storedUser = JSON.parse(storedStr);
+          if (storedUser && storedUser.roles && storedUser.roles.length > 0) {
+            dispatch(restoreSession({
+              token,
+              refreshToken: localStorage.getItem("refreshToken") || "",
+              user: storedUser,
+            }));
+            if (checkStudentRole(storedUser)) {
+              setIsAuthChecking(false);
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to parse cached user", err);
+      }
+    }
+
+    // 3. Fallback: Fetch fresh profile from API to ensure DB state is loaded
+    authApi.getProfile()
+      .then((res: any) => {
+        const fetchedUser = res.data?.user || res.data?.data || res.data;
+        if (fetchedUser) {
+          dispatch(updateAuthUser(fetchedUser));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem("user", JSON.stringify(fetchedUser));
+          }
+          if (checkStudentRole(fetchedUser)) {
+            setIsAuthChecking(false);
+          } else {
+            router.push('/join');
+          }
+        } else {
+          router.push('/auth/login');
+        }
+      })
+      .catch((err) => {
+        console.error("Session verification failed", err);
+        if (err?.response?.status === 401) {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+          }
+          router.push('/auth/login');
+        } else {
+          setIsAuthChecking(false);
+        }
+      });
+  }, [router, user, dispatch]);
 
   const handleLogout = async () => {
-    await dispatch(logoutUserAsync());
-    router.push('/auth/login');
-    setIsSidebarOpen(false);
-    setShowLogoutModal(false);
+    try {
+      setIsLoggingOut(true);
+      await dispatch(logoutUserAsync());
+      router.push('/auth/login');
+    } finally {
+      setIsLoggingOut(false);
+      setIsSidebarOpen(false);
+      setShowLogoutModal(false);
+    }
   };
 
 
   if (isAuthChecking) {
     return (
-      <div className="min-h-screen bg-[color:var(--sa-cream)] flex items-center justify-center">
-        <div className="flex items-center gap-3 text-xs text-[color:var(--sa-ink-3)] font-mono uppercase tracking-wider">
-          <Loader2 size={16} className="animate-spin text-[color:var(--sa-gold)]" />
-          Verifying session...
+      <div className="ac-student min-h-screen bg-[#F7F3EA] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-[#0b2240] border border-[#C9A227]/40 flex items-center justify-center mb-5 shadow-lg shadow-[#0b2240]/10">
+          <Image
+            src="/logo-gold.png"
+            alt="Sajjad Husain Academy Logo"
+            width={34}
+            height={34}
+            className="object-contain"
+            priority
+          />
         </div>
+        <div className="flex items-center gap-2.5 text-xs font-semibold text-[#0b2240] tracking-wider uppercase font-mono mb-2">
+          <Loader2 size={16} className="animate-spin text-[#C9A227]" />
+          Checking Academy Access...
+        </div>
+        <p className="text-xs text-[#0b2240]/55 max-w-xs">
+          Verifying your student credentials and course enrollments
+        </p>
       </div>
     );
   }
@@ -181,14 +292,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Top Header Rail (h-20 = 80px, solid non-translucent background, matches sidebar header position) */}
         <header className="h-20 bg-[color:var(--sa-cream)] border-b border-[color:var(--sa-line)] flex items-center justify-end px-6 sm:px-8 md:px-10 sticky top-0 z-30">
           <div className="flex items-center gap-5">
-            {/* Notification Bell */}
-            <button
-              className="relative text-slate-500 hover:text-slate-800 p-2 rounded-lg hover:bg-black/5 transition-colors cursor-pointer"
-              title="Notifications"
-            >
-              <Bell size={18} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
-            </button>
+            {/* Notification Bell Dropdown */}
+            {user && (user._id || (user as any).id) && (
+              <AcademyNotificationDropdown userId={user._id || (user as any).id} />
+            )}
 
             {/* Vertical Hairline Divider */}
             <div className="w-px h-6 bg-slate-200"></div>
@@ -294,9 +401,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </button>
               <button
                 onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 text-xs font-bold rounded-lg cursor-pointer transition-colors shadow-sm"
+                disabled={isLoggingOut}
+                className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 text-xs font-bold rounded-lg cursor-pointer transition-colors shadow-sm disabled:opacity-60 flex items-center justify-center gap-2"
               >
-                Sign out
+                {isLoggingOut ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>Signing out...</span>
+                  </>
+                ) : (
+                  <span>Sign out</span>
+                )}
               </button>
             </div>
           </div>

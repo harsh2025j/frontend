@@ -43,6 +43,14 @@ const nextConfig: NextConfig = {
         destination: '/:locale/academy/certificates/verify/:id',
       },
       {
+        source: '/v/:id',
+        destination: '/academy/certificates/verify/:id',
+      },
+      {
+        source: '/:locale/v/:id',
+        destination: '/:locale/academy/certificates/verify/:id',
+      },
+      {
         source: '/courses',
         destination: '/academy/courses',
       },

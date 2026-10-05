@@ -478,7 +478,7 @@ function TemplatePreviewModal({
         </div>
 
         {/* Scaled Visual Preview Canvas */}
-        <div className="flex-1 overflow-auto p-6 bg-gray-100 flex items-center justify-center">
+        <div className="flex-1 overflow-auto p-6 bg-gray-100 flex items-start justify-center">
           <div
             style={{
               width: template.widthPx * scale,
@@ -519,16 +519,15 @@ function TemplatePreviewModal({
             {/* Fields */}
             {(template.fields || []).map((f, i) => {
               if (f.key === "qrCode") {
-                const qrSize = Math.round((f.height || 76) * scale);
-                const containerWidth = Math.max(f.width || (f.height || 76) + 20, 96) * scale;
-                const verifyUrl = "https://academy.sajjadhusainlawassociates.com/certificates/verify/SHLA-CON-K3N8QP";
-                const cardBg = (f as any).bgColor || (f.color?.startsWith("rgba") ? f.color : "rgba(255,255,255,0.96)");
-                const isTransparent = cardBg === "transparent";
+                const qrCalcSize = Math.max(f.height || 88, 88);
+                const qrSize = Math.round(qrCalcSize * scale);
+                const containerWidth = Math.round(Math.max(f.width || 112, qrCalcSize + 24) * scale);
+                const verifyUrl = "https://academy.sajjadhusainlawassociates.com/v/SHLA-CON-K3N8QP";
+                const cardBg = "#ffffff";
                 const qrPatternColor = ((f as any).qrColor || "#122340").replace("#", "");
                 const textColor = f.color || "#122340";
-                const bgParam = getQrBgParam(cardBg);
-                const textFontSize = Math.max(6, Math.round((f.fontSize || 9) * scale));
-                const textFontWeight = f.fontWeight || "700";
+                const textFontSize = Math.max(6, Math.round(Math.max(8, Math.min(13, Math.round(qrCalcSize * 0.1))) * scale));
+                const textFontWeight = "700";
 
                 return (
                   <div
@@ -539,10 +538,10 @@ function TemplatePreviewModal({
                       top: f.y * scale,
                       width: containerWidth,
                       background: cardBg,
-                      padding: `${6 * scale}px ${6 * scale}px ${5 * scale}px ${6 * scale}px`,
+                      padding: `${6 * scale}px ${8 * scale}px ${6 * scale}px ${8 * scale}px`,
                       borderRadius: Math.max(4, Math.round(8 * scale)),
-                      border: isTransparent ? "none" : "1px solid rgba(18, 35, 64, 0.12)",
-                      boxShadow: isTransparent ? "none" : "0 2px 6px rgba(0,0,0,0.06)",
+                      border: "1px solid rgba(18, 35, 64, 0.12)",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "center",
@@ -552,15 +551,15 @@ function TemplatePreviewModal({
                     }}
                   >
                     <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(verifyUrl)}&bgcolor=${bgParam}&color=${qrPatternColor}&margin=1`}
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(verifyUrl)}&bgcolor=ffffff&color=${qrPatternColor}&margin=2&ecc=H`}
                       width={qrSize}
                       height={qrSize}
                       style={{
                         width: `${qrSize}px`,
                         height: `${qrSize}px`,
                         display: "block",
-                        borderRadius: Math.max(2, Math.round(4 * scale)),
-                        mixBlendMode: isTransparent ? "multiply" : "normal",
+                        borderRadius: 0,
+                        imageRendering: "pixelated",
                       }}
                       alt="QR Code"
                     />

@@ -599,6 +599,46 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
     );
   }
 
+  // Enrollment Gate: Verify student is enrolled before allowing access to lessons and live classes
+  const isStaff = Boolean(
+    (user as any)?.role === 'admin' ||
+    (user as any)?.role === 'instructor' ||
+    (user as any)?.role === 'superadmin' ||
+    (user as any)?.roles?.some((r: any) =>
+      ['admin', 'instructor', 'superadmin'].includes(
+        typeof r === 'string' ? r.toLowerCase() : (r?.slug || r?.name || '').toLowerCase()
+      )
+    )
+  );
+
+  if (!isStaff && !isEnrollmentsLoading && !currentEnrollment && currentCourse && !isLoading) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-[#F7F3EA] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
+        <div className="bg-white rounded-3xl p-8 max-w-md w-full border border-[#122340]/10 flex flex-col items-center">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 text-[#C9A227] flex items-center justify-center mb-4 border border-[#C9A227]/20">
+            <Lock size={32} />
+          </div>
+          <h2 className="text-2xl font-black text-[#122340] mb-2">Enrollment Required</h2>
+          <p className="text-sm text-[#122340]/60 mb-6 leading-relaxed">
+            You must be actively enrolled in <span className="font-bold text-[#122340]">&ldquo;{currentCourse.title}&rdquo;</span> to access this classroom, lesson videos, and live sessions.
+          </p>
+          <div className="flex gap-3 w-full">
+            <Link href="/dashboard/courses" className="flex-1">
+              <button className="w-full py-3 rounded-xl font-bold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer">
+                My Courses
+              </button>
+            </Link>
+            <Link href={`/courses/${slug}`} className="flex-1">
+              <button className="w-full py-3 rounded-xl font-bold text-xs bg-[#C9A227] text-white hover:bg-[#b39022] transition-colors cursor-pointer">
+                Enroll Now &rarr;
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const COURSE_DATA = mappedCourseData;
   if (!activeItem) return null; // Wait for activeItem to be set
 
@@ -1084,7 +1124,7 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ slug: s
                       ) : activeSubmission?.status === 'verified' ? (
                         <>
                           <CheckCircle2 size={32} className="text-green-500 mb-4" />
-                          <p className="font-bold text-sm mb-1 text-green-700">Assignment Verified</p>
+                          <p className="font-bold text-sm mb-1 text-green-700">Assignment Accepted</p>
                           {activeSubmission.feedback && <p className="text-xs text-green-600 font-medium bg-green-100/80 px-4 py-2 rounded-lg mt-3 text-left w-full border border-green-200">{activeSubmission.feedback}</p>}
                         </>
                       ) : activeSubmission?.status === 'rejected' ? (

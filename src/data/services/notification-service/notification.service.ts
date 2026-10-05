@@ -12,15 +12,17 @@ export interface Notification {
     updatedAt: string;
     __v: number;
     data?: any;
+    portal?: 'academy' | 'main';
 }
 
 export const notificationService = {
-    getNotifications: async (userId: string, page = 1, limit = 15) => {
-        return apiClient.get(`${API_ENDPOINTS.NOTIFICATIONS.FETCH_BY_ID}?userId=${userId}&page=${page}&limit=${limit}`);
+    getNotifications: async (userId: string, page = 1, limit = 15, portal?: string) => {
+        const portalQuery = portal ? `&portal=${portal}` : '';
+        return apiClient.get(`${API_ENDPOINTS.NOTIFICATIONS.FETCH_BY_ID}?userId=${userId}&page=${page}&limit=${limit}${portalQuery}`);
     },
 
-    markAllRead: async (userId: string) => {
-        return apiClient.post(API_ENDPOINTS.NOTIFICATIONS.READ_ALL, { userId });
+    markAllRead: async (userId: string, portal?: string) => {
+        return apiClient.post(API_ENDPOINTS.NOTIFICATIONS.READ_ALL, { userId, portal });
     },
 
     markRead: async (id: string) => {

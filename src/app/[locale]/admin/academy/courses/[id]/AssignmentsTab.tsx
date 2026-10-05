@@ -14,7 +14,6 @@ export default function AssignmentsTab({ courseId }: { courseId: string }) {
   const [filterStatus, setFilterStatus] = useState('all');
 
   // Grading state
-  const [marks, setMarks] = useState<number | ''>('');
   const [feedback, setFeedback] = useState('');
   const [gradingStatus, setGradingStatus] = useState<'verified' | 'rejected'>('verified');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,25 +55,28 @@ export default function AssignmentsTab({ courseId }: { courseId: string }) {
 
   const handleGrade = async () => {
     if (!selectedSub) return;
+    if (selectedSub.status !== 'pending' && selectedSub.status !== 'resubmitted') {
+      return toast.error("Only pending or resubmitted assignments can be reviewed.");
+    }
     if (gradingStatus === 'rejected' && !feedback.trim()) {
-      return toast.error("Please provide a reason for rejection");
+      return toast.error("Please provide a valid reason for rejection");
     }
 
     try {
       setIsSubmitting(true);
       const res = await apiClient.patch(`/academy/assignments/submissions/${selectedSub.id}/grade`, {
         status: gradingStatus,
-        marksAwarded: null,
         feedback: feedback
       });
 
-      toast.success(`Submission ${gradingStatus} successfully!`);
+      toast.success(gradingStatus === 'verified' ? 'Assignment accepted successfully!' : 'Assignment rejected.');
 
       // Update local state by merging to keep nested relations (like assignment)
       setSubmissions(prev => prev.map(s => s.id === selectedSub.id ? { ...s, ...res.data } : s));
       setSelectedSub(null);
-    } catch (error) {
-      toast.error("Failed to grade submission");
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || "Failed to submit review";
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -82,7 +84,7 @@ export default function AssignmentsTab({ courseId }: { courseId: string }) {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'verified': return <span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-max"><CheckCircle size={12} /> Verified</span>;
+      case 'verified': return <span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-max"><CheckCircle size={12} /> Accepted</span>;
       case 'rejected': return <span className="bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-max"><XCircle size={12} /> Rejected</span>;
       case 'resubmitted': return <span className="bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-max"><RotateCcw size={12} /> Resubmitted</span>;
       default: return <span className="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-max"><Clock size={12} /> Pending</span>;
@@ -123,7 +125,7 @@ export default function AssignmentsTab({ courseId }: { courseId: string }) {
             >
               <option value="all">All Statuses</option>
               <option value="pending">Pending</option>
-              <option value="verified">Verified</option>
+              <option value="verified">Accepted</option>
               <option value="rejected">Rejected</option>
               <option value="resubmitted">Resubmitted</option>
             </select>
@@ -166,13 +168,16 @@ export default function AssignmentsTab({ courseId }: { courseId: string }) {
                       <button
                         onClick={() => {
                           setSelectedSub(sub);
-                          setMarks(sub.marksAwarded || '');
-                          setFeedback(sub.feedback || '');
+                          setFeedback(sub.status === 'resubmitted' ? '' : (sub.feedback || ''));
                           setGradingStatus(sub.status === 'rejected' ? 'rejected' : 'verified');
                         }}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-bold bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
+                        className={`text-sm font-bold px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                          sub.status === 'pending' || sub.status === 'resubmitted'
+                            ? 'text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100'
+                            : 'text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200'
+                        }`}
                       >
-                        Review
+                        {sub.status === 'pending' || sub.status === 'resubmitted' ? 'Review' : 'View'}
                       </button>
                     </td>
                   </tr>
@@ -184,86 +189,147 @@ export default function AssignmentsTab({ courseId }: { courseId: string }) {
       </div>
 
       {/* Review Modal */}
-      {selectedSub && (
-        <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <div>
-                <h3 className="font-bold text-lg text-gray-900">Review Submission</h3>
-                <p className="text-sm text-gray-500">{selectedSub.studentName} - {selectedSub.assignment?.title}</p>
-              </div>
-              <button onClick={() => setSelectedSub(null)} className="text-gray-400 hover:bg-gray-200 p-2 rounded-full"><XCircle size={20} /></button>
-            </div>
+      {selectedSub && (() => {
+        const canGrade = selectedSub.status === 'pending' || selectedSub.status === 'resubmitted';
 
-            <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
-              {/* PDF Viewer */}
-              <div className="flex-1 bg-gray-900 h-full min-h-[400px]">
-                <iframe
-                  src={selectedSub.submissionPdfUrl?.toLowerCase().includes('.pdf') ? `${selectedSub.submissionPdfUrl}#toolbar=0` : `https://docs.google.com/viewer?url=${encodeURIComponent(selectedSub.submissionPdfUrl || '')}&embedded=true`}
-                  className="w-full h-full border-0 min-h-[600px]"
-                  title="Document Preview"
-                ></iframe>
+        return (
+          <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+              <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <div>
+                  <h3 className="font-bold text-lg text-gray-900">
+                    {canGrade ? 'Review Submission' : 'View Submission Details'}
+                  </h3>
+                  <p className="text-sm text-gray-500">{selectedSub.studentName} - {selectedSub.assignment?.title}</p>
+                </div>
+                <button onClick={() => setSelectedSub(null)} className="text-gray-400 hover:bg-gray-200 p-2 rounded-full cursor-pointer"><XCircle size={20} /></button>
               </div>
 
-              {/* Grading Panel */}
-              <div className="w-full md:w-80 border-l border-gray-100 bg-white p-6 overflow-y-auto flex flex-col">
-                <h4 className="font-bold text-gray-900 mb-4">Grading Panel</h4>
-
-                <div className="space-y-5 flex-1">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Outcome</label>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => setGradingStatus('verified')} 
-                        disabled={selectedSub.status !== 'pending'}
-                        className={`flex-1 py-2 text-sm font-bold rounded-lg border transition disabled:opacity-60 disabled:cursor-not-allowed ${gradingStatus === 'verified' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
-                      >Verify</button>
-                      <button 
-                        onClick={() => setGradingStatus('rejected')} 
-                        disabled={selectedSub.status !== 'pending'}
-                        className={`flex-1 py-2 text-sm font-bold rounded-lg border transition disabled:opacity-60 disabled:cursor-not-allowed ${gradingStatus === 'rejected' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
-                      >Reject</button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Feedback / Reason</label>
-                    <textarea
-                      rows={4}
-                      value={feedback}
-                      onChange={e => setFeedback(e.target.value)}
-                      disabled={selectedSub.status !== 'pending'}
-                      placeholder={gradingStatus === 'rejected' ? "Explain why it was rejected so the student can try again..." : "Optional feedback..."}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 resize-none text-sm disabled:bg-gray-50 disabled:text-gray-500"
-                    />
-                  </div>
+              <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
+                {/* PDF Viewer */}
+                <div className="flex-1 bg-gray-900 h-full min-h-[400px]">
+                  <iframe
+                    src={selectedSub.submissionPdfUrl?.toLowerCase().includes('.pdf') ? `${selectedSub.submissionPdfUrl}#toolbar=0` : `https://docs.google.com/viewer?url=${encodeURIComponent(selectedSub.submissionPdfUrl || '')}&embedded=true`}
+                    className="w-full h-full border-0 min-h-[600px]"
+                    title="Document Preview"
+                  ></iframe>
                 </div>
 
-                <div className="pt-6 mt-4 border-t border-gray-100">
-                  {selectedSub.status === 'pending' ? (
-                    <button
-                      onClick={handleGrade}
-                      disabled={isSubmitting}
-                      className={`w-full py-3 text-white font-bold rounded-xl flex justify-center items-center gap-2 transition disabled:opacity-50 ${gradingStatus === 'verified' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
-                    >
-                      {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <CheckCircle size={18} />}
-                      {gradingStatus === 'verified' ? 'Accept Assignment' : 'Reject & Notify'}
-                    </button>
-                  ) : (
-                    <div className="w-full py-3 px-4 rounded-xl flex flex-col justify-center items-center gap-1 bg-gray-100 border border-gray-200">
-                      <span className="font-bold text-gray-600 flex items-center gap-2">
-                        {selectedSub.status === 'verified' ? <CheckCircle size={18} className="text-green-600" /> : <XCircle size={18} className="text-red-600" />}
-                        Already {selectedSub.status === 'verified' ? 'Verified' : 'Rejected'}
-                      </span>
-                      <span className="text-xs text-gray-500">Wait for student to re-upload to grade again.</span>
+                {/* Review Panel */}
+                <div className="w-full md:w-80 border-l border-gray-100 bg-white p-6 overflow-y-auto flex flex-col">
+                  <h4 className="font-bold text-gray-900 mb-3">Review Action</h4>
+
+                  {/* Resubmission Banner (Active review) */}
+                  {selectedSub.status === 'resubmitted' && (
+                    <div className="p-3 rounded-xl bg-orange-50 border border-orange-200 text-orange-900 text-xs flex items-start gap-2.5 mb-4">
+                      <RotateCcw size={16} className="text-orange-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold">Student Resubmitted Assignment</p>
+                        <p className="text-orange-700/90 mt-0.5">Please review the updated document and make your decision.</p>
+                        {selectedSub.feedback && (
+                          <p className="mt-1.5 pt-1.5 border-t border-orange-200 text-[11px] text-orange-800">
+                            <span className="font-semibold">Previous Rejection Reason:</span> {selectedSub.feedback}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   )}
+
+                  <div className="space-y-4 flex-1">
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">Outcome</label>
+                      <div className="flex gap-2">
+                        <button 
+                          type="button"
+                          onClick={() => canGrade && setGradingStatus('verified')} 
+                          disabled={!canGrade}
+                          className={`flex-1 py-2 text-sm font-bold rounded-lg border transition ${
+                            !canGrade
+                              ? selectedSub.status === 'verified'
+                                ? 'bg-green-50 border-green-300 text-green-700 cursor-not-allowed'
+                                : 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
+                              : gradingStatus === 'verified'
+                              ? 'bg-green-50 border-green-300 text-green-700 shadow-xs cursor-pointer'
+                              : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 cursor-pointer'
+                          }`}
+                        >Accept</button>
+                        <button 
+                          type="button"
+                          onClick={() => canGrade && setGradingStatus('rejected')} 
+                          disabled={!canGrade}
+                          className={`flex-1 py-2 text-sm font-bold rounded-lg border transition ${
+                            !canGrade
+                              ? selectedSub.status === 'rejected'
+                                ? 'bg-red-50 border-red-300 text-red-700 cursor-not-allowed'
+                                : 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
+                              : gradingStatus === 'rejected'
+                              ? 'bg-red-50 border-red-300 text-red-700 shadow-xs cursor-pointer'
+                              : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 cursor-pointer'
+                          }`}
+                        >Reject</button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                        {gradingStatus === 'rejected' ? (
+                          <span>Rejection Reason <span className="text-red-500">*</span></span>
+                        ) : (
+                          <span>Feedback / Remarks <span className="text-gray-400 font-normal text-xs">(Optional)</span></span>
+                        )}
+                      </label>
+                      <textarea
+                        rows={5}
+                        value={canGrade ? feedback : (selectedSub.feedback || 'No feedback provided.')}
+                        onChange={e => canGrade && setFeedback(e.target.value)}
+                        disabled={!canGrade}
+                        placeholder={gradingStatus === 'rejected' ? "Please explain why this assignment is rejected so the student can revise..." : "Optional feedback or remarks for the student..."}
+                        className={`w-full px-4 py-2.5 border border-gray-200 rounded-lg resize-none text-sm ${
+                          !canGrade
+                            ? 'bg-gray-50 text-gray-600 cursor-not-allowed'
+                            : 'focus:outline-none focus:border-blue-500'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-6 mt-4 border-t border-gray-100">
+                    {canGrade ? (
+                      <button
+                        type="button"
+                        onClick={handleGrade}
+                        disabled={isSubmitting}
+                        className={`w-full py-3 text-white font-bold rounded-xl flex justify-center items-center gap-2 transition cursor-pointer disabled:opacity-50 ${gradingStatus === 'verified' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                      >
+                        {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <CheckCircle size={18} />}
+                        {gradingStatus === 'verified' 
+                          ? (selectedSub.status === 'resubmitted' ? 'Accept Resubmitted Assignment' : 'Accept Assignment') 
+                          : 'Reject Assignment'}
+                      </button>
+                    ) : selectedSub.status === 'verified' ? (
+                      <div className="w-full py-3 px-4 rounded-xl flex flex-col justify-center items-center gap-1 bg-green-50 border border-green-200 text-center">
+                        <span className="font-bold text-green-700 flex items-center gap-2">
+                          <CheckCircle size={18} className="text-green-600" />
+                          Assignment Accepted
+                        </span>
+                        <span className="text-xs text-green-600/80">Evaluation completed. Locked from further modification.</span>
+                      </div>
+                    ) : (
+                      <div className="w-full py-3 px-4 rounded-xl flex flex-col justify-center items-center gap-1 bg-red-50 border border-red-200 text-center">
+                        <span className="font-bold text-red-700 flex items-center gap-2">
+                          <XCircle size={18} className="text-red-600" />
+                          Already Rejected
+                        </span>
+                        <span className="text-xs text-red-600/80">Wait for student to re-upload before reviewing again.</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

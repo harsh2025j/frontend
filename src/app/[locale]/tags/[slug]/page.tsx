@@ -2,8 +2,7 @@ import React from "react";
 import { Metadata } from "next";
 import TagClient from "./TagClient";
 
-// Enable ISR caching for 1 hour to reduce SSR compute costs
-export const revalidate = 3600;
+export const revalidate = 1200;
 
 interface Props {
   params: Promise<{ slug: string; locale: string }>;
@@ -14,7 +13,7 @@ interface Props {
  */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, locale } = await params;
-  
+
   // Format slug for title (e.g. supreme-court -> Supreme Court)
   const formattedName = slug
     .split("-")
@@ -23,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${formattedName} | Related Law News & Updates - Sajjad Husain Law Associates`;
   const description = `Explore legal reports, news updates, and insights tagged with ${formattedName}. Stay up to date with the latest from Sajjad Husain Law Associates.`;
-  
+
   const SITE_URL = "https://www.sajjadhusainlawassociates.com";
 
   return {

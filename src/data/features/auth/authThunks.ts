@@ -13,7 +13,7 @@ import {
   RefreshTokenRequest,
   RefreshTokenResponse,
 } from "./auth.types";
-import { requestFcmToken } from "@/lib/fcmUtils";
+import { requestFcmToken, getStoredFcmToken, clearStoredFcmToken } from "@/lib/fcmUtils";
 import { firebaseAuth } from "@/data/services/auth-service/auth-service";
 import { AuthUser } from "./auth.types";
 import { authApi } from "@/data/services/auth-service/auth-service";
@@ -119,12 +119,14 @@ export const ResendOtp = createAsyncThunk<ResendOtpResponse, ResendOtpRequest>(
 )
 
 
-export const loginWithGoogle = createAsyncThunk<LoginResponse, { roleIds?: string[] } | void>(
+export const loginWithGoogle = createAsyncThunk<LoginResponse, { roleIds?: string[]; portal?: string } | void>(
   "auth/loginWithGoogle",
   async (args, thunkAPI) => {
     try {
       const firebaseUser = await firebaseAuth.loginWithGoogle();
       const fcmToken = await requestFcmToken();
+
+      const googleArgs = (args && typeof args === "object" ? args : undefined) as { roleIds?: string[]; portal?: string } | undefined;
 
       const socialLoginData = {
         email: firebaseUser.email || "",
@@ -132,9 +134,10 @@ export const loginWithGoogle = createAsyncThunk<LoginResponse, { roleIds?: strin
         provider: "google",
         providerId: firebaseUser.uid,
         profilePicture: firebaseUser.photoURL || "",
-        roleIds: args?.roleIds,
+        roleIds: googleArgs?.roleIds,
         fcmToken: fcmToken || undefined,
-        platform: "web"
+        platform: "web",
+        portal: googleArgs?.portal,
       };
 
       const res = await authApi.socialLogin(socialLoginData);
@@ -165,12 +168,40 @@ export const logoutUserAsync = createAsyncThunk(
   "auth/logoutUserAsync",
   async (_, thunkAPI) => {
     try {
-      const refreshToken = localStorage.getItem("refreshToken");
-      const fcmToken = await requestFcmToken();
+      const refreshToken = typeof window !== "undefined" ? (localStorage.getItem("refreshToken") || "") : "";
+      let fcmToken = getStoredFcmToken();
 
-      if (refreshToken) {
-        await authApi.logout({ refreshToken, fcmToken: fcmToken || undefined });
+      if (!fcmToken) {
+        try {
+          fcmToken = await Promise.race([
+            requestFcmToken(),
+            new Promise<null>((res) => setTimeout(() => res(null), 1500)),
+          ]);
+        } catch {
+          // ignore error
+        }
       }
+
+      // 1. Call Backend Logout API to invalidate session and remove FCM device token
+      try {
+        await authApi.logout({
+          refreshToken: refreshToken || "",
+          fcmToken: fcmToken || undefined,
+        });
+      } catch (backendErr) {
+        console.warn("Backend logout failed:", backendErr);
+      }
+
+      // 2. Sign out of Firebase if initialized
+      try {
+        await firebaseAuth.logout();
+      } catch {
+        // ignore
+      }
+
+      // 3. Clear local FCM cache
+      clearStoredFcmToken();
+
       return true;
     } catch (err: unknown) {
       const apiError = err as ApiError;

@@ -42,6 +42,8 @@ export default function IssuedTab() {
   const [selected, setSelected] = useState<Certificate | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<Certificate | null>(null);
   const [revokeReason, setRevokeReason] = useState("");
+  const [reissueTarget, setReissueTarget] = useState<Certificate | null>(null);
+  const [isReissuing, setIsReissuing] = useState(false);
 
   // Manual Generation State
   const [generateModalOpen, setGenerateModalOpen] = useState(false);
@@ -137,13 +139,18 @@ export default function IssuedTab() {
     }
   };
 
-  const doReissue = async (c: Certificate) => {
+  const doReissue = async () => {
+    if (!reissueTarget) return;
+    setIsReissuing(true);
     try {
-      await certificateApi.reissue(c.id);
-      toast.success("Reissue triggered");
+      await certificateApi.reissue(reissueTarget.id);
+      toast.success("Certificate re-issued successfully!");
+      setReissueTarget(null);
       load();
     } catch (e: any) {
       toast.error(e?.message || "Failed to reissue");
+    } finally {
+      setIsReissuing(false);
     }
   };
 
@@ -292,14 +299,12 @@ export default function IssuedTab() {
         enrollmentId: generateMode === "enrolled" ? generateForm.enrollmentId : undefined,
         userId: generateMode === "enrolled" ? generateForm.userId : undefined,
         mode: generateMode,
-        sendEmail: generateForm.sendEmail !== false,
+        sendEmail: true,
         updateExisting,
       });
 
       if (updateExisting) {
         toast.success("Certificate updated and re-issued successfully!");
-      } else if (generateForm.sendEmail && generateForm.studentEmail) {
-        toast.success("Certificate issued & sent to student's email!");
       } else {
         toast.success("Certificate generated and issued successfully!");
       }
@@ -561,8 +566,8 @@ export default function IssuedTab() {
                         </button>
                       ) : (
                         <button
-                          onClick={() => doReissue(c)}
-                          className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg"
+                          onClick={() => setReissueTarget(c)}
+                          className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                           title="Reissue"
                         >
                           <RefreshCw size={18} />
@@ -644,6 +649,71 @@ export default function IssuedTab() {
                 className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold disabled:opacity-40"
               >
                 Revoke
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reissue Confirmation Modal */}
+      {reissueTarget && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={() => !isReissuing && setReissueTarget(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-100 animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3.5 mb-4">
+              <div className="w-11 h-11 rounded-xl bg-green-50 text-green-600 border border-green-200 flex items-center justify-center shrink-0">
+                <RefreshCw size={22} className={isReissuing ? "animate-spin" : ""} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 leading-tight">Reissue Certificate</h3>
+                <p className="text-xs text-blue-600 font-mono font-semibold mt-0.5">{reissueTarget.certificateId}</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+              Are you sure you want to reissue the certificate for <strong className="text-gray-900">{reissueTarget.studentName}</strong> in course <strong className="text-gray-900">{reissueTarget.courseName}</strong>?
+            </p>
+
+            <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3.5 text-xs text-amber-900 mb-5 space-y-1.5">
+              <div className="font-semibold text-amber-950 flex items-center gap-1.5">
+                <span>⚠️ What will happen:</span>
+              </div>
+              <p className="text-amber-800 leading-relaxed">• Certificate status will be restored from <span className="font-semibold text-red-600">Revoked</span> back to <span className="font-semibold text-green-700">Issued</span>.</p>
+              <p className="text-amber-800 leading-relaxed">• The certificate PDF will be regenerated with the latest course, faculty, and template design.</p>
+              <p className="text-amber-800 leading-relaxed">• An updated certificate email with the new PDF attached will be automatically sent to the student.</p>
+            </div>
+
+            <div className="flex justify-end gap-2.5">
+              <button
+                type="button"
+                disabled={isReissuing}
+                onClick={() => setReissueTarget(null)}
+                className="px-4 py-2 bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 rounded-xl text-sm font-medium transition-colors disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isReissuing}
+                onClick={doReissue}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md disabled:opacity-50 flex items-center gap-2"
+              >
+                {isReissuing ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" />
+                    <span>Reissuing...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw size={14} />
+                    <span>Confirm Reissue</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -859,23 +929,6 @@ export default function IssuedTab() {
                                 />
                               </div>
                             </div>
-
-                            <div className="mt-2.5 p-2.5 bg-white rounded-lg border border-blue-100 flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Mail size={15} className="text-blue-600 shrink-0" />
-                                <span className="text-xs font-medium text-gray-700">
-                                  Email certificate PDF & verification link upon generation
-                                </span>
-                              </div>
-                              <input
-                                type="checkbox"
-                                checked={generateForm.sendEmail}
-                                onChange={(e) =>
-                                  setGenerateForm({ ...generateForm, sendEmail: e.target.checked })
-                                }
-                                className="w-4 h-4 text-blue-600 rounded cursor-pointer"
-                              />
-                            </div>
                           </div>
                         );
                       })()}
@@ -1038,21 +1091,6 @@ export default function IssuedTab() {
                         </div>
                       );
                     })()}
-                  </div>
-
-                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200/60 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Mail size={16} className="text-blue-600" />
-                      <span className="text-xs font-semibold text-gray-800">
-                        Email certificate PDF & link upon generation
-                      </span>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={generateForm.sendEmail}
-                      onChange={(e) => setGenerateForm({ ...generateForm, sendEmail: e.target.checked })}
-                      className="w-4 h-4 text-blue-600 rounded cursor-pointer"
-                    />
                   </div>
                 </div>
               )}

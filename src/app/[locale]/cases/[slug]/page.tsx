@@ -3,68 +3,91 @@ import { Metadata } from "next";
 import { casesService } from "@/data/services/cases-service/casesService";
 import CaseView from "./CaseView";
 
-// Enable ISR caching for 1 hour to reduce SSR compute costs
 export const revalidate = 3600;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.sajjadhusainlawassociates.com";
 
 interface PageProps {
-    params: {
+    params: Promise<{
         slug: string;
         locale: string;
-    };
+    }>;
+}
+
+async function fetchCase(slug: string) {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+    const response = isUUID
+        ? await casesService.getById(slug)
+        : await casesService.getBySlug(slug);
+    return response.data.data;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const { slug, locale } = params;
-    
+    const { slug, locale } = await params;
+
     try {
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
-        const response = isUUID ? await casesService.getById(slug) : await casesService.getBySlug(slug);
-        const caseData = response.data.data;
+        const caseData = await fetchCase(slug);
 
         if (!caseData) {
-            return { title: "Case Not Found" };
+            return {
+                title: "Case Not Found | Sajjad Husain Law Associates",
+                description: "The requested case could not be found.",
+            };
         }
 
-        const title = `${caseData.title || "Legal Case"} | ${caseData.caseNumber || ""} | Sajjad Husain Law Associates`;
-        const description = `Legal record for Case No: ${caseData.caseNumber}. Status: ${caseData.status}. Court: ${caseData.court}.`;
+        const title = `${caseData.title || "Legal Case"} | ${caseData.caseNumber || ""} - Case Status`;
+        const courtName = caseData.court || "Court";
+        const description = `Case No: ${caseData.caseNumber || "N/A"}. Status: ${caseData.status || "Pending"}. Court: ${courtName}. View full case details and hearing updates.`;
 
         return {
             title,
             description,
+            keywords: [
+                caseData.caseNumber,
+                caseData.cnrNumber,
+                caseData.title,
+                courtName,
+                `${courtName} case status`,
+                "case status india",
+                "court case update",
+            ].filter(Boolean),
+            alternates: {
+                canonical: `${SITE_URL}/${locale}/cases/${slug}`,
+            },
             openGraph: {
                 title,
                 description,
                 type: "article",
                 url: `${SITE_URL}/${locale}/cases/${slug}`,
+                siteName: "Sajjad Husain Law Associates",
                 images: [`${SITE_URL}/logo-gold.png`],
             },
             twitter: {
                 card: "summary_large_image",
                 title,
                 description,
-            }
+            },
         };
-    } catch (error) {
-        return { title: "Case Details | Sajjad Husain Law Associates" };
+    } catch {
+        return {
+            title: "Case Details | Sajjad Husain Law Associates",
+            description: "View detailed case information, hearing dates, and status updates on Sajjad Husain Law Associates.",
+        };
     }
 }
 
-export default async function CaseDetailPage({ params, caseId: propId, isModal = false }: PageProps & { caseId?: string; isModal?: boolean }) {
-    const { slug } = params || {};
-    // If propId is passed, use getById, otherwise use getBySlug for page viewing
-    
+export default async function CaseDetailPage({ params: paramsPromise, caseId: propId, isModal = false }: PageProps & { caseId?: string; isModal?: boolean }) {
+    const { slug, locale } = await paramsPromise;
+    const finalId = propId || slug;
+
     let caseData = null;
 
     try {
         if (propId) {
             const response = await casesService.getById(propId);
             caseData = response.data.data;
-        } else if (slug) {
-            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
-            const response = isUUID ? await casesService.getById(slug) : await casesService.getBySlug(slug);
-            caseData = response.data.data;
+        } else {
+            caseData = await fetchCase(slug);
         }
     } catch (error) {
         console.error("Error fetching case for SEO:", error);
@@ -74,13 +97,38 @@ export default async function CaseDetailPage({ params, caseId: propId, isModal =
         "@context": "https://schema.org",
         "@type": "LegalService",
         "name": caseData.title,
-        "description": `Legal case record in ${caseData.court}`,
+        "description": `Legal case record in ${caseData.court || "Court"}`,
         "identifier": caseData.caseNumber || caseData.cnrNumber,
         "provider": {
             "@type": "Organization",
             "name": "Sajjad Husain Law Associates"
         }
     } : null;
+
+    const breadcrumbJsonLd = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": `${SITE_URL}/${locale || 'en'}`
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Cases",
+                "item": `${SITE_URL}/${locale || 'en'}/cases`
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": caseData?.title || "Case Detail",
+                "item": `${SITE_URL}/${locale || 'en'}/cases/${finalId}`
+            }
+        ]
+    };
 
     return (
         <>
@@ -90,6 +138,10 @@ export default async function CaseDetailPage({ params, caseId: propId, isModal =
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
                 />
             )}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+            />
             <CaseView caseId={propId} caseSlug={slug} isModal={isModal} />
         </>
     );

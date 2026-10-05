@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
-import { API_BASE_URL, API_ENDPOINTS } from "./apiContants";
+import { API_BASE_URL, API_ENDPOINTS, IS_NGROK } from "./apiContants";
 import { isTokenExpiredSoon } from "@/lib/utils/jwtUtils";
 
 import { handleApiError } from "@/lib/utils/errorHandler";
@@ -77,7 +77,7 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
-    // "ngrok-skip-browser-warning": "true",  //only in local development with ngrok, can be removed in production
+    ...(IS_NGROK && { "ngrok-skip-browser-warning": "true" }),
   },
   timeout: 30000,
 });

@@ -168,6 +168,7 @@ export const useAcademyLoginActions = () => {
         email: formData.email.trim(),
         fcmToken: fcmToken || undefined,
         platform: "web",
+        portal: "academy",
       }));
     } finally {
       setIsLocalLoading(false);
@@ -186,10 +187,10 @@ export const useAcademyLoginActions = () => {
       if (userRole) roleIds.push(userRole._id);
       if (studentRole) roleIds.push(studentRole._id);
 
-      dispatch(loginWithGoogle({ roleIds }));
+      dispatch(loginWithGoogle({ roleIds, portal: "academy" }));
     } catch (err) {
       console.error("Failed to fetch roles for Google Login", err);
-      dispatch(loginWithGoogle());
+      dispatch(loginWithGoogle({ portal: "academy" }));
     }
   };
 

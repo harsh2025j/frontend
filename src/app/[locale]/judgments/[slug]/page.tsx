@@ -3,92 +3,100 @@ import { Metadata } from "next";
 import { judgmentsService } from "@/data/services/judgments-service/judgmentsService";
 import JudgmentView from "./JudgmentView";
 
-// Enable ISR caching for 1 hour to reduce SSR compute costs
 export const revalidate = 3600;
 
-// This is the constant site URL for absolute paths in SEO
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.sajjadhusainlawassociates.com";
 
 interface PageProps {
-    params: {
+    params: Promise<{
         slug: string;
         locale: string;
-    };
+    }>;
 }
 
-/**
- * Dynamic Metadata generation for Judgment pages
- */
+async function fetchJudgment(slug: string) {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+    const response = isUUID
+        ? await judgmentsService.getById(slug)
+        : await judgmentsService.getBySlug(slug);
+    return response.data.data;
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const { slug, locale } = params;
+    const { slug, locale } = await params;
 
     try {
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
-        let response;
-        if (isUUID) {
-            response = await judgmentsService.getById(slug);
-        } else {
-            response = await judgmentsService.getBySlug(slug);
-        }
-        
-        const judgment = response.data.data;
+        const judgment = await fetchJudgment(slug);
 
         if (!judgment) {
-            return { title: "Judgment Not Found" };
+            return {
+                title: "Judgment Not Found | Sajjad Husain Law Associates",
+                description: "The requested judgment could not be found.",
+            };
         }
 
-        const courtName = judgment.court || judgment.case?.court || "THE HIGH COURT OF JURISDICTION";
-        const baseTitle = `${judgment.petitioner || "Petitioner"} vs ${judgment.respondent || "Respondent"} | ${courtName}`;
-        const seoTitle = `${baseTitle} | Latest Judgment & Court Order - Sajjad Husain Law Associates`;
-        const description = judgment.summary?.replace(/<[^>]*>?/gm, "").slice(0, 160) + "..." || `Judgment record for ${judgment.case?.caseNumber || "this case"}.`;
+        const petitioner = judgment.petitioner || "Petitioner";
+        const respondent = judgment.respondent || "Respondent";
+        const courtName = judgment.court || judgment.case?.court || "High Court";
+        const caseNumber = judgment.case?.caseNumber || "";
+        const judgmentDate = judgment.judgmentDate
+            ? new Date(judgment.judgmentDate).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })
+            : "";
+
+        const seoTitle = `${petitioner} vs ${respondent} | ${courtName} Judgment`;
+        const rawSummary = judgment.summary?.replace(/<[^>]*>?/gm, "").trim() || "";
+        const description = rawSummary
+            ? rawSummary.slice(0, 155) + (rawSummary.length > 155 ? "..." : "")
+            : `${courtName} judgment in ${petitioner} vs ${respondent}${caseNumber ? ` (${caseNumber})` : ""}${judgmentDate ? `, dated ${judgmentDate}` : ""}.`;
+
+        const keywords = [
+            `${petitioner} vs ${respondent}`,
+            caseNumber,
+            courtName,
+            `${courtName} judgment`,
+            judgment.judgmentType,
+            "court order",
+            "legal decision india",
+        ].filter(Boolean);
 
         return {
             title: seoTitle,
             description,
-            keywords: [
-                `${judgment.petitioner} vs ${judgment.respondent}`,
-                judgment.case?.caseNumber || "",
-                courtName,
-                "latest judgment",
-                "court order",
-                "legal decision india",
-                "case status update"
-            ],
+            keywords,
+            alternates: {
+                canonical: `${SITE_URL}/${locale}/judgments/${slug}`,
+            },
             openGraph: {
                 title: seoTitle,
                 description,
                 type: "article",
                 url: `${SITE_URL}/${locale}/judgments/${slug}`,
+                siteName: "Sajjad Husain Law Associates",
                 images: [`${SITE_URL}/logo-gold.png`],
+                ...(judgment.judgmentDate && { publishedTime: judgment.judgmentDate }),
             },
             twitter: {
                 card: "summary_large_image",
                 title: seoTitle,
                 description,
-            }
+            },
         };
-    } catch (error) {
-        return { title: "Judgment Detail | Sajjad Husain Law Associates" };
+    } catch {
+        return {
+            title: "Judgment Detail | Sajjad Husain Law Associates",
+            description: "Read the full text and analysis of this court judgment on Sajjad Husain Law Associates.",
+        };
     }
 }
 
 export default async function JudgmentDetailPage({ params: paramsPromise, judgmentId: propId, isModal = false }: PageProps & { judgmentId?: string; isModal?: boolean }) {
-    const params = await paramsPromise;
-    const { slug, locale } = params || {};
+    const { slug, locale } = await paramsPromise;
     const finalId = propId || slug;
 
-    // Fetch data for JSON-LD structured data
     let judgment = null;
 
     try {
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(finalId);
-        let response;
-        if (isUUID) {
-            response = await judgmentsService.getById(finalId);
-        } else {
-            response = await judgmentsService.getBySlug(finalId);
-        }
-        judgment = response.data.data;
+        judgment = await fetchJudgment(finalId);
     } catch (error) {
         console.error("Error fetching judgment for SEO:", error);
     }

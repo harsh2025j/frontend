@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, BookOpen, LayoutDashboard, LogOut, ChevronDown, AlertTriangle, Heart } from 'lucide-react';
+import { Menu, X, BookOpen, LayoutDashboard, LogOut, ChevronDown, AlertTriangle, Heart, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import logo from "../../../../../public/logo.png";
 import { useAuth } from '@/data/features/auth/useAuthActions';
@@ -11,20 +11,27 @@ import { logoutUserAsync } from '@/data/features/auth/authThunks';
 import { useRouter } from 'next/navigation';
 import { useWishlist } from '@/context/WishlistContext';
 import AcademySearch from './AcademySearch';
+import AcademyNotificationDropdown from './AcademyNotificationDropdown';
 
 export default function AcademyNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { user } = useAuth();
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { wishlist, openWishlist } = useWishlist();
 
   const handleLogout = async () => {
-    await dispatch(logoutUserAsync());
-    router.push('/auth/login');
-    setIsMenuOpen(false);
-    setShowLogoutModal(false);
+    try {
+      setIsLoggingOut(true);
+      await dispatch(logoutUserAsync());
+      router.push('/auth/login');
+    } finally {
+      setIsLoggingOut(false);
+      setIsMenuOpen(false);
+      setShowLogoutModal(false);
+    }
   };
 
   return (
@@ -77,6 +84,11 @@ export default function AcademyNavbar() {
               <span className="group-hover:text-[#C9A227] transition-colors">Wishlist</span>
             </button>
 
+            {/* Notifications */}
+            {user && (user._id || (user as any).id) && (
+              <AcademyNotificationDropdown userId={user._id || (user as any).id} />
+            )}
+
             <div className="flex items-center gap-4 relative">
             {user ? (
               <div className="relative group cursor-pointer flex items-center gap-2">
@@ -125,7 +137,10 @@ export default function AcademyNavbar() {
             </div>
           </div>
 
-          <div className="md:hidden flex items-center gap-3">
+          <div className="md:hidden flex items-center gap-2">
+            {user && (user._id || (user as any).id) && (
+              <AcademyNotificationDropdown userId={user._id || (user as any).id} />
+            )}
             <button
               onClick={openWishlist}
               className="relative p-1.5 text-[#122340] hover:text-[#C9A227] transition-colors"
@@ -247,9 +262,17 @@ export default function AcademyNavbar() {
               </button>
               <button
                 onClick={handleLogout}
-                className="flex-1 py-2.5 px-4 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-700 shadow-[0_4px_12px_rgba(220,38,38,0.3)] transition-all hover:-translate-y-0.5"
+                disabled={isLoggingOut}
+                className="flex-1 py-2.5 px-4 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-700 shadow-[0_4px_12px_rgba(220,38,38,0.3)] transition-all hover:-translate-y-0.5 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
               >
-                Logout
+                {isLoggingOut ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Logging out...</span>
+                  </>
+                ) : (
+                  <span>Logout</span>
+                )}
               </button>
             </div>
           </div>

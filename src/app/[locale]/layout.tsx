@@ -13,8 +13,7 @@ import { getMessages } from 'next-intl/server';
 import Script from 'next/script';
 import GoogleAnalyticsTracker from "@/components/GoogleAnalyticsTracker";
 
-import { API_BASE_URL, API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
-import { headers } from "next/headers";
+import { API_BASE_URL, API_ENDPOINTS, IS_NGROK } from "@/data/services/apiConfig/apiContants";
 // import { Analytics } from "@vercel/analytics/next";
 // import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -134,9 +133,9 @@ async function getCategories() {
   try {
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CATEGORIES.FETCH_ALL_CATEGORY}`, {
       headers: {
-        // "ngrok-skip-browser-warning": "true",
+        ...(IS_NGROK && { "ngrok-skip-browser-warning": "true" }),
       },
-      next: { revalidate: 86400 } // Cache categories for 24 hours on Edge CDN
+      next: { revalidate: 86400 }
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -171,11 +170,6 @@ export default async function RootLayout({
     }
   };
 
-
-  const headerList = await headers();
-  const host = headerList.get("host") || "";
-  const isAcademyHeader = headerList.get("x-academy-subdomain") === "true";
-  const isAcademySubdomain = isAcademyHeader || host.startsWith("academy.");
 
   return (
     <html lang={locale}>
@@ -213,14 +207,13 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} antialiased`} suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
           <ErrorBoundary>
             <ReduxProvider>
               <AdProvider>
                 <ClientLayout
                   initialCategories={categories}
-                  isAcademySubdomain={isAcademySubdomain}
                 >
                   {children}
                 </ClientLayout>

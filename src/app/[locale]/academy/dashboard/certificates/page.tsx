@@ -35,7 +35,22 @@ export default function CertificatesPage() {
       </div>
 
       {loading ? (
-        <div className="p-16 text-center text-gray-400 text-sm">Loading…</div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 animate-in fade-in duration-300">
+          {[1, 2].map((i) => (
+            <div key={i} className="bg-white border border-[#122340]/10 rounded-2xl p-6 sm:p-8 shadow-sm space-y-5">
+              <div className="flex items-center justify-between">
+                <div className="h-4 w-32 bg-slate-200 rounded animate-pulse" />
+                <div className="h-6 w-24 bg-slate-100 rounded-full animate-pulse" />
+              </div>
+              <div className="h-7 w-3/4 bg-slate-200 rounded animate-pulse" />
+              <div className="h-4 w-1/2 bg-slate-100 rounded animate-pulse" />
+              <div className="pt-6 border-t border-slate-100 flex gap-4">
+                <div className="h-10 flex-1 bg-slate-200 rounded-xl animate-pulse" />
+                <div className="h-10 w-24 bg-slate-100 rounded-xl animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : items.length === 0 ? (
         <div className="bg-white border border-[#122340]/5 rounded-3xl p-16 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
           <div className="w-24 h-24 bg-[#f0f2f5] rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-[#122340]/5">

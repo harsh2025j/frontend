@@ -6,6 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
+    "start:ngrok": "./scripts/start-with-ngrok.sh",
     "dev:ngrok": "./scripts/dev-with-ngrok.sh",
     "lint": "next lint"
   },

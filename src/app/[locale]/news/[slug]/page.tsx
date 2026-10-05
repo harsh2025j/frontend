@@ -3,11 +3,9 @@ import { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
 import ArticleClient from "./ArticleClient";
 import { Article } from "@/data/features/article/article.types";
-import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
+import { API_BASE_URL, IS_NGROK } from "@/data/services/apiConfig/apiContants";
 
-// Revalidate the page in the background every 1 hour (3600 seconds)
-// This enables Incremental Static Regeneration (ISR) and slashes SSR costs
-export const revalidate = 3600;
+export const revalidate = 1800;
 
 const SITE_URL = "https://www.sajjadhusainlawassociates.com"; // production
 // const SITE_URL = "https://unimpeded-sprung-banter.ngrok-free.dev"; // dev (url)
@@ -20,9 +18,9 @@ type Props = {
 async function getArticle(slug: string): Promise<Article | null> {
     try {
         const res = await fetch(`${API_BASE_URL}/articles/${slug}`, {
-            next: { revalidate: 3600 }, // Cache response for 1 hour to prevent constant API calls
+            next: { revalidate: 3600 },
             headers: {
-                // "ngrok-skip-browser-warning": "true",
+                ...(IS_NGROK && { "ngrok-skip-browser-warning": "true" }),
             },
         });
 

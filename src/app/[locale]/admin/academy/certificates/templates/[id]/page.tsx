@@ -85,6 +85,15 @@ const COLOR_SWATCHES = [
   { name: "Pure Black", hex: "#000000" },
 ];
 
+const QR_COLOR_SWATCHES = [
+  { name: "Academy Navy", hex: "#122340" },
+  { name: "Pure Black", hex: "#000000" },
+  { name: "Midnight Blue", hex: "#0a192f" },
+  { name: "Charcoal Dark", hex: "#1e293b" },
+  { name: "Deep Maroon", hex: "#4c0519" },
+  { name: "Forest Noir", hex: "#064e3b" },
+];
+
 const DIMENSION_PRESETS = [
   { label: "A4 Landscape", width: 1123, height: 794, orientation: "landscape" as const },
   { label: "US Letter", width: 1056, height: 816, orientation: "landscape" as const },
@@ -174,7 +183,28 @@ export default function TemplateEditorPage() {
     (async () => {
       try {
         const res: any = await certificateApi.getTemplate(id);
-        setT(res?.data ?? res);
+        const data: CertificateTemplate = res?.data ?? res;
+        if (data && Array.isArray(data.fields)) {
+          data.fields = data.fields.map((f: TemplateField) => {
+            if (f.key === "qrCode") {
+              const qrSize = Math.max(f.height || 88, 88);
+              const isAllowedColor = QR_COLOR_SWATCHES.some(
+                (s) => s.hex.toLowerCase() === (f.qrColor || "").toLowerCase()
+              );
+              return {
+                ...f,
+                width: Math.max(f.width || 116, qrSize + 24),
+                height: qrSize,
+                fontSize: 9,
+                fontWeight: "700",
+                bgColor: "#ffffff",
+                qrColor: isAllowedColor ? f.qrColor : "#122340",
+              };
+            }
+            return f;
+          });
+        }
+        setT(data);
       } catch (e: any) {
         toast.error(e?.message || "Failed to load template");
       }
@@ -251,12 +281,14 @@ export default function TemplateEditorPage() {
       label: placeholder?.label || "Custom Text",
       x: 100,
       y: 100,
-      width: isQr ? 210 : isCertId ? 280 : 400,
-      height: isQr ? 72 : undefined,
-      fontSize: isQr ? 14 : isCertId ? 14 : 24,
-      fontFamily: isCertId ? "monospace" : "Georgia, serif",
-      fontWeight: isCertId ? "700" : "400",
+      width: isQr ? 112 : isCertId ? 280 : 400,
+      height: isQr ? 88 : undefined,
+      fontSize: isQr ? 9 : isCertId ? 14 : 24,
+      fontFamily: isCertId ? "monospace" : isQr ? "system-ui, sans-serif" : "Georgia, serif",
+      fontWeight: isCertId || isQr ? "700" : "400",
       color: "#122340",
+      qrColor: isQr ? "#122340" : undefined,
+      bgColor: isQr ? "#ffffff" : undefined,
       textAlign: isCertId ? "right" : "center",
       uppercase: isCertId ? true : false,
       defaultText: isCertId ? "SHLA-CRS-XXXXXX" : (placeholder?.label || "Text"),
@@ -376,23 +408,24 @@ export default function TemplateEditorPage() {
         const text = f.uppercase ? raw.toUpperCase() : raw;
         if (f.key === "qrCode") {
           const qrData = encodeURIComponent(SAMPLE_VALUES.verifyUrl);
-          const qrSize = f.height || 76;
-          const containerWidth = Math.max(f.width || (qrSize + 20), qrSize + 16);
-          const qrPatternColor = (f.qrColor || "#122340").replace("#", "");
+          const qrSize = Math.max(f.height || 88, 88);
+          const containerWidth = Math.max(f.width || 112, qrSize + 24);
+          const isApprovedColor = QR_COLOR_SWATCHES.some(
+            (s) => s.hex.toLowerCase() === (f.qrColor || "").toLowerCase()
+          );
+          const rawColor = isApprovedColor ? (f.qrColor || "#122340") : "#122340";
+          const qrPatternColor = rawColor.replace("#", "");
           const textColor = f.color || "#122340";
-          const cardBg = f.bgColor || (f.color?.startsWith("rgba") ? f.color : "rgba(255,255,255,0.96)");
-          const isTransparent = cardBg === "transparent";
-          const borderStyle = isTransparent
-            ? "border:none;box-shadow:none;"
-            : "border:1px solid rgba(18,35,64,0.12);box-shadow:0 2px 8px rgba(0,0,0,0.06);";
-          const bgParam = getQrBgParam(cardBg);
-          const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${qrData}&bgcolor=${bgParam}&color=${qrPatternColor}&margin=1`;
-          const blendStyle = isTransparent ? "mix-blend-mode:multiply;" : "";
-          const textFontSize = f.fontSize || 9;
-          const textFontWeight = f.fontWeight || "700";
-          return `<div style="position:absolute;left:${f.x}px;top:${f.y}px;width:${containerWidth}px;background:${cardBg};padding:8px 8px 6px 8px;border-radius:8px;${borderStyle}display:flex;flex-direction:column;align-items:center;text-align:center;box-sizing:border-box;">
-            <img src="${qrSrc}" width="${qrSize}" height="${qrSize}" style="width:${qrSize}px;height:${qrSize}px;display:block;border-radius:4px;${blendStyle}" alt="QR Code" />
-            <div style="font-family:system-ui,sans-serif;font-size:${textFontSize}px;font-weight:${textFontWeight};color:${textColor};letter-spacing:0.8px;text-transform:uppercase;margin-top:5px;white-space:nowrap;">Scan to Verify</div>
+          const cardBg = "#ffffff";
+          const borderStyle = "border:1px solid rgba(18,35,64,0.12);box-shadow:0 2px 8px rgba(0,0,0,0.06);";
+          const compactQrData = qrData.replace('/certificates/verify/', '/v/');
+          const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(compactQrData)}&bgcolor=ffffff&color=${qrPatternColor}&margin=2&ecc=H`;
+          // Auto-computed: font size scales with QR size (matches canvas + PDF exactly)
+          const textFontSize = Math.max(8, Math.min(13, Math.round(qrSize * 0.1)));
+          const textFontWeight = "700";
+          return `<div style="position:absolute;left:${f.x}px;top:${f.y}px;width:${containerWidth}px;background:${cardBg};padding:10px 10px 8px 10px;border-radius:8px;${borderStyle}display:flex;flex-direction:column;align-items:center;text-align:center;box-sizing:border-box;">
+            <img src="${qrSrc}" width="${qrSize}" height="${qrSize}" style="width:${qrSize}px;height:${qrSize}px;display:block;border-radius:0;image-rendering:pixelated;" alt="QR Code" />
+            <div style="font-family:system-ui,sans-serif;font-size:${textFontSize}px;font-weight:${textFontWeight};color:${textColor};letter-spacing:0.8px;text-transform:uppercase;margin-top:6px;white-space:nowrap;">Scan to Verify</div>
           </div>`;
         }
         const isItalic = f.italic || f.fontStyle === "italic";
@@ -531,11 +564,10 @@ export default function TemplateEditorPage() {
           <button
             onClick={doSave}
             disabled={saving}
-            className={`px-4 py-2 text-white rounded-xl text-xs font-semibold flex items-center gap-2 disabled:opacity-60 shadow-sm hover:shadow transition-all active:scale-[0.98] cursor-pointer ${
-              t.isDefault
+            className={`px-4 py-2 text-white rounded-xl text-xs font-semibold flex items-center gap-2 disabled:opacity-60 shadow-sm hover:shadow transition-all active:scale-[0.98] cursor-pointer ${t.isDefault
                 ? "bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800"
                 : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-            }`}
+              }`}
           >
             <Save size={14} />
             {saving ? "Saving…" : t.isDefault ? "Save Universal Master" : "Save Template"}
@@ -576,11 +608,10 @@ export default function TemplateEditorPage() {
                         });
                       }
                     }}
-                    className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                      t.orientation === "landscape"
+                    className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${t.orientation === "landscape"
                         ? "bg-white text-slate-900 shadow-2xs font-bold"
                         : "text-slate-500 hover:text-slate-800"
-                    }`}
+                      }`}
                   >
                     <RectangleHorizontal size={14} /> Landscape
                   </button>
@@ -595,11 +626,10 @@ export default function TemplateEditorPage() {
                         });
                       }
                     }}
-                    className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                      t.orientation === "portrait"
+                    className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${t.orientation === "portrait"
                         ? "bg-white text-slate-900 shadow-2xs font-bold"
                         : "text-slate-500 hover:text-slate-800"
-                    }`}
+                      }`}
                   >
                     <RectangleVertical size={14} /> Portrait
                   </button>
@@ -621,11 +651,10 @@ export default function TemplateEditorPage() {
                           orientation: p.orientation,
                         })
                       }
-                      className={`text-[10px] py-1.5 px-1 text-center font-medium rounded-lg border transition cursor-pointer ${
-                        t.widthPx === p.width && t.heightPx === p.height
+                      className={`text-[10px] py-1.5 px-1 text-center font-medium rounded-lg border transition cursor-pointer ${t.widthPx === p.width && t.heightPx === p.height
                           ? "bg-blue-50 border-blue-300 text-blue-700 font-bold"
                           : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                      }`}
+                        }`}
                     >
                       {p.label}
                     </button>
@@ -824,11 +853,10 @@ export default function TemplateEditorPage() {
                       key={a.id}
                       id={`asset-card-${i}`}
                       onClick={() => selectAsset(i)}
-                      className={`border rounded-xl p-2.5 space-y-2 transition-all cursor-pointer ${
-                        selectedAssetIdx === i
+                      className={`border rounded-xl p-2.5 space-y-2 transition-all cursor-pointer ${selectedAssetIdx === i
                           ? "border-indigo-500 bg-indigo-50/80 ring-2 ring-indigo-400 shadow-md scale-[1.01]"
                           : "border-slate-200 bg-slate-50/40 hover:border-slate-300 hover:bg-slate-50"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 min-w-0">
@@ -921,11 +949,10 @@ export default function TemplateEditorPage() {
                     key={z.label}
                     type="button"
                     onClick={() => setZoom(z.val)}
-                    className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ${
-                      Math.abs(zoom - z.val) < 0.03
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ${Math.abs(zoom - z.val) < 0.03
                         ? "bg-blue-600 text-white font-bold"
                         : "text-slate-500 hover:bg-slate-200/60"
-                    }`}
+                      }`}
                   >
                     {z.label}
                   </button>
@@ -957,11 +984,10 @@ export default function TemplateEditorPage() {
               <button
                 type="button"
                 onClick={() => setRightTab("elements")}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                  rightTab === "elements"
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${rightTab === "elements"
                     ? "bg-white text-slate-900 shadow-2xs"
                     : "text-slate-500 hover:text-slate-800"
-                }`}
+                  }`}
               >
                 <Layers size={13} />
                 Elements ({t.fields.length + t.assets.length})
@@ -969,11 +995,10 @@ export default function TemplateEditorPage() {
               <button
                 type="button"
                 onClick={() => setRightTab("inspector")}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer relative ${
-                  rightTab === "inspector"
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer relative ${rightTab === "inspector"
                     ? "bg-white text-slate-900 shadow-2xs"
                     : "text-slate-500 hover:text-slate-800"
-                }`}
+                  }`}
               >
                 <Sliders size={13} />
                 Properties
@@ -1010,11 +1035,10 @@ export default function TemplateEditorPage() {
                     <div
                       key={i}
                       onClick={() => selectField(i)}
-                      className={`w-full text-left p-2.5 rounded-xl border text-xs transition cursor-pointer flex items-center justify-between group ${
-                        selectedFieldIdx === i
+                      className={`w-full text-left p-2.5 rounded-xl border text-xs transition cursor-pointer flex items-center justify-between group ${selectedFieldIdx === i
                           ? "border-blue-500 bg-blue-50/60 ring-2 ring-blue-100 font-semibold shadow-2xs"
                           : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/80 bg-white"
-                      }`}
+                        }`}
                     >
                       <div className="min-w-0 pr-2">
                         <div className="flex items-center gap-1.5">
@@ -1066,11 +1090,10 @@ export default function TemplateEditorPage() {
                       <div
                         key={a.id}
                         onClick={() => selectAsset(i)}
-                        className={`w-full text-left p-2.5 rounded-xl border text-xs transition cursor-pointer flex items-center justify-between group ${
-                          selectedAssetIdx === i
+                        className={`w-full text-left p-2.5 rounded-xl border text-xs transition cursor-pointer flex items-center justify-between group ${selectedAssetIdx === i
                             ? "border-indigo-500 bg-indigo-50/60 ring-2 ring-indigo-100 font-semibold shadow-2xs"
                             : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/80 bg-white"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0 pr-2">
                           <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 p-0.5 overflow-hidden">
@@ -1481,9 +1504,8 @@ function FontFamilySelect({
         </span>
         <ChevronDown
           size={14}
-          className={`text-slate-400 shrink-0 ml-1.5 transition-transform duration-200 ${
-            open ? "rotate-180" : ""
-          }`}
+          className={`text-slate-400 shrink-0 ml-1.5 transition-transform duration-200 ${open ? "rotate-180" : ""
+            }`}
         />
       </button>
 
@@ -1504,11 +1526,10 @@ function FontFamilySelect({
                       onChange(f.value);
                       setOpen(false);
                     }}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors cursor-pointer ${
-                      isSelected
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors cursor-pointer ${isSelected
                         ? "bg-blue-50 text-blue-700 font-bold"
                         : "text-slate-700 hover:bg-slate-100/80"
-                    }`}
+                      }`}
                   >
                     <span className="truncate" style={{ fontFamily: f.value }}>
                       {f.label}
@@ -1527,9 +1548,10 @@ function FontFamilySelect({
 
 function FieldEditor({ field, onChange }: { field: TemplateField; onChange: (p: Partial<TemplateField>) => void }) {
   if (field.key === "qrCode") {
-    const cardBg = field.bgColor || (field.color?.startsWith("rgba") ? field.color : "rgba(255,255,255,0.96)");
     const qrColor = field.qrColor || "#122340";
     const textColor = field.color?.startsWith("#") ? field.color : "#122340";
+    const qrSize = Math.max(field.height || 88, 76);
+    const badgeWidth = Math.max(field.width || 112, qrSize + 24);
 
     return (
       <div className="space-y-3.5">
@@ -1546,60 +1568,77 @@ function FieldEditor({ field, onChange }: { field: TemplateField; onChange: (p: 
           <NumInput label="Position Y (px)" badge="Y" value={field.y} onChange={(v) => onChange({ y: v })} />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <NumInput label="Badge Width (px)" badge="W" value={field.width} onChange={(v) => onChange({ width: v })} />
-          <NumInput label="QR Size (px)" badge="H" value={field.height || 76} onChange={(v) => onChange({ height: v })} min={36} max={180} />
+          <NumInput
+            label="Badge Width (px)"
+            badge="W"
+            value={badgeWidth}
+            onChange={(v) => onChange({ width: Math.max(v, 100) })}
+            min={100}
+            max={250}
+          />
+          <NumInput
+            label="QR Size (px)"
+            badge="H"
+            value={qrSize}
+            onChange={(v) => {
+              const newSize = Math.max(v, 76);
+              onChange({ height: newSize, width: Math.max(field.width || 112, newSize + 24) });
+            }}
+            min={76}
+            max={180}
+          />
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <NumInput label="Text Font Size (px)" badge="PT" value={field.fontSize || 9} onChange={(v) => onChange({ fontSize: v })} min={6} max={24} />
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Font Weight</label>
-            <select
-              value={field.fontWeight || "700"}
-              onChange={(e) => onChange({ fontWeight: e.target.value })}
-              className="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs bg-white font-medium focus:outline-none cursor-pointer"
-            >
-              <option value="400">Regular (400)</option>
-              <option value="600">Semibold (600)</option>
-              <option value="700">Bold (700)</option>
-              <option value="800">Extra Bold (800)</option>
-            </select>
+        {/* Auto-computed text style — locked to QR size, not editable */}
+        <div className="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-start gap-2">
+          <div className="w-2 h-2 rounded-full bg-blue-400 mt-1 shrink-0" />
+          <div className="text-[11px] text-slate-600 leading-tight">
+            <span className="font-bold text-slate-700">"Scan to Verify" text:</span>{" "}
+            <span className="font-mono font-bold text-blue-700">{Math.max(8, Math.min(13, Math.round(qrSize * 0.1)))}px</span>{" "}
+            &middot; <span className="font-bold">Bold&nbsp;700</span>{" "}&mdash; auto-scales with QR size.
           </div>
         </div>
 
-        {/* 1. QR Pattern Color */}
+        {/* 1. QR Pattern Color (Strictly High-Contrast Verified Shades) */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">QR Pattern Color</label>
-          <div className="flex items-center gap-1.5 mb-1.5">
-            {COLOR_SWATCHES.map((c) => (
-              <button
-                key={c.hex}
-                type="button"
-                onClick={() => onChange({ qrColor: c.hex })}
-                style={{ backgroundColor: c.hex }}
-                className={`w-5 h-5 rounded-full border-2 transition shadow-2xs cursor-pointer ${
-                  qrColor.toLowerCase() === c.hex.toLowerCase()
-                    ? "border-blue-600 scale-110 ring-2 ring-blue-200"
-                    : "border-white"
-                }`}
-                title={c.name}
-              />
-            ))}
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-bold text-slate-700">QR Pattern Color</label>
+            <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" /> Verified High Contrast
+            </span>
           </div>
-          <div className="flex items-center gap-2 border border-slate-200 rounded-xl px-2.5 py-1 bg-white">
-            <input
-              type="color"
-              value={qrColor.startsWith("#") ? qrColor : "#122340"}
-              onChange={(e) => onChange({ qrColor: e.target.value })}
-              className="w-5 h-5 border-0 rounded cursor-pointer p-0"
-            />
-            <input
-              type="text"
-              value={qrColor}
-              onChange={(e) => onChange({ qrColor: e.target.value })}
-              className="text-xs font-mono font-bold text-slate-800 bg-transparent border-0 focus:outline-none w-24"
-              placeholder="#122340"
-            />
+          <div className="grid grid-cols-2 gap-2">
+            {QR_COLOR_SWATCHES.map((c) => {
+              const active = qrColor.toLowerCase() === c.hex.toLowerCase();
+              return (
+                <button
+                  key={c.hex}
+                  type="button"
+                  onClick={() => onChange({ qrColor: c.hex })}
+                  className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-all cursor-pointer ${active
+                      ? "border-blue-600 bg-blue-50/90 shadow-2xs ring-1 ring-blue-500/30"
+                      : "border-slate-200 bg-white hover:bg-slate-50"
+                    }`}
+                  title={`${c.name} (${c.hex})`}
+                >
+                  <span
+                    className="w-4 h-4 rounded-full border border-black/10 shrink-0 shadow-2xs"
+                    style={{ backgroundColor: c.hex }}
+                  />
+                  <div className="min-w-0">
+                    <p className={`text-[11px] font-bold truncate ${active ? "text-blue-900" : "text-slate-700"}`}>
+                      {c.name}
+                    </p>
+                    <p className="text-[9px] font-mono text-slate-400 uppercase leading-none">
+                      {c.hex}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
+          <p className="text-[10px] text-slate-400 mt-1.5 leading-tight">
+            Restricted to certified dark pigments ensuring 100% optical visibility and instant scanning.
+          </p>
         </div>
 
         {/* 2. Text Color ("Scan to Verify") */}
@@ -1612,11 +1651,10 @@ function FieldEditor({ field, onChange }: { field: TemplateField; onChange: (p: 
                 type="button"
                 onClick={() => onChange({ color: c.hex })}
                 style={{ backgroundColor: c.hex }}
-                className={`w-5 h-5 rounded-full border-2 transition shadow-2xs cursor-pointer ${
-                  textColor.toLowerCase() === c.hex.toLowerCase()
+                className={`w-5 h-5 rounded-full border-2 transition shadow-2xs cursor-pointer ${textColor.toLowerCase() === c.hex.toLowerCase()
                     ? "border-blue-600 scale-110 ring-2 ring-blue-200"
                     : "border-white"
-                }`}
+                  }`}
                 title={c.name}
               />
             ))}
@@ -1638,47 +1676,11 @@ function FieldEditor({ field, onChange }: { field: TemplateField; onChange: (p: 
           </div>
         </div>
 
-        {/* 3. Card Background */}
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Card Background</label>
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <button
-              type="button"
-              onClick={() => onChange({ bgColor: "rgba(255,255,255,0.96)" })}
-              className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all ${
-                (!cardBg || cardBg.includes("255") || cardBg === "#ffffff")
-                  ? "bg-blue-50 border-blue-500 text-blue-700 shadow-2xs"
-                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              White Card
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange({ bgColor: "transparent" })}
-              className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all ${
-                cardBg === "transparent"
-                  ? "bg-blue-50 border-blue-500 text-blue-700 shadow-2xs"
-                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              Transparent
-            </button>
-          </div>
-          <div className="flex items-center gap-2 border border-slate-200 rounded-xl px-2.5 py-1 bg-white">
-            <input
-              type="color"
-              value={cardBg.startsWith("#") ? cardBg : "#ffffff"}
-              onChange={(e) => onChange({ bgColor: e.target.value })}
-              className="w-5 h-5 border-0 rounded cursor-pointer p-0"
-            />
-            <input
-              type="text"
-              value={cardBg}
-              onChange={(e) => onChange({ bgColor: e.target.value })}
-              className="text-xs font-mono font-bold text-slate-800 bg-transparent border-0 focus:outline-none w-full"
-              placeholder="rgba(255,255,255,0.96)"
-            />
+        {/* 3. Base Plate Status (Locked solid white plate for 100% optical durability) */}
+        <div className="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl text-[11px] text-slate-600 flex items-start gap-2">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1 shrink-0" />
+          <div>
+            <span className="font-bold text-slate-700">Solid White Base Plate:</span> Permanently locked to pure white with quiet zone margin so scanner vision decodes in milliseconds across any background.
           </div>
         </div>
       </div>
@@ -1718,7 +1720,7 @@ function FieldEditor({ field, onChange }: { field: TemplateField; onChange: (p: 
       {/* Typography */}
       <div className="space-y-2">
         <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Typography</span>
-        
+
         <div>
           <label className="block text-xs font-bold text-slate-700 mb-1">Font Family</label>
           <FontFamilySelect
@@ -1749,7 +1751,7 @@ function FieldEditor({ field, onChange }: { field: TemplateField; onChange: (p: 
       {/* Style & Alignment */}
       <div className="space-y-2">
         <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Alignment & Style</span>
-        
+
         {/* Alignment Segmented Control */}
         <div>
           <label className="block text-xs font-bold text-slate-700 mb-1">Text Alignment</label>
@@ -1759,11 +1761,10 @@ function FieldEditor({ field, onChange }: { field: TemplateField; onChange: (p: 
                 key={align}
                 type="button"
                 onClick={() => onChange({ textAlign: align })}
-                className={`py-1.5 flex items-center justify-center rounded-lg text-xs font-semibold capitalize transition cursor-pointer ${
-                  field.textAlign === align
+                className={`py-1.5 flex items-center justify-center rounded-lg text-xs font-semibold capitalize transition cursor-pointer ${field.textAlign === align
                     ? "bg-white text-blue-600 shadow-2xs font-bold"
                     : "text-slate-500 hover:text-slate-800"
-                }`}
+                  }`}
                 title={`Align ${align}`}
               >
                 {align === "left" && <AlignLeft size={14} />}
@@ -1782,22 +1783,20 @@ function FieldEditor({ field, onChange }: { field: TemplateField; onChange: (p: 
               const next = !(field.italic || field.fontStyle === "italic");
               onChange({ italic: next, fontStyle: next ? "italic" : "normal" });
             }}
-            className={`flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-              field.italic || field.fontStyle === "italic"
+            className={`flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${field.italic || field.fontStyle === "italic"
                 ? "border-blue-500 bg-blue-50 text-blue-700 shadow-2xs"
                 : "border-slate-200 bg-slate-50/70 hover:bg-slate-100/70 text-slate-700"
-            }`}
+              }`}
           >
             <span className="flex items-center gap-1.5">
               <span className="italic font-serif font-black text-sm">I</span>
               <span>Italic Text</span>
             </span>
             <span
-              className={`w-4 h-4 rounded-md flex items-center justify-center border text-[10px] font-bold ${
-                field.italic || field.fontStyle === "italic"
+              className={`w-4 h-4 rounded-md flex items-center justify-center border text-[10px] font-bold ${field.italic || field.fontStyle === "italic"
                   ? "bg-blue-600 border-blue-600 text-white"
                   : "border-slate-300 bg-white text-transparent"
-              }`}
+                }`}
             >
               ✓
             </span>
@@ -1806,22 +1805,20 @@ function FieldEditor({ field, onChange }: { field: TemplateField; onChange: (p: 
           <button
             type="button"
             onClick={() => onChange({ uppercase: !field.uppercase })}
-            className={`flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-              field.uppercase
+            className={`flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${field.uppercase
                 ? "border-blue-500 bg-blue-50 text-blue-700 shadow-2xs"
                 : "border-slate-200 bg-slate-50/70 hover:bg-slate-100/70 text-slate-700"
-            }`}
+              }`}
           >
             <span className="flex items-center gap-1.5">
               <span className="font-mono text-xs">AA</span>
               <span>Uppercase</span>
             </span>
             <span
-              className={`w-4 h-4 rounded-md flex items-center justify-center border text-[10px] font-bold ${
-                field.uppercase
+              className={`w-4 h-4 rounded-md flex items-center justify-center border text-[10px] font-bold ${field.uppercase
                   ? "bg-blue-600 border-blue-600 text-white"
                   : "border-slate-300 bg-white text-transparent"
-              }`}
+                }`}
             >
               ✓
             </span>
@@ -1838,11 +1835,10 @@ function FieldEditor({ field, onChange }: { field: TemplateField; onChange: (p: 
                 type="button"
                 onClick={() => onChange({ color: c.hex })}
                 style={{ backgroundColor: c.hex }}
-                className={`w-6 h-6 rounded-full border-2 transition shadow-2xs cursor-pointer ${
-                  field.color?.toLowerCase() === c.hex.toLowerCase()
+                className={`w-6 h-6 rounded-full border-2 transition shadow-2xs cursor-pointer ${field.color?.toLowerCase() === c.hex.toLowerCase()
                     ? "border-blue-600 scale-110 ring-2 ring-blue-200"
                     : "border-white"
-                }`}
+                  }`}
                 title={c.name}
               />
             ))}
@@ -1982,11 +1978,10 @@ function AssetEditor({
               key={type}
               type="button"
               onClick={() => onChange({ type })}
-              className={`py-1.5 px-2 rounded-lg text-xs font-semibold capitalize border transition cursor-pointer text-center ${
-                asset.type === type
+              className={`py-1.5 px-2 rounded-lg text-xs font-semibold capitalize border transition cursor-pointer text-center ${asset.type === type
                   ? "border-indigo-600 bg-indigo-50 text-indigo-800 font-bold shadow-2xs"
                   : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
-              }`}
+                }`}
             >
               {type}
             </button>
@@ -2169,6 +2164,10 @@ function CanvasPreview({
           const text = f.uppercase ? raw.toUpperCase() : raw;
           const isSelected = selectedFieldIdx === i;
 
+          const isQrField = f.key === "qrCode";
+          const qrCalcSize = isQrField ? Math.max(f.height || 88, 88) : 88;
+          const qrContainerWidth = isQrField ? Math.max(f.width || 112, qrCalcSize + 24) : f.width;
+
           return (
             <div
               key={i}
@@ -2177,7 +2176,7 @@ function CanvasPreview({
                 position: "absolute",
                 left: f.x,
                 top: f.y,
-                width: f.width,
+                width: isQrField ? qrContainerWidth : f.width,
                 fontSize: f.fontSize,
                 fontFamily: f.fontFamily,
                 fontWeight: f.fontWeight as any,
@@ -2196,34 +2195,38 @@ function CanvasPreview({
             >
               {f.key === "qrCode" ? (
                 (() => {
-                  const qrSize = f.height || 76;
-                  const qrPatternColor = (f.qrColor || "#122340").replace("#", "");
+                  const qrSize = qrCalcSize;
+                  const isApprovedColor = QR_COLOR_SWATCHES.some(
+                    (s) => s.hex.toLowerCase() === (f.qrColor || "").toLowerCase()
+                  );
+                  const rawColor = isApprovedColor ? (f.qrColor || "#122340") : "#122340";
+                  const qrPatternColor = rawColor.replace("#", "");
                   const textColor = f.color || "#122340";
-                  const cardBg = f.bgColor || (f.color?.startsWith("rgba") ? f.color : "rgba(255,255,255,0.96)");
-                  const isTransparent = cardBg === "transparent";
-                  const bgParam = getQrBgParam(cardBg);
-                  const textFontSize = f.fontSize || 9;
-                  const textFontWeight = f.fontWeight || "700";
+                  // Auto-computed: scales with QR size — same formula as buildPreviewHtml + backend
+                  const textFontSize = Math.max(8, Math.min(13, Math.round(qrSize * 0.1)));
+                  const textFontWeight = "700";
+                  const compactVerifyUrl = SAMPLE_VALUES.verifyUrl.replace('/certificates/verify/', '/v/');
                   return (
                     <div
-                      style={{ background: cardBg }}
-                      className={`flex flex-col items-center text-center p-2 pb-1.5 rounded-xl ${isTransparent ? "" : "border border-slate-200/80 shadow-sm"} pointer-events-none box-border w-full`}
+                      style={{ background: "#ffffff", width: qrContainerWidth }}
+                      className="flex flex-col items-center text-center p-2.5 pb-2 rounded-xl border border-slate-200/90 shadow-xs pointer-events-none box-border"
                     >
                       <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(SAMPLE_VALUES.verifyUrl)}&bgcolor=${bgParam}&color=${qrPatternColor}&margin=1`}
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(compactVerifyUrl)}&bgcolor=ffffff&color=${qrPatternColor}&margin=2&ecc=H`}
                         width={qrSize}
                         height={qrSize}
                         style={{
                           width: `${qrSize}px`,
                           height: `${qrSize}px`,
-                          mixBlendMode: isTransparent ? "multiply" : "normal",
+                          borderRadius: 0,
+                          imageRendering: "pixelated",
                         }}
                         alt="QR Code"
-                        className="rounded-md flex-shrink-0"
+                        className="flex-shrink-0 block"
                       />
                       <span
                         style={{ color: textColor, fontSize: `${textFontSize}px`, fontWeight: textFontWeight }}
-                        className="uppercase tracking-wider mt-1.5 whitespace-nowrap"
+                        className="uppercase tracking-wider mt-1.5 whitespace-nowrap leading-none block"
                       >
                         Scan to Verify
                       </span>

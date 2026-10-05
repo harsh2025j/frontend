@@ -18,6 +18,9 @@ export const requestFcmToken = async (): Promise<string | null> => {
             });
 
             if (currentToken) {
+                if (typeof window !== "undefined") {
+                    localStorage.setItem("fcm_token", currentToken);
+                }
                 return currentToken;
             } else {
                 // console.log("No registration token available. Request permission to generate one.");
@@ -30,5 +33,17 @@ export const requestFcmToken = async (): Promise<string | null> => {
     } catch (error) {
         console.error("An error occurred while retrieving token. ", error);
         return null;
+    }
+};
+
+export const getStoredFcmToken = (): string | null => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("fcm_token") || localStorage.getItem("fcmToken");
+};
+
+export const clearStoredFcmToken = (): void => {
+    if (typeof window !== "undefined") {
+        localStorage.removeItem("fcm_token");
+        localStorage.removeItem("fcmToken");
     }
 };

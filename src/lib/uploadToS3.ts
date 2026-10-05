@@ -9,17 +9,17 @@ import { API_BASE_URL } from '@/data/services/apiConfig/apiContants';
 export const uploadToS3 = async (file: File): Promise<string> => {
   try {
     const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    
+
     // 1. Get Presigned URL from Backend
     const presignedRes = await axios.post(`${API_BASE_URL}academy/s3/presigned-url`, {
       filename: filename,
       contentType: file.type,
     });
-    
+
     // The backend should return the URL directly or in a specific format.
     // We assume the standard pattern where { url } is returned.
     const url = presignedRes.data?.data?.url || presignedRes.data?.url || presignedRes.data;
-    
+
     if (!url || typeof url !== 'string') {
       console.error("Presigned URL response:", presignedRes.data);
       throw new Error("Failed to get presigned URL from backend.");

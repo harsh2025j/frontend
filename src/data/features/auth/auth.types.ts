@@ -6,6 +6,7 @@ export interface LoginRequest {
   password: string;
   fcmToken?: string;
   platform?: string;
+  portal?: string;
 }
 
 export interface SocialLoginRequest {
@@ -17,6 +18,7 @@ export interface SocialLoginRequest {
   roleIds?: string[];
   fcmToken?: string;
   platform?: string;
+  portal?: string;
 }
 
 export interface RegisterRequest {

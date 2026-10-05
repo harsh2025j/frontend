@@ -71,8 +71,23 @@ export default function MyCoursesPage() {
 
       {/* Content */}
       {isLoading && myEnrollments.length === 0 ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 size={32} className="animate-spin text-[#C9A227]" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in duration-300">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-xl overflow-hidden border border-[#122340]/5 flex flex-col h-[400px]">
+              <div className="w-full h-48 bg-slate-200 animate-pulse" />
+              <div className="p-6 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="h-5 w-24 bg-slate-100 rounded mb-3 animate-pulse" />
+                  <div className="h-6 w-full bg-slate-200 rounded mb-2 animate-pulse" />
+                  <div className="h-6 w-2/3 bg-slate-200 rounded mb-4 animate-pulse" />
+                </div>
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <div className="h-2.5 w-full bg-slate-100 rounded-full animate-pulse" />
+                  <div className="h-10 w-full bg-slate-200 rounded-xl animate-pulse" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredEnrollments.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 border border-[#122340]/5 shadow-sm text-center">

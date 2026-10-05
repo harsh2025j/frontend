@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "@/i18n/routing";
+import { useSelectedLayoutSegments } from "next/navigation";
 import HeaderNew from "@/components/layout/HeaderNew";
 
 // import Header from "@/components/layout/Header";
@@ -35,6 +36,7 @@ export default function ClientLayout({
 
 
   const pathname = usePathname();
+  const segments = useSelectedLayoutSegments();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -106,7 +108,10 @@ export default function ClientLayout({
     }
   }, [dispatch, initialCategories]);
 
+  const isAcademyRoute = segments[0] === 'academy';
+
   const isHiddenLayout =
+    isAcademyRoute ||
     isAcademySubdomain ||
     (typeof window !== 'undefined' && window.location.hostname.startsWith('academy.')) ||
     pathname.startsWith("/auth") ||

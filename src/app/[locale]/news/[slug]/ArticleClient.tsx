@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Advocate, Article } from "@/data/features/article/article.types";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
@@ -638,8 +639,8 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
     const [loadingNext, setLoadingNext] = useState(false);
     const [loadedSlugs] = useState(() => new Set([slug]));
     const sentinelRef = useRef<HTMLDivElement>(null);
-    const sidebarContainerRef = useRef<HTMLDivElement>(null);
-    const sidebarScrollRef = useRef<HTMLDivElement>(null);
+    const sidebarContainerRef = useRef<HTMLElement | null>(null);
+    const sidebarScrollRef = useRef<HTMLElement | null>(null);
     const isHoveringSidebar = useRef(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -832,6 +833,74 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
         return recommendedArticles.map((rec, idx) => ({ ...rec, title: translatedRelatedTitles[idx] || rec.title }));
     }, [recommendedArticles, translatedRelatedTitles, locale]);
 
+    const renderSidebarContent = (showHideButton = false) => (
+        <>
+            {/* Header above Related Articles with clean Hide Button */}
+            <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-5 bg-[#C9A227] rounded-full inline-block"></span>
+                    <h3 className="text-lg font-bold text-gray-900 font-georgia tracking-tight">
+                        {t("relatedArticles")}
+                    </h3>
+                </div>
+                {showHideButton && (
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0A2342] text-white hover:bg-[#C9A227] hover:text-black rounded-full text-xs font-semibold shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer group"
+                        title="Hide Related Articles"
+                    >
+                        <span className="text-[11px] font-sans text-white group-hover:text-black transition-colors duration-200">Hide</span>
+                        <svg className="w-3.5 h-3.5 text-white group-hover:text-black transition-all duration-300 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                )}
+            </div>
+
+            {/* Sidebar Top Ad */}
+            {!isPremium && (
+                <div className="mb-6">
+                    <ArticleSidebarTopAd />
+                </div>
+            )}
+            <div className="space-y-6">
+                {loadingRecommended ? (
+                    Array(5).fill(0).map((_, i) => (
+                        <div key={i} className="flex gap-4 animate-pulse">
+                            <div className="w-24 h-24 bg-gray-200 rounded shrink-0" />
+                            <div className="flex-1 space-y-2 py-1">
+                                <div className="h-4 bg-gray-200 rounded w-full" />
+                                <div className="h-4 bg-gray-200 rounded w-5/6" />
+                            </div>
+                        </div>
+                    ))
+                ) : displayRecommended.length > 0 ? (
+                    displayRecommended.map((rec) => (
+                        <Link key={rec.id} href={`/news/${rec.slug}`} className="block group">
+                            <div className="flex gap-4">
+                                <div className="relative w-28 aspect-video flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                                    <Image src={getSafeImageUrl(rec.thumbnail)} alt={rec.title} fill sizes="200px" className="object-cover" quality={90} />
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-medium text-sm text-gray-900 line-clamp-3 group-hover:text-blue-600 transition-colors leading-snug">{rec.title}</h4>
+                                </div>
+                            </div>
+                        </Link>
+                    ))
+                ) : (
+                    <p className="text-gray-500 text-sm">No related articles found.</p>
+                )}
+            </div>
+
+            {/* Sidebar Bottom Ad */}
+            {!isPremium && (
+                <div className="mt-6">
+                    <ArticleSidebarBottomAd />
+                </div>
+            )}
+        </>
+    );
+
     if (!initialArticle) {
         return <div className="flex justify-center items-center min-h-screen"><Loader text={t("loading")} size="lg" /></div>;
     }
@@ -847,128 +916,104 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative transition-all duration-500">
-
-                    {/* ── Floating Toggle Sidebar Button (Closed State) ── */}
+                {/* ── Floating Toggle Sidebar Button (Closed State) ── */}
+                <AnimatePresence>
                     {!isSidebarOpen && (
-                        <button
+                        <motion.button
+                            key="floating-sidebar-toggle"
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 50 }}
+                            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                             onClick={() => setIsSidebarOpen(true)}
-                            className="hidden lg:flex fixed right-0 top-[40vh] bg-[#0A2342] border border-[#0A2342] text-white hover:bg-[#C9A227] hover:border-[#C9A227] rounded-l-xl p-3 pl-4 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.2)] z-50 transition-colors duration-300"
+                            className="hidden lg:flex fixed right-0 top-[40vh] bg-[#0A2342] border border-[#0A2342] text-white hover:bg-[#C9A227] hover:border-[#C9A227] hover:text-black rounded-l-xl p-3 pl-4 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.2)] z-50 cursor-pointer group"
                             title="Show Related Articles"
                         >
                             <div className="flex flex-col items-center gap-2">
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
-                                <span className="text-[11px] font-bold uppercase tracking-widest text-white whitespace-nowrap" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>{t("relatedArticles")}</span>
+                                <svg className="w-5 h-5 text-white group-hover:text-black transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                                </svg>
+                                <span className="text-[11px] font-bold uppercase tracking-widest text-white group-hover:text-black transition-colors duration-200 whitespace-nowrap" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
+                                    {t("relatedArticles")}
+                                </span>
                             </div>
-                        </button>
+                        </motion.button>
                     )}
+                </AnimatePresence>
+
+                <div className="flex flex-col lg:flex-row items-start relative">
 
                     {/* ── Main content column ── */}
-                    <div className={`transition-all duration-500 ${isSidebarOpen ? "lg:col-span-9" : "lg:col-span-10 lg:col-start-2"}`}>
-                        {articles.map((article, i) => (
-                            <React.Fragment key={article.id}>
+                    <div className="w-full flex-1 min-w-0">
+                        <div className="max-w-5xl mx-auto">
+                            {articles.map((article, i) => (
+                                <React.Fragment key={article.id}>
 
-                                {/* "Next News" divider between articles */}
-                                {i > 0 && (
-                                    <>
-                                        <div className="relative flex items-center my-16">
-                                            <div className="flex-1 border-t-2 border-dashed border-[#0B2149]/20" />
-                                            <div className="mx-6 flex items-center gap-3 px-6 py-3 bg-[#0B2149] text-white rounded-full shadow-lg text-sm font-bold tracking-widest uppercase whitespace-nowrap">
-                                                <ChevronDown size={15} className="text-[#C9A227]" />
-                                                Next News
-                                                <ChevronDown size={15} className="text-[#C9A227]" />
+                                    {/* "Next News" divider between articles */}
+                                    {i > 0 && (
+                                        <>
+                                            <div className="relative flex items-center my-16">
+                                                <div className="flex-1 border-t-2 border-dashed border-[#0B2149]/20" />
+                                                <div className="mx-6 flex items-center gap-3 px-6 py-3 bg-[#0B2149] text-white rounded-full shadow-lg text-sm font-bold tracking-widest uppercase whitespace-nowrap">
+                                                    <ChevronDown size={15} className="text-[#C9A227]" />
+                                                    Next News
+                                                    <ChevronDown size={15} className="text-[#C9A227]" />
+                                                </div>
+                                                <div className="flex-1 border-t-2 border-dashed border-[#0B2149]/20" />
                                             </div>
-                                            <div className="flex-1 border-t-2 border-dashed border-[#0B2149]/20" />
-                                        </div>
 
-                                        {/* In-Feed Ad between articles in infinite scroll */}
-                                        <InFeedAd />
-                                    </>
-                                )}
+                                            {/* In-Feed Ad between articles in infinite scroll */}
+                                            <InFeedAd />
+                                        </>
+                                    )}
 
-                                <ArticleBody article={article} locale={locale} t={t} isPriority={i === 0} />
-                            </React.Fragment>
-                        ))}
+                                    <ArticleBody article={article} locale={locale} t={t} isPriority={i === 0} />
+                                </React.Fragment>
+                            ))}
 
-                        {/* Invisible sentinel — IntersectionObserver trigger */}
-                        {hasMore && <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />}
+                            {/* Invisible sentinel — IntersectionObserver trigger */}
+                            {hasMore && <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />}
 
-                        {/* Loading next */}
-                        {loadingNext && (
-                            <div className="flex justify-center items-center py-12">
-                                <Loader size="sm" text="Loading next article..." />
+                            {/* Loading next */}
+                            {loadingNext && (
+                                <div className="flex justify-center items-center py-12">
+                                    <Loader size="sm" text="Loading next article..." />
+                                </div>
+                            )}
+
+                            {/* ── Mobile Related Articles (visible only on mobile below the article) ── */}
+                            <div className="block lg:hidden w-full relative z-20 print:hidden mt-12 pt-8 border-t border-gray-200">
+                                {renderSidebarContent(false)}
                             </div>
+                        </div>
+                    </div>
+
+                    {/* ── Desktop Sidebar (sticky, animated open/close from right) ── */}
+                    <AnimatePresence initial={false}>
+                        {isSidebarOpen && (
+                            <motion.aside
+                                key="desktop-related-sidebar"
+                                initial={{ width: 0, opacity: 0 }}
+                                animate={{ width: 340, opacity: 1 }}
+                                exit={{ width: 0, opacity: 0 }}
+                                transition={{
+                                    width: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+                                    opacity: { duration: 0.25, ease: "easeInOut" }
+                                }}
+                                className="hidden lg:block shrink-0 sticky top-[132px] max-h-[calc(100vh-145px)] overflow-y-auto overflow-x-hidden pr-2 scrollbar-hide pb-10 z-20 print:hidden"
+                                ref={(el) => {
+                                    sidebarContainerRef.current = el;
+                                    sidebarScrollRef.current = el;
+                                }}
+                                onMouseEnter={() => { isHoveringSidebar.current = true; }}
+                                onMouseLeave={() => { isHoveringSidebar.current = false; }}
+                            >
+                                <div className="w-[340px] pl-6">
+                                    {renderSidebarContent(true)}
+                                </div>
+                            </motion.aside>
                         )}
-                    </div>
-
-                    {/* ── Sidebar (sticky, related articles from category) ── */}
-                    <div
-                        className={`relative z-20 print:hidden transition-all duration-500 ${isSidebarOpen ? "lg:col-span-3 opacity-100 translate-x-0" : "hidden lg:block lg:absolute lg:right-0 lg:top-0 lg:w-0 lg:opacity-0 lg:translate-x-full overflow-hidden"}`}
-                        ref={sidebarContainerRef}
-                        onMouseEnter={() => { isHoveringSidebar.current = true; }}
-                        onMouseLeave={() => { isHoveringSidebar.current = false; }}
-                    >
-                        {/* ── Close Sidebar Button (Open State) ── */}
-                        <div className="sticky top-24 z-40">
-                            {isSidebarOpen && (
-                                <button
-                                    onClick={() => setIsSidebarOpen(false)}
-                                    className="hidden lg:flex absolute -left-8 top-0 bg-[#0A2342] border border-white text-white hover:bg-[#C9A227] rounded-full w-8 h-8 items-center justify-center shadow-lg transition-colors duration-300"
-                                    title="Hide Sidebar"
-                                >
-                                    <svg className="w-4 h-4 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
-                                </button>
-                            )}
-                        </div>
-                        <div
-                            ref={sidebarScrollRef}
-                            className="sticky top-24 max-h-[90vh] overflow-y-auto pr-2 scrollbar-hide pb-10"
-                        >
-                            {/* Sidebar Top Ad */}
-                            {!isPremium && (
-                                <div className="mb-6">
-                                    <ArticleSidebarTopAd />
-                                </div>
-                            )}
-
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 font-georgia">{t("relatedArticles")}</h3>
-                            <div className="space-y-6">
-                                {loadingRecommended ? (
-                                    Array(5).fill(0).map((_, i) => (
-                                        <div key={i} className="flex gap-4 animate-pulse">
-                                            <div className="w-24 h-24 bg-gray-200 rounded shrink-0" />
-                                            <div className="flex-1 space-y-2 py-1">
-                                                <div className="h-4 bg-gray-200 rounded w-full" />
-                                                <div className="h-4 bg-gray-200 rounded w-5/6" />
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : displayRecommended.length > 0 ? (
-                                    displayRecommended.map((rec) => (
-                                        <Link key={rec.id} href={`/news/${rec.slug}`} className="block group">
-                                            <div className="flex gap-4">
-                                                <div className="relative w-28 aspect-video flex-shrink-0 rounded overflow-hidden bg-gray-100">
-                                                    <Image src={getSafeImageUrl(rec.thumbnail)} alt={rec.title} fill sizes="200px" className="object-cover" quality={90} />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <h4 className="font-medium text-sm text-gray-900 line-clamp-3 group-hover:text-blue-600 transition-colors leading-snug">{rec.title}</h4>
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    ))
-                                ) : (
-                                    <p className="text-gray-500 text-sm">No related articles found.</p>
-                                )}
-                            </div>
-
-                            {/* Sidebar Bottom Ad */}
-                            {!isPremium && (
-                                <div className="mt-1">
-                                    <ArticleSidebarBottomAd />
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    </AnimatePresence>
 
                 </div>
             </div>

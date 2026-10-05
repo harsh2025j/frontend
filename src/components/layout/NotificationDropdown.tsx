@@ -36,8 +36,14 @@ export default function NotificationDropdown({ userId }: NotificationDropdownPro
 
         try {
             const currentPage = isLoadMore ? page + 1 : 1;
-            const response = await notificationService.getNotifications(userId, currentPage, LIMIT);
-            const data = Array.isArray(response.data?.data) ? response.data.data : [];
+            const response = await notificationService.getNotifications(userId, currentPage, LIMIT, "main");
+            const rawData = Array.isArray(response.data?.data) ? response.data.data : [];
+            // Filter out Academy notifications from the main site bell
+            const data = rawData.filter((n: any) => {
+                if (n.portal === "academy") return false;
+                const type = (n.type || "").toLowerCase();
+                return !type.startsWith("academy") && !type.startsWith("certificate");
+            });
             const meta = response.data?.meta;
 
             if (isLoadMore) {
@@ -100,7 +106,7 @@ export default function NotificationDropdown({ userId }: NotificationDropdownPro
         if (unreadCount === 0) return;
 
         try {
-            await notificationService.markAllRead(userId);
+            await notificationService.markAllRead(userId, "main");
             setNotifications(prev => prev.map(n => ({ ...n, read: true })));
             setShowReadAllConfirm(false);
             toast.success("All notifications marked as read");

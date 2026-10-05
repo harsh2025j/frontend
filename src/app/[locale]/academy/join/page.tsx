@@ -17,8 +17,31 @@ export default function JoinAcademy() {
 
   // If already a student, redirect to dashboard
   useEffect(() => {
-    if (user?.roles?.some((r: any) => r.slug === "student" || r.name === "student")) {
+    const checkIsStudent = (u: any) => {
+      return Boolean(u?.roles?.some((r: any) => 
+        r?.slug === "student" || 
+        r?.name?.toLowerCase() === "student" || 
+        r?.slug?.toLowerCase() === "student" || 
+        r === "student" ||
+        (typeof r === "string" && r.toLowerCase() === "student")
+      ));
+    };
+
+    if (checkIsStudent(user)) {
       router.push("/dashboard");
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      try {
+        const storedStr = localStorage.getItem("user");
+        if (storedStr) {
+          const storedUser = JSON.parse(storedStr);
+          if (checkIsStudent(storedUser)) {
+            router.push("/dashboard");
+          }
+        }
+      } catch {}
     }
   }, [user, router]);
 
