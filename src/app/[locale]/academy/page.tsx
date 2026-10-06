@@ -14,7 +14,6 @@ import {
   Scale,
   Users,
   Award,
-  Loader2,
   Star,
   Heart
 } from 'lucide-react';
@@ -22,50 +21,54 @@ import { useAppDispatch, useAppSelector } from '@/data/redux/hooks';
 import { fetchAllCourses } from '@/data/features/academy/course/courseThunks';
 import { useWishlist } from '@/context/WishlistContext';
 
-const COURSES = [
-  {
-    id: 1,
-    title: "Certificate Course in Legal Research & Writing",
-    subtitle: "Build strong research and writing skills for academic and professional success.",
-    duration: "4 Weeks",
-    category: "Online",
-    level: "Beginner",
-    price: 4999,
-    originalPrice: 7999,
-    thumbnailUrl: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=600&auto=format&fit=crop",
-    slug: "legal-research-and-writing",
-    averageRating: 4.8,
-    totalReviews: 24,
-  },
-  {
-    id: 2,
-    title: "Diploma in Corporate Law",
-    subtitle: "Understand corporate laws and regulations with practical insights.",
-    duration: "3 Months",
-    category: "Corporate Law",
-    level: "Intermediate",
-    price: 14999,
-    originalPrice: 19999,
-    thumbnailUrl: "https://images.unsplash.com/photo-1505664177922-9283892047d6?q=80&w=600&auto=format&fit=crop",
-    slug: "corporate-law-diploma",
-    averageRating: 4.9,
-    totalReviews: 42,
-  },
-  {
-    id: 3,
-    title: "Certificate Course in Contract Drafting",
-    subtitle: "Learn to draft effective and enforceable contracts with confidence.",
-    duration: "4 Weeks",
-    category: "Drafting",
-    level: "All Levels",
-    price: 4999,
-    originalPrice: 6999,
-    thumbnailUrl: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=600&auto=format&fit=crop",
-    slug: "contract-drafting-certificate",
-    averageRating: 4.7,
-    totalReviews: 19,
-  }
-];
+function CourseCardSkeleton() {
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full animate-pulse">
+      {/* Thumbnail Skeleton */}
+      <div className="relative w-full aspect-video bg-slate-200/90 shrink-0" />
+
+      {/* Content Skeleton */}
+      <div className="p-3 md:p-5 flex flex-col flex-grow">
+        {/* Title */}
+        <div className="space-y-2 mb-2">
+          <div className="h-4 bg-slate-200 rounded-md w-5/6" />
+          <div className="h-4 bg-slate-200 rounded-md w-3/5" />
+        </div>
+
+        {/* Subtitle */}
+        <div className="space-y-1.5 mb-3">
+          <div className="h-3 bg-slate-100 rounded w-full" />
+          <div className="h-3 bg-slate-100 rounded w-4/5" />
+        </div>
+
+        {/* Rating & Reviews Skeleton */}
+        <div className="flex items-center gap-2 mb-3">
+          <div className="h-3.5 w-16 bg-slate-200/80 rounded" />
+          <div className="h-3 w-20 bg-slate-100 rounded" />
+        </div>
+
+        {/* Bottom meta row */}
+        <div className="md:border-t border-gray-100 md:pt-3 mt-auto">
+          {/* Level / Category pills */}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="h-3 w-14 bg-slate-100 rounded" />
+            <div className="w-1 h-1 rounded-full bg-slate-200" />
+            <div className="h-3 w-16 bg-slate-100 rounded" />
+          </div>
+
+          {/* Price & Discount */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-baseline gap-2">
+              <div className="h-4 w-14 bg-slate-200 rounded" />
+              <div className="h-3 w-10 bg-slate-100 rounded" />
+            </div>
+            <div className="h-4 w-16 bg-slate-100 rounded-full hidden sm:block" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const INTERNSHIPS = [
   {
@@ -114,13 +117,28 @@ const TESTIMONIALS = [
 
 export default function AcademyLandingPage() {
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
+  const [isInitialLoading, setIsInitialLoading] = React.useState(true);
   const dispatch = useAppDispatch();
   const { courses, isLoading } = useAppSelector((state) => state.course);
   const { isInWishlist, toggleWishlist } = useWishlist();
 
   React.useEffect(() => {
-    dispatch(fetchAllCourses());
+    let isMounted = true;
+    dispatch(fetchAllCourses()).finally(() => {
+      if (isMounted) {
+        setIsInitialLoading(false);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
   }, [dispatch]);
+
+  const publishedCourses = React.useMemo(() => {
+    return (courses || []).filter((c: any) => c.status === 'published' && c.slug);
+  }, [courses]);
+
+  const showSkeleton = isLoading || (isInitialLoading && publishedCourses.length === 0);
 
   const nextTestimonial = () => {
     setActiveTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
@@ -136,28 +154,57 @@ export default function AcademyLandingPage() {
       {/* ─────────────────────────────────────────────────────────────
           HERO SECTION
       ────────────────────────────────────────────────────────────── */}
-      <section className="relative bg-[color:var(--sa-cream)] pt-10 pb-20 lg:pt-12 lg:pb-32">
+      <section className="relative bg-[color:var(--sa-cream)] pt-6 sm:pt-12 pb-8 sm:pb-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row items-center justify-between">
+
+          {/* Mobile Hero */}
+          <div className="flex justify-between items-start sm:hidden mb-6">
+            <div className="w-[60%] pt-2 z-10 pr-2">
+              <p className="text-[#C9A227] font-bold text-[8px] tracking-widest uppercase mb-2">Empowering Future Legal Professionals</p>
+              <h1 className="text-[26px] font-serif font-bold text-[#111827] leading-[1.15] mb-3">
+                Achieve Legal Excellence with Sajjad Husain Legal Academy
+              </h1>
+              <p className="text-gray-600 text-[11px] leading-relaxed">
+                Practical learning, expert mentorship, and real-world exposure to build a successful legal career.
+              </p>
+            </div>
+            <div className="w-[45%] absolute right-[-1rem] top-0 h-[220px]">
+              <div className="w-full h-full relative rounded-l-full overflow-hidden shadow-inner">
+                <Image src="/academy-hero.png" alt="Students" layout="fill" objectFit="cover" />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:hidden relative z-10 w-full mb-6">
+            <Link href="/courses" className="w-full">
+              <button className="w-full bg-[#C9A227] text-white py-3.5 rounded text-[13px] font-bold shadow-sm hover:bg-[#b39022] transition-colors">Explore Courses</button>
+            </Link>
+            <Link href="#internships" className="w-full">
+              <button className="w-full bg-transparent border border-gray-400 text-gray-700 py-3.5 rounded text-[13px] font-bold hover:bg-white hover:border-gray-300 transition-colors">Explore Internships</button>
+            </Link>
+          </div>
+
+          {/* Desktop Hero */}
+          <div className="hidden sm:flex flex-row items-center justify-between">
             {/* Left Content */}
-            <div className="w-full lg:w-[45%] pr-0 lg:pr-8 z-10">
+            <div className="w-[45%] pr-8 z-10">
               <p className="text-[#C9A227] font-bold text-[9px] tracking-widest uppercase mb-3">
                 Empowering Future Legal Professionals
               </p>
-              <h1 className="text-3xl lg:text-4xl xl:text-[42px] font-serif font-bold text-[#111827] leading-[1.15] mb-4">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-[42px] font-serif font-bold text-[#111827] leading-[1.15] mb-4">
                 Achieve Legal Excellence with Sajjad Husain Legal Academy
               </h1>
-              <p className="text-gray-600 mb-6 text-xs lg:text-sm leading-relaxed max-w-sm">
+              <p className="text-gray-600 mb-6 text-sm leading-relaxed max-w-sm">
                 Practical learning, expert mentorship, and real-world exposure to build a successful legal career.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-row gap-3">
                 <Link href="/courses">
-                  <button className="bg-[#C9A227] text-white px-6 py-2.5 rounded text-xs font-medium hover:bg-[#b39022] transition-colors w-full sm:w-auto shadow-sm">
+                  <button className="bg-[#C9A227] text-white px-6 py-2.5 rounded text-xs font-medium hover:bg-[#b39022] transition-colors shadow-sm">
                     Explore Courses
                   </button>
                 </Link>
-                <Link href="/courses/1">
-                  <button className="bg-white text-gray-700 border border-gray-300 px-6 py-2.5 rounded text-xs font-medium hover:bg-gray-50 transition-colors w-full sm:w-auto">
+                <Link href="#internships">
+                  <button className="bg-white text-gray-700 border border-gray-300 px-6 py-2.5 rounded text-xs font-medium hover:bg-gray-50 transition-colors">
                     Explore Internships
                   </button>
                 </Link>
@@ -165,7 +212,7 @@ export default function AcademyLandingPage() {
             </div>
 
             {/* Right Image Mask */}
-            <div className="hidden lg:block w-[55%] absolute right-0 top-0 bottom-0">
+            <div className="w-[55%] absolute right-0 top-0 bottom-0">
               <div className="relative w-full h-full rounded-l-[12rem] overflow-hidden ml-4 shadow-inner">
                 <Image
                   src="/academy-hero.png"
@@ -180,9 +227,9 @@ export default function AcademyLandingPage() {
         </div>
 
         {/* Floating Features Bar */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 translate-y-1/2 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-[1100px] mx-auto bg-[#0a1628] rounded-xl shadow-2xl p-4 lg:p-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 divide-x-0 lg:divide-x divide-white/10">
+        <div className="relative md:absolute md:bottom-0 left-0 right-0 z-20 md:translate-y-1/2 px-4 sm:px-6 md:px-8 mt-2 md:mt-0">
+          <div className="max-w-[1100px] mx-auto bg-[#0a1628] rounded-xl shadow-2xl p-5 lg:p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-6 gap-y-8 divide-x-0 md:divide-x divide-white/10">
 
               <div className="flex flex-col items-start px-2 lg:px-4">
                 <div className="mb-2.5 flex items-center gap-2">
@@ -240,36 +287,54 @@ export default function AcademyLandingPage() {
       {/* ─────────────────────────────────────────────────────────────
           OUR COURSES
       ────────────────────────────────────────────────────────────── */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 lg:mt-16">
-        <div className="flex flex-col sm:flex-row justify-between items-end mb-8 gap-4">
+      <section className="py-10 lg:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-10 md:mt-28 lg:mt-28">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
           <div>
             <p className="text-[#C9A227] font-bold text-[10px] uppercase tracking-widest mb-1.5">Our Courses</p>
             <h2 className="text-2xl md:text-[32px] font-serif font-bold text-gray-900 leading-tight">Learn. Practice. Excel.</h2>
           </div>
           <Link href="/courses">
-            <button className="border border-gray-300 text-gray-700 px-5 py-2 rounded text-xs font-medium hover:bg-gray-50 transition-colors">
+            <button className="border border-gray-300 text-gray-700 px-5 py-2 rounded text-xs font-medium hover:bg-gray-50 transition-colors w-full sm:w-auto">
               View All Courses
             </button>
           </Link>
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="animate-spin text-[#C9A227]" size={48} />
+        {showSkeleton ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((key) => (
+              <CourseCardSkeleton key={key} />
+            ))}
+          </div>
+        ) : publishedCourses.length === 0 ? (
+          <div className="bg-white rounded-xl border border-dashed border-gray-200 p-12 text-center shadow-xs">
+            <div className="w-12 h-12 rounded-full bg-[#122340]/5 flex items-center justify-center mx-auto mb-3 text-[#C9A227]">
+              <BookOpen size={24} />
+            </div>
+            <h3 className="text-base font-serif font-bold text-gray-900 mb-1">No Courses Available Yet</h3>
+            <p className="text-xs text-gray-500 max-w-sm mx-auto mb-4">
+              We are preparing new comprehensive legal courses. Check back soon or browse our full catalogue.
+            </p>
+            <Link href="/courses">
+              <button className="bg-[#122340] text-white px-5 py-2 rounded text-xs font-medium hover:bg-[#0a1628] transition-colors">
+                Browse Courses
+              </button>
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(courses.filter(c => c.status === 'published' && c.slug).length > 0
-              ? courses.filter(c => c.status === 'published' && c.slug).slice(0, 3)
-              : (COURSES as any[]).slice(0, 3)
-            ).map((course: any) => {
+            {publishedCourses.slice(0, 3).map((course: any) => {
               const reviewsCount = Number(course.totalReviews || 0);
               const avgScore = Number(course.averageRating || 0);
+              const isRecent = Boolean(
+                course.isNew ||
+                (course.createdAt && (Date.now() - new Date(course.createdAt).getTime()) < 30 * 24 * 60 * 60 * 1000)
+              );
 
               return (
-                <Link href={`/courses/${course.slug}`} key={course.id} className="block group">
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:border-[#C9A227] transition-colors duration-300 flex flex-col h-full">
-                    <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
+                <Link href={`/courses/${course.slug}`} key={course.id || (course as any)._id || course.slug} className="block group">
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:border-[#C9A227] transition-colors duration-300 flex flex-col h-full items-stretch">
+                    <div className="relative w-full aspect-video shrink-0 overflow-hidden bg-gray-100 block">
                       {course.thumbnailUrl ? (
                         <Image src={course.thumbnailUrl} alt={course.title} layout="fill" objectFit="cover" />
                       ) : (
@@ -280,18 +345,17 @@ export default function AcademyLandingPage() {
                           e.preventDefault();
                           e.stopPropagation();
                           toggleWishlist({
-                            id: String(course.id || course.slug),
+                            id: String(course.id || (course as any)._id || course.slug),
                             slug: course.slug,
                             title: course.title,
                             thumbnailUrl: course.thumbnailUrl,
                             price: course.price,
                             originalPrice: course.originalPrice,
-                            instructor: course.instructor || "Legal Academy",
+                            instructor: course.instructor || course.instructors?.[0]?.name || "Legal Academy",
                           });
                         }}
                         className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-sm transition text-gray-400 hover:text-red-500 z-10"
                         aria-label="Wishlist course"
-                        title={isInWishlist(course.slug) ? "Remove from wishlist" : "Add to wishlist"}
                       >
                         <Heart
                           size={15}
@@ -299,9 +363,15 @@ export default function AcademyLandingPage() {
                         />
                       </button>
                     </div>
-                    <div className="p-5 flex flex-col flex-grow">
-                      <h3 className="font-serif font-bold text-[15px] text-gray-900 mb-2 leading-tight group-hover:text-[#C9A227] transition-colors line-clamp-2">{course.title}</h3>
-                      <p className="text-gray-500 text-xs mb-3 leading-relaxed line-clamp-2">{course.subtitle || 'Learn from expert legal professionals with practical insights.'}</p>
+
+                    <div className="p-3 md:p-5 flex flex-col flex-grow">
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-serif font-bold text-[14px] md:text-[15px] text-gray-900 mb-1.5 md:mb-2 leading-tight group-hover:text-[#C9A227] transition-colors line-clamp-2 pr-2">{course.title}</h3>
+                        {isRecent && (
+                          <span className="hidden md:inline-block bg-blue-50 text-blue-600 text-[9px] font-bold px-1.5 py-0.5 rounded ml-1 shrink-0">New</span>
+                        )}
+                      </div>
+                      <p className="text-gray-500 text-[11px] md:text-xs mb-2 md:mb-3 leading-relaxed line-clamp-2 md:line-clamp-2">{course.subtitle || 'Learn from expert legal professionals with practical insights.'}</p>
 
                       {/* Course Rating & Review Count */}
                       <div className="flex items-center gap-1.5 mb-3 text-xs">
@@ -324,33 +394,35 @@ export default function AcademyLandingPage() {
                           </div>
                         )}
                       </div>
-                    <div className="border-t border-gray-100 pt-3 mt-auto">
-                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 mb-2">
-                        <span>{course.level || 'Beginner'}</span>
-                        <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                        <span>{course.category || 'Online'}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="font-bold text-[#C9A227] text-sm">
-                            {course.price ? `₹${course.price}` : 'Free'}
-                          </span>
-                          {course.originalPrice && (
-                            <span className="text-[#122340]/40 line-through text-xs font-medium">
-                              ₹{course.originalPrice}
+
+                      <div className="md:border-t border-gray-100 md:pt-3 mt-auto">
+                        <div className="flex flex-wrap items-center gap-1.5 text-[10px] md:text-[11px] font-medium text-gray-400 md:text-gray-500 mb-1 md:mb-2">
+                          <span>{course.level || 'Beginner'}</span>
+                          <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                          <span>{course.category || 'Online'}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-bold text-[#C9A227] text-[13px] md:text-sm">
+                              {course.price ? `₹${course.price}` : 'Free'}
+                            </span>
+                            {course.originalPrice && (
+                              <span className="text-gray-400 line-through text-[10px] md:text-xs font-medium">
+                                ₹{course.originalPrice}
+                              </span>
+                            )}
+                          </div>
+                          {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
+                            <span className="hidden sm:inline-block text-[9px] md:text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">
+                              {Math.round(((Number(course.originalPrice) - Number(course.price)) / Number(course.originalPrice)) * 100)}% OFF
                             </span>
                           )}
+                          <ChevronRight size={14} className="text-gray-300 md:hidden ml-auto" />
                         </div>
-                        {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
-                          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                            {Math.round(((Number(course.originalPrice) - Number(course.price)) / Number(course.originalPrice)) * 100)}% OFF
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
               );
             })}
           </div>
@@ -414,7 +486,7 @@ export default function AcademyLandingPage() {
       {/* ─────────────────────────────────────────────────────────────
           INTERNSHIP OPPORTUNITIES
       ────────────────────────────────────────────────────────────── */}
-      <section className="py-16 bg-[color:var(--sa-cream)]">
+      <section id="internships" className="py-16 bg-[color:var(--sa-cream)] scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-end mb-10 gap-4">
             <div>
@@ -424,7 +496,7 @@ export default function AcademyLandingPage() {
                 Our internship programs are designed to provide practical exposure and mentorship from legal experts.
               </p>
             </div>
-            <Link href="/courses/1">
+            <Link href="/auth/signup">
               <button className="border border-gray-300 bg-white text-gray-700 px-5 py-2 rounded text-xs font-medium hover:bg-gray-50 transition-colors">
                 View All Internships
               </button>
@@ -440,7 +512,7 @@ export default function AcademyLandingPage() {
                 <div>
                   <h3 className="font-serif font-bold text-gray-900 text-[15px] mb-1.5">{internship.title}</h3>
                   <p className="text-gray-500 text-xs mb-4 leading-relaxed pr-2">{internship.desc}</p>
-                  <Link href="/courses/1" className="text-xs font-bold text-gray-900 flex items-center gap-1 group-hover:text-[#C9A227] transition-colors">
+                  <Link href="/auth/signup" className="text-xs font-bold text-gray-900 flex items-center gap-1 group-hover:text-[#C9A227] transition-colors">
                     Apply Now <ArrowRight size={14} />
                   </Link>
                 </div>
@@ -540,7 +612,7 @@ export default function AcademyLandingPage() {
                 <p className="text-gray-500 text-xs">Join Sajjad Husain Legal Academy and take the first step towards a successful legal career.</p>
               </div>
             </div>
-            <Link href="/courses">
+            <Link href="/auth/signup">
               <button className="bg-[#C9A227] text-white px-6 py-2.5 rounded text-xs font-medium hover:bg-[#b39022] transition-colors whitespace-nowrap shadow-sm">
                 Apply Now
               </button>

@@ -12,7 +12,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import Script from 'next/script';
 import GoogleAnalyticsTracker from "@/components/GoogleAnalyticsTracker";
-
+import { routing } from "@/i18n/routing";
 import { API_BASE_URL, API_ENDPOINTS, IS_NGROK } from "@/data/services/apiConfig/apiContants";
 // import { Analytics } from "@vercel/analytics/next";
 // import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -144,6 +144,12 @@ async function getCategories() {
     console.error("Failed to fetch categories on server:", e);
     return [];
   }
+}
+
+
+
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
 }
 
 export default async function RootLayout({

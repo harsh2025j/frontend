@@ -20,6 +20,10 @@ import {
   Mail,
   CheckCircle2,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
+  Filter,
 } from "lucide-react";
 import { certificateApi, Certificate } from "@/data/services/academy-service/certificate.service";
 import { courseApi } from "@/data/services/academy-service/course.service";
@@ -192,7 +196,7 @@ export default function IssuedTab() {
                     s.studentEmail = pu.email;
                   }
                 }
-              } catch {}
+              } catch { }
             }
           }
           return s;
@@ -358,7 +362,6 @@ export default function IssuedTab() {
       return;
     }
 
-    // Check if certificate already exists in current course certificate list
     const normalizedEmail = generateForm.studentEmail.trim().toLowerCase();
     const existingCertInList = items.find(
       (c) =>
@@ -380,22 +383,30 @@ export default function IssuedTab() {
     await executeIssue(false);
   };
 
+  /* ─────────────────── STATS ─────────────────── */
+  const issuedCount = items.filter((c) => c.status === "issued").length;
+  const revokedCount = items.filter((c) => c.status === "revoked").length;
+
+  /* ─────────────────── JSX ─────────────────── */
   return (
-    <div className="space-y-4">
-      {/* Course Selector Bar */}
-      <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg">
-            <GraduationCap size={22} />
+    <div className="space-y-5">
+
+      {/* ── Toolbar: Course Selector + Action ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <BookOpen size={20} />
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Filter by Course
-            </label>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
+              Viewing Course
+            </p>
             {loadingCourses ? (
-              <p className="text-sm text-gray-400">Loading courses…</p>
+              <p className="text-sm text-gray-400 flex items-center gap-1.5">
+                <Loader2 size={14} className="animate-spin" /> Loading courses…
+              </p>
             ) : courses.length === 0 ? (
-              <p className="text-sm text-red-500">No courses available.</p>
+              <p className="text-sm text-red-500 font-medium">No courses available</p>
             ) : (
               <select
                 value={selectedCourseId}
@@ -403,7 +414,7 @@ export default function IssuedTab() {
                   setSelectedCourseId(e.target.value);
                   setPage(1);
                 }}
-                className="mt-0.5 font-semibold text-gray-900 bg-transparent border-b border-gray-300 hover:border-blue-500 focus:border-blue-600 focus:outline-none py-1 pr-6 cursor-pointer text-base"
+                className="font-bold text-gray-900 bg-transparent border-none focus:outline-none text-base pr-2 cursor-pointer w-full max-w-xs truncate"
               >
                 {courses.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -415,303 +426,359 @@ export default function IssuedTab() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 self-start md:self-auto">
-          {selectedCourse && (
-            <div className="hidden sm:flex items-center gap-2 bg-blue-50/60 border border-blue-100 text-blue-800 px-3.5 py-1.5 rounded-lg text-xs font-medium">
-              <span>Course:</span>
-              <span className="font-bold truncate max-w-xs">{selectedCourse.title}</span>
-              <span className="bg-blue-200/70 text-blue-900 px-2 py-0.5 rounded-full font-semibold">
-                {total} {total === 1 ? "cert" : "certs"}
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Quick Stats */}
+          {selectedCourse && !loading && (
+            <div className="hidden md:flex items-center gap-2">
+              <span className="flex items-center gap-1.5 text-xs font-semibold bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded-lg">
+                <ShieldCheck size={13} /> {issuedCount} Issued
               </span>
+              {revokedCount > 0 && (
+                <span className="flex items-center gap-1.5 text-xs font-semibold bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg">
+                  <ShieldAlert size={13} /> {revokedCount} Revoked
+                </span>
+              )}
             </div>
           )}
 
           <button
             onClick={handleOpenGenerateModal}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-sm transition"
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-sm transition cursor-pointer whitespace-nowrap"
           >
-            <Award size={16} />
-            <span>+ Generate Certificate</span>
+            <Plus size={15} />
+            Issue Certificate
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="Search student, email, certificate ID…"
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && (setPage(1), load())}
-            />
-          </div>
-          <div className="flex items-center gap-2 w-full md:w-auto">
+      {/* ── Filters Row ── */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+          <input
+            type="text"
+            placeholder="Search by student name, email, or cert ID…"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && (setPage(1), load())}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5">
+            <Filter size={15} className="text-gray-400" />
             <select
               value={status}
               onChange={(e) => (setStatus(e.target.value), setPage(1))}
-              className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+              className="text-sm bg-transparent border-none focus:outline-none text-gray-700 font-medium cursor-pointer"
             >
-              <option value="all">All statuses</option>
+              <option value="all">All Status</option>
               <option value="issued">Issued</option>
               <option value="revoked">Revoked</option>
             </select>
+          </div>
+          <button
+            onClick={() => (setPage(1), load())}
+            className="px-4 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-black transition cursor-pointer whitespace-nowrap"
+          >
+            Search
+          </button>
+        </div>
+      </div>
+
+      {/* ── Table ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="p-16 text-center">
+            <Loader2 size={28} className="animate-spin text-blue-500 mx-auto mb-3" />
+            <p className="text-sm text-gray-400">Loading certificates…</p>
+          </div>
+        ) : !selectedCourseId ? (
+          <div className="p-16 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <BookOpen size={26} className="text-gray-400" />
+            </div>
+            <p className="text-gray-600 font-semibold">Select a course to view its certificates</p>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="p-16 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-4">
+              <Award size={28} className="text-blue-500" />
+            </div>
+            <p className="text-gray-800 font-bold text-base">No certificates yet</p>
+            <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">
+              No certificates have been issued for{" "}
+              <span className="font-semibold text-gray-600">{selectedCourse?.title}</span>.
+            </p>
             <button
-              onClick={() => (setPage(1), load())}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shrink-0"
+              onClick={handleOpenGenerateModal}
+              className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition shadow-sm cursor-pointer"
             >
-              Search
+              <Plus size={15} />
+              Issue First Certificate
             </button>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50/70">
+                    <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-gray-400">Cert ID</th>
+                    <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-gray-400">Student</th>
+                    <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-gray-400">Issue Date</th>
+                    <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-gray-400">Status</th>
+                    <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {items.map((c) => (
+                    <tr key={c.id} className="hover:bg-blue-50/30 transition-colors group">
+                      <td className="px-5 py-4">
+                        <span className="font-mono text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
+                          {c.certificateId}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
+                            {(c.studentName || "?").slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900 leading-tight">{c.studentName}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{c.studentEmail}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-sm text-gray-600 whitespace-nowrap">
+                        {new Date(c.issueDate).toLocaleDateString(undefined, {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="px-5 py-4">
+                        {c.status === "issued" ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <ShieldCheck size={12} /> Issued
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full bg-red-50 text-red-600 border border-red-200">
+                            <ShieldAlert size={12} /> Revoked
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => setSelected(c)}
+                            title="Preview"
+                            className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition cursor-pointer"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <a
+                            href={`/api/academy/download?url=${encodeURIComponent(c.pdfUrl)}&filename=${encodeURIComponent(
+                              (c.studentName || "Certificate").replace(/[^a-zA-Z0-9_-]/g, "_") +
+                              "_" +
+                              (c.courseName || "Course").replace(/[^a-zA-Z0-9_-]/g, "_") +
+                              ".pdf"
+                            )}`}
+                            download={`${(c.studentName || "Certificate").replace(/[^a-zA-Z0-9_-]/g, "_")}_${(
+                              c.courseName || "Course"
+                            ).replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`}
+                            title="Download PDF"
+                            className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+                          >
+                            <Download size={16} />
+                          </a>
+                          {c.status === "issued" ? (
+                            <button
+                              onClick={() => setRevokeTarget(c)}
+                              title="Revoke"
+                              className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                            >
+                              <Ban size={16} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setReissueTarget(c)}
+                              title="Reissue"
+                              className="p-2 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition cursor-pointer"
+                            >
+                              <RefreshCw size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 font-semibold">
-                <th className="p-4">Certificate ID</th>
-                <th className="p-4">Student</th>
-                <th className="p-4">Issue Date</th>
-                <th className="p-4">Status</th>
-                <th className="p-4 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-400 text-sm">
-                    Loading certificates for this course…
-                  </td>
-                </tr>
-              ) : !selectedCourseId ? (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-400 text-sm">
-                    Please select a course to view issued certificates.
-                  </td>
-                </tr>
-              ) : items.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-12 text-center">
-                    <div className="max-w-md mx-auto space-y-3">
-                      <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
-                        <Award size={24} />
-                      </div>
-                      <p className="text-gray-700 font-medium">
-                        No certificates issued yet for{" "}
-                        <span className="font-semibold text-gray-900">
-                          {selectedCourse?.title || "this course"}
-                        </span>.
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        Certificates are issued automatically upon course completion, or you can issue one manually below.
-                      </p>
-                      <button
-                        onClick={handleOpenGenerateModal}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition shadow-sm cursor-pointer"
-                      >
-                        <Plus size={14} />
-                        Generate Certificate for this Course
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                items.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50/50 transition">
-                    <td className="p-4">
-                      <p className="font-mono font-bold text-blue-600 text-sm">{c.certificateId}</p>
-                    </td>
-                    <td className="p-4">
-                      <p className="text-sm font-semibold text-gray-900">{c.studentName}</p>
-                      <p className="text-xs text-gray-500">{c.studentEmail}</p>
-                    </td>
-                    <td className="p-4 text-sm text-gray-600">
-                      {new Date(c.issueDate).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })}
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2.5 py-1 text-xs font-semibold rounded-full flex w-max items-center gap-1 ${
-                        c.status === "issued" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                      }`}>
-                        {c.status === "issued" ? <ShieldCheck size={14} /> : <ShieldAlert size={14} />}
-                        {c.status === "issued" ? "Issued" : "Revoked"}
-                      </span>
-                    </td>
-                  <td className="p-4 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <button
-                        onClick={() => setSelected(c)}
-                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                        title="View"
-                      >
-                        <Eye size={18} />
-                      </button>
-                      <a
-                        href={`/api/academy/download?url=${encodeURIComponent(c.pdfUrl)}&filename=${encodeURIComponent((c.studentName || 'Certificate').replace(/[^a-zA-Z0-9_-]/g, '_') + '_' + (c.courseName || 'Course').replace(/[^a-zA-Z0-9_-]/g, '_') + '.pdf')}`}
-                        download={`${(c.studentName || 'Certificate').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(c.courseName || 'Course').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`}
-                        className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
-                        title="Download PDF"
-                      >
-                        <Download size={18} />
-                      </a>
-                      {c.status === "issued" ? (
-                        <button
-                          onClick={() => setRevokeTarget(c)}
-                          className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                          title="Revoke"
-                        >
-                          <Ban size={18} />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setReissueTarget(c)}
-                          className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title="Reissue"
-                        >
-                          <RefreshCw size={18} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="p-4 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500 bg-gray-50/50">
-        <div>{total} certificate{total === 1 ? "" : "s"}</div>
-        <div className="flex items-center gap-2">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="px-3 py-1.5 border border-gray-200 rounded-md disabled:opacity-40"
-          >
-            Prev
-          </button>
-          <span>Page {page} of {totalPages}</span>
-          <button
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
-            className="px-3 py-1.5 border border-gray-200 rounded-md disabled:opacity-40"
-          >
-            Next
-          </button>
-        </div>
-      </div>
-      </div>
-
-      {/* Detail modal */}
-      {selected && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50" onClick={() => setSelected(null)}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-              <div>
-                <p className="font-mono font-bold text-blue-600">{selected.certificateId}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{selected.studentName} · {selected.courseName}</p>
+            {/* Pagination */}
+            <div className="px-5 py-3.5 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between text-sm">
+              <p className="text-gray-400 text-xs">
+                {total} certificate{total !== 1 ? "s" : ""} &middot; page {page} of {totalPages}
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="p-1.5 rounded-lg border border-gray-200 text-gray-500 disabled:opacity-30 hover:bg-gray-100 transition cursor-pointer"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="p-1.5 rounded-lg border border-gray-200 text-gray-500 disabled:opacity-30 hover:bg-gray-100 transition cursor-pointer"
+                >
+                  <ChevronRight size={16} />
+                </button>
               </div>
-              <button onClick={() => setSelected(null)} className="p-2 text-gray-400 hover:text-gray-700"><X size={20} /></button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ─── Detail Modal ─── */}
+      {selected && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setSelected(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[88vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/60">
+              <div>
+                <span className="font-mono text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
+                  {selected.certificateId}
+                </span>
+                <p className="text-xs text-gray-500 mt-1.5">
+                  {selected.studentName} &middot; {selected.courseName}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelected(null)}
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition cursor-pointer"
+              >
+                <X size={18} />
+              </button>
             </div>
             <iframe src={selected.pdfUrl} className="flex-1 w-full" title="Certificate PDF" />
           </div>
         </div>
       )}
 
-      {/* Revoke modal */}
+      {/* ─── Revoke Modal ─── */}
       {revokeTarget && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50" onClick={() => setRevokeTarget(null)}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Revoke Certificate</h3>
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setRevokeTarget(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-11 h-11 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                <Ban size={22} />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Revoke Certificate</h3>
+                <p className="text-xs font-mono text-gray-400 mt-0.5">{revokeTarget.certificateId}</p>
+              </div>
+            </div>
             <p className="text-sm text-gray-500 mb-4">
-              Revoking <span className="font-mono font-bold">{revokeTarget.certificateId}</span> keeps it in the system but marks it as REVOKED on the public verify page.
+              The certificate stays in the system but will be marked as{" "}
+              <span className="font-semibold text-red-600">REVOKED</span> on the public verification page.
             </p>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Reason</label>
+            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+              Reason <span className="text-red-500">*</span>
+            </label>
             <textarea
               value={revokeReason}
               onChange={(e) => setRevokeReason(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              placeholder="e.g. Issued in error / plagiarism / student request"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400"
+              placeholder="e.g. Issued in error, plagiarism, student request…"
             />
-            <div className="flex justify-end gap-2 mt-4">
+            <div className="flex justify-end gap-2.5 mt-5">
               <button
                 onClick={() => setRevokeTarget(null)}
-                className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg text-sm"
+                className="px-4 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 disabled={!revokeReason.trim()}
                 onClick={doRevoke}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold disabled:opacity-40"
+                className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 transition shadow-sm cursor-pointer"
               >
-                Revoke
+                Revoke Certificate
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Reissue Confirmation Modal */}
+      {/* ─── Reissue Modal ─── */}
       {reissueTarget && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           onClick={() => !isReissuing && setReissueTarget(null)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-100 animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-100"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3.5 mb-4">
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-11 h-11 rounded-xl bg-green-50 text-green-600 border border-green-200 flex items-center justify-center shrink-0">
                 <RefreshCw size={22} className={isReissuing ? "animate-spin" : ""} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900 leading-tight">Reissue Certificate</h3>
-                <p className="text-xs text-blue-600 font-mono font-semibold mt-0.5">{reissueTarget.certificateId}</p>
+                <h3 className="text-base font-bold text-gray-900">Reissue Certificate</h3>
+                <p className="text-xs font-mono text-blue-600 mt-0.5">{reissueTarget.certificateId}</p>
               </div>
             </div>
 
-            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-              Are you sure you want to reissue the certificate for <strong className="text-gray-900">{reissueTarget.studentName}</strong> in course <strong className="text-gray-900">{reissueTarget.courseName}</strong>?
+            <p className="text-sm text-gray-600 mb-4">
+              Reissue the certificate for{" "}
+              <strong className="text-gray-900">{reissueTarget.studentName}</strong> in{" "}
+              <strong className="text-gray-900">{reissueTarget.courseName}</strong>?
             </p>
 
-            <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3.5 text-xs text-amber-900 mb-5 space-y-1.5">
-              <div className="font-semibold text-amber-950 flex items-center gap-1.5">
-                <span>⚠️ What will happen:</span>
-              </div>
-              <p className="text-amber-800 leading-relaxed">• Certificate status will be restored from <span className="font-semibold text-red-600">Revoked</span> back to <span className="font-semibold text-green-700">Issued</span>.</p>
-              <p className="text-amber-800 leading-relaxed">• The certificate PDF will be regenerated with the latest course, faculty, and template design.</p>
-              <p className="text-amber-800 leading-relaxed">• An updated certificate email with the new PDF attached will be automatically sent to the student.</p>
+            <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 mb-5 space-y-1">
+              <p className="font-bold text-amber-950">What will happen:</p>
+              <p>• Status restored from <span className="font-semibold text-red-600">Revoked</span> → <span className="font-semibold text-green-700">Issued</span></p>
+              <p>• PDF regenerated with the latest template & course details</p>
+              <p>• An updated certificate email will be sent to the student</p>
             </div>
 
             <div className="flex justify-end gap-2.5">
               <button
-                type="button"
                 disabled={isReissuing}
                 onClick={() => setReissueTarget(null)}
-                className="px-4 py-2 bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 rounded-xl text-sm font-medium transition-colors disabled:opacity-40"
+                className="px-4 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition disabled:opacity-40 cursor-pointer"
               >
                 Cancel
               </button>
               <button
-                type="button"
                 disabled={isReissuing}
                 onClick={doReissue}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold shadow-sm transition flex items-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {isReissuing ? (
                   <>
-                    <RefreshCw size={14} className="animate-spin" />
-                    <span>Reissuing...</span>
+                    <RefreshCw size={14} className="animate-spin" /> Reissuing…
                   </>
                 ) : (
                   <>
-                    <RefreshCw size={14} />
-                    <span>Confirm Reissue</span>
+                    <RefreshCw size={14} /> Confirm Reissue
                   </>
                 )}
               </button>
@@ -720,40 +787,39 @@ export default function IssuedTab() {
         </div>
       )}
 
-      {/* Manual Generate Certificate Modal */}
+      {/* ─── Manual Generate Modal ─── */}
       {generateModalOpen && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           onClick={() => !isGenerating && setGenerateModalOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-gray-100 flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-gray-100 flex flex-col max-h-[92vh]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/60">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shadow-xs">
-                  <Award size={22} />
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
+                  <Award size={20} />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-gray-900">Issue Certificate Manually</h3>
-                  <p className="text-xs text-gray-500">Emergency & direct certificate generation for students</p>
+                  <p className="text-xs text-gray-400">Direct certificate generation for a student</p>
                 </div>
               </div>
               <button
-                type="button"
                 disabled={isGenerating}
                 onClick={() => setGenerateModalOpen(false)}
-                className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 disabled:opacity-50 transition"
+                className="p-1.5 text-gray-400 hover:text-gray-700 rounded-xl hover:bg-gray-100 transition disabled:opacity-50 cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            {/* Segmented Mode Selector */}
+            {/* Mode Selector */}
             <div className="p-4 bg-gray-50/80 border-b border-gray-100">
-              <div className="grid grid-cols-2 gap-2 p-1 bg-gray-200/60 rounded-xl">
+              <div className="grid grid-cols-2 gap-2 p-1 bg-gray-200/50 rounded-xl">
                 <button
                   type="button"
                   onClick={() => {
@@ -762,14 +828,12 @@ export default function IssuedTab() {
                       fetchEnrolledStudents(generateForm.courseId || selectedCourseId);
                     }
                   }}
-                  className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    generateMode === "enrolled"
-                      ? "bg-white text-blue-700 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
-                  }`}
+                  className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition cursor-pointer ${generateMode === "enrolled"
+                    ? "bg-white text-blue-700 shadow-sm"
+                    : "text-gray-500 hover:text-gray-800 hover:bg-white/60"
+                    }`}
                 >
-                  <UserCheck size={16} />
-                  <span>Enrolled Course Student</span>
+                  <UserCheck size={15} /> Enrolled Student
                 </button>
                 <button
                   type="button"
@@ -777,23 +841,21 @@ export default function IssuedTab() {
                     setGenerateMode("external");
                     setSelectedEnrolledStudent(null);
                   }}
-                  className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    generateMode === "external"
-                      ? "bg-white text-blue-700 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
-                  }`}
+                  className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition cursor-pointer ${generateMode === "external"
+                    ? "bg-white text-blue-700 shadow-sm"
+                    : "text-gray-500 hover:text-gray-800 hover:bg-white/60"
+                    }`}
                 >
-                  <UserPlus size={16} />
-                  <span>External / Direct Entry</span>
+                  <UserPlus size={15} /> External / Direct Entry
                 </button>
               </div>
             </div>
 
             <form onSubmit={handleGenerateSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
-              {/* Course Selector (Common to both, pre-selected to currently viewed course) */}
+              {/* Course Selector */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                  Target Course <span className="text-red-500">*</span>
+                  Course <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={generateForm.courseId}
@@ -807,125 +869,83 @@ export default function IssuedTab() {
                     </option>
                   ))}
                 </select>
-                <p className="text-[11px] text-gray-400 mt-1">
-                  The certificate template assigned to this course will be rendered automatically.
-                </p>
               </div>
 
-              {/* Pathway 1: Enrolled Course Student */}
+              {/* Enrolled Student Picker */}
               {generateMode === "enrolled" && (
-                <div className="space-y-3 pt-1">
+                <div className="space-y-3">
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    Select Enrolled Student <span className="text-red-500">*</span>
+                    Enrolled Student <span className="text-red-500">*</span>
                   </label>
 
                   {selectedEnrolledStudent ? (
-                    <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded-xl relative">
+                    <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded-xl">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center shrink-0">
-                            {(generateForm.studentName || selectedEnrolledStudent.studentName || "S").slice(0, 2).toUpperCase()}
+                          <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center shrink-0">
+                            {(generateForm.studentName || "S").slice(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-gray-900 leading-tight">
-                              {generateForm.studentName || selectedEnrolledStudent.studentName || "Unnamed Student"}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              {generateForm.studentEmail || selectedEnrolledStudent.studentEmail || "No email on record"}
-                            </p>
+                            <p className="text-sm font-bold text-gray-900">{generateForm.studentName || "—"}</p>
+                            <p className="text-xs text-gray-400">{generateForm.studentEmail || "No email"}</p>
                           </div>
                         </div>
                         <button
                           type="button"
                           onClick={() => {
                             setSelectedEnrolledStudent(null);
-                            setGenerateForm((prev) => ({
-                              ...prev,
-                              studentName: "",
-                              studentEmail: "",
-                              enrollmentId: "",
-                              userId: "",
-                            }));
+                            setGenerateForm((p) => ({ ...p, studentName: "", studentEmail: "", enrollmentId: "", userId: "" }));
                           }}
-                          className="px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 rounded-lg transition cursor-pointer"
+                          className="text-xs text-blue-700 font-semibold hover:underline cursor-pointer"
                         >
-                          Change Student
+                          Change
                         </button>
                       </div>
-
-                      {/* Course progress info */}
                       {(() => {
                         const enrollment =
-                          selectedEnrolledStudent.enrollments?.find(
-                            (e: any) => e.courseId === generateForm.courseId
-                          ) || selectedEnrolledStudent.enrollments?.[0];
+                          selectedEnrolledStudent.enrollments?.find((e: any) => e.courseId === generateForm.courseId) ||
+                          selectedEnrolledStudent.enrollments?.[0];
                         const prog = enrollment?.progress ?? 0;
                         const hasCertAlready = items.some(
                           (c) => c.userId === selectedEnrolledStudent.userId && c.status === "issued"
                         );
-
                         return (
-                          <div className="mt-3 pt-3 border-t border-blue-100 text-xs">
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-gray-600 font-medium">Current Progress:</span>
-                              <span className="font-bold text-blue-900">{prog}% Completed</span>
+                          <div className="mt-3 pt-3 border-t border-blue-100 space-y-2">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-gray-500">Progress</span>
+                              <span className="font-bold text-blue-800">{prog}%</span>
                             </div>
                             <div className="w-full h-1.5 bg-blue-100 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-blue-600 rounded-full"
-                                style={{ width: `${Math.min(100, Math.max(5, prog))}%` }}
-                              />
+                              <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, Math.max(3, prog))}%` }} />
                             </div>
-
                             {hasCertAlready ? (
-                              <div className="mt-2.5 p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-amber-800 text-[11px]">
-                                <AlertCircle size={14} className="shrink-0 mt-0.5" />
-                                <span>
-                                  A certificate already exists for this student in this course. Generating will
-                                  update and reissue their certificate.
-                                </span>
+                              <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-amber-800 text-xs">
+                                <AlertCircle size={13} className="shrink-0 mt-0.5" />
+                                <span>Certificate already exists. Generating will update & reissue it.</span>
                               </div>
                             ) : (
-                              <div className="mt-2.5 p-2 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-2 text-emerald-800 text-[11px]">
-                                <CheckCircle2 size={14} className="shrink-0 mt-0.5" />
-                                <span>
-                                  Issuing will mark progress as <strong>100% Completed</strong> and immediately
-                                  unlock their verifiable certificate in their Student Dashboard and Learn page.
-                                </span>
+                              <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-2 text-emerald-800 text-xs">
+                                <CheckCircle2 size={13} className="shrink-0 mt-0.5" />
+                                <span>Issuing will mark progress as <strong>100% Completed</strong> and unlock their certificate.</span>
                               </div>
                             )}
-
-                            {/* Editable student name & email on certificate */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-3 border-t border-blue-100">
+                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-blue-100">
                               <div>
-                                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-                                  Student Name on Certificate <span className="text-red-500">*</span>
-                                </label>
+                                <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Name on Cert *</label>
                                 <input
-                                  type="text"
-                                  required
-                                  disabled={isGenerating}
-                                  placeholder="e.g. Adv. Rahul Sharma"
+                                  type="text" required disabled={isGenerating}
                                   value={generateForm.studentName}
-                                  onChange={(e) =>
-                                    setGenerateForm({ ...generateForm, studentName: e.target.value })
-                                  }
+                                  onChange={(e) => setGenerateForm({ ...generateForm, studentName: e.target.value })}
                                   className="w-full px-3 py-2 border border-gray-200 bg-white rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                                 />
                               </div>
                               <div>
-                                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-                                  Student Email Address
-                                </label>
+                                <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Email</label>
                                 <input
-                                  type="email"
-                                  disabled={isGenerating}
-                                  placeholder="student@example.com"
+                                  type="email" disabled={isGenerating}
                                   value={generateForm.studentEmail}
-                                  onChange={(e) =>
-                                    setGenerateForm({ ...generateForm, studentEmail: e.target.value })
-                                  }
-                                  className="w-full px-3 py-2 border border-gray-200 bg-white rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                                  onChange={(e) => setGenerateForm({ ...generateForm, studentEmail: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-200 bg-white rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                                 />
                               </div>
                             </div>
@@ -936,74 +956,50 @@ export default function IssuedTab() {
                   ) : (
                     <div className="space-y-2">
                       <div className="relative">
-                        <Search
-                          size={16}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                        />
+                        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                         <input
-                          type="text"
-                          placeholder="Search enrolled student by name or email…"
+                          type="text" placeholder="Search enrolled student…"
                           value={studentSearchQuery}
                           onChange={(e) => setStudentSearchQuery(e.target.value)}
                           className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                         />
                       </div>
-
-                      <div className="border border-gray-200 rounded-xl max-h-52 overflow-y-auto divide-y divide-gray-100 bg-gray-50/40">
+                      <div className="border border-gray-200 rounded-xl max-h-48 overflow-y-auto divide-y divide-gray-100 bg-gray-50/40">
                         {loadingEnrolledStudents ? (
-                          <div className="p-6 text-center text-xs text-gray-500 flex items-center justify-center gap-2">
-                            <Loader2 size={16} className="animate-spin text-blue-600" />
-                            <span>Loading enrolled students…</span>
+                          <div className="p-5 flex items-center justify-center gap-2 text-xs text-gray-400">
+                            <Loader2 size={14} className="animate-spin text-blue-500" /> Loading students…
                           </div>
                         ) : filteredStudents.length === 0 ? (
-                          <div className="p-6 text-center text-xs text-gray-400">
-                            {studentSearchQuery
-                              ? `No students found matching "${studentSearchQuery}"`
-                              : "No students currently enrolled in this course."}
+                          <div className="p-5 text-center text-xs text-gray-400">
+                            {studentSearchQuery ? `No results for "${studentSearchQuery}"` : "No enrolled students found."}
                           </div>
                         ) : (
                           filteredStudents.map((s: any) => {
-                            const enrollment =
-                              s.enrollments?.find((e: any) => e.courseId === generateForm.courseId) ||
-                              s.enrollments?.[0];
+                            const enrollment = s.enrollments?.find((e: any) => e.courseId === generateForm.courseId) || s.enrollments?.[0];
                             const prog = enrollment?.progress ?? 0;
-                            const hasCert = items.some(
-                              (c) => c.userId === s.userId && c.status === "issued"
-                            );
-
+                            const hasCert = items.some((c) => c.userId === s.userId && c.status === "issued");
                             return (
                               <button
-                                key={s.userId}
-                                type="button"
+                                key={s.userId} type="button"
                                 onClick={() => handleSelectStudent(s)}
-                                className="w-full p-2.5 text-left hover:bg-blue-50/50 transition flex items-center justify-between gap-3 group cursor-pointer"
+                                className="w-full p-2.5 text-left hover:bg-blue-50/60 transition flex items-center justify-between gap-3 cursor-pointer"
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
                                   <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0">
                                     {(s.studentName || "S").slice(0, 2).toUpperCase()}
                                   </div>
                                   <div className="min-w-0">
-                                    <p className="text-xs font-bold text-gray-900 truncate group-hover:text-blue-700">
-                                      {s.studentName || "Unnamed Student"}
-                                    </p>
-                                    <p className="text-[11px] text-gray-400 truncate">
-                                      {s.studentEmail || "No email"}
-                                    </p>
+                                    <p className="text-xs font-bold text-gray-900 truncate">{s.studentName || "Unnamed"}</p>
+                                    <p className="text-[11px] text-gray-400 truncate">{s.studentEmail || "No email"}</p>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0">
+                                <div className="flex items-center gap-1.5 shrink-0">
                                   {hasCert && (
-                                    <span className="text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-md font-semibold">
+                                    <span className="text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded font-semibold">
                                       Cert Issued
                                     </span>
                                   )}
-                                  <span
-                                    className={`text-[10px] px-2 py-0.5 rounded-md font-semibold ${
-                                      prog === 100
-                                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                        : "bg-blue-50 text-blue-700 border border-blue-200"
-                                    }`}
-                                  >
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold border ${prog === 100 ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200"}`}>
                                     {prog}%
                                   </span>
                                 </div>
@@ -1017,93 +1013,52 @@ export default function IssuedTab() {
                 </div>
               )}
 
-              {/* Pathway 2: External / Direct Entry */}
+              {/* External Entry */}
               {generateMode === "external" && (
-                <div className="space-y-4 pt-1">
-                  <div className="p-3 bg-amber-50/60 border border-amber-200/70 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
-                    <Sparkles size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-3">
+                  <div className="p-3 bg-amber-50/70 border border-amber-200/70 rounded-xl text-xs text-amber-900 flex items-start gap-2">
+                    <Sparkles size={15} className="text-amber-600 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-bold">Direct Entry Mode (External Candidate)</p>
-                      <p className="text-[11px] text-amber-800/80 mt-0.5">
-                        Issue a verified credential for an offline or external student not registered on the
-                        platform. A unique certificate ID and QR verification will be created.
-                      </p>
+                      <p className="font-bold">External / Offline Candidate</p>
+                      <p className="text-amber-800/80 mt-0.5">A unique certificate ID and QR code will be created for this person.</p>
                     </div>
                   </div>
-
                   <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                      Student Full Name <span className="text-red-500">*</span>
+                      Full Name <span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="text"
-                      required
-                      disabled={isGenerating}
-                      placeholder="e.g. Adv. Rahul Sharma / Sajjad Husain"
+                      type="text" required disabled={isGenerating}
+                      placeholder="e.g. Adv. Rahul Sharma"
                       value={generateForm.studentName}
                       onChange={(e) => setGenerateForm({ ...generateForm, studentName: e.target.value })}
                       className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                     />
                   </div>
-
                   <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                      Student Email Address <span className="text-red-500">*</span>
+                      Email <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <Mail
-                        size={16}
-                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                      />
+                      <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                       <input
-                        type="email"
-                        required
-                        disabled={isGenerating}
+                        type="email" required disabled={isGenerating}
                         placeholder="student@example.com"
                         value={generateForm.studentEmail}
                         onChange={(e) => setGenerateForm({ ...generateForm, studentEmail: e.target.value })}
                         className="w-full pl-10 pr-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                       />
                     </div>
-                    <p className="text-[11px] text-gray-500 mt-1">
-                      The certificate PDF and verification link will be automatically sent to this email address.
-                    </p>
-                    {(() => {
-                      const emailInput = generateForm.studentEmail.trim().toLowerCase();
-                      const existingCert = emailInput
-                        ? items.find(
-                            (c) =>
-                              c.courseId === generateForm.courseId &&
-                              c.studentEmail?.toLowerCase() === emailInput
-                          )
-                        : null;
-                      if (!existingCert) return null;
-                      return (
-                        <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-amber-900 text-xs">
-                          <AlertCircle size={15} className="shrink-0 mt-0.5 text-amber-600" />
-                          <div>
-                            <p className="font-bold">Certificate already generated for this email</p>
-                            <p className="text-[11px] text-amber-800 mt-0.5">
-                              Certificate <strong>{existingCert.certificateId}</strong> was already issued to{" "}
-                              <strong>{existingCert.studentName}</strong> for this course. Submitting will prompt to update the existing certificate.
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })()}
                   </div>
                 </div>
               )}
 
-              {/* Shared Date & Grade */}
-              <div className="grid grid-cols-2 gap-3 pt-1">
+              {/* Date + Grade */}
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                    Issue Date
-                  </label>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Issue Date</label>
                   <input
-                    type="date"
-                    disabled={isGenerating}
+                    type="date" disabled={isGenerating}
                     value={generateForm.issueDate}
                     onChange={(e) => setGenerateForm({ ...generateForm, issueDate: e.target.value })}
                     className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
@@ -1111,12 +1066,11 @@ export default function IssuedTab() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                    Grade / Score <span className="text-gray-400 font-normal">(Optional)</span>
+                    Grade <span className="text-gray-400 font-normal">(Optional)</span>
                   </label>
                   <input
-                    type="text"
-                    disabled={isGenerating}
-                    placeholder="e.g. 95% or A+"
+                    type="text" disabled={isGenerating}
+                    placeholder="e.g. A+ or 95%"
                     value={generateForm.grade}
                     onChange={(e) => setGenerateForm({ ...generateForm, grade: e.target.value })}
                     className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
@@ -1124,67 +1078,34 @@ export default function IssuedTab() {
                 </div>
               </div>
 
-              {/* Automated Course Instructor(s) Section */}
+              {/* Instructor Info */}
               {(() => {
                 const curCourse = courses.find((c) => c.id === generateForm.courseId);
                 const rawInstructors = curCourse?.instructors;
                 const instructorNames = Array.isArray(rawInstructors)
-                  ? rawInstructors
-                      .map((i: any) => (typeof i === "string" ? i : i?.name))
-                      .filter((n: any) => typeof n === "string" && n.trim().length > 0)
-                      .map((n: string) => n.trim())
+                  ? rawInstructors.map((i: any) => (typeof i === "string" ? i : i?.name)).filter((n: any) => typeof n === "string" && n.trim()).map((n: string) => n.trim())
                   : [];
-                const isMultiple = instructorNames.length > 1;
-                const displayNames =
-                  generateForm.instructorName ||
-                  (instructorNames.length > 0
-                    ? instructorNames.join(", ")
-                    : "Platform Academic Board");
-                const label = isMultiple ? "Instructors" : "Instructor";
-
+                const displayNames = generateForm.instructorName || (instructorNames.length > 0 ? instructorNames.join(", ") : "Platform Academic Board");
                 return (
-                  <div className="p-3.5 bg-slate-50/90 border border-slate-200/80 rounded-xl space-y-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-                          <GraduationCap size={16} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                            {label} on Certificate
-                          </p>
-                          <p className="text-sm font-bold text-slate-900 truncate">
-                            {displayNames}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md font-semibold shrink-0">
-                        {isMultiple
-                          ? `${instructorNames.length} Instructors (Auto)`
-                          : instructorNames.length === 1
-                          ? "Auto from Course"
-                          : "Auto Default"}
-                      </span>
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                      <GraduationCap size={15} />
                     </div>
-
-                    <p className="text-[11px] text-slate-500 pl-10.5">
-                      {isMultiple
-                        ? `Automatically printing all ${instructorNames.length} instructors (${instructorNames.join(", ")}) onto the certificate.`
-                        : instructorNames.length === 1
-                        ? `Automatically assigned based on course curriculum instructor.`
-                        : `No specific instructor assigned in course; using official academy signatory.`}
-                    </p>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Instructor on Certificate</p>
+                      <p className="text-sm font-bold text-slate-900 truncate">{displayNames}</p>
+                    </div>
+                    <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded font-semibold shrink-0 ml-auto">Auto</span>
                   </div>
                 );
               })()}
 
-              {/* Action Buttons */}
-              <div className="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
+              {/* Actions */}
+              <div className="pt-3 border-t border-gray-100 flex justify-end gap-3">
                 <button
-                  type="button"
-                  disabled={isGenerating}
+                  type="button" disabled={isGenerating}
                   onClick={() => setGenerateModalOpen(false)}
-                  className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-100 rounded-xl border border-gray-200 transition cursor-pointer"
+                  className="px-4 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1194,15 +1115,9 @@ export default function IssuedTab() {
                   className="px-5 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {isGenerating ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      <span>Generating PDF…</span>
-                    </>
+                    <><Loader2 size={15} className="animate-spin" /> Generating PDF…</>
                   ) : (
-                    <>
-                      <Sparkles size={16} />
-                      <span>Generate & Issue Certificate</span>
-                    </>
+                    <><Sparkles size={15} /> Generate & Issue</>
                   )}
                 </button>
               </div>
@@ -1211,43 +1126,41 @@ export default function IssuedTab() {
         </div>
       )}
 
-      {/* Update Confirmation Modal when Certificate Already Exists */}
+      {/* ─── Existing Cert Conflict ─── */}
       {existingCertPrompt.open && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4 shadow-xs">
-              <AlertCircle size={26} />
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-100">
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle size={24} />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 text-center">Certificate Already Generated</h3>
-            <p className="text-sm text-gray-600 text-center mt-2 leading-relaxed">
-              A certificate has already been generated for{" "}
-              <strong className="text-gray-900">{existingCertPrompt.studentEmail || generateForm.studentEmail}</strong> in this course.
-              {existingCertPrompt.certificateId && (
-                <span className="block text-xs font-mono text-gray-500 mt-1">
-                  Existing Certificate ID: {existingCertPrompt.certificateId}
-                </span>
-              )}
+            <h3 className="text-base font-bold text-gray-900 text-center">Certificate Already Exists</h3>
+            <p className="text-sm text-gray-500 text-center mt-2">
+              A certificate was already generated for{" "}
+              <strong className="text-gray-800">{existingCertPrompt.studentEmail || generateForm.studentEmail}</strong>.
             </p>
-            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3 text-center">
+            {existingCertPrompt.certificateId && (
+              <p className="text-center mt-1">
+                <span className="font-mono text-xs text-gray-400">{existingCertPrompt.certificateId}</span>
+              </p>
+            )}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-4 text-xs text-amber-900 text-center">
               Do you want to update the existing certificate instead of creating a duplicate?
-            </p>
-            <div className="grid grid-cols-2 gap-3 mt-6">
+            </div>
+            <div className="grid grid-cols-2 gap-3 mt-5">
               <button
-                type="button"
                 disabled={isGenerating}
                 onClick={() => setExistingCertPrompt({ open: false })}
-                className="w-full py-2.5 px-4 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition cursor-pointer"
+                className="py-2.5 px-4 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
-                type="button"
                 disabled={isGenerating}
                 onClick={() => executeIssue(true)}
-                className="w-full py-2.5 px-4 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="py-2.5 px-4 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {isGenerating ? <Loader2 size={14} className="animate-spin" /> : null}
-                Yes, Update Certificate
+                Update Certificate
               </button>
             </div>
           </div>

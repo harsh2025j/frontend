@@ -1,4 +1,4 @@
-import React from "react";
+import React, { cache } from "react";
 import { Metadata } from "next";
 import { casesService } from "@/data/services/cases-service/casesService";
 import CaseView from "./CaseView";
@@ -14,13 +14,13 @@ interface PageProps {
     }>;
 }
 
-async function fetchCase(slug: string) {
+const fetchCase = cache(async (slug: string) => {
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
     const response = isUUID
         ? await casesService.getById(slug)
         : await casesService.getBySlug(slug);
     return response.data.data;
-}
+});
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug, locale } = await params;

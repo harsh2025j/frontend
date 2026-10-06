@@ -1,4 +1,4 @@
-import React from "react";
+import React, { cache } from "react";
 import { Metadata } from "next";
 import { judgmentsService } from "@/data/services/judgments-service/judgmentsService";
 import JudgmentView from "./JudgmentView";
@@ -14,13 +14,13 @@ interface PageProps {
     }>;
 }
 
-async function fetchJudgment(slug: string) {
+const fetchJudgment = cache(async (slug: string) => {
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
     const response = isUUID
         ? await judgmentsService.getById(slug)
         : await judgmentsService.getBySlug(slug);
     return response.data.data;
-}
+});
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug, locale } = await params;

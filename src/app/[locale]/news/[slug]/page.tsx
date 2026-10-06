@@ -1,4 +1,4 @@
-import React from "react";
+import React, { cache } from "react";
 import { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
 import ArticleClient from "./ArticleClient";
@@ -15,7 +15,7 @@ type Props = {
 };
 
 // Function to fetch article data
-async function getArticle(slug: string): Promise<Article | null> {
+const getArticle = cache(async (slug: string): Promise<Article | null> => {
     try {
         const res = await fetch(`${API_BASE_URL}/articles/${slug}`, {
             next: { revalidate: 3600 },
@@ -35,7 +35,7 @@ async function getArticle(slug: string): Promise<Article | null> {
         console.error("Error fetching article:", error);
         return null;
     }
-}
+});
 
 // Generate Metadata for OG Tags
 export async function generateMetadata(

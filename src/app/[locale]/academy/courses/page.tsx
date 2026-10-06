@@ -16,10 +16,23 @@ export default function CoursesPage() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
 
   const [categories, setCategories] = useState<string[]>(["All Categories"]);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   const dispatch = useAppDispatch();
   const { courses, isLoading, error } = useAppSelector((state) => state.course);
   const { isInWishlist, toggleWishlist } = useWishlist();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsCategoryOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     dispatch(fetchAllCourses());
@@ -63,26 +76,74 @@ export default function CoursesPage() {
   );
 
   return (
-    <div className="ac-student bg-[color:var(--sa-cream)] min-h-screen font-sans pt-10 pb-20">
+    <div className="ac-student bg-[color:var(--sa-cream)] min-h-screen font-sans pt-6 sm:pt-10 pb-20">
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* Back Button */}
-        <button onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#122340]/60 hover:text-[#C9A227] mb-8 transition-colors group">
-          <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-          Back
-        </button>
+        {/* Top Bar: Back Button on Left & Category Dropdown on Right at Same Level in Mobile */}
+        <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8">
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#122340]/70 hover:text-[#C9A227] transition-colors group cursor-pointer"
+          >
+            <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+            <span>Back</span>
+          </button>
 
-        {/* Toolbar: Category Horizontal List */}
-        <div className="mb-10 overflow-x-auto hide-scrollbar whitespace-nowrap flex gap-3 py-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+          {/* Mobile Category Dropdown on Right */}
+          <div className="relative sm:hidden" ref={dropdownRef}>
+            <button
+              onClick={() => setIsCategoryOpen(prev => !prev)}
+              className="inline-flex items-center gap-2 bg-white px-3.5 py-2 rounded-full border border-gray-200 shadow-xs text-xs font-semibold text-[#122340] hover:border-[#C9A227] transition-all cursor-pointer active:scale-95"
+              aria-expanded={isCategoryOpen}
+            >
+              <Filter size={13} className="text-[#C9A227]" />
+              <span className="max-w-[120px] truncate">{selectedCategory}</span>
+              <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${isCategoryOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isCategoryOpen && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-3.5 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                  Select Category
+                </div>
+                <div className="max-h-64 overflow-y-auto py-1 hide-scrollbar">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => {
+                        setSelectedCategory(cat);
+                        setIsCategoryOpen(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2.5 text-xs font-medium flex items-center justify-between transition-colors ${
+                        selectedCategory === cat
+                          ? 'bg-[#C9A227]/10 text-[#C9A227] font-bold'
+                          : 'text-[#122340]/80 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="truncate">{cat}</span>
+                      {selectedCategory === cat && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C9A227] shrink-0 ml-2" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Toolbar: Category Horizontal List for Desktop / Tablet */}
+        <div className="hidden sm:flex mb-10 overflow-x-auto hide-scrollbar whitespace-nowrap gap-3 py-2 -mx-4 px-4 sm:mx-0 sm:px-0">
           {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${selectedCategory === cat
+              className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all cursor-pointer ${
+                selectedCategory === cat
                   ? 'bg-[#C9A227] text-white shadow-md'
                   : 'bg-white text-[#122340]/70 hover:bg-gray-50 border border-gray-100'
-                }`}
+              }`}
             >
               {cat}
             </button>
@@ -90,8 +151,18 @@ export default function CoursesPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="animate-spin text-[#C9A227]" size={48} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+              <div key={i} className="bg-white rounded-lg overflow-hidden shadow-xs border border-gray-100 flex flex-col h-full">
+                <div className="aspect-video w-full bg-slate-200" />
+                <div className="p-5 flex flex-col flex-grow space-y-3">
+                  <div className="h-4 bg-slate-200 rounded w-4/5" />
+                  <div className="h-4 bg-slate-200 rounded w-3/5" />
+                  <div className="h-3 bg-slate-100 rounded w-1/3" />
+                  <div className="h-4 bg-slate-200 rounded w-1/4 mt-auto pt-2" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="text-center py-20">

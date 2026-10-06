@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, BookOpen, LayoutDashboard, LogOut, ChevronDown, AlertTriangle, Heart, Loader2 } from 'lucide-react';
+import { Menu, X, BookOpen, LayoutDashboard, LogOut, ChevronDown, AlertTriangle, Heart, Loader2, ChevronRight, Facebook, Linkedin, Instagram, Search } from 'lucide-react';
 import Image from 'next/image';
 import logo from "../../../../../public/logo.png";
 import { useAuth } from '@/data/features/auth/useAuthActions';
@@ -15,6 +15,7 @@ import AcademyNotificationDropdown from './AcademyNotificationDropdown';
 
 export default function AcademyNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { user } = useAuth();
@@ -36,13 +37,13 @@ export default function AcademyNavbar() {
 
   return (
     <>
-      <header className="w-full border-b border-[#122340]/10 bg-[#F7F3EA] z-[100] fixed top-0 left-0 shadow-xs">
+      <header className="w-full border-b border-[#122340]/10 bg-[#F7F3EA] z-[100] sticky top-0 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
             <Image src="/logo-gold.png" alt="Sajjad Husain Logo" width={40} height={40} className="object-contain" priority />
-            <div className="flex flex-col hidden sm:flex">
+            <div className="flex flex-col hidden lg:flex">
               <span className="text-[#122340] font-serif font-bold text-base leading-none tracking-wider uppercase">Sajjad Husain</span>
               <span className="text-[#C9A227] font-serif italic text-xs leading-none mt-1">Legal Academy</span>
             </div>
@@ -138,6 +139,16 @@ export default function AcademyNavbar() {
           </div>
 
           <div className="md:hidden flex items-center gap-2">
+            <button
+              onClick={() => {
+                setIsSearchOpen(!isSearchOpen);
+                if (isMenuOpen) setIsMenuOpen(false);
+              }}
+              className="p-1.5 text-[#122340] hover:text-[#C9A227] transition-colors"
+              aria-label="Toggle Search"
+            >
+              <Search size={22} />
+            </button>
             {user && (user._id || (user as any).id) && (
               <AcademyNotificationDropdown userId={user._id || (user as any).id} />
             )}
@@ -153,81 +164,69 @@ export default function AcademyNavbar() {
                 </span>
               )}
             </button>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-[#122340] hover:text-[#C9A227] transition-colors">
+            <button 
+              onClick={() => {
+                setIsMenuOpen(!isMenuOpen);
+                if (isSearchOpen) setIsSearchOpen(false);
+              }} 
+              className="text-[#122340] hover:text-[#C9A227] transition-colors"
+            >
               {isMenuOpen ? <X size={26} /> : <Menu size={26} />}
             </button>
           </div>
         </div>
 
+        {/* Mobile Search Overlay */}
+        {isSearchOpen && (
+          <div className="md:hidden w-full bg-[#F7F3EA] border-t border-gray-200/60 p-4 absolute top-16 left-0 z-40 shadow-md animate-in slide-in-from-top-2 duration-200">
+            <AcademySearch onSelectCourse={() => setIsSearchOpen(false)} />
+          </div>
+        )}
+
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden bg-[#F7F3EA] border-t border-gray-200/60 w-full h-[calc(100vh-64px)] overflow-y-auto shadow-lg absolute top-16 left-0 z-40 pb-20">
-            <div className="flex flex-col p-5 gap-2">
-              {user && (
-                <div className="flex items-center gap-4 mb-4 pb-4 border-b border-gray-100">
-                  {user.profilePicture ? (
-                    <img src={user.profilePicture} alt="Profile" className="w-12 h-12 rounded-full border border-gray-200 object-cover" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-[#122340] text-white flex items-center justify-center font-bold text-lg">
-                      {user.name?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-bold text-gray-800">{user.name}</p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Mobile Search Bar */}
-              <div className="mb-3">
-                <AcademySearch onSelectCourse={() => setIsMenuOpen(false)} />
-              </div>
-
-              <Link href="/courses" className="flex items-center gap-2 py-3 text-sm font-medium text-gray-700 hover:text-[#C9A227]" onClick={() => setIsMenuOpen(false)}>
-                <BookOpen size={16} /> Browse Courses
+          <div className="md:hidden bg-[#F7F3EA] border-t border-gray-200/60 w-full h-[calc(100vh-64px)] overflow-y-auto shadow-lg absolute top-16 left-0 z-40 flex flex-col">
+            <div className="flex-1 py-4">
+              <Link href="/" className="block px-6 py-4 text-[15px] font-medium text-gray-800 border-b border-black/5" onClick={() => setIsMenuOpen(false)}>
+                Home
               </Link>
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  openWishlist();
-                }}
-                className="flex items-center justify-between py-3 text-sm font-medium text-gray-700 hover:text-[#C9A227] text-left"
-              >
-                <div className="flex items-center gap-2">
-                  <Heart size={16} />
-                  <span>My Wishlist</span>
-                </div>
-                {wishlist.length > 0 && (
-                  <span className="bg-[#122340] text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                    {wishlist.length}
-                  </span>
-                )}
-              </button>
-              <Link href="/dashboard" className="flex items-center gap-2 py-3 text-sm font-medium text-gray-700 hover:text-[#C9A227]" onClick={() => setIsMenuOpen(false)}>
-                <LayoutDashboard size={16} /> My Learning
+              <Link href="/courses" className="flex items-center justify-between px-6 py-4 text-[15px] font-medium text-gray-800 border-b border-black/5 hover:text-[#C9A227]" onClick={() => setIsMenuOpen(false)}>
+                Courses <ChevronRight size={16} className="text-gray-400" />
               </Link>
-
-              <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-gray-200">
-                {user ? (
-                  <button onClick={() => setShowLogoutModal(true)} className="w-full flex items-center justify-center gap-2 rounded-full border border-red-200 text-red-600 px-5 py-2.5 text-sm font-medium hover:bg-red-50 transition-colors">
-                    <LogOut size={16} /> Logout
+              <Link href="/about" className="flex items-center justify-between px-6 py-4 text-[15px] font-medium text-gray-800 border-b border-black/5 hover:text-[#C9A227]" onClick={() => setIsMenuOpen(false)}>
+                About Us <ChevronRight size={16} className="text-gray-400" />
+              </Link>
+              <Link href="/contact" className="flex items-center justify-between px-6 py-4 text-[15px] font-medium text-gray-800 border-b border-black/5 hover:text-[#C9A227]" onClick={() => setIsMenuOpen(false)}>
+                Contact Us <ChevronRight size={16} className="text-gray-400" />
+              </Link>
+            </div>
+            
+            <div className="p-6 pb-20 flex flex-col gap-3">
+              {user ? (
+                <>
+                  <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                    <button className="w-full py-3.5 bg-[#C9A227] text-white text-[15px] font-bold rounded shadow-sm hover:bg-[#b39022] transition-colors">
+                      My Dashboard
+                    </button>
+                  </Link>
+                  <button onClick={() => setShowLogoutModal(true)} className="w-full py-3.5 bg-transparent border border-red-200 text-red-600 text-[15px] font-bold rounded shadow-sm hover:bg-red-50 transition-colors">
+                    Logout
                   </button>
-                ) : (
-                  <div className="flex gap-4">
-                    <Link href="/auth/login" className="flex-1" onClick={() => setIsMenuOpen(false)}>
-                      <button className="w-full rounded-full border border-[#C9A227] text-[#C9A227] px-5 py-2 text-sm font-medium hover:bg-[#C9A227] hover:text-white transition-colors">
-                        LOGIN
-                      </button>
-                    </Link>
-                    <Link href="/auth/signup" className="flex-1" onClick={() => setIsMenuOpen(false)}>
-                      <button className="w-full rounded-full bg-[#C9A227] text-white px-5 py-2 text-sm font-medium hover:bg-[#b39022] transition-colors">
-                        START LEARNING
-                      </button>
-                    </Link>
-                  </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
+                    <button className="w-full py-3.5 bg-transparent border border-[#C9A227] text-[#C9A227] text-[15px] font-bold rounded hover:bg-[#C9A227] hover:text-white transition-colors">
+                      Login
+                    </button>
+                  </Link>
+                  <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)}>
+                    <button className="w-full py-3.5 bg-[#C9A227] text-white text-[15px] font-bold rounded shadow-sm hover:bg-[#b39022] transition-colors">
+                      Sign Up
+                    </button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
