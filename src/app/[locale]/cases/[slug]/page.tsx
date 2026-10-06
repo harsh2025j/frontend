@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import ArticleSkeleton from "@/components/ui/ArticleSkeleton";
 import React, { cache } from "react";
 import { Metadata } from "next";
 import { casesService } from "@/data/services/cases-service/casesService";
@@ -154,7 +155,7 @@ export default async function CaseDetailPage({ params: paramsPromise, caseId: pr
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
             />
-            <Suspense fallback={null}><CaseView caseId={propId} caseSlug={slug} isModal={isModal} /></Suspense>
+            <Suspense fallback={<ArticleSkeleton />}><CaseView caseId={propId} caseSlug={slug} isModal={isModal} /></Suspense>
         </>
     );
 }

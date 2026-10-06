@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import TagLoading from "./loading";
 import React from "react";
 import { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
@@ -69,5 +70,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TagPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <Suspense fallback={null}><TagClient /></Suspense>;
+  return <Suspense fallback={<TagLoading />}><TagClient /></Suspense>;
 }

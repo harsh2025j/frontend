@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import RouteFallback from "@/components/ui/RouteFallback";
 import React, { useState, useRef, useEffect } from "react";
 import CustomInput from "@/components/ui/CustomInput";
 import { useResendOtp, useVerifyActions } from "@/data/features/auth/useAuthActions";
@@ -181,7 +182,7 @@ function VerifyPageContent() {
 // whole route falls back to per-request rendering and can never be CDN-cached.
 export default function VerifyPage(props: any) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<RouteFallback />}>
       <VerifyPageContent {...props} />
     </Suspense>
   );

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import HomeLoading from "./HomeLoading";
 import HomeClient from "./HomeClient";
 import { HomeDataProvider } from "@/context/HomeDataContext";
 import { API_BASE_URL, API_ENDPOINTS, IS_NGROK } from "@/data/services/apiConfig/apiContants";
@@ -53,7 +54,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
   return (
     <HomeDataProvider data={initialHomeData}>
-      <Suspense fallback={null}><HomeClient /></Suspense>
+      <Suspense fallback={<HomeLoading />}><HomeClient /></Suspense>
     </HomeDataProvider>
   );
 }

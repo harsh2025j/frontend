@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import RouteFallback from "@/components/ui/RouteFallback";
 import Image from "next/image";
 import logo from "../../../../../public/LightGray.png";
 import award1 from "../../../../public/awards/award1.jpg";
@@ -220,7 +221,7 @@ function LoginPageContent() {
 // whole route falls back to per-request rendering and can never be CDN-cached.
 export default function LoginPage(props: any) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<RouteFallback />}>
       <LoginPageContent {...props} />
     </Suspense>
   );

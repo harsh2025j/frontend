@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import RouteFallback from "@/components/ui/RouteFallback";
 import Image from "next/image";
 import logo from "../../../../../public/LightGray.png";
 import { useEffect, useState } from "react";
@@ -387,7 +388,7 @@ function ForgotPasswordPageContent() {
 // whole route falls back to per-request rendering and can never be CDN-cached.
 export default function ForgotPasswordPage(props: any) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<RouteFallback />}>
       <ForgotPasswordPageContent {...props} />
     </Suspense>
   );

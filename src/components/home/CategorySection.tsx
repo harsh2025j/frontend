@@ -178,7 +178,7 @@ const GridLayout = ({ articles }: { articles: any[] }) => (
   </div>
 );
 
-const GridSkeleton = ({ limit }: { limit: number }) => (
+export const GridSkeleton = ({ limit }: { limit: number }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     {Array.from({ length: limit }).map((_, i) => (
       <ArticleCardSkeleton key={i} compact={false} />
@@ -221,7 +221,7 @@ const ListLayout = ({ articles }: { articles: any[] }) => (
   </div>
 );
 
-const ListLayoutSkeleton = ({ limit }: { limit: number }) => (
+export const ListLayoutSkeleton = ({ limit }: { limit: number }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
     {Array.from({ length: limit }).map((_, i) => (
       <div key={i} className="flex gap-4 items-stretch md:items-start bg-white rounded-xl border border-gray-100 overflow-hidden animate-pulse">
@@ -309,7 +309,7 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
   );
 };
 
-const FeaturedLayoutSkeleton = () => (
+export const FeaturedLayoutSkeleton = () => (
   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-pulse">
     <div className="lg:col-span-7">
       <div className="aspect-video w-full rounded-2xl bg-gray-200 relative overflow-hidden">
@@ -356,7 +356,7 @@ const SliderLayout = ({ articles, slug }: { articles: any[], slug: string }) => 
   </div>
 );
 
-const SliderLayoutSkeleton = ({ limit }: { limit: number }) => (
+export const SliderLayoutSkeleton = ({ limit }: { limit: number }) => (
   <div className="flex overflow-hidden pb-6 gap-6">
     {Array.from({ length: limit }).map((_, i) => (
       <div key={i} className="min-w-[280px] md:min-w-[320px]">

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import CategoryLoading from "./loading";
 import React from "react";
 import { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
@@ -71,5 +72,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CategoryPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <Suspense fallback={null}><CategoryClient /></Suspense>;
+  return <Suspense fallback={<CategoryLoading />}><CategoryClient /></Suspense>;
 }
