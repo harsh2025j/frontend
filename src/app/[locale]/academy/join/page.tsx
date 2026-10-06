@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { GraduationCap, ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react";
@@ -9,7 +10,7 @@ import { useAppDispatch } from "@/data/redux/hooks";
 import { upgradeToStudentAsync } from "@/data/features/auth/authThunks";
 import toast from "react-hot-toast";
 
-export default function JoinAcademy() {
+function JoinAcademyContent() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
@@ -165,5 +166,15 @@ export default function JoinAcademy() {
 
       </div>
     </div>
+  );
+}
+// Reads the query string via useSearchParams, which opts the component out of
+// static rendering unless it sits inside a Suspense boundary. Without this the
+// whole route falls back to per-request rendering and can never be CDN-cached.
+export default function JoinAcademy(props: any) {
+  return (
+    <Suspense fallback={null}>
+      <JoinAcademyContent {...props} />
+    </Suspense>
   );
 }

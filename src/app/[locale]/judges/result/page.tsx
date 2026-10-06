@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { performJudgeSearch, JudgeSearchInputs, JudgeSearchType } from "../searchLogic";
 import { ArrowLeft } from "lucide-react";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
-export default function JudgesResultPage() {
+function JudgesResultPageContent() {
     useDocTitle("Judges | Sajjad Husain Law Associates");
     const searchParams = useSearchParams();
     const [judges, setJudges] = useState<any[]>([]);
@@ -116,4 +116,16 @@ export default function JudgesResultPage() {
             </div>
         </div>
     );
+}
+
+// This page reads the query string (useSearchParams), which opts a component
+// out of static rendering unless it sits inside a Suspense boundary. Without
+// this wrapper the whole route falls back to per-request rendering and can
+// never be cached by the CDN.
+export default function JudgesResultPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen w-full" />}>
+      <JudgesResultPageContent />
+    </Suspense>
+  );
 }

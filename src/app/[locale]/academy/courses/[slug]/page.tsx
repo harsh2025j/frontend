@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, Star, Share2, CalendarDays, Clock,
@@ -864,7 +865,7 @@ function CourseSkeletonLayout() {
 
 // ── Main Page Component ──────────────────────────────────────────
 
-export default function CourseDetail({ params }: { params: Promise<{ slug: string }> }) {
+function CourseDetailContent({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = React.use(params);
   const slug = resolvedParams.slug;
   const dispatch = useAppDispatch();
@@ -997,5 +998,15 @@ export default function CourseDetail({ params }: { params: Promise<{ slug: strin
         <VideoCourseLayout course={mappedCourse as any} />
       </div>
     </div>
+  );
+}
+// Reads the query string via useSearchParams, which opts the component out of
+// static rendering unless it sits inside a Suspense boundary. Without this the
+// whole route falls back to per-request rendering and can never be CDN-cached.
+export default function CourseDetail(props: any) {
+  return (
+    <Suspense fallback={null}>
+      <CourseDetailContent {...props} />
+    </Suspense>
   );
 }

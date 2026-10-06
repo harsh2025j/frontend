@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Image from "next/image";
 import logo from "../../../../../public/LightGray.png";
 import { useEffect, useState } from "react";
@@ -28,7 +29,7 @@ import {
 
 type Step = "forgot" | "verify" | "reset";
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordPageContent() {
   useDocTitle("Forgot Password  | Sajjad Husain Law Associates");
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -379,5 +380,15 @@ export default function ForgotPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+// Reads the query string via useSearchParams, which opts the component out of
+// static rendering unless it sits inside a Suspense boundary. Without this the
+// whole route falls back to per-request rendering and can never be CDN-cached.
+export default function ForgotPasswordPage(props: any) {
+  return (
+    <Suspense fallback={null}>
+      <ForgotPasswordPageContent {...props} />
+    </Suspense>
   );
 }

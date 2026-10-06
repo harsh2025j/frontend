@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Image from "next/image";
 import logo from "../../../../../public/LightGray.png";
 import award1 from "../../../../public/awards/award1.jpg";
@@ -16,7 +17,7 @@ import { Link } from "@/i18n/routing";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
 
-export default function LoginPage() {
+function LoginPageContent() {
   useDocTitle("Login | Sajjad Husain Law Associates");
   const {
     formData,
@@ -212,5 +213,15 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+// Reads the query string via useSearchParams, which opts the component out of
+// static rendering unless it sits inside a Suspense boundary. Without this the
+// whole route falls back to per-request rendering and can never be CDN-cached.
+export default function LoginPage(props: any) {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent {...props} />
+    </Suspense>
   );
 }

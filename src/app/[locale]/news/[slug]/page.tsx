@@ -8,6 +8,15 @@ import { setRequestLocale } from "next-intl/server";
 
 export const revalidate = 1800;
 
+// Marks this route as statically renderable so Next.js serves it via ISR
+// instead of rendering it dynamically on every request. Returning an empty
+// list prerenders nothing at build time; each path is generated on first
+// request and then cached for the `revalidate` window above.
+// `dynamicParams` defaults to true, so any slug still resolves.
+export function generateStaticParams() {
+  return [];
+}
+
 const SITE_URL = "https://www.sajjadhusainlawassociates.com"; // production
 // const SITE_URL = "https://unimpeded-sprung-banter.ngrok-free.dev"; // dev (url)
 // ---------------------------------------------------------------------

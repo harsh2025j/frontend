@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import React from "react";
 import { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
@@ -5,6 +6,15 @@ import CategoryClient from "./CategoryClient";
 import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
 
 export const revalidate = 600;
+
+// Marks this route as statically renderable so Next.js serves it via ISR
+// instead of rendering it dynamically on every request. Returning an empty
+// list prerenders nothing at build time; each path is generated on first
+// request and then cached for the `revalidate` window above.
+// `dynamicParams` defaults to true, so any slug still resolves.
+export function generateStaticParams() {
+  return [];
+}
 
 interface Props {
   params: Promise<{ slug: string; locale: string }>;
@@ -61,5 +71,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CategoryPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <CategoryClient />;
+  return <Suspense fallback={null}><CategoryClient /></Suspense>;
 }

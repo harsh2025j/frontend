@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
@@ -21,7 +22,7 @@ import { resetAuthState } from "@/data/features/auth/authSlice";
 import { MESSAGES } from "@/lib/constants/messageConstants";
 import toast from "react-hot-toast";
 
-export default function AcademySignup() {
+function AcademySignupContent() {
   const {
     formData,
     handleChange,
@@ -954,5 +955,15 @@ export default function AcademySignup() {
         </section>
       </div>
     </main>
+  );
+}
+// Reads the query string via useSearchParams, which opts the component out of
+// static rendering unless it sits inside a Suspense boundary. Without this the
+// whole route falls back to per-request rendering and can never be CDN-cached.
+export default function AcademySignup(props: any) {
+  return (
+    <Suspense fallback={null}>
+      <AcademySignupContent {...props} />
+    </Suspense>
   );
 }

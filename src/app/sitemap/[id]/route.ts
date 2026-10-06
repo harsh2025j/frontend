@@ -3,6 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 // Revalidate sub-sitemaps every 6 hours (21600 seconds) on Vercel Edge CDN
 export const revalidate = 21600;
 
+// Marks this route as statically renderable so Next.js serves it via ISR
+// instead of rendering it dynamically on every request. Returning an empty
+// list prerenders nothing at build time; each path is generated on first
+// request and then cached for the `revalidate` window above.
+// `dynamicParams` defaults to true, so any slug still resolves.
+export function generateStaticParams() {
+  return [];
+}
+
 const API_BASE = 'https://api.sajjadhusainlawassociates.com';
 const LIMIT = 2000;
 

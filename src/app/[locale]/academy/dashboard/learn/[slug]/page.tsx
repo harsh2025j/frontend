@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
@@ -45,7 +46,7 @@ import { reviewApi } from '@/data/services/academy-service/review.service';
 import { CourseReview } from '@/data/features/academy/course/course.types';
 import CourseQATab from '@/components/academy/qa/CourseQATab';
 
-export default function CoursePlayerPage({ params }: { params: Promise<{ slug: string }> }) {
+function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = React.use(params);
   const slug = resolvedParams.slug?.toLowerCase() || '';
 
@@ -1782,5 +1783,15 @@ function CertificateCTA({
         </div>
       </div>
     </div>
+  );
+}
+// Reads the query string via useSearchParams, which opts the component out of
+// static rendering unless it sits inside a Suspense boundary. Without this the
+// whole route falls back to per-request rendering and can never be CDN-cached.
+export default function CoursePlayerPage(props: any) {
+  return (
+    <Suspense fallback={null}>
+      <CoursePlayerPageContent {...props} />
+    </Suspense>
   );
 }

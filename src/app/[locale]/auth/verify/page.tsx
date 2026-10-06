@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import React, { useState, useRef, useEffect } from "react";
 import CustomInput from "@/components/ui/CustomInput";
 import { useResendOtp, useVerifyActions } from "@/data/features/auth/useAuthActions";
@@ -7,7 +8,7 @@ import toast from "react-hot-toast";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
 
-export default function VerifyPage() {
+function VerifyPageContent() {
   useDocTitle("Verify | Sajjad Husain Law Associates");
   const { formData, handleChange, handleVerify, loading: verifyLoading, error, message } = useVerifyActions();
   // Get specific loading state for resend action
@@ -173,5 +174,15 @@ export default function VerifyPage() {
         </div>
       </div>
     </div>
+  );
+}
+// Reads the query string via useSearchParams, which opts the component out of
+// static rendering unless it sits inside a Suspense boundary. Without this the
+// whole route falls back to per-request rendering and can never be CDN-cached.
+export default function VerifyPage(props: any) {
+  return (
+    <Suspense fallback={null}>
+      <VerifyPageContent {...props} />
+    </Suspense>
   );
 }

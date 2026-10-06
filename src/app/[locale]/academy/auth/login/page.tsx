@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Mail,
@@ -15,7 +15,7 @@ import { FcGoogle } from "react-icons/fc";
 import { useAcademyLoginActions } from "@/data/features/academyAuth/useAcademyAuth";
 import toast from "react-hot-toast";
 
-export default function AcademyLogin() {
+function AcademyLoginContent() {
   const {
     formData,
     handleChange,
@@ -650,5 +650,17 @@ export default function AcademyLogin() {
         </section>
       </div>
     </main>
+  );
+}
+
+// This page reads the query string (useSearchParams), which opts a component
+// out of static rendering unless it sits inside a Suspense boundary. Without
+// this wrapper the whole route falls back to per-request rendering and can
+// never be cached by the CDN.
+export default function AcademyLogin() {
+  return (
+    <Suspense fallback={<main className="min-h-[100dvh] w-full bg-[#f7f8fa]" />}>
+      <AcademyLoginContent />
+    </Suspense>
   );
 }

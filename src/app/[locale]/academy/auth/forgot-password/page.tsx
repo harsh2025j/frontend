@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,7 +24,7 @@ import toast from "react-hot-toast";
 
 type Step = "forgot" | "verify" | "reset";
 
-export default function AcademyForgotPassword() {
+function AcademyForgotPasswordContent() {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -998,5 +999,15 @@ export default function AcademyForgotPassword() {
         </section>
       </div>
     </main>
+  );
+}
+// Reads the query string via useSearchParams, which opts the component out of
+// static rendering unless it sits inside a Suspense boundary. Without this the
+// whole route falls back to per-request rendering and can never be CDN-cached.
+export default function AcademyForgotPassword(props: any) {
+  return (
+    <Suspense fallback={null}>
+      <AcademyForgotPasswordContent {...props} />
+    </Suspense>
   );
 }

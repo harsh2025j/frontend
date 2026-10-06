@@ -12,6 +12,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import Script from 'next/script';
 import GoogleAnalyticsTracker from "@/components/GoogleAnalyticsTracker";
+import { routing } from "@/i18n/routing";
 import { API_BASE_URL, API_ENDPOINTS, IS_NGROK } from "@/data/services/apiConfig/apiContants";
 // import { Analytics } from "@vercel/analytics/next";
 // import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -126,6 +127,16 @@ export const metadata: Metadata = {
     google: "2V5MrE-SR9--pjYygKw7KYu269YLinXDRr_MRj1Hy-A",
   }
 };
+
+
+// Makes the [locale] segment statically known at build time.
+// Without this, every route nested under app/[locale] is classified as
+// `ƒ (Dynamic)` and `export const revalidate` on child pages is ignored,
+// which makes Vercel emit `Cache-Control: private, no-cache, no-store`
+// and never cache the response (x-vercel-cache: MISS on every request).
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
 
 
 async function getCategories() {
