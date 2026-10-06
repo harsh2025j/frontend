@@ -107,7 +107,9 @@ export default function middleware(request: NextRequest) {
   }
 
   // 3. Normal Request Handling (Main Website)
-  return intlMiddleware(request);
+  const response = intlMiddleware(request);
+  response.headers.delete('set-cookie');
+  return response;
 }
 
 export const config = {
