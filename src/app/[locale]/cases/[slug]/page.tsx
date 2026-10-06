@@ -2,6 +2,7 @@ import React, { cache } from "react";
 import { Metadata } from "next";
 import { casesService } from "@/data/services/cases-service/casesService";
 import CaseView from "./CaseView";
+import { setRequestLocale } from "next-intl/server";
 
 export const revalidate = 3600;
 
@@ -78,6 +79,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CaseDetailPage({ params: paramsPromise, caseId: propId, isModal = false }: PageProps & { caseId?: string; isModal?: boolean }) {
     const { slug, locale } = await paramsPromise;
+    setRequestLocale(locale);
     const finalId = propId || slug;
 
     let caseData = null;

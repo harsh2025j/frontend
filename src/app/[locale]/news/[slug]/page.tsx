@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import ArticleClient from "./ArticleClient";
 import { Article } from "@/data/features/article/article.types";
 import { API_BASE_URL, IS_NGROK } from "@/data/services/apiConfig/apiContants";
+import { setRequestLocale } from "next-intl/server";
 
 export const revalidate = 1800;
 
@@ -119,6 +120,7 @@ export async function generateMetadata(
 
 export default async function ArticlePage({ params }: Props) {
     const { slug, locale } = await params;
+    setRequestLocale(locale);
     const article = await getArticle(slug);
 
     if (!article) {

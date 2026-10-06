@@ -1,6 +1,7 @@
 import HomeClient from "./HomeClient";
 import { HomeDataProvider } from "@/context/HomeDataContext";
 import { API_BASE_URL, API_ENDPOINTS, IS_NGROK } from "@/data/services/apiConfig/apiContants";
+import { setRequestLocale } from "next-intl/server";
 
 export const revalidate = 600;
 
@@ -26,7 +27,10 @@ async function getArticles(params: Record<string, any> = {}) {
   }
 }
 
-export default async function Home() {
+export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   // Parallel fetch strictly for the Homepage
   const [latestArticles, financeArticles, legalArticles, hindiArticles, judgmentsArticles, bareActsArticles] = await Promise.all([
     getArticles({ limit: 8, status: 'published' }),

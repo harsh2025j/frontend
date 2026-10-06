@@ -6,7 +6,13 @@ export const routing = defineRouting({
     locales: ['en', 'hi'],
 
     // Used when no locale matches
-    defaultLocale: 'en'
+    defaultLocale: 'en',
+
+    // Disable cookie-based detection to enable Vercel Edge CDN caching (no Set-Cookie on every request)
+    localeDetection: false,
+
+    // Ensure all localized routes have the locale prefix (/en/ or /hi/)
+    localePrefix: 'always'
 });
 
 // Lightweight wrappers around Next.js' navigation APIs

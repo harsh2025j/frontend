@@ -1,5 +1,6 @@
 import React from "react";
 import { Metadata } from "next";
+import { setRequestLocale } from "next-intl/server";
 import CategoryClient from "./CategoryClient";
 import { API_BASE_URL } from "@/data/services/apiConfig/apiContants";
 
@@ -57,6 +58,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function CategoryPage() {
+export default async function CategoryPage({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   return <CategoryClient />;
 }

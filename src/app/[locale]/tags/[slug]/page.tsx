@@ -1,5 +1,6 @@
 import React from "react";
 import { Metadata } from "next";
+import { setRequestLocale } from "next-intl/server";
 import TagClient from "./TagClient";
 
 export const revalidate = 1200;
@@ -55,6 +56,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function TagPage() {
+export default async function TagPage({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   return <TagClient />;
 }

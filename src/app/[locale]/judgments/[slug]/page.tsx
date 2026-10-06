@@ -2,6 +2,7 @@ import React, { cache } from "react";
 import { Metadata } from "next";
 import { judgmentsService } from "@/data/services/judgments-service/judgmentsService";
 import JudgmentView from "./JudgmentView";
+import { setRequestLocale } from "next-intl/server";
 
 export const revalidate = 3600;
 
@@ -91,6 +92,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function JudgmentDetailPage({ params: paramsPromise, judgmentId: propId, isModal = false }: PageProps & { judgmentId?: string; isModal?: boolean }) {
     const { slug, locale } = await paramsPromise;
+    setRequestLocale(locale);
     const finalId = propId || slug;
 
     let judgment = null;
