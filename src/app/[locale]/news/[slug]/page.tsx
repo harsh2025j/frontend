@@ -136,6 +136,12 @@ export default async function ArticlePage({ params }: Props) {
         notFound();
     }
 
+    const articleImage = article.thumbnail
+        ? (article.thumbnail.startsWith("http")
+            ? article.thumbnail
+            : `${SITE_URL}${article.thumbnail.startsWith("/") ? "" : "/"}${article.thumbnail}`)
+        : `${SITE_URL}/logo-gold.png`;
+
     // JSON-LD for NewsArticle SEO
     const newsArticleJsonLd = {
         "@context": "https://schema.org",
@@ -147,7 +153,7 @@ export default async function ArticlePage({ params }: Props) {
         "headline": article.title,
         "description": article.subHeadline || article.content.replace(/<[^>]*>?/gm, "").slice(0, 160) + "...",
         "image": [
-            `${SITE_URL}/${locale}/news/${slug}/opengraph-image`
+            articleImage
         ],
         "datePublished": article.createdAt,
         "dateModified": article.updatedAt || article.createdAt,
