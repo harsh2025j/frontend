@@ -16,6 +16,7 @@ import { API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
 
 export type StudentActivityType =
   | "enrolled"
+  | "lesson_completed"
   | "assessment_passed"
   | "assessment_attempt"
   | "assignment_submitted"
@@ -58,6 +59,7 @@ export interface StudentActivityDay {
   date: string; // YYYY-MM-DD
   events: number;
   enrollments: number;
+  lessons?: number;
   attempts: number;
   submissions: number;
   certificates: number;

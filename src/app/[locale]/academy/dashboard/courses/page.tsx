@@ -217,7 +217,7 @@ function FilterTabs({
     { key: 'completed', label: 'Completed' },
   ];
   return (
-    <div className="inline-flex shrink-0 overflow-x-auto rounded-full border border-[rgba(11,18,32,0.08)] bg-[color:var(--sa-cream)] p-1">
+    <div className="inline-flex max-w-full shrink-0 overflow-x-auto rounded-full border border-[rgba(11,18,32,0.08)] bg-[color:var(--sa-cream)] p-1 scrollbar-none">
       {options.map((o) => {
         const active = filter === o.key;
         return (
@@ -225,7 +225,7 @@ function FilterTabs({
             key={o.key}
             type="button"
             onClick={() => onChange(o.key)}
-            className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-[12.5px] font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-[12.5px] font-semibold transition-colors cursor-pointer ${
               active
                 ? 'bg-white text-[color:var(--sa-ink)] shadow-sm'
                 : 'text-[color:var(--sa-ink-3)] hover:text-[color:var(--sa-ink)]'

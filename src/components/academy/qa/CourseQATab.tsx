@@ -468,7 +468,7 @@ export default function CourseQATab({ courseId, activeItemId, activeModuleId, ac
         </div>
 
         {/* Search */}
-        <div className="flex items-center gap-2 bg-white border border-[#122340]/10 rounded-full px-3 py-2 flex-1 max-w-sm ml-auto">
+        <div className="flex items-center gap-2 bg-white border border-[#122340]/10 rounded-full px-3 py-2 w-full sm:w-auto sm:flex-1 sm:max-w-sm sm:ml-auto">
           <Search size={13} className="text-gray-400 shrink-0" />
           <input
             type="text"

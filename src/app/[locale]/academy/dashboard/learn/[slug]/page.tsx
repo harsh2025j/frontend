@@ -7,7 +7,7 @@ import {
   ChevronLeft, PlayCircle, CheckCircle2, FileText, MessageSquare, Download,
   Play, Pause, Maximize, Volume2, SkipForward, Video, ClipboardList, Award,
   CheckSquare, UploadCloud, Clock, ExternalLink, XCircle, Circle, FileQuestion, GraduationCap,
-  Lock, ArrowRight, Star, AlertCircle, ChevronDown, BookOpen
+  Lock, ArrowRight, Star, AlertCircle, ChevronDown, BookOpen, X
 } from 'lucide-react';
 import AssessmentPlayer from './AssessmentPlayer';
 import LiveClassViewer from '@/components/academy/live/LiveClassViewer';
@@ -65,8 +65,11 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
 
   const [studentSubmissions, setStudentSubmissions] = useState<any[]>([]);
 
+  // Mobile syllabus drawer state
+  const [isSyllabusDrawerOpen, setIsSyllabusDrawerOpen] = useState(false);
+
   // Review states inside learn page
-  const [activeTab, setActiveTab] = useState<'qa' | 'reviews'>('qa');
+  const [activeTab, setActiveTab] = useState<'curriculum' | 'qa' | 'reviews'>('qa');
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedRating, setSelectedRating] = useState<number | undefined>(undefined);
   const [myReview, setMyReview] = useState<CourseReview | null>(null);
@@ -208,6 +211,44 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
     return () => clearTimeout(timer);
   }, [activeItem?.id, openModule]);
 
+  // Close syllabus drawer on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsSyllabusDrawerOpen(false);
+    };
+    if (isSyllabusDrawerOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isSyllabusDrawerOpen]);
+
+  const handleSelectItem = (item: any) => {
+    if (item.type === 'final_assessment' && !isFinalAssessmentUnlocked) {
+      toast.error(`Complete ${unlockPctRequired}% of prior lessons to unlock final assessment (${currentProgressPct}% completed)`);
+      return;
+    }
+    hasUserManuallySelected.current = true;
+    setActiveItem(item);
+    setIsVideoEnded(false);
+    setIsSyllabusDrawerOpen(false);
+
+    // Expand parent module of the selected item
+    if (mappedCourseData?.modules) {
+      const parentModuleIndex = mappedCourseData.modules.findIndex((mod: any) => {
+        if (mod.items?.some((it: any) => it.id === item.id)) return true;
+        if (mod.submodules?.some((sub: any) => sub.items?.some((it: any) => it.id === item.id))) return true;
+        return false;
+      });
+      if (parentModuleIndex !== -1) {
+        setOpenModule(parentModuleIndex);
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const activeSubmission = React.useMemo(() => {
     if (!activeItem || activeItem.type !== 'assignment') return null;
     return studentSubmissions.find(s => s.assignmentId === activeItem.id);
@@ -217,6 +258,27 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
   const [isPlaying, setIsPlaying] = useState(false);
   const [isVideoEnded, setIsVideoEnded] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDocIframeLoading, setIsDocIframeLoading] = useState(true);
+
+  useEffect(() => {
+    setIsDocIframeLoading(true);
+  }, [activeItem?.id]);
+
+  const getDocFileInfo = (url: string) => {
+    if (!url) return { isPdf: false, isDoc: false, isLocalhost: false, ext: 'FILE', label: 'Document' };
+    const cleanUrl = url.split('?')[0].toLowerCase();
+    const ext = cleanUrl.split('.').pop() || '';
+    const isPdf = ext === 'pdf';
+    const isDoc = ext === 'doc' || ext === 'docx' || ext === 'odt' || ext === 'rtf';
+    const isLocalhost = cleanUrl.includes('localhost') || cleanUrl.includes('127.0.0.1') || cleanUrl.includes('.local');
+    return {
+      isPdf,
+      isDoc,
+      isLocalhost,
+      ext: ext.toUpperCase(),
+      label: isPdf ? 'PDF Document' : isDoc ? 'Word Document' : 'Document',
+    };
+  };
 
   const handleDownload = async (e: React.MouseEvent, url: string, title: string) => {
     e.preventDefault();
@@ -500,6 +562,16 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
     return allCourseItems.find((it: any) => it.id !== activeItem.id && !getItemLockStatus(it).isLocked && !it.completed) || null;
   }, [activeItem, allCourseItems, getItemLockStatus]);
 
+  // Sequential adjacent lesson navigation (Previous and Next items)
+  const { prevItem, nextItem } = React.useMemo(() => {
+    if (!activeItem || !allCourseItems.length) return { prevItem: null, nextItem: null };
+    const currentIndex = allCourseItems.findIndex((it: any) => it.id === activeItem.id);
+    return {
+      prevItem: currentIndex > 0 ? allCourseItems[currentIndex - 1] : null,
+      nextItem: currentIndex >= 0 && currentIndex < allCourseItems.length - 1 ? allCourseItems[currentIndex + 1] : null,
+    };
+  }, [activeItem, allCourseItems]);
+
   useEffect(() => {
     if (mappedCourseData && mappedCourseData.modules.length > 0) {
       if (allCourseItems.length > 0) {
@@ -645,6 +717,227 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
 
   const activeItemLock = getItemLockStatus(activeItem);
 
+  const renderCurriculumModules = (prefix: string) => {
+    return COURSE_DATA.modules.map((mod, i) => {
+      const modCompleted = mod.items.filter((item: any) => item.completed).length + mod.submodules.reduce((acc: number, sub: any) => acc + sub.items.filter((item: any) => item.completed).length, 0);
+      const modTotal = mod.items.length + mod.submodules.reduce((acc: number, sub: any) => acc + sub.items.length, 0);
+      const modPct = modTotal > 0 ? Math.round((modCompleted / modTotal) * 100) : 0;
+      const modFullyDone = modTotal > 0 && modCompleted === modTotal;
+      const isOpen = openModule === i;
+      return (
+        <div key={`${prefix}-mod-${i}`} className="border-b border-[#122340]/8">
+          <button
+            onClick={() => setOpenModule(openModule === i ? null : i)}
+            className={`w-full p-4 flex justify-between items-start text-left transition-all cursor-pointer ${isOpen ? 'bg-[#122340]/[0.03]' : 'bg-white hover:bg-[#122340]/[0.02]'}`}
+          >
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start gap-2.5">
+                <div className={`mt-0.5 w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-extrabold shrink-0 transition-colors ${modFullyDone ? 'bg-green-500 text-white shadow-sm' : isOpen ? 'bg-[#C9A227] text-white shadow-sm' : 'bg-[#122340]/8 text-[#122340]/70'}`}>
+                  {modFullyDone ? <CheckCircle2 size={13} /> : (i + 1).toString().padStart(2, '0')}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-[#122340] text-sm mb-1.5 pr-2 leading-tight">{mod.title}</h4>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1 bg-[#122340]/8 rounded-full overflow-hidden max-w-[120px]">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${modFullyDone ? 'bg-green-500' : 'bg-[#C9A227]'}`}
+                        style={{ width: `${modPct}%` }}
+                      />
+                    </div>
+                    <p className="text-[11px] font-semibold text-[#122340]/55 tabular-nums">
+                      {modCompleted}/{modTotal}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ChevronDown size={16} className={`text-[#122340]/40 shrink-0 mt-1 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#C9A227]' : ''}`} />
+          </button>
+
+          {openModule === i && (
+            <div className="bg-[#122340]/[0.02] py-2">
+              {/* Root Level Items */}
+              {mod.items.map((item: any) => {
+                const isActive = activeItem?.id === item.id;
+                const lockStatus = getItemLockStatus(item);
+                const isItemLocked = lockStatus.isLocked;
+                return (
+                  <div
+                    key={`${prefix}-item-${item.id}`}
+                    id={`${prefix}-item-${item.id}`}
+                    onClick={() => handleSelectItem(item)}
+                    title={lockStatus.tooltip || undefined}
+                    className={`group/item relative flex gap-3 p-3 pl-4 cursor-pointer transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-[#C9A227]/15 via-[#C9A227]/8 to-transparent border-l-4 border-[#C9A227] shadow-[inset_0_0_0_1px_rgba(201,162,39,0.12)]' : 'border-l-4 border-transparent hover:bg-[#122340]/[0.04] hover:border-[#122340]/15'}`}
+                  >
+                    {/* Floating tooltip on hover when locked */}
+                    {lockStatus.isLocked && (
+                      <div className="absolute right-3 top-2 hidden group-hover/item:flex items-center gap-1.5 px-2.5 py-1 bg-gray-900/95 text-white text-[10px] font-semibold rounded-lg shadow-xl z-20 pointer-events-none whitespace-nowrap border border-gray-700/60 animate-in fade-in duration-150">
+                        <Lock size={10} className="text-amber-400 shrink-0" />
+                        <span>{lockStatus.tooltip}</span>
+                      </div>
+                    )}
+
+                    <div className="mt-0.5 shrink-0 flex items-center justify-center">
+                      {(() => {
+                        const submission = item.type === 'assignment' ? studentSubmissions.find(s => s.assignmentId === item.id) : null;
+                        if (submission?.status === 'rejected') {
+                          return <XCircle size={16} className="text-red-500" />;
+                        }
+                        if (submission?.status === 'pending' || submission?.status === 'resubmitted') {
+                          return <Circle size={16} className="text-green-500" />;
+                        }
+                        if (item.completed) {
+                          return <CheckCircle2 size={16} className="text-green-500" />;
+                        }
+                        if (isItemLocked) {
+                          return <Lock size={16} className="text-amber-500" />;
+                        }
+                        return (
+                          <div className="w-4 h-4 rounded-full border-2 border-[#122340]/20 flex items-center justify-center">
+                            {isActive && <div className="w-1.5 h-1.5 bg-[#C9A227] rounded-full"></div>}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    <div>
+                      <p className={`text-sm ${isActive ? 'font-bold text-[#122340]' : 'font-medium text-[#122340]/80'}`}>
+                        {item.title}
+                      </p>
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#122340]/50 mt-1.5">
+                        {isItemLocked ? (
+                          <Lock size={14} className="text-amber-500" />
+                        ) : (
+                          getItemIcon(item.type, isActive, item.completed)
+                        )}
+                        <span className="uppercase tracking-wider">{formatItemType(item.type)}</span>
+                        {item.type === 'live' && item.liveData?.status === 'live' && (
+                          <span className="px-1.5 py-0.2 text-[9px] bg-red-100 text-red-700 font-extrabold rounded-full animate-pulse">LIVE</span>
+                        )}
+                        {isItemLocked && (
+                          <div className="relative group/badge inline-flex">
+                            <span
+                              className="px-1.5 py-0.5 text-[9px] bg-amber-100 text-amber-800 font-extrabold rounded flex items-center gap-0.5 cursor-pointer"
+                              title={lockStatus.tooltip}
+                            >
+                              <Lock size={9} /> LOCKED
+                            </span>
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover/badge:flex items-center gap-1 px-2.5 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-xl z-50 pointer-events-none whitespace-nowrap border border-gray-700">
+                              <Lock size={10} className="text-amber-400 shrink-0" />
+                              <span>{lockStatus.tooltip}</span>
+                            </div>
+                          </div>
+                        )}
+                        {item.type === 'final_assessment' && isFinalAssessmentUnlocked && !item.completed && (
+                          <span className="px-1.5 py-0.5 text-[9px] bg-emerald-100 text-emerald-800 font-extrabold rounded">
+                            READY
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Submodules rendering */}
+              {mod.submodules.map((sub: any) => (
+                <div key={`${prefix}-sub-${sub.id}`} className="mt-2 mb-1">
+                  <div className="px-4 py-2 bg-gradient-to-r from-[#122340]/8 to-[#122340]/4 border-y border-[#122340]/8 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-3.5 bg-[#C9A227] rounded-full"></div>
+                      <h5 className="font-extrabold text-[#122340] text-[11px] uppercase tracking-wider">{sub.title}</h5>
+                    </div>
+                  </div>
+                  <div className="bg-white/50">
+                    {sub.items.map((item: any) => {
+                      const isActive = activeItem?.id === item.id;
+                      const lockStatus = getItemLockStatus(item);
+                      const isItemLocked = lockStatus.isLocked;
+                      return (
+                        <div
+                          key={`${prefix}-item-${item.id}`}
+                          id={`${prefix}-item-${item.id}`}
+                          onClick={() => handleSelectItem(item)}
+                          title={lockStatus.tooltip || undefined}
+                          className={`group/item relative flex gap-3 p-3 pl-6 cursor-pointer transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-[#C9A227]/15 via-[#C9A227]/8 to-transparent border-l-4 border-[#C9A227] shadow-[inset_0_0_0_1px_rgba(201,162,39,0.12)]' : 'border-l-4 border-transparent hover:bg-[#122340]/[0.04] hover:border-[#122340]/15'}`}
+                        >
+                          {/* Floating tooltip on hover when locked */}
+                          {lockStatus.isLocked && (
+                            <div className="absolute right-3 top-2 hidden group-hover/item:flex items-center gap-1.5 px-2.5 py-1 bg-gray-900/95 text-white text-[10px] font-semibold rounded-lg shadow-xl z-20 pointer-events-none whitespace-nowrap border border-gray-700/60 animate-in fade-in duration-150">
+                              <Lock size={10} className="text-amber-400 shrink-0" />
+                              <span>{lockStatus.tooltip}</span>
+                            </div>
+                          )}
+
+                          <div className="mt-0.5 shrink-0 flex items-center justify-center">
+                            {(() => {
+                              const submission = item.type === 'assignment' ? studentSubmissions.find(s => s.assignmentId === item.id) : null;
+                              if (submission?.status === 'rejected') {
+                                return <XCircle size={16} className="text-red-500" />;
+                              }
+                              if (submission?.status === 'pending' || submission?.status === 'resubmitted') {
+                                return <Circle size={16} className="text-green-500" />;
+                              }
+                              if (item.completed) {
+                                return <CheckCircle2 size={16} className="text-green-500" />;
+                              }
+                              if (isItemLocked) {
+                                return <Lock size={16} className="text-amber-500" />;
+                              }
+                              return (
+                                <div className="w-4 h-4 rounded-full border-2 border-[#122340]/20 flex items-center justify-center">
+                                  {isActive && <div className="w-1.5 h-1.5 bg-[#C9A227] rounded-full"></div>}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                          <div>
+                            <p className={`text-sm ${isActive ? 'font-bold text-[#122340]' : 'font-medium text-[#122340]/80'}`}>
+                              {item.title}
+                            </p>
+                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#122340]/50 mt-1.5">
+                              {isItemLocked ? (
+                                <Lock size={14} className="text-amber-500" />
+                              ) : (
+                                getItemIcon(item.type, isActive, item.completed)
+                              )}
+                              <span className="uppercase tracking-wider">{formatItemType(item.type)}</span>
+                              {item.type === 'live' && item.liveData?.status === 'live' && (
+                                <span className="px-1.5 py-0.2 text-[9px] bg-red-100 text-red-700 font-extrabold rounded-full animate-pulse">LIVE</span>
+                              )}
+                              {isItemLocked && (
+                                <div className="relative group/badge inline-flex">
+                                  <span
+                                    className="px-1.5 py-0.5 text-[9px] bg-amber-100 text-amber-800 font-extrabold rounded flex items-center gap-0.5 cursor-pointer"
+                                    title={lockStatus.tooltip}
+                                  >
+                                    <Lock size={9} /> LOCKED
+                                  </span>
+                                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover/badge:flex items-center gap-1 px-2.5 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-xl z-50 pointer-events-none whitespace-nowrap border border-gray-700">
+                                    <Lock size={10} className="text-amber-400 shrink-0" />
+                                    <span>{lockStatus.tooltip}</span>
+                                  </div>
+                                </div>
+                              )}
+                              {item.type === 'final_assessment' && isFinalAssessmentUnlocked && !item.completed && (
+                                <span className="px-1.5 py-0.5 text-[9px] bg-emerald-100 text-emerald-800 font-extrabold rounded">
+                                  READY
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    });
+  };
+
   // We use fixed positioning to overlay on top of the global Academy Navbar/Footer 
   // to create a true distraction-free learning environment.
   return (
@@ -659,40 +952,44 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
       `}</style>
 
       {/* ── TOP BAR ── */}
-      <div className="h-16 bg-gradient-to-r from-[#0a1628] via-[#0d1b32] to-[#0a1628] text-white flex items-center justify-between px-4 shrink-0 shadow-[0_2px_16px_-4px_rgba(10,22,40,0.6)] relative border-b border-[#C9A227]/15">
+      <div className="h-14 sm:h-16 bg-gradient-to-r from-[#0a1628] via-[#0d1b32] to-[#0a1628] text-white flex items-center justify-between px-2.5 sm:px-4 shrink-0 shadow-[0_2px_16px_-4px_rgba(10,22,40,0.6)] relative border-b border-[#C9A227]/15 z-30">
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#C9A227]/40 to-transparent pointer-events-none" />
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1.5 sm:gap-4 min-w-0">
           <Link href="/dashboard/courses">
-            <button className="p-2 hover:bg-white/10 rounded-full transition-all hover:-translate-x-0.5 active:scale-95 cursor-pointer">
-              <ChevronLeft size={24} />
+            <button className="p-1 sm:p-2 hover:bg-white/10 rounded-full transition-all hover:-translate-x-0.5 active:scale-95 cursor-pointer shrink-0" title="Back to Courses">
+              <ChevronLeft size={20} className="sm:w-[22px] sm:h-[22px]" />
             </button>
           </Link>
-          <div className="hidden sm:block h-6 w-px bg-white/15"></div>
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="hidden sm:block h-6 w-px bg-white/15 shrink-0"></div>
+          <div className="flex items-center gap-2 min-w-0">
             <div className="hidden md:flex w-8 h-8 rounded-lg bg-[#C9A227]/15 border border-[#C9A227]/25 items-center justify-center shrink-0">
               <BookOpen size={15} className="text-[#C9A227]" />
             </div>
-            <h1 className="font-bold text-sm sm:text-base truncate max-w-md tracking-tight">{COURSE_DATA.title}</h1>
+            <h1 className="font-bold text-xs sm:text-sm md:text-base truncate max-w-[110px] xs:max-w-[160px] sm:max-w-xs md:max-w-md lg:max-w-lg tracking-tight">
+              {COURSE_DATA.title}
+            </h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {(progress >= 30 || myReview || canReview) && (
             <button
               onClick={() => setIsReviewModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C9A227]/15 hover:bg-[#C9A227]/25 text-[#C9A227] border border-[#C9A227]/30 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-[0_4px_12px_-2px_rgba(201,162,39,0.35)] hover:-translate-y-0.5"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-[#C9A227]/15 hover:bg-[#C9A227]/25 text-[#C9A227] border border-[#C9A227]/30 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-[0_4px_12px_-2px_rgba(201,162,39,0.35)] hover:-translate-y-0.5 shrink-0"
               title={myReview ? "Edit your review" : "Leave a review"}
             >
-              <Star size={13} className="fill-[#C9A227]" />
-              <span>{myReview ? "Edit Review" : "Write Review"}</span>
+              <Star size={12} className="fill-[#C9A227] sm:w-[13px] sm:h-[13px]" />
+              <span className="hidden sm:inline">{myReview ? "Edit Review" : "Write Review"}</span>
+              <span className="sm:hidden text-[10.5px]">{myReview ? "Review" : "Rate"}</span>
             </button>
           )}
 
-          <div className="hidden sm:flex items-center gap-3 mr-4 relative group cursor-pointer py-1">
+          {/* Progress bar on tablet/desktop */}
+          <div className="hidden md:flex items-center gap-3 mr-1 relative group cursor-pointer py-1">
             <span className="text-xs text-white/70 font-semibold uppercase tracking-wider group-hover:text-white transition-colors">
-              Your Progress
+              Progress
             </span>
-            <div className="w-32 bg-white/10 rounded-full h-2 overflow-hidden relative ring-1 ring-white/5">
+            <div className="w-24 lg:w-32 bg-white/10 rounded-full h-2 overflow-hidden relative ring-1 ring-white/5">
               <div
                 className="bg-gradient-to-r from-[#C9A227] via-[#e0b93a] to-[#C9A227] h-2 rounded-full transition-all duration-700 ease-out relative overflow-hidden shadow-[0_0_8px_rgba(201,162,39,0.5)]"
                 style={{ width: `${COURSE_DATA.progress}%` }}
@@ -700,7 +997,7 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_2.5s_infinite]" style={{ animation: 'shimmer 2.5s infinite' }} />
               </div>
             </div>
-            <span className="text-xs font-extrabold text-[#C9A227] tabular-nums w-9 text-right">{COURSE_DATA.progress}%</span>
+            <span className="text-xs font-extrabold text-[#C9A227] tabular-nums w-8 text-right">{COURSE_DATA.progress}%</span>
 
             {/* Hover Tooltip */}
             <div className="absolute top-full right-0 mt-2 px-3 py-1.5 bg-[#122340] text-white text-xs font-bold rounded-xl shadow-2xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 flex items-center whitespace-nowrap">
@@ -708,7 +1005,23 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
               <div className="absolute bottom-full right-8 border-4 border-transparent border-b-[#122340]" />
             </div>
           </div>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#e0b93a] to-[#C9A227] flex items-center justify-center font-bold text-sm text-[#0a1628] ring-2 ring-[#C9A227]/40 ring-offset-2 ring-offset-[#0a1628] shadow-md">
+
+          {/* Mobile & Tablet syllabus toggle button */}
+          <button
+            onClick={() => setIsSyllabusDrawerOpen((prev) => !prev)}
+            className="lg:hidden flex items-center gap-1.5 px-2.5 py-1.5 bg-[#C9A227]/15 hover:bg-[#C9A227]/25 text-[#C9A227] border border-[#C9A227]/35 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
+            title={isSyllabusDrawerOpen ? "Close Syllabus" : "View all lectures & modules"}
+            aria-label="Course Syllabus"
+            aria-expanded={isSyllabusDrawerOpen}
+          >
+            <BookOpen size={13} className="text-[#C9A227] shrink-0" />
+            <span className="text-[11px] font-bold">Lectures</span>
+            <span className="text-[9.5px] font-extrabold text-[#0a1628] bg-[#C9A227] px-1.5 py-0.5 rounded-full tabular-nums ml-0.5">
+              {COURSE_DATA.progress}%
+            </span>
+          </button>
+
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-[#e0b93a] to-[#C9A227] flex items-center justify-center font-bold text-[11px] sm:text-sm text-[#0a1628] ring-2 ring-[#C9A227]/40 ring-offset-2 ring-offset-[#0a1628] shadow-md shrink-0">
             {(() => {
               const u = user as any;
               const fullName = u?.name || u?.firstName || u?.email || '';
@@ -796,7 +1109,7 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
               </div>
             ) : (
               /* Content Missing / Not Uploaded Yet by Faculty */
-              <div className="my-6 sm:my-8 mx-auto w-[95%] max-w-4xl bg-white border border-[#E5DDCB] rounded-2xl p-8 sm:p-12 shadow-[0_20px_50px_-20px_rgba(11,18,32,0.08)] flex flex-col items-center text-center shrink-0 relative">
+              <div className="my-4 sm:my-8 mx-auto w-[96%] sm:w-[95%] max-w-4xl bg-white border border-[#E5DDCB] rounded-2xl p-5 sm:p-8 md:p-12 shadow-[0_20px_50px_-20px_rgba(11,18,32,0.08)] flex flex-col items-center text-center shrink-0 relative">
                 {/* <div className="w-20 h-20 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-[#B7913A] flex items-center justify-center mb-6 shadow-inner">
                   <Clock size={38} className="animate-pulse" strokeWidth={1.75} />
                 </div> */}
@@ -869,26 +1182,26 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
             <>
               {/* Dynamic Render based on item type (Only when unlocked) */}
               {activeItem.type === 'video' && (
-                <div className="mt-2 sm:mt-4 mx-auto w-[95%] max-w-5xl relative flex flex-col shrink-0 rounded-2xl overflow-hidden shadow-[0_12px_40px_-8px_rgba(10,22,40,0.25)] border border-[#122340]/10 bg-black ring-1 ring-black/5">
-                  <div className="bg-gradient-to-b from-white to-[#fafaf7] border-b border-[#122340]/10 p-4 flex justify-between items-center shrink-0">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 bg-gradient-to-br from-[#C9A227]/20 to-[#C9A227]/10 text-[#C9A227] rounded-xl flex items-center justify-center shadow-inner border border-[#C9A227]/20 shrink-0">
-                        <Video size={20} />
+                <div className="mt-2 sm:mt-4 mx-auto w-[96%] sm:w-[95%] max-w-5xl relative flex flex-col shrink-0 rounded-2xl overflow-hidden shadow-[0_12px_40px_-8px_rgba(10,22,40,0.25)] border border-[#122340]/10 bg-black ring-1 ring-black/5">
+                  <div className="bg-gradient-to-b from-white to-[#fafaf7] border-b border-[#122340]/10 p-3 sm:p-4 flex flex-wrap gap-2 justify-between items-center shrink-0">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#C9A227]/20 to-[#C9A227]/10 text-[#C9A227] rounded-xl flex items-center justify-center shadow-inner border border-[#C9A227]/20 shrink-0">
+                        <Video size={18} />
                       </div>
-                      <h2 className="font-bold text-[#122340] text-lg tracking-tight truncate">{activeItem.title}</h2>
+                      <h2 className="font-bold text-[#122340] text-sm sm:text-lg tracking-tight truncate">{activeItem.title}</h2>
                     </div>
                     <div className="flex gap-2 shrink-0">
                       {activeItem.completed ? (
-                        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white px-5 py-2 rounded-xl font-bold text-sm flex items-center gap-2 cursor-default select-none shadow-[0_4px_12px_-2px_rgba(34,197,94,0.4)]">
-                          <CheckCircle2 size={16} /> Completed
+                        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 cursor-default select-none shadow-[0_4px_12px_-2px_rgba(34,197,94,0.4)]">
+                          <CheckCircle2 size={15} /> Completed
                         </div>
                       ) : activeItem.fileUrl ? (
                         <button
                           onClick={() => handleMarkAsComplete(activeItem.id)}
                           disabled={isMarkingComplete}
-                          className="bg-gradient-to-br from-[#C9A227] to-[#b08d20] text-white px-5 py-2 rounded-xl font-bold text-sm hover:shadow-[0_4px_14px_-2px_rgba(201,162,39,0.5)] hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer shadow-sm"
+                          className="bg-gradient-to-br from-[#C9A227] to-[#b08d20] text-white px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm hover:shadow-[0_4px_14px_-2px_rgba(201,162,39,0.5)] hover:-translate-y-0.5 transition-all flex items-center gap-1.5 sm:gap-2 disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer shadow-sm"
                         >
-                          {isMarkingComplete ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                          {isMarkingComplete ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
                           Mark as Complete
                         </button>
                       ) : null}
@@ -938,8 +1251,8 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
                             >
                               <div className="relative">
                                 <div className="absolute inset-0 rounded-full bg-[#C9A227]/40 blur-2xl scale-110 animate-pulse" />
-                                <div className="relative w-20 h-20 bg-gradient-to-br from-[#e0b93a] to-[#C9A227] rounded-full flex items-center justify-center shadow-2xl transition-all transform group-hover/play:scale-110 ring-4 ring-white/20">
-                                  <Play className="text-[#0a1628] ml-2" size={40} fill="currentColor" />
+                                <div className="relative w-14 h-14 sm:w-20 sm:h-20 bg-gradient-to-br from-[#e0b93a] to-[#C9A227] rounded-full flex items-center justify-center shadow-2xl transition-all transform group-hover/play:scale-110 ring-4 ring-white/20">
+                                  <Play className="text-[#0a1628] ml-1 sm:ml-2 w-6 h-6 sm:w-10 sm:h-10" fill="currentColor" />
                                 </div>
                               </div>
                             </div>
@@ -964,64 +1277,218 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
                 </div>
               )}
 
-              {activeItem.type === 'document' && (
-                <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-5xl bg-[#f8f9fa] max-h-[700px] h-[700px] relative flex flex-col shrink-0 rounded-2xl overflow-hidden shadow-[0_12px_40px_-8px_rgba(10,22,40,0.2)] border border-[#122340]/10 ring-1 ring-black/5">
-                  {activeItem.fileUrl ? (
-                    <>
-                      <div className="bg-gradient-to-b from-white to-[#fafaf7] border-b border-[#122340]/10 p-4 flex justify-between items-center shrink-0">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 bg-gradient-to-br from-[#C9A227]/20 to-[#C9A227]/10 text-[#C9A227] rounded-xl flex items-center justify-center shadow-inner border border-[#C9A227]/20 shrink-0">
-                            <FileText size={20} />
+              {activeItem.type === 'document' && (() => {
+                const docInfo = getDocFileInfo(activeItem.fileUrl || '');
+                const googleDocsEmbedUrl = activeItem.fileUrl
+                  ? `https://docs.google.com/viewer?url=${encodeURIComponent(activeItem.fileUrl)}&embedded=true`
+                  : '';
+                const googleDocsExternalUrl = activeItem.fileUrl
+                  ? `https://docs.google.com/viewer?url=${encodeURIComponent(activeItem.fileUrl)}`
+                  : '';
+
+                const pdfNativeUrl = `${activeItem.fileUrl}#toolbar=1&navpanes=1`;
+
+                return (
+                  <div className="mt-2.5 sm:mt-8 mx-auto w-[98%] sm:w-[95%] max-w-5xl bg-[#f8f9fa] h-[72vh] min-h-[520px] sm:h-[680px] lg:h-[750px] relative flex flex-col shrink-0 rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_12px_40px_-8px_rgba(10,22,40,0.18)] border border-[#122340]/10 ring-1 ring-black/5">
+                    {activeItem.fileUrl ? (
+                      <>
+                        {/* ── Single-Row Header ── */}
+                        <div className="bg-gradient-to-b from-white to-[#fafaf7] border-b border-[#122340]/10 px-2.5 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-1.5 sm:gap-3 shrink-0">
+                          {/* Left: Icon + Title + Format Badge */}
+                          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
+                            <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center shadow-inner border shrink-0 ${
+                              docInfo.isPdf
+                                ? 'bg-red-50 text-red-600 border-red-200/60'
+                                : docInfo.isDoc
+                                ? 'bg-blue-50 text-blue-600 border-blue-200/60'
+                                : 'bg-[#C9A227]/15 text-[#C9A227] border-[#C9A227]/25'
+                            }`}>
+                              <FileText size={15} />
+                            </div>
+                            <div className="min-w-0 flex items-center gap-1.5 flex-1">
+                              <h2
+                                className="font-bold text-[#122340] text-xs sm:text-sm tracking-tight truncate max-w-[110px] xs:max-w-[160px] sm:max-w-xs md:max-w-md"
+                                title={activeItem.title}
+                              >
+                                {activeItem.title}
+                              </h2>
+                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wide uppercase border shrink-0 ${
+                                docInfo.isPdf
+                                  ? 'bg-red-50 text-red-700 border-red-200'
+                                  : docInfo.isDoc
+                                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                  : 'bg-amber-50 text-amber-800 border-amber-200'
+                              }`}>
+                                {docInfo.ext}
+                              </span>
+                            </div>
                           </div>
-                          <h2 className="font-bold text-[#122340] text-lg tracking-tight truncate">{activeItem.title}</h2>
-                        </div>
-                        <div className="flex gap-2 shrink-0">
-                          {activeItem.completed ? (
-                            <div
-                              className="bg-gradient-to-br from-green-500 to-green-600 text-white px-5 py-2 rounded-xl font-bold text-sm flex items-center gap-2 cursor-default select-none shadow-[0_4px_12px_-2px_rgba(34,197,94,0.4)]"
+
+                          {/* Right: Actions in a single compact row */}
+                          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                            {activeItem.completed ? (
+                              <div
+                                className="bg-gradient-to-br from-green-500 to-green-600 text-white px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-lg font-bold text-[11px] sm:text-xs flex items-center gap-1 shadow-2xs"
+                              >
+                                <CheckCircle2 size={12} />
+                                <span className="hidden xs:inline">Completed</span>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => handleMarkAsComplete(activeItem.id)}
+                                disabled={isMarkingComplete}
+                                className="bg-gradient-to-br from-[#C9A227] to-[#b08d20] text-white px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-lg font-bold text-[11px] sm:text-xs hover:shadow-md transition-all flex items-center gap-1 disabled:opacity-50 cursor-pointer shadow-2xs active:scale-95"
+                              >
+                                {isMarkingComplete ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
+                                <span className="hidden xs:inline">Mark </span><span>Done</span>
+                              </button>
+                            )}
+
+                            {/* Opener for PDF / DOCX */}
+                            {docInfo.isPdf ? (
+                              <a
+                                href={activeItem.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-white hover:bg-slate-50 text-[#122340] border border-[#122340]/15 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-bold text-[11px] sm:text-xs hover:-translate-y-0.5 transition-all flex items-center gap-1 shadow-2xs cursor-pointer shrink-0 active:scale-95"
+                                title="Open in new browser tab"
+                              >
+                                <ExternalLink size={12} className="text-red-600" />
+                                <span className="hidden sm:inline">Browser</span>
+                              </a>
+                            ) : (
+                              <a
+                                href={googleDocsExternalUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-bold text-[11px] sm:text-xs hover:-translate-y-0.5 transition-all flex items-center gap-1 shadow-2xs cursor-pointer shrink-0 active:scale-95"
+                                title="Open in Google Docs"
+                              >
+                                <ExternalLink size={12} className="text-blue-600" />
+                                <span className="hidden sm:inline">Docs</span>
+                              </a>
+                            )}
+
+                            {/* Download Button */}
+                            <button
+                              onClick={(e) => activeItem.fileUrl && handleDownload(e, activeItem.fileUrl, activeItem.title)}
+                              disabled={isDownloading}
+                              className="bg-gradient-to-br from-[#122340] to-[#0a1628] text-white p-1.5 sm:px-3 sm:py-1.5 rounded-lg font-bold text-[11px] sm:text-xs hover:shadow-md transition-all flex items-center gap-1 disabled:opacity-50 cursor-pointer shadow-2xs shrink-0 active:scale-95"
+                              title="Download file"
                             >
-                              <CheckCircle2 size={16} />
-                              Completed
+                              {isDownloading ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
+                              <span className="hidden sm:inline">Download</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* ── Sub-Header Tip Strip ── */}
+                        {docInfo.isPdf ? (
+                          <div className="bg-[#122340]/[0.03] border-b border-[#122340]/8 px-2.5 sm:px-4 py-1.5 text-[10.5px] sm:text-xs text-[#122340]/70 flex items-center justify-between gap-2 shrink-0">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="font-extrabold text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border bg-red-50 text-red-800 border-red-200 shrink-0">
+                                Native PDF
+                              </span>
+                              <span className="truncate text-[#122340]/60">
+                                Default Chrome PDF engine · If not rendering on your mobile browser, tap Fullscreen &rarr;
+                              </span>
+                            </div>
+                            <a
+                              href={activeItem.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#C9A227] hover:text-[#a88518] font-bold inline-flex items-center gap-0.5 text-[10.5px] shrink-0"
+                            >
+                              <span>Fullscreen</span> &rarr;
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="bg-[#122340]/[0.03] border-b border-[#122340]/8 px-2.5 sm:px-4 py-1.5 text-[10.5px] sm:text-xs text-[#122340]/70 flex items-center justify-between gap-2 shrink-0">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="font-extrabold text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border bg-blue-50 text-blue-800 border-blue-200 shrink-0">
+                                Cloud Docs
+                              </span>
+                              <span className="truncate text-[#122340]/60">
+                                Word file preview rendered via Google Docs Cloud
+                              </span>
+                            </div>
+                            <a
+                              href={googleDocsExternalUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-700 hover:text-blue-900 font-bold inline-flex items-center gap-0.5 text-[10.5px] shrink-0"
+                            >
+                              <span>Google Docs</span> &rarr;
+                            </a>
+                          </div>
+                        )}
+
+                        {/* ── Viewer Viewport ── */}
+                        <div className="flex-1 w-full bg-[#f8f9fa] overflow-hidden relative">
+                          {isDocIframeLoading && (
+                            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#f8f9fa] transition-opacity duration-300">
+                              <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-2 shadow-xs animate-pulse ${
+                                docInfo.isPdf ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
+                              }`}>
+                                <FileText size={22} />
+                              </div>
+                              <div className="flex items-center gap-1.5 text-xs font-medium text-[#122340]/60">
+                                <Loader2 size={13} className="animate-spin text-[#C9A227]" />
+                                <span>Loading document...</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {docInfo.isPdf ? (
+                            /* PDF: Native Browser Engine (Same for desktop, mobile, tablet) */
+                            <iframe
+                              key={activeItem.id}
+                              src={pdfNativeUrl}
+                              onLoad={() => setIsDocIframeLoading(false)}
+                              className="w-full h-full border-none bg-white block"
+                              title={activeItem.title}
+                            />
+                          ) : docInfo.isDoc && docInfo.isLocalhost ? (
+                            /* DOC/DOCX on localhost: Google Docs Cloud cannot reach localhost */
+                            <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-white">
+                              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 border border-blue-200/60 flex items-center justify-center mb-4 shadow-xs">
+                                <FileText size={28} />
+                              </div>
+                              <h3 className="font-bold text-[#122340] text-base mb-1.5">Word Document (Development Notice)</h3>
+                              <p className="text-xs text-[#122340]/70 max-w-md mb-4 leading-relaxed">
+                                Google Docs Cloud Viewer requires a publicly accessible URL. Because this course file is hosted on <code className="bg-slate-100 px-1.5 py-0.5 rounded text-blue-700 font-mono text-[11px]">localhost</code>, Google’s cloud servers cannot reach it in local development. On production or cloud storage (S3/Cloudinary), this document will preview automatically.
+                              </p>
+                              <button
+                                onClick={(e) => activeItem.fileUrl && handleDownload(e, activeItem.fileUrl, activeItem.title)}
+                                className="px-4 py-2 bg-[#122340] hover:bg-[#0a1628] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-xs cursor-pointer"
+                              >
+                                <Download size={14} /> Download {docInfo.ext} File
+                              </button>
                             </div>
                           ) : (
-                            <button
-                              onClick={() => handleMarkAsComplete(activeItem.id)}
-                              disabled={isMarkingComplete}
-                              className="bg-gradient-to-br from-[#C9A227] to-[#b08d20] text-white px-5 py-2 rounded-xl font-bold text-sm hover:shadow-[0_4px_14px_-2px_rgba(201,162,39,0.5)] hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer shadow-sm"
-                            >
-                              {isMarkingComplete ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-                              Mark as Complete
-                            </button>
+                            /* DOC/DOCX: Render via Google Docs Cloud Viewer */
+                            <iframe
+                              key={activeItem.id}
+                              src={googleDocsEmbedUrl}
+                              onLoad={() => setIsDocIframeLoading(false)}
+                              className="w-full h-full border-none bg-white block"
+                              title={activeItem.title}
+                            />
                           )}
-                          <button
-                            onClick={(e) => activeItem.fileUrl && handleDownload(e, activeItem.fileUrl, activeItem.title)}
-                            disabled={isDownloading}
-                            className="bg-gradient-to-br from-[#122340] to-[#0a1628] text-white px-5 py-2 rounded-xl font-bold text-sm hover:shadow-[0_4px_14px_-2px_rgba(10,22,40,0.5)] hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer shadow-sm"
-                          >
-                            {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-                            {isDownloading ? 'Downloading...' : 'Download Document'}
-                          </button>
                         </div>
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-white">
+                        <FileText size={64} className="text-[#122340]/20 mb-6" />
+                        <h2 className="text-2xl font-extrabold mb-2 text-[#122340]">Document Unavailable</h2>
+                        <p className="text-[#122340]/60 mb-8 font-medium max-w-lg">
+                          The document for this lesson has not been uploaded yet. Please check back later.
+                        </p>
                       </div>
-                      <div className="flex-1 w-full bg-[#e5e7eb]">
-                        <iframe
-                          src={activeItem.fileUrl.toLowerCase().includes('.pdf') ? `${activeItem.fileUrl}#toolbar=0` : `https://docs.google.com/viewer?url=${encodeURIComponent(activeItem.fileUrl)}&embedded=true`}
-                          className="w-full h-full border-none"
-                          title={activeItem.title}
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-white">
-                      <FileText size={64} className="text-[#122340]/20 mb-6" />
-                      <h2 className="text-2xl font-extrabold mb-2 text-[#122340]">Document Unavailable</h2>
-                      <p className="text-[#122340]/60 mb-8 font-medium max-w-lg">
-                        The document for this lesson has not been uploaded yet. Please check back later.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                );
+              })()}
 
               {activeItem.type === 'live' && (
                 <LiveClassViewer
@@ -1039,24 +1506,24 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
               )}
 
               {activeItem.type === 'assignment' && (
-                <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-5xl bg-[#f8f9fa] border border-[#122340]/10 rounded-2xl p-10 flex flex-col items-center justify-center shrink-0 text-[#122340] shadow-sm">
-                  <ClipboardList size={48} className="text-[#C9A227] mb-6" />
-                  <h2 className="text-2xl font-extrabold mb-2 text-center">{activeItem.title}</h2>
-                  <p className="text-[#122340]/60 mb-6 font-medium">Please review the instructions below and upload your completed work.</p>
+                <div className="mt-4 sm:mt-8 mx-auto w-[96%] sm:w-[95%] max-w-5xl bg-[#f8f9fa] border border-[#122340]/10 rounded-2xl p-5 sm:p-8 md:p-10 flex flex-col items-center justify-center shrink-0 text-[#122340] shadow-sm">
+                  <ClipboardList size={40} className="text-[#C9A227] mb-4 sm:mb-6" />
+                  <h2 className="text-xl sm:text-2xl font-extrabold mb-2 text-center">{activeItem.title}</h2>
+                  <p className="text-[#122340]/60 mb-6 font-medium text-center text-xs sm:text-sm max-w-md">Please review the instructions below and upload your completed work.</p>
 
                   {activeItem.fileUrl && (
                     <button
                       onClick={(e) => handleDownload(e, activeItem.fileUrl, activeItem.title)}
                       disabled={isDownloading}
-                      className="mb-8 bg-[#C9A227] text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-[#b08d20] hover:shadow-lg transition-all flex items-center gap-3 shadow-md disabled:opacity-50"
+                      className="mb-6 sm:mb-8 bg-[#C9A227] text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm hover:bg-[#b08d20] hover:shadow-lg transition-all flex items-center gap-2 sm:gap-3 shadow-md disabled:opacity-50"
                     >
-                      {isDownloading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+                      {isDownloading ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
                       {isDownloading ? 'Downloading...' : 'Download Assignment Instructions'}
                     </button>
                   )}
 
                   {!activeItem.fileUrl ? (
-                    <div className="w-full max-w-md bg-white border-2 border-dashed border-[#122340]/20 rounded-2xl p-10 flex flex-col items-center justify-center text-center cursor-not-allowed mb-8 relative opacity-70">
+                    <div className="w-full max-w-md bg-white border-2 border-dashed border-[#122340]/20 rounded-2xl p-6 sm:p-10 flex flex-col items-center justify-center text-center cursor-not-allowed mb-6 sm:mb-8 relative opacity-70">
                       <FileText size={32} className="text-[#122340]/20 mb-4" />
                       <p className="font-bold text-sm mb-1 text-[#122340]/50">Assignment Instructions Unavailable</p>
                       <p className="text-xs text-[#122340]/40">You cannot submit until instructions are provided.</p>
@@ -1068,7 +1535,7 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
                         : activeSubmission?.status === 'rejected'
                           ? 'border-red-400 hover:border-red-500 hover:bg-red-50 cursor-pointer'
                           : 'border-[#122340]/20 hover:border-[#C9A227]/50 hover:bg-[#C9A227]/5 cursor-pointer'
-                        } rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-colors group mb-8 relative`}
+                        } rounded-2xl p-6 sm:p-10 flex flex-col items-center justify-center text-center transition-colors group mb-6 sm:mb-8 relative`}
                       onClick={() => {
                         const isCompletedButLocked = activeSubmission?.status === 'verified' || activeSubmission?.status === 'pending' || activeSubmission?.status === 'resubmitted' || (activeItem.completed && activeSubmission?.status !== 'rejected');
                         if (!isCompletedButLocked && !isMarkingComplete) {
@@ -1168,10 +1635,10 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
               })()}
 
               {activeItem.type === 'certificate' && (
-                <div className="mt-6 sm:mt-8 mx-auto w-[95%] max-w-5xl bg-gradient-to-br from-[#122340] to-[#0a1628] border border-[#122340]/10 rounded-2xl p-10 flex flex-col items-center justify-center shrink-0 text-white min-h-[400px] shadow-sm">
-                  <Award size={64} className="text-[#C9A227] mb-6" />
-                  <h2 className="text-3xl font-extrabold mb-4 text-center">Course Complete!</h2>
-                  <p className="text-blue-100/70 mb-8 font-medium text-center max-w-lg">
+                <div className="mt-4 sm:mt-8 mx-auto w-[96%] sm:w-[95%] max-w-5xl bg-gradient-to-br from-[#122340] to-[#0a1628] border border-[#122340]/10 rounded-2xl p-6 sm:p-10 flex flex-col items-center justify-center shrink-0 text-white min-h-[350px] shadow-sm">
+                  <Award size={52} className="text-[#C9A227] mb-4 sm:mb-6" />
+                  <h2 className="text-2xl sm:text-3xl font-extrabold mb-3 text-center">Course Complete!</h2>
+                  <p className="text-blue-100/70 mb-6 sm:mb-8 font-medium text-center text-xs sm:text-sm max-w-lg">
                     {COURSE_DATA.progress === 100
                       ? "Congratulations! You have completed all requirements, including the final assessment. Your certificate is ready to download."
                       : "Congratulations on reaching this far. Your verifiable certificate is locked until all course requirements and the final assessment are passed."}
@@ -1184,21 +1651,21 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
                           if (certBtn) certBtn.click();
                           else window.location.href = '/dashboard/certificates';
                         }}
-                        className="bg-[#C9A227] text-[#0a1628] px-8 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 cursor-pointer"
+                        className="bg-[#C9A227] text-[#0a1628] px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-xl font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 cursor-pointer"
                       >
-                        <Download size={18} /> Download Certificate
+                        <Download size={16} /> Download Certificate
                       </button>
                       <button
                         onClick={() => setIsReviewModalOpen(true)}
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-8 py-3.5 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer"
+                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer"
                       >
-                        <Star size={18} className="fill-[#C9A227] text-[#C9A227]" />
+                        <Star size={16} className="fill-[#C9A227] text-[#C9A227]" />
                         {myReview ? "Edit Your Review" : "Rate & Review Course"}
                       </button>
                     </div>
                   ) : (
-                    <button disabled className="bg-[#122340] border border-white/10 text-white/50 px-10 py-4 rounded-xl font-bold transition-all flex items-center gap-2">
-                      <Download size={18} /> Certificate Locked
+                    <button disabled className="bg-[#122340] border border-white/10 text-white/50 px-6 sm:px-10 py-3 sm:py-4 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2">
+                      <Download size={16} /> Certificate Locked
                     </button>
                   )}
                 </div>
@@ -1206,35 +1673,114 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
             </>
           )}
 
+          {/* Quick Lesson Navigation Bar (Previous & Next) */}
+          {!activeItemLock.isLocked && (prevItem || nextItem) && (
+            <div className="mx-auto w-[96%] sm:w-[95%] max-w-5xl mt-3 sm:mt-5 flex items-center justify-between gap-2 sm:gap-3 px-1">
+              {prevItem ? (
+                <button
+                  type="button"
+                  onClick={() => handleSelectItem(prevItem)}
+                  className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#122340] bg-white border border-[#122340]/15 hover:bg-[#122340]/5 transition cursor-pointer shadow-xs active:scale-95"
+                  title={`Previous: ${prevItem.title}`}
+                >
+                  <ChevronLeft size={16} className="text-[#C9A227] shrink-0" />
+                  <span className="hidden xs:inline text-[#122340]/60 font-semibold">Previous:</span>
+                  <span className="truncate max-w-[80px] xs:max-w-[120px] sm:max-w-[180px] text-[#122340]">{prevItem.title}</span>
+                </button>
+              ) : (
+                <div />
+              )}
+
+              {/* Quick Jump / All Lectures button (Mobile & Tablet) */}
+              <button
+                type="button"
+                onClick={() => setIsSyllabusDrawerOpen(true)}
+                className="lg:hidden flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold text-[#122340] bg-white border border-[#122340]/15 hover:border-[#C9A227] hover:text-[#C9A227] transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
+                title="Open Course Syllabus to jump to any lecture"
+              >
+                <BookOpen size={14} className="text-[#C9A227] shrink-0" />
+                <span>All Lectures</span>
+                <span className="text-[10px] bg-[#122340] text-white px-1.5 py-0.2 rounded-full tabular-nums">
+                  {allCourseItems.length}
+                </span>
+              </button>
+
+              {nextItem ? (
+                <button
+                  type="button"
+                  onClick={() => handleSelectItem(nextItem)}
+                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-[#122340] to-[#0a1628] hover:from-[#1a325c] hover:to-[#122340] transition cursor-pointer shadow-md hover:-translate-y-0.5 active:scale-95 ml-auto"
+                  title={`Next: ${nextItem.title}`}
+                >
+                  <span className="hidden xs:inline text-white/70 font-semibold">Next:</span>
+                  <span className="truncate max-w-[80px] xs:max-w-[120px] sm:max-w-[180px] text-white">{nextItem.title}</span>
+                  <ArrowRight size={16} className="text-[#C9A227] shrink-0" />
+                </button>
+              ) : null}
+            </div>
+          )}
+
           {/* Content Tabs Below Media Area */}
-          <div className="p-6 md:p-10 max-w-4xl w-full mx-auto pb-32">
+          <div className="p-4 sm:p-6 md:p-10 max-w-4xl w-full mx-auto pb-24 sm:pb-32">
 
             {!activeItemLock.isLocked && (
-              <h2 className="text-2xl font-bold text-[#122340] mb-6">{activeItem.title}</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-[#122340] mb-4 sm:mb-6">{activeItem.title}</h2>
             )}
 
-            <div className="flex border-b border-[#122340]/10 mb-8 overflow-x-auto gap-1 relative">
+            <div className="flex border-b border-[#122340]/10 mb-6 sm:mb-8 overflow-x-auto gap-1 relative scrollbar-none">
+              {/* Mobile & Tablet Curriculum Tab */}
               <button
-                onClick={() => setActiveTab('qa')}
-                className={`px-6 py-4 text-sm font-bold whitespace-nowrap transition-all border-b-2 flex items-center gap-2 cursor-pointer relative -mb-px ${activeTab === 'qa'
+                onClick={() => setActiveTab('curriculum')}
+                className={`lg:hidden px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-bold whitespace-nowrap transition-all border-b-2 flex items-center gap-1.5 sm:gap-2 cursor-pointer relative -mb-px ${activeTab === 'curriculum'
                   ? 'border-[#C9A227] text-[#C9A227]'
                   : 'border-transparent text-[#122340]/55 hover:text-[#122340] hover:bg-[#122340]/[0.02]'
                   }`}
               >
-                <MessageSquare size={16} /> Q&A
+                <BookOpen size={15} />
+                <span>Lectures</span>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#122340]/5 text-[#122340]/70 tabular-nums">
+                  {allCourseItems.length}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('qa')}
+                className={`px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-bold whitespace-nowrap transition-all border-b-2 flex items-center gap-2 cursor-pointer relative -mb-px ${activeTab === 'qa'
+                  ? 'border-[#C9A227] text-[#C9A227]'
+                  : 'border-transparent text-[#122340]/55 hover:text-[#122340] hover:bg-[#122340]/[0.02]'
+                  }`}
+              >
+                <MessageSquare size={15} /> Q&A
               </button>
               <button
                 onClick={() => setActiveTab('reviews')}
-                className={`px-6 py-4 text-sm font-bold whitespace-nowrap transition-all border-b-2 flex items-center gap-2 cursor-pointer relative -mb-px ${activeTab === 'reviews'
+                className={`px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-bold whitespace-nowrap transition-all border-b-2 flex items-center gap-2 cursor-pointer relative -mb-px ${activeTab === 'reviews'
                   ? 'border-[#C9A227] text-[#C9A227]'
                   : 'border-transparent text-[#122340]/55 hover:text-[#122340] hover:bg-[#122340]/[0.02]'
                   }`}
               >
-                <Star size={16} className={activeTab === 'reviews' ? 'fill-[#C9A227]' : ''} /> Course Reviews
+                <Star size={15} className={activeTab === 'reviews' ? 'fill-[#C9A227]' : ''} /> Course Reviews
               </button>
             </div>
 
-            {activeTab === 'qa' ? (
+            {activeTab === 'curriculum' ? (
+              <div className="lg:hidden bg-white rounded-2xl border border-[#122340]/10 overflow-hidden shadow-xs mb-8">
+                <div className="p-4 bg-gradient-to-r from-[#f9f7f0] to-white border-b border-[#122340]/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-md bg-[#122340] flex items-center justify-center">
+                      <BookOpen size={12} className="text-[#C9A227]" />
+                    </div>
+                    <span className="font-extrabold text-sm text-[#122340]">Course Syllabus & Lectures</span>
+                  </div>
+                  <span className="text-xs font-bold text-[#122340]/60 tabular-nums">
+                    {COURSE_DATA.progress}% Completed
+                  </span>
+                </div>
+                <div className="divide-y divide-[#122340]/8">
+                  {renderCurriculumModules('inline')}
+                </div>
+              </div>
+            ) : activeTab === 'qa' ? (
               <div>
                 {currentCourse?.id ? (
                   <CourseQATab
@@ -1284,9 +1830,22 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Sequential Syllabus Accordion */}
-        <div className="w-full lg:w-96 bg-white border-l border-[#122340]/10 h-full flex flex-col shrink-0 relative z-10 shadow-xl lg:shadow-[inset_1px_0_0_rgba(18,35,64,0.05)]">
-          <div className="p-4 border-b border-[#122340]/10 bg-gradient-to-b from-[#f9f7f0] to-white relative">
+        {/* Mobile Syllabus Backdrop */}
+        {isSyllabusDrawerOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-xs transition-opacity duration-300"
+            onClick={() => setIsSyllabusDrawerOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* RIGHT COLUMN: Sequential Syllabus Accordion (Drawer on mobile/tablet, rail on desktop) */}
+        <div
+          className={`fixed inset-y-0 right-0 z-50 w-full xs:w-[360px] sm:w-[400px] bg-white border-l border-[#122340]/10 flex flex-col shadow-2xl transition-transform duration-300 ease-out lg:static lg:z-auto lg:w-96 lg:h-full lg:shadow-[inset_1px_0_0_rgba(18,35,64,0.05)] ${
+            isSyllabusDrawerOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
+          }`}
+        >
+          <div className="p-4 border-b border-[#122340]/10 bg-gradient-to-b from-[#f9f7f0] to-white relative shrink-0">
             <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#C9A227]/30 to-transparent" />
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -1295,9 +1854,20 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
                 </div>
                 <h3 className="font-extrabold text-[#122340] text-sm tracking-tight">Course Syllabus</h3>
               </div>
-              <span className="text-[10px] font-bold text-[#122340]/60 uppercase tracking-wider bg-[#122340]/5 px-2 py-0.5 rounded-full">
-                {COURSE_DATA.modules.length} {COURSE_DATA.modules.length === 1 ? 'Module' : 'Modules'}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-[#122340]/60 uppercase tracking-wider bg-[#122340]/5 px-2 py-0.5 rounded-full">
+                  {COURSE_DATA.modules.length} {COURSE_DATA.modules.length === 1 ? 'Module' : 'Modules'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsSyllabusDrawerOpen(false)}
+                  className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors ml-1 cursor-pointer"
+                  title="Close Syllabus"
+                  aria-label="Close Syllabus"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex-1 h-1.5 bg-[#122340]/8 rounded-full overflow-hidden">
@@ -1311,233 +1881,7 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
           </div>
 
           <div ref={sidebarScrollRef} className="learn-sidebar-scroll overflow-y-auto flex-grow pb-20 scroll-smooth">
-            {COURSE_DATA.modules.map((mod, i) => {
-              const modCompleted = mod.items.filter((item: any) => item.completed).length + mod.submodules.reduce((acc: number, sub: any) => acc + sub.items.filter((item: any) => item.completed).length, 0);
-              const modTotal = mod.items.length + mod.submodules.reduce((acc: number, sub: any) => acc + sub.items.length, 0);
-              const modPct = modTotal > 0 ? Math.round((modCompleted / modTotal) * 100) : 0;
-              const modFullyDone = modTotal > 0 && modCompleted === modTotal;
-              const isOpen = openModule === i;
-              return (
-                <div key={i} className="border-b border-[#122340]/8">
-                  <button
-                    onClick={() => setOpenModule(openModule === i ? null : i)}
-                    className={`w-full p-4 flex justify-between items-start text-left transition-all cursor-pointer ${isOpen ? 'bg-[#122340]/[0.03]' : 'bg-white hover:bg-[#122340]/[0.02]'}`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start gap-2.5">
-                        <div className={`mt-0.5 w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-extrabold shrink-0 transition-colors ${modFullyDone ? 'bg-green-500 text-white shadow-sm' : isOpen ? 'bg-[#C9A227] text-white shadow-sm' : 'bg-[#122340]/8 text-[#122340]/70'}`}>
-                          {modFullyDone ? <CheckCircle2 size={13} /> : (i + 1).toString().padStart(2, '0')}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-[#122340] text-sm mb-1.5 pr-2 leading-tight">{mod.title}</h4>
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 h-1 bg-[#122340]/8 rounded-full overflow-hidden max-w-[120px]">
-                              <div
-                                className={`h-full rounded-full transition-all duration-500 ${modFullyDone ? 'bg-green-500' : 'bg-[#C9A227]'}`}
-                                style={{ width: `${modPct}%` }}
-                              />
-                            </div>
-                            <p className="text-[11px] font-semibold text-[#122340]/55 tabular-nums">
-                              {modCompleted}/{modTotal}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronDown size={16} className={`text-[#122340]/40 shrink-0 mt-1 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#C9A227]' : ''}`} />
-                  </button>
-
-                  {openModule === i && (
-                    <div className="bg-[#122340]/[0.02] py-2">
-                      {/* Root Level Items */}
-                      {mod.items.map((item: any) => {
-                        const isActive = activeItem?.id === item.id;
-                        const lockStatus = getItemLockStatus(item);
-                        const isItemLocked = lockStatus.isLocked;
-                        return (
-                          <div
-                            key={item.id}
-                            id={`syllabus-item-${item.id}`}
-                            onClick={() => {
-                              hasUserManuallySelected.current = true;
-                              setActiveItem(item);
-                              setIsVideoEnded(false);
-                            }}
-                            title={lockStatus.tooltip || undefined}
-                            className={`group/item relative flex gap-3 p-3 pl-4 cursor-pointer transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-[#C9A227]/15 via-[#C9A227]/8 to-transparent border-l-4 border-[#C9A227] shadow-[inset_0_0_0_1px_rgba(201,162,39,0.12)]' : 'border-l-4 border-transparent hover:bg-[#122340]/[0.04] hover:border-[#122340]/15'}`}
-                          >
-                            {/* Floating tooltip on hover when locked */}
-                            {lockStatus.isLocked && (
-                              <div className="absolute right-3 top-2 hidden group-hover/item:flex items-center gap-1.5 px-2.5 py-1 bg-gray-900/95 text-white text-[10px] font-semibold rounded-lg shadow-xl z-20 pointer-events-none whitespace-nowrap border border-gray-700/60 animate-in fade-in duration-150">
-                                <Lock size={10} className="text-amber-400 shrink-0" />
-                                <span>{lockStatus.tooltip}</span>
-                              </div>
-                            )}
-
-                            <div className="mt-0.5 shrink-0 flex items-center justify-center">
-                              {(() => {
-                                const submission = item.type === 'assignment' ? studentSubmissions.find(s => s.assignmentId === item.id) : null;
-                                if (submission?.status === 'rejected') {
-                                  return <XCircle size={16} className="text-red-500" />;
-                                }
-                                if (submission?.status === 'pending' || submission?.status === 'resubmitted') {
-                                  return <Circle size={16} className="text-green-500" />;
-                                }
-                                if (item.completed) {
-                                  return <CheckCircle2 size={16} className="text-green-500" />;
-                                }
-                                if (isItemLocked) {
-                                  return <Lock size={16} className="text-amber-500" />;
-                                }
-                                return (
-                                  <div className="w-4 h-4 rounded-full border-2 border-[#122340]/20 flex items-center justify-center">
-                                    {isActive && <div className="w-1.5 h-1.5 bg-[#C9A227] rounded-full"></div>}
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                            <div>
-                              <p className={`text-sm ${isActive ? 'font-bold text-[#122340]' : 'font-medium text-[#122340]/80'}`}>
-                                {item.title}
-                              </p>
-                              <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#122340]/50 mt-1.5">
-                                {isItemLocked ? (
-                                  // <Lock size={14} className="text-amber-500" />
-                                  <></>
-                                ) : (
-                                  getItemIcon(item.type, isActive, item.completed)
-                                )}
-                                <span className="uppercase tracking-wider">{formatItemType(item.type)}</span>
-                                {item.type === 'live' && item.liveData?.status === 'live' && (
-                                  <span className="px-1.5 py-0.2 text-[9px] bg-red-100 text-red-700 font-extrabold rounded-full animate-pulse">LIVE</span>
-                                )}
-                                {isItemLocked && (
-                                  <div className="relative group/badge inline-flex">
-                                    <span
-                                      className="px-1.5 py-0.5 text-[9px] bg-amber-100 text-amber-800 font-extrabold rounded flex items-center gap-0.5 cursor-pointer"
-                                      title={lockStatus.tooltip}
-                                    >
-                                      <Lock size={9} /> LOCKED
-                                    </span>
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover/badge:flex items-center gap-1 px-2.5 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-xl z-50 pointer-events-none whitespace-nowrap border border-gray-700">
-                                      <Lock size={10} className="text-amber-400 shrink-0" />
-                                      <span>{lockStatus.tooltip}</span>
-                                    </div>
-                                  </div>
-                                )}
-                                {item.type === 'final_assessment' && isFinalAssessmentUnlocked && !item.completed && (
-                                  <span className="px-1.5 py-0.5 text-[9px] bg-emerald-100 text-emerald-800 font-extrabold rounded">
-                                    READY
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      {/* Submodules rendering */}
-                      {mod.submodules.map((sub: any) => (
-                        <div key={sub.id} className="mt-2 mb-1">
-                          <div className="px-4 py-2 bg-gradient-to-r from-[#122340]/8 to-[#122340]/4 border-y border-[#122340]/8 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-1 h-3.5 bg-[#C9A227] rounded-full"></div>
-                              <h5 className="font-extrabold text-[#122340] text-[11px] uppercase tracking-wider">{sub.title}</h5>
-                            </div>
-                          </div>
-                          <div className="bg-white/50">
-                            {sub.items.map((item: any) => {
-                              const isActive = activeItem?.id === item.id;
-                              const lockStatus = getItemLockStatus(item);
-                              const isItemLocked = lockStatus.isLocked;
-                              return (
-                                <div
-                                  key={item.id}
-                                  id={`syllabus-item-${item.id}`}
-                                  onClick={() => {
-                                    hasUserManuallySelected.current = true;
-                                    setActiveItem(item);
-                                    setIsVideoEnded(false);
-                                  }}
-                                  title={lockStatus.tooltip || undefined}
-                                  className={`group/item relative flex gap-3 p-3 pl-6 cursor-pointer transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-[#C9A227]/15 via-[#C9A227]/8 to-transparent border-l-4 border-[#C9A227] shadow-[inset_0_0_0_1px_rgba(201,162,39,0.12)]' : 'border-l-4 border-transparent hover:bg-[#122340]/[0.04] hover:border-[#122340]/15'}`}
-                                >
-                                  {/* Floating tooltip on hover when locked */}
-                                  {lockStatus.isLocked && (
-                                    <div className="absolute right-3 top-2 hidden group-hover/item:flex items-center gap-1.5 px-2.5 py-1 bg-gray-900/95 text-white text-[10px] font-semibold rounded-lg shadow-xl z-20 pointer-events-none whitespace-nowrap border border-gray-700/60 animate-in fade-in duration-150">
-                                      <Lock size={10} className="text-amber-400 shrink-0" />
-                                      <span>{lockStatus.tooltip}</span>
-                                    </div>
-                                  )}
-
-                                  <div className="mt-0.5 shrink-0 flex items-center justify-center">
-                                    {(() => {
-                                      const submission = item.type === 'assignment' ? studentSubmissions.find(s => s.assignmentId === item.id) : null;
-                                      if (submission?.status === 'rejected') {
-                                        return <XCircle size={16} className="text-red-500" />;
-                                      }
-                                      if (submission?.status === 'pending' || submission?.status === 'resubmitted') {
-                                        return <Circle size={16} className="text-green-500" />;
-                                      }
-                                      if (item.completed) {
-                                        return <CheckCircle2 size={16} className="text-green-500" />;
-                                      }
-                                      if (isItemLocked) {
-                                        return <Lock size={16} className="text-amber-500" />;
-                                      }
-                                      return (
-                                        <div className="w-4 h-4 rounded-full border-2 border-[#122340]/20 flex items-center justify-center">
-                                          {isActive && <div className="w-1.5 h-1.5 bg-[#C9A227] rounded-full"></div>}
-                                        </div>
-                                      );
-                                    })()}
-                                  </div>
-                                  <div>
-                                    <p className={`text-sm ${isActive ? 'font-bold text-[#122340]' : 'font-medium text-[#122340]/80'}`}>
-                                      {item.title}
-                                    </p>
-                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#122340]/50 mt-1.5">
-                                      {isItemLocked ? (
-                                        <Lock size={14} className="text-amber-500" />
-                                      ) : (
-                                        getItemIcon(item.type, isActive, item.completed)
-                                      )}
-                                      <span className="uppercase tracking-wider">{formatItemType(item.type)}</span>
-                                      {item.type === 'live' && item.liveData?.status === 'live' && (
-                                        <span className="px-1.5 py-0.2 text-[9px] bg-red-100 text-red-700 font-extrabold rounded-full animate-pulse">LIVE</span>
-                                      )}
-                                      {isItemLocked && (
-                                        <div className="relative group/badge inline-flex">
-                                          <span
-                                            className="px-1.5 py-0.5 text-[9px] bg-amber-100 text-amber-800 font-extrabold rounded flex items-center gap-0.5 cursor-pointer"
-                                            title={lockStatus.tooltip}
-                                          >
-                                            <Lock size={9} /> LOCKED
-                                          </span>
-                                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover/badge:flex items-center gap-1 px-2.5 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-xl z-50 pointer-events-none whitespace-nowrap border border-gray-700">
-                                            <Lock size={10} className="text-amber-400 shrink-0" />
-                                            <span>{lockStatus.tooltip}</span>
-                                          </div>
-                                        </div>
-                                      )}
-                                      {item.type === 'final_assessment' && isFinalAssessmentUnlocked && !item.completed && (
-                                        <span className="px-1.5 py-0.5 text-[9px] bg-emerald-100 text-emerald-800 font-extrabold rounded">
-                                          READY
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {renderCurriculumModules('syllabus')}
 
             <CertificateCTA
               courseId={currentCourse?.id}

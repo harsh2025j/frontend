@@ -307,39 +307,39 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-2.5 sm:p-6 bg-black/70 backdrop-blur-sm animate-fadeIn"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-[#122340]/10 flex flex-col max-h-[90vh] animate-scaleUp"
+        className="bg-white w-full max-w-2xl rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-[#122340]/10 flex flex-col max-h-[92vh] sm:max-h-[90vh] animate-scaleUp"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-[#fcfcfa]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#122340] text-[#C9A227] flex items-center justify-center shadow-sm">
-              <Share2 size={20} />
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-5 border-b border-gray-100 bg-[#fcfcfa] shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-[#122340] text-[#C9A227] flex items-center justify-center shadow-sm shrink-0">
+              <Share2 size={18} className="sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <h2 className="text-xl font-extrabold text-[#122340]">Share Your Achievement</h2>
-              <p className="text-xs text-[#122340]/60 font-medium">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-xl font-extrabold text-[#122340] truncate">Share Your Achievement</h2>
+              <p className="text-[11px] sm:text-xs text-[#122340]/60 font-medium truncate">
                 Showcase your verified credential across professional networks
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-gray-100 text-gray-500 hover:text-[#122340] hover:bg-gray-200 flex items-center justify-center transition-colors cursor-pointer"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-100 text-gray-500 hover:text-[#122340] hover:bg-gray-200 flex items-center justify-center transition-colors cursor-pointer shrink-0 ml-2"
             aria-label="Close"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-6">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6">
           {/* Certificate Preview Card */}
           <div className="relative rounded-2xl bg-gradient-to-br from-[#0a1628] to-[#1a2f4d] p-4 text-white border-2 border-[#C9A227]/40 shadow-inner overflow-hidden">
             <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -559,36 +559,38 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
             <label className="block text-xs font-bold text-[#122340]/60 uppercase tracking-wider mb-2">
               Public Verification Link
             </label>
-            <div className="flex gap-2">
+            <div className="flex flex-col xs:flex-row gap-2">
               <input
                 type="text"
                 readOnly
                 value={verifyUrl}
-                className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-mono text-[#122340] focus:outline-hidden select-all"
+                className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-mono text-[#122340] focus:outline-hidden select-all"
               />
-              <button
-                onClick={handleCopyLink}
-                className="bg-[#122340] text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#0a1628] transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
-              >
-                {copyingLink ? (
-                  <>
-                    <Check size={14} className="text-green-400" /> Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy size={14} /> Copy Link
-                  </>
-                )}
-              </button>
-              {typeof navigator !== 'undefined' && 'share' in navigator && (
+              <div className="flex items-center gap-2 shrink-0">
                 <button
-                  onClick={handleDeviceShare}
-                  className="border border-[#122340]/15 text-[#122340] hover:bg-gray-100 px-3 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
-                  title="Share via device"
+                  onClick={handleCopyLink}
+                  className="flex-1 xs:flex-initial justify-center bg-[#122340] text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#0a1628] transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Share2 size={14} /> More
+                  {copyingLink ? (
+                    <>
+                      <Check size={14} className="text-green-400" /> Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={14} /> Copy Link
+                    </>
+                  )}
                 </button>
-              )}
+                {typeof navigator !== 'undefined' && 'share' in navigator && (
+                  <button
+                    onClick={handleDeviceShare}
+                    className="border border-[#122340]/15 text-[#122340] hover:bg-gray-100 px-3 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                    title="Share via device"
+                  >
+                    <Share2 size={14} /> More
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

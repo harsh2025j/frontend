@@ -48,7 +48,7 @@ function OverviewSkeleton() {
       <div className={`${skel} h-28`} />
       <div className="sa-bento">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className={`${skel} h-28 sa-col-sm-3 sa-col-lg-3`} />
+          <div key={i} className={`${skel} h-28 sa-col-xs-6 sa-col-sm-3 sa-col-lg-3`} />
         ))}
       </div>
       <div className="sa-bento">
@@ -70,6 +70,12 @@ const ACTIVITY_META: Record<
     tone: 'text-[color:var(--sa-ink-3)]',
     dot: 'bg-[color:var(--sa-ink-5)]',
     label: 'Enrolled',
+  },
+  lesson_completed: {
+    icon: CheckCircle2,
+    tone: 'text-[color:var(--sa-sage-2)]',
+    dot: 'bg-[color:var(--sa-sage)]',
+    label: 'Lesson completed',
   },
   assessment_passed: {
     icon: GraduationCap,
@@ -112,10 +118,25 @@ const ACTIVITY_META: Record<
 function relativeDay(iso: string): string {
   const then = new Date(iso);
   if (isNaN(then.getTime())) return '';
-  const days = Math.floor((Date.now() - then.getTime()) / 86400000);
-  if (days <= 0) return 'Today';
-  if (days === 1) return 'Yesterday';
-  if (days < 7) return `${days} days ago`;
+  const now = new Date();
+  if (
+    then.getFullYear() === now.getFullYear() &&
+    then.getMonth() === now.getMonth() &&
+    then.getDate() === now.getDate()
+  ) {
+    return 'Today';
+  }
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (
+    then.getFullYear() === yesterday.getFullYear() &&
+    then.getMonth() === yesterday.getMonth() &&
+    then.getDate() === yesterday.getDate()
+  ) {
+    return 'Yesterday';
+  }
+  const diffDays = Math.floor((now.getTime() - then.getTime()) / 86400000);
+  if (diffDays < 7 && diffDays > 0) return `${diffDays} days ago`;
   return then.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
@@ -447,13 +468,13 @@ export default function DashboardOverview() {
       {/* ═════════════ 2. Headline KPIs ═════════════ */}
       <div className="sa-bento">
         {/* Enrolled */}
-        <div className="sa-tile sa-col-sm-3 sa-col-lg-3">
+        <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
           <div className="flex items-center justify-between">
             <span className="sa-label">Enrolled</span>
             <BookOpen size={14} className="text-[color:var(--sa-ink-4)]" />
           </div>
           <p className="sa-value sa-value-lg mt-2.5">{summary.coursesEnrolled}</p>
-          <p className="sa-sub mt-1.5">
+          <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">
             {summary.coursesEnrolled > 0
               ? `${summary.coursesInProgress} in progress`
               : 'No courses yet'}
@@ -461,13 +482,13 @@ export default function DashboardOverview() {
         </div>
 
         {/* Completed */}
-        <div className="sa-tile sa-col-sm-3 sa-col-lg-3">
+        <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
           <div className="flex items-center justify-between">
             <span className="sa-label">Completed</span>
             <CheckCircle2 size={14} className="text-[color:var(--sa-ink-4)]" />
           </div>
           <p className="sa-value sa-value-lg mt-2.5">{summary.coursesCompleted}</p>
-          <p className="sa-sub mt-1.5">
+          <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">
             {summary.coursesEnrolled > 0
               ? `of ${summary.coursesEnrolled} ${
                   summary.coursesEnrolled === 1 ? 'course' : 'courses'
@@ -477,36 +498,36 @@ export default function DashboardOverview() {
         </div>
 
         {/* Average progress with ring */}
-        <div className="sa-tile sa-col-sm-3 sa-col-lg-3">
+        <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
           <div className="flex items-center justify-between">
             <span className="sa-label">Avg. progress</span>
           </div>
-          <div className="mt-3 flex items-center gap-4">
-            <div className="relative shrink-0" style={{ width: 84, height: 84 }}>
-              <ProgressRing pct={summary.averageProgressPct} size={84} stroke={8} />
+          <div className="mt-2.5 sm:mt-3 flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-3 sm:gap-4">
+            <div className="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20">
+              <ProgressRing pct={summary.averageProgressPct} size={64} stroke={7} />
               <div className="pointer-events-none absolute inset-0 grid place-items-center">
                 <span
-                  className="font-serif font-bold tabular-nums leading-none text-[color:var(--sa-ink)]"
-                  style={{ fontSize: '1.1875rem', letterSpacing: '-0.02em' }}
+                  className="font-serif font-bold tabular-nums leading-none text-[color:var(--sa-ink)] text-sm sm:text-base"
+                  style={{ letterSpacing: '-0.02em' }}
                 >
                   {summary.averageProgressPct}
-                  <span className="ml-[1px] text-[0.65rem] font-semibold align-top text-[color:var(--sa-ink-4)]">
+                  <span className="ml-[1px] text-[0.6rem] font-semibold align-top text-[color:var(--sa-ink-4)]">
                     %
                   </span>
                 </span>
               </div>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="sa-sub leading-snug">
+              <p className="sa-sub leading-snug text-xs sm:text-[12.5px]">
                 {summary.coursesEnrolled > 0
                   ? `Across ${summary.coursesEnrolled} ${
                       summary.coursesEnrolled === 1 ? 'course' : 'courses'
                     }`
-                  : 'Across every enrolled course'}
+                  : 'Across every course'}
               </p>
               {summary.itemsTotal > 0 && (
-                <p className="mt-1 text-[11.5px] tabular-nums text-[color:var(--sa-ink-4)]">
-                  {summary.itemsCompleted} of {summary.itemsTotal} lessons
+                <p className="mt-1 text-[11px] sm:text-[11.5px] tabular-nums text-[color:var(--sa-ink-4)]">
+                  {summary.itemsCompleted}/{summary.itemsTotal} lessons
                 </p>
               )}
             </div>
@@ -516,7 +537,7 @@ export default function DashboardOverview() {
         {/* Certificates */}
         <Link
           href="/dashboard/certificates"
-          className="sa-tile sa-tile-accent sa-tile-hover sa-col-sm-3 sa-col-lg-3 group block"
+          className="sa-tile sa-tile-accent sa-tile-hover sa-col-xs-6 sa-col-sm-3 sa-col-lg-3 group block"
         >
           <div className="flex items-center justify-between">
             <span className="sa-label">Certificates</span>
@@ -525,7 +546,7 @@ export default function DashboardOverview() {
           <p className="sa-value sa-value-lg mt-2.5">
             {summary.certificatesEarned}
           </p>
-          <p className="sa-sub mt-1.5 inline-flex items-center gap-1 text-[color:var(--sa-gold-3)]">
+          <p className="sa-sub mt-1.5 inline-flex items-center gap-1 text-[color:var(--sa-gold-3)] text-xs sm:text-[12.5px]">
             View credentials
             <ArrowRight
               size={11}
@@ -538,7 +559,7 @@ export default function DashboardOverview() {
       {/* ═════════════ 3. Performance ═════════════ */}
       {perf ? (
         <div className="sa-bento">
-          <div className="sa-tile sa-col-sm-3 sa-col-lg-3">
+          <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
             <div className="flex items-center justify-between">
               <span className="sa-label">Time studied</span>
               <Timer size={14} className="text-[color:var(--sa-ink-4)]" />
@@ -548,7 +569,7 @@ export default function DashboardOverview() {
             </p>
             {summary.learningMinutesTotal > 0 ? (
               <>
-                <p className="sa-sub mt-1.5">
+                <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">
                   of {formatStudyTime(summary.learningMinutesTotal)}
                 </p>
                 <div className="sa-bar sa-bar-slim mt-3">
@@ -566,11 +587,11 @@ export default function DashboardOverview() {
                 </div>
               </>
             ) : (
-              <p className="sa-sub mt-1.5">Based on completed lesson durations</p>
+              <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">Based on completed lessons</p>
             )}
           </div>
 
-          <div className="sa-tile sa-col-sm-3 sa-col-lg-3">
+          <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
             <div className="flex items-center justify-between">
               <span className="sa-label">Lessons</span>
               <BookOpen size={14} className="text-[color:var(--sa-ink-4)]" />
@@ -584,10 +605,10 @@ export default function DashboardOverview() {
                 </span>
               )}
             </p>
-            <p className="sa-sub mt-1.5">Across all enrolled courses</p>
+            <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">Across all enrolled courses</p>
           </div>
 
-          <div className="sa-tile sa-col-sm-3 sa-col-lg-3">
+          <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
             <div className="flex items-center justify-between">
               <span className="sa-label">Assessments</span>
               <GraduationCap size={14} className="text-[color:var(--sa-ink-4)]" />
@@ -606,7 +627,7 @@ export default function DashboardOverview() {
                 </span>
               )}
             </p>
-            <p className="sa-sub mt-1.5">
+            <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">
               {perf.assessments.completedAttempts > 0
                 ? `${perf.assessments.completedAttempts} ${
                     perf.assessments.completedAttempts === 1 ? 'attempt' : 'attempts'
@@ -619,7 +640,7 @@ export default function DashboardOverview() {
             </p>
           </div>
 
-          <div className="sa-tile sa-col-sm-3 sa-col-lg-3">
+          <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
             <div className="flex items-center justify-between">
               <span className="sa-label">Assignments</span>
               <ClipboardList size={14} className="text-[color:var(--sa-ink-4)]" />
@@ -639,7 +660,7 @@ export default function DashboardOverview() {
                 </span>
               )}
             </p>
-            <p className="sa-sub mt-1.5">
+            <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">
               {perf.assignments.submitted > 0
                 ? `Accepted${
                     perf.assignments.awaitingReview > 0
@@ -811,7 +832,7 @@ export default function DashboardOverview() {
                   </span>
                 </p>
                 <p className="sa-sub mt-1.5">
-                  Submissions, assessments, enrolments and certificates in the
+                  Lessons completed, assessments, submissions and certificates in the
                   last 7 days.
                 </p>
                 {perf.nextUp && perf.nextUp.itemsRemaining > 0 && (
@@ -1020,7 +1041,7 @@ export default function DashboardOverview() {
                 return (
                   <li
                     key={`${entry.type}-${entry.at}-${i}`}
-                    className="flex items-start gap-3 rounded-xl p-2.5 -mx-2.5 transition-colors hover:bg-[color:var(--sa-cream)]"
+                    className="flex items-start gap-2.5 sm:gap-3 rounded-xl p-2 sm:p-2.5 -mx-1 sm:-mx-2.5 transition-colors hover:bg-[color:var(--sa-cream)]"
                   >
                     <span className={`mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full ${meta.dot}`} />
                     <span className="min-w-0 flex-1">

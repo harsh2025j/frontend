@@ -171,7 +171,7 @@ function CertificateCard({
 
   return (
     <article className="sa-tile sa-tile-hover sa-col-sm-6 sa-col-lg-6 !p-0 overflow-hidden">
-      <div className="relative h-64 overflow-hidden bg-gradient-to-br from-[color:var(--sa-navy-ink)] to-[color:var(--sa-navy-2)]">
+      <div className="relative h-52 sm:h-64 overflow-hidden bg-gradient-to-br from-[color:var(--sa-navy-ink)] to-[color:var(--sa-navy-2)]">
         <img
           src={cert.imageUrl || `/academy/certificates/image/${cert.certificateId}`}
           alt={cert.courseName}
@@ -192,15 +192,15 @@ function CertificateCard({
         />
       </div>
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <h3 className="line-clamp-1 font-serif text-[1.0625rem] font-bold tracking-[-0.005em] text-[color:var(--sa-ink)]">
           {cert.courseName}
         </h3>
 
-        <div className="mt-4 flex items-start justify-between gap-4 rounded-xl border border-[rgba(11,18,32,0.06)] bg-[color:var(--sa-cream)] px-4 py-3">
+        <div className="mt-3.5 sm:mt-4 flex flex-col xs:flex-row xs:items-start justify-between gap-2 xs:gap-4 rounded-xl border border-[rgba(11,18,32,0.06)] bg-[color:var(--sa-cream)] px-3.5 sm:px-4 py-2.5 sm:py-3">
           <div>
             <p className="sa-label !text-[10px]">Issue date</p>
-            <p className="mt-1 font-serif text-[13px] font-bold text-[color:var(--sa-ink)]">
+            <p className="mt-0.5 sm:mt-1 font-serif text-[13px] font-bold text-[color:var(--sa-ink)]">
               {new Date(cert.issueDate).toLocaleDateString(undefined, {
                 day: '2-digit',
                 month: 'short',
@@ -208,9 +208,9 @@ function CertificateCard({
               })}
             </p>
           </div>
-          <div className="text-right">
+          <div className="text-left xs:text-right">
             <p className="sa-label !text-[10px]">Credential ID</p>
-            <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-[12.5px] font-bold text-[color:var(--sa-ink)]">
+            <p className="mt-0.5 sm:mt-1 inline-flex items-center gap-1.5 font-mono text-[12.5px] font-bold text-[color:var(--sa-ink)]">
               <ShieldCheck
                 size={13}
                 className="text-[color:var(--sa-sage-2)]"
@@ -220,11 +220,11 @@ function CertificateCard({
           </div>
         </div>
 
-        <div className="mt-5 flex gap-2">
+        <div className="mt-4 sm:mt-5 flex flex-wrap gap-2">
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="sa-btn sa-btn-primary flex-1 disabled:opacity-70"
+            className="sa-btn sa-btn-primary flex-1 min-w-[140px] disabled:opacity-70 cursor-pointer"
           >
             {downloading ? (
               <>
@@ -236,24 +236,26 @@ function CertificateCard({
               </>
             )}
           </button>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(verifyUrl);
-              toast.success('Verify URL copied');
-            }}
-            className="sa-btn sa-btn-ghost w-12 shrink-0 !px-0"
-            title="Copy verify URL"
-            aria-label="Copy verify URL"
-          >
-            <Copy size={15} />
-          </button>
-          <button
-            onClick={onShare}
-            className="sa-btn sa-btn-ghost shrink-0 !border-[color:var(--sa-gold-line)] !bg-[color:var(--sa-gold-soft)] !text-[color:var(--sa-gold-3)]"
-            title="Share certificate"
-          >
-            <Share2 size={14} /> Share
-          </button>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(verifyUrl);
+                toast.success('Verify URL copied');
+              }}
+              className="sa-btn sa-btn-ghost w-11 sm:w-12 shrink-0 !px-0 cursor-pointer"
+              title="Copy verify URL"
+              aria-label="Copy verify URL"
+            >
+              <Copy size={15} />
+            </button>
+            <button
+              onClick={onShare}
+              className="sa-btn sa-btn-ghost shrink-0 !border-[color:var(--sa-gold-line)] !bg-[color:var(--sa-gold-soft)] !text-[color:var(--sa-gold-3)] cursor-pointer"
+              title="Share certificate"
+            >
+              <Share2 size={14} /> Share
+            </button>
+          </div>
         </div>
       </div>
     </article>

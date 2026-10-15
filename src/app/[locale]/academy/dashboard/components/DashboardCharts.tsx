@@ -269,7 +269,7 @@ export function WeeklyActivityChart({ days }: { days: StudentActivityDay[] }) {
     <div className="sa-tile h-full">
       <p className="sa-label">Weekly events · last 8 weeks</p>
       <p className="mb-4 mt-1.5 text-[12.5px] text-[color:var(--sa-ink-3)]">
-        Submissions, assessments, enrolments and certificates per week
+        Lessons completed, assessments, submissions and enrolments per week
       </p>
 
       {hasData ? (

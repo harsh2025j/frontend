@@ -341,7 +341,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex min-h-screen min-w-0 flex-col lg:ml-[var(--sa-side-w)]">
 
         {/* Top rail */}
-        <header className="ac-rail sticky top-0 z-30 gap-3 px-4 sm:px-6 lg:px-10">
+        <header className="ac-rail sticky top-0 z-30 gap-2 sm:gap-3 px-3 sm:px-6 lg:px-10">
           <button
             type="button"
             onClick={() => setIsSidebarOpen(true)}
@@ -354,7 +354,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Breadcrumb — tells you where you are without a second heading */}
           <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
-            <ol className="flex items-center gap-2 text-[13px]">
+            <ol className="flex items-center gap-1.5 sm:gap-2 text-[12.5px] sm:text-[13px]">
               <li className="hidden sm:block">
                 <span className="text-[color:var(--sa-ink-4)]">Dashboard</span>
               </li>
@@ -377,7 +377,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <AcademyNotificationDropdown userId={user._id || (user as any).id} />
             )}
 
-            <span aria-hidden="true" className="mx-1.5 hidden h-6 w-px bg-[color:var(--sa-line)] sm:block" />
+            <span aria-hidden="true" className="mx-1 hidden h-6 w-px bg-[color:var(--sa-line)] sm:block" />
 
             {user && (
               <div className="relative" ref={userMenuRef}>
@@ -386,7 +386,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   onClick={() => setIsUserMenuOpen((v) => !v)}
                   aria-expanded={isUserMenuOpen}
                   aria-haspopup="menu"
-                  className="flex items-center gap-2 rounded-[var(--sa-r-pill)] p-1 pr-1.5 transition-colors hover:bg-[color:var(--sa-cream-2)] sm:pr-2"
+                  className="flex items-center gap-1.5 sm:gap-2 rounded-[var(--sa-r-pill)] p-1 pr-1.5 transition-colors hover:bg-[color:var(--sa-cream-2)] sm:pr-2"
                 >
                   {user.profilePicture ? (
                     <img
@@ -454,7 +454,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Page body */}
         <main className="sa-shell min-w-0 flex-1">
-          <div className="mx-auto min-w-0 max-w-[1320px] px-4 py-7 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
+          <div className="mx-auto min-w-0 max-w-[1320px] px-3.5 py-5 sm:px-6 sm:py-8 lg:px-10 lg:py-10 pb-16 sm:pb-8">
             {children}
           </div>
         </main>

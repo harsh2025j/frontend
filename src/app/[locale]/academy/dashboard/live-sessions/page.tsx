@@ -253,7 +253,7 @@ function SessionCard({ session, live = false }: { session: any; live?: boolean }
         </p>
       </div>
 
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-[rgba(11,18,32,0.07)] pt-4">
+      <div className="mt-auto flex flex-col xs:flex-row xs:items-center justify-between gap-3 border-t border-[rgba(11,18,32,0.07)] pt-4">
         <span className="inline-flex items-center gap-2 text-[12.5px] font-semibold text-[color:var(--sa-ink-2)]">
           <Clock size={13} className="text-[color:var(--sa-gold-2)]" />
           {formatTime12HourIST(liveData.scheduledTime)}
@@ -262,18 +262,18 @@ function SessionCard({ session, live = false }: { session: any; live?: boolean }
           </span>
         </span>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full xs:w-auto">
           {(platform === 'gmeet' || platform === 'zoom') && meetingUrl && (
-            <a href={meetingUrl} target="_blank" rel="noopener noreferrer">
-              <button className="sa-btn sa-btn-ghost sa-btn-sm">
+            <a href={meetingUrl} target="_blank" rel="noopener noreferrer" className="flex-1 xs:flex-initial">
+              <button className="sa-btn sa-btn-ghost sa-btn-sm w-full cursor-pointer">
                 Open {platform === 'gmeet' ? 'Meet' : 'Zoom'}
                 <ExternalLink size={12} />
               </button>
             </a>
           )}
-          <Link href={targetUrl}>
+          <Link href={targetUrl} className="flex-1 xs:flex-initial">
             <button
-              className={`sa-btn sa-btn-sm ${
+              className={`sa-btn sa-btn-sm w-full cursor-pointer ${
                 live ? 'sa-btn-live' : 'sa-btn-primary'
               }`}
             >
