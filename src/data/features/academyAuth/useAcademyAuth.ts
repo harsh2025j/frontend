@@ -260,7 +260,7 @@ export const useAcademyVerifyActions = () => {
 
   useEffect(() => {
     if (message === MESSAGES.VERIFY_SUCCESS) {
-      toast.success("Account successfully verified! Welcome to SA Academy.");
+      toast.success("Account successfully verified! Welcome to Sajjad Husain Legal Academy.");
       router.push("/dashboard"); // Middleware handles subdomain rewrite
       dispatch(resetAuthState());
     }

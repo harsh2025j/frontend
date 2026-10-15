@@ -2,202 +2,277 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
-import { PlayCircle, CheckCircle, BarChart2, Loader2, BookOpen } from 'lucide-react';
+import {
+  Play,
+  PlayCircle,
+  CheckCircle2,
+  BookOpen,
+  ArrowRight,
+  Clock,
+  Award,
+} from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/data/redux/hooks';
 import { fetchMyEnrollments } from '@/data/features/academy/enrollments/enrollmentsThunks';
 
+type Filter = 'all' | 'in_progress' | 'completed';
+
 export default function MyCoursesPage() {
   const dispatch = useAppDispatch();
-  const { myEnrollments, isLoading } = useAppSelector(state => state.enrollments);
-  const [filter, setFilter] = React.useState<'all' | 'in_progress' | 'completed'>('all');
+  const { myEnrollments, isLoading } = useAppSelector((state) => state.enrollments);
+  const [filter, setFilter] = React.useState<Filter>('all');
 
   useEffect(() => {
     dispatch(fetchMyEnrollments());
   }, [dispatch]);
 
-  const activeCoursesCount = myEnrollments.length;
-  const inProgressCourses = myEnrollments.filter(e => (e.progress || 0) !== 100).length;
-  const completedCourses = myEnrollments.filter(e => (e.progress || 0) === 100).length;
+  const totalCount = myEnrollments.length;
+  const inProgressCount = myEnrollments.filter((e) => (e.progress || 0) < 100).length;
+  const completedCount = myEnrollments.filter((e) => (e.progress || 0) >= 100).length;
 
-  const filteredEnrollments = myEnrollments.filter(e => {
-    const isComp = (e.progress || 0) === 100;
-    if (filter === 'in_progress') return !isComp;
-    if (filter === 'completed') return isComp;
+  const filtered = myEnrollments.filter((e) => {
+    const done = (e.progress || 0) >= 100;
+    if (filter === 'in_progress') return !done;
+    if (filter === 'completed') return done;
     return true;
   });
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700 ease-out">
-      
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-extrabold text-[#122340] mb-2 tracking-tight">My Courses</h1>
-          <p className="text-[#122340]/60">Your active enrollments and learning history.</p>
+    <div className="sa-rise space-y-5 sm:space-y-6">
+      {/* ─── Header ─── */}
+      <div className="sa-tile flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <p className="sa-runhead">My courses</p>
+          <h1 className="font-serif text-[1.625rem] font-bold leading-tight tracking-[-0.015em] text-[color:var(--sa-ink)] sm:text-[1.875rem]">
+            Your learning library
+          </h1>
+          <p className="mt-1.5 text-[13px] text-[color:var(--sa-ink-3)]">
+            Everything you&apos;re enrolled in, with progress tracked across lessons.
+          </p>
         </div>
-        <div className="flex gap-2 bg-white p-1.5 rounded-xl border border-[#122340]/10 shadow-sm overflow-x-auto max-w-full">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-5 py-2 whitespace-nowrap rounded-lg font-bold text-sm transition-colors cursor-pointer ${
-              filter === 'all'
-                ? 'bg-[#122340]/5 text-[#122340]'
-                : 'text-[#122340]/50 hover:text-[#122340]'
-            }`}
-          >
-            All Courses ({activeCoursesCount})
-          </button>
-          <button
-            onClick={() => setFilter('in_progress')}
-            className={`px-5 py-2 whitespace-nowrap rounded-lg font-semibold text-sm transition-colors cursor-pointer ${
-              filter === 'in_progress'
-                ? 'bg-[#122340]/5 text-[#122340] font-bold'
-                : 'text-[#122340]/50 hover:text-[#122340]'
-            }`}
-          >
-            In Progress ({inProgressCourses})
-          </button>
-          <button
-            onClick={() => setFilter('completed')}
-            className={`px-5 py-2 whitespace-nowrap rounded-lg font-semibold text-sm transition-colors cursor-pointer ${
-              filter === 'completed'
-                ? 'bg-[#122340]/5 text-[#122340] font-bold'
-                : 'text-[#122340]/50 hover:text-[#122340]'
-            }`}
-          >
-            Completed ({completedCourses})
-          </button>
-        </div>
+
+        <FilterTabs
+          filter={filter}
+          onChange={setFilter}
+          counts={{ all: totalCount, in_progress: inProgressCount, completed: completedCount }}
+        />
       </div>
 
-      {/* Content */}
+      {/* ─── Content ─── */}
       {isLoading && myEnrollments.length === 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in duration-300">
+        <div className="sa-bento">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-xl overflow-hidden border border-[#122340]/5 flex flex-col h-[400px]">
-              <div className="w-full h-48 bg-slate-200 animate-pulse" />
-              <div className="p-6 flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="h-5 w-24 bg-slate-100 rounded mb-3 animate-pulse" />
-                  <div className="h-6 w-full bg-slate-200 rounded mb-2 animate-pulse" />
-                  <div className="h-6 w-2/3 bg-slate-200 rounded mb-4 animate-pulse" />
-                </div>
-                <div className="space-y-3 pt-4 border-t border-slate-100">
-                  <div className="h-2.5 w-full bg-slate-100 rounded-full animate-pulse" />
-                  <div className="h-10 w-full bg-slate-200 rounded-xl animate-pulse" />
-                </div>
+            <div
+              key={i}
+              className="sa-tile sa-col-sm-6 sa-col-lg-4 !p-0 overflow-hidden"
+            >
+              <div className="aspect-video w-full animate-pulse bg-[color:var(--sa-cream-2)]" />
+              <div className="space-y-3 p-5">
+                <div className="h-4 w-24 animate-pulse rounded bg-[color:var(--sa-cream-2)]" />
+                <div className="h-5 w-full animate-pulse rounded bg-[color:var(--sa-cream-2)]" />
+                <div className="h-5 w-2/3 animate-pulse rounded bg-[color:var(--sa-cream-2)]" />
+                <div className="h-2 w-full animate-pulse rounded-full bg-[color:var(--sa-cream-2)]" />
+                <div className="h-10 w-full animate-pulse rounded-xl bg-[color:var(--sa-cream-2)]" />
               </div>
             </div>
           ))}
         </div>
-      ) : filteredEnrollments.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 border border-[#122340]/5 shadow-sm text-center">
-          <div className="w-16 h-16 bg-[#122340]/5 rounded-full flex items-center justify-center mx-auto mb-4 text-[#C9A227]">
-            <BookOpen size={28} />
-          </div>
-          <h3 className="text-xl font-bold text-[#122340] mb-2">
-            {filter === 'completed'
-              ? 'No Completed Courses Yet'
-              : filter === 'in_progress'
-              ? 'No Courses In Progress'
-              : 'No Active Enrollments'}
-          </h3>
-          <p className="text-[#122340]/60 mb-6 max-w-md mx-auto">
-            {filter === 'completed'
-              ? 'Keep learning to complete your enrolled courses and unlock credentials.'
-              : 'You have not enrolled in any courses yet. Explore our academy to start learning today.'}
-          </p>
-          <Link href="/courses">
-            <button className="bg-[#C9A227] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#b39022] transition-colors shadow-md cursor-pointer">
-              Browse Courses
-            </button>
-          </Link>
-        </div>
+      ) : filtered.length === 0 ? (
+        <EmptyState filter={filter} />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredEnrollments.map((enrollment) => {
+        <div className="sa-bento">
+          {filtered.map((enrollment) => {
             const course = enrollment.course;
             if (!course) return null;
-            
-            const progress = enrollment.progress || 0;
-            const isCompleted = progress === 100;
-            
+            const progress = Math.min(100, Math.max(0, enrollment.progress || 0));
+            const done = progress >= 100;
+            const since = new Date(enrollment.createdAt).toLocaleDateString(undefined, {
+              month: 'short',
+              year: 'numeric',
+            });
+
             return (
-              <div key={course.slug} className="group relative bg-white rounded-xl overflow-hidden border border-[#122340]/5 flex flex-col h-full hover:border-[#C9A227]  transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                
-                {/* Image Section (Clickable) */}
-                <Link href={`/dashboard/learn/${course.slug}`} className="block relative aspect-video w-full overflow-hidden bg-[#122340]/5 cursor-pointer">
-                  <img 
-                    src={course.thumbnailUrl || "https://images.unsplash.com/photo-1505664177922-9283892047d6?q=80&w=600&auto=format&fit=crop"} 
-                    alt={course.title} 
-                    className="w-full h-full object-cover"
+              <article
+                key={course.slug}
+                className="sa-tile sa-tile-hover sa-col-sm-6 sa-col-lg-4 group !p-0 overflow-hidden flex flex-col"
+              >
+                <Link
+                  href={`/dashboard/learn/${course.slug}`}
+                  className="relative block aspect-video w-full overflow-hidden bg-[color:var(--sa-cream-2)]"
+                >
+                  <img
+                    src={
+                      course.thumbnailUrl ||
+                      'https://images.unsplash.com/photo-1505664177922-9283892047d6?q=80&w=600&auto=format&fit=crop'
+                    }
+                    alt=""
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/40 to-transparent opacity-70 transition-opacity duration-500 group-hover:opacity-80"></div>
-                  
-                  {/* Progress Ring Overlay */}
-                  <div className="absolute bottom-5 right-5 flex items-center justify-center">
-                    <div className="relative w-14 h-14 bg-black/20 backdrop-blur-sm rounded-full shadow-lg">
-                      <svg className="w-full h-full transform -rotate-90 p-1" viewBox="0 0 36 36">
-                        <path className="text-white/10" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
-                        <path className={isCompleted ? "text-green-400" : "text-[#C9A227]"} strokeDasharray={`${progress}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-white drop-shadow-md">
-                        {progress}%
-                      </div>
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 bg-gradient-to-t from-[rgba(11,18,32,0.68)] via-[rgba(11,18,32,0.08)] to-transparent"
+                  />
+
+                  {/* Status badge: solid, high contrast, reads on any thumbnail */}
+                  {done ? (
+                    <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-[color:var(--sa-sage-2)] px-2.5 py-[5px] text-[11px] font-semibold text-white shadow-sm">
+                      <CheckCircle2 size={12} strokeWidth={2.5} />
+                      Completed
+                    </span>
+                  ) : (
+                    <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-[5px] text-[11px] font-semibold text-[color:var(--sa-ink)] shadow-sm">
+                      <span
+                        aria-hidden="true"
+                        className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--sa-gold)]"
+                      />
+                      In progress · {progress}%
+                    </span>
+                  )}
+
+                  {/* Hover play affordance */}
+                  <span
+                    className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-[color:var(--sa-gold)] text-[#1F1703] shadow-[0_6px_18px_-4px_rgba(183,145,58,0.6)] ring-2 ring-white/80 transition-transform duration-200 group-hover:scale-110"
+                    aria-hidden="true"
+                  >
+                    {done ? (
+                      <BookOpen size={16} strokeWidth={2.25} />
+                    ) : (
+                      <Play size={16} fill="currentColor" className="ml-0.5" />
+                    )}
+                  </span>
+                </Link>
+
+                <div className="flex flex-1 flex-col gap-4 p-5">
+                  <div className="min-w-0">
+                    <Link href={`/dashboard/learn/${course.slug}`}>
+                      <h3 className="line-clamp-2 font-serif text-[1.0625rem] font-bold leading-snug tracking-[-0.005em] text-[color:var(--sa-ink)] transition-colors hover:text-[color:var(--sa-navy-2)]">
+                        {course.title}
+                      </h3>
+                    </Link>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-[color:var(--sa-ink-4)]">
+                      <span className="inline-flex items-center gap-1">
+                        <Clock size={11} /> Since {since}
+                      </span>
+                      {done && (
+                        <span className="inline-flex items-center gap-1 text-[color:var(--sa-gold-3)]">
+                          <Award size={11} /> Credential earned
+                        </span>
+                      )}
                     </div>
                   </div>
-                </Link>
-                
-                {/* Content Section */}
-                <div className="p-6 md:p-7 flex flex-col flex-grow bg-white">
-                  
-                  {/* Course Title (Clickable) */}
-                  <Link href={`/dashboard/learn/${course.slug}`}>
-                    <h3 className="font-extrabold text-[#122340] text-xl leading-tight line-clamp-2 mb-5  transition-colors duration-300 cursor-pointer">
-                      {course.title}
-                    </h3>
-                  </Link>
 
-                  <div className="flex items-center justify-between gap-4 mb-8 text-sm">
-                    {isCompleted ? (
-                      <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-emerald-200/60">
-                        <CheckCircle size={12} /> Completed
-                      </span>
-                    ) : (
-                      <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-amber-200/60">
-                        <PlayCircle size={12} /> In Progress
-                      </span>
-                    )}
-                    <span className="text-[11px] font-semibold text-[#122340]/40 uppercase tracking-wider">
-                      Since {new Date(enrollment.createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
-                    </span>
-                  </div>
-                  
-                  {/* Always allow viewing course content */}
-                  <div className="mt-auto">
+                  <div className="mt-auto space-y-3">
+                    <div>
+                      <div className="mb-1.5 flex items-baseline justify-between">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[color:var(--sa-ink-3)]">
+                          Progress
+                        </span>
+                        <span className="font-serif text-[14px] font-bold tabular-nums text-[color:var(--sa-ink)]">
+                          {progress}%
+                        </span>
+                      </div>
+                      <div className={`sa-bar ${done ? 'sa-bar-done' : ''}`}>
+                        <span style={{ width: `${progress}%` }} />
+                      </div>
+                    </div>
+
                     <Link href={`/dashboard/learn/${course.slug}`}>
-                      <button className="w-full bg-[#122340] text-white py-3.5 rounded-xl font-bold hover:bg-[#0a1628] transition-all text-sm flex items-center justify-center gap-2 shadow-[0_4px_14px_0_rgba(18,35,64,0.39)] hover:shadow-[0_6px_20px_rgba(18,35,64,0.23)]  relative overflow-hidden group/btn cursor-pointer">
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover/btn:animate-[shimmer_1.5s_infinite]"></div>
-                        {isCompleted ? (
+                      <button className="sa-btn sa-btn-primary sa-btn-block">
+                        {done ? (
                           <>
-                            <BookOpen size={18} className="text-[#C9A227]" /> Review Course
+                            <BookOpen size={14} /> Review course
                           </>
                         ) : (
                           <>
-                            <PlayCircle size={18} className="text-[#C9A227]" /> Resume Course
+                            <PlayCircle size={14} /> Resume course
                           </>
                         )}
+                        <ArrowRight size={14} />
                       </button>
                     </Link>
                   </div>
                 </div>
-                
-              </div>
+              </article>
             );
           })}
         </div>
       )}
-
     </div>
   );
 }
 
+/* ─────────────────────── Filter tabs ─────────────────────── */
+
+function FilterTabs({
+  filter,
+  onChange,
+  counts,
+}: {
+  filter: Filter;
+  onChange: (f: Filter) => void;
+  counts: Record<Filter, number>;
+}) {
+  const options: { key: Filter; label: string }[] = [
+    { key: 'all', label: 'All' },
+    { key: 'in_progress', label: 'In progress' },
+    { key: 'completed', label: 'Completed' },
+  ];
+  return (
+    <div className="inline-flex shrink-0 overflow-x-auto rounded-full border border-[rgba(11,18,32,0.08)] bg-[color:var(--sa-cream)] p-1">
+      {options.map((o) => {
+        const active = filter === o.key;
+        return (
+          <button
+            key={o.key}
+            type="button"
+            onClick={() => onChange(o.key)}
+            className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-[12.5px] font-semibold transition-colors ${
+              active
+                ? 'bg-white text-[color:var(--sa-ink)] shadow-sm'
+                : 'text-[color:var(--sa-ink-3)] hover:text-[color:var(--sa-ink)]'
+            }`}
+          >
+            {o.label}
+            <span
+              className={`rounded-full px-1.5 text-[10.5px] tabular-nums ${
+                active
+                  ? 'bg-[color:var(--sa-cream-2)] text-[color:var(--sa-ink-2)]'
+                  : 'text-[color:var(--sa-ink-4)]'
+              }`}
+            >
+              {counts[o.key]}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─────────────────────── Empty state ─────────────────────── */
+
+function EmptyState({ filter }: { filter: Filter }) {
+  return (
+    <div className="sa-tile sa-tile-pad-lg text-center">
+      <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[color:var(--sa-gold-soft)] text-[color:var(--sa-gold-2)]">
+        <BookOpen size={22} />
+      </span>
+      <h3 className="mt-4 font-serif text-[1.25rem] font-bold text-[color:var(--sa-ink)]">
+        {filter === 'completed'
+          ? 'No completed courses yet'
+          : filter === 'in_progress'
+          ? 'No courses in progress'
+          : 'No active enrolments'}
+      </h3>
+      <p className="sa-sub mx-auto mt-2 max-w-md">
+        {filter === 'completed'
+          ? 'Keep learning to complete your enrolled courses and unlock credentials.'
+          : 'Explore the academy to start learning today.'}
+      </p>
+      <Link href="/courses" className="mt-5 inline-flex">
+        <button className="sa-btn sa-btn-gold">
+          Browse courses <ArrowRight size={15} />
+        </button>
+      </Link>
+    </div>
+  );
+}

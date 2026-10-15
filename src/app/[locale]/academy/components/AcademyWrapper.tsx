@@ -14,7 +14,10 @@ export default function AcademyWrapper({ children }: { children: React.ReactNode
 
   return (
     <WishlistProvider>
-      <div className="ac-root min-h-screen selection:bg-yellow-500/20 flex flex-col" style={{ background: '#F7F3EA', color: '#0B1220', fontFamily: "'Inter', sans-serif" }}>
+      <div
+        className="ac-root min-h-screen selection:bg-yellow-500/20 flex flex-col bg-[#F7F3EA]"
+        style={{ color: '#0B1220', fontFamily: "'Inter', sans-serif" }}
+      >
         {!hideNavigation && <AcademyNavbar />}
         <main className="flex-grow flex flex-col">
           {children}

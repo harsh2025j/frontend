@@ -215,5 +215,8 @@ export const API_ENDPOINTS = {
       EDIT_QUESTION: "/academy/courses/:courseId/qa/:questionId",
       EDIT_ANSWER: "/academy/courses/:courseId/qa/:questionId/answers/:answerId",
     },
+    STUDENTS: {
+      MY_PERFORMANCE: "/academy/students/me/performance",
+    },
   }
 };

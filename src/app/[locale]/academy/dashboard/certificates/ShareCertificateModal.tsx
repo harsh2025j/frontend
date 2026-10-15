@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   DownloadCloud,
@@ -302,10 +303,14 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
     }
   };
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm animate-fadeIn"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
     >
       <div
         className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-[#122340]/10 flex flex-col max-h-[90vh] animate-scaleUp"
@@ -588,6 +593,7 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

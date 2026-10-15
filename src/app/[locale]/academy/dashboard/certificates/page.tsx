@@ -1,10 +1,22 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { DownloadCloud, Award, Share2, ShieldCheck, Copy, Loader2 } from 'lucide-react';
-import { certificateApi, Certificate } from '@/data/services/academy-service/certificate.service';
-import { ShareCertificateModal, formatCertificateFilename } from './ShareCertificateModal';
+import {
+  DownloadCloud,
+  Award,
+  Share2,
+  ShieldCheck,
+  Copy,
+  Loader2,
+} from 'lucide-react';
+import {
+  certificateApi,
+  Certificate,
+} from '@/data/services/academy-service/certificate.service';
+import {
+  ShareCertificateModal,
+  formatCertificateFilename,
+} from './ShareCertificateModal';
 import toast from 'react-hot-toast';
 
 export default function CertificatesPage() {
@@ -26,43 +38,60 @@ export default function CertificatesPage() {
   }, []);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-extrabold text-[#122340] mb-2 tracking-tight">My Credentials</h1>
-          <p className="text-[#122340]/60">Verified completion certificates for your resume and LinkedIn.</p>
+    <div className="sa-rise space-y-5 sm:space-y-6">
+      {/* ─── Header ─── */}
+      <div className="sa-tile flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <p className="sa-runhead">Credentials</p>
+          <h1 className="font-serif text-[1.625rem] font-bold leading-tight tracking-[-0.015em] text-[color:var(--sa-ink)] sm:text-[1.875rem]">
+            My certificates
+          </h1>
+          <p className="mt-1.5 text-[13px] text-[color:var(--sa-ink-3)]">
+            Verified completion certificates for your resume and LinkedIn.
+          </p>
         </div>
+        {items.length > 0 && (
+          <div className="shrink-0 rounded-full border border-[rgba(11,18,32,0.08)] bg-[color:var(--sa-cream)] px-4 py-2 text-[12px] font-semibold text-[color:var(--sa-ink-2)]">
+            <span className="font-serif text-[18px] font-bold text-[color:var(--sa-ink)]">
+              {items.length}
+            </span>{' '}
+            issued
+          </div>
+        )}
       </div>
 
+      {/* ─── Content ─── */}
       {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 animate-in fade-in duration-300">
+        <div className="sa-bento">
           {[1, 2].map((i) => (
-            <div key={i} className="bg-white border border-[#122340]/10 rounded-2xl p-6 sm:p-8 shadow-sm space-y-5">
-              <div className="flex items-center justify-between">
-                <div className="h-4 w-32 bg-slate-200 rounded animate-pulse" />
-                <div className="h-6 w-24 bg-slate-100 rounded-full animate-pulse" />
-              </div>
-              <div className="h-7 w-3/4 bg-slate-200 rounded animate-pulse" />
-              <div className="h-4 w-1/2 bg-slate-100 rounded animate-pulse" />
-              <div className="pt-6 border-t border-slate-100 flex gap-4">
-                <div className="h-10 flex-1 bg-slate-200 rounded-xl animate-pulse" />
-                <div className="h-10 w-24 bg-slate-100 rounded-xl animate-pulse" />
+            <div
+              key={i}
+              className="sa-tile sa-col-sm-6 sa-col-lg-6 !p-0 overflow-hidden"
+            >
+              <div className="h-56 w-full animate-pulse bg-[color:var(--sa-cream-2)]" />
+              <div className="space-y-3 p-6">
+                <div className="h-5 w-3/4 animate-pulse rounded bg-[color:var(--sa-cream-2)]" />
+                <div className="h-4 w-1/2 animate-pulse rounded bg-[color:var(--sa-cream-2)]" />
+                <div className="h-10 w-full animate-pulse rounded-xl bg-[color:var(--sa-cream-2)]" />
               </div>
             </div>
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-white border border-[#122340]/5 rounded-3xl p-16 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-          <div className="w-24 h-24 bg-[#f0f2f5] rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-[#122340]/5">
-            <Award size={40} className="text-[#122340]/20" />
-          </div>
-          <h3 className="text-xl font-extrabold text-[#122340] mb-3">No certificates yet</h3>
-          <p className="text-[#122340]/50 max-w-md mx-auto font-medium">
-            Complete your first course to unlock a digitally verified certificate of completion.
+        <div className="sa-tile sa-tile-pad-lg text-center">
+          <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[color:var(--sa-gold-soft)] text-[color:var(--sa-gold-2)]">
+            <Award size={28} />
+          </span>
+          <h3 className="mt-4 font-serif text-[1.25rem] font-bold text-[color:var(--sa-ink)]">
+            No certificates yet
+          </h3>
+          <p className="sa-sub mx-auto mt-2 max-w-md">
+            Complete your first course to unlock a digitally verified certificate
+            of completion.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="sa-bento">
           {items.map((cert) => (
             <CertificateCard
               key={cert.id}
@@ -73,7 +102,6 @@ export default function CertificatesPage() {
         </div>
       )}
 
-      {/* Social Share & Export Modal */}
       {shareCert && (
         <ShareCertificateModal
           cert={shareCert}
@@ -93,14 +121,18 @@ function CertificateCard({
   onShare: () => void;
 }) {
   const [downloading, setDownloading] = useState(false);
-  const verifyUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/certificates/verify/${cert.certificateId}`;
+  const verifyUrl = `${
+    typeof window !== 'undefined' ? window.location.origin : ''
+  }/certificates/verify/${cert.certificateId}`;
 
   const handleDownload = async () => {
     if (downloading) return;
     setDownloading(true);
     const filename = formatCertificateFilename(cert.studentName, cert.courseName, 'pdf');
     try {
-      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(cert.pdfUrl)}&filename=${encodeURIComponent(filename)}`;
+      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(
+        cert.pdfUrl,
+      )}&filename=${encodeURIComponent(filename)}`;
       let res: Response;
       try {
         res = await fetch(cert.pdfUrl, { mode: 'cors' });
@@ -122,7 +154,9 @@ function CertificateCard({
       toast.success('Certificate downloaded successfully');
     } catch (err) {
       console.error('Download error:', err);
-      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(cert.pdfUrl)}&filename=${encodeURIComponent(filename)}`;
+      const proxyUrl = `/api/academy/download?url=${encodeURIComponent(
+        cert.pdfUrl,
+      )}&filename=${encodeURIComponent(filename)}`;
       const a = document.createElement('a');
       a.href = proxyUrl;
       a.download = filename;
@@ -136,74 +170,92 @@ function CertificateCard({
   };
 
   return (
-    <div>
-      <div className="bg-white rounded-xl overflow-hidden shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-[#122340]/5">
-        {/* Certificate image preview (strictly images on web, never heavy PDF iframe) */}
-        <div className="h-72 relative bg-gradient-to-br from-[#0a1628] to-[#1a2f4d] border-b-4 border-[#C9A227] overflow-hidden">
-          <img
-            src={cert.imageUrl || `/academy/certificates/image/${cert.certificateId}`}
-            alt={cert.courseName}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+    <article className="sa-tile sa-tile-hover sa-col-sm-6 sa-col-lg-6 !p-0 overflow-hidden">
+      <div className="relative h-64 overflow-hidden bg-gradient-to-br from-[color:var(--sa-navy-ink)] to-[color:var(--sa-navy-2)]">
+        <img
+          src={cert.imageUrl || `/academy/certificates/image/${cert.certificateId}`}
+          alt={cert.courseName}
+          className="h-full w-full object-cover"
+          loading="lazy"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-[rgba(11,18,32,0.3)] to-transparent"
+        />
+        <span
+          aria-hidden="true"
+          className="absolute bottom-0 left-0 right-0 h-[3px]"
+          style={{
+            background:
+              'linear-gradient(90deg, var(--sa-gold-3), var(--sa-gold-1) 48%, var(--sa-gold-3))',
+          }}
+        />
+      </div>
+
+      <div className="p-6">
+        <h3 className="line-clamp-1 font-serif text-[1.0625rem] font-bold tracking-[-0.005em] text-[color:var(--sa-ink)]">
+          {cert.courseName}
+        </h3>
+
+        <div className="mt-4 flex items-start justify-between gap-4 rounded-xl border border-[rgba(11,18,32,0.06)] bg-[color:var(--sa-cream)] px-4 py-3">
+          <div>
+            <p className="sa-label !text-[10px]">Issue date</p>
+            <p className="mt-1 font-serif text-[13px] font-bold text-[color:var(--sa-ink)]">
+              {new Date(cert.issueDate).toLocaleDateString(undefined, {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+              })}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="sa-label !text-[10px]">Credential ID</p>
+            <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-[12.5px] font-bold text-[color:var(--sa-ink)]">
+              <ShieldCheck
+                size={13}
+                className="text-[color:var(--sa-sage-2)]"
+              />
+              {cert.certificateId}
+            </p>
+          </div>
         </div>
 
-        <div className="p-8">
-          <p className="font-extrabold text-[#122340] text-lg mb-1 truncate">{cert.courseName}</p>
-          <div className="flex justify-between items-start mb-6 mt-4 bg-[#fcfcfa] p-4 rounded-xl border border-[#122340]/5">
-            <div>
-              <p className="text-[10px] font-bold text-[#122340]/40 uppercase tracking-widest mb-1.5">Issue Date</p>
-              <p className="font-extrabold text-[#122340] text-sm">
-                {new Date(cert.issueDate).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-[10px] font-bold text-[#122340]/40 uppercase tracking-widest mb-1.5">Credential ID</p>
-              <p className="font-mono font-extrabold text-[#122340] text-sm flex items-center justify-end gap-1.5">
-                <ShieldCheck size={14} className="text-green-500" />
-                {cert.certificateId}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              className="flex-1 bg-[#122340] text-white py-3.5 rounded-xl font-bold hover:bg-[#0a1628] transition-colors text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
-            >
-              {downloading ? (
-                <>
-                  <Loader2 size={18} className="animate-spin text-[#C9A227]" /> Downloading...
-                </>
-              ) : (
-                <>
-                  <DownloadCloud size={18} /> Download PDF
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(verifyUrl);
-                toast.success('Verify URL copied');
-              }}
-              className="w-14 shrink-0 border border-[#122340]/10 text-[#122340] rounded-xl flex items-center justify-center hover:bg-[#122340]/5 cursor-pointer transition-colors"
-              title="Copy verify URL"
-            >
-              <Copy size={18} />
-            </button>
-            <button
-              onClick={onShare}
-              className="px-4 border border-[#C9A227]/40 bg-[#C9A227]/10 text-[#122340] rounded-xl flex items-center justify-center gap-1.5 hover:bg-[#C9A227]/20 cursor-pointer transition-colors text-sm font-bold"
-              title="Share Certificate"
-            >
-              <Share2 size={17} className="text-[#C9A227]" />
-              <span>Share</span>
-            </button>
-          </div>
+        <div className="mt-5 flex gap-2">
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="sa-btn sa-btn-primary flex-1 disabled:opacity-70"
+          >
+            {downloading ? (
+              <>
+                <Loader2 size={15} className="animate-spin" /> Downloading
+              </>
+            ) : (
+              <>
+                <DownloadCloud size={15} /> Download PDF
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(verifyUrl);
+              toast.success('Verify URL copied');
+            }}
+            className="sa-btn sa-btn-ghost w-12 shrink-0 !px-0"
+            title="Copy verify URL"
+            aria-label="Copy verify URL"
+          >
+            <Copy size={15} />
+          </button>
+          <button
+            onClick={onShare}
+            className="sa-btn sa-btn-ghost shrink-0 !border-[color:var(--sa-gold-line)] !bg-[color:var(--sa-gold-soft)] !text-[color:var(--sa-gold-3)]"
+            title="Share certificate"
+          >
+            <Share2 size={14} /> Share
+          </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

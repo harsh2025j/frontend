@@ -1,10 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, BookOpen, Award, Settings, Menu, X, Bell, Video, ChevronDown, Home, Loader2, LogOut } from 'lucide-react';
+import {
+  LayoutDashboard,
+  BookOpen,
+  Award,
+  Settings,
+  Menu,
+  X,
+  Video,
+  ChevronDown,
+  Home,
+  Loader2,
+  LogOut,
+  AlertTriangle,
+  ExternalLink,
+} from 'lucide-react';
 import { useAuth } from '@/data/features/auth/useAuthActions';
 import { useAppDispatch } from '@/data/redux/hooks';
 import { logoutUserAsync } from '@/data/features/auth/authThunks';
@@ -13,12 +27,38 @@ import { restoreSession, updateAuthUser } from '@/data/features/auth/authSlice';
 import AcademyNotificationDropdown from '../components/AcademyNotificationDropdown';
 
 const SIDEBAR_NAV = [
-  { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={18} /> },
-  { name: 'My Courses', href: '/dashboard/courses', icon: <BookOpen size={18} /> },
-  { name: 'Live Sessions', href: '/dashboard/live-sessions', icon: <Video size={18} /> },
-  { name: 'Certificates', href: '/dashboard/certificates', icon: <Award size={18} /> },
-  { name: 'Settings', href: '/dashboard/settings', icon: <Settings size={18} /> },
+  {
+    label: 'Learning',
+    items: [
+      { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+      { name: 'My courses', href: '/dashboard/courses', icon: BookOpen },
+      { name: 'Live sessions', href: '/dashboard/live-sessions', icon: Video },
+    ],
+  },
+  {
+    label: 'Record',
+    items: [
+      { name: 'Certificates', href: '/dashboard/certificates', icon: Award },
+      { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+    ],
+  },
 ];
+
+/** Flat list used to resolve the current page title for the top rail. */
+const FLAT_NAV = SIDEBAR_NAV.flatMap((g) => g.items);
+
+function isStudent(u: any): boolean {
+  return Boolean(
+    u?.roles?.some(
+      (r: any) =>
+        r?.slug === 'student' ||
+        r?.name?.toLowerCase() === 'student' ||
+        r?.slug?.toLowerCase() === 'student' ||
+        r === 'student' ||
+        (typeof r === 'string' && r.toLowerCase() === 'student')
+    )
+  );
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -26,24 +66,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  // Check session synchronously on mount so verified students never see a blank/black screen
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Check the session synchronously on mount so a verified student never sees
+  // a blocking splash at all.
   const [isAuthChecking, setIsAuthChecking] = useState(() => {
     if (typeof window === 'undefined') return true;
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     if (!token) return false;
     try {
-      const storedStr = localStorage.getItem("user");
-      if (storedStr) {
-        const storedUser = JSON.parse(storedStr);
-        const hasStudent = storedUser?.roles?.some((r: any) => 
-          r?.slug === 'student' || 
-          r?.name?.toLowerCase() === 'student' || 
-          r?.slug?.toLowerCase() === 'student' || 
-          r === 'student' ||
-          (typeof r === 'string' && r.toLowerCase() === 'student')
-        );
-        if (hasStudent) return false; // Already verified student! No blocking screen at all!
-      }
+      const storedStr = localStorage.getItem('user');
+      if (storedStr && isStudent(JSON.parse(storedStr))) return false;
     } catch {}
     return true;
   });
@@ -52,25 +86,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (!token) {
-      router.push("/auth/login");
+      router.push('/auth/login');
       return;
     }
 
-    const checkStudentRole = (u: any): boolean => {
-      return Boolean(u?.roles?.some((r: any) => 
-        r?.slug === 'student' || 
-        r?.name?.toLowerCase() === 'student' || 
-        r?.slug?.toLowerCase() === 'student' || 
-        r === 'student' ||
-        (typeof r === 'string' && r.toLowerCase() === 'student')
-      ));
-    };
-
-    // 1. If Redux already has user, check student role
+    // 1. Redux already has the user
     if (user && user.roles && user.roles.length > 0) {
-      if (!checkStudentRole(user)) {
+      if (!isStudent(user)) {
         router.push('/join');
       } else {
         setIsAuthChecking(false);
@@ -78,39 +102,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return;
     }
 
-    // 2. If localStorage has cached user, restore and check
+    // 2. localStorage has a cached user — restore and check
     if (typeof window !== 'undefined') {
       try {
-        const storedStr = localStorage.getItem("user");
+        const storedStr = localStorage.getItem('user');
         if (storedStr) {
           const storedUser = JSON.parse(storedStr);
           if (storedUser && storedUser.roles && storedUser.roles.length > 0) {
-            dispatch(restoreSession({
-              token,
-              refreshToken: localStorage.getItem("refreshToken") || "",
-              user: storedUser,
-            }));
-            if (checkStudentRole(storedUser)) {
+            dispatch(
+              restoreSession({
+                token,
+                refreshToken: localStorage.getItem('refreshToken') || '',
+                user: storedUser,
+              })
+            );
+            if (isStudent(storedUser)) {
               setIsAuthChecking(false);
               return;
             }
           }
         }
       } catch (err) {
-        console.error("Failed to parse cached user", err);
+        console.error('Failed to parse cached user', err);
       }
     }
 
-    // 3. Fallback: Fetch fresh profile from API to ensure DB state is loaded
-    authApi.getProfile()
+    // 3. Fallback: fetch a fresh profile so the DB state wins
+    authApi
+      .getProfile()
       .then((res: any) => {
         const fetchedUser = res.data?.user || res.data?.data || res.data;
         if (fetchedUser) {
           dispatch(updateAuthUser(fetchedUser));
           if (typeof window !== 'undefined') {
-            localStorage.setItem("user", JSON.stringify(fetchedUser));
+            localStorage.setItem('user', JSON.stringify(fetchedUser));
           }
-          if (checkStudentRole(fetchedUser)) {
+          if (isStudent(fetchedUser)) {
             setIsAuthChecking(false);
           } else {
             router.push('/join');
@@ -120,11 +147,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
       })
       .catch((err) => {
-        console.error("Session verification failed", err);
+        console.error('Session verification failed', err);
         if (err?.response?.status === 401) {
           if (typeof window !== 'undefined') {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
           }
           router.push('/auth/login');
         } else {
@@ -132,6 +159,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
       });
   }, [router, user, dispatch]);
+
+  // Close the mobile drawer and the user popover on navigation
+  useEffect(() => {
+    setIsSidebarOpen(false);
+    setIsUserMenuOpen(false);
+  }, [pathname]);
+
+  // Lock background scroll while the drawer is open
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.body.style.overflow = isSidebarOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isSidebarOpen]);
+
+  // Controlled popover — the previous hover-only menu was unreachable by
+  // keyboard and on touch devices.
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsUserMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isUserMenuOpen]);
 
   const handleLogout = async () => {
     try {
@@ -145,279 +207,308 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   };
 
+  const isNavActive = (href: string) =>
+    href === '/dashboard' ? pathname === '/dashboard' : Boolean(pathname?.startsWith(href));
+
+  const currentPage =
+    FLAT_NAV.find((i) => i.href !== '/dashboard' && pathname?.startsWith(i.href))?.name ||
+    'Overview';
+
+  const initial = user?.name?.charAt(0).toUpperCase();
 
   if (isAuthChecking) {
     return (
-      <div className="ac-student min-h-screen bg-[#F7F3EA] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-[#0b2240] border border-[#C9A227]/40 flex items-center justify-center mb-5 shadow-lg shadow-[#0b2240]/10">
-          <Image
-            src="/logo-gold.png"
-            alt="Sajjad Husain Academy Logo"
-            width={34}
-            height={34}
-            className="object-contain"
-            priority
-          />
-        </div>
-        <div className="flex items-center gap-2.5 text-xs font-semibold text-[#0b2240] tracking-wider uppercase font-mono mb-2">
-          <Loader2 size={16} className="animate-spin text-[#C9A227]" />
-          Checking Academy Access...
-        </div>
-        <p className="text-xs text-[#0b2240]/55 max-w-xs">
-          Verifying your student credentials and course enrollments
+      <div className="ac-student flex min-h-screen flex-col items-center justify-center bg-[color:var(--sa-cream)] p-6 text-center">
+        <span className="mb-6 grid h-14 w-14 place-items-center rounded-[var(--sa-r-md)] border border-[color:var(--sa-gold-line)] bg-[color:var(--sa-navy)] shadow-[var(--sa-e2)]">
+          <Image src="/logo-gold.png" alt="" width={32} height={32} className="object-contain" priority />
+        </span>
+        <p className="ac-eyebrow ac-eyebrow-bare mb-3 inline-flex items-center gap-2.5">
+          <Loader2 size={14} className="animate-spin" />
+          Checking academy access
+        </p>
+        <p className="max-w-xs text-[13px] leading-relaxed text-[color:var(--sa-ink-3)]">
+          Verifying your student credentials and course enrolments.
         </p>
       </div>
     );
   }
 
-  return (
-    <div className="ac-student bg-[color:var(--sa-cream)] min-h-screen font-sans flex flex-col md:flex-row">
+  const brand = (
+    <Link href="/" className="group flex items-center gap-3">
+      <Image src="/logo-gold.png" alt="" width={34} height={34} className="shrink-0 object-contain" priority />
+      <span className="flex flex-col leading-none">
+        <span className="ac-display text-[14px] uppercase tracking-[0.09em] !text-white">
+          Sajjad Husain
+        </span>
+        <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-[color:var(--sa-gold-1)]">
+          Legal Academy
+        </span>
+      </span>
+    </Link>
+  );
 
-      {/* Mobile Top Navbar with Logo and Hamburger (h-20 aligned) */}
-      <div className="md:hidden bg-[color:var(--sa-navy)] text-[color:var(--sa-cream)] px-5 h-20 flex justify-between items-center border-b border-white/10 z-30 relative">
-        <Link href="/" className="flex items-center gap-3">
-          <Image
-            src="/logo-gold.png"
-            alt="Sajjad Husain Academy Logo"
-            width={36}
-            height={36}
-            className="object-contain shrink-0"
-            priority
-          />
-          <div className="flex flex-col">
-            <span className="font-serif font-bold text-sm tracking-wider text-[#C9A227] uppercase leading-tight">
-              Sajjad Husain
-            </span>
-            <span className="text-[9px] tracking-[0.16em] text-[color:var(--sa-cream)]/60 uppercase font-medium mt-0.5">
-              Legal Academy
-            </span>
-          </div>
-        </Link>
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="text-[color:var(--sa-cream)] hover:text-[#C9A227] transition-colors p-2 cursor-pointer"
-          aria-label="Toggle navigation"
-        >
-          {isSidebarOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
-      </div>
-
-      {/* Editorial Navy Sidebar (264px desktop) */}
-      <aside className={`
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-        md:translate-x-0 transition-transform duration-300 ease-in-out
-        w-[264px] bg-[color:var(--sa-navy)] text-[color:var(--sa-cream)] border-r border-white/10 shrink-0 h-screen self-start
-        fixed md:sticky top-0 left-0 z-40 flex flex-col
-      `}>
-        {/* Brand Header with Logo (h-20 = 80px, exactly matches top rail height & border) */}
-        <div className="h-20 flex-shrink-0 flex items-center px-6 border-b border-white/10">
-          <Link href="/" className="flex items-center gap-3 group">
-            <Image
-              src="/logo-gold.png"
-              alt="Sajjad Husain Academy Logo"
-              width={38}
-              height={38}
-              className="object-contain shrink-0"
-              priority
-            />
-            <div className="flex flex-col">
-              <span className="font-serif font-bold text-base tracking-wider text-[#C9A227] uppercase leading-tight group-hover:text-yellow-400 transition-colors">
-                Sajjad Husain
-              </span>
-              <span className="text-[10px] tracking-[0.18em] text-[color:var(--sa-cream)]/60 uppercase font-medium mt-0.5">
-                Legal Academy
-              </span>
-            </div>
-          </Link>
-        </div>
-
-        {/* Scrollable Nav Menu */}
-        <div className="flex-1 overflow-y-auto flex flex-col py-6">
-
-
-          <nav className="space-y-1 flex-1">
-            {SIDEBAR_NAV.map((item) => {
-              const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname?.startsWith(item.href));
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setIsSidebarOpen(false)}
-                  className={`flex items-center gap-3.5 px-6 py-3 text-sm font-medium transition-colors relative group ${isActive
-                    ? 'text-[color:var(--sa-cream)] font-semibold border-l-2 border-[#C9A227] bg-white/[0.04]'
-                    : 'text-[color:var(--sa-cream)]/60 hover:text-[color:var(--sa-cream)] border-l-2 border-transparent'
-                    }`}
-                >
-                  <span className={`${isActive ? 'text-[#C9A227]' : 'text-[color:var(--sa-cream)]/55 group-hover:text-[color:var(--sa-cream)]'} transition-colors`}>
-                    {item.icon}
-                  </span>
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* User Block & Sign Out */}
-          <div className="mt-auto pt-6 border-t border-white/10 px-6 space-y-3">
-            {user && (
-              <div className="flex items-center gap-3 py-1">
-                <div className="w-8 h-8 rounded-full bg-[#C9A227]/20 border border-[#C9A227]/40 flex items-center justify-center text-xs font-bold text-[#C9A227] shrink-0">
-                  {user.name?.charAt(0).toUpperCase()}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-[color:var(--sa-cream)] truncate leading-tight">
-                    {user.name}
-                  </p>
-                  <p className="text-[11px] text-[color:var(--sa-cream)]/50 truncate font-mono">
-                    {user.email}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={() => setShowLogoutModal(true)}
-              className="text-xs font-medium text-rose-300 hover:text-rose-200 transition-colors flex items-center gap-2 py-1 cursor-pointer w-full text-left"
+  const navTree = SIDEBAR_NAV.map((group) => (
+    <div key={group.label} className="ac-side-group">
+      <p className="ac-side-group-label">{group.label}</p>
+      <nav className="space-y-0.5">
+        {group.items.map((item) => {
+          const Icon = item.icon;
+          const active = isNavActive(item.href);
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              onClick={() => setIsSidebarOpen(false)}
+              aria-current={active ? 'page' : undefined}
+              className={`ac-side-link ${active ? 'ac-side-link-active' : ''}`}
             >
-              <LogOut size={14} className="text-rose-400" />
-              <span>Sign out</span>
-            </button>
-          </div>
+              <Icon size={17} strokeWidth={1.8} />
+              {item.name}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
+  ));
+
+  const sidebarFooter = (
+    <div className="ac-side-foot">
+      <Link
+        href="/"
+        className="ac-side-link mb-1"
+        onClick={() => setIsSidebarOpen(false)}
+      >
+        <Home size={17} strokeWidth={1.8} />
+        Academy home
+      </Link>
+      <button
+        type="button"
+        onClick={() => setShowLogoutModal(true)}
+        className="ac-side-link w-full !text-[color:#F0A9A0] hover:!bg-[rgba(200,50,42,0.14)] hover:!text-[#FFC8C2]"
+      >
+        <LogOut size={17} strokeWidth={1.8} />
+        Sign out
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="ac-student relative min-h-screen bg-[color:var(--sa-cream)]">
+
+      {/* ═══════════ Sidebar (desktop) ═══════════ */}
+      <aside className="ac-side ac-scroll-dark fixed inset-y-0 left-0 z-30 hidden w-[var(--sa-side-w)] flex-col overflow-y-auto lg:flex">
+        <div className="ac-side-brand">{brand}</div>
+        <div className="flex flex-1 flex-col py-4">
+          {navTree}
+          {sidebarFooter}
         </div>
       </aside>
 
-      {/* Main Column */}
-      <div className="flex-grow w-full min-w-0 flex flex-col">
+      {/* ═══════════ Drawer (mobile) ═══════════ */}
+      {isSidebarOpen && (
+        <>
+          <div
+            className="ac-overlay z-40 lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+            aria-hidden="true"
+          />
+          <aside
+            className="ac-side ac-scroll-dark fixed inset-y-0 left-0 z-50 flex w-[min(84vw,var(--sa-side-w))] flex-col overflow-y-auto lg:hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Dashboard navigation"
+          >
+            <div className="ac-side-brand justify-between">
+              {brand}
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen(false)}
+                className="grid h-9 w-9 place-items-center rounded-full text-white/65 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Close navigation"
+              >
+                <X size={19} />
+              </button>
+            </div>
+            <div className="flex flex-1 flex-col py-4">
+              {navTree}
+              {sidebarFooter}
+            </div>
+          </aside>
+        </>
+      )}
 
-        {/* Top Header Rail (h-20 = 80px, solid non-translucent background, matches sidebar header position) */}
-        <header className="h-20 bg-[color:var(--sa-cream)] border-b border-[color:var(--sa-line)] flex items-center justify-end px-6 sm:px-8 md:px-10 sticky top-0 z-30">
-          <div className="flex items-center gap-5">
-            {/* Notification Bell Dropdown */}
+      {/* ═══════════ Main column ═══════════ */}
+      <div className="flex min-h-screen min-w-0 flex-col lg:ml-[var(--sa-side-w)]">
+
+        {/* Top rail */}
+        <header className="ac-rail sticky top-0 z-30 gap-3 px-4 sm:px-6 lg:px-10">
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen(true)}
+            className="-ml-1 grid h-10 w-10 shrink-0 place-items-center rounded-full text-[color:var(--sa-ink-2)] transition-colors hover:bg-[color:var(--sa-cream-2)] lg:hidden"
+            aria-label="Open navigation"
+            aria-expanded={isSidebarOpen}
+          >
+            <Menu size={20} />
+          </button>
+
+          {/* Breadcrumb — tells you where you are without a second heading */}
+          <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
+            <ol className="flex items-center gap-2 text-[13px]">
+              <li className="hidden sm:block">
+                <span className="text-[color:var(--sa-ink-4)]">Dashboard</span>
+              </li>
+              <li aria-hidden="true" className="hidden text-[color:var(--sa-ink-5)] sm:block">
+                /
+              </li>
+              <li className="min-w-0 truncate font-semibold text-[color:var(--sa-ink)]">
+                {currentPage}
+              </li>
+            </ol>
+          </nav>
+
+          <div className="flex shrink-0 items-center gap-1">
+            <Link href="/courses" className="ac-btn ac-btn-quiet hidden sm:inline-flex">
+              <BookOpen size={16} />
+              Browse courses
+            </Link>
+
             {user && (user._id || (user as any).id) && (
               <AcademyNotificationDropdown userId={user._id || (user as any).id} />
             )}
 
-            {/* Vertical Hairline Divider */}
-            <div className="w-px h-6 bg-slate-200"></div>
+            <span aria-hidden="true" className="mx-1.5 hidden h-6 w-px bg-[color:var(--sa-line)] sm:block" />
 
-            {/* User Dropdown Cluster */}
             {user && (
-              <div className="relative group">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   type="button"
-                  className="flex items-center gap-2.5 py-1 px-2 rounded-full hover:bg-black/5 transition-colors cursor-pointer text-left focus:outline-none"
+                  onClick={() => setIsUserMenuOpen((v) => !v)}
+                  aria-expanded={isUserMenuOpen}
+                  aria-haspopup="menu"
+                  className="flex items-center gap-2 rounded-[var(--sa-r-pill)] p-1 pr-1.5 transition-colors hover:bg-[color:var(--sa-cream-2)] sm:pr-2"
                 >
                   {user.profilePicture ? (
                     <img
                       src={user.profilePicture}
-                      alt={user.name || "Profile"}
-                      className="w-8 h-8 rounded-full object-cover border border-[#C9A227]/40 shadow-xs"
+                      alt=""
+                      className="ac-avatar border border-[color:var(--sa-line)] object-cover"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#C9A227] to-amber-700 text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                      {user.name?.charAt(0).toUpperCase()}
-                    </div>
+                    <span className="ac-avatar">{initial}</span>
                   )}
-                  <span className="text-xs font-semibold text-slate-800 leading-none hidden lg:block">
+                  <span className="hidden max-w-[8rem] truncate text-[13px] font-semibold text-[color:var(--sa-ink)] sm:block">
                     {user.name}
                   </span>
                   <ChevronDown
                     size={14}
-                    className="text-slate-400 group-hover:text-slate-700 transition-transform group-hover:translate-y-0.5 hidden lg:block"
+                    className={`hidden text-[color:var(--sa-ink-4)] transition-transform sm:block ${
+                      isUserMenuOpen ? 'rotate-180' : ''
+                    }`}
                   />
                 </button>
 
-                {/* Dropdown Card */}
-                <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-[0_12px_40px_-8px_rgba(0,0,0,0.18)] border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 transform origin-top-right translate-y-1 group-hover:translate-y-0 z-50 overflow-hidden divide-y divide-slate-100">
-                  <div className="px-4 py-3 bg-slate-50/70">
-                    <p className="text-xs font-bold text-slate-900 truncate leading-tight">
-                      {user.name}
-                    </p>
-                    <p className="text-[11px] text-slate-500 font-mono truncate mt-0.5">
-                      {user.email}
-                    </p>
+                {isUserMenuOpen && (
+                  <div role="menu" className="ac-menu absolute right-0 top-full mt-2 w-60">
+                    <div className="ac-menu-head">
+                      <p className="truncate text-[13px] font-semibold text-[color:var(--sa-ink)]">
+                        {user.name}
+                      </p>
+                      <p className="ac-mono mt-0.5 truncate text-[color:var(--sa-ink-3)]">
+                        {user.email}
+                      </p>
+                    </div>
+                    <div className="ac-menu-list">
+                      <Link
+                        href="/dashboard/settings"
+                        role="menuitem"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="ac-menu-item"
+                      >
+                        <Settings size={15} className="text-[color:var(--sa-ink-4)]" />
+                        Account settings
+                      </Link>
+                      <Link href="/" role="menuitem" onClick={() => setIsUserMenuOpen(false)} className="ac-menu-item">
+                        <ExternalLink size={15} className="text-[color:var(--sa-ink-4)]" />
+                        Academy home
+                      </Link>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          setShowLogoutModal(true);
+                        }}
+                        className="ac-menu-item ac-menu-item-danger"
+                      >
+                        <LogOut size={15} />
+                        Sign out
+                      </button>
+                    </div>
                   </div>
-                  <div className="p-1.5 space-y-0.5">
-                    <Link
-                      href="/"
-                      className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:text-[#C9A227] hover:bg-slate-50 rounded-lg transition-colors"
-                    >
-                      <Home size={15} className="text-slate-400" />
-                      <span>Academy Home</span>
-                    </Link>
-                    <button
-                      onClick={() => setShowLogoutModal(true)}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50/80 rounded-lg transition-colors text-left cursor-pointer"
-                    >
-                      <LogOut size={15} className="text-red-500" />
-                      <span>Sign out</span>
-                    </button>
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </div>
         </header>
 
-        {/* Page Content Body */}
-        <main className="flex-grow w-full min-w-0">
-          <div className="px-6 sm:px-8 md:px-12 lg:px-16 py-10 max-w-[1240px] mx-auto min-w-0">
+        {/* Page body */}
+        <main className="sa-shell min-w-0 flex-1">
+          <div className="mx-auto min-w-0 max-w-[1320px] px-4 py-7 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
             {children}
           </div>
         </main>
       </div>
 
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-[#0B1220]/50 z-30 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* Custom Logout Confirmation Modal */}
+      {/* ═══════════ Sign-out confirmation ═══════════ */}
       {showLogoutModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="ac-overlay" onClick={() => setShowLogoutModal(false)} />
           <div
-            className="absolute inset-0 bg-[#0B1220]/50 backdrop-blur-xs transition-opacity"
-            onClick={() => setShowLogoutModal(false)}
-          />
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 p-6 sm:p-7 w-full max-w-md relative z-10 animate-in fade-in zoom-in-95 duration-150">
-            <p className="text-[11px] font-mono uppercase tracking-widest text-red-600 font-semibold mb-1">
-              Sign Out
-            </p>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">
-              Sign out of the Academy?
-            </h3>
-            <p className="text-sm text-slate-600 mb-6 leading-relaxed">
-              You&apos;ll need to sign in again to reach your courses. Any saved progress on your current lessons remains intact.
-            </p>
-            <div className="flex justify-end gap-3">
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ac-dash-logout-title"
+            className="ac-modal z-10 max-w-sm"
+          >
+            <div className="ac-modal-body text-center">
+              <span className="ac-icon-tile ac-icon-tile-clay ac-icon-tile-xl mx-auto !rounded-full">
+                <AlertTriangle size={24} />
+              </span>
+              <h2 id="ac-dash-logout-title" className="ac-display ac-h3 mb-2 mt-4">
+                Sign out of the Academy?
+              </h2>
+              <p className="text-[13.5px] leading-relaxed text-[color:var(--sa-ink-3)]">
+                You will need to sign in again to reach your courses. Any saved progress on
+                your current lessons remains intact.
+              </p>
+            </div>
+            <div className="ac-modal-foot">
               <button
+                type="button"
                 onClick={() => setShowLogoutModal(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer transition-colors"
+                className="ac-btn ac-btn-ghost flex-1"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 text-xs font-bold rounded-lg cursor-pointer transition-colors shadow-sm disabled:opacity-60 flex items-center justify-center gap-2"
+                className="ac-btn ac-btn-danger flex-1"
               >
                 {isLoggingOut ? (
                   <>
-                    <Loader2 size={14} className="animate-spin" />
-                    <span>Signing out...</span>
+                    <Loader2 size={15} className="animate-spin" />
+                    Signing out…
                   </>
                 ) : (
-                  <span>Sign out</span>
+                  'Sign out'
                 )}
               </button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }
