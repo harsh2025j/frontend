@@ -8,6 +8,7 @@ import { isAdmin as checkIsAdmin } from "@/utils/permissions";
 import CategorySection from "@/components/home/CategorySection";
 import NewsSlider from "@/components/home/NewsSlider";
 import Stores from "@/components/home/Stores";
+import JudiciaryToolsSection from "@/components/home/JudiciaryToolsSection";
 import { AdBanner, AdSidebar, useAdvertisement, useSlotVisibility } from "@/components/ads/StandardAds";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
@@ -45,6 +46,9 @@ export default function HomeClient() {
 
         {/* Stores Section */}
         <Stores />
+
+        {/* Judiciary AI Tools Suite Showcase */}
+        <JudiciaryToolsSection />
 
         {/* Top Banner Ads */}
         <div className="container mx-auto px-4 py-8 space-y-4">

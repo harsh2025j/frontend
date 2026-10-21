@@ -15,6 +15,13 @@ export const navigationData: NavItem[] = [
     {
         label: "Legal Tools",
         children: [
+            { label: "Judiciary Tools Suite", href: "/tools" },
+            { label: "• Precedent Research", href: "/tools/research" },
+            { label: "• AI Legal Drafting", href: "/tools/drafting" },
+            { label: "• Legal Documents Studio", href: "/tools/documents" },
+            { label: "• Document Health Check", href: "/tools/health-check" },
+            { label: "• Mediation & Settlement", href: "/tools/mediation" },
+            { label: "• Vernacular Translation", href: "/tools/translation" },
             { label: "Cases", href: "/cases" },
             { label: "Judgments", href: "/judgments" },
             { label: "Judges", href: "/judges" },

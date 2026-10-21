@@ -147,10 +147,23 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 };
 
+const defaultWishlistContext: WishlistContextType = {
+  wishlist: [],
+  isInWishlist: () => false,
+  addToWishlist: () => {},
+  removeFromWishlist: () => {},
+  toggleWishlist: () => {},
+  clearWishlist: () => {},
+  isWishlistOpen: false,
+  setIsWishlistOpen: () => {},
+  openWishlist: () => {},
+  closeWishlist: () => {},
+};
+
 export const useWishlist = () => {
   const context = useContext(WishlistContext);
   if (!context) {
-    throw new Error("useWishlist must be used within a WishlistProvider");
+    return defaultWishlistContext;
   }
   return context;
 };

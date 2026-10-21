@@ -15,6 +15,33 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchParams, useRouter } from "next/navigation";
 import Pagination from "@/components/Pagination";
 
+function getJudgesList(j: any, judgesMap: Record<string, string>): string[] {
+    if (j.leadJudges && Array.isArray(j.leadJudges) && j.leadJudges.length > 0) {
+        return j.leadJudges
+            .map((lj: any) => (typeof lj === "string" ? lj : lj?.name || lj?.fullName || ""))
+            .map((s: string) => s.trim())
+            .filter(Boolean);
+    }
+
+    if (j.scrapedJudgeNames && typeof j.scrapedJudgeNames === "string") {
+        const split = j.scrapedJudgeNames
+            .split(/[,;\n\r]+/)
+            .map((s: string) => s.trim())
+            .filter(Boolean);
+        if (split.length > 0) return split;
+    }
+
+    if (j.judge?.name && typeof j.judge.name === "string") {
+        return [j.judge.name.trim()];
+    }
+
+    if (j.judgeId && judgesMap[j.judgeId]) {
+        return [judgesMap[j.judgeId].trim()];
+    }
+
+    return [];
+}
+
 const AdminJudgmentsPageContent = () => {
     useDocTitle("Judgments  | Sajjad Husain Law Associates");
     const searchParams = useSearchParams();
@@ -175,32 +202,68 @@ const AdminJudgmentsPageContent = () => {
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[200px]">Judgment Title</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case Number</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judgment Date</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judge</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[220px]">Judgment Title</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[160px]">Case Number</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[140px]">Judgment Date</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[240px] max-w-[280px]">Judge</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[120px]">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {loading ? (
                                     <JudgmentsTableSkeleton />
                                 ) : judgments.length > 0 ? (
-                                    judgments.map((j) => (
+                                    judgments.map((j) => {
+                                        const caseNum = j.case?.caseNumber || j.scrapedCaseNumber || (j.caseId && casesMap[j.caseId]) || "N/A";
+                                        const judgeList = getJudgesList(j, judgesMap);
+
+                                        return (
                                         <tr key={j.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[200px]">{j.title?.substring(0, 400) + "..." || "No Title"}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                {j.case?.caseNumber || j.scrapedCaseNumber || (j.caseId && casesMap[j.caseId]) || "N/A"}
+                                            <td 
+                                                className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-[220px]"
+                                                title={j.title || "No Title"}
+                                            >
+                                                {j.title || "No Title"}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            <td 
+                                                className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 truncate max-w-[160px]"
+                                                title={caseNum}
+                                            >
+                                                {caseNum}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 w-[140px]">
                                                 {formatDate(j.judgmentDate)}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                {j.leadJudges && j.leadJudges.length > 0
-                                                    ? j.leadJudges.map((lj: any) => lj.name).join(", ")
-                                                    : (j.scrapedJudgeNames || j.judge?.name || (j.judgeId && judgesMap[j.judgeId]) || "Unknown")}
+                                            <td className="px-6 py-4 text-sm text-gray-600 w-[240px] max-w-[280px]">
+                                                {judgeList.length === 0 ? (
+                                                    <span className="text-gray-400 italic">Unknown</span>
+                                                ) : judgeList.length === 1 ? (
+                                                    <span 
+                                                        className="truncate block max-w-[220px] text-gray-700 font-medium text-xs" 
+                                                        title={judgeList[0]}
+                                                    >
+                                                        {judgeList[0]}
+                                                    </span>
+                                                ) : (
+                                                    <div 
+                                                        className="flex items-center gap-1.5 max-w-[240px] cursor-default"
+                                                        title={`Bench (${judgeList.length} Judges):\n` + judgeList.map((name: string, i: number) => `${i + 1}. ${name}`).join("\n")}
+                                                    >
+                                                        <span 
+                                                            className="truncate text-gray-700 font-medium text-xs max-w-[140px]"
+                                                            title={judgeList[0]}
+                                                        >
+                                                            {judgeList[0]}
+                                                        </span>
+                                                        <span 
+                                                            className="shrink-0 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 hover:bg-amber-100 transition-colors"
+                                                        >
+                                                            +{judgeList.length - 1} more
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium w-[120px]">
                                                 <div className="flex justify-end gap-3">
                                                     <button
                                                         onClick={() => setViewJudgmentId(j.id)}
@@ -226,7 +289,8 @@ const AdminJudgmentsPageContent = () => {
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))
+                                    );
+                                })
                                 ) : (
                                     <tr>
                                         <td colSpan={5} className="px-6 py-12 text-center text-gray-500">

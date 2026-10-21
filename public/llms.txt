@@ -1,0 +1,40 @@
+# Sajjad Husain Law Associates
+
+> Sajjad Husain Law Associates is a premier Indian law firm and judicial technology platform based in Lucknow and New Delhi. The firm combines deep courtroom advocacy with advanced legal engineering to deliver institutional-grade judicial intelligence: an authentic Supreme Court and High Court precedents research engine, disciplined 3-step court drafting studio, Order XXIII Rule 3 CPC mediation term sheet generator, 3-layer contract risk audit, 22-language vernacular translation, and accredited professional legal education through the Legal Academy.
+
+## Platform Overview
+
+- [Official Portal](https://www.sajjadhusainlawassociates.com/en): The flagship bilingual digital legal portal integrating real-time judicial intelligence, case status tracking, daily legal news, and practice management.
+- [About the Firm](https://www.sajjadhusainlawassociates.com/en/about): History, mission, leadership, core values, and practice areas across Supreme Court of India, Allahabad High Court (Lucknow Bench), and commercial tribunals.
+- [Practice Areas & Chambers Contact](https://www.sajjadhusainlawassociates.com/en/contact): Chamber 515, Block-C, High Court, Lucknow - Ayodhya Rd, Gomti Nagar, Lucknow, Uttar Pradesh 226010, India. Phone: +91 70809 09786, Email: sajjadhusainlawassociates@gmail.com.
+
+## Judiciary AI Tools Suite
+
+- [Supreme Court & High Court Precedents Research](https://www.sajjadhusainlawassociates.com/en/tools/research): High-speed judicial citation and ratio decidendi retrieval engine indexed against 50,000+ authentic Supreme Court and High Court judgments, neutral citations, coram composition, and official Supreme Court Law Report (SCR) reader with zero hallucination.
+- [AI Legal Drafting Studio for Indian Courts](https://www.sajjadhusainlawassociates.com/en/tools/drafting): Disciplined 3-step court drafting engine for Article 226/32 Writ Petitions, Special Leave Petitions (SLPs), Commercial Suits, Interim Applications, and Legal Notices adhering strictly to High Court and Supreme Court Rules. Formulates verified questions of law, chronological synopsis, and conforming prayer deeds.
+- [Mediation & Out-of-Court Settlement Desk](https://www.sajjadhusainlawassociates.com/en/tools/mediation): Enforceable 5-part commercial and civil settlement term sheet generator complying with Order XXIII Rule 3 CPC and the Mediation Act 2023. Generates structured payment tranches, grace periods, commercial default interest, and mutual release covenants.
+- [Legal Document Health Check & 3-Layer Risk Audit](https://www.sajjadhusainlawassociates.com/en/tools/documents): 100-point diagnostic audit engine spotting missing arbitration seats vs venues under the Hardy Exploration doctrine, uncapped indemnities, unilateral termination traps, and compliance with the Indian Contract Act 1872 and Stamp Acts. Accessible via both `/tools/documents` and `/tools/health-check`.
+- [Legal Vernacular Translation & Document OCR](https://www.sajjadhusainlawassociates.com/en/tools/translation): High Court-grade certified translation and OCR engine covering all 22 Eighth Schedule Indian languages (Hindi, Urdu, Bengali, Marathi, Tamil, Telugu, etc.) into judicial English. Preserves statutory sections, FIR numbers, plot measurements, and maps legacy IPC/CrPC sections directly to the Bharatiya Nyaya Sanhita (BNS 2023).
+
+## Legal Academy & Professional Education (Non-Localized Dedicated Subdomain)
+
+> Note: The Academy module strictly does not follow URL localization prefixes and is hosted on a dedicated subdomain. All academy routes originate from `academy.sajjadhusainlawassociates.com`.
+
+- [Legal Academy Home](https://academy.sajjadhusainlawassociates.com/): Professional legal education and training portal empowering law students, junior advocates, and judicial aspirants with practical litigation, research, and corporate advisory skills.
+- [Courses Catalog](https://academy.sajjadhusainlawassociates.com/courses): Practical courses and modules taught by experienced courtroom advocates covering legal research, civil procedure, criminal defense, and corporate compliance.
+- [Certificate Verification](https://academy.sajjadhusainlawassociates.com/verify-certificate): Cryptographic student certificate and credential verification portal for bar council and employer verification (also accessible via short URLs `https://academy.sajjadhusainlawassociates.com/v/:id`).
+- [Admissions & Enrollment](https://academy.sajjadhusainlawassociates.com/join): Direct enrollment and application desk for specialized legal certifications and practical litigation training.
+
+## Supreme Court Judgments Repository
+
+- [Judgments Search Engine](https://www.sajjadhusainlawassociates.com/en/judgments): Comprehensive, searchable repository of Supreme Court of India judgments with multi-parameter filtering: Case Number, Diary Number, Free-Text Keywords, Judge / Coram Name, and Date Range.
+- [Cause Lists & Case Status](https://www.sajjadhusainlawassociates.com/en/cases): Live case tracking, cause lists, daily orders, and judicial case status.
+
+## Real-Time Legal News
+
+- [Legal News Hub](https://www.sajjadhusainlawassociates.com/en/news): Daily real-time coverage of Supreme Court Constitution Benches, High Court landmark orders, legislative developments, and bar council notifications.
+- [Top Legal Stories](https://www.sajjadhusainlawassociates.com/en/top-stories): Curated reporting on key constitutional developments, high-profile litigations, and major judicial appointments.
+
+## Optional
+
+- [Full LLM Context Document](https://www.sajjadhusainlawassociates.com/llms-full.txt): Complete architectural, statutory, practice area, and API context document for AI LLM retrieval engines (ChatGPT, Gemini, Claude, Perplexity).

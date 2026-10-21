@@ -1,6 +1,26 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sajjadhusainlawassociates.com/";
 export const IS_NGROK = process.env.NEXT_PUBLIC_NGROK === "true";
 export const API_ENDPOINTS = {
+  TOOLS: {
+    STATUS: "/tools/status",
+    RESEARCH: "/tools/research",
+    DRAFTING: "/tools/drafting",
+    MEDIATION: "/tools/mediation",
+    HEALTH_CHECK: "/tools/health-check",
+    TRANSLATION: "/tools/translation",
+    DRAFT_HISTORY: "/tools/drafting/history",
+    DRAFT_DELETE: "/tools/drafting/history/:id",
+    DRAFT_SAVE: "/tools/drafting/save",
+    DOCUMENTS_CHAT: "/tools/documents/chat",
+    DOCUMENTS_GENERATE: "/tools/documents/generate",
+    DOCUMENTS_SAVE: "/tools/documents/save",
+    DOCUMENTS_HISTORY: "/tools/documents/history",
+    DOCUMENTS_DELETE: "/tools/documents/history/:id",
+    JUDGMENT_DETAILS: "/tools/judgment/:id",
+    JUDGMENT_DOWNLOAD: "/tools/judgment/:id/download",
+    JUDGMENT_PARAGRAPHS: "/tools/judgment/:id/paragraphs",
+    JUDGMENT_PDF: "/tools/judgment/:id/pdf",
+  },
   SEARCH: {
     JUDGES: "/search/judges",
     CASES: "/search/cases",

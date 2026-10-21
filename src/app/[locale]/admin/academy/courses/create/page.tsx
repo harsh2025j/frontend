@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, UploadCloud, Loader2, Save, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, UploadCloud, Loader2, Save, Image as ImageIcon, Plus, X } from "lucide-react";
 import { courseApi } from "@/data/services/academy-service/course.service";
 import toast from "react-hot-toast";
 import { uploadToS3 } from "@/lib/uploadToS3";
@@ -14,6 +14,7 @@ export default function CreateCoursePage() {
 
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -26,13 +27,20 @@ export default function CreateCoursePage() {
   const [categories, setCategories] = useState<{ label: string, value: string }[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
-  React.useEffect(() => {
+  // Quick category modal states
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
     const fetchCats = async () => {
       try {
         setLoadingCategories(true);
         const res = await courseApi.fetchCategories();
-        if (res.data && Array.isArray(res.data)) {
-          setCategories(res.data.map((c: any) => ({ label: c.name, value: c.name })));
+        const rawList = res.data?.data || res.data || [];
+        if (Array.isArray(rawList)) {
+          setCategories(rawList.map((c: any) => ({ label: c.name, value: c.name })));
         }
       } catch (err) {
         console.error("Failed to fetch categories", err);
@@ -44,17 +52,54 @@ export default function CreateCoursePage() {
   }, []);
 
   const handleCategoryCreate = async (inputValue: string) => {
+    const trimmed = inputValue.trim();
+    if (!trimmed) return null;
+
+    // Check if category already exists in current options (case-insensitive)
+    const existing = categories.find(c => c.value.toLowerCase() === trimmed.toLowerCase());
+    if (existing) {
+      setFormData(prev => ({ ...prev, category: existing.value }));
+      toast.success(`Selected existing category "${existing.label}"`);
+      return existing.value;
+    }
+
     try {
       setLoadingCategories(true);
-      const res = await courseApi.createCategory({ name: inputValue });
-      const newOption = { label: res.data.name, value: res.data.name };
-      setCategories(prev => [...prev, newOption]);
-      setFormData(prev => ({ ...prev, category: res.data.name }));
-    } catch (err) {
+      const res = await courseApi.createCategory({ name: trimmed });
+      const createdCategory = res.data?.data || res.data;
+      const catName = createdCategory?.name || trimmed;
+      const newOption = { label: catName, value: catName };
+
+      setCategories(prev => {
+        if (prev.some(c => c.value.toLowerCase() === catName.toLowerCase())) {
+          return prev;
+        }
+        return [...prev, newOption];
+      });
+      setFormData(prev => ({ ...prev, category: catName }));
+      toast.success(`Category "${catName}" created and selected!`);
+      return catName;
+    } catch (err: any) {
       console.error("Failed to create category", err);
-      toast.error("Failed to create category");
+      toast.error(err?.response?.data?.message || "Failed to create category");
+      return null;
     } finally {
       setLoadingCategories(false);
+    }
+  };
+
+  const handleModalCreateCategory = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!newCategoryName.trim()) {
+      toast.error("Please enter a category name");
+      return;
+    }
+    setCreatingCategory(true);
+    const created = await handleCategoryCreate(newCategoryName);
+    setCreatingCategory(false);
+    if (created) {
+      setNewCategoryName("");
+      setShowCreateModal(false);
     }
   };
 
@@ -172,17 +217,121 @@ export default function CreateCoursePage() {
 
           {/* Category */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
-            <select
-              name="category" value={formData.category} onChange={handleInputChange}
-              disabled={loadingCategories}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white"
-            >
-              <option value="">Select a category</option>
-              {categories.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700">Category</label>
+                <p className="text-[11px] text-gray-400 font-medium mt-0.5">
+                  Select an existing category or type to search &amp; create a new one
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(true)}
+                className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition border border-transparent hover:border-blue-200 cursor-pointer"
+              >
+                <Plus size={14} /> Add new category
+              </button>
+            </div>
+
+            {!isMounted ? (
+              <div className="w-full h-12 border border-gray-200 rounded-xl bg-gray-50 flex items-center px-4 text-xs text-gray-400 font-medium">
+                Loading categories...
+              </div>
+            ) : (
+              <CreatableSelect
+                instanceId="course-category-select"
+                isClearable
+                isDisabled={loadingCategories}
+                isLoading={loadingCategories}
+                options={categories}
+                value={
+                  categories.find(c => c.value === formData.category) ||
+                  (formData.category ? { label: formData.category, value: formData.category } : null)
+                }
+                onChange={(selected: any) => {
+                  setFormData(prev => ({ ...prev, category: selected?.value || "" }));
+                }}
+                onCreateOption={handleCategoryCreate}
+                placeholder="Search or select a category, or type to create..."
+                formatCreateLabel={(inputValue) => `+ Create category "${inputValue}"`}
+                noOptionsMessage={({ inputValue }) =>
+                  inputValue
+                    ? `No matching category found. Press Enter or click above to create "${inputValue}"`
+                    : "No categories found"
+                }
+                styles={{
+                  control: (base, state) => ({
+                    ...base,
+                    minHeight: '48px',
+                    padding: '2px 4px',
+                    borderRadius: '0.75rem',
+                    borderColor: state.isFocused ? '#3b82f6' : '#e5e7eb',
+                    backgroundColor: '#ffffff',
+                    boxShadow: state.isFocused ? '0 0 0 2px rgba(59, 130, 246, 0.2)' : 'none',
+                    transition: 'all 0.15s ease',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      borderColor: state.isFocused ? '#3b82f6' : '#9ca3af',
+                    },
+                  }),
+                  valueContainer: (base) => ({
+                    ...base,
+                    padding: '0 8px',
+                  }),
+                  placeholder: (base) => ({
+                    ...base,
+                    color: '#9ca3af',
+                    fontSize: '0.875rem',
+                  }),
+                  singleValue: (base) => ({
+                    ...base,
+                    color: '#111827',
+                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    borderRadius: '0.75rem',
+                    overflow: 'hidden',
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                    border: '1px solid #e5e7eb',
+                    zIndex: 50,
+                  }),
+                  menuList: (base) => ({
+                    ...base,
+                    padding: '6px',
+                    maxHeight: '260px',
+                  }),
+                  option: (base, state) => {
+                    const isNew = (state.data as any)?.__isNew__;
+                    return {
+                      ...base,
+                      borderRadius: '0.5rem',
+                      margin: '2px 0',
+                      padding: isNew ? '10px 14px' : '9px 12px',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      backgroundColor: state.isSelected
+                        ? '#2563eb'
+                        : state.isFocused
+                        ? isNew
+                          ? '#eff6ff'
+                          : '#f3f4f6'
+                        : isNew
+                        ? '#f8fafc'
+                        : 'transparent',
+                      color: state.isSelected
+                        ? '#ffffff'
+                        : isNew
+                        ? '#2563eb'
+                        : '#1f2937',
+                      fontWeight: isNew || state.isSelected ? 600 : 500,
+                      borderTop: isNew ? '1px dashed #bfdbfe' : undefined,
+                    };
+                  },
+                }}
+              />
+            )}
           </div>
 
           {/* Field 1: Full Price / MRP — crossed-out display price */}
@@ -331,6 +480,65 @@ export default function CreateCoursePage() {
         </div>
 
       </div>
+
+      {/* Quick Add Category Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-gray-100">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-900">Create Course Category</h3>
+              <button
+                type="button"
+                onClick={() => { setShowCreateModal(false); setNewCategoryName(""); }}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleModalCreateCategory} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                  Category Name *
+                </label>
+                <input
+                  type="text"
+                  autoFocus
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="e.g. Constitutional Law, Cyber Crime"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-medium"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowCreateModal(false); setNewCategoryName(""); }}
+                  className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingCategory || !newCategoryName.trim()}
+                  className="px-4 py-2 text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                >
+                  {creatingCategory ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" /> Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={14} /> Create Category
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

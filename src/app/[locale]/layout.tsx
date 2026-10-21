@@ -4,15 +4,16 @@ import "../globals.css";
 import ClientLayout from "@/components/layout/ClientWrapper";
 import ReduxProvider from "@/data/redux/providers/ReduxProvider";
 import { Toaster } from "react-hot-toast";
-import GlobalLoader from "@/components/ui/GlobalLoader";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { AdProvider } from "@/context/AdContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import Script from 'next/script';
 import GoogleAnalyticsTracker from "@/components/GoogleAnalyticsTracker";
 import { routing } from "@/i18n/routing";
+import JsonLd from "@/components/seo/JsonLd";
 import { API_BASE_URL, API_ENDPOINTS, IS_NGROK } from "@/data/services/apiConfig/apiContants";
 // import { Analytics } from "@vercel/analytics/next";
 // import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -170,28 +171,13 @@ export default async function RootLayout({
   const messages = await getMessages();
   const categories = await getCategories();
 
-  const siteUrl = "https://www.sajjadhusainlawassociates.com";
-  const siteSearchJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Sajjad Husain Law Associates",
-    "url": siteUrl,
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": `${siteUrl}/${locale}/search?q={search_term_string}`,
-      "query-input": "required name=search_term_string"
-    }
-  };
-
-
   return (
     <html lang={locale}>
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSearchJsonLd) }}
-        />
-        {/* Google AdSense Script - Replace with your actual publisher ID */}
+        <JsonLd locale={locale} />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} antialiased`} suppressHydrationWarning>
+        {/* Google AdSense Script - Placed in body per Next.js requirements to avoid data-nscript head error */}
         <Script
           id="google-adsense"
           async
@@ -219,33 +205,34 @@ export default async function RootLayout({
             `,
           }}
         />
-      </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} antialiased`} suppressHydrationWarning>
+
         <NextIntlClientProvider messages={messages}>
           <ErrorBoundary>
             <ReduxProvider>
               <AdProvider>
-                <ClientLayout
-                  initialCategories={categories}
-                >
-                  {children}
-                </ClientLayout>
+                <WishlistProvider>
+                  <ClientLayout
+                    initialCategories={categories}
+                  >
+                    {children}
+                  </ClientLayout>
 
-                <GoogleAnalyticsTracker />
-                {/* <Analytics />
-                <SpeedInsights /> */}
+                  <GoogleAnalyticsTracker />
+                  {/* <Analytics />
+                  <SpeedInsights /> */}
 
-                {/* <GlobalLoader /> */}
-                <Toaster
-                  position="top-right"
-                  toastOptions={{
-                    duration: 3000,
-                    // Prevent duplicate toasts
-                    style: {
-                      maxWidth: '500px',
-                    },
-                  }}
-                />
+                  {/* <GlobalLoader /> */}
+                  <Toaster
+                    position="top-right"
+                    toastOptions={{
+                      duration: 3000,
+                      // Prevent duplicate toasts
+                      style: {
+                        maxWidth: '500px',
+                      },
+                    }}
+                  />
+                </WishlistProvider>
               </AdProvider>
             </ReduxProvider>
           </ErrorBoundary>

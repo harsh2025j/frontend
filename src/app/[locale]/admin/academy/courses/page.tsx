@@ -114,10 +114,12 @@ export default function AcademyCoursesPage() {
               <tbody className="divide-y divide-gray-100">
                 {filteredCourses.map((course) => (
                   <tr key={course.id} className="hover:bg-gray-50/50 transition group">
-                    <td className="p-4">
+                    <td className="p-4 max-w-xs md:max-w-md">
                       <Link href={`/admin/academy/courses/${course.id}`} className="block w-full h-full">
-                        <p className="font-semibold text-gray-900 group-hover:text-blue-600 transition">{course.title}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{course.id}</p>
+                        <p className="font-semibold text-gray-900 group-hover:text-blue-600 transition truncate" title={course.title}>
+                          {course.title}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5 truncate">{course.id}</p>
                       </Link>
                     </td>
                     <td className="p-4 text-sm text-gray-600">

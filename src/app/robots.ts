@@ -20,6 +20,29 @@ export default function robots(): MetadataRoute.Robots {
             {
                 userAgent: 'Mediapartners-Google',
                 allow: '/',
+            },
+            {
+                userAgent: [
+                    'GPTBot',
+                    'ChatGPT-User',
+                    'ClaudeBot',
+                    'Claude-Web',
+                    'PerplexityBot',
+                    'Google-Extended',
+                    'Applebot-Extended',
+                    'Amazonbot',
+                ],
+                allow: [
+                    '/',
+                    '/llms.txt',
+                    '/llms-full.txt',
+                ],
+                disallow: [
+                    '/admin/',
+                    '/api/',
+                    '/dashboard/private/',
+                    '/search',
+                ],
             }
         ],
         sitemap: `${SITE_URL}/sitemap.xml`,

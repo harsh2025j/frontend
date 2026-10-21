@@ -1,0 +1,34 @@
+# Robots.txt for Sajjad Husain Law Associates
+# Optimized for Search Engines (Googlebot) and AI Retrieval Engines (GEO / LLM SEO)
+
+User-agent: *
+Allow: /
+Allow: /*opengraph-image*
+Disallow: /admin/
+Disallow: /api/
+Disallow: /search
+Disallow: /dashboard/private/
+
+# Google AdSense
+User-agent: Mediapartners-Google
+Allow: /
+
+# Explicit AI Crawlers & Retrieval Bots
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-Web
+User-agent: PerplexityBot
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: Amazonbot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin/
+Disallow: /api/
+Disallow: /search
+Disallow: /dashboard/private/
+
+# Sitemaps & Knowledge Repositories
+Sitemap: https://www.sajjadhusainlawassociates.com/sitemap.xml

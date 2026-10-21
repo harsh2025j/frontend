@@ -258,26 +258,35 @@ export default function CourseUnifiedDashboard() {
     <div className="space-y-6 max-w-6xl mx-auto pb-20 mt-8">
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/academy/courses" className="p-2 hover:bg-gray-100 rounded-full transition text-gray-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 min-w-0">
+        <div className="flex items-center gap-4 min-w-0 flex-1 w-full md:w-auto">
+          <Link 
+            href="/admin/academy/courses" 
+            className="p-2 hover:bg-gray-100 rounded-full transition text-gray-500 shrink-0"
+            title="Back to Courses"
+          >
             <ArrowLeft size={20} />
           </Link>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900">{course?.title}</h1>
-              <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${course?.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-3 min-w-0">
+              <h1 
+                className="text-2xl font-bold text-gray-900 truncate"
+                title={course?.title}
+              >
+                {course?.title}
+              </h1>
+              <span className={`shrink-0 px-2.5 py-1 text-xs font-semibold rounded-full ${course?.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
                 }`}>
                 {course?.status ? course.status.charAt(0).toUpperCase() + course.status.slice(1) : "Draft"}
               </span>
             </div>
-            <p className="text-gray-500 text-sm mt-1">Course ID: {course?.id}</p>
+            <p className="text-gray-500 text-sm mt-1 truncate">Course ID: {course?.id}</p>
           </div>
         </div>
-        <div>
+        <div className="shrink-0 flex items-center gap-3 self-end md:self-auto">
           <button
             onClick={() => setShowPublishModal(true)}
-            className={`px-4 py-2 font-medium text-sm rounded-lg shadow-sm transition flex items-center gap-2 ${course?.status === 'published' ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' : 'bg-blue-600 text-white hover:bg-blue-700'
+            className={`px-4 py-2 font-medium text-sm rounded-lg shadow-sm transition flex items-center gap-2 whitespace-nowrap ${course?.status === 'published' ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
           >
             {course?.status === 'published' ? 'Unpublish Course' : <><Eye size={16} /> Preview & Publish</>}
