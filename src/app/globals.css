@@ -473,6 +473,10 @@ textarea,
 
 /* Professional Printing Styles */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 0mm !important; /* Zero margin suppresses browser default header (URL, title, date) and footer */
+  }
 
   /* Aggressively hide non-essential elements */
   header,
@@ -482,6 +486,9 @@ textarea,
   [role="banner"],
   [role="navigation"],
   .no-print,
+  .no-print-bar,
+  .no-print-area,
+  .print\:hidden,
   button,
   .share-buttons,
   .lg\:col-span-4,
@@ -940,4 +947,105 @@ input::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+/* ── Neural Voice Narration Karaoke Highlighting (Zero Layout Shift) ── */
+.tts-sentence {
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 4px;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline;
+}
+
+body.tts-active .tts-sentence {
+  cursor: pointer;
+}
+
+body.tts-active .tts-sentence:hover {
+  background-color: rgba(201, 162, 39, 0.12);
+}
+
+.tts-sentence.tts-sentence-active {
+  background-color: #FEF9ED !important;
+  color: inherit !important;
+  box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.4);
+  border-radius: 4px;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.tts-word {
+  display: inline;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-weight: inherit !important;
+  border-radius: 3px;
+  transition: background-color 0.08s ease, color 0.08s ease;
+}
+
+.tts-word.tts-word-active {
+  background-color: #C9A227 !important;
+  color: #0B2242 !important;
+  font-weight: inherit !important; /* Zero bolding to eliminate glyph expansion */
+  padding: 0 !important;            /* Zero horizontal padding to eliminate layout shift */
+  margin: 0 !important;             /* Zero margin to eliminate layout shift */
+  border-radius: 3px;
+  box-shadow: 0 0 0 1.5px #C9A227;  /* Clean outline without occupying document space */
+}
+
+/* ── Neural Voice Speech Speed Slider (Sleek Compact Size) ── */
+.tts-speed-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.tts-speed-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #C9A227;
+  border: 1.5px solid #0B2242;
+  box-shadow: 0 0 5px rgba(201, 162, 39, 0.7);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.tts-speed-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  box-shadow: 0 0 8px rgba(201, 162, 39, 1);
+}
+
+.tts-speed-slider::-webkit-slider-thumb:active {
+  transform: scale(1.35);
+}
+
+.tts-speed-slider::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #C9A227;
+  border: 1.5px solid #0B2242;
+  box-shadow: 0 0 5px rgba(201, 162, 39, 0.7);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.tts-speed-slider::-moz-range-thumb:hover {
+  transform: scale(1.25);
+  box-shadow: 0 0 8px rgba(201, 162, 39, 1);
+}
+
+.tts-speed-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.15);
 }

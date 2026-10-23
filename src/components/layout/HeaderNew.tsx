@@ -58,15 +58,15 @@ const SubCategoryItem = ({ item, closeMenu, isPinned }: { item: NavItem; closeMe
                 <Link
                     href={item.href || "#"}
                     onClick={(e) => { e.stopPropagation(); closeMenu(); }}
-                    className={`text-sm hover:text-[#C9A227] transition-colors font-medium ${isSelfActive || isChildActive ? "text-[#C9A227]" : "text-gray-700"}`}
+                    className={`text-sm hover:text-[#C9A227] transition-colors font-bold tracking-normal ${isSelfActive || isChildActive ? "text-[#C9A227]" : "text-gray-900"}`}
                 >
                     {item.label}
                 </Link>
                 {hasSubItems && (
                     <button
-                        className={`p-1 hover:text-[#C9A227] focus:outline-none transition-colors ${isExpanded || isChildActive ? "text-[#C9A227]" : "text-gray-400"}`}
+                        className={`p-1 hover:text-[#C9A227] focus:outline-none transition-colors ${isExpanded || isChildActive ? "text-[#C9A227]" : "text-gray-600"}`}
                     >
-                        <ChevronDown size={16} className={`transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
+                        <ChevronDown size={15} className={`stroke-[2.5] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
                     </button>
                 )}
             </div>
@@ -74,7 +74,7 @@ const SubCategoryItem = ({ item, closeMenu, isPinned }: { item: NavItem; closeMe
             {hasSubItems && (
                 <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
                     <div className="overflow-hidden">
-                        <div className="flex flex-col gap-1.5 pl-3 border-l-2 border-[#C9A227]/30 pt-1 pb-2">
+                        <div className="flex flex-col gap-1.5 pl-3 border-l-2 border-[#C9A227]/40 pt-1 pb-2">
                             {item.children!.map((subChild, j) => {
                                 const isActive = subChild.href && (pathname === subChild.href || pathname.startsWith(`${subChild.href}/`));
                                 return (
@@ -82,7 +82,7 @@ const SubCategoryItem = ({ item, closeMenu, isPinned }: { item: NavItem; closeMe
                                         key={j}
                                         href={subChild.href || "#"}
                                         onClick={closeMenu}
-                                        className={`text-sm hover:text-[#C9A227] transition-colors block py-0.5 ${isActive ? "text-[#C9A227] font-medium" : "text-gray-600"}`}
+                                        className={`text-sm hover:text-[#C9A227] transition-colors block py-0.5 font-semibold ${isActive ? "text-[#C9A227]" : "text-gray-800"}`}
                                     >
                                         {subChild.label}
                                     </Link>
@@ -321,35 +321,14 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
         );
     };
 
-    const DesktopMenuItem = ({ item, isPinned, onToggle }: { item: NavItem; isPinned: boolean; onToggle: (label: string | null) => void }) => {
+    const DesktopMenuItem = ({ item, isPinned, onToggle, isLast }: { item: NavItem; isPinned: boolean; onToggle: (label: string | null) => void; isLast?: boolean }) => {
         const hasChildren = item.children && item.children.length > 0;
         const [isOpen, setIsOpen] = useState(false);
         const active = isItemOrChildActive(item);
         const showDropdown = isOpen || isPinned;
 
         const itemRef = useRef<HTMLDivElement>(null);
-        const dropdownRef = useRef<HTMLDivElement>(null);
-        const [leftPos, setLeftPos] = useState<number>(0);
-        const [isVisible, setIsVisible] = useState(false);
-
         const isTouch = useRef(false);
-
-        useEffect(() => {
-            if (showDropdown && itemRef.current && dropdownRef.current) {
-                const itemRect = itemRef.current.getBoundingClientRect();
-                const dropdownRect = dropdownRef.current.getBoundingClientRect();
-                const windowWidth = window.innerWidth;
-
-                let targetLeft = itemRect.left + (itemRect.width / 2) - (dropdownRect.width / 2);
-                targetLeft = Math.max(100, targetLeft);
-                targetLeft = Math.min(targetLeft, windowWidth - 100 - dropdownRect.width);
-
-                setLeftPos(targetLeft);
-                setIsVisible(true);
-            } else {
-                setIsVisible(false);
-            }
-        }, [showDropdown]);
 
         useEffect(() => {
             const handleClickOutside = (e: TouchEvent) => {
@@ -365,12 +344,9 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
             return (
                 <Link
                     href={item.href || "#"}
-                    className={`flex items-center h-full px-1 hover:text-[#C9A227] whitespace-nowrap transition-colors relative group ${active ? "text-[#C9A227]" : "text-gray-800"}`}
+                    className={`flex items-center h-full px-2 text-sm font-bold tracking-normal hover:text-[#C9A227] whitespace-nowrap transition-colors relative group ${active ? "text-[#C9A227]" : "text-gray-900"}`}
                 >
-                    <div className="grid place-items-center">
-                        <span className={`col-start-1 row-start-1 transition-colors ${active ? "font-semibold" : "font-medium"}`}>{item.label}</span>
-                        <span className="col-start-1 row-start-1 font-semibold invisible" aria-hidden="true">{item.label}</span>
-                    </div>
+                    <span>{item.label}</span>
                     <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A227] transform origin-left transition-transform duration-300 ${active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}></span>
                 </Link>
             );
@@ -379,42 +355,38 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
         return (
             <div
                 ref={itemRef}
-                className="group h-full flex items-center"
+                className="relative group h-full flex items-center"
                 onTouchStart={() => { isTouch.current = true; }}
                 onMouseEnter={() => { if (!isTouch.current) setIsOpen(true); }}
                 onMouseLeave={() => { if (!isTouch.current) setIsOpen(false); }}
             >
                 <Link
                     href={item.href || "#"}
-                    onClick={(e) => { 
+                    onClick={(e) => {
                         if (!item.href || item.href === "#") {
-                            e.preventDefault(); 
+                            e.preventDefault();
                             if (isTouch.current) setIsOpen(!isOpen);
                             return;
                         }
-                        
+
                         if (isTouch.current && hasChildren && !isOpen) {
                             e.preventDefault();
                             setIsOpen(true);
                         }
                     }}
-                    className={`flex items-center gap-1 px-1 hover:text-[#C9A227] whitespace-nowrap transition-colors relative ${active || showDropdown ? "text-[#C9A227]" : "text-gray-800"}`}
+                    className={`flex items-center gap-2 px-2 text-sm font-bold tracking-normal hover:text-[#C9A227] whitespace-nowrap transition-colors relative ${active || showDropdown ? "text-[#C9A227]" : "text-gray-900"}`}
                 >
-                    <div className="grid place-items-center">
-                        <span className={`col-start-1 row-start-1 transition-colors ${active || showDropdown ? "font-semibold" : "font-medium"}`}>{item.label}</span>
-                        <span className="col-start-1 row-start-1 font-semibold invisible" aria-hidden="true">{item.label}</span>
-                    </div>
-                    <ChevronDown size={14} className={`transition-transform duration-200 ${showDropdown ? "rotate-180" : ""}`} />
+                    <span>{item.label}</span>
+                    <ChevronDown size={14} className={`stroke-[2.5] transition-transform duration-200 ${showDropdown ? "rotate-180" : ""}`} />
                     <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A227] transform origin-left transition-transform duration-300 ${active || showDropdown ? "scale-x-100" : "scale-x-0"}`}></span>
                 </Link>
                 {showDropdown && (
                     <div
-                        ref={dropdownRef}
-                        className={`absolute top-full mt-0 bg-white border border-gray-200 shadow-xl rounded-lg z-50 max-h-[70vh] overflow-auto w-max max-w-[calc(100vw-200px)] transition-opacity duration-200 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-                        style={{ left: `${leftPos}px` }}
+                        className={`absolute top-full mt-0 bg-white border border-gray-200/90 shadow-2xl rounded-xl z-50 max-h-[75vh] overflow-y-auto w-max max-w-[calc(100vw-48px)] transition-opacity duration-150 ease-out before:content-[''] before:absolute before:-top-2 before:left-0 before:right-0 before:h-2 ${isLast ? 'right-0' : 'left-0'
+                            }`}
                         onClick={(e) => isPinned && e.stopPropagation()}
                     >
-                        <div className="p-6 grid grid-cols-2 md:grid-cols-3 gap-6">
+                        <div className="py-3.5 px-5 grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
                             {item.children!.map((child, i) => (
                                 <SubCategoryItem key={i} item={child} closeMenu={() => { setIsOpen(false); onToggle(null); }} />
                             ))}
@@ -455,7 +427,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                             {/* Right - Social & Language */}
                             <div className="flex items-center gap-4 ml-auto">
                                 <div className="hidden sm:flex items-center gap-2">
-                                    <a target="_blank" href="https://www.facebook.com/advocatesajjofficial" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Facebook size={14} /></a>
+                                    <a target="_blank" href="https://www.facebook.com/advocatesajjadofficial" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Facebook size={14} /></a>
                                     <a target="_blank" href="https://x.com/advocatesajjad" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><FaXTwitter size={14} /></a>
                                     <a target="_blank" href="https://www.linkedin.com/in/sajjad-husain-associates-law-31715675/" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Linkedin size={14} /></a>
                                     <a target="_blank" href="https://www.instagram.com/sajjad_husain_law_associates/?hl=en" className="hover:text-amber-400 transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"><Instagram size={14} /></a>
@@ -479,23 +451,32 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
             <header className="w-full bg-white z-[100] sticky top-0 left-0">
                 {/* Main Header Container */}
                 <div className="border-b border-gray-100">
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between h-16">
+                    <div className="container mx-auto px-3 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16 sm:h-20">
                             {/* Logo & Tagline */}
-                            <Link href="/" className="flex items-center gap-3 group">
-                                <div className="relative">
-                                    <Image src={logo} alt="Sajjad Husain Law Associates" className="object-contain" width={40} height={40} priority />
-                                    {/* <div className="absolute -inset-1 bg-[#C9A227]/20 rounded-full blur-sm opacity-0  transition-opacity duration-300"></div> */}
+                            <Link href="/" className="flex items-center gap-2 sm:gap-3.5 group py-1 min-w-0">
+                                <div className="relative shrink-0">
+                                    <Image
+                                        src={logo}
+                                        alt="Sajjad Husain Law Associates"
+                                        className="object-contain drop-shadow-sm w-[55px] h-[55px] sm:w-[60px] sm:h-[60px] lg:w-[75px] lg:h-[75px]"
+                                        width={75}
+                                        height={75}
+                                        priority
+                                    />
                                 </div>
-                                <div className="block">
-                                    <h1 className="text-sm min-[400px]:text-base sm:text-lg font-bold text-gray-900 leading-tight">
+                                <div className="block min-w-0">
+                                    <h1 className="text-[14px] min-[380px]:text-[15px] min-[420px]:text-base sm:text-xl md:text-2xl font-bold font-serif text-[#0B2242] tracking-tight leading-tight group-hover:text-[#C9A227] transition-colors whitespace-nowrap">
                                         <span className="sm:hidden">Sajjad Husain Law</span>
                                         <span className="hidden sm:inline">Sajjad Husain Law Associates</span>
                                     </h1>
-                                    <p className="hidden min-[350px]:flex text-[9px] sm:text-[10px] text-gray-600 items-center gap-1">
-                                        <Scale size={11} className="text-[#C9A227]" />
-                                        Excellence in Legal Services
-                                    </p>
+                                    <div className="hidden min-[340px]:flex items-center  sm:gap-2 mt-0.5">
+                                        <span className="sm:h-px sm:w-5 bg-[#C9A227]/70 shrink-0" />
+                                        <p className="text-[7.5px] min-[360px]:text-[8px] min-[400px]:text-[9px] sm:text-[11px] font-medium text-gray-600 tracking-wide sm:tracking-wider uppercase font-serif whitespace-nowrap">
+                                            Excellence in Legal Services
+                                        </p>
+                                        <span className="hidden sm:block h-px w-5 bg-[#C9A227]/70 shrink-0" />
+                                    </div>
                                 </div>
                             </Link>
 
@@ -526,7 +507,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#C9A227] to-[#b39022] flex items-center justify-center text-sm font-semibold text-white overflow-hidden border-2 border-white shadow-md">
                                                 {avatar ? <Image src={avatar} alt="Avatar" width={32} height={32} className="object-cover w-full h-full" quality={90} sizes="100px" /> : (user?.name?.[0] || "U").toUpperCase()}
                                             </div>
-                                            <span className="text-sm font-medium text-gray-800 hidden xl:block">{user?.name}</span>
+                                            <span className="text-sm font-bold text-gray-900 hidden xl:block">{user?.name}</span>
                                             <ChevronDown size={14} className={`text-gray-500 hidden xl:block transition-transform duration-200 ${(isProfileOpen || activeDropdown === "profile") ? "rotate-180" : ""}`} />
                                         </button>
                                         <div className={`absolute right-0 top-full min-w-56 w-max max-w-sm bg-white border border-gray-200 rounded-xl shadow-xl transition-all duration-200 transform origin-top-right z-50 ${(isProfileOpen || activeDropdown === "profile") ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
@@ -580,7 +561,7 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                             </div>
 
                             {/* Mobile Search & Menu Buttons */}
-                            <div className="lg:hidden flex items-center gap-2">
+                            <div className="lg:hidden flex items-center gap-0.5 min-[380px]:gap-1 sm:gap-2 shrink-0">
                                 {/* Mobile Notification */}
                                 {user && <NotificationDropdown userId={user._id} />}
 
@@ -635,15 +616,16 @@ export default function HeaderNew({ initialCategories = [] }: { initialCategorie
                 </div>
 
                 {/* Navigation Bar */}
-                <div className="hidden lg:block bg-white border-b border-gray-100" ref={navRef}>
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8 overflow-hidden">
-                        <nav className="flex items-center gap-8 h-10 text-sm font-medium overflow-hidden">
+                <div className="hidden lg:block bg-white border-b border-gray-200/80 shadow-2xs" ref={navRef}>
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <nav className="flex items-center gap-7 xl:gap-8 h-11 text-sm font-bold">
                             {navItems.map((item, i) => (
                                 <DesktopMenuItem
                                     key={i}
                                     item={item}
                                     isPinned={activeDropdown === item.label}
                                     onToggle={togglePin}
+                                    isLast={i >= navItems.length - 2}
                                 />
                             ))}
                         </nav>

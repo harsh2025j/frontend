@@ -32,7 +32,6 @@ import {
   ChevronDown,
   Search,
   Landmark,
-  Edit3,
   Plus,
   Eye,
   Save,
@@ -44,9 +43,6 @@ import {
   AlertCircle,
   Gavel,
   Paperclip,
-  AlignLeft,
-  AlignCenter,
-  AlignJustify,
   Settings,
   CheckCheck,
   FileUp,
@@ -69,6 +65,7 @@ const PaginatedCourtEditor = dynamic(() => import('@/components/ui/PaginatedCour
 });
 import { ensurePleadingHasPageBreaks, splitHtmlIntoA4Pages } from '@/components/ui/PaginatedCourtEditor';
 import { downloadDocxFile } from '@/utils/docxExport';
+import toast from 'react-hot-toast';
 
 // Conversion helpers
 const plainTextToHtml = (text?: string): string => {
@@ -766,6 +763,8 @@ export default function DraftingStudioPage() {
   const [activeDraftCreatedAt, setActiveDraftCreatedAt] = useState<string>(new Date().toISOString());
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [saveToast, setSaveToast] = useState(false);
+  const [mattersFilter, setMattersFilter] = useState<'all' | 'ready' | 'started'>('all');
+  const [mattersSearch, setMattersSearch] = useState<string>('');
 
   // STEP 1 & 2 & 3 FORM DATA
   const [selectedCourtType, setSelectedCourtType] = useState<'sc' | 'hc' | 'district' | 'tribunal'>('hc');
@@ -1270,14 +1269,6 @@ export default function DraftingStudioPage() {
     }
   };
 
-  // Formatting actions in Step 9
-  const handleAlignment = (alignment: 'left' | 'center' | 'justify') => {
-    if (typeof document !== 'undefined') {
-      if (alignment === 'center') document.execCommand('justifyCenter', false);
-      else if (alignment === 'justify') document.execCommand('justifyFull', false);
-      else document.execCommand('justifyLeft', false);
-    }
-  };
 
   // Copy Pleading with exact page-by-page demarcation matching editor
   const handleCopy = () => {
@@ -1318,51 +1309,66 @@ export default function DraftingStudioPage() {
 
   // Download Genuine Microsoft Word Document (.docx - 100% 1:1 Parity with Google Docs & On-Screen Pages)
   const handleDownloadDoc = async () => {
-    const content = editablePleading;
-    if (!content) return;
+    let content = editablePleading;
+    if (!content || !content.trim()) {
+      content = build11SectionDraftHtml({
+        court: formData.court,
+        matterType: formData.matterType,
+        petitioners,
+        respondents,
+        jurisdiction: formData.jurisdictionArticle || 'Article 226 of the Constitution of India',
+        facts: formData.facts,
+        legalIssues: formData.legalIssues || '',
+        reliefSought: formData.reliefSought,
+        interimRelief: interimReliefText,
+        advocateDetails,
+        deponentDetails,
+        datesEvents,
+        pinnedCitations,
+        showSectionLabels,
+      });
+    }
+
+    if (!content || !content.trim()) {
+      toast.error('No draft content available to export.');
+      return;
+    }
 
     try {
-      const filename = `${(formData.matterType || 'Court_Pleading').replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
+      const cleanType = (formData.matterType || 'Court_Pleading')
+        .replace(/[^a-zA-Z0-9]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_|_$/g, '');
+      const filename = `${cleanType}_${Date.now()}`;
+      toast.success('Generating Microsoft Word document (.docx)...');
       await downloadDocxFile(content, filename, formData.matterType || 'Certified Court Pleading');
     } catch (err) {
-      console.error('Failed to generate .docx, using standard export:', err);
-      // Fallback with explicit Google Docs & Word compatible page breaks
-      const cleanContent = content
-        .replace(/<span[^>]*class="[^"]*page-break-badge[^"]*"[^>]*>[\s\S]*?<\/span>/gi, '')
-        .replace(/<div[^>]*class="[^"]*page-break-indicator[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
-        .replace(/<hr[^>]*class="[^"]*court-page-break[^"]*"[^>]*\/?>/gi, '<div style="page-break-before:always;break-before:page;mso-break-type:page-break;clear:both;height:0;line-height:0;font-size:0;"><br clear="all" style="page-break-before:always;mso-break-type:page-break" /></div>')
-        .replace(/<div[^>]*court-page-break[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi, '<div style="page-break-before:always;break-before:page;mso-break-type:page-break;clear:both;height:0;line-height:0;font-size:0;"><br clear="all" style="page-break-before:always;mso-break-type:page-break" /></div>')
-        .replace(/<div[^>]*court-page-break[^>]*>[\s\S]*?<\/div>/gi, '<div style="page-break-before:always;break-before:page;mso-break-type:page-break;clear:both;height:0;line-height:0;font-size:0;"><br clear="all" style="page-break-before:always;mso-break-type:page-break" /></div>')
-        .replace(/<div[^>]*data-page-break="true"[^>]*>[\s\S]*?<\/div>/gi, '<div style="page-break-before:always;break-before:page;mso-break-type:page-break;clear:both;height:0;line-height:0;font-size:0;"><br clear="all" style="page-break-before:always;mso-break-type:page-break" /></div>')
-        .replace(/<p(?:\s+[^>]*)?>\s*(<p(?:\s+[^>]*)?>)/gi, '$1')
-        .replace(/(<\/p>)\s*<\/p>/gi, '$1');
+      console.error('Failed to generate .docx:', err);
+      toast.error('Failed to download Word document. Please try again.');
+    }
+  };
 
-      const docContent = `<!DOCTYPE html>
-<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head>
-  <meta charset='utf-8'>
-  <title>${formData.matterType || 'Court Pleading'}</title>
-  <style>
-    @page { size: 8.27in 11.69in; margin: 0.75in; }
-    body { font-family: 'Times New Roman', Georgia, serif; font-size: 12pt; line-height: 1.5; color: #000; text-align: justify; }
-    p { margin-bottom: 8pt; text-align: justify; line-height: 1.5; font-size: 12pt; }
-    .ql-align-center { text-align: center !important; }
-    .ql-align-right { text-align: right !important; }
-    .ql-align-justify { text-align: justify !important; }
-    strong, b { font-weight: bold; }
-  </style>
-</head>
-<body>${cleanContent}</body>
-</html>`;
+  // Dedicated Multi-Page PDF Print Handler (auto-switches to Step 9 if needed)
+  const handlePrintPdf = () => {
+    const originalTitle = document.title;
+    const cleanMatterTitle = (formData.matterType || 'Court_Pleading').replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_');
+    document.title = cleanMatterTitle;
 
-      const blob = new Blob(['\ufeff' + docContent], { type: 'application/msword' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${(formData.matterType || 'Court_Pleading').replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.doc`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+    const restoreTitle = () => {
+      document.title = originalTitle;
+      window.removeEventListener('afterprint', restoreTitle);
+    };
+    window.addEventListener('afterprint', restoreTitle);
+
+    if (currentStep !== 9) {
+      setCurrentStep(9);
+      setTimeout(() => {
+        window.print();
+        setTimeout(restoreTitle, 3000);
+      }, 500);
+    } else {
+      window.print();
+      setTimeout(restoreTitle, 3000);
     }
   };
 
@@ -1378,150 +1384,223 @@ export default function DraftingStudioPage() {
   // ─────────────────────────────────────────────────────────────
   // VIEW 1: 'YOUR MATTERS' (DRAFTS HUB / LIST VIEW)
   // ─────────────────────────────────────────────────────────────
+  // VIEW MODE: 'matters' (WritOnline Style Drafting Hub & Matters Archive)
+  // ─────────────────────────────────────────────────────────────
   if (viewMode === 'matters') {
+    const readyDrafts = savedDrafts.filter(
+      (d) => d.status === 'DRAFT READY' || (d.result?.fullDraft && d.result.fullDraft.length > 50)
+    );
+    const startedDrafts = savedDrafts.filter(
+      (d) => !(d.status === 'DRAFT READY' || (d.result?.fullDraft && d.result.fullDraft.length > 50))
+    );
+
+    const filteredDrafts = savedDrafts.filter((draft) => {
+      const isReady = draft.status === 'DRAFT READY' || (draft.result?.fullDraft && draft.result.fullDraft.length > 50);
+      if (mattersFilter === 'ready' && !isReady) return false;
+      if (mattersFilter === 'started' && isReady) return false;
+
+      if (mattersSearch.trim()) {
+        const q = mattersSearch.toLowerCase();
+        const matchesTitle = draft.title.toLowerCase().includes(q);
+        const matchesCourt = draft.court?.toLowerCase().includes(q);
+        const matchesPetitioner = draft.formData?.petitioner?.toLowerCase().includes(q);
+        const matchesRespondent = draft.formData?.respondent?.toLowerCase().includes(q);
+        return matchesTitle || matchesCourt || matchesPetitioner || matchesRespondent;
+      }
+      return true;
+    });
+
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-150">
-        {/* Hub Header */}
-        <div className="border-b border-[#E2E8F0] pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-[#0B2242]/10 px-2.5 py-0.5 text-[11px] font-bold font-mono tracking-wider text-[#0B2242]">
-                <Sparkles className="size-3 text-[#CAA438]" />
-                <span>DRAFTING &middot; AI</span>
+      <div className="min-h-screen bg-[#F8FAFC] animate-in fade-in duration-150">
+        {/* ─────────────────────────────────────────────────────────
+            YOUR MATTERS WORKSPACE REPOSITORY
+        ───────────────────────────────────────────────────────── */}
+        <section id="matters-archive" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#E2E8F0]">
+            <div>
+              <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#CAA438]">
+                WORKSPACE REPOSITORY
               </span>
-            </div>
-            <h1 className="mt-2 text-3xl font-extrabold font-merriweather text-[#0B2242] tracking-tight">
-              Your matters.
-            </h1>
-            <p className="mt-1 text-xs sm:text-sm text-[#64748B]">
-              Every draft you have started, newest first. Open one to continue, or begin a new matter.
-            </p>
-          </div>
-
-          {/* Top Right Actions */}
-          <div className="flex flex-wrap items-center gap-3">
-
-            {/* + New matter button */}
-            <button
-              type="button"
-              onClick={handleStartNewMatter}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#0B2242] px-4 py-2.5 text-xs sm:text-sm font-bold text-white hover:bg-[#15345E] shadow-xs transition-all cursor-pointer"
-            >
-              <Plus className="size-4 text-[#CAA438]" />
-              <span>New matter</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Drafts List / Grid */}
-        <div className="mt-8">
-          {savedDrafts.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {savedDrafts.map((draft) => {
-                const isReady = draft.status === 'DRAFT READY' || (draft.result?.fullDraft && draft.result.fullDraft.length > 50);
-                const dateDisplay =
-                  new Date(draft.createdAt).toDateString() === new Date().toDateString()
-                    ? 'Today'
-                    : new Date(draft.createdAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      });
-
-                return (
-                  <div
-                    key={draft.id}
-                    className="group relative flex flex-col justify-between rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xs hover:border-[#0B2242] hover:shadow-md transition-all"
-                  >
-                    <div>
-                      {/* Top Meta: Status Badge & Trash Icon */}
-                      <div className="flex items-center justify-between mb-3">
-                        {isReady ? (
-                          <span className="rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold tracking-wider font-mono">
-                            DRAFT READY
-                          </span>
-                        ) : (
-                          <span className="rounded-md bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 text-[10px] font-bold tracking-wider font-mono">
-                            STARTED
-                          </span>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteConfirmDraft(draft);
-                          }}
-                          className="size-7 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 flex items-center justify-center transition-colors cursor-pointer"
-                          title="Delete draft"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
-                      </div>
-
-                      {/* Matter Title */}
-                      <h3
-                        className="font-bold text-sm sm:text-base font-merriweather text-[#0B2242] line-clamp-2 leading-snug cursor-pointer group-hover:text-[#15345E]"
-                        onClick={() => handleOpenDraft(draft)}
-                        title={draft.title}
-                      >
-                        {draft.title}
-                      </h3>
-
-                      {/* Court */}
-                      <p className="mt-2 text-xs font-medium text-[#475569] flex items-center gap-1.5 truncate">
-                        <Landmark className="size-3.5 text-[#CAA438] shrink-0" />
-                        <span className="truncate">{draft.court}</span>
-                      </p>
-
-                      {/* Parties if available */}
-                      {draft.formData?.petitioner && (
-                        <p className="mt-1 text-[11px] text-[#64748B] truncate">
-                          {draft.formData.petitioner} v. {draft.formData.respondent || 'Respondent'}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Card Footer: Date & Open Button */}
-                    <div className="mt-5 pt-3.5 border-t border-[#F1F5F9] flex items-center justify-between">
-                      <span className="text-[11px] text-[#64748B] flex items-center gap-1 font-mono">
-                        <Clock className="size-3 text-[#94A3B8]" />
-                        <span>{dateDisplay}</span>
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() => handleOpenDraft(draft)}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-[#0B2242] hover:text-[#15345E] hover:underline cursor-pointer"
-                      >
-                        <span>Open</span>
-                        <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="rounded-2xl border-2 border-dashed border-[#CBD5E1] bg-white p-12 text-center">
-              <FolderOpen className="size-10 text-[#94A3B8] mx-auto mb-3" />
-              <h3 className="font-bold text-sm font-merriweather text-[#0B2242]">No drafts started yet</h3>
-              <p className="mt-1 text-xs text-[#64748B] max-w-sm mx-auto">
-                Begin a new matter to experience the court-aware 9-step legal drafting studio.
+              <h2 className="mt-1 text-2xl sm:text-3xl font-extrabold font-merriweather text-[#0B2242] tracking-tight">
+                Your Matters.
+              </h2>
+              <p className="mt-1 text-xs sm:text-sm text-[#64748B]">
+                Every draft you have initiated, newest first. Open any matter to continue in the 9-step studio.
               </p>
+            </div>
+
+            {/* Filter Tabs & Search */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex rounded-lg border border-[#CBD5E1] bg-white p-0.5 shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => setMattersFilter('all')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                    mattersFilter === 'all'
+                      ? 'bg-[#0B2242] text-white'
+                      : 'text-[#475569] hover:bg-[#F1F5F9]'
+                  }`}
+                >
+                  All ({savedDrafts.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMattersFilter('ready')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                    mattersFilter === 'ready'
+                      ? 'bg-[#0B2242] text-white'
+                      : 'text-[#475569] hover:bg-[#F1F5F9]'
+                  }`}
+                >
+                  Draft Ready ({readyDrafts.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMattersFilter('started')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                    mattersFilter === 'started'
+                      ? 'bg-[#0B2242] text-white'
+                      : 'text-[#475569] hover:bg-[#F1F5F9]'
+                  }`}
+                >
+                  In Progress ({startedDrafts.length})
+                </button>
+              </div>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-[#94A3B8]" />
+                <input
+                  type="text"
+                  value={mattersSearch}
+                  onChange={(e) => setMattersSearch(e.target.value)}
+                  placeholder="Filter matters..."
+                  className="rounded-lg border border-[#CBD5E1] bg-white pl-8 pr-3 py-1.5 text-xs text-[#0B2242] placeholder:text-slate-400 focus:border-[#0B2242] focus:outline-hidden"
+                />
+              </div>
+
               <button
                 type="button"
                 onClick={handleStartNewMatter}
-                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#0B2242] px-4 py-2 text-xs font-bold text-white hover:bg-[#15345E] cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#0B2242] px-3.5 py-1.5 text-xs font-bold text-white hover:bg-[#15345E] shadow-2xs transition-colors cursor-pointer shrink-0"
               >
                 <Plus className="size-3.5 text-[#CAA438]" />
-                <span>Start your first matter</span>
+                <span>New Matter</span>
               </button>
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Custom Delete Confirmation Modal */}
+          {/* Drafts List / Grid */}
+          <div className="mt-8">
+            {filteredDrafts.length > 0 ? (
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredDrafts.map((draft) => {
+                  const isReady =
+                    draft.status === 'DRAFT READY' ||
+                    (draft.result?.fullDraft && draft.result.fullDraft.length > 50);
+                  const dateDisplay =
+                    new Date(draft.createdAt).toDateString() === new Date().toDateString()
+                      ? 'Today'
+                      : new Date(draft.createdAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        });
+
+                  return (
+                    <div
+                      key={draft.id}
+                      className="group relative flex flex-col justify-between rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xs hover:border-[#0B2242] hover:shadow-md transition-all"
+                    >
+                      <div>
+                        {/* Top Meta: Status Badge & Trash Icon */}
+                        <div className="flex items-center justify-between mb-3">
+                          {isReady ? (
+                            <span className="rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold tracking-wider font-mono">
+                              DRAFT READY
+                            </span>
+                          ) : (
+                            <span className="rounded-md bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 text-[10px] font-bold tracking-wider font-mono">
+                              IN PROGRESS
+                            </span>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirmDraft(draft);
+                            }}
+                            className="size-7 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 flex items-center justify-center transition-colors cursor-pointer"
+                            title="Delete draft"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Matter Title */}
+                        <h3
+                          className="font-bold text-sm sm:text-base font-merriweather text-[#0B2242] line-clamp-2 leading-snug cursor-pointer group-hover:text-[#1D4ED8] transition-colors"
+                          onClick={() => handleOpenDraft(draft)}
+                          title={draft.title}
+                        >
+                          {draft.title}
+                        </h3>
+
+                        {/* Court */}
+                        <p className="mt-2 text-xs font-medium text-[#475569] flex items-center gap-1.5 truncate">
+                          <Landmark className="size-3.5 text-[#CAA438] shrink-0" />
+                          <span className="truncate">{draft.court}</span>
+                        </p>
+
+                        {/* Parties */}
+                        {draft.formData?.petitioner && (
+                          <p className="mt-1 text-[11px] text-[#64748B] truncate">
+                            {draft.formData.petitioner} v. {draft.formData.respondent || 'Respondent'}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Card Footer: Date & Open Button */}
+                      <div className="mt-5 pt-3.5 border-t border-[#F1F5F9] flex items-center justify-between">
+                        <span className="text-[11px] text-[#64748B] flex items-center gap-1 font-mono">
+                          <Clock className="size-3 text-[#94A3B8]" />
+                          <span>{dateDisplay}</span>
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => handleOpenDraft(draft)}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-[#0B2242] group-hover:text-[#1D4ED8] hover:underline cursor-pointer"
+                        >
+                          <span>Open</span>
+                          <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-2xl border-2 border-dashed border-[#CBD5E1] bg-white p-12 text-center">
+                <FolderOpen className="size-10 text-[#94A3B8] mx-auto mb-3" />
+                <h3 className="font-bold text-sm font-merriweather text-[#0B2242]">No drafts matching filter</h3>
+                <p className="mt-1 text-xs text-[#64748B] max-w-sm mx-auto">
+                  {mattersSearch ? 'Try a different search query or clear the filter.' : 'Begin a new matter to experience the court-aware 9-step legal drafting studio.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleStartNewMatter}
+                  className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#0B2242] px-4 py-2 text-xs font-bold text-white hover:bg-[#15345E] cursor-pointer"
+                >
+                  <Plus className="size-3.5 text-[#CAA438]" />
+                  <span>Start your first matter</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Delete Confirmation Modal */}
         {deleteConfirmDraft && (
           <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
             <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
@@ -1558,7 +1637,7 @@ export default function DraftingStudioPage() {
                 <button
                   type="button"
                   onClick={executeDeleteDraft}
-                  className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                  className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-xs transition-colors cursor-pointer inline-flex items-center gap-1.5"
                 >
                   <Trash2 className="size-3.5" />
                   <span>Delete</span>
@@ -1587,11 +1666,11 @@ export default function DraftingStudioPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-[#F8FAFC] print:bg-white print:min-h-0 print:p-0 print:m-0">
       {/* ─────────────────────────────────────────────────────────────
           TOP BAR
       ───────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-40 bg-white border-b border-[#CBD5E1] shadow-2xs">
+      <div className="no-print no-print-bar no-print-area print:hidden sticky top-0 z-40 bg-white border-b border-[#CBD5E1] shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3">
           {/* Left section: '← All drafts' & Matter title */}
           <div className="flex items-center gap-3 min-w-0">
@@ -1619,39 +1698,6 @@ export default function DraftingStudioPage() {
 
           {/* Center & Right Controls */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            {/* Alignment icons (active on canvas) */}
-            <div className="flex items-center rounded-lg border border-[#CBD5E1] bg-white p-0.5 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => handleAlignment('left')}
-                className="p-1.5 hover:bg-[#F1F5F9] text-slate-700 hover:text-[#0B2242] rounded-md transition-colors cursor-pointer"
-                title="Format Align Left"
-              >
-                <AlignLeft className="size-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleAlignment('center')}
-                className="p-1.5 hover:bg-[#F1F5F9] text-slate-700 hover:text-[#0B2242] rounded-md transition-colors cursor-pointer"
-                title="Format Align Center"
-              >
-                <AlignCenter className="size-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleAlignment('justify')}
-                className="p-1.5 hover:bg-[#F1F5F9] text-slate-700 hover:text-[#0B2242] rounded-md transition-colors cursor-pointer"
-                title="Format Align Justify"
-              >
-                <AlignJustify className="size-3.5" />
-              </button>
-            </div>
-
-            {/* Edit text / Format indicator */}
-            <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-mono font-medium text-[#64748B] bg-slate-100 px-2 py-1 rounded">
-              <Edit3 className="size-3 text-[#CAA438]" />
-              <span>Edit text</span>
-            </span>
 
             {/* 'Generating…' / 'Generate draft' AI button */}
             <button
@@ -1698,7 +1744,7 @@ export default function DraftingStudioPage() {
             {/* PDF (Official law report print / PDF export) */}
             <button
               type="button"
-              onClick={() => window.print()}
+              onClick={handlePrintPdf}
               className="inline-flex items-center gap-1 rounded-lg border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#0B2242] hover:bg-[#F1F5F9] shadow-2xs cursor-pointer"
               title="Official law report print / PDF export"
             >
@@ -1747,9 +1793,14 @@ export default function DraftingStudioPage() {
             {/* Auto-save status */}
             <div className="flex items-center gap-1 text-[11px] font-mono pl-1">
               {autoSaveStatus === 'saving' ? (
-                <span className="flex items-center gap-1 text-amber-700 animate-pulse">
-                  <RefreshCw className="size-3 animate-spin" />
+                <span className="flex items-center gap-1 text-amber-700 animate-pulse font-semibold">
+                  <RefreshCw className="size-3 animate-spin text-[#CAA438]" />
                   <span>Saving…</span>
+                </span>
+              ) : autoSaveStatus === 'unsaved' ? (
+                <span className="flex items-center gap-1 text-amber-600 font-medium">
+                  <Clock className="size-3 text-amber-500" />
+                  <span>Editing…</span>
                 </span>
               ) : (
                 <span className="flex items-center gap-1 text-emerald-700 font-bold">
@@ -1763,52 +1814,60 @@ export default function DraftingStudioPage() {
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          MAIN DRAFTING STUDIO LAYOUT (LEFT SIDEBAR + STEP WORKSPACE)
+          MAIN DRAFTING STUDIO LAYOUT — smooth collapsible sidebar
       ───────────────────────────────────────────────────────────── */}
-      <div className={`mx-auto px-4 sm:px-6 lg:px-8 py-6 ${isSidebarCollapsed && currentStep === 9 ? 'max-w-(--breakpoint-2xl)' : 'max-w-7xl'}`}>
-        <div className={`grid grid-cols-1 ${isSidebarCollapsed && currentStep === 9 ? 'lg:grid-cols-1' : 'lg:grid-cols-12'} gap-6 items-start`}>
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-5 lg:px-8 py-5 print:max-w-none print:p-0 print:m-0 print:block">
+        <div className="flex gap-5 items-start print:block print:p-0 print:m-0">
           {/* ─────────────────────────────────────────────────────────
-              LEFT SIDEBAR: 'DRAFT PROGRESS'
+              LEFT SIDEBAR — smooth CSS transition collapse
           ───────────────────────────────────────────────────────── */}
-          {(!isSidebarCollapsed || currentStep !== 9) && (
-            <div className="lg:col-span-3 bg-white rounded-xl border border-[#CBD5E1] p-4 shadow-2xs sticky top-16">
+          <div
+            className="no-print no-print-bar no-print-area print:hidden shrink-0 bg-white rounded-xl border border-[#CBD5E1] shadow-sm sticky top-14 overflow-hidden"
+            style={{
+              width: isSidebarCollapsed ? '0px' : '224px',
+              padding: isSidebarCollapsed ? '0' : undefined,
+              opacity: isSidebarCollapsed ? 0 : 1,
+              transition: 'width 0.25s ease, opacity 0.2s ease, padding 0.25s ease',
+              border: isSidebarCollapsed ? 'none' : undefined,
+              minHeight: isSidebarCollapsed ? 0 : undefined,
+            }}
+          >
+            <div className="p-4" style={{ minWidth: '224px' }}>
               <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#F1F5F9]">
-                <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#0B2242]">
+                <span className="font-mono text-[10.5px] font-bold uppercase tracking-widest text-[#0B2242]">
                   DRAFT PROGRESS
                 </span>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-mono text-[#64748B]">
-                    Step {currentStep} of 9
+                  <span className="text-[10px] font-mono text-[#94A3B8]">
+                    {currentStep} / 9
                   </span>
-                  {currentStep === 9 && (
-                    <button
-                      type="button"
-                      onClick={() => setIsSidebarCollapsed(true)}
-                      className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-[#0B2242] cursor-pointer"
-                      title="Collapse sidebar for wide A4 Google Docs view"
-                    >
-                      <PanelCollapseIcon className="size-3.5" />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setIsSidebarCollapsed(true)}
+                    className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-[#0B2242] cursor-pointer transition-colors"
+                    title="Collapse sidebar"
+                  >
+                    <PanelCollapseIcon className="size-3.5" />
+                  </button>
                 </div>
               </div>
 
-              <nav className="space-y-1">
+              <nav className="space-y-0.5">
                 {STEPS.map((step) => {
                   const isActive = currentStep === step.num;
-                  const isCompleted = currentStep > step.num || (step.num === 9 && draftResult);
+                  const isCompleted = currentStep > step.num || (step.num === 9 && !!draftResult);
 
                   return (
                     <button
                       key={step.num}
                       type="button"
                       onClick={() => setCurrentStep(step.num)}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all text-left cursor-pointer ${
+                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-all text-left cursor-pointer ${
                         isActive
-                          ? 'bg-[#0B2242] text-white font-bold shadow-xs'
+                          ? 'bg-[#0B2242] text-white font-bold'
                           : isCompleted
                           ? 'text-[#1E293B] hover:bg-[#F1F5F9]'
-                          : 'text-[#64748B] hover:bg-[#F8FAFC]'
+                          : 'text-[#94A3B8] hover:bg-[#F8FAFC]'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
@@ -1817,32 +1876,43 @@ export default function DraftingStudioPage() {
                             isActive
                               ? 'bg-white text-[#0B2242] font-bold'
                               : isCompleted
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-slate-100 text-slate-500'
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : 'bg-slate-100 text-slate-400'
                           }`}
                         >
-                          {isCompleted && !isActive ? <Check className="size-3 text-emerald-700" /> : step.num}
+                          {isCompleted && !isActive ? <Check className="size-3 text-emerald-600" /> : step.num}
                         </span>
                         <span className="truncate">{step.label}</span>
                       </div>
-
-                      {isActive && <ChevronRight className="size-3.5 text-white shrink-0" />}
+                      {isActive && <ChevronRight className="size-3 text-white/70 shrink-0" />}
                     </button>
                   );
                 })}
               </nav>
 
-              <div className="mt-4 pt-3 border-t border-[#F1F5F9] text-[11px] text-[#64748B] flex items-center gap-1.5 font-mono">
-                <ShieldCheck className="size-3.5 text-emerald-600" />
+              <div className="mt-4 pt-3 border-t border-[#F1F5F9] text-[10.5px] text-[#94A3B8] flex items-center gap-1.5 font-mono">
+                <ShieldCheck className="size-3 text-emerald-500" />
                 <span>Court-Aware Engine v2.4</span>
               </div>
             </div>
+          </div>
+
+          {/* Sidebar expand button — visible only when collapsed */}
+          {isSidebarCollapsed && (
+            <button
+              type="button"
+              onClick={() => setIsSidebarCollapsed(false)}
+              className="no-print no-print-bar no-print-area print:hidden shrink-0 sticky top-14 mt-0 flex items-center justify-center size-8 rounded-lg border border-[#CBD5E1] bg-white text-slate-500 hover:text-[#0B2242] hover:bg-[#F1F5F9] transition-colors cursor-pointer shadow-sm"
+              title="Show steps sidebar"
+            >
+              <PanelExpandIcon className="size-3.5" />
+            </button>
           )}
 
           {/* ─────────────────────────────────────────────────────────
               RIGHT WORKSPACE: STEPS 1 THROUGH 9
           ───────────────────────────────────────────────────────── */}
-          <div className={isSidebarCollapsed && currentStep === 9 ? 'lg:col-span-12' : 'lg:col-span-9'}>
+          <div className="flex-1 min-w-0 print:w-full print:m-0 print:p-0">
             {/* ─────────────────────────────────────────────────────────
                 STEP 1: Court
             ───────────────────────────────────────────────────────── */}
@@ -3274,110 +3344,78 @@ export default function DraftingStudioPage() {
                 STEP 9: Editor (RichTextEditor / Quill in court format)
             ───────────────────────────────────────────────────────── */}
             {currentStep === 9 && (
-              <div className="space-y-4 animate-in fade-in duration-100">
+              <div className="animate-in fade-in duration-100">
                 <style>{`
                   @media print {
-                    body * {
-                      visibility: hidden !important;
+                    @page {
+                      size: A4 portrait;
+                      margin: 0mm !important; /* Zero margin removes browser date, time, site name and URL */
                     }
-                    #court-pleading-printable, #court-pleading-printable * {
-                      visibility: visible !important;
+                    html, body {
+                      margin: 0 !important;
+                      padding: 0 !important;
+                      background: white !important;
+                      height: auto !important;
+                      overflow: visible !important;
+                    }
+                    header, footer, nav, aside, .no-print, .no-print-area, .no-print-bar, .print\:hidden {
+                      display: none !important;
                     }
                     #court-pleading-printable {
-                      position: absolute !important;
-                      left: 0 !important;
-                      top: 0 !important;
+                      position: static !important;
+                      display: block !important;
                       width: 100% !important;
                       margin: 0 !important;
                       padding: 0 !important;
                       border: none !important;
                       box-shadow: none !important;
                       background: white !important;
-                    }
-                    .no-print-area {
-                      display: none !important;
+                      overflow: visible !important;
                     }
                   }
                 `}</style>
 
-                {/* Canvas Container */}
-                <div id="court-pleading-printable" className="rounded-xl border border-[#CBD5E1] bg-white shadow-xs overflow-hidden">
-                  {/* Pleading Action Ribbon */}
-                  <div className="no-print-area px-5 py-3 bg-[#F8FAFC] border-b border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <FileCheck2 className="size-4 text-[#CAA438]" />
-                      <span className="font-mono text-xs font-bold text-[#0B2242] uppercase tracking-wider">
-                        Step 9 · Certified Court Document Canvas (All 11 Sections)
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-[#CBD5E1] bg-white text-[#0B2242] hover:bg-[#F1F5F9] transition-colors cursor-pointer"
-                        title={isSidebarCollapsed ? 'Show Steps 1-8 Sidebar' : 'Collapse Sidebar for Full Width A4 Google Docs View'}
-                      >
-                        {isSidebarCollapsed ? <PanelExpandIcon className="size-3.5 text-[#CAA438]" /> : <PanelCollapseIcon className="size-3.5 text-[#CAA438]" />}
-                        <span>{isSidebarCollapsed ? 'Show Steps (1–8)' : 'Expand Canvas'}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleCopy}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-[#CBD5E1] bg-white text-[#0B2242] hover:bg-[#F1F5F9] cursor-pointer"
-                      >
-                        {copied ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
-                        <span>{copied ? 'Copied' : 'Copy Plain'}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleDownloadDoc}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md bg-[#0B2242] text-white hover:bg-[#15345E] cursor-pointer"
-                      >
-                        <FileText className="size-3.5 text-[#CAA438]" />
-                        <span>Word (.docx)</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleDownloadTxt}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-[#CBD5E1] bg-white text-[#0B2242] hover:bg-[#F1F5F9] cursor-pointer"
-                      >
-                        <Download className="size-3.5" />
-                        <span>.txt</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => window.print()}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-[#CBD5E1] bg-white text-[#0B2242] hover:bg-[#F1F5F9] cursor-pointer"
-                      >
-                        <Printer className="size-3.5" />
-                        <span>Print</span>
-                      </button>
-                    </div>
+                {/* Step 9 compact header bar */}
+                <div className="no-print-area no-print mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <FileCheck2 className="size-4 text-[#CAA438]" />
+                    <span className="font-mono text-xs font-bold text-[#0B2242] uppercase tracking-wider">
+                      Step 9 · Certified Court Document Canvas
+                    </span>
+                    <span className="hidden sm:inline rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 font-mono">
+                      ALL 11 SECTIONS
+                    </span>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-[#CBD5E1] bg-white text-[#0B2242] hover:bg-[#F1F5F9] transition-colors cursor-pointer shadow-sm"
+                    title={isSidebarCollapsed ? 'Show Steps 1-8 Sidebar' : 'Collapse Sidebar for Full Width A4 Google Docs View'}
+                  >
+                    {isSidebarCollapsed ? <PanelExpandIcon className="size-3.5 text-[#CAA438]" /> : <PanelCollapseIcon className="size-3.5 text-[#CAA438]" />}
+                    <span>{isSidebarCollapsed ? 'Show Steps (1–8)' : 'Expand Canvas'}</span>
+                  </button>
+                </div>
 
-                  {/* Google Docs Style Paginated Court Document Editor */}
-                  <div className="w-full">
-                    <PaginatedCourtEditor
-                      value={editablePleading}
-                      onChange={(val) => {
-                        setEditablePleading(val);
-                        setHasUnsavedChanges(true);
-                      }}
-                      placeholder="Court pleading canvas with all 11 court sections..."
-                      documentTitle={formData.matterType || 'Certified Court Pleading'}
-                      courtLevel={formData.court || 'High Court'}
-                      initialPageSize={formData.court?.includes('Supreme Court') ? 'legal' : 'a4'}
-                    />
-                  </div>
+                {/* Google Docs Style Paginated Court Document Editor */}
+                <div id="court-pleading-printable" className="rounded-xl overflow-hidden shadow-md border border-[#CBD5E1] print:rounded-none print:shadow-none print:border-none print:overflow-visible">
+                  <PaginatedCourtEditor
+                    value={editablePleading}
+                    onChange={(val) => {
+                      setEditablePleading(val);
+                      setHasUnsavedChanges(true);
+                      setAutoSaveStatus('unsaved');
+                    }}
+                    saveStatus={autoSaveStatus}
+                    placeholder="Court pleading canvas with all 11 court sections..."
+                    documentTitle={formData.matterType || 'Certified Court Pleading'}
+                    courtLevel={formData.court || 'High Court'}
+                    initialPageSize={formData.court?.includes('Supreme Court') ? 'legal' : 'a4'}
+                  />
                 </div>
 
                 {/* Footer Navigation */}
-                <div className="no-print-area flex justify-between items-center pt-2">
+                <div className="no-print-area flex justify-between items-center pt-3">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(8)}

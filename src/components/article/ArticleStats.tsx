@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Heart, Eye } from 'lucide-react';
+import { Heart, Eye, Calendar, Clock } from 'lucide-react';
 import { articleApi } from '@/data/services/article-service/article-service';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/data/redux/store';
@@ -15,9 +15,23 @@ interface ArticleStatsProps {
   initialViews?: number;
   className?: string;
   hasLikedByCurrentUser?: boolean;
+  variant?: 'default' | 'pills' | 'desktop-card';
+  dateText?: string;
+  readTimeText?: string;
+  children?: React.ReactNode;
 }
 
-export default function ArticleStats({ articleId, initialLikes = 0, initialViews = 0, className = "", hasLikedByCurrentUser = false }: ArticleStatsProps) {
+export default function ArticleStats({
+  articleId,
+  initialLikes = 0,
+  initialViews = 0,
+  className = "",
+  hasLikedByCurrentUser = false,
+  variant = 'default',
+  dateText,
+  readTimeText,
+  children,
+}: ArticleStatsProps) {
   const [likesCount, setLikesCount] = useState(initialLikes);
   const [hasLiked, setHasLiked] = useState(hasLikedByCurrentUser);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -141,6 +155,131 @@ export default function ArticleStats({ articleId, initialLikes = 0, initialViews
     }, 500); // Reduced debounce from 2s to 500ms to save almost instantly
   };
 
+  if (variant === 'pills') {
+    return (
+      <>
+        {/* Views Pill */}
+        <div className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 rounded-full border border-gray-200/80 bg-white text-[11px] sm:text-xs font-medium text-gray-700 whitespace-nowrap ${className}`}>
+          <Eye className="w-3.5 h-3.5 text-[#C9A227] shrink-0" />
+          <span>{initialViews}</span>
+        </div>
+
+        {/* Likes Pill */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleLike();
+          }}
+          className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 rounded-full border border-gray-200/80 bg-white text-[11px] sm:text-xs font-medium transition-all group/like focus:outline-none cursor-pointer whitespace-nowrap ${
+            hasLiked
+              ? "text-[#e11d48] border-[#e11d48]/40 bg-rose-50/40"
+              : "text-gray-700 hover:border-gray-300"
+          } ${className} ${mounted ? 'opacity-100' : 'opacity-0'}`}
+          aria-label={hasLiked ? "Unlike article" : "Like article"}
+        >
+          <Heart
+            className={`w-3.5 h-3.5 transition-all duration-300 shrink-0 ${
+              hasLiked
+                ? "fill-[#e11d48] text-[#e11d48] scale-110"
+                : "text-[#C9A227] group-hover/like:text-[#e11d48]"
+            }`}
+          />
+          <span className={hasLiked ? "text-[#e11d48]" : "text-gray-700"}>
+            {likesCount}
+          </span>
+        </button>
+
+        <ConfirmationModal
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          onConfirm={() => {
+            router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
+          }}
+          title="Login Required"
+          message="Please log in or sign up to interact with this article."
+          confirmText="Login / Sign Up"
+          cancelText="Cancel"
+        />
+      </>
+    );
+  }
+
+  if (variant === 'desktop-card') {
+    return (
+      <div className={`flex items-center justify-between w-full ${className}`}>
+        {/* Left Side: Date | Read Time | Views | Children */}
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3.5 text-xs sm:text-sm text-gray-600 font-medium">
+          {dateText && (
+            <>
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#C9A227] shrink-0" />
+                <span>{dateText}</span>
+              </div>
+              <div className="h-3.5 w-px bg-gray-200" />
+            </>
+          )}
+
+          {readTimeText && (
+            <>
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#C9A227] shrink-0" />
+                <span>{readTimeText}</span>
+              </div>
+              <div className="h-3.5 w-px bg-gray-200" />
+            </>
+          )}
+
+          {/* Views */}
+          <div className="flex items-center gap-1.5">
+            <Eye className="w-3.5 h-3.5 text-[#C9A227] shrink-0" />
+            <span>{initialViews} {initialViews === 1 ? 'view' : 'views'}</span>
+          </div>
+
+          {children}
+        </div>
+
+        {/* Right Side: Like Button Pill (Matching uploaded UI) */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleLike();
+          }}
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#D5C7B0] bg-white text-xs font-medium transition-all group/like focus:outline-none cursor-pointer shadow-xs hover:border-[#C9A227] shrink-0 ml-4 ${
+            hasLiked
+              ? "text-[#e11d48] border-[#e11d48]/40 bg-rose-50/40"
+              : "text-gray-700 hover:text-gray-900"
+          } ${mounted ? 'opacity-100' : 'opacity-0'}`}
+          aria-label={hasLiked ? "Unlike article" : "Like article"}
+        >
+          <Heart
+            className={`w-4 h-4 transition-all duration-300 shrink-0 ${
+              hasLiked
+                ? "fill-[#e11d48] text-[#e11d48] scale-110"
+                : "text-[#C9A227] group-hover/like:text-[#e11d48]"
+            }`}
+          />
+          <span className={hasLiked ? "text-[#e11d48]" : "text-gray-700"}>
+            {likesCount} {likesCount === 1 ? 'like' : 'likes'}
+          </span>
+        </button>
+
+        <ConfirmationModal
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          onConfirm={() => {
+            router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
+          }}
+          title="Login Required"
+          message="Please log in or sign up to interact with this article."
+          confirmText="Login / Sign Up"
+          cancelText="Cancel"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={`flex items-center gap-4 ${className}`}>
       {/* Views */}
@@ -153,7 +292,11 @@ export default function ArticleStats({ articleId, initialLikes = 0, initialViews
 
       {/* Likes */}
       <button
-        onClick={(e) => { e.preventDefault(); handleLike(); }}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleLike();
+        }}
         className={`flex items-center gap-1.5 transition-opacity duration-200 group/like focus:outline-none ${mounted ? 'opacity-100' : 'opacity-0'}`}
         aria-label={hasLiked ? "Unlike article" : "Like article"}
       >

@@ -55,17 +55,28 @@ export default function JudiciaryToolsSection() {
     {
       id: 'documents',
       number: '04',
+      title: 'Legal Documents Drafting Studio',
+      badge: '2,176+ Templates',
+      description:
+        'Draft contracts, agreements, affidavits, and deeds from 2,176+ proven Indian legal templates across 58 categories with AI customization.',
+      actionText: 'Draft Document',
+      href: `/${locale}/tools/documents`,
+      icon: FileText,
+    },
+    {
+      id: 'health-check',
+      number: '05',
       title: 'Legal Document Health Check',
       badge: '3-Layer Risk Audit',
       description:
         'Diagnostic risk audit spotting missing arbitration seats, uncapped indemnities, unilateral terminations, and compliance traps.',
       actionText: 'Audit Document',
-      href: `/${locale}/tools/documents`,
+      href: `/${locale}/tools/health-check`,
       icon: FileCheck2,
     },
     {
       id: 'translation',
-      number: '05',
+      number: '06',
       title: 'Vernacular Translation & OCR',
       badge: '22 Indian Languages',
       description:
@@ -153,30 +164,31 @@ export default function JudiciaryToolsSection() {
             );
           })}
 
-          {/* Directory Summary Card */}
-          <div className="flex flex-col justify-between rounded-xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-6 text-center">
+        </div>
+
+        {/* Directory Summary Banner */}
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-5 sm:p-6">
+          <div className="flex items-center gap-3.5 text-left">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-white border border-[#CBD5E1] text-[#0B2242] shrink-0">
+              <Scale className="size-5 text-[#CAA438]" />
+            </div>
             <div>
-              <div className="mx-auto flex size-11 items-center justify-center rounded-lg bg-white border border-[#CBD5E1] text-[#0B2242]">
-                <Scale className="size-5 text-[#CAA438]" />
-              </div>
-              <h4 className="mt-4 font-merriweather text-base font-bold text-[#0B2242]">
+              <h4 className="font-merriweather text-sm sm:text-base font-bold text-[#0B2242]">
                 Future-Ready Judiciary Suite
               </h4>
-              <p className="mt-2 text-xs text-[#64748B] leading-relaxed">
-                Extensible workspace architected to scale up to 20+ specialized judicial & compliance tools as new workflows are introduced.
+              <p className="text-xs text-[#64748B]">
+                Explore all 6 purpose-built judicial &amp; compliance tools in one unified workspace.
               </p>
             </div>
-
-            <div className="mt-6">
-              <Link
-                href={`/${locale}/tools`}
-                className="inline-flex items-center justify-center gap-1.5 w-full rounded-lg bg-[#0B2242] px-4 py-2 text-xs font-bold text-white hover:bg-[#15345E] shadow-2xs"
-              >
-                <span>Open Full Tools Directory</span>
-                <ArrowRight className="size-3.5" />
-              </Link>
-            </div>
           </div>
+
+          <Link
+            href={`/${locale}/tools`}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#0B2242] px-4 py-2 text-xs font-bold text-white hover:bg-[#15345E] shadow-2xs shrink-0"
+          >
+            <span>Open Full Tools Directory</span>
+            <ArrowRight className="size-3.5" />
+          </Link>
         </div>
       </div>
     </section>

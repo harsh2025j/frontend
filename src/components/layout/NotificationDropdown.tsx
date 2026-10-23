@@ -157,7 +157,7 @@ export default function NotificationDropdown({ userId }: NotificationDropdownPro
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors focus:outline-none"
+                className="relative p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors focus:outline-none"
                 aria-label="Notifications"
             >
                 <Bell size={20} className="text-gray-600" />

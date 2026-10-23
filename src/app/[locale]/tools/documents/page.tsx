@@ -56,6 +56,7 @@ const PaginatedCourtEditor = dynamic(() => import('@/components/ui/PaginatedCour
     </div>
   ),
 });
+import { downloadDocxFile } from '@/utils/docxExport';
 
 // The 58 Categories with exact counts reverse-engineered from WritOnline
 const CATEGORIES: LegalDocCategory[] = [
@@ -237,21 +238,21 @@ export default function LegalDocumentsPage() {
   // Filter Templates
   const currentTemplates = selectedCategory
     ? TEMPLATES_LIBRARY[selectedCategory.id] || [
-        {
-          id: `${selectedCategory.id}-default-1`,
-          title: `Standard ${selectedCategory.name} Form`,
-          category: selectedCategory.name,
-          pageCount: 2,
-          description: `Authoritative standard ${selectedCategory.name} template conforming to Indian statutory practice.`,
-        },
-        {
-          id: `${selectedCategory.id}-default-2`,
-          title: `Commercial ${selectedCategory.name} Agreement`,
-          category: selectedCategory.name,
-          pageCount: 3,
-          description: `Detailed commercial ${selectedCategory.name} with standard indemnity, breach, and arbitration covenants.`,
-        },
-      ]
+      {
+        id: `${selectedCategory.id}-default-1`,
+        title: `Standard ${selectedCategory.name} Form`,
+        category: selectedCategory.name,
+        pageCount: 2,
+        description: `Authoritative standard ${selectedCategory.name} template conforming to Indian statutory practice.`,
+      },
+      {
+        id: `${selectedCategory.id}-default-2`,
+        title: `Commercial ${selectedCategory.name} Agreement`,
+        category: selectedCategory.name,
+        pageCount: 3,
+        description: `Detailed commercial ${selectedCategory.name} with standard indemnity, breach, and arbitration covenants.`,
+      },
+    ]
     : [];
 
   const filteredTemplates = currentTemplates.filter((t) =>
@@ -429,131 +430,13 @@ export default function LegalDocumentsPage() {
   };
 
   // Export handlers
-  const handleDownloadWord = () => {
-    const cleanContent = draftContent
-      .replace(/<span[^>]*class="[^"]*page-break-badge[^"]*"[^>]*>[\s\S]*?<\/span>/gi, '')
-      .replace(/<div[^>]*class="[^"]*page-break-indicator[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
-      .replace(/<hr[^>]*class="[^"]*court-page-break[^"]*"[^>]*\/?>/gi, '<br clear="all" style="page-break-before:always;mso-break-type:section-break" />')
-      .replace(/<div[^>]*court-page-break[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi, '<br clear="all" style="page-break-before:always;mso-break-type:section-break" />')
-      .replace(/<div[^>]*court-page-break[^>]*>[\s\S]*?<\/div>/gi, '<br clear="all" style="page-break-before:always;mso-break-type:section-break" />')
-      .replace(/<div[^>]*data-page-break="true"[^>]*>[\s\S]*?<\/div>/gi, '<br clear="all" style="page-break-before:always;mso-break-type:section-break" />')
-      .replace(/<p(?:\s+[^>]*)?>\s*(<p(?:\s+[^>]*)?>)/gi, '$1')
-      .replace(/(<\/p>)\s*<\/p>/gi, '$1')
-      .replace(/<br\s*\/?>\s*(<p)/gi, '$1')
-      .replace(/(<\/p>)\s*<br\s*\/?>/gi, '$1');
-
-    const formattedContent = /<\s*(p|div|h[1-6]|span|table|section|article|header|br|b|i|strong|em)\b/i.test(cleanContent)
-      ? cleanContent
-      : cleanContent
-          .split(/\n\n+/)
-          .map((p) => `<p style="text-align: justify; line-height: 1.5; margin-bottom: 8pt;">${p.trim().replace(/\n/g, '<br/>')}</p>`)
-          .join('');
-
-    const docContent = `<!DOCTYPE html>
-<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head>
-  <meta charset='utf-8'>
-  <!--[if gte mso 9]>
-  <xml>
-    <w:WordDocument>
-      <w:View>Print</w:View>
-      <w:Zoom>100</w:Zoom>
-      <w:DoNotOptimizeForBrowser/>
-    </w:WordDocument>
-  </xml>
-  <![endif]-->
-  <title>${selectedTemplate?.title || 'Legal Document'}</title>
-  <style>
-    @page Section1 {
-      size: 8.27in 11.69in; /* A4 */
-      margin: 1.25in 1.0in 1.25in 1.25in;
-      mso-header-margin: 0.5in;
-      mso-footer-margin: 0.5in;
-      mso-paper-source: 0;
-    }
-    div.Section1 {
-      page: Section1;
-    }
-    body {
-      font-family: 'Times New Roman', Georgia, serif;
-      font-size: 13pt;
-      color: #000000;
-      background: #FFFFFF;
-      line-height: 1.5;
-    }
-    p {
-      text-align: justify;
-      margin-top: 0pt;
-      margin-bottom: 8pt;
-      line-height: 1.5;
-      font-size: 13pt;
-    }
-    .ql-align-center { text-align: center !important; }
-    .ql-align-right { text-align: right !important; }
-    .ql-align-justify { text-align: justify !important; }
-    .ql-align-left { text-align: left !important; }
-    .court-page-break {
-      page-break-before: always !important;
-      mso-break-type: page-break;
-    }
-    .page-break-indicator {
-      display: none !important;
-    }
-    strong, b { font-weight: bold; }
-    em, i { font-style: italic; }
-    u { text-decoration: underline; }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 8pt;
-      margin-bottom: 12pt;
-    }
-    th, td {
-      border: 1px solid #475569;
-      padding: 6pt 8pt;
-      font-size: 11pt;
-    }
-  </style>
-</head>
-<body>
-  <div class="Section1">
-    ${formattedContent}
-  </div>
-</body>
-</html>`;
-
-    const blob = new Blob(['\ufeff', docContent], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${(selectedTemplate?.title || 'Legal-Document').replace(/\s+/g, '_')}.doc`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleDownloadWord = async () => {
+    const filename = (selectedTemplate?.title || 'Legal-Document').replace(/\s+/g, '_');
+    await downloadDocxFile(draftContent, filename, selectedTemplate?.title);
   };
 
   const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>${selectedTemplate?.title || 'Legal Document'}</title>
-          <style>
-            body { font-family: 'Times New Roman', Georgia, serif; font-size: 14pt; line-height: 1.7; margin: 1.2in 1in; color: #000; }
-            pre { font-family: 'Times New Roman', Georgia, serif; white-space: pre-wrap; word-wrap: break-word; }
-            @page { size: A4; margin: 1in; }
-          </style>
-        </head>
-        <body>
-          <pre>${draftContent}</pre>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
+    window.print();
   };
 
   const handleCopyDraft = () => {
@@ -581,13 +464,7 @@ export default function LegalDocumentsPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-mono text-xs font-bold text-emerald-800">
-              <span>7 drafts left</span>
-              <span className="text-emerald-400">·</span>
-              <span>Lawyer</span>
-            </div>
-          </div>
+
         </div>
       </div>
 
@@ -620,22 +497,20 @@ export default function LegalDocumentsPage() {
                 onClick={() => {
                   if (isCompleted || isActive) setActiveStep(st.num);
                 }}
-                className={`flex-1 min-w-[120px] inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold transition-all ${
-                  isActive
+                className={`flex-1 min-w-[120px] inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold transition-all ${isActive
                     ? 'bg-[#0B2242] text-white shadow-xs'
                     : isCompleted
-                    ? 'text-[#0B2242] hover:bg-gray-100'
-                    : 'text-gray-400 cursor-not-allowed'
-                }`}
+                      ? 'text-[#0B2242] hover:bg-gray-100'
+                      : 'text-gray-400 cursor-not-allowed'
+                  }`}
               >
                 <span
-                  className={`size-5 rounded-full inline-flex items-center justify-center text-[11px] font-bold ${
-                    isActive
+                  className={`size-5 rounded-full inline-flex items-center justify-center text-[11px] font-bold ${isActive
                       ? 'bg-white text-[#0B2242]'
                       : isCompleted
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : 'bg-gray-100 text-gray-500'
-                  }`}
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-gray-100 text-gray-500'
+                    }`}
                 >
                   {isCompleted ? <Check className="size-3" /> : st.num}
                 </span>
@@ -748,9 +623,8 @@ export default function LegalDocumentsPage() {
                     <button
                       key={tmpl.id}
                       onClick={() => setSelectedTemplate(tmpl)}
-                      className={`w-full flex items-start gap-3 p-4 text-left transition-colors cursor-pointer ${
-                        isSelected ? 'bg-[#EAEFF9] border-l-4 border-l-[#0B2242]' : 'hover:bg-gray-50'
-                      }`}
+                      className={`w-full flex items-start gap-3 p-4 text-left transition-colors cursor-pointer ${isSelected ? 'bg-[#EAEFF9] border-l-4 border-l-[#0B2242]' : 'hover:bg-gray-50'
+                        }`}
                     >
                       <FileText className={`size-4 mt-0.5 shrink-0 ${isSelected ? 'text-[#0B2242]' : 'text-gray-400'}`} />
                       <div className="flex-1 min-w-0">
@@ -958,11 +832,10 @@ export default function LegalDocumentsPage() {
                     className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed ${
-                        msg.sender === 'user'
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed ${msg.sender === 'user'
                           ? 'bg-[#0B2242] text-white rounded-br-xs'
                           : 'bg-[#F1F5F9] text-[#1E293B] rounded-bl-xs border border-[#E2E8F0]'
-                      }`}
+                        }`}
                     >
                       {msg.text}
                     </div>
@@ -1285,7 +1158,25 @@ export default function LegalDocumentsPage() {
                 </div>
 
                 {/* Google Docs Style Paginated Legal Document Canvas */}
-                <div className="w-full max-w-5xl mx-auto">
+                <div id="legal-doc-printable" className="w-full max-w-5xl mx-auto">
+                  <style>{`
+                    @media print {
+                      body * {
+                        visibility: hidden !important;
+                      }
+                      #legal-doc-printable, #legal-doc-printable * {
+                        visibility: visible !important;
+                      }
+                      #legal-doc-printable {
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 100% !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                      }
+                    }
+                  `}</style>
                   <PaginatedCourtEditor
                     value={draftContent}
                     onChange={(val) => setDraftContent(val)}

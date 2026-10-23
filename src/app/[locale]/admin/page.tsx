@@ -1,17 +1,16 @@
 "use client";
 import {
-  PlusCircle,
-  TrendingUp,
-  UserCheck,
+  Newspaper,
+  BadgeCheck,
+  Hourglass,
+  Activity,
   Users,
-  Star,
-  Eye,
-  MapPin,
-  CircleDollarSign,
-  Clock,
+  Layers,
+  Crown,
+  User,
 } from "lucide-react";
 import ContentTable from "./components/ContentTable";
-import StatCard from "./components/StatCard";
+import StatCard, { StatCardColor } from "./components/StatCard";
 import DummyChart from "./components/charts/LineChart";
 import RevenueChart from "./components/charts/RevenueChart";
 import ContentApprovalPanel from "./components/UrgentTable";
@@ -34,6 +33,7 @@ import {
   canAccessPlanManagementPage,
   canAccessContentManagementPage,
   canAccessCategoryManagementPage,
+  canAccessContentApprovalPage,
   isAdmin,
   canAccessMyEarningsPage
 } from "@/utils/permissions";
@@ -71,90 +71,114 @@ const Page = () => {
   const canManagePlans = canAccessPlanManagementPage(userData);
   const canManageContent = canAccessContentManagementPage(userData);
   const canManageCategories = canAccessCategoryManagementPage(userData);
+  const canApproveArticles = canAccessContentApprovalPage(userData);
 
   // --- Chart Data: Passed directly to component for processing ---
 
   const stats = useMemo(() => {
     // We remove the !dashboardStats guard to allow rendering initial state (Fetching...)
 
-    const allStats = [
-      {
-        label: "Total Articles",
-        value: dashboardStats?.totalArticles?.value?.toLocaleString() ?? "Fetching...",
-        icon: <TrendingUp className="w-5 h-5" />,
-        trend: dashboardStats?.totalArticles?.trend ?? null,
-        trendUp: dashboardStats?.totalArticles?.trendUp ?? true,
-        sparklineData: dashboardStats?.totalArticles?.sparklineData ?? [],
-        show: canManageContent
-      },
-      {
-        label: "Published Articles",
-        value: dashboardStats?.publishedArticles?.value?.toLocaleString() ?? "Fetching...",
-        icon: <Star className="w-5 h-5" />,
-        trend: dashboardStats?.publishedArticles?.trend ?? null,
-        trendUp: dashboardStats?.publishedArticles?.trendUp ?? true,
-        sparklineData: dashboardStats?.publishedArticles?.sparklineData ?? [],
-        show: canManageContent
-      },
-      {
-        label: "Pending Articles",
-        value: dashboardStats?.pendingArticles?.value?.toLocaleString() ?? "Fetching...",
-        icon: <Clock className="w-5 h-5" />,
-        trend: dashboardStats?.pendingArticles?.trend ?? null,
-        trendUp: dashboardStats?.pendingArticles?.trendUp ?? false,
-        sparklineData: dashboardStats?.pendingArticles?.sparklineData ?? [],
-        show: canManageContent
-      },
-      {
-        label: "Active Users",
-        value: dashboardStats?.activeUsers?.value?.toLocaleString() ?? "Fetching...",
-        icon: <UserCheck className="w-5 h-5" />,
-        trend: dashboardStats?.activeUsers?.trend ?? null,
-        trendUp: dashboardStats?.activeUsers?.trendUp ?? true,
-        sparklineData: dashboardStats?.activeUsers?.sparklineData ?? [],
-        show: canManageUsers
-      },
-      {
-        label: "Total Users",
-        value: dashboardStats?.totalUsers?.value?.toLocaleString() ?? "Fetching...",
-        path: "/admin/users",
-        icon: <Users className="w-5 h-5" />,
-        trend: dashboardStats?.totalUsers?.trend ?? null,
-        trendUp: dashboardStats?.totalUsers?.trendUp ?? true,
-        sparklineData: dashboardStats?.totalUsers?.sparklineData ?? [],
-        show: canManageUsers
-      },
-      {
-        label: "Most Active Category",
-        value: dashboardStats?.mostActiveCategory?.value ?? "Fetching...",
-        icon: <Eye className="w-5 h-5" />,
-        trend: dashboardStats?.mostActiveCategory?.trend ?? null,
-        trendUp: dashboardStats?.mostActiveCategory?.trendUp ?? true,
-        sparklineData: dashboardStats?.mostActiveCategory?.sparklineData ?? [],
-        show: canManageCategories
-      },
-      {
-        label: "Premium Subscribers",
-        value: dashboardStats?.premiumSubscribers?.value?.toLocaleString() ?? "Fetching...",
-        icon: <CircleDollarSign className="w-5 h-5" />,
-        trend: dashboardStats?.premiumSubscribers?.trend ?? null,
-        trendUp: dashboardStats?.premiumSubscribers?.trendUp ?? true,
-        sparklineData: dashboardStats?.premiumSubscribers?.sparklineData ?? [],
-        show: canManagePlans
-      },
-      {
-        label: "Free Users",
-        value: dashboardStats?.freeUsers?.value?.toLocaleString() ?? "Fetching...",
-        icon: <Users className="w-5 h-5" />,
-        trend: dashboardStats?.freeUsers?.trend ?? null,
-        trendUp: dashboardStats?.freeUsers?.trendUp ?? true,
-        sparklineData: dashboardStats?.freeUsers?.sparklineData ?? [],
-        show: canManagePlans
-      },
-    ];
+    const allStats: {
+      label: string;
+      value: string | number;
+      icon: React.ReactNode;
+      trend: string | null;
+      trendUp: boolean;
+      sparklineData: { value: number }[];
+      show: boolean;
+      path?: string;
+      color: StatCardColor;
+    }[] = [
+        {
+          label: "Total Articles",
+          value: dashboardStats?.totalArticles?.value?.toLocaleString() ?? "Fetching...",
+          path: "/admin/content-management",
+          icon: <Newspaper className="w-5 h-5" />,
+          trend: dashboardStats?.totalArticles?.trend ?? null,
+          trendUp: dashboardStats?.totalArticles?.trendUp ?? true,
+          sparklineData: dashboardStats?.totalArticles?.sparklineData ?? [],
+          show: canManageContent,
+          color: "blue",
+        },
+        {
+          label: "Published Articles",
+          value: dashboardStats?.publishedArticles?.value?.toLocaleString() ?? "Fetching...",
+          path: canApproveArticles ? "/admin/content-approval" : "/admin/content-management",
+          icon: <BadgeCheck className="w-5 h-5" />,
+          trend: dashboardStats?.publishedArticles?.trend ?? null,
+          trendUp: dashboardStats?.publishedArticles?.trendUp ?? true,
+          sparklineData: dashboardStats?.publishedArticles?.sparklineData ?? [],
+          show: canManageContent,
+          color: "emerald",
+        },
+        {
+          label: "Pending Articles",
+          value: dashboardStats?.pendingArticles?.value?.toLocaleString() ?? "Fetching...",
+          path: canApproveArticles ? "/admin/content-approval" : "/admin/content-management",
+          icon: <Hourglass className="w-5 h-5" />,
+          trend: dashboardStats?.pendingArticles?.trend ?? null,
+          trendUp: dashboardStats?.pendingArticles?.trendUp ?? false,
+          sparklineData: dashboardStats?.pendingArticles?.sparklineData ?? [],
+          show: canManageContent,
+          color: "amber",
+        },
+        {
+          label: "Active Users",
+          value: dashboardStats?.activeUsers?.value?.toLocaleString() ?? "Fetching...",
+          path: "/admin/users",
+          icon: <Activity className="w-5 h-5" />,
+          trend: dashboardStats?.activeUsers?.trend ?? null,
+          trendUp: dashboardStats?.activeUsers?.trendUp ?? true,
+          sparklineData: dashboardStats?.activeUsers?.sparklineData ?? [],
+          show: canManageUsers,
+          color: "violet",
+        },
+        {
+          label: "Total Users",
+          value: dashboardStats?.totalUsers?.value?.toLocaleString() ?? "Fetching...",
+          path: "/admin/users",
+          icon: <Users className="w-5 h-5" />,
+          trend: dashboardStats?.totalUsers?.trend ?? null,
+          trendUp: dashboardStats?.totalUsers?.trendUp ?? true,
+          sparklineData: dashboardStats?.totalUsers?.sparklineData ?? [],
+          show: canManageUsers,
+          color: "indigo",
+        },
+        {
+          label: "Most Active Category",
+          value: dashboardStats?.mostActiveCategory?.value ?? "Fetching...",
+          icon: <Layers className="w-5 h-5" />,
+          trend: dashboardStats?.mostActiveCategory?.trend ?? null,
+          trendUp: dashboardStats?.mostActiveCategory?.trendUp ?? true,
+          sparklineData: dashboardStats?.mostActiveCategory?.sparklineData ?? [],
+          show: canManageCategories,
+          color: "rose",
+        },
+        {
+          label: "Premium Subscribers",
+          value: dashboardStats?.premiumSubscribers?.value?.toLocaleString() ?? "Fetching...",
+          icon: <Crown className="w-5 h-5" />,
+          trend: dashboardStats?.premiumSubscribers?.trend ?? null,
+          trendUp: dashboardStats?.premiumSubscribers?.trendUp ?? true,
+          sparklineData: dashboardStats?.premiumSubscribers?.sparklineData ?? [],
+          show: canManagePlans,
+          color: "amber",
+        },
+        {
+          label: "Free Users",
+          value: dashboardStats?.freeUsers?.value?.toLocaleString() ?? "Fetching...",
+          path: "/admin/users",
+          icon: <User className="w-5 h-5" />,
+          trend: dashboardStats?.freeUsers?.trend ?? null,
+          trendUp: dashboardStats?.freeUsers?.trendUp ?? true,
+          sparklineData: dashboardStats?.freeUsers?.sparklineData ?? [],
+          show: canManagePlans,
+          color: "sky",
+        },
+      ];
 
     return allStats.filter(s => s.show);
-  }, [dashboardStats, canManageUsers, canManagePlans, canManageContent, canManageCategories]);
+  }, [dashboardStats, canManageUsers, canManagePlans, canManageContent, canManageCategories, canApproveArticles]);
 
 
 
@@ -177,17 +201,20 @@ const Page = () => {
         {/* Top Stats Grid Skeleton */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((_, i) => (
-            <div key={i} className="h-[140px] bg-[#0B2149] p-6 rounded-2xl shadow-[0_4px_20px_-4px_rgba(11,33,73,0.4)] border border-[#0B2149]/80 flex flex-col justify-between animate-pulse">
+            <div
+              key={i}
+              className="h-[152px] bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col justify-between animate-pulse"
+            >
               <div className="flex justify-between items-start mb-4">
-                <div className="h-[46px] w-[46px] bg-white/10 rounded-xl"></div>
-                <div className="h-[22px] w-[50px] bg-white/10 rounded-full"></div>
+                <div className="h-10 w-10 bg-slate-100 rounded-xl"></div>
+                <div className="h-5 w-14 bg-slate-100 rounded-full"></div>
               </div>
-              <div className="flex items-end justify-between mt-2">
-                <div>
-                  <div className="h-[32px] w-[80px] bg-white/20 rounded mb-2.5"></div>
-                  <div className="h-[14px] w-[110px] bg-[#C9A227]/30 rounded"></div>
+              <div className="flex items-end justify-between mt-auto">
+                <div className="w-2/3">
+                  <div className="h-7 w-20 bg-slate-200 rounded mb-2"></div>
+                  <div className="h-3 w-28 bg-slate-100 rounded"></div>
                 </div>
-                <div className="h-[24px] w-[60px] bg-white/10 rounded"></div>
+                <div className="h-6 w-16 bg-slate-100 rounded"></div>
               </div>
             </div>
           ))}
@@ -301,6 +328,7 @@ const Page = () => {
               trend={item.trend}
               trendUp={item.trendUp}
               sparklineData={item.sparklineData}
+              color={item.color}
             />
           </div>
         ))}
@@ -315,10 +343,10 @@ const Page = () => {
         )}
         {(canManagePlans || isAdmin(userData) || canAccessMyEarningsPage(userData)) && (
           <div className="lg:col-span-1">
-            <RevenueChart 
-              user={userData} 
-              isAdmin={isAdmin(userData) || canManagePlans} 
-              isAdvocate={canAccessMyEarningsPage(userData)} 
+            <RevenueChart
+              user={userData}
+              isAdmin={isAdmin(userData) || canManagePlans}
+              isAdvocate={canAccessMyEarningsPage(userData)}
             />
           </div>
         )}

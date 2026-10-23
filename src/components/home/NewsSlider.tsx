@@ -223,7 +223,7 @@ export default function NewsSlider() {
               >
                 {/* 1. Category Indicator */}
                 <div className="flex items-center justify-center lg:justify-start gap-4 mb-4 lg:mb-6">
-                  <span className="text-[#C9A227] font-black tracking-[0.25em] text-[10px] lg:text-xs uppercase drop-shadow-sm">
+                  <span className="text-[#C9A227] font-black tracking-[0.25em] text-[12px] lg:text-[14px] uppercase drop-shadow-sm">
                     {slides[current].category}
                   </span>
                   <div className="hidden lg:block flex-1 h-[1px] bg-white/10" />
@@ -251,7 +251,7 @@ export default function NewsSlider() {
                     href={slides[current].link}
                     className="group/btn inline-flex items-center gap-3 bg-[#C9A227] hover:bg-[#b39022] text-[#0A2342] px-8 lg:px-10 py-3.5 lg:py-4 rounded-full font-bold text-[10px] lg:text-xs tracking-widest transition-all duration-300 shadow-md hover:shadow-lg active:scale-95"
                   >
-                    <span className="!text-white">READ FULL ARTICLE</span>
+                    <span className="!text-black text-[12px] sm:text-[14px]">READ FULL ARTICLE</span>
                     {/* <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" /> */}
                   </Link>
 

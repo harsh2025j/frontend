@@ -9,8 +9,10 @@ import Button from "../ui/Button";
 import AiPoweredFeatures from "../ui/AiPoweredFeatures";
 import ContentSlider from "@/components/home/ContentSlider";
 import LatestNews from "../ui/LatestNews";
+import HomeLatestArticleCard from "./HomeLatestArticleCard";
 import Judgement from "../ui/judgement";
 import { LeaderboardAd, InFeedAd } from "../ads/StandardAds";
+import { ArrowRight } from "lucide-react";
 
 import TopJudges from "./TopJudges";
 import TopAdvocateSection from "./TopAdvocateSection";
@@ -530,44 +532,89 @@ export default function Stores() {
           </div>
         </div> */}
 
-        {/* Latest News*/}
-        <div className="w-full px-4">
-          <div className="flex items-center justify-center my-6 md:my-10">
-            <div className="flex-1 h-px bg-gray-400"></div>
-            <h2 className="px-3 sm:px-4 text-base sm:text-lg md:text-xl font-merriweather font-semibold text-black text-center whitespace-nowrap">
-              Latest News
-            </h2>
-            <div className="flex-1 h-px bg-gray-400"></div>
-          </div>
+        {/* Latest Articles / News Section */}
+        <div className="w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto my-8 md:my-12">
+          {/* Header Banner Card */}
+          <div className="relative bg-[#FAF5E2] rounded-2xl border border-[#EADBBD]/80 shadow-sm overflow-hidden mb-8 min-h-[220px] md:min-h-[260px] flex flex-col md:flex-row items-center">
+            {/* Right 50% image container with clean photo and code-based smooth blend */}
+            <div
+              className="absolute right-0 top-0 bottom-0 w-full md:w-1/2 pointer-events-none overflow-hidden select-none"
+              style={{
+                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.5) 8%, black 20%)',
+                maskImage: 'linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.5) 8%, black 20%)',
+              }}
+            >
+              {/* Smooth 10% middle blend applied purely by code */}
+              <div
+                className="absolute inset-0 z-10 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to right, #FAF5E2 0%, rgba(250, 245, 226, 0.9) 13%, rgba(250, 245, 226, 0.4) 40%, rgba(250, 245, 226, 0) 60%)',
+                }}
+              />
+              <Image
+                src="/home-articles-banner.jpg"
+                alt="Law, Justice and Legal Books with Gavel"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover object-center"
+                priority
+              />
+            </div>
 
-          <div className="flex justify-center mb-6 md:mb-10">
-            <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {loading ? (
-                <ArticleSkeleton count={8} type="latest" noWrapper={true} />
-              ) : (
-                displayLatestNews.map((data: any) => (
+            {/* Left 50% Content */}
+            <div className="relative z-20 p-6 sm:p-8 md:p-10 w-full md:w-1/2 flex flex-col justify-center">
+              {/* Tri-part Tagline */}
+              <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold tracking-widest uppercase mb-2.5">
+                <span className="text-[#C9A227]">LEGAL INSIGHTS</span>
+                <span className="text-[#C9A227]/70 font-normal">|</span>
+                <span className="text-[#0B2242]">CASE UPDATES</span>
+                <span className="text-[#C9A227]/70 font-normal">|</span>
+                <span className="text-[#C9A227]">EXPERT ANALYSIS</span>
+              </div>
 
-                  <LatestNews
-                    key={data.id}
-                    img={data.thumbnail}
-                    title={data.title}
-                    slug={data.slug}
-                    author={data.authors || data.advocateName}
-                    date={formatDate(data.createdAt)}
-                    button1Text="Read Full Case"
-                    button2Text="AI Summary"
-                  />
-                ))
-              )}
+              {/* Serif Headline */}
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-[#0B2242] leading-tight">
+                Your Trusted Source for <br className="hidden sm:inline" />
+                <span className="text-[#C9A227]">Law, Justice & Updates</span>
+              </h2>
+
+              {/* Subtitle */}
+              <p className="text-slate-600 text-xs sm:text-sm mt-2.5 mb-5 max-w-xl leading-relaxed">
+                Stay informed with the latest legal news, landmark judgments, case updates and expert articles.
+              </p>
+
+              {/* Pill CTA Button */}
+              <div>
+                <Link
+                  href="/category/latest-news"
+                  className="inline-flex items-center gap-2 bg-[#B8860B] hover:bg-[#996515] text-white px-5 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold shadow-sm transition-all"
+                >
+                  <span>Explore Latest Articles</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex justify-center mb-6 md:mb-10">
-          <Link href="/category/latest-news">
-            <button className="bg-transparent border-1 hover:border-blue-300 transition-all duration-300 border-black rounded-md px-4 sm:px-6 py-1 sm:py-2 text-sm sm:text-base">
-              View More
-            </button>
-          </Link>
+
+          {/* Articles Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {loading ? (
+              <ArticleSkeleton count={8} type="latest" noWrapper={true} />
+            ) : (
+              displayLatestNews.slice(0, 8).map((data: any) => (
+                <HomeLatestArticleCard
+                  key={data.id}
+                  img={data.thumbnail}
+                  title={data.title}
+                  slug={data.slug}
+                  author={data.authors || data.advocateName || "Super admin"}
+                  date={formatDate(data.createdAt)}
+                  button1Text="Read Full Case"
+                  category={data.category?.name || "LATEST CASE"}
+                />
+              ))
+            )}
+          </div>
         </div>
 
         {/* In-Feed Ad after Latest News */}

@@ -24,7 +24,7 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Top Left Navigation Bar with dynamic Back button aligned with base content */}
-      <div className="border-b border-[#E2E8F0]/70 bg-white/80 backdrop-blur-xs">
+      <div className="no-print no-print-bar no-print-area print:hidden border-b border-[#E2E8F0]/70 bg-white/80 backdrop-blur-xs">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
           <button
             type="button"
