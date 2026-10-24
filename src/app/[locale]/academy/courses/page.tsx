@@ -1,22 +1,29 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { ChevronDown, Filter, ChevronLeft, Loader2, Star, Heart } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/data/redux/hooks';
-import { fetchAllCourses } from '@/data/features/academy/course/courseThunks';
-import { useRouter } from 'next/navigation';
-import { courseApi } from '@/data/services/academy-service/course.service';
-import { useWishlist } from '@/context/WishlistContext';
+import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import {
+  ChevronDown,
+  Filter,
+  Star,
+  Heart,
+  ArrowLeft,
+  ArrowRight,
+  User,
+  BookOpen,
+} from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
+import { fetchAllCourses } from "@/data/features/academy/course/courseThunks";
+import { useRouter } from "next/navigation";
+import { courseApi } from "@/data/services/academy-service/course.service";
+import { useWishlist } from "@/context/WishlistContext";
 
-// ── Component ───────────────────────────────────────────────
 export default function CoursesPage() {
   const router = useRouter();
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
-
   const [categories, setCategories] = useState<string[]>(["All Categories"]);
-  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const dispatch = useAppDispatch();
   const { courses, isLoading, error } = useAppSelector((state) => state.course);
@@ -51,61 +58,73 @@ export default function CoursesPage() {
   }, [dispatch]);
 
   const mappedCourses = courses
-    .filter(course => course.status === 'published' && course.slug)
-    .map(course => {
+    .filter((course) => course.status === "published" && course.slug)
+    .map((course) => {
       const p = Number(course.price) || 0;
       const op = course.originalPrice ? Number(course.originalPrice) : null;
       const discountPct = op && op > p ? Math.round(((op - p) / op) * 100) : null;
 
       return {
+        id: (course as any).id || (course as any)._id || course.slug,
         slug: course.slug as string,
         title: course.title,
         instructor: course.instructors?.[0]?.name || "Sajjad Husain Legal Academy",
         price: `₹${course.price}`,
         originalPrice: op ? `₹${op}` : null,
         discountPct,
-        image: course.thumbnailUrl || "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=600&auto=format&fit=crop",
+        image:
+          course.thumbnailUrl ||
+          "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=600&auto=format&fit=crop",
         category: course.category || "General",
         averageRating: Number(course.averageRating) || 0,
         totalReviews: Number(course.totalReviews) || 0,
       };
     });
 
-  const filteredCourses = mappedCourses.filter(course =>
-    selectedCategory === "All Categories" || course.category === selectedCategory
-  );
+  const filteredCourses = mappedCourses.filter((course) => {
+    return (
+      selectedCategory === "All Categories" || course.category === selectedCategory
+    );
+  });
 
   return (
-    <div className="ac-student bg-[color:var(--sa-cream)] min-h-screen font-sans pt-6 sm:pt-10 pb-20">
-
+    <div className="ac-student bg-[color:var(--sa-cream)] min-h-screen font-sans pt-6 sm:pt-8 pb-20">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* Top Bar: Back Button on Left & Category Dropdown on Right at Same Level in Mobile */}
-        <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8">
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#122340]/70 hover:text-[#C9A227] transition-colors group cursor-pointer"
+        {/* Top Navigation Bar */}
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <Link
+            href="/academy"
+            className="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border-2 border-slate-300 text-xs sm:text-sm font-bold text-[#08172D] hover:border-[#8A6100] hover:text-[#8A6100] shadow-2xs transition-all cursor-pointer"
           >
-            <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-            <span>Back</span>
-          </button>
+            <ArrowLeft
+              size={15}
+              className="text-[#08172D] group-hover:text-[#8A6100] group-hover:-translate-x-0.5 transition-transform"
+            />
+            <span>Academy Home</span>
+          </Link>
 
           {/* Mobile Category Dropdown on Right */}
           <div className="relative sm:hidden" ref={dropdownRef}>
             <button
-              onClick={() => setIsCategoryOpen(prev => !prev)}
-              className="inline-flex items-center gap-2 bg-white px-3.5 py-2 rounded-full border border-gray-200 shadow-xs text-xs font-semibold text-[#122340] hover:border-[#C9A227] transition-all cursor-pointer active:scale-95"
+              onClick={() => setIsCategoryOpen((prev) => !prev)}
+              className="inline-flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border-2 border-slate-300 shadow-2xs text-xs font-bold text-[#08172D] hover:border-[#8A6100] transition-all cursor-pointer active:scale-95"
               aria-expanded={isCategoryOpen}
             >
-              <Filter size={13} className="text-[#C9A227]" />
-              <span className="max-w-[120px] truncate">{selectedCategory}</span>
-              <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${isCategoryOpen ? 'rotate-180' : ''}`} />
+              <Filter size={13} className="text-[#8A6100]" />
+              <span className="max-w-[130px] truncate">{selectedCategory}</span>
+              <ChevronDown
+                size={14}
+                className={`text-slate-500 transition-transform duration-200 ${
+                  isCategoryOpen ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
             {isCategoryOpen && (
-              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-                <div className="px-3.5 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                  Select Category
+              <div className="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-2xl border-2 border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                  Select Legal Specialization
                 </div>
                 <div className="max-h-64 overflow-y-auto py-1 hide-scrollbar">
                   {categories.map((cat) => (
@@ -115,15 +134,15 @@ export default function CoursesPage() {
                         setSelectedCategory(cat);
                         setIsCategoryOpen(false);
                       }}
-                      className={`w-full text-left px-3.5 py-2.5 text-xs font-medium flex items-center justify-between transition-colors ${
+                      className={`w-full text-left px-4 py-2.5 text-xs font-semibold flex items-center justify-between transition-colors ${
                         selectedCategory === cat
-                          ? 'bg-[#C9A227]/10 text-[#C9A227] font-bold'
-                          : 'text-[#122340]/80 hover:bg-gray-50'
+                          ? "bg-[#08172D] text-white font-bold"
+                          : "text-[#08172D] hover:bg-slate-50"
                       }`}
                     >
                       <span className="truncate">{cat}</span>
                       {selectedCategory === cat && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#C9A227] shrink-0 ml-2" />
+                        <span className="w-2 h-2 rounded-full bg-[#E8CD82] shrink-0 ml-2" />
                       )}
                     </button>
                   ))}
@@ -133,27 +152,61 @@ export default function CoursesPage() {
           </div>
         </div>
 
-        {/* Toolbar: Category Horizontal List for Desktop / Tablet */}
-        <div className="hidden sm:flex mb-10 overflow-x-auto hide-scrollbar whitespace-nowrap gap-3 py-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all cursor-pointer ${
-                selectedCategory === cat
-                  ? 'bg-[#C9A227] text-white shadow-md'
-                  : 'bg-white text-[#122340]/70 hover:bg-gray-50 border border-gray-100'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        {/* =====================================================
+            CATEGORY FILTER CHIPS (DESKTOP & TABLET)
+        ====================================================== */}
+        <div className="hidden sm:flex mb-6 overflow-x-auto hide-scrollbar whitespace-nowrap gap-2.5 py-1">
+          {categories.map((cat) => {
+            const isActive = selectedCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                  isActive
+                    ? "bg-[#08172D] text-white border-2 border-[#08172D] shadow-md ring-2 ring-[#08172D]/20"
+                    : "bg-white text-[#08172D] hover:bg-slate-50 border-2 border-slate-300 hover:border-[#08172D] shadow-2xs"
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          })}
         </div>
 
+        {/* Results Counter & Reset Filter Option */}
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-700">
+            Showing{" "}
+            <span className="font-extrabold text-[#08172D]">{filteredCourses.length}</span>{" "}
+            {filteredCourses.length === 1 ? "Course" : "Courses"}
+            {selectedCategory !== "All Categories" && (
+              <span className="ml-2 font-normal text-slate-500 normal-case">
+                in <strong className="text-[#08172D]">{selectedCategory}</strong>
+              </span>
+            )}
+          </p>
+
+          {selectedCategory !== "All Categories" && (
+            <button
+              onClick={() => setSelectedCategory("All Categories")}
+              className="text-xs font-bold text-[#8A6100] underline decoration-[#B8860B] hover:text-[#6D4C00] cursor-pointer"
+            >
+              Show all categories
+            </button>
+          )}
+        </div>
+
+        {/* =====================================================
+            COURSES GRID / STATES
+        ====================================================== */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-              <div key={i} className="bg-white rounded-lg overflow-hidden shadow-xs border border-gray-100 flex flex-col h-full">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl overflow-hidden shadow-xs border-2 border-slate-200 flex flex-col h-full"
+              >
                 <div className="aspect-video w-full bg-slate-200" />
                 <div className="p-5 flex flex-col flex-grow space-y-3">
                   <div className="h-4 bg-slate-200 rounded w-4/5" />
@@ -165,37 +218,64 @@ export default function CoursesPage() {
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-20">
-            <p className="text-red-500">{error}</p>
+          <div className="text-center py-20 bg-white rounded-2xl border-2 border-red-200 p-8 max-w-lg mx-auto shadow-sm">
+            <p className="text-red-600 font-bold text-sm mb-4">{error}</p>
+            <button
+              onClick={() => dispatch(fetchAllCourses())}
+              className="px-4 py-2 rounded-xl bg-[#08172D] text-white text-xs font-extrabold hover:bg-[#0B2242] transition-colors cursor-pointer"
+            >
+              Retry Loading Courses
+            </button>
           </div>
         ) : filteredCourses.length === 0 ? (
-          <div className="text-center py-20 text-[#122340]/50">
-            <p>No courses found for this category.</p>
+          <div className="bg-white rounded-2xl border-2 border-dashed border-slate-300 p-10 sm:p-14 text-center max-w-lg mx-auto shadow-xs">
+            <div className="w-14 h-14 rounded-2xl bg-[#FDF6E2] border border-[#E8CD82] text-[#8A6100] flex items-center justify-center mx-auto mb-4">
+              <BookOpen size={26} />
+            </div>
+            <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#08172D] mb-2">
+              No Courses Found
+            </h3>
+            <p className="text-sm text-slate-600 leading-relaxed mb-6 font-normal">
+              No published courses currently found in &ldquo;{selectedCategory}&rdquo;.
+            </p>
+            <button
+              onClick={() => setSelectedCategory("All Categories")}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#08172D] hover:bg-[#0B2242] text-white font-extrabold text-sm transition-all shadow-md cursor-pointer"
+            >
+              <span>View All Courses</span>
+              <ArrowRight size={15} />
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredCourses.map((course) => (
-              <Link href={`/courses/${course.slug}`} key={course.slug} className="group block">
-                <div className="bg-white rounded-lg overflow-hidden shadow-[0_2px_8px_rgb(0,0,0,0.06)] border border-[#122340]/10 flex flex-col h-full hover:border-[#C9A227] transition-colors duration-300">
+              <Link
+                href={`/courses/${course.slug}`}
+                key={course.slug}
+                className="group block h-full"
+              >
+                <div className="bg-white rounded-2xl overflow-hidden border-2 border-slate-200/90 hover:border-[#B8860B]  transition-all duration-300 flex flex-col h-full">
 
-                  {/* Image */}
-                  <div className="relative aspect-video w-full overflow-hidden bg-[#122340]/5">
+                  {/* Image & Badges */}
+                  <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
                     <img
                       src={course.image}
                       alt={course.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    {course.category === 'Criminal Law' && (
-                      <span className="absolute top-2 left-2 bg-[#122340] text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
-                        Package
-                      </span>
-                    )}
+
+                    {/* High-Contrast Category Badge */}
+                    <span className="absolute top-2.5 left-2.5 bg-[#08172D]/95 backdrop-blur-md text-white text-[11px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border border-white/20 shadow-md">
+                      {course.category}
+                    </span>
+
+                    {/* Wishlist Button */}
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         toggleWishlist({
-                          id: String((course as any).id || course.slug),
+                          id: String(course.id || course.slug),
                           slug: course.slug,
                           title: course.title,
                           thumbnailUrl: course.image,
@@ -204,66 +284,90 @@ export default function CoursesPage() {
                           instructor: course.instructor,
                         });
                       }}
-                      className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-sm transition text-gray-400 hover:text-red-500 z-10"
+                      className="absolute top-2.5 right-2.5 p-2 rounded-full bg-white/95 hover:bg-white border border-slate-200 shadow-md transition-all text-slate-400 hover:text-red-500 z-10 cursor-pointer"
                       aria-label="Wishlist course"
-                      title={isInWishlist(course.slug) ? "Remove from wishlist" : "Add to wishlist"}
+                      title={
+                        isInWishlist(course.slug)
+                          ? "Remove from wishlist"
+                          : "Add to wishlist"
+                      }
                     >
                       <Heart
                         size={15}
-                        className={isInWishlist(course.slug) ? "fill-red-500 text-red-500" : ""}
+                        className={
+                          isInWishlist(course.slug)
+                            ? "fill-red-500 text-red-500"
+                            : ""
+                        }
                       />
                     </button>
                   </div>
 
-                  {/* Content */}
+                  {/* Card Content */}
                   <div className="p-5 flex flex-col flex-grow">
-                    <h3 className="font-bold text-[15px] text-[#122340] mb-2 leading-snug line-clamp-3">
+                    {/* Course Title */}
+                    <h3 className="font-serif font-bold text-base sm:text-[17px] text-[#08172D] group-hover:text-[#8A6100] transition-colors leading-snug line-clamp-2 mb-2">
                       {course.title}
                     </h3>
 
-                    <p className="text-[#122340]/60 text-xs mb-2">
-                      {course.instructor}
-                    </p>
+                    {/* Instructor Row */}
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 mb-2.5">
+                      <User size={13} className="text-[#8A6100] shrink-0" />
+                      <span className="truncate">{course.instructor}</span>
+                    </div>
 
                     {/* Rating Badge */}
                     <div className="flex items-center gap-1.5 mb-3 text-xs">
                       {course.totalReviews > 0 ? (
                         <>
-                          <div className="flex items-center text-[#C9A227]">
-                            <Star size={13} className="fill-[#C9A227]" />
-                            <span className="font-bold ml-1 text-slate-800">
+                          <div className="flex items-center text-[#D97706]">
+                            <Star size={13} className="fill-[#D97706]" />
+                            <span className="font-black ml-1 text-slate-900">
                               {Number(course.averageRating).toFixed(1)}
                             </span>
                           </div>
-                          <span className="text-slate-400 text-[11px]">
-                            ({course.totalReviews} {course.totalReviews === 1 ? "review" : "reviews"})
+                          <span className="text-slate-500 font-medium text-[11px]">
+                            ({course.totalReviews}{" "}
+                            {course.totalReviews === 1 ? "review" : "reviews"})
                           </span>
                         </>
                       ) : (
-                        <div className="flex items-center text-slate-400 text-[11px]">
+                        <div className="flex items-center text-slate-400 text-[11px] font-medium">
                           <Star size={12} className="text-slate-300 mr-1" />
-                          <span>New (0 reviews)</span>
+                          <span>New Course</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="mt-auto pt-4 border-t border-[#122340]/5 flex items-center justify-between">
+                    {/* Price and Action Footer */}
+                    <div className="mt-auto pt-3.5 border-t-2 border-slate-100 flex items-center justify-between">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[#C9A227] font-bold text-lg">{course.price}</span>
+                        <span className="text-[#08172D] font-black text-xl tracking-tight">
+                          {course.price}
+                        </span>
                         {course.originalPrice && (
-                          <span className="text-[#122340]/40 line-through text-xs font-medium">
+                          <span className="text-slate-400 line-through text-xs font-semibold">
                             {course.originalPrice}
                           </span>
                         )}
                       </div>
-                      {course.discountPct && (
-                        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          {course.discountPct}% OFF
-                        </span>
-                      )}
-                    </div>
-                  </div>
 
+                      <div className="flex items-center gap-2">
+                        {course.discountPct && (
+                          <span className="text-[11px] font-black text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-md">
+                            {course.discountPct}% OFF
+                          </span>
+                        )}
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-[#08172D] flex items-center justify-center transition-colors">
+                          <ArrowRight
+                            size={15}
+                            className="text-[#08172D] group-hover:text-white transition-transform group-hover:translate-x-0.5"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
                 </div>
               </Link>
             ))}

@@ -32,7 +32,7 @@ const SIDEBAR_NAV = [
     items: [
       { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
       { name: 'My courses', href: '/dashboard/courses', icon: BookOpen },
-      { name: 'Live sessions', href: '/dashboard/live-sessions', icon: Video },
+      { name: 'Live classes', href: '/dashboard/live-sessions', icon: Video },
     ],
   },
   {
@@ -69,19 +69,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Check the session synchronously on mount so a verified student never sees
-  // a blocking splash at all.
-  const [isAuthChecking, setIsAuthChecking] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    const token = localStorage.getItem('token');
-    if (!token) return false;
-    try {
-      const storedStr = localStorage.getItem('user');
-      if (storedStr && isStudent(JSON.parse(storedStr))) return false;
-    } catch {}
-    return true;
-  });
-
   const { user } = useAuth();
   const dispatch = useAppDispatch();
 
@@ -96,8 +83,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (user && user.roles && user.roles.length > 0) {
       if (!isStudent(user)) {
         router.push('/join');
-      } else {
-        setIsAuthChecking(false);
       }
       return;
     }
@@ -116,10 +101,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 user: storedUser,
               })
             );
-            if (isStudent(storedUser)) {
-              setIsAuthChecking(false);
-              return;
+            if (!isStudent(storedUser)) {
+              router.push('/join');
             }
+            return;
           }
         }
       } catch (err) {
@@ -137,9 +122,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           if (typeof window !== 'undefined') {
             localStorage.setItem('user', JSON.stringify(fetchedUser));
           }
-          if (isStudent(fetchedUser)) {
-            setIsAuthChecking(false);
-          } else {
+          if (!isStudent(fetchedUser)) {
             router.push('/join');
           }
         } else {
@@ -154,8 +137,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             localStorage.removeItem('user');
           }
           router.push('/auth/login');
-        } else {
-          setIsAuthChecking(false);
         }
       });
   }, [router, user, dispatch]);
@@ -207,8 +188,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   };
 
-  const isNavActive = (href: string) =>
-    href === '/dashboard' ? pathname === '/dashboard' : Boolean(pathname?.startsWith(href));
+  const isNavActive = (href: string) => {
+    if (href === '/dashboard') return pathname === '/dashboard';
+    if (href === '/dashboard/live-sessions') {
+      return pathname?.startsWith('/dashboard/live-sessions') || pathname?.startsWith('/dashboard/live-classes');
+    }
+    return Boolean(pathname?.startsWith(href));
+  };
 
   const currentPage =
     FLAT_NAV.find((i) => i.href !== '/dashboard' && pathname?.startsWith(i.href))?.name ||
@@ -216,31 +202,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const initial = user?.name?.charAt(0).toUpperCase();
 
-  if (isAuthChecking) {
-    return (
-      <div className="ac-student flex min-h-screen flex-col items-center justify-center bg-[color:var(--sa-cream)] p-6 text-center">
-        <span className="mb-6 grid h-14 w-14 place-items-center rounded-[var(--sa-r-md)] border border-[color:var(--sa-gold-line)] bg-[color:var(--sa-navy)] shadow-[var(--sa-e2)]">
-          <Image src="/logo-gold.png" alt="" width={32} height={32} className="object-contain" priority />
-        </span>
-        <p className="ac-eyebrow ac-eyebrow-bare mb-3 inline-flex items-center gap-2.5">
-          <Loader2 size={14} className="animate-spin" />
-          Checking academy access
-        </p>
-        <p className="max-w-xs text-[13px] leading-relaxed text-[color:var(--sa-ink-3)]">
-          Verifying your student credentials and course enrolments.
-        </p>
-      </div>
-    );
-  }
 
   const brand = (
-    <Link href="/" className="group flex items-center gap-3">
-      <Image src="/logo-gold.png" alt="" width={34} height={34} className="shrink-0 object-contain" priority />
-      <span className="flex flex-col leading-none">
-        <span className="ac-display text-[14px] uppercase tracking-[0.09em] !text-white">
+    <Link href="/" className="group flex items-center gap-3.5 focus:outline-hidden">
+      <Image
+        src="/logo-gold.png"
+        alt="Sajjad Husain Legal Academy"
+        width={46}
+        height={46}
+        className="shrink-0 object-contain"
+        priority
+      />
+      <span className="flex flex-col leading-tight whitespace-nowrap">
+        <span className="ac-display text-[16px] sm:text-[17px] font-bold uppercase tracking-[0.08em] !text-white">
           Sajjad Husain
         </span>
-        <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-[color:var(--sa-gold-1)]">
+        <span className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#D4AF37]">
           Legal Academy
         </span>
       </span>

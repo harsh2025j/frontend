@@ -333,14 +333,14 @@
    ============================================================ */
 
 .ac-student {
-  --sa-ink: #0B1220;
-  --sa-ink-2: #243044;
-  --sa-ink-3: #4B5468;
-  --sa-ink-4: #7B8498;
-  --sa-ink-5: #B0B6C3;
-  --sa-line: #E5DDCB;
-  --sa-line-2: #D9D1BE;
-  --sa-line-strong: #C9BFA6;
+  --sa-ink: #08172D;
+  --sa-ink-2: #1E293B;
+  --sa-ink-3: #334155;
+  --sa-ink-4: #475569;
+  --sa-ink-5: #64748B;
+  --sa-line: #DFD7C4;
+  --sa-line-2: #D2C8B2;
+  --sa-line-strong: #BAAE93;
   --sa-cream: #F7F3EA;
   --sa-cream-2: #EFE8D6;
   --sa-cream-3: #E6DEC7;
@@ -371,8 +371,8 @@
   --sa-live: #B8543A;
   --sa-focus: rgba(183, 145, 58, 0.35);
 
-  --sa-side-w: 260px;
-  --sa-rail-h: 56px;
+  --sa-side-w: 268px;
+  --sa-rail-h: 72px;
 
   --sa-r-xs: 2px;
   --sa-r-sm: 4px;
@@ -547,20 +547,23 @@
   letter-spacing: 0;
 }
 
-/* ── Hover Scale Guard ───────────────────────────────────────
-   Explicit rule ensuring no hover scale effect is ever applied
-   to images, cards, or cart items within the Academy module.
+/* ── Hover Scale & Motion Guard ─────────────────────────────
+   Explicit rule ensuring no hover scale, scaleY, or translateY
+   is applied to images, cards, tiles, or carts in the dashboard.
    ──────────────────────────────────────────────────────────── */
 .ac-student img,
 .ac-student img:hover,
 .ac-student .group:hover img,
+.ac-student .sa-tile,
+.ac-student .sa-tile:hover,
+.ac-student .sa-tile-hover:hover,
 .ac-student .ac-card,
 .ac-student .ac-card:hover,
-.ac-student [class*="card"],
 .ac-student [class*="card"]:hover,
-.ac-student [class*="cart"],
+.ac-student [class*="tile"]:hover,
 .ac-student [class*="cart"]:hover {
   scale: 1 !important;
+  transform: none !important;
 }
 /* ============================================================
    Student Dashboard — Layout & Component Styles
@@ -616,9 +619,13 @@
 .ac-student .ac-side-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 20px 18px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 14px;
+  height: var(--sa-rail-h);
+  min-height: var(--sa-rail-h);
+  max-height: var(--sa-rail-h);
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-sizing: border-box;
 }
 .ac-student .ac-side-group { padding: 10px 10px 2px; }
 .ac-student .ac-side-group-label {
@@ -659,11 +666,14 @@
 
 /* ───────────── Top rail ───────────── */
 .ac-student .ac-rail {
+  height: var(--sa-rail-h);
   min-height: var(--sa-rail-h);
+  max-height: var(--sa-rail-h);
   display: flex;
   align-items: center;
   background: var(--sa-paper);
   border-bottom: 1px solid var(--sa-line);
+  box-sizing: border-box;
 }
 
 /* ───────────── Overlay ───────────── */
@@ -1113,12 +1123,12 @@
 .ac-student .sa-tile {
   position: relative;
   background: #FFFFFF;
-  border: 1px solid rgba(11, 18, 32, 0.055);
+  border: 1.5px solid #DDD3BF;
   border-radius: 18px;
   padding: 16px;
   box-shadow:
-    0 1px 2px rgba(11, 18, 32, 0.03),
-    0 6px 20px -8px rgba(11, 18, 32, 0.08);
+    0 1px 3px rgba(11, 18, 32, 0.05),
+    0 8px 24px -8px rgba(11, 18, 32, 0.09);
   transition: transform 180ms cubic-bezier(0.2, 0.7, 0.2, 1),
               box-shadow 180ms cubic-bezier(0.2, 0.7, 0.2, 1),
               border-color 180ms ease;
@@ -1128,35 +1138,34 @@
 @media (min-width: 1024px) { .ac-student .sa-tile { padding: 24px; } }
 
 .ac-student .sa-tile-hover:hover {
-  transform: translateY(-1px);
-  border-color: rgba(11, 18, 32, 0.09);
+  border-color: #B7913A;
   box-shadow:
-    0 1px 2px rgba(11, 18, 32, 0.04),
-    0 12px 28px -10px rgba(11, 18, 32, 0.14);
+    0 2px 6px rgba(11, 18, 32, 0.06),
+    0 16px 32px -10px rgba(11, 18, 32, 0.16);
 }
 
 .ac-student .sa-tile-plain {
   background: #FFFFFF;
-  border: 1px solid rgba(11, 18, 32, 0.055);
+  border: 1.5px solid #DDD3BF;
   border-radius: 20px;
   padding: 20px;
 }
 
 .ac-student .sa-tile-dark {
   background:
-    radial-gradient(600px 300px at 100% 0%, rgba(217, 178, 84, 0.14), transparent 60%),
-    #0B1220;
-  color: #F3EEDE;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+    radial-gradient(600px 300px at 100% 0%, rgba(217, 178, 84, 0.22), transparent 60%),
+    #08172D;
+  color: #F8FAFC;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
 }
-.ac-student .sa-tile-dark .sa-label { color: rgba(243, 238, 222, 0.56); }
+.ac-student .sa-tile-dark .sa-label { color: rgba(243, 238, 222, 0.85); font-weight: 700; }
 .ac-student .sa-tile-dark .sa-value { color: #FFFFFF; }
-.ac-student .sa-tile-dark .sa-sub   { color: rgba(243, 238, 222, 0.72); }
+.ac-student .sa-tile-dark .sa-sub   { color: rgba(243, 238, 222, 0.88); font-weight: 500; }
 
 .ac-student .sa-tile-accent {
   background:
-    linear-gradient(135deg, rgba(217, 178, 84, 0.14), rgba(217, 178, 84, 0.04));
-  border: 1px solid rgba(183, 145, 58, 0.22);
+    linear-gradient(135deg, rgba(217, 178, 84, 0.18), rgba(217, 178, 84, 0.06));
+  border: 1.5px solid rgba(183, 145, 58, 0.38);
 }
 
 .ac-student .sa-tile-pad-sm { padding: 16px; }
@@ -1165,14 +1174,14 @@
 /* ───── Labels, values, chrome ───── */
 .ac-student .sa-label {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--sa-ink-3);
+  color: #1E293B;
 }
 .ac-student .sa-value {
   font-family: 'Playfair Display', Georgia, serif;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.015em;
   line-height: 1;
   color: var(--sa-ink);
@@ -1183,7 +1192,8 @@
 .ac-student .sa-value-md { font-size: 1.5rem; }
 .ac-student .sa-sub {
   font-size: 12.5px;
-  color: var(--sa-ink-3);
+  color: #334155;
+  font-weight: 500;
   line-height: 1.45;
 }
 
@@ -1236,20 +1246,20 @@
 .ac-student .sa-bar {
   position: relative;
   display: block;
-  height: 6px;
-  background: #F0EADA;
+  height: 7px;
+  background: #E2D9C8;
   border-radius: 999px;
   overflow: hidden;
 }
 .ac-student .sa-bar > span {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--sa-gold-2), var(--sa-gold-1));
+  background: linear-gradient(90deg, #B8860B, #D4AF37);
   border-radius: inherit;
   transition: width 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.ac-student .sa-bar-done > span { background: linear-gradient(90deg, var(--sa-sage-2), var(--sa-sage)); }
-.ac-student .sa-bar-slim { height: 4px; }
+.ac-student .sa-bar-done > span { background: linear-gradient(90deg, #15803D, #22C55E); }
+.ac-student .sa-bar-slim { height: 5px; }
 
 /* ───── Divider ───── */
 .ac-student .sa-divider {
@@ -1317,9 +1327,9 @@
   height: 12px;
   border-radius: 3px;
   background: #F0EADA;
-  transition: transform 120ms ease;
+  transition: outline 120ms ease;
 }
-.ac-student .sa-heat-cell:hover { transform: scale(1.25); }
+.ac-student .sa-heat-cell:hover { outline: 1.5px solid var(--sa-gold); }
 
 /* ───── Keep thumbnails inside their frame ───── */
 .ac-student .sa-tile img,

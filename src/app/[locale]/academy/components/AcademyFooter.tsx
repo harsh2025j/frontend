@@ -1,231 +1,276 @@
+"use client";
+
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Mail, Phone, MapPin, ArrowRight, ShieldCheck } from 'lucide-react';
-
-const QUICK_LINKS = [
-  { href: '/', label: 'Home' },
-  { href: '/courses', label: 'Courses' },
-  { href: '/#internships', label: 'Internships' },
-  { href: '/about', label: 'About us' },
-  { href: '/contact', label: 'Contact us' },
-];
-
-const RESOURCE_LINKS = [
-  { href: '/courses', label: 'Course catalogue' },
-  { href: '/certificates/verify', label: 'Verify a certificate' },
-  { href: '/dashboard', label: 'Student dashboard' },
-  { href: '/auth/signup', label: 'Create an account' },
-];
-
-const SOCIALS = [
-  {
-    label: 'Facebook',
-    href: '#',
-    path: 'M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z',
-  },
-  {
-    label: 'LinkedIn',
-    href: '#',
-    path: 'M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z',
-  },
-  {
-    label: 'Instagram',
-    href: '#',
-    path: 'M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z',
-  },
-];
+import {
+  Mail,
+  Phone,
+  MapPin,
+  ShieldCheck,
+  Calendar,
+  Scale,
+  BookOpen,
+  HelpCircle,
+  Linkedin,
+  Facebook,
+  Instagram,
+  Youtube
+} from 'lucide-react';
 
 export default function AcademyFooter() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer
-      className="relative overflow-hidden text-white"
-      style={{ background: '#0B1F3F' }}
-    >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-px"
-        style={{
-          background:
-            'linear-gradient(90deg, transparent, rgba(217, 178, 84, 0.55), transparent)',
-        }}
-      />
-
-      {/* Verify strip */}
-      {/* <div className="relative border-b border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col items-start gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[rgba(217,178,84,0.35)] bg-[rgba(217,178,84,0.14)] text-[#E5C66E]">
-              <ShieldCheck size={15} />
-            </span>
-            <div>
-              <p className="text-[14px] font-semibold text-white">
-                Checking a credential?
-              </p>
-              <p className="mt-0.5 text-[12.5px] text-white/60">
-                Every certificate we issue carries an ID you can verify publicly.
-              </p>
-            </div>
-          </div>
-          <Link href="/certificates/verify" className="w-full shrink-0 sm:w-auto">
-            <button
-              type="button"
-              className="group inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:border-[rgba(217,178,84,0.5)] hover:bg-[rgba(217,178,84,0.12)] sm:w-auto"
-            >
-              Verify a certificate
-              <ArrowRight
-                size={14}
-                className="transition-transform group-hover:translate-x-0.5"
-              />
-            </button>
-          </Link>
-        </div>
-      </div> */}
-
-      {/* Main grid */}
-      <div className="relative mx-auto max-w-7xl px-4 pb-8 pt-12 sm:px-6 sm:pt-14 lg:px-10">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.3fr]">
-          {/* Brand */}
-          <div className="sm:col-span-2 lg:col-span-1">
-            <div className="mb-5 flex items-center gap-3">
-              <Image
-                src="/logo-gold.png"
-                alt=""
-                width={40}
-                height={40}
-                className="object-contain"
-              />
-              <span className="flex flex-col leading-none">
-                <span
-                  className="text-[15px] uppercase tracking-[0.09em] text-white"
-                  style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700 }}
-                >
+    <footer className="relative bg-[#07172C] text-white pt-12 pb-8 border-t border-white/10 overflow-hidden font-sans">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Main 4-Column Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1.1fr_1.4fr] gap-10 lg:gap-8 pb-10">
+          
+          {/* Column 1: Brand & Socials */}
+          <div className="flex flex-col">
+            <Link href="/" className="flex items-center gap-3 mb-4 group">
+              <div className="w-12 h-12 flex-shrink-0 relative">
+                <Image
+                  src="/logo-gold.png"
+                  alt="Sajjad Husain Legal Academy Logo"
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-white font-serif font-bold text-base sm:text-lg uppercase tracking-wider leading-tight group-hover:text-[#C9A227] transition-colors">
                   Sajjad Husain
                 </span>
-                <span className="mt-1 text-[9.5px] font-semibold uppercase tracking-[0.2em] text-[#E5C66E]">
+                <span className="text-[#C9A227] font-serif italic text-xs sm:text-sm font-semibold leading-tight mt-0.5">
                   Legal Academy
                 </span>
-              </span>
-            </div>
+              </div>
+            </Link>
 
-            <p className="mb-6 max-w-sm text-[13.5px] leading-relaxed text-white/65">
-              Empowering future legal professionals with practical education,
-              courtroom exposure and ethical grounding.
+            <p className="text-gray-300/80 text-xs sm:text-[13px] leading-relaxed mb-6 max-w-sm font-normal">
+              Empowering future legal professionals with quality education, practical exposure, and ethical values.
             </p>
 
-            <div className="flex items-center gap-2.5">
-              {SOCIALS.map((s) => (
-                <Link
-                  key={s.label}
-                  href={s.href}
-                  aria-label={s.label}
-                  className="grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/[0.06] text-white/80 transition-colors hover:border-[#E5C66E] hover:bg-[#C9A227] hover:text-[#1F1703]"
-                >
-                  <svg
-                    className="h-4 w-4"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path fillRule="evenodd" clipRule="evenodd" d={s.path} />
-                  </svg>
-                </Link>
-              ))}
+            <div className="flex items-center gap-3">
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full border border-white/20 bg-white/5 flex items-center justify-center text-white/80 hover:text-white hover:border-[#C9A227] hover:bg-[#C9A227]/20 transition-all cursor-pointer"
+                aria-label="LinkedIn"
+              >
+                <Linkedin size={15} />
+              </a>
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full border border-white/20 bg-white/5 flex items-center justify-center text-white/80 hover:text-white hover:border-[#C9A227] hover:bg-[#C9A227]/20 transition-all cursor-pointer"
+                aria-label="Facebook"
+              >
+                <Facebook size={15} />
+              </a>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full border border-white/20 bg-white/5 flex items-center justify-center text-white/80 hover:text-white hover:border-[#C9A227] hover:bg-[#C9A227]/20 transition-all cursor-pointer"
+                aria-label="Instagram"
+              >
+                <Instagram size={15} />
+              </a>
+              <a
+                href="https://youtube.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full border border-white/20 bg-white/5 flex items-center justify-center text-white/80 hover:text-white hover:border-[#C9A227] hover:bg-[#C9A227]/20 transition-all cursor-pointer"
+                aria-label="YouTube"
+              >
+                <Youtube size={15} />
+              </a>
             </div>
           </div>
 
-          {/* Academy nav */}
-          <nav aria-label="Academy">
-            <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#E5C66E]">
-              Academy
-            </h2>
-            <ul className="space-y-2.5 text-[13.5px]">
-              {QUICK_LINKS.map((l) => (
-                <li key={l.label}>
-                  <Link
-                    href={l.href}
-                    className="inline-block text-white/70 transition-colors hover:text-white"
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* Student nav */}
-          <nav aria-label="Students">
-            <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#E5C66E]">
-              Students
-            </h2>
-            <ul className="space-y-2.5 text-[13.5px]">
-              {RESOURCE_LINKS.map((l) => (
-                <li key={l.label}>
-                  <Link
-                    href={l.href}
-                    className="inline-block text-white/70 transition-colors hover:text-white"
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* Contact */}
+          {/* Column 2: Quick Links */}
           <div>
-            <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#E5C66E]">
-              Contact
-            </h2>
-            <ul className="space-y-3 text-[13.5px]">
+            <h3 className="font-serif font-bold text-white text-[15px] mb-4 tracking-wide">
+              Quick Links
+            </h3>
+            <ul className="space-y-2.5 text-xs sm:text-[13px]">
+              <li>
+                <Link
+                  href="/"
+                  className="text-[#C9A227] underline decoration-[#C9A227] underline-offset-4 font-semibold hover:text-[#e0b738] transition-colors"
+                >
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/courses"
+                  className="text-white/75 hover:text-white transition-colors"
+                >
+                  Courses
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/academy/certificates/verify"
+                  className="text-white/75 hover:text-white transition-colors"
+                >
+                  Verify Certificate
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/internships"
+                  className="text-white/75 hover:text-white transition-colors"
+                >
+                  Internships
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/about"
+                  className="text-white/75 hover:text-white transition-colors"
+                >
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="text-white/75 hover:text-white transition-colors"
+                >
+                  Contact Us
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3: Resources */}
+          <div>
+            <h3 className="font-serif font-bold text-white text-[15px] mb-4 tracking-wide">
+              Resources
+            </h3>
+            <ul className="space-y-3 text-xs sm:text-[13px]">
+              <li>
+                <Link
+                  href="/academy/certificates/verify"
+                  className="inline-flex items-center gap-2 text-white/75 hover:text-white transition-colors group"
+                >
+                  <ShieldCheck size={16} className="text-[#C9A227] group-hover:scale-105 transition-transform flex-shrink-0" />
+                  <span>Verify Certificate</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/competitions"
+                  className="inline-flex items-center gap-2 text-white/75 hover:text-white transition-colors group"
+                >
+                  <Calendar size={16} className="text-[#C9A227] group-hover:scale-105 transition-transform flex-shrink-0" />
+                  <span>Events</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/news"
+                  className="inline-flex items-center gap-2 text-white/75 hover:text-white transition-colors group"
+                >
+                  <Scale size={16} className="text-[#C9A227] group-hover:scale-105 transition-transform flex-shrink-0" />
+                  <span>Legal Updates</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/notes"
+                  className="inline-flex items-center gap-2 text-white/75 hover:text-white transition-colors group"
+                >
+                  <BookOpen size={16} className="text-[#C9A227] group-hover:scale-105 transition-transform flex-shrink-0" />
+                  <span>Study Materials</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact#faq"
+                  className="inline-flex items-center gap-2 text-white/75 hover:text-white transition-colors group"
+                >
+                  <HelpCircle size={16} className="text-[#C9A227] group-hover:scale-105 transition-transform flex-shrink-0" />
+                  <span>FAQs</span>
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 4: Contact Us */}
+          <div>
+            <h3 className="font-serif font-bold text-white text-[15px] mb-4 tracking-wide">
+              Contact Us
+            </h3>
+            <ul className="space-y-3.5 text-xs sm:text-[13px]">
               <li>
                 <a
-                  href="mailto:sajjadhusainlawassociates@gmail.com"
-                  className="flex items-start gap-2.5 text-white/70 transition-colors hover:text-white"
+                  href="mailto:sajjad.husainlawassociates@gmail.com"
+                  className="flex items-start gap-2.5 text-white/80 hover:text-white transition-colors group"
                 >
-                  <Mail size={15} className="mt-0.5 shrink-0 text-[#E5C66E]" />
-                  <span className="break-all">sajjadhusainlawassociates@gmail.com</span>
+                  <Mail size={16} className="text-[#C9A227] mt-0.5 flex-shrink-0 group-hover:scale-105 transition-transform" />
+                  <span className="break-all">sajjad.husainlawassociates@gmail.com</span>
                 </a>
               </li>
               <li>
                 <a
-                  href="tel:+917080909786"
-                  className="flex items-center gap-2.5 text-white/70 transition-colors hover:text-white"
+                  href="tel:+917089009786"
+                  className="flex items-center gap-2.5 text-white/80 hover:text-white transition-colors group"
                 >
-                  <Phone size={15} className="shrink-0 text-[#E5C66E]" />
-                  +91 70809 09786
+                  <Phone size={16} className="text-[#C9A227] flex-shrink-0 group-hover:scale-105 transition-transform" />
+                  <span>+91 70890 09786</span>
                 </a>
               </li>
-              <li className="flex items-start gap-2.5 text-white/70">
-                <MapPin size={15} className="mt-0.5 shrink-0 text-[#E5C66E]" />
-                <address className="not-italic leading-relaxed">
-                  Block-C, High Court, Advocates Chamber 515,
-                  <br />
-                  Lucknow Ayodhya Rd, Gomti Nagar, Lucknow 226010
+              <li className="flex items-start gap-2.5 text-white/80">
+                <MapPin size={16} className="text-[#C9A227] mt-0.5 flex-shrink-0" />
+                <address className="not-italic leading-relaxed text-gray-300/90">
+                  Block C, High Court, Advocates Chamber-315, Lucknow - Ayodhya Rd, Gomti Nagar, Lucknow 226010
                 </address>
               </li>
             </ul>
           </div>
+
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-[12.5px] text-white/55 md:flex-row">
-          <p>
-            © {new Date().getFullYear()} Sajjad Husain Legal Academy. All rights
-            reserved.
+        {/* Bottom Bar */}
+        <div className="border-t border-white/10 pt-5 mt-4 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-400">
+          <p className="order-2 md:order-1 text-center md:text-left">
+            © {currentYear} Sajjad Husain Legal Academy. All Rights Reserved.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+          
+          <div className="order-1 md:order-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-white/75">
+            <Link
+              href="/academy/certificates/verify"
+              className="inline-flex items-center gap-1.5 hover:text-white transition-colors"
+            >
+              <ShieldCheck size={14} className="text-[#C9A227]" />
+              <span>Verify Certificate</span>
+            </Link>
+            <span className="text-white/20 select-none">|</span>
             <Link
               href="/privacy-policy"
-              className="transition-colors hover:text-white"
+              className="hover:text-white transition-colors"
             >
-              Privacy policy
+              Privacy Policy
             </Link>
-            <Link href="/terms" className="transition-colors hover:text-white">
-              Terms &amp; conditions
+            <span className="text-white/20 select-none">|</span>
+            <Link
+              href="/terms"
+              className="hover:text-white transition-colors"
+            >
+              Terms &amp; Conditions
             </Link>
           </div>
         </div>
+
       </div>
     </footer>
   );

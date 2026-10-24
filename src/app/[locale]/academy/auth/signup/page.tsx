@@ -1,21 +1,26 @@
 "use client";
 
-import { Suspense } from "react";
-import React, { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import {
   Mail,
   Lock,
-  CheckCircle2,
   User,
   Phone,
   Eye,
   EyeOff,
   ArrowLeft,
   Loader2,
+  Quote,
+  ShieldCheck,
+  CheckCircle2,
 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
-import { useAcademyRegisterActions, useAcademyVerifyActions } from "@/data/features/academyAuth/useAcademyAuth";
+import {
+  useAcademyRegisterActions,
+  useAcademyVerifyActions,
+} from "@/data/features/academyAuth/useAcademyAuth";
 import { useResendOtp } from "@/data/features/auth/useAuthActions";
 import { useAppDispatch } from "@/data/redux/hooks";
 import { resetAuthState } from "@/data/features/auth/authSlice";
@@ -31,7 +36,6 @@ function AcademySignupContent() {
     loading: registerLoading,
     error: registerError,
     message: registerMessage,
-    debugOtp,
   } = useAcademyRegisterActions();
 
   const { handleVerify, loading: verifyLoading } = useAcademyVerifyActions();
@@ -78,891 +82,426 @@ function AcademySignupContent() {
   };
 
   return (
-    <main className="min-h-[100dvh] w-full bg-[#f7f8fa] font-sans lg:h-[100dvh] lg:overflow-hidden">
-      <div className="flex min-h-[100dvh] w-full flex-col lg:h-full lg:flex-row">
+    <main className="w-full min-h-screen lg:h-screen lg:overflow-hidden bg-[#08172D] font-sans">
+      <div className="flex w-full min-h-screen lg:h-full flex-col lg:flex-row bg-white">
 
         {/* =====================================================
-            LEFT - ACADEMY BRANDING
+            LEFT - ACADEMY BRANDING (FIXED, NO SCROLL, IMMOVABLE)
         ====================================================== */}
-        <section
-          className="
-            relative
-            hidden
-            lg:flex
-            lg:h-full
-            lg:w-[42%]
-            xl:w-[44%]
-            shrink-0
-            overflow-hidden
-            bg-[#0d1b34]
-            text-white
-          "
-        >
-          {/* Subtle decorative elements */}
-          <div
-            className="
-              pointer-events-none
-              absolute
-              -top-32
-              -right-32
-              h-[420px]
-              w-[420px]
-              rounded-full
-              border-[70px]
-              border-white/[0.025]
-            "
-          />
+        <section className="relative hidden lg:flex lg:w-[45%] xl:w-[46%] shrink-0 flex-col justify-between bg-[#08172D] text-white p-6 lg:p-8 xl:p-10 overflow-hidden border-r border-[#122340]/20 lg:h-full select-none">
+          
+          {/* Subtle architectural ambient accent */}
+          <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#C9A227]/5 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-[#122340]/60 blur-3xl" />
 
-          <div
-            className="
-              pointer-events-none
-              absolute
-              -bottom-40
-              -left-40
-              h-[500px]
-              w-[500px]
-              rounded-full
-              border-[80px]
-              border-[#c9a227]/[0.04]
-            "
-          />
-
-          {/* Gold vertical accent */}
-          {/* <div className="absolute left-0 top-0 h-full w-[4px] bg-[#c9a227]" /> */}
-
-          <div className="relative z-10 flex min-h-full w-full flex-col px-10 py-8 lg:px-[3vw] lg:py-[3vh] xl:px-16 xl:py-[4vh]">
-
-            {/* Logo */}
-            <Link
-              href="/"
-              className="group inline-flex w-fit shrink-0 items-center gap-3"
-            >
-              <div
-                className="
-                  flex
-                  h-11
-                  w-11
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-xl
-                  border
-                  border-white/15
-                  bg-white/[0.06]
-                  shadow-lg
-                  transition
-                  group-hover:border-[#c9a227]/50
-                "
-              >
-                <span className="text-sm font-black tracking-tight text-[#c9a227]">
-                  SA
-                </span>
-              </div>
-
-              <div>
-                <p className="text-[15px] font-bold tracking-tight text-white">
-                  Sajjad Husain
-                </p>
-
-                <p className="text-[11px] font-medium tracking-[0.16em] text-white/45 uppercase">
-                  Legal Academy
-                </p>
-              </div>
-            </Link>
-
-            {/* Main branding content */}
-            <div className="flex flex-1 flex-col justify-center lg:py-[2vh]">
-              <div className="max-w-[560px]">
-
-                <div className="mb-4 flex items-center gap-3 lg:mb-[2vh]">
-                  {/* <div className="h-px w-10 bg-[#c9a227]" /> */}
-
-                  <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#c9a227]">
-                    Legal Education
-                  </span>
-                </div>
-
-                <h1
-                  className="
-                    text-4xl
-                    font-extrabold
-                    leading-[1.08]
-                    tracking-[-0.035em]
-                    text-white
-                    lg:text-[clamp(2rem,5vh,3.75rem)]
-                  "
-                >
-                  Start your
-                  <br />
-
-                  <span className="text-[#c9a227]">
-                    Legal Journey.
-                  </span>
-                </h1>
-
-                <p
-                  className="
-                    mt-5
-                    max-w-[440px]
-                    text-[15px]
-                    leading-7
-                    text-white/55
-                    lg:mt-[2vh]
-                    lg:text-[clamp(13px,1.8vh,16px)]
-                    lg:leading-[1.6]
-                  "
-                >
-                  Create your student account in a few minutes — no
-                  application fee, no waiting list, and access opens the
-                  moment your email is verified.
-                </p>
-
-                {/* How it works */}
-                <div className="mt-8 space-y-5 border-t border-white/10 pt-6 lg:mt-[3.5vh] lg:space-y-[2vh] lg:pt-[2.5vh]">
-                  {[
-                    {
-                      step: "01",
-                      title: "Create your account",
-                      desc: "Name, email, phone and a password — that's it.",
-                    },
-                    {
-                      step: "02",
-                      title: "Verify your email",
-                      desc: "Enter the 6-digit code we send you to confirm it's you.",
-                    },
-                    {
-                      step: "03",
-                      title: "Start learning",
-                      desc: "Get instant access to courses and upcoming live sessions.",
-                    },
-                  ].map((item) => (
-                    <div key={item.step} className="flex gap-4">
-                      <span className="mt-0.5 shrink-0 text-[13px] font-extrabold tracking-tight text-[#c9a227]">
-                        {item.step}
-                      </span>
-
-                      <div>
-                        <p className="text-[13px] font-semibold text-white/85">
-                          {item.title}
-                        </p>
-
-                        <p className="mt-0.5 text-[12.5px] leading-snug text-white/45">
-                          {item.desc}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-              </div>
+          {/* Top Logo */}
+          <Link href="/academy" className="relative z-10 group inline-flex items-center gap-3.5 w-fit shrink-0">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/5 shadow-md transition-transform group-hover:scale-105">
+              <span className="text-base font-black tracking-tight text-[#C9A227]">
+                SH
+              </span>
             </div>
+            <div>
+              <p className="text-[17px] font-bold tracking-tight text-white leading-tight">
+                Sajjad Husain
+              </p>
+              <p className="text-[11px] font-semibold tracking-[0.18em] text-[#C9A227] uppercase leading-tight mt-0.5">
+                LEGAL ACADEMY
+              </p>
+            </div>
+          </Link>
 
-            {/* Footer */}
-            <div className="flex shrink-0 items-end justify-between gap-6 border-t border-white/10 pt-5 lg:pt-[2vh]">
-              <div>
-                <p className="text-[12px] italic leading-snug text-white/40">
-                  "I went from reading bare acts to drafting my first
-                  contract in six weeks."
-                </p>
+          {/* Center Content */}
+          <div className="relative z-10 my-auto py-2 xl:py-4 max-w-lg">
+            <h1 className="font-serif text-2xl sm:text-3xl xl:text-[38px] font-bold text-white leading-[1.15] tracking-tight">
+              Start your
+              <br />
+              <span className="text-[#C9A227]">Legal Journey.</span>
+            </h1>
 
-                {/* <p className="mt-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white/25">
-                  © {new Date().getFullYear()} Sajjad Husain Law Associates
-                </p> */}
-              </div>
+            <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-gray-300 font-normal max-w-md">
+              Create your student account in minutes and get immediate access to courses, practical assignments, and live courtroom mentoring.
+            </p>
 
-              {/* <div className="hidden shrink-0 xl:block h-px w-16 self-end bg-white/10" /> */}
+            {/* Step-by-Step Onboarding Overview */}
+            <div className="mt-5 pt-4 border-t border-white/15 space-y-2.5">
+              {[
+                {
+                  step: "01",
+                  active: step === "register",
+                  done: step === "verify",
+                  title: "Create your account",
+                  desc: "Name, email, phone and a password — that's it.",
+                },
+                {
+                  step: "02",
+                  active: step === "verify",
+                  done: false,
+                  title: "Verify your email",
+                  desc: "Enter the 6-digit code we send you to confirm your identity.",
+                },
+                {
+                  step: "03",
+                  active: false,
+                  done: false,
+                  title: "Start learning",
+                  desc: "Get instant access to courses and upcoming live sessions.",
+                },
+              ].map((item) => (
+                <div
+                  key={item.step}
+                  className={`relative flex items-start gap-3.5 p-3 rounded-xl transition-all ${
+                    item.active
+                      ? "bg-white/[0.09] border border-white/20 shadow-inner"
+                      : "border border-transparent"
+                  }`}
+                >
+                  <span
+                    className={`shrink-0 flex h-8 w-8 items-center justify-center rounded-full text-xs font-mono font-black mt-0.5 transition-all ${
+                      item.done
+                        ? "bg-[#C9A227] text-[#08172D] shadow-md shadow-[#C9A227]/40 ring-2 ring-[#C9A227]/50"
+                        : item.active
+                        ? "bg-[#C9A227] text-[#08172D] shadow-lg shadow-[#C9A227]/60 ring-4 ring-white/30 text-sm"
+                        : "border-2 border-white/50 bg-[#122340] text-white font-bold"
+                    }`}
+                  >
+                    {item.done ? <CheckCircle2 size={17} strokeWidth={3} /> : item.step}
+                  </span>
+                  <div>
+                    <p
+                      className={`text-[15px] font-bold leading-tight ${
+                        item.active || item.done ? "text-white" : "text-white/90"
+                      }`}
+                    >
+                      {item.title}
+                    </p>
+                    <p
+                      className={`mt-1 text-xs leading-relaxed font-normal ${
+                        item.active ? "text-slate-200" : "text-slate-300"
+                      }`}
+                    >
+                      {item.desc}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Quote */}
+          <div className="relative z-10 pt-3 xl:pt-4 border-t border-white/10 shrink-0">
+            <div className="flex items-start gap-2.5">
+              <Quote size={15} className="text-[#C9A227] fill-[#C9A227] shrink-0 mt-0.5" />
+              <p className="text-xs sm:text-[12px] italic leading-relaxed text-gray-300 font-light">
+                Every lesson here comes from an active courtroom — not a textbook.
+              </p>
             </div>
           </div>
         </section>
 
         {/* =====================================================
-            RIGHT - SIGNUP
+            RIGHT - SIGNUP FORM (SCROLLABLE FORM, INDEPENDENT SCROLL)
         ====================================================== */}
-        <section
-          className="
-            flex
-            min-h-[100dvh]
-            flex-1
-            bg-white
-            lg:h-full
-            lg:min-h-0
-            lg:overflow-y-auto
-          "
-        >
-          <div className="flex w-full items-center justify-center px-5 py-10 sm:px-8 md:px-10 md:py-12 lg:px-12 lg:py-[2.2vh] xl:px-20">
+        <section className="flex-1 flex flex-col items-center justify-start bg-white px-5 py-6 sm:py-8 md:px-10 min-h-screen lg:min-h-0 lg:h-full overflow-y-auto">
+          <div className="w-full max-w-[420px] pb-8">
 
-            <div className="w-full max-w-[460px]">
-
-              {/* Back */}
+            {/* High-Visibility Back to Home Button */}
+            <div className="mb-3">
               <Link
-                href="/"
-                className="
-                  group
-                  mb-8
-                  inline-flex
-                  items-center
-                  gap-2
-                  text-[13px]
-                  font-semibold
-                  text-[#122340]/55
-                  transition
-                  hover:text-[#122340]
-                  lg:mb-[2.2vh]
-                "
+                href="/academy"
+                className="group inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#0B2242] hover:text-[#8A6100] transition-colors"
               >
-                <ArrowLeft
-                  size={16}
-                  className="transition-transform group-hover:-translate-x-1"
-                />
-
-                Back to Home
+                <div className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-[#8A6100]/10 flex items-center justify-center transition-colors">
+                  <ArrowLeft size={15} className="text-[#0B2242] group-hover:text-[#8A6100] transition-transform group-hover:-translate-x-0.5" />
+                </div>
+                <span>Back to Home</span>
               </Link>
+            </div>
 
-              {/* Heading */}
-              <div className="mb-8 lg:mb-[2.2vh]">
+            {/* Header */}
+            <div className="mb-3">
+              <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#FDF6E2] text-[#8A6100] border border-[#E8CD82] text-[11px] font-black uppercase tracking-wider mb-2">
+                STUDENT PORTAL
+              </span>
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0B2242] tracking-tight">
+                {step === "register" ? "Create Account" : "Check Your Email"}
+              </h2>
+              <p className="mt-0.5 text-xs sm:text-sm text-slate-600 leading-normal font-normal">
+                {step === "register"
+                  ? "Join the Academy to advance your legal career."
+                  : "We've sent a 6-digit verification code to your email."}
+              </p>
+            </div>
 
-                <div className="mb-4 lg:hidden">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="
-                        flex
-                        h-10
-                        w-10
-                        items-center
-                        justify-center
-                        rounded-xl
-                        bg-[#122340]
-                      "
-                    >
-                      <span className="text-xs font-black text-[#c9a227]">
-                        SA
-                      </span>
-                    </div>
-
-                    <div>
-                      <p className="text-sm font-bold text-[#122340]">
-                        Sajjad Husain
-                      </p>
-
-                      <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-[#122340]/40">
-                        Legal Academy
-                      </p>
-                    </div>
+            {/* Step 1: Registration Form */}
+            {step === "register" && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleRegister();
+                }}
+                className="space-y-2.5"
+              >
+                {/* Full Name */}
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-[11px] font-extrabold uppercase tracking-wider text-[#0B2242] mb-0.5"
+                  >
+                    FULL NAME
+                  </label>
+                  <div className="relative group">
+                    <User
+                      size={17}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#8A6100] transition-colors pointer-events-none"
+                    />
+                    <input
+                      id="name"
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      disabled={registerLoading}
+                      autoComplete="name"
+                      placeholder="Advocate Student"
+                      className="w-full h-10.5 pl-10 pr-3.5 rounded-xl border-2 border-slate-300 bg-slate-50/50 text-sm font-semibold text-[#0B2242] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#B8860B] focus:bg-white focus:ring-4 focus:ring-[#B8860B]/15 transition-all shadow-2xs hover:border-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
                   </div>
                 </div>
 
-                {/* <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a227]">
-                  Student Portal
-                </p> */}
+                {/* Email Address */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-[11px] font-extrabold uppercase tracking-wider text-[#0B2242] mb-0.5"
+                  >
+                    EMAIL ADDRESS
+                  </label>
+                  <div className="relative group">
+                    <Mail
+                      size={17}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#8A6100] transition-colors pointer-events-none"
+                    />
+                    <input
+                      id="email"
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      disabled={registerLoading}
+                      autoComplete="email"
+                      placeholder="student@example.com"
+                      className="w-full h-10.5 pl-10 pr-3.5 rounded-xl border-2 border-slate-300 bg-slate-50/50 text-sm font-semibold text-[#0B2242] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#B8860B] focus:bg-white focus:ring-4 focus:ring-[#B8860B]/15 transition-all shadow-2xs hover:border-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                </div>
 
-                <h2
-                  className="
-                    text-3xl
-                    font-extrabold
-                    tracking-[-0.025em]
-                    text-[#122340]
-                    sm:text-4xl
-                    lg:text-[clamp(1.5rem,3.8vh,2.25rem)]
-                  "
+                {/* Mobile Number */}
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="block text-[11px] font-extrabold uppercase tracking-wider text-[#0B2242] mb-0.5"
+                  >
+                    MOBILE NUMBER
+                  </label>
+                  <div className="relative group">
+                    <Phone
+                      size={17}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#8A6100] transition-colors pointer-events-none"
+                    />
+                    <input
+                      id="phone"
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      disabled={registerLoading}
+                      autoComplete="tel"
+                      placeholder="+91 98765 43210"
+                      className="w-full h-10.5 pl-10 pr-3.5 rounded-xl border-2 border-slate-300 bg-slate-50/50 text-sm font-semibold text-[#0B2242] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#B8860B] focus:bg-white focus:ring-4 focus:ring-[#B8860B]/15 transition-all shadow-2xs hover:border-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-[11px] font-extrabold uppercase tracking-wider text-[#0B2242] mb-0.5"
+                  >
+                    PASSWORD
+                  </label>
+                  <div className="relative group">
+                    <Lock
+                      size={17}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#8A6100] transition-colors pointer-events-none"
+                    />
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
+                      disabled={registerLoading}
+                      autoComplete="new-password"
+                      placeholder="Create a strong password"
+                      className="w-full h-10.5 pl-10 pr-11 rounded-xl border-2 border-slate-300 bg-slate-50/50 text-sm font-semibold text-[#0B2242] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#B8860B] focus:bg-white focus:ring-4 focus:ring-[#B8860B]/15 transition-all shadow-2xs hover:border-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      disabled={registerLoading}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#0B2242] transition-colors cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Create Account Submit Button */}
+                <button
+                  type="submit"
+                  disabled={registerLoading}
+                  className="w-full h-10.5 bg-[#0B2242] hover:bg-[#07172C] text-white rounded-xl text-sm font-extrabold tracking-wide transition-all shadow-md hover:shadow-lg cursor-pointer flex items-center justify-center gap-2 mt-1 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {step === "register" ? "Create Account" : "Check Your Email"}
-                </h2>
+                  {registerLoading ? (
+                    <>
+                      <Loader2 size={17} className="animate-spin" />
+                      <span>Creating account...</span>
+                    </>
+                  ) : (
+                    "Create Student Account"
+                  )}
+                </button>
 
-                <p className="mt-3 text-sm leading-6 text-[#122340]/50 lg:mt-[1vh]">
-                  {step === "register"
-                    ? "Join the Academy to advance your legal career."
-                    : "We've sent a 6-digit verification code to your email."}
-                </p>
-              </div>
+                {/* OR Divider */}
+                <div className="flex items-center gap-3 my-1">
+                  <div className="flex-1 h-[1px] bg-slate-200" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1">OR</span>
+                  <div className="flex-1 h-[1px] bg-slate-200" />
+                </div>
 
-              {step === "register" && (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleRegister();
-                  }}
-                  className="space-y-3.5 lg:space-y-[1.3vh]"
+                {/* Continue with Google */}
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  disabled={registerLoading}
+                  className="w-full h-10.5 rounded-xl border-2 border-slate-300 bg-white hover:bg-slate-50 hover:border-slate-400 text-slate-800 text-sm font-bold flex items-center justify-center gap-3 transition-all shadow-2xs cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
+                  <FcGoogle size={18} />
+                  <span>Continue with Google</span>
+                </button>
+              </form>
+            )}
 
-                  {/* Full Name */}
-                  <div>
-                    <label
-                      htmlFor="name"
-                      className="
-                        mb-2
-                        block
-                        text-[11px]
-                        font-bold
-                        uppercase
-                        tracking-[0.12em]
-                        text-[#122340]
-                        lg:mb-[0.7vh]
-                      "
-                    >
-                      Full Name
-                    </label>
-
-                    <div className="group relative">
-                      <User
-                        size={18}
-                        className="
-                          pointer-events-none
-                          absolute
-                          left-4
-                          top-1/2
-                          -translate-y-1/2
-                          text-[#122340]/30
-                          transition
-                          group-focus-within:text-[#c9a227]
-                        "
-                      />
-
-                      <input
-                        id="name"
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                        disabled={registerLoading}
-                        autoComplete="name"
-                        placeholder="Advocate Student"
-                        className="
-                          h-[46px]
-                          w-full
-                          rounded-xl
-                          border
-                          border-[#122340]/10
-                          bg-[#f8f9fb]
-                          pl-11
-                          pr-4
-                          text-sm
-                          font-medium
-                          text-[#122340]
-                          outline-none
-                          transition
-                          placeholder:text-[#122340]/30
-                          focus:border-[#c9a227]/60
-                          focus:bg-white
-                          focus:ring-4
-                          focus:ring-[#c9a227]/10
-                          disabled:cursor-not-allowed
-                          disabled:opacity-60
-                          lg:h-[clamp(40px,5.4vh,50px)]
-                        "
-                      />
-                    </div>
-                  </div>
-
-                  {/* Email */}
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="
-                        mb-2
-                        block
-                        text-[11px]
-                        font-bold
-                        uppercase
-                        tracking-[0.12em]
-                        text-[#122340]
-                        lg:mb-[0.7vh]
-                      "
-                    >
-                      Email Address
-                    </label>
-
-                    <div className="group relative">
-                      <Mail
-                        size={18}
-                        className="
-                          pointer-events-none
-                          absolute
-                          left-4
-                          top-1/2
-                          -translate-y-1/2
-                          text-[#122340]/30
-                          transition
-                          group-focus-within:text-[#c9a227]
-                        "
-                      />
-
-                      <input
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        disabled={registerLoading}
-                        autoComplete="email"
-                        placeholder="student@example.com"
-                        className="
-                          h-[46px]
-                          w-full
-                          rounded-xl
-                          border
-                          border-[#122340]/10
-                          bg-[#f8f9fb]
-                          pl-11
-                          pr-4
-                          text-sm
-                          font-medium
-                          text-[#122340]
-                          outline-none
-                          transition
-                          placeholder:text-[#122340]/30
-                          focus:border-[#c9a227]/60
-                          focus:bg-white
-                          focus:ring-4
-                          focus:ring-[#c9a227]/10
-                          disabled:cursor-not-allowed
-                          disabled:opacity-60
-                          lg:h-[clamp(40px,5.4vh,50px)]
-                        "
-                      />
-                    </div>
-                  </div>
-
-                  {/* Phone */}
-                  <div>
-                    <label
-                      htmlFor="phone"
-                      className="
-                        mb-2
-                        block
-                        text-[11px]
-                        font-bold
-                        uppercase
-                        tracking-[0.12em]
-                        text-[#122340]
-                        lg:mb-[0.7vh]
-                      "
-                    >
-                      Mobile Number
-                    </label>
-
-                    <div className="group relative">
-                      <Phone
-                        size={18}
-                        className="
-                          pointer-events-none
-                          absolute
-                          left-4
-                          top-1/2
-                          -translate-y-1/2
-                          text-[#122340]/30
-                          transition
-                          group-focus-within:text-[#c9a227]
-                        "
-                      />
-
-                      <input
-                        id="phone"
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        required
-                        disabled={registerLoading}
-                        autoComplete="tel"
-                        placeholder="+91 98765 43210"
-                        className="
-                          h-[46px]
-                          w-full
-                          rounded-xl
-                          border
-                          border-[#122340]/10
-                          bg-[#f8f9fb]
-                          pl-11
-                          pr-4
-                          text-sm
-                          font-medium
-                          text-[#122340]
-                          outline-none
-                          transition
-                          placeholder:text-[#122340]/30
-                          focus:border-[#c9a227]/60
-                          focus:bg-white
-                          focus:ring-4
-                          focus:ring-[#c9a227]/10
-                          disabled:cursor-not-allowed
-                          disabled:opacity-60
-                          lg:h-[clamp(40px,5.4vh,50px)]
-                        "
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password */}
-                  <div>
-                    <label
-                      htmlFor="password"
-                      className="
-                        mb-2
-                        block
-                        text-[11px]
-                        font-bold
-                        uppercase
-                        tracking-[0.12em]
-                        text-[#122340]
-                        lg:mb-[0.7vh]
-                      "
-                    >
-                      Password
-                    </label>
-
-                    <div className="group relative">
-                      <Lock
-                        size={18}
-                        className="
-                          pointer-events-none
-                          absolute
-                          left-4
-                          top-1/2
-                          -translate-y-1/2
-                          text-[#122340]/30
-                          transition
-                          group-focus-within:text-[#c9a227]
-                        "
-                      />
-
-                      <input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                        disabled={registerLoading}
-                        autoComplete="new-password"
-                        placeholder="Enter your password"
-                        className="
-                          h-[46px]
-                          w-full
-                          rounded-xl
-                          border
-                          border-[#122340]/10
-                          bg-[#f8f9fb]
-                          pl-11
-                          pr-12
-                          text-sm
-                          font-medium
-                          text-[#122340]
-                          outline-none
-                          transition
-                          placeholder:text-[#122340]/30
-                          focus:border-[#c9a227]/60
-                          focus:bg-white
-                          focus:ring-4
-                          focus:ring-[#c9a227]/10
-                          disabled:cursor-not-allowed
-                          disabled:opacity-60
-                          lg:h-[clamp(40px,5.4vh,50px)]
-                        "
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        disabled={registerLoading}
-                        aria-label={
-                          showPassword ? "Hide password" : "Show password"
+            {/* Step 2: Verification Flow */}
+            {step === "verify" && (
+              <form onSubmit={onVerifySubmit} className="space-y-5">
+                <div className="flex justify-between gap-2 sm:gap-3">
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <input
+                      key={i}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={otp[i] || ""}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "").slice(0, 1);
+                        const chars = otp.split("");
+                        chars[i] = value;
+                        setOtp(chars.join(""));
+                        if (value && i < 5) {
+                          const nextInput = document.querySelector<HTMLInputElement>(
+                            `input[data-index="${i + 1}"]`
+                          );
+                          nextInput?.focus();
                         }
-                        className="
-                          absolute
-                          right-4
-                          top-1/2
-                          -translate-y-1/2
-                          text-[#122340]/35
-                          transition
-                          hover:text-[#122340]
-                        "
-                      >
-                        {showPassword ? (
-                          <EyeOff size={18} />
-                        ) : (
-                          <Eye size={18} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Backspace" && !otp[i] && i > 0) {
+                          const prevInput = document.querySelector<HTMLInputElement>(
+                            `input[data-index="${i - 1}"]`
+                          );
+                          prevInput?.focus();
+                        }
+                      }}
+                      data-index={i}
+                      className="h-11 w-11 sm:h-12 sm:w-12 rounded-xl border-2 border-slate-300 bg-slate-50/50 text-center text-lg font-bold text-[#0B2242] outline-none transition-all focus:border-[#B8860B] focus:bg-white focus:ring-4 focus:ring-[#B8860B]/20 shadow-2xs hover:border-slate-400"
+                    />
+                  ))}
+                </div>
 
-                  {/* Create Account Button */}
+                <div className="flex flex-col items-center gap-3">
                   <button
                     type="submit"
-                    disabled={registerLoading}
-                    className="
-                      mt-2
-                      flex
-                      h-[46px]
-                      w-full
-                      items-center
-                      justify-center
-                      gap-2
-                      rounded-xl
-                      bg-[#122340]
-                      text-sm
-                      font-bold
-                      text-white
-                      
-                      transition-all
-                      
-                      hover:bg-[#0e1d36]
-                      
-                      active:translate-y-0
-                      disabled:cursor-not-allowed
-                      disabled:opacity-60
-                      disabled:hover:translate-y-0
-                      lg:h-[clamp(40px,5.4vh,50px)]
-                    "
+                    disabled={verifyLoading || resendLoading || otp.length < 6}
+                    className="w-full h-11 bg-[#0B2242] hover:bg-[#07172C] text-white rounded-xl text-sm font-extrabold tracking-wide transition-all shadow-md hover:shadow-lg cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {registerLoading ? (
+                    {verifyLoading ? (
                       <>
-                        <Loader2 size={19} className="animate-spin" />
-                        Creating account...
+                        <Loader2 size={17} className="animate-spin" />
+                        <span>Verifying code...</span>
                       </>
                     ) : (
-                      "Create Student Account"
+                      "Verify Code"
                     )}
                   </button>
 
-                  {/* Divider */}
-                  <div className="flex items-center gap-4 py-1.5 lg:py-[0.4vh]">
-                    <div className="h-px flex-1 bg-[#122340]/10" />
-
-                    <span
-                      className="
-                        text-[10px]
-                        font-bold
-                        uppercase
-                        tracking-[0.18em]
-                        text-[#122340]/50
-                      "
-                    >
-                      or
-                    </span>
-
-                    <div className="h-px flex-1 bg-[#122340]/10" />
-                  </div>
-
-                  {/* Google */}
                   <button
                     type="button"
-                    onClick={handleGoogleLogin}
-                    disabled={registerLoading}
-                    className="
-                      flex
-                      h-[46px]
-                      w-full
-                      items-center
-                      justify-center
-                      gap-3
-                      rounded-xl
-                      border
-                      border-[#122340]/10
-                      bg-white
-                      text-sm
-                      font-bold
-                      text-[#122340]
-                      transition
-                      hover:bg-[#f8f9fb]
-                      hover:border-[#122340]/20
-                      disabled:cursor-not-allowed
-                      disabled:opacity-60
-                      lg:h-[clamp(40px,5.4vh,50px)]
-                    "
+                    onClick={handleResendWithTimer}
+                    disabled={resendLoading || verifyLoading || countdown > 0}
+                    className="text-xs font-bold text-slate-600 transition-colors hover:text-[#8A6100] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
-                    <FcGoogle size={20} />
-                    Continue with Google
+                    {resendLoading
+                      ? "Sending..."
+                      : countdown > 0
+                      ? `Resend code in 0:${countdown.toString().padStart(2, "0")}`
+                      : (
+                        <>
+                          Didn&apos;t receive code?{" "}
+                          <span className="text-[#8A6100] font-bold underline decoration-[#B8860B] decoration-2 hover:text-[#6D4C00]">Resend</span>
+                        </>
+                      )}
                   </button>
-                </form>
-              )}
-
-              {step === "verify" && (
-                <div>
-                  {/* <div
-                    className="
-                      mb-6
-                      flex
-                      h-11
-                      w-11
-                      items-center
-                      justify-center
-                      rounded-2xl
-                      border
-                      border-[#122340]/10
-                      bg-[#122340]/5
-                      lg:mb-[2vh]
-                    "
-                  >
-                    <Mail size={20} className="text-[#c9a227]" />
-                  </div> */}
-
-                  <form
-                    onSubmit={onVerifySubmit}
-                    className="space-y-6 lg:space-y-[2.5vh]"
-                  >
-                    <div className="flex justify-between gap-2 sm:gap-3">
-                      {[0, 1, 2, 3, 4, 5].map((i) => (
-                        <input
-                          key={i}
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={1}
-                          value={otp[i] || ""}
-                          onChange={(e) => {
-                            const value = e.target.value
-                              .replace(/\D/g, "")
-                              .slice(0, 1);
-                            const chars = otp.split("");
-                            chars[i] = value;
-                            setOtp(chars.join(""));
-                            if (value && i < 5) {
-                              const nextInput =
-                                document.querySelector<HTMLInputElement>(
-                                  `input[data-index="${i + 1}"]`
-                                );
-                              nextInput?.focus();
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Backspace" && !otp[i] && i > 0) {
-                              const prevInput =
-                                document.querySelector<HTMLInputElement>(
-                                  `input[data-index="${i - 1}"]`
-                                );
-                              prevInput?.focus();
-                            }
-                          }}
-                          data-index={i}
-                          className="
-                            h-12
-                            w-10
-                            rounded-xl
-                            border
-                            border-[#122340]/10
-                            bg-[#f8f9fb]
-                            text-center
-                            text-xl
-                            font-bold
-                            text-[#122340]
-                            outline-none
-                            transition
-                            focus:border-[#c9a227]/60
-                            focus:bg-white
-                            focus:ring-4
-                            focus:ring-[#c9a227]/10
-                            sm:h-14
-                            sm:w-12
-                          "
-                        />
-                      ))}
-                    </div>
-
-                    <div className="flex flex-col items-center gap-4">
-                      <button
-                        type="submit"
-                        disabled={
-                          verifyLoading || resendLoading || otp.length < 6
-                        }
-                        className="
-                          flex
-                          h-[50px]
-                          w-full
-                          items-center
-                          justify-center
-                          gap-2
-                          rounded-xl
-                          bg-[#122340]
-                          text-sm
-                          font-bold
-                          text-white
-                          
-                          transition-all
-                          
-                          hover:bg-[#0e1d36]
-                          disabled:cursor-not-allowed
-                          disabled:opacity-50
-                          disabled:hover:translate-y-0
-                        "
-                      >
-                        {verifyLoading ? (
-                          <Loader2 size={19} className="animate-spin" />
-                        ) : (
-                          "Verify Code"
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleResendWithTimer}
-                        disabled={
-                          resendLoading || verifyLoading || countdown > 0
-                        }
-                        className="
-                          text-sm
-                          font-semibold
-                          text-[#122340]/70
-                          transition
-                          hover:text-[#c9a227]
-                          disabled:cursor-not-allowed
-                          disabled:opacity-50
-                        "
-                      >
-                        {resendLoading
-                          ? "Sending..."
-                          : countdown > 0
-                          ? `Resend code in 0:${countdown
-                              .toString()
-                              .padStart(2, "0")}`
-                          : (<>Didn't receive code? <span className="text-[#c9a227] hover:underline">Resend</span></>)}
-                      </button>
-                    </div>
-                  </form>
                 </div>
-              )}
+              </form>
+            )}
 
-              {/* Login link */}
-              <div className="mt-8 text-center lg:mt-[2.2vh]">
-                <p className="text-sm text-[#122340]/70">
-                  Already have an account?{" "}
-                  <Link
-                    href="/auth/login"
-                    className="
-                      font-bold
-                      text-[#122340]
-                      underline
-                      decoration-[#c9a227]/40
-                      underline-offset-4
-                      transition
-                      hover:text-[#c9a227]
-                      hover:decoration-[#c9a227]
-                    "
-                  >
-                    Login
-                  </Link>
-                </p>
-              </div>
-
-              {/* Small footer */}
-              <p className="mt-8 text-center text-[10px] font-medium text-[#122340]/45 lg:mt-[1.8vh]">
-                Secure access to Sajjad Husain Legal Academy
+            {/* Switch to Login */}
+            <div className="mt-3 text-center">
+              <p className="text-xs sm:text-[13px] font-medium text-slate-600">
+                Already have an account?{" "}
+                <Link
+                  href="/academy/auth/login"
+                  className="font-extrabold text-[#0B2242] underline decoration-[#B8860B] decoration-2 underline-offset-4 hover:text-[#8A6100] transition-colors"
+                >
+                  Login
+                </Link>
               </p>
-
             </div>
+
+            {/* Security Footnote */}
+            <div className="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600">
+              <ShieldCheck size={14} className="text-[#A67C00]" />
+              <span>Secure access to Sajjad Husain Legal Academy</span>
+            </div>
+
           </div>
         </section>
       </div>
     </main>
   );
 }
-// Reads the query string via useSearchParams, which opts the component out of
-// static rendering unless it sits inside a Suspense boundary. Without this the
-// whole route falls back to per-request rendering and can never be CDN-cached.
+
 export default function AcademySignup(props: any) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<main className="min-h-screen w-full bg-white" />}>
       <AcademySignupContent {...props} />
     </Suspense>
   );

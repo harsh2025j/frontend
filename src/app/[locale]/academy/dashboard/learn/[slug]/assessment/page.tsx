@@ -101,7 +101,7 @@ export default function AssessmentPage() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-2 sm:pt-4">
                   <Link href="/dashboard/certificates" className="w-full sm:w-auto">
-                    <button className="w-full bg-[#122340] text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer">
+                    <button className="w-full bg-[#122340] text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all cursor-pointer">
                       View Certificate
                     </button>
                   </Link>
@@ -119,7 +119,7 @@ export default function AssessmentPage() {
                 </p>
                 <button 
                   onClick={() => { setIsSubmitted(false); setCurrentQuestion(0); setSelectedAnswers({}); }}
-                  className="bg-[#122340] text-white px-8 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all w-full sm:w-auto cursor-pointer"
+                  className="bg-[#122340] text-white px-8 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all w-full sm:w-auto cursor-pointer"
                 >
                   Retake Assessment
                 </button>
@@ -207,14 +207,14 @@ export default function AssessmentPage() {
                 <button 
                   onClick={handleSubmit}
                   disabled={Object.keys(selectedAnswers).length < questions.length}
-                  className="bg-green-600 text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer"
+                  className="bg-green-600 text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all disabled:opacity-50 cursor-pointer"
                 >
                   Submit Assessment
                 </button>
               ) : (
                 <button 
                   onClick={handleNext}
-                  className="bg-[#122340] text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 cursor-pointer"
+                  className="bg-[#122340] text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer"
                 >
                   Next Question <ArrowRight size={16} />
                 </button>

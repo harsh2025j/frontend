@@ -92,17 +92,19 @@ export default function LiveSessionsPage() {
       {/* Header */}
       <div className="sa-tile flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <p className="sa-runhead">Live classes</p>
-          <h1 className="font-serif text-[1.625rem] font-bold leading-tight tracking-[-0.015em] text-[color:var(--sa-ink)] sm:text-[1.875rem]">
-            Virtual sessions
+          <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#FDF6E2] text-[#8A6100] border border-[#E8CD82] text-[11px] font-black uppercase tracking-wider mb-2">
+            LIVE CLASSES
+          </span>
+          <h1 className="font-serif text-[1.625rem] font-bold leading-tight tracking-[-0.015em] text-[#08172D] sm:text-[1.875rem]">
+            Virtual Sessions &amp; Classrooms
           </h1>
-          <p className="mt-1.5 text-[13px] text-[color:var(--sa-ink-3)]">
-            Join live, interactive classroom sessions with your instructors.
+          <p className="mt-1.5 text-xs sm:text-sm font-medium text-slate-600">
+            Join live, interactive courtroom and lecture sessions with your legal instructors.
           </p>
         </div>
         {upcomingSessions.length > 0 && (
-          <div className="shrink-0 rounded-full border border-[rgba(11,18,32,0.08)] bg-[color:var(--sa-cream)] px-4 py-2 text-[12px] font-semibold text-[color:var(--sa-ink-2)]">
-            <span className="font-serif text-[18px] font-bold text-[color:var(--sa-ink)]">
+          <div className="shrink-0 rounded-full border-2 border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-800 shadow-2xs">
+            <span className="font-serif text-lg font-black text-[#08172D]">
               {upcomingSessions.length}
             </span>{' '}
             upcoming
@@ -117,9 +119,9 @@ export default function LiveSessionsPage() {
               key={i}
               className="sa-tile sa-col-sm-6 sa-col-lg-6 h-44 animate-pulse"
             >
-              <div className="h-4 w-24 rounded bg-[color:var(--sa-cream-2)]" />
-              <div className="mt-3 h-5 w-3/4 rounded bg-[color:var(--sa-cream-2)]" />
-              <div className="mt-2 h-4 w-1/2 rounded bg-[color:var(--sa-cream-2)]" />
+              <div className="h-4 w-24 rounded bg-slate-200" />
+              <div className="mt-3 h-5 w-3/4 rounded bg-slate-200" />
+              <div className="mt-2 h-4 w-1/2 rounded bg-slate-200" />
             </div>
           ))}
         </div>
@@ -130,13 +132,12 @@ export default function LiveSessionsPage() {
           {/* Live now section */}
           {liveNow.length > 0 && (
             <div className="space-y-3">
-              <p className="sa-runhead flex items-center gap-2">
-                <span className="relative inline-flex h-2 w-2">
-                  <span className="absolute inset-0 animate-ping rounded-full bg-[color:var(--sa-live)] opacity-70" />
-                  <span className="relative inline-block h-2 w-2 rounded-full bg-[color:var(--sa-live)]" />
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white font-black text-xs uppercase tracking-wider animate-pulse shadow-sm">
+                  <Radio size={13} className="animate-pulse" strokeWidth={2.5} />
+                  Happening Now ({liveNow.length})
                 </span>
-                Happening now
-              </p>
+              </div>
               <div className="sa-bento">
                 {liveNow.map((s) => (
                   <SessionCard key={s.id} session={s} live />
@@ -148,7 +149,13 @@ export default function LiveSessionsPage() {
           {/* Scheduled section */}
           {scheduled.length > 0 && (
             <div className="space-y-3">
-              {liveNow.length > 0 && <p className="sa-runhead">Scheduled</p>}
+              {liveNow.length > 0 && (
+                <div className="flex items-center gap-2 pt-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-800">
+                    Scheduled Classes ({scheduled.length})
+                  </span>
+                </div>
+              )}
               <div className="sa-bento">
                 {scheduled.map((s) => (
                   <SessionCard key={s.id} session={s} />
@@ -191,22 +198,22 @@ function SessionCard({ session, live = false }: { session: any; live?: boolean }
     gmeet: {
       label: 'Google Meet',
       Icon: Video,
-      pill: 'bg-[color:var(--sa-sage-soft)] text-[color:var(--sa-sage-2)]',
+      pill: 'bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold',
     },
     zoom: {
       label: 'Zoom',
       Icon: Video,
-      pill: 'bg-[color:var(--sa-blue-soft)] text-[color:var(--sa-blue-2)]',
+      pill: 'bg-blue-50 text-blue-800 border border-blue-300 font-bold',
     },
     youtube: {
       label: 'YouTube Live',
       Icon: Tv,
-      pill: 'bg-[color:var(--sa-clay-soft)] text-[color:var(--sa-clay-2)]',
+      pill: 'bg-rose-50 text-rose-800 border border-rose-300 font-bold',
     },
     jitsi: {
       label: 'Classroom',
       Icon: Users,
-      pill: 'bg-[color:var(--sa-gold-soft)] text-[color:var(--sa-gold-3)]',
+      pill: 'bg-amber-50 text-amber-800 border border-amber-300 font-bold',
     },
   } as const;
   const pMeta = platformMeta[platform];
@@ -214,50 +221,54 @@ function SessionCard({ session, live = false }: { session: any; live?: boolean }
 
   return (
     <article
-      className={`sa-tile sa-col-sm-6 sa-col-lg-6 flex flex-col gap-4 ${
-        live ? '!border-[color:var(--sa-clay-line)]' : 'sa-tile-hover'
+      className={`sa-col-sm-6 sa-col-lg-6 flex flex-col gap-4 rounded-2xl p-5 sm:p-6 transition-all relative overflow-hidden bg-white ${
+        live
+          ? 'border-2 border-red-500 shadow-xl shadow-red-500/10'
+          : 'border-2 border-slate-200/90 hover:border-[#B7913A] shadow-sm hover:shadow-xl'
       }`}
     >
+      {live && <div className="absolute top-0 left-0 right-0 h-1 bg-red-600" />}
+
       <div className="flex items-start justify-between gap-3">
         {live ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--sa-clay)] px-2.5 py-[5px] text-[11px] font-semibold text-white shadow-sm">
-            <Radio size={12} className="animate-pulse" strokeWidth={2.5} />
-            Live now
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white shadow-sm uppercase tracking-wider animate-pulse">
+            <Radio size={13} className="animate-pulse" strokeWidth={2.5} />
+            Live Now
           </span>
         ) : (
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-[5px] text-[11px] font-semibold ${pMeta.pill}`}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${pMeta.pill}`}
           >
-            <PIcon size={12} />
+            <PIcon size={13} />
             {pMeta.label}
           </span>
         )}
 
         {/* Date block */}
-        <span className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border border-[rgba(11,18,32,0.08)] bg-[color:var(--sa-cream)] text-center">
-          <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-[color:var(--sa-gold-2)]">
+        <span className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-[#08172D] text-center shadow-xs">
+          <span className="text-[10px] font-black uppercase tracking-wider text-[#F59E0B]">
             {validDate ? d!.toLocaleString('en-US', { month: 'short' }).toUpperCase() : 'TBD'}
           </span>
-          <span className="font-serif text-[16px] font-bold leading-none text-[color:var(--sa-ink)]">
+          <span className="font-serif text-lg font-black leading-none text-white">
             {validDate ? d!.getDate() : '--'}
           </span>
         </span>
       </div>
 
       <div className="min-w-0">
-        <h3 className="line-clamp-2 font-serif text-[1.0625rem] font-bold leading-snug tracking-[-0.005em] text-[color:var(--sa-ink)]">
+        <h3 className="line-clamp-2 font-serif text-[1.125rem] sm:text-[1.2rem] font-bold leading-snug tracking-tight text-[#08172D] group-hover:text-[#8A6100] transition-colors">
           {session.title}
         </h3>
-        <p className="mt-1.5 text-[12.5px] text-[color:var(--sa-ink-3)]">
-          {session.course?.title || 'Academy course'}
+        <p className="mt-1.5 text-xs font-semibold text-slate-600">
+          {session.course?.title || 'Academy Course'}
         </p>
       </div>
 
-      <div className="mt-auto flex flex-col xs:flex-row xs:items-center justify-between gap-3 border-t border-[rgba(11,18,32,0.07)] pt-4">
-        <span className="inline-flex items-center gap-2 text-[12.5px] font-semibold text-[color:var(--sa-ink-2)]">
-          <Clock size={13} className="text-[color:var(--sa-gold-2)]" />
+      <div className="mt-auto flex flex-col xs:flex-row xs:items-center justify-between gap-3 border-t-2 border-slate-100 pt-4">
+        <span className="inline-flex items-center gap-2 text-xs font-bold text-slate-800">
+          <Clock size={13} className="text-[#B8860B]" />
           {formatTime12HourIST(liveData.scheduledTime)}
-          <span className="text-[color:var(--sa-ink-4)]">
+          <span className="text-slate-500 font-semibold">
             · {liveData.durationMinutes || 60} min
           </span>
         </span>
@@ -265,20 +276,22 @@ function SessionCard({ session, live = false }: { session: any; live?: boolean }
         <div className="flex flex-wrap items-center gap-2 w-full xs:w-auto">
           {(platform === 'gmeet' || platform === 'zoom') && meetingUrl && (
             <a href={meetingUrl} target="_blank" rel="noopener noreferrer" className="flex-1 xs:flex-initial">
-              <button className="sa-btn sa-btn-ghost sa-btn-sm w-full cursor-pointer">
-                Open {platform === 'gmeet' ? 'Meet' : 'Zoom'}
+              <button className="border-2 border-slate-300 bg-white hover:bg-slate-50 text-[#08172D] font-bold px-3.5 py-2 rounded-xl text-xs inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors w-full">
+                <span>Open {platform === 'gmeet' ? 'Meet' : 'Zoom'}</span>
                 <ExternalLink size={12} />
               </button>
             </a>
           )}
           <Link href={targetUrl} className="flex-1 xs:flex-initial">
             <button
-              className={`sa-btn sa-btn-sm w-full cursor-pointer ${
-                live ? 'sa-btn-live' : 'sa-btn-primary'
+              className={`px-4 py-2 rounded-xl text-xs font-black inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow-md transition-all w-full ${
+                live
+                  ? 'bg-red-600 hover:bg-red-700 text-white'
+                  : 'bg-[#08172D] hover:bg-[#040C18] text-white'
               }`}
             >
-              {live ? 'Enter class' : 'Classroom'}
-              <ArrowRight size={12} />
+              <span>{live ? 'Enter Live Class' : 'Classroom'}</span>
+              <ArrowRight size={13} />
             </button>
           </Link>
         </div>
@@ -291,24 +304,24 @@ function SessionCard({ session, live = false }: { session: any; live?: boolean }
 
 function EmptyState({ hasEnrolments }: { hasEnrolments: boolean }) {
   return (
-    <div className="sa-tile sa-tile-pad-lg text-center">
-      <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[color:var(--sa-gold-soft)] text-[color:var(--sa-gold-2)]">
-        <Calendar size={22} />
+    <div className="sa-tile text-center p-8 sm:p-14 border-2 border-slate-200">
+      <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#FAF0D4] border border-[#E8CD82] text-[#8A6100]">
+        <Calendar size={26} strokeWidth={2} />
       </span>
-      <h3 className="mt-4 font-serif text-[1.25rem] font-bold text-[color:var(--sa-ink)]">
-        {hasEnrolments ? 'No upcoming sessions' : 'No enrolled courses'}
+      <h3 className="mt-4 font-serif text-xl sm:text-2xl font-bold text-[#08172D]">
+        {hasEnrolments ? 'No upcoming live sessions' : 'No enrolled courses'}
       </h3>
-      <p className="sa-sub mx-auto mt-2 max-w-md">
+      <p className="mt-2 text-xs sm:text-sm font-medium text-slate-600 max-w-md mx-auto leading-relaxed">
         {hasEnrolments
-          ? 'None of your enrolled courses have a live session scheduled right now. You will see one here as soon as your instructor adds it.'
-          : 'Live interactive sessions are only available for the courses you have enrolled in. Enrol to unlock them.'}
+          ? 'None of your enrolled courses have a virtual session scheduled right now. You will see scheduled sessions here as soon as your instructor adds one.'
+          : 'Live interactive classes are exclusively available for enrolled students. Browse our academy courses to enrol and unlock live sessions.'}
       </p>
       <Link
         href={hasEnrolments ? '/dashboard/courses' : '/courses'}
-        className="mt-5 inline-flex"
+        className="mt-6 inline-flex"
       >
-        <button className="sa-btn sa-btn-gold">
-          {hasEnrolments ? 'View my courses' : 'Browse courses'}
+        <button className="bg-[#08172D] hover:bg-[#040C18] text-white font-bold py-3 px-6 rounded-xl text-xs sm:text-sm shadow-md transition-all inline-flex items-center gap-2 cursor-pointer">
+          <span>{hasEnrolments ? 'View My Courses' : 'Browse Courses'}</span>
           <ArrowRight size={15} />
         </button>
       </Link>

@@ -791,6 +791,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                     `}</style>
                     <div
                         className="article-content"
+                        suppressHydrationWarning
                         dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayContent) }}
                     />
                     {!hasFullAccess && <PaywallOverlay isLoggedIn={!!user} t={t} />}

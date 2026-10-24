@@ -263,15 +263,18 @@ export default function SettingsPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold text-[#122340] mb-1 tracking-tight">Account Settings</h1>
-        <p className="text-sm text-[#122340]/65">Manage your student profile, login security credentials, and official billing invoices.</p>
+        <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#FDF6E2] text-[#8A6100] border border-[#E8CD82] text-[11px] font-black uppercase tracking-wider mb-2">
+          SETTINGS
+        </span>
+        <h1 className="text-3xl font-serif font-black text-[#08172D] mb-1 tracking-tight">Account &amp; Profile Settings</h1>
+        <p className="text-xs sm:text-sm font-medium text-slate-600">Manage your student profile, login security credentials, and official billing invoices.</p>
       </div>
 
       {/* Main Settings Card */}
-      <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#122340]/8 p-6 md:p-8 lg:p-10">
+      <div className="bg-white rounded-3xl shadow-sm border-2 border-slate-200 p-6 md:p-8 lg:p-10">
 
         {/* Top Horizontal Navigation Tabs (Wide & Un-cramped) */}
-        <div className="flex items-center gap-2 border-b border-[#122340]/10 pb-4 mb-8 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 border-b-2 border-slate-100 pb-4 mb-8 overflow-x-auto no-scrollbar">
           {[
             { id: 'profile', label: 'Student Profile', icon: <Camera size={18} /> },
             { id: 'password', label: 'Security & Password', icon: <Shield size={18} /> },
@@ -286,16 +289,16 @@ export default function SettingsPage() {
                   if (tab.id === 'password') setPasswordSuccess(false);
                 }}
                 className={`inline-flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${isActive
-                  ? 'bg-[#122340] text-white shadow-md'
-                  : 'text-[#122340]/65 hover:bg-[#FAF7F2] hover:text-[#122340]'
+                  ? 'bg-[#08172D] text-white shadow-md'
+                  : 'text-slate-700 hover:bg-slate-100 hover:text-[#08172D]'
                   }`}
               >
-                <span className={isActive ? 'text-[#C9A227]' : 'text-[#122340]/40'}>
+                <span className={isActive ? 'text-[#F59E0B]' : 'text-slate-400'}>
                   {tab.icon}
                 </span>
                 <span>{tab.label}</span>
                 {tab.badge !== undefined && (
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-[#C9A227] text-[#122340]' : 'bg-[#122340]/8 text-[#122340]/70'
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isActive ? 'bg-[#F59E0B] text-[#08172D]' : 'bg-slate-200 text-slate-700'
                     }`}>
                     {tab.badge}
                   </span>
@@ -437,7 +440,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={isUpdatingProfile}
-                  className="bg-[#122340] hover:bg-[#1b3560] text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  className="bg-[#122340] hover:bg-[#1b3560] text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
                 >
                   {isUpdatingProfile ? <Loader2 size={16} className="animate-spin text-[#C9A227]" /> : <Check size={16} />}
                   Save Changes
@@ -559,7 +562,7 @@ export default function SettingsPage() {
                     <button
                       type="submit"
                       disabled={isUpdatingPassword}
-                      className="bg-[#122340] hover:bg-[#1b3560] text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                      className="bg-[#122340] hover:bg-[#1b3560] text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
                     >
                       {isUpdatingPassword ? <Loader2 size={16} className="animate-spin text-[#C9A227]" /> : <Lock size={15} />}
                       Update Password
