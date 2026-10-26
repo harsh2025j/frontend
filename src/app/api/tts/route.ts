@@ -21,7 +21,11 @@ function cleanCache() {
 }
 
 function getVoiceName(lang: string, gender: string): string {
-    return gender === "male" ? "hi-IN-MadhurNeural" : "hi-IN-SwaraNeural";
+    const isMale = (gender || "male").toLowerCase() === "male";
+    // Microsoft Edge Neural bilingual models for Indian languages:
+    // hi-IN-MadhurNeural (Male) and hi-IN-SwaraNeural (Female) natively speak
+    // both Hindi and English with natural pronunciation and legal terminology.
+    return isMale ? "hi-IN-MadhurNeural" : "hi-IN-SwaraNeural";
 }
 
 function getRateString(speed: string): string {
@@ -33,24 +37,22 @@ function getRateString(speed: string): string {
 
 function synthesizeWithEdgeTts(voice: string, rate: string, text: string): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-        const candidatePaths = [
-            "/home/keshav-pathak/Projects/LegalTech/frontend/.venv-tts/bin/edge-tts",
-            path.join(process.cwd(), ".venv-tts", "bin", "edge-tts"),
-            path.join(process.cwd(), "frontend", ".venv-tts", "bin", "edge-tts"),
-            "/tmp/tts_venv/bin/edge-tts",
+        // Find python in the dedicated virtual environment or system packages
+        const pythonCandidates = [
+            path.join(process.cwd(), ".venv-tts", "bin", "python3"),
+            "/home/keshav-pathak/Projects/LegalTech/frontend/.venv-tts/bin/python3",
+            path.join(process.cwd(), "frontend", ".venv-tts", "bin", "python3"),
+            "/usr/bin/python3",
         ];
-        const binaryPath = candidatePaths.find((p) => fs.existsSync(p));
-
-        if (!binaryPath) {
-            return reject(new Error(`edge-tts binary not found in candidates: ${candidatePaths.join(", ")}`));
-        }
+        const pythonPath = pythonCandidates.find((p) => fs.existsSync(p)) || "python3";
 
         const tempFile = path.join("/tmp", `edge_tts_${crypto.randomUUID()}.mp3`);
 
+        // Executing python directly with -m edge_tts avoids shebang and path mismatches
         execFile(
-            binaryPath,
-            ["--voice", voice, "--rate", rate, "--text", text, "--write-media", tempFile],
-            { timeout: 12000 },
+            pythonPath,
+            ["-m", "edge_tts", "--voice", voice, "--rate", rate, "--text", text, "--write-media", tempFile],
+            { timeout: 15000 },
             (err, stdout, stderr) => {
                 if (err) {
                     console.error("[TTS API] execFile error:", err, "stderr:", stderr);
@@ -75,14 +77,14 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const text = searchParams.get("text");
     const lang = searchParams.get("lang") || "en";
-    const gender = searchParams.get("gender") || "female";
+    const gender = searchParams.get("gender") || "male";
     const speed = searchParams.get("speed") || "1";
 
     if (!text || !text.trim()) {
         return new NextResponse("Text parameter is required", { status: 400 });
     }
 
-    const trimmedText = text.trim().slice(0, 500);
+    const trimmedText = text.trim().slice(0, 3000);
     const voiceName = getVoiceName(lang, gender);
     const rateStr = getRateString(speed);
     const cacheKey = `${voiceName}_${rateStr}_${trimmedText}`;

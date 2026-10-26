@@ -93,6 +93,35 @@ interface AudioChunk {
 const STORAGE_VOICE_KEY = "legaltech_speech_voice_mode";
 const STORAGE_SPEED_KEY = "legaltech_speech_speed";
 
+// Smart legal sentence tokenizer preventing citation and abbreviation fragments
+function splitIntoSentences(text: string): string[] {
+    if (!text || !text.trim()) return [];
+
+    // Protect common abbreviations in legal and news text from being split into fragments
+    const abbrevs = [
+        "hon'ble", "hon", "dr", "mr", "mrs", "ms", "prof", "sr", "jr", "adv", "justice",
+        "ltd", "pvt", "co", "inc", "corp", "sec", "art", "no", "nos", "vol", "para",
+        "air", "scc", "scr", "ilr", "cr.p.c", "c.p.c", "i.p.c", "u.p", "m.p", "a.p",
+        "h.p", "govt", "dept", "i.e", "e.g", "etc", "v", "vs", "u/s", "al", "anr", "ors"
+    ];
+    let sanitized = text;
+    abbrevs.forEach((abbr) => {
+        const regex = new RegExp(`\\b${abbr}\\.`, "gi");
+        sanitized = sanitized.replace(regex, (m) => m.slice(0, -1) + "@@DOT@@");
+    });
+    // Protect initials like "J." or single capital letters followed by dot (e.g. "C.J.")
+    sanitized = sanitized.replace(/\b([A-Z])\./g, "$1@@DOT@@");
+    // Protect decimal numbers like 3.14 or Section 302.1
+    sanitized = sanitized.replace(/(\d)\.(\d)/g, "$1@@DEC@@$2");
+
+    // Split on actual sentence endings: . ! ? or Hindi purna viram (।)
+    const rawMatches = sanitized.match(/[^.!?।]+(?:[.!?।]+(?:\s+|$)|$)/g) || [sanitized];
+
+    return rawMatches
+        .map((s) => s.replace(/@@DOT@@/g, ".").replace(/@@DEC@@/g, ".").trim())
+        .filter((s) => s.length > 0);
+}
+
 // ── Exported Trigger Button for the Author Card ──
 export function ListenArticleButton({
     article,
@@ -214,7 +243,7 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isPlayerActive, setIsPlayerActive] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
-    const [voiceMode, setVoiceMode] = useState<VoiceMode>("female");
+    const [voiceMode, setVoiceMode] = useState<VoiceMode>("male");
     const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
     const [isMuted, setIsMuted] = useState(false);
     const [volume, setVolume] = useState(1);
@@ -224,7 +253,7 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
     // Audio & sync references
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const chunksRef = useRef<AudioChunk[]>([]);
-    const voiceModeRef = useRef<VoiceMode>("female");
+    const voiceModeRef = useRef<VoiceMode>("male");
     const playbackSpeedRef = useRef<number>(1);
     const currentChunkIndexRef = useRef(0);
     const isPlayingRef = useRef(false);
@@ -255,13 +284,16 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         );
     }, []);
 
-    // 1. Load persistent user preferences from localStorage on mount
+    // 1. Load persistent user preferences from localStorage on mount (defaults to male)
     useEffect(() => {
         try {
             const savedVoice = localStorage.getItem(STORAGE_VOICE_KEY) as VoiceMode;
             if (savedVoice && ["female", "male", "both"].includes(savedVoice)) {
                 setVoiceMode(savedVoice);
                 voiceModeRef.current = savedVoice;
+            } else {
+                setVoiceMode("male");
+                voiceModeRef.current = "male";
             }
             const savedSpeed = localStorage.getItem(STORAGE_SPEED_KEY);
             if (savedSpeed && !isNaN(parseFloat(savedSpeed))) {
@@ -310,19 +342,24 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         let paragraphCounter = 0;
 
         blocks.forEach((block) => {
-            // Avoid touching blocks with media
-            if (block.querySelector("img, iframe, video, audio, figure, script")) {
+            // Avoid touching pure script, style, or iframe embed blocks
+            if (block.querySelector("script, style")) {
                 return;
             }
 
             const rawText = block.textContent?.trim();
             if (!rawText || rawText.length < 3) return;
 
-            const blockGender: "female" | "male" = paragraphCounter % 2 === 0 ? "female" : "male";
+            // Preserve any nested media elements (images, figures) inside the block
+            const mediaElements = Array.from(block.querySelectorAll("img, iframe, video, figure"));
+            const mediaHtml = mediaElements.map((el) => el.outerHTML).join("\n");
+
+            // Default alternating starts with male voice
+            const blockGender: "female" | "male" = paragraphCounter % 2 === 0 ? "male" : "female";
             paragraphCounter++;
 
-            // Split into sentences (handling English ., !, ? and Hindi ।)
-            const sentenceMatches = rawText.match(/[^.!?।]+(?:[.!?।]+(?:\s+|$)|$)/g) || [rawText];
+            // Split into sentences using abbreviation-aware legal tokenizer
+            const sentenceMatches = splitIntoSentences(rawText);
 
             let newBlockHtml = "";
 
@@ -349,7 +386,7 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
             });
 
             if (newBlockHtml) {
-                block.innerHTML = newBlockHtml;
+                block.innerHTML = mediaHtml ? `${mediaHtml}${newBlockHtml}` : newBlockHtml;
             }
         });
 
@@ -469,10 +506,14 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
                 }
             })
             .catch((err) => {
+                if (err?.name === "AbortError") {
+                    // Ignore normal AbortError when audio is stopped or track changed
+                    return;
+                }
                 console.warn("[SpeechPlayer] Play error:", err);
                 setIsLoadingAudio(false);
-                if (isPlayingRef.current && index + 1 < chunksRef.current.length) {
-                    setTimeout(() => playChunk(index + 1), 200);
+                if (isPlayingRef.current && currentChunkIndexRef.current === index && index + 1 < chunksRef.current.length) {
+                    setTimeout(() => playChunk(index + 1), 500);
                 }
             });
     }, [getAudioUrl, highlightSentence, isMuted, volume, dispatchState, prepareArticleChunks]);
@@ -866,17 +907,6 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
                             </div>
                             <div className="grid grid-cols-3 gap-1.5">
                                 <button
-                                    onClick={() => handleVoiceChange("female")}
-                                    className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                                        voiceMode === "female"
-                                            ? "bg-[#C9A227] text-[#0B2242] shadow-xs"
-                                            : "bg-white/10 text-white/80 hover:bg-white/15"
-                                    }`}
-                                >
-                                    <FemaleVoiceIcon className="w-3.5 h-3.5 shrink-0" />
-                                    <span>Female</span>
-                                </button>
-                                <button
                                     onClick={() => handleVoiceChange("male")}
                                     className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                                         voiceMode === "male"
@@ -886,6 +916,17 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
                                 >
                                     <MaleVoiceIcon className="w-3.5 h-3.5 shrink-0" />
                                     <span>Male</span>
+                                </button>
+                                <button
+                                    onClick={() => handleVoiceChange("female")}
+                                    className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                        voiceMode === "female"
+                                            ? "bg-[#C9A227] text-[#0B2242] shadow-xs"
+                                            : "bg-white/10 text-white/80 hover:bg-white/15"
+                                    }`}
+                                >
+                                    <FemaleVoiceIcon className="w-3.5 h-3.5 shrink-0" />
+                                    <span>Female</span>
                                 </button>
                                 <button
                                     onClick={() => handleVoiceChange("both")}
