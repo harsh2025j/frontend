@@ -33,13 +33,13 @@ export default function JudiciaryToolsSection() {
     {
       id: 'drafting',
       number: '02',
-      title: 'AI Legal Drafting Studio',
-      badge: 'High Court Formats',
+      title: 'Court Pleadings & Petitions Drafter',
+      badge: 'Court Filing Formats',
       description:
-        'Turn matter facts, jurisdiction, grounds, and prayers into a disciplined review-ready first draft for Article 226/32 petitions and notices.',
-      actionText: 'Launch Drafting Studio',
+        'Turn matter facts, statutory grounds, and relief into review-ready court petitions, writ drafts, and bail applications conforming to filing rules.',
+      actionText: 'Draft Court Pleading',
       href: `/${locale}/tools/drafting`,
-      icon: FileText,
+      icon: Scale,
     },
     {
       id: 'mediation',
@@ -55,11 +55,11 @@ export default function JudiciaryToolsSection() {
     {
       id: 'documents',
       number: '04',
-      title: 'Legal Documents Drafting Studio',
+      title: 'Legal Contracts & Deeds Library',
       badge: '2,176+ Templates',
       description:
-        'Draft contracts, agreements, affidavits, and deeds from 2,176+ proven Indian legal templates across 58 categories with AI customization.',
-      actionText: 'Draft Document',
+        'Draft customized business contracts, deeds, affidavits, and commercial agreements from 2,176+ proven Indian legal templates across 58 categories.',
+      actionText: 'Browse Templates',
       href: `/${locale}/tools/documents`,
       icon: FileText,
     },

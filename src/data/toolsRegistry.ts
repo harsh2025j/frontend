@@ -44,12 +44,12 @@ export const TOOLS_REGISTRY: ToolItem[] = [
   {
     id: 'drafting',
     slug: 'drafting',
-    title: 'AI Legal Drafting Studio for Indian Courts',
-    shortTitle: 'Legal Drafting',
-    tagline: 'Disciplined 3-Step Drafting for Petitions, Appeals, Notices & Pleadings',
+    title: 'Court Pleadings & Petitions Drafter',
+    shortTitle: 'Court Pleadings',
+    tagline: 'Disciplined Drafting for Petitions, Appeals, Bail & Pleadings',
     description: 'Convert matter facts, statutory grounds, and prayers into a court-ready first draft for Article 226/32 Writ Petitions, SLPs, and Commercial Suits.',
     category: 'Drafting & Pleadings',
-    iconName: 'FileText',
+    iconName: 'Scale',
     badge: 'High Court & SC Formats',
     badgeVariant: 'gold',
     status: 'active',
@@ -59,7 +59,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
       'Substantiated grounds linking facts directly to binding judicial ratios',
       'Conforming prayer clauses, interim stay applications & verification deeds'
     ],
-    primaryAction: 'Launch Drafting Studio',
+    primaryAction: 'Draft Court Pleading',
     route: '/tools/drafting',
     benchmarkTime: '10–15 mins',
     statBadge: '99% Structural Accuracy'
@@ -90,8 +90,8 @@ export const TOOLS_REGISTRY: ToolItem[] = [
   {
     id: 'documents',
     slug: 'documents',
-    title: 'Legal Documents Studio from Proven Templates',
-    shortTitle: 'Legal Documents',
+    title: 'Legal Contracts & Deeds Library',
+    shortTitle: 'Contracts & Deeds',
     tagline: 'Draft from 2,176+ Proven Indian Legal Templates Across 58 Categories',
     description: 'Pick the kind of document, choose a template, provide your situation — the draft follows the template structure and wording with your details in place and [● label] blanks.',
     category: 'Drafting & Pleadings',
@@ -105,7 +105,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
       'Live Intelligence Inspector with "What I have" and "Still needed" guidance',
       'High Court & standard legal document editor with interactive [● label] blanks'
     ],
-    primaryAction: 'Draft from Template',
+    primaryAction: 'Browse Templates',
     route: '/tools/documents',
     benchmarkTime: '< 2 minutes',
     statBadge: '2,176 Templates'

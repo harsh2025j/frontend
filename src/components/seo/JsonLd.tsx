@@ -88,7 +88,7 @@ export default function JsonLd({ locale = 'en' }: JsonLdProps) {
               '@type': 'Offer',
               itemOffered: {
                 '@type': 'Service',
-                name: 'AI Legal Drafting Studio for Indian Courts',
+                name: 'Court Pleadings & Petitions Drafter for Indian Courts',
                 url: `${siteUrl}/${locale}/tools/drafting`,
                 description:
                   'Court-ready drafting for Article 226/32 Writs, Special Leave Petitions, and commercial suits.',

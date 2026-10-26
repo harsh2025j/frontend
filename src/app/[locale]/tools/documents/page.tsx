@@ -163,6 +163,372 @@ const TEMPLATES_LIBRARY: Record<string, LegalDocTemplate[]> = {
   ],
 };
 
+interface DocumentSpecimen {
+  categoryBadge: string;
+  title: string;
+  preamble: string;
+  parties: Array<{ label: string; text: string }>;
+  recitals: string[];
+  clauses: Array<{ number: string; title: string; body: string }>;
+  signatures: Array<{ role: string; label: string }>;
+  witnesses: string[];
+}
+
+function getDocumentSpecimen(template: LegalDocTemplate): DocumentSpecimen {
+  const titleLower = (template.title || '').toLowerCase();
+
+  if (titleLower.includes('arbitrat')) {
+    return {
+      categoryBadge: 'Arbitration & Conciliation Act 1996 Specimen',
+      title: template.title,
+      preamble: 'THIS INDENTURE / AGREEMENT OF REFERENCE is executed on this _____ day of ____________, 20___ at New Delhi, India;',
+      parties: [
+        { label: 'FIRST PARTY', text: '1. [● FIRST PARTY / CLAIMANT NAME], residing at / registered office at [● Complete Address], (hereinafter referred to as "FIRST PARTY");' },
+        { label: 'SECOND PARTY', text: '2. [● SECOND PARTY / RESPONDENT NAME], residing at / registered office at [● Complete Address], (hereinafter referred to as "SECOND PARTY").' },
+      ],
+      recitals: [
+        'WHEREAS commercial transactions took place under Contract Ref No. [● Reference Number] dated [● Date] having an aggregate value of Rs. [● Valuation in INR];',
+        'AND WHEREAS disputes and claims have arisen between the parties regarding non-payment and execution amounting to Rs. [● Amount in Dispute];',
+        'AND WHEREAS the parties have mutually agreed to refer all disputes to arbitration under the Arbitration and Conciliation Act, 1996 to avoid protracted court litigation;',
+      ],
+      clauses: [
+        { number: '1', title: 'REFERENCE TO ARBITRATORS', body: 'The parties refer all disputes and claims to the joint arbitration of [● Name of Arbitrator 1] (nominated by First Party) and [● Name of Arbitrator 2] (nominated by Second Party).' },
+        { number: '2', title: 'APPOINTMENT OF UMPIRE', body: 'The two nominated Arbitrators shall, prior to entering upon the reference, nominate and appoint a third Arbitrator as Presiding Arbitrator (Umpire) in accordance with Section 11 of the Act.' },
+        { number: '3', title: 'SEAT & LANGUAGE', body: 'The legal seat and venue of the arbitration shall be [● Seat, e.g. New Delhi], and all proceedings shall be conducted in the English language.' },
+        { number: '4', title: 'TIMELINE & AWARD', body: 'The Arbitrators shall make their reasoned award within [● 6 / 12 Months] in terms of Section 29A of the Act, which award shall be conclusive and binding.' },
+      ],
+      signatures: [
+        { role: 'FIRST PARTY', label: 'Signature of First Party / Claimant' },
+        { role: 'SECOND PARTY', label: 'Signature of Second Party / Respondent' },
+      ],
+      witnesses: [
+        '1. [● Name, Father’s Name & Address of Witness 1]',
+        '2. [● Name, Father’s Name & Address of Witness 2]',
+      ],
+    };
+  }
+
+  if (titleLower.includes('builder') || titleLower.includes('construct')) {
+    return {
+      categoryBadge: 'Real Estate & Construction Law Specimen',
+      title: template.title,
+      preamble: 'THIS CONSTRUCTION AGREEMENT is made on this _____ day of ____________, 20___ at [● Place of Execution], India;',
+      parties: [
+        { label: 'OWNER', text: '1. [● OWNER NAME], residing at [● Residential Address], (hereinafter referred to as the "OWNER");' },
+        { label: 'BUILDER', text: '2. [● BUILDER / CONTRACTOR NAME], having its office at [● Office Address], (hereinafter referred to as the "BUILDER").' },
+      ],
+      recitals: [
+        'WHEREAS the Owner is the absolute owner of Plot No. [● Plot Number], Khasra No. [● Khasra], admeasuring [● Area in sq. meters] situated at [● Property Location];',
+        'AND WHEREAS the Owner has engaged Architect [● Architect Name] and obtained municipal sanction for construction of a building thereon;',
+        'AND WHEREAS the Builder has covenanted to execute and complete the entire construction for an agreed consideration of Rs. [● Agreed Contract Sum];',
+      ],
+      clauses: [
+        { number: '1', title: 'CONSTRUCTION SPECIFICATIONS', body: 'The Builder shall construct the building in strict conformity with architectural drawings and merchantable materials set out in Schedule A.' },
+        { number: '2', title: 'PAYMENT TRANCHES', body: 'The Owner shall pay the contract sum of Rs. [● Amount in INR] linked strictly to milestone completion certificates issued by the Architect.' },
+        { number: '3', title: 'TIME OF ESSENCE & DELAY', body: 'Construction shall be completed within [● Timeline in Months]. Unexcused delay shall attract liquidated damages of Rs. [● Penalty per week] per week.' },
+        { number: '4', title: 'ARBITRATION', body: 'Any dispute arising hereunder shall be referred to arbitration under the Arbitration and Conciliation Act, 1996 with seat at [● Seat / New Delhi].' },
+      ],
+      signatures: [
+        { role: 'OWNER', label: 'Signature of Owner' },
+        { role: 'BUILDER', label: 'Signature of Builder / Authorized Signatory' },
+      ],
+      witnesses: [
+        '1. [● Name, Father’s Name & Address of Witness 1]',
+        '2. [● Name, Father’s Name & Address of Witness 2]',
+      ],
+    };
+  }
+
+  if (titleLower.includes('power of attorney') || titleLower.includes('poa')) {
+    return {
+      categoryBadge: 'Powers of Attorney Act 1882 Specimen',
+      title: template.title,
+      preamble: 'TO ALL TO WHOM THESE PRESENTS SHALL COME, I, [● PRINCIPAL NAME], residing at [● Principal Address], SEND GREETINGS;',
+      parties: [
+        { label: 'PRINCIPAL', text: '1. [● PRINCIPAL NAME], residing at [● Principal Address], (hereinafter referred to as the "PRINCIPAL");' },
+        { label: 'ATTORNEY', text: '2. [● ATTORNEY AGENT NAME], residing at [● Attorney Address], (hereinafter referred to as the "ATTORNEY").' },
+      ],
+      recitals: [
+        'WHEREAS the Principal is the lawful owner of [● Property / Business Description] situated at [● Location / Jurisdiction];',
+        'AND WHEREAS the Principal is unable to personally attend to management, court proceedings, and registry filings due to [● Cause, e.g. absence from city / occupation];',
+      ],
+      clauses: [
+        { number: '1', title: 'MANAGEMENT & COLLECTION', body: 'To manage, supervise, and control the said property, demand and collect rents, and issue valid discharge receipts.' },
+        { number: '2', title: 'COURT LITIGATION & ADVOCATES', body: 'To institute, defend, sign plaints, written statements, affidavits, and engage advocates on behalf of the Principal.' },
+        { number: '3', title: 'SUB-REGISTRAR PRESENTATION', body: 'To present deeds before the Sub-Registrar of Assurances and admit execution thereof on behalf of the Principal.' },
+        { number: '4', title: 'RATIFICATION', body: 'The Principal hereby ratifies and confirms all lawful acts done by the Attorney by virtue of these presents.' },
+      ],
+      signatures: [
+        { role: 'PRINCIPAL', label: 'Signature of Principal (Executant)' },
+        { role: 'ATTORNEY', label: 'Signature of Attorney (Specimen)' },
+      ],
+      witnesses: [
+        '1. [● Name, Father’s Name & Address of Witness 1]',
+        '2. [● Name, Father’s Name & Address of Witness 2]',
+      ],
+    };
+  }
+
+  if (titleLower.includes('notice')) {
+    return {
+      categoryBadge: 'Statutory Legal Demand Notice Specimen',
+      title: template.title,
+      preamble: 'LEGAL DEMAND NOTICE ISSUED UNDER INSTRUCTIONS OF CLIENT; DATED: _____ DAY OF ____________, 20___;',
+      parties: [
+        { label: 'ISSUED BY ADVOCATE FOR', text: 'Client: [● CLIENT / PAYEE NAME], residing at [● Client Address];' },
+        { label: 'ADDRESSED TO', text: 'Noticee / Accused: [● NOTICEE / DRAWER NAME], residing at [● Noticee Address].' },
+      ],
+      recitals: [
+        'Under instructions from and on behalf of my client, I hereby serve upon you this formal statutory demand notice:',
+        'WHEREAS you approached my client for commercial transaction / loan, towards discharge whereof you issued Cheque No. [● Cheque Number] for Rs. [● Cheque Amount] drawn on [● Bank Name];',
+        'AND WHEREAS upon presentation, the said cheque was dishonoured with remark "[● Return Reason, e.g. Funds Insufficient]" vide memo dated [● Cheque Return Date];',
+      ],
+      clauses: [
+        { number: '1', title: 'DEMAND FOR PAYMENT', body: 'You are hereby called upon to pay the said sum of Rs. [● Amount in INR] within 15 days of receipt of this notice.' },
+        { number: '2', title: 'CONSEQUENCES OF DEFAULT', body: 'Take notice that failure to pay shall compel my client to initiate criminal proceedings under Section 138 Negotiable Instruments Act without further reference.' },
+      ],
+      signatures: [
+        { role: 'ADVOCATE', label: 'Signature of Advocate for Client' },
+      ],
+      witnesses: [
+        'Copy retained for office file and postal dispatch track record.',
+      ],
+    };
+  }
+
+  // Universal Default Specimen
+  return {
+    categoryBadge: `Indian Legal Standard Specimen · ${template.category}`,
+    title: template.title,
+    preamble: 'THIS INDENTURE / AGREEMENT is made on this _____ day of ____________, 20___ at New Delhi, India;',
+    parties: [
+      { label: 'FIRST PARTY', text: '1. [● FIRST PARTY / PRINCIPAL NAME], residing at / registered office at [● Address], (hereinafter referred to as the "FIRST PARTY");' },
+      { label: 'SECOND PARTY', text: '2. [● SECOND PARTY / CONTRACTOR NAME], residing at / registered office at [● Address], (hereinafter referred to as the "SECOND PARTY").' },
+    ],
+    recitals: [
+      'WHEREAS the First Party is the lawful owner/operator of [● Subject Matter] and is desirous of entering into this arrangement;',
+      'AND WHEREAS the Second Party has the requisite expertise, capacity, and legal standing to perform the obligations herein;',
+      'AND WHEREAS the agreed financial consideration for the covenants herein is Rs. [● Agreed Consideration Amount in INR];',
+    ],
+    clauses: [
+      { number: '1', title: 'SCOPE OF ENGAGEMENT', body: 'The parties agree that the transaction shall be executed strictly as per the terms and specifications agreed upon herein.' },
+      { number: '2', title: 'FINANCIAL CONSIDERATION', body: 'In consideration whereof, the Second Party shall pay/receive an amount of Rs. [● Amount in INR] in designated banking tranches.' },
+      { number: '3', title: 'DISPUTE RESOLUTION', body: 'Any dispute arising out of this deed shall be referred to arbitration under the Arbitration and Conciliation Act, 1996 with seat at New Delhi, India.' },
+      { number: '4', title: 'JURISDICTION', body: 'The competent civil courts having territorial jurisdiction shall have exclusive authority.' },
+    ],
+    signatures: [
+      { role: 'FIRST PARTY', label: 'Signature of First Party' },
+      { role: 'SECOND PARTY', label: 'Signature of Second Party' },
+    ],
+    witnesses: [
+      '1. [● Name, Father’s Name & Address of Witness 1]',
+      '2. [● Name, Father’s Name & Address of Witness 2]',
+    ],
+  };
+}
+
+function countRemainingBlanks(content: string): number {
+  if (!content) return 0;
+  const matches1 = content.match(/\[●[^\]]+\]/g) || [];
+  const matches2 = content.match(/_{5,}/g) || [];
+  return matches1.length + matches2.length;
+}
+
+function generateClientSideLegalDraft(
+  templateTitle: string,
+  category: string,
+  situation: string,
+  extractedData: Record<string, string> = {}
+): string {
+  const partyA = extractedData['party_a'] || extractedData['Party A name'] || '[● Name of First Party]';
+  const partyAResidence = extractedData['party_a_residence'] || extractedData['Party A residence'] || '[● Residential / Registered Office Address of First Party]';
+  const partyB = extractedData['party_b'] || extractedData['Party B name'] || '[● Name of Second Party]';
+  const partyBResidence = extractedData['party_b_residence'] || extractedData['Party B residence'] || '[● Residential / Registered Office Address of Second Party]';
+  const amount = extractedData['amount'] || extractedData['Financial consideration / amount'] || '[● Agreed Consideration Amount in INR]';
+  const seat = extractedData['seat'] || extractedData['Seat of arbitration'] || extractedData['Governing jurisdiction'] || '[● Seat of Arbitration / New Delhi]';
+  const disputeSubject = extractedData['dispute_subject'] || extractedData['Subject of the dispute'] || situation || '[● Specific subject matter and transaction scope]';
+  const dateOfSigning = '[● Day, Month and Year of Signing]';
+  const placeOfSigning = '[● Place of Execution / City]';
+
+  const isArbitration = /arbitrat/i.test(templateTitle);
+  const isConstruction = /builder|construct|building/i.test(templateTitle);
+
+  if (isArbitration) {
+    const arb1 = extractedData['arbitrator_1'] || extractedData['First arbitrator'] || '[● Name of First Arbitrator appointed by First Party]';
+    const arb2 = extractedData['arbitrator_2'] || extractedData['Second arbitrator'] || '[● Name of Second Arbitrator appointed by Second Party]';
+    return `${templateTitle.toUpperCase()}
+
+THIS AGREEMENT OF ARBITRAL REFERENCE is entered into on this ${dateOfSigning} at ${placeOfSigning}, India;
+
+BY AND BETWEEN:
+1. ${partyA}, residing at / having registered office at ${partyAResidence} (hereinafter referred to as the "FIRST PARTY", which expression shall include legal heirs, successors, and assigns) of the FIRST PART;
+AND
+2. ${partyB}, residing at / having registered office at ${partyBResidence} (hereinafter referred to as the "SECOND PARTY", which expression shall include legal heirs, successors, and assigns) of the SECOND PART.
+
+WHEREAS:
+A. The parties hereto entered into commercial relations wherein mutual rights, liabilities, and obligations were stipulated;
+B. In the performance thereof, commercial disputes and differences have arisen between the parties concerning ${disputeSubject}, with a claim valuation of Rs. ${amount};
+C. In order to avoid protracted court litigation and resolve the controversy expeditiously, the parties have mutually agreed to refer all disputes to arbitration under the Arbitration and Conciliation Act, 1996.
+
+NOW, THEREFORE, THIS INDENTURE WITNESSETH AND IT IS MUTUALLY COVENANTED AS FOLLOWS:
+
+1. REFERENCE TO ARBITRAL TRIBUNAL:
+The parties hereby refer all disputes, claims, counterclaims, and differences between them concerning ${disputeSubject} to the joint arbitration and final determination of two independent Arbitrators, viz. ${arb1} nominated by the First Party, and ${arb2} nominated by the Second Party.
+
+2. APPOINTMENT OF PRESIDING ARBITRATOR (UMPIRE):
+The two nominated Arbitrators shall, prior to entering upon the reference and taking cognizance of the dispute, nominate and appoint a third independent Arbitrator who shall act as the Presiding Arbitrator (Umpire) in accordance with Section 11 of the Arbitration and Conciliation Act, 1996.
+
+3. ARBITRAL SEAT AND PROCEDURAL LANGUAGE:
+The legal seat and territorial venue of the arbitration proceedings shall be ${seat}, and the proceedings, evidence, and orders shall be conducted strictly in the English language.
+
+4. STATEMENT OF CLAIMS AND EVIDENCE:
+The Arbitral Tribunal shall provide adequate and reasonable opportunity to both parties to submit their respective Statement of Claim, Statement of Defence, Counterclaims, and documentary evidence in accordance with natural justice.
+
+5. ARBITRAL AWARD AND ENFORCEABILITY:
+The arbitral award rendered by the Arbitrators (or the Presiding Arbitrator in case of equality of votes) shall be in writing, reasoned, final, conclusive, and binding on both parties under Section 35 and Section 36 of the Arbitration and Conciliation Act, 1996.
+
+6. COSTS AND REMUNERATION:
+Arbitrator remuneration and administrative costs shall initially be borne [● proportion of costs / equally by both parties], subject to final cost assessment and recovery in the Arbitral Award.
+
+IN WITNESS WHEREOF, the First Party and the Second Party have set and subscribed their respective hands to this deed on the date and year first above written.
+
+_____________________________               _____________________________
+FIRST PARTY (${partyA})                      SECOND PARTY (${partyB})
+
+WITNESSES:
+1. Name: [● Witness 1 Full Name]
+   Address: [● Witness 1 Residential Address]
+   Signature: _______________________
+
+2. Name: [● Witness 2 Full Name]
+   Address: [● Witness 2 Residential Address]
+   Signature: _______________________`;
+  }
+
+  if (isConstruction) {
+    return `${templateTitle.toUpperCase()}
+
+THIS CONSTRUCTION AGREEMENT is executed on this ${dateOfSigning} at ${placeOfSigning}, India;
+
+BY AND BETWEEN:
+${partyA}, residing at ${partyAResidence} (hereinafter referred to as the "OWNER", which expression shall include legal representatives, heirs, and permitted assigns) of the FIRST PART;
+AND
+${partyB}, having registered office at ${partyBResidence} (hereinafter referred to as the "BUILDER / CONTRACTOR", which expression shall include successors and assigns) of the SECOND PART.
+
+WHEREAS:
+A. The Owner is the absolute, lawful owner of Plot No. [● Plot Number], admeasuring [● Area in sq. yards / meters], situated at [● Complete Property Address];
+B. The Owner is desirous of constructing a residential/commercial structure thereon as per the architectural blueprints and structural designs prepared by the appointed Architect, [● Name of Architect];
+C. The Builder has represented that it possesses the requisite infrastructure, technical workforce, and capital to complete the construction within the specified milestones.
+
+NOW IT IS MUTUALLY COVENANTED AND AGREED BETWEEN THE PARTIES AS FOLLOWS:
+
+1. WORK SPECIFICATIONS:
+The Builder shall carry out and complete the construction of the building in strict adherence to the sanctioned municipal drawings, architectural plans, and merchantable materials specified in Annexure A.
+
+2. CONSIDERATION AND PAYMENT TRANCHES:
+The Owner agrees to pay the Builder a total agreed contract sum of Rs. ${amount} /- (Rupees ${amount} only), payable in progressive installments upon completion of plinth, RCC roof casting, brickwork, finishing, and issuance of Architect Certificate.
+
+3. COMPLETION SCHEDULE:
+The Builder undertakes to commence site operations within [● 15 days] of this deed and shall complete the entire construction ready for handover within [● 12 months / Completion Timeline].
+
+4. DELAY AND LIQUIDATED DAMAGES:
+In the event of unexcused delay beyond the agreed completion date, the Builder shall be liable to pay liquidated damages calculated at Rs. [● Delay Penalty Amount per week] per week of delay.
+
+5. ARBITRATION AND GOVERNING LAW:
+Any dispute arising out of or regarding the interpretation or breach of this agreement shall be settled through arbitration under the Arbitration and Conciliation Act, 1996, with seat at ${seat}.
+
+IN WITNESS WHEREOF, the Owner and the Builder have hereunto set their hands and seals on the day and year first above written.
+
+_____________________________               _____________________________
+OWNER (${partyA})                            BUILDER (${partyB})
+
+WITNESSES:
+1. Name: [● Witness 1 Full Name]
+   Address: [● Witness 1 Address]
+   Signature: _______________________
+
+2. Name: [● Witness 2 Full Name]
+   Address: [● Witness 2 Address]
+   Signature: _______________________`;
+  }
+
+  // Universal Indian Legal Deed / Agreement
+  return `${templateTitle.toUpperCase()}
+
+THIS INDENTURE / AGREEMENT is made and entered into on this ${dateOfSigning} at ${placeOfSigning}, India;
+
+BY AND BETWEEN:
+1. ${partyA}, residing at / having registered office at ${partyAResidence} (hereinafter referred to as the "FIRST PARTY", which term shall unless repugnant to the context include its successors, legal heirs, and permitted assigns) of the ONE PART;
+AND
+2. ${partyB}, residing at / having registered office at ${partyBResidence} (hereinafter referred to as the "SECOND PARTY", which term shall unless repugnant to the context include its successors, legal heirs, and permitted assigns) of the OTHER PART.
+
+WHEREAS:
+A. The First Party and the Second Party have agreed to enter into this formal instrument to record, define, and regulate their mutual rights and commercial obligations concerning ${disputeSubject};
+B. The total financial and contractual consideration agreed upon for the covenants herein is Rs. ${amount};
+C. Both parties have verified their respective legal standing, corporate authorizations, and authority to enter into this legally binding arrangement.
+
+NOW, THEREFORE, THIS DEED WITNESSETH AND IT IS HEREBY MUTUALLY AGREED BY AND BETWEEN THE PARTIES AS FOLLOWS:
+
+1. SCOPE AND DEFINITION OF ENGAGEMENT:
+The First Party and the Second Party covenant to discharge their mutual obligations regarding ${disputeSubject} in strict compliance with the terms and covenants herein.
+
+2. FINANCIAL COVENANTS AND CONSIDERATION:
+In consideration of the mutual covenants and undertakings, the agreed financial sum of Rs. ${amount} shall be paid and discharged through regular banking channels strictly as per [● Milestone / Schedule of Payment].
+
+3. STATUTORY COMPLIANCE AND INDEMNITY:
+Each party covenants to comply with all relevant Indian statutory laws, rules, and municipal permissions, and shall keep the other party indemnified against any regulatory penalty, fine, or third-party claim arising from its default.
+
+4. TERM AND TERMINATION:
+This Agreement shall remain in force for an initial term of [● Term / Duration, e.g. 12 Months] from the date of execution, unless terminated earlier by either party giving [● 30 days] prior written notice upon uncured breach.
+
+5. DISPUTE RESOLUTION AND ARBITRATION:
+All disputes, controversies, or claims arising out of or relating to this Agreement, including any question regarding its existence, validity, or termination, shall be referred to and finally resolved by arbitration in accordance with the Arbitration and Conciliation Act, 1996. The seat and venue of arbitration shall be ${seat}, and the proceedings shall be conducted in English.
+
+6. JURISDICTION:
+Subject to the arbitration clause, the competent civil courts situated at ${seat} shall have exclusive territorial jurisdiction.
+
+IN WITNESS WHEREOF, the parties hereto have signed, sealed, and executed this Agreement on the day, month, and year first written above.
+
+_____________________________               _____________________________
+FIRST PARTY (${partyA})                      SECOND PARTY (${partyB})
+
+WITNESSES:
+1. Name: [● Witness 1 Full Name]
+   Address: [● Witness 1 Address]
+   Signature: _______________________
+
+2. Name: [● Witness 2 Full Name]
+   Address: [● Witness 2 Address]
+   Signature: _______________________`;
+}
+
+function formatLegalDraftToHtml(rawText: string): string {
+  if (!rawText) return '';
+
+  const normalized = rawText
+    .replace(/\\r\\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/\r\n/g, '\n');
+
+  if (/<\s*(p|div|h[1-6]|span|table|section|article|header|br|b|i|strong|em)\b/i.test(normalized)) {
+    return normalized;
+  }
+
+  return normalized
+    .split(/\n\n+/)
+    .map((p) => {
+      const trimmed = p.trim();
+      const isTitleOrHeading = /^(AGREEMENT|DEED|INDENTURE|IN WITNESS|NOW THEREFORE|WHEREAS|BY AND BETWEEN|MEMORANDUM OF|SCHEDULE|ANNEXURE|WITNESSES)/i.test(trimmed);
+      const isCenterAlign = /^(AGREEMENT|DEED|INDENTURE|MEMORANDUM OF|SCHEDULE|ANNEXURE)/i.test(trimmed);
+      const alignClass = isCenterAlign ? ' class="ql-align-center"' : '';
+      const textAlign = isCenterAlign ? 'center' : 'justify';
+      const fontWeight = isTitleOrHeading ? 'font-weight: bold;' : '';
+
+      return `<p${alignClass} style="text-align: ${textAlign}; line-height: 1.6; margin-bottom: 12pt; font-family: 'Times New Roman', Georgia, serif; font-size: 13pt; ${fontWeight}">${trimmed.replace(/\n/g, '<br/>')}</p>`;
+    })
+    .join('');
+}
+
 export default function LegalDocumentsPage() {
   const params = useParams();
   const router = useRouter();
@@ -174,6 +540,7 @@ export default function LegalDocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<LegalDocTemplate | null>(null);
   const [categorySearch, setCategorySearch] = useState<string>('');
   const [templateSearch, setTemplateSearch] = useState<string>('');
+  const [previewTab, setPreviewTab] = useState<'pdf' | 'overview'>('pdf');
 
   // Step 3 Details State
   const [situationText, setSituationText] = useState<string>('');
@@ -410,6 +777,7 @@ export default function LegalDocumentsPage() {
       extractedMap[item.label] = item.value;
     });
 
+    let draftText = '';
     try {
       const res = await toolsService.generateLegalDocumentDraft({
         template: selectedTemplate?.title || 'LEGAL AGREEMENT',
@@ -417,16 +785,29 @@ export default function LegalDocumentsPage() {
         situation: situationText,
         extractedData: extractedMap,
       });
-
-      setTimeout(() => {
-        setDraftContent(res.content || '');
-        setIsWritingDraft(false);
-        setReadyToDraft(false);
-      }, 1600);
+      if (res?.content && res.content.trim()) {
+        draftText = res.content;
+      }
     } catch {
+      // Backend unavailable, fallback to client-side legal engine
+    }
+
+    if (!draftText) {
+      draftText = generateClientSideLegalDraft(
+        selectedTemplate?.title || 'LEGAL AGREEMENT',
+        selectedCategory?.name || 'Agreement',
+        situationText,
+        extractedMap
+      );
+    }
+
+    const formattedDraftHtml = formatLegalDraftToHtml(draftText);
+
+    setTimeout(() => {
+      setDraftContent(formattedDraftHtml);
       setIsWritingDraft(false);
       setReadyToDraft(false);
-    }
+    }, 1200);
   };
 
   // Export handlers
@@ -643,39 +1024,153 @@ export default function LegalDocumentsPage() {
             {/* Right Preview Aside (5 cols) */}
             <div className="lg:col-span-5">
               {selectedTemplate ? (
-                <div className="sticky top-20 rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-xs space-y-4">
-                  <div className="border-b border-[#F1F5F9] pb-4">
-                    <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
-                      {selectedTemplate.category}
-                    </span>
-                    <h3 className="mt-1 text-lg font-bold font-merriweather text-[#0B2242]">
-                      {selectedTemplate.title}
-                    </h3>
-                    <div className="mt-2 inline-flex items-center gap-2 rounded bg-gray-100 px-2.5 py-1 text-xs font-medium text-[#0B2242]">
-                      <Clock className="size-3 text-gray-500" />
-                      <span>Standard length: {selectedTemplate.pageCount} pages</span>
+                <div className="sticky top-20 rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-sm space-y-4">
+                  {/* Top Mode Selector Tabs */}
+                  <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3">
+                    <div className="flex items-center gap-1.5 p-0.5 bg-gray-100 rounded-lg text-xs font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewTab('pdf')}
+                        className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                          previewTab === 'pdf' ? 'bg-white text-[#0B2242] shadow-xs' : 'text-gray-500 hover:text-gray-900'
+                        }`}
+                      >
+                        <FileText className="size-3.5 text-[#C9A227]" />
+                        <span>Document PDF Preview</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewTab('overview')}
+                        className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                          previewTab === 'overview' ? 'bg-white text-[#0B2242] shadow-xs' : 'text-gray-500 hover:text-gray-900'
+                        }`}
+                      >
+                        <span>Overview &amp; Scope</span>
+                      </button>
                     </div>
+                    <span className="text-[10px] font-mono font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                      Page 1 of {selectedTemplate.pageCount}
+                    </span>
                   </div>
 
-                  <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#64748B] font-mono">
-                      Template Overview
-                    </h4>
-                    <p className="mt-2 text-xs sm:text-sm text-[#334155] leading-relaxed">
-                      {selectedTemplate.description}
-                    </p>
-                  </div>
+                  {/* TAB 1: Live A4 PDF Legal Sheet Preview */}
+                  {previewTab === 'pdf' && (() => {
+                    const specimen = getDocumentSpecimen(selectedTemplate);
+                    return (
+                      <div className="relative rounded-lg border border-gray-300 bg-white p-5 sm:p-6 shadow-md font-serif text-[11px] text-[#1E293B] leading-relaxed max-h-[460px] overflow-y-auto select-none border-t-4 border-t-[#0B2242]">
+                        {/* Document Header */}
+                        <div className="text-center pb-3 border-b border-gray-200 mb-3.5">
+                          <p className="text-[9px] uppercase tracking-[0.2em] font-sans font-bold text-gray-400">
+                            {specimen.categoryBadge}
+                          </p>
+                          <h3 className="mt-1 text-xs sm:text-sm font-bold uppercase tracking-wide text-[#0B2242] leading-snug">
+                            {specimen.title}
+                          </h3>
+                        </div>
 
-                  <div className="rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] p-4 text-xs text-[#475569] space-y-2">
-                    <h5 className="font-bold text-[#0B2242] uppercase font-mono text-[11px]">Included Clauses & Features</h5>
-                    <ul className="space-y-1.5 list-disc list-inside">
-                      <li>Formal Indian execution preamble & party recitals</li>
-                      <li>Operative commercial and procedural covenants</li>
-                      <li>Indian Arbitration & Conciliation Act 1996 dispute clause</li>
-                      <li>Liquidated damages, indemnity & termination cure terms</li>
-                      <li>Two-witness attestations & verification deeds</li>
-                    </ul>
-                  </div>
+                        {/* Opening Recital */}
+                        <p className="text-justify mb-3 italic text-gray-600">
+                          {specimen.preamble}
+                        </p>
+
+                        {/* Parties Block */}
+                        <div className="mb-3 space-y-1.5 text-justify bg-gray-50/80 p-2.5 rounded border border-gray-200/60 font-sans text-[10.5px]">
+                          <p className="font-bold text-[#0B2242] uppercase text-[9.5px] tracking-wider">BY AND BETWEEN:</p>
+                          {specimen.parties.map((pt, pIdx) => (
+                            <React.Fragment key={pIdx}>
+                              {pIdx > 0 && <p className="text-center font-bold text-[9px] uppercase text-gray-400">AND</p>}
+                              <p>
+                                <strong className="text-[#0B2242]">{pt.text}</strong>
+                              </p>
+                            </React.Fragment>
+                          ))}
+                        </div>
+
+                        {/* Recitals */}
+                        <div className="mb-3 space-y-1.5 text-justify text-[11px]">
+                          {specimen.recitals.map((rec, rIdx) => (
+                            <p key={rIdx}>{rec}</p>
+                          ))}
+                        </div>
+
+                        {/* Operative Clauses */}
+                        <div className="mb-3.5 space-y-2 text-justify text-[10.5px]">
+                          <p className="font-bold font-sans text-[#0B2242] uppercase text-[10px]">NOW THEREFORE, IT IS MUTUALLY COVENANTED AS FOLLOWS:</p>
+                          {specimen.clauses.map((cl, cIdx) => (
+                            <p key={cIdx}>
+                              <span className="font-bold">{cl.number}. {cl.title}:</span> {cl.body}
+                            </p>
+                          ))}
+                        </div>
+
+                        {/* Signature Block */}
+                        <div className="pt-2.5 border-t border-gray-200 text-[10px] space-y-2">
+                          <p className="italic text-gray-500">IN WITNESS WHEREOF, the parties hereto have signed and delivered this deed.</p>
+                          <div className="flex justify-between pt-1">
+                            {specimen.signatures.map((sig, sIdx) => (
+                              <div key={sIdx} className="text-center">
+                                <div className="w-24 border-b border-gray-400 mb-1" />
+                                <span className="font-sans font-semibold text-[9px] text-gray-500">{sig.role}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Witnesses Block */}
+                        <div className="pt-2 border-t border-gray-100 text-[9.5px] text-gray-500 font-sans space-y-0.5">
+                          <p className="font-bold uppercase text-[9px] text-gray-400">WITNESSES:</p>
+                          {specimen.witnesses.map((w, wIdx) => (
+                            <p key={wIdx} className="italic">{w}</p>
+                          ))}
+                        </div>
+
+                        {/* Footer Badge */}
+                        <div className="mt-3 text-center">
+                          <span className="inline-block px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-[9px] font-sans font-bold uppercase tracking-widest text-amber-800">
+                            Specimen Form · Fillable Blanks highlighted as [● label]
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* TAB 2: Overview & Scope */}
+                  {previewTab === 'overview' && (
+                    <div className="space-y-4">
+                      <div className="border-b border-[#F1F5F9] pb-3">
+                        <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
+                          {selectedTemplate.category}
+                        </span>
+                        <h3 className="mt-1 text-base font-bold font-merriweather text-[#0B2242]">
+                          {selectedTemplate.title}
+                        </h3>
+                        <div className="mt-2 inline-flex items-center gap-2 rounded bg-gray-100 px-2.5 py-1 text-xs font-medium text-[#0B2242]">
+                          <Clock className="size-3 text-gray-500" />
+                          <span>Standard length: {selectedTemplate.pageCount} pages</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-[#64748B] font-mono">
+                          Template Overview
+                        </h4>
+                        <p className="mt-2 text-xs text-[#334155] leading-relaxed">
+                          {selectedTemplate.description}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] p-3 text-xs text-[#475569] space-y-1.5">
+                        <h5 className="font-bold text-[#0B2242] uppercase font-mono text-[10px]">Included Clauses &amp; Features</h5>
+                        <ul className="space-y-1 list-disc list-inside text-[11px]">
+                          <li>Formal Indian execution preamble &amp; party recitals</li>
+                          <li>Operative commercial and procedural covenants</li>
+                          <li>Indian Arbitration &amp; Conciliation Act 1996 dispute clause</li>
+                          <li>Liquidated damages, indemnity &amp; termination cure terms</li>
+                          <li>Two-witness attestations &amp; verification deeds</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
 
                   <button
                     onClick={handleUseTemplate}
@@ -1156,6 +1651,21 @@ export default function LegalDocumentsPage() {
                     </button>
                   </div>
                 </div>
+
+                {/* Blanks & Quality Indicator Banner */}
+                {countRemainingBlanks(draftContent) > 0 && (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-amber-50 border border-amber-200 px-4 py-2.5 rounded-xl text-xs text-amber-900 shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="size-4 text-amber-600 shrink-0" />
+                      <span>
+                        <strong>{countRemainingBlanks(draftContent)} runtime blanks detected:</strong> Missing client particulars appear as <span className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded text-amber-950">[● label]</span> or <span className="font-mono font-bold underline">_______</span>. You can click directly on the canvas to fill them in before exporting.
+                      </span>
+                    </div>
+                    <span className="self-start sm:self-auto shrink-0 font-mono text-[10px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-200">
+                      Indian Statutory Standard
+                    </span>
+                  </div>
+                )}
 
                 {/* Google Docs Style Paginated Legal Document Canvas */}
                 <div id="legal-doc-printable" className="w-full max-w-5xl mx-auto">
