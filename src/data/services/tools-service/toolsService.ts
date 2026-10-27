@@ -107,6 +107,7 @@ export const toolsService = {
 
     const res = await apiClient.post(API_ENDPOINTS.TOOLS.HEALTH_CHECK, formData, {
       headers: { "Content-Type": "multipart/form-data" },
+      timeout: 120000,
     });
     const data = res.data?.data || res.data;
     return data?.report || data;
@@ -126,6 +127,7 @@ export const toolsService = {
 
     const res = await apiClient.post(API_ENDPOINTS.TOOLS.TRANSLATION, formData, {
       headers: { "Content-Type": "multipart/form-data" },
+      timeout: 120000,
     });
     const data = res.data?.data || res.data;
     return data?.result || data;

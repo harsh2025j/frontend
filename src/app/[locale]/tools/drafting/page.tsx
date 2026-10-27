@@ -1175,6 +1175,7 @@ export default function DraftingStudioPage() {
     setViewMode('studio');
   };
 
+
   // Delete draft action
   const executeDeleteDraft = async () => {
     if (!deleteConfirmDraft) return;
