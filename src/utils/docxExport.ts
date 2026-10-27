@@ -47,9 +47,31 @@ export function buildDocxFromHtml(html: string, title: string = 'Court Pleading'
 
       elementsToProcess.forEach((element) => {
         // Table element
+        // Table element
         if (element.tagName.toLowerCase() === 'table') {
           const rows: TableRow[] = [];
           const trElements = Array.from(element.querySelectorAll('tr'));
+          const isBorderless =
+            (element as HTMLElement).style?.border?.includes('none') ||
+            element.getAttribute('border') === '0' ||
+            element.className?.includes('border-none') ||
+            element.innerHTML.includes('FIRST PARTY') ||
+            element.innerHTML.includes('SECOND PARTY') ||
+            element.innerHTML.includes('DEPONENT');
+
+          const cellBorders = isBorderless
+            ? {
+                top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+                bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+                left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+                right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+              }
+            : {
+                top: { style: BorderStyle.SINGLE, size: 4, color: '64748B' },
+                bottom: { style: BorderStyle.SINGLE, size: 4, color: '64748B' },
+                left: { style: BorderStyle.SINGLE, size: 4, color: '64748B' },
+                right: { style: BorderStyle.SINGLE, size: 4, color: '64748B' },
+              };
 
           trElements.forEach((tr) => {
             const cells: TableCell[] = [];
@@ -57,31 +79,63 @@ export function buildDocxFromHtml(html: string, title: string = 'Court Pleading'
 
             cellElements.forEach((cell) => {
               const isHeader = cell.tagName.toLowerCase() === 'th';
-              const text = cell.textContent?.trim() || '';
+              const cellStyleAlign = (cell as HTMLElement).style?.textAlign;
+              const cellAlign =
+                isHeader || isBorderless || cellStyleAlign === 'center'
+                  ? AlignmentType.CENTER
+                  : cellStyleAlign === 'right'
+                  ? AlignmentType.RIGHT
+                  : AlignmentType.LEFT;
+
+              const cellPs = Array.from(cell.querySelectorAll('p'));
+              const cellParagraphs: Paragraph[] = [];
+
+              if (cellPs.length > 0) {
+                cellPs.forEach((p) => {
+                  const runs: TextRun[] = [];
+                  const pTxt = p.textContent?.trim() || '';
+                  if (pTxt.length > 0) {
+                    const isBold = p.style?.fontWeight === 'bold' || /strong|b/i.test(p.innerHTML);
+                    runs.push(
+                      new TextRun({
+                        text: pTxt,
+                        bold: isHeader || isBold,
+                        font: 'Times New Roman',
+                        size: 22,
+                      })
+                    );
+                  }
+                  cellParagraphs.push(
+                    new Paragraph({
+                      alignment: cellAlign,
+                      spacing: { before: 40, after: 40, line: 280 },
+                      children: runs.length > 0 ? runs : [new TextRun({ text: '' })],
+                    })
+                  );
+                });
+              } else {
+                const text = cell.textContent?.trim() || '';
+                cellParagraphs.push(
+                  new Paragraph({
+                    alignment: cellAlign,
+                    spacing: { before: 60, after: 60, line: 280 },
+                    children: [
+                      new TextRun({
+                        text,
+                        bold: isHeader,
+                        font: 'Times New Roman',
+                        size: 22,
+                      }),
+                    ],
+                  })
+                );
+              }
 
               cells.push(
                 new TableCell({
-                  children: [
-                    new Paragraph({
-                      alignment: isHeader ? AlignmentType.CENTER : AlignmentType.LEFT,
-                      spacing: { before: 60, after: 60, line: 280 },
-                      children: [
-                        new TextRun({
-                          text,
-                          bold: isHeader,
-                          font: 'Times New Roman',
-                          size: 22,
-                        }),
-                      ],
-                    }),
-                  ],
+                  children: cellParagraphs,
                   shading: isHeader ? { fill: 'F1F5F9' } : undefined,
-                  borders: {
-                    top: { style: BorderStyle.SINGLE, size: 4, color: '64748B' },
-                    bottom: { style: BorderStyle.SINGLE, size: 4, color: '64748B' },
-                    left: { style: BorderStyle.SINGLE, size: 4, color: '64748B' },
-                    right: { style: BorderStyle.SINGLE, size: 4, color: '64748B' },
-                  },
+                  borders: cellBorders,
                 })
               );
             });
@@ -102,78 +156,97 @@ export function buildDocxFromHtml(html: string, title: string = 'Court Pleading'
           return;
         }
 
-        // Paragraph / Heading / Div element
-        const tag = element.tagName.toLowerCase();
-        const isHeading = /^h[1-6]$/.test(tag);
-        let align: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.JUSTIFIED;
+        // Decompose container divs with nested paragraphs
+        const childParagraphs = Array.from(element.querySelectorAll('p'));
+        const subElementsToRender: HTMLElement[] =
+          element.tagName.toLowerCase() === 'div' && childParagraphs.length > 0
+            ? childParagraphs
+            : [element as HTMLElement];
 
-        const styleAlign = (element as HTMLElement).style?.textAlign;
-        const className = element.className || '';
+        const containerAlign =
+          (element as HTMLElement).style?.textAlign ||
+          (element.className.includes('ql-align-right') ? 'right' : '') ||
+          (element.className.includes('ql-align-center') ? 'center' : '');
 
-        if (styleAlign === 'center' || className.includes('ql-align-center') || isHeading) {
-          align = AlignmentType.CENTER;
-        } else if (styleAlign === 'right' || className.includes('ql-align-right')) {
-          align = AlignmentType.RIGHT;
-        } else if (styleAlign === 'left' || className.includes('ql-align-left')) {
-          align = AlignmentType.LEFT;
-        }
+        subElementsToRender.forEach((el) => {
+          const tag = el.tagName.toLowerCase();
+          const isHeading = /^h[1-6]$/.test(tag);
+          let align: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.JUSTIFIED;
 
-        const runs: TextRun[] = [];
+          const styleAlign = el.style?.textAlign || containerAlign;
+          const className = el.className || element.className || '';
 
-        // Helper to recursively parse node children (strong, em, text, br)
-        const parseNodes = (node: Node, bold = isHeading, italic = false, underline = false) => {
-          node.childNodes.forEach((child) => {
-            if (child.nodeType === Node.TEXT_NODE) {
-              const txt = child.textContent || '';
-              if (txt.length > 0) {
-                runs.push(
-                  new TextRun({
-                    text: txt,
-                    bold,
-                    italics: italic,
-                    underline: underline ? {} : undefined,
-                    font: 'Times New Roman',
-                    size: isHeading ? 28 : 26,
-                  })
-                );
+          if (styleAlign === 'center' || className.includes('ql-align-center') || isHeading) {
+            align = AlignmentType.CENTER;
+          } else if (styleAlign === 'right' || className.includes('ql-align-right')) {
+            align = AlignmentType.RIGHT;
+          } else if (styleAlign === 'left' || className.includes('ql-align-left')) {
+            align = AlignmentType.LEFT;
+          }
+
+          const isHangingIndent =
+            el.style?.textIndent?.includes('-') ||
+            /^\s*(\d+\.|\([0-9a-zA-Z]+\)|[a-z]\))\s+/.test(el.textContent || '');
+
+          const runs: TextRun[] = [];
+
+          // Helper to recursively parse node children (strong, em, text, br)
+          const parseNodes = (node: Node, bold = isHeading, italic = false, underline = false) => {
+            node.childNodes.forEach((child) => {
+              if (child.nodeType === Node.TEXT_NODE) {
+                const txt = child.textContent || '';
+                if (txt.length > 0) {
+                  runs.push(
+                    new TextRun({
+                      text: txt,
+                      bold,
+                      italics: italic,
+                      underline: underline ? {} : undefined,
+                      font: 'Times New Roman',
+                      size: isHeading ? 28 : 24,
+                    })
+                  );
+                }
+              } else if (child.nodeType === Node.ELEMENT_NODE) {
+                const childEl = child as HTMLElement;
+                const childTag = childEl.tagName.toLowerCase();
+                if (childTag === 'br') {
+                  runs.push(new TextRun({ break: 1 }));
+                } else {
+                  const isB = bold || childTag === 'strong' || childTag === 'b' || childEl.style?.fontWeight === 'bold';
+                  const isI = italic || childTag === 'em' || childTag === 'i' || childEl.style?.fontStyle === 'italic';
+                  const isU = underline || childTag === 'u' || childEl.style?.textDecoration?.includes('underline');
+                  parseNodes(child, isB, isI, isU);
+                }
               }
-            } else if (child.nodeType === Node.ELEMENT_NODE) {
-              const el = child as HTMLElement;
-              const childTag = el.tagName.toLowerCase();
-              if (childTag === 'br') {
-                runs.push(new TextRun({ break: 1 }));
-              } else {
-                const isB = bold || childTag === 'strong' || childTag === 'b';
-                const isI = italic || childTag === 'em' || childTag === 'i';
-                const isU = underline || childTag === 'u';
-                parseNodes(child, isB, isI, isU);
-              }
-            }
-          });
-        };
+            });
+          };
 
-        parseNodes(element);
+          parseNodes(el);
 
-        if (runs.length > 0) {
-          children.push(
-            new Paragraph({
-              alignment: align,
-              spacing: {
-                after: isHeading ? 180 : 140,
-                line: 360,
-              },
-              children: runs,
-            })
-          );
-        } else {
-          children.push(
-            new Paragraph({
-              alignment: align,
-              spacing: { after: 140, line: 360 },
-              children: [new TextRun({ text: '' })],
-            })
-          );
-        }
+          if (runs.length > 0) {
+            children.push(
+              new Paragraph({
+                alignment: align,
+                indent: isHangingIndent ? { left: 560, hanging: 560 } : undefined,
+                spacing: {
+                  before: isHeading ? 200 : align === AlignmentType.RIGHT ? 120 : 60,
+                  after: isHeading ? 140 : align === AlignmentType.RIGHT ? 60 : 120,
+                  line: 360,
+                },
+                children: runs,
+              })
+            );
+          } else {
+            children.push(
+              new Paragraph({
+                alignment: align,
+                spacing: { after: 120, line: 360 },
+                children: [new TextRun({ text: '' })],
+              })
+            );
+          }
+        });
       });
     } else {
       // Regex fallback for SSR

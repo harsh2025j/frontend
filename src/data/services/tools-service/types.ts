@@ -170,6 +170,7 @@ export interface LegalDocTemplate {
   id: string;
   title: string;
   category: string;
+  subcategory?: string;
   pageCount: number;
   description?: string;
 }

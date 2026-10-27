@@ -20,6 +20,10 @@ export const API_ENDPOINTS = {
     JUDGMENT_DOWNLOAD: "/tools/judgment/:id/download",
     JUDGMENT_PARAGRAPHS: "/tools/judgment/:id/paragraphs",
     JUDGMENT_PDF: "/tools/judgment/:id/pdf",
+    TEMPLATES_CATEGORIES: "/tools/documents/templates/categories",
+    TEMPLATES: "/tools/documents/templates",
+    TEMPLATE_BY_ID: "/tools/documents/templates/:id",
+    TEMPLATE_PDF: "/tools/documents/templates/:id/pdf",
   },
   SEARCH: {
     JUDGES: "/search/judges",

@@ -156,10 +156,11 @@ export const toolsService = {
 
   generateLegalDocumentDraft: async (payload: {
     template: string;
+    templateId?: string;
     category: string;
     situation: string;
     extractedData: Record<string, string>;
-  }): Promise<{ content: string }> => {
+  }): Promise<{ content: string; source?: string }> => {
     const res = await apiClient.post(API_ENDPOINTS.TOOLS.DOCUMENTS_GENERATE, payload);
     const data = res.data?.data || res.data;
     return data;
@@ -192,6 +193,38 @@ export const toolsService = {
     } catch {
       return false;
     }
+  },
+
+  getTemplateCategories: async () => {
+    try {
+      const res = await apiClient.get(API_ENDPOINTS.TOOLS.TEMPLATES_CATEGORIES);
+      return res.data?.data?.categories || res.data?.categories || [];
+    } catch {
+      return [];
+    }
+  },
+
+  getTemplates: async (params?: { category?: string; subcategory?: string; q?: string; page?: number; limit?: number }) => {
+    try {
+      const res = await apiClient.get(API_ENDPOINTS.TOOLS.TEMPLATES, { params });
+      return res.data?.data || res.data;
+    } catch {
+      return { success: false, templates: [] };
+    }
+  },
+
+  getTemplateById: async (id: string) => {
+    try {
+      const endpoint = API_ENDPOINTS.TOOLS.TEMPLATE_BY_ID.replace(":id", encodeURIComponent(id));
+      const res = await apiClient.get(endpoint);
+      return res.data?.data?.template || res.data?.template || null;
+    } catch {
+      return null;
+    }
+  },
+
+  getTemplatePdfUrl: (id: string): string => {
+    return `${API_BASE_URL.replace(/\/$/, '')}/tools/documents/templates/${encodeURIComponent(id)}/pdf`;
   },
 };
 
