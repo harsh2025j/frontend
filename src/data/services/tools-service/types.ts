@@ -109,6 +109,19 @@ export interface SavedDraftItem {
   pinnedCitations?: Array<{ title: string; citation: string; ratio?: string }>;
 }
 
+export interface PaymentTranche {
+  tranche: string;
+  amount: string;
+  dueDate: string;
+  paymentMode?: string;
+}
+
+export interface PendingLitigation {
+  courtName?: string;
+  caseNumber?: string;
+  caseType?: string;
+}
+
 export interface SettlementRequest {
   disputeType: string;
   partyA: string;
@@ -117,6 +130,15 @@ export interface SettlementRequest {
   settlementAmount: string;
   disputeSummary: string;
   liabilityAllocation?: string;
+  paymentTranches?: PaymentTranche[];
+  pendingLitigation?: PendingLitigation;
+}
+
+export interface SettlementSection {
+  index: string;
+  heading: string;
+  badge?: string;
+  content: string;
 }
 
 export interface SettlementResponse {
@@ -125,7 +147,11 @@ export interface SettlementResponse {
   parties: { partyA: string; partyB: string };
   claimValue: string;
   agreedSettlementValue: string;
-  sections: { index: string; heading: string; content: string }[];
+  pendingLitigation?: PendingLitigation;
+  sections: SettlementSection[];
+  courtApplication?: string;
+  executionBlock?: string;
+  defaultMechanism?: string;
 }
 
 export interface HealthCheckFinding {

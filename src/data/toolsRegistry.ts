@@ -73,19 +73,19 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     description: 'Structure commercial disputes, unpaid claims, and contested liabilities into a balanced, judicially enforceable 5-part settlement term sheet.',
     category: 'Alternative Dispute Resolution',
     iconName: 'Gavel',
-    badge: 'Order XXIII R3 CPC',
-    badgeVariant: 'emerald',
-    status: 'active',
+    badge: 'Coming Soon',
+    badgeVariant: 'gold',
+    status: 'coming_soon',
     features: [
       '5-part enforceable settlement agreement complying with the Mediation Act 2023',
       'Structured payment tranches, grace periods, and commercial default interest',
       'Comprehensive mutual releases, non-disparagement, and court withdrawal terms',
       'Order XXIII Rule 3 CPC compromise decree template with advocate verification'
     ],
-    primaryAction: 'Build Term Sheet',
-    route: '/tools/mediation',
-    benchmarkTime: '5 minutes',
-    statBadge: 'Statutory Enforceability'
+    primaryAction: 'Coming Soon',
+    route: '/tools/settlement',
+    benchmarkTime: 'In Development',
+    statBadge: 'Coming Soon'
   },
   {
     id: 'documents',

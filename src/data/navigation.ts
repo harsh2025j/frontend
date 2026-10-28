@@ -20,7 +20,7 @@ export const navigationData: NavItem[] = [
             { label: "• AI Legal Drafting", href: "/tools/drafting" },
             { label: "• Legal Documents Studio", href: "/tools/documents" },
             { label: "• Document Health Check", href: "/tools/health-check" },
-            { label: "• Mediation & Settlement", href: "/tools/mediation" },
+            { label: "• Mediation & Settlement (Coming Soon)", href: "#" },
             { label: "• Vernacular Translation", href: "/tools/translation" },
             { label: "Cases", href: "/cases" },
             { label: "Judgments", href: "/judgments" },

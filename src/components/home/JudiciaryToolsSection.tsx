@@ -12,6 +12,7 @@ import {
   Languages,
   ArrowRight,
   Sparkles,
+  Clock,
 } from 'lucide-react';
 
 export default function JudiciaryToolsSection() {
@@ -45,12 +46,13 @@ export default function JudiciaryToolsSection() {
       id: 'mediation',
       number: '03',
       title: 'Mediation & Out-of-Court Settlement',
-      badge: 'Order XXIII R3 CPC',
+      badge: 'Coming Soon',
       description:
         'Turn commercial disputes, claim amounts, and desired outcomes into a 5-part balanced term sheet enforceable under the Mediation Act 2023.',
-      actionText: 'Build Term Sheet',
-      href: `/${locale}/tools/mediation`,
+      actionText: 'Coming Soon',
+      href: `/${locale}/tools/settlement`,
       icon: Gavel,
+      comingSoon: true,
     },
     {
       id: 'documents',
@@ -122,6 +124,51 @@ export default function JudiciaryToolsSection() {
         <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {tools.map((tool) => {
             const Icon = tool.icon;
+            const isComingSoon = (tool as any).comingSoon;
+
+            if (isComingSoon) {
+              return (
+                <div
+                  key={tool.id}
+                  className="group relative flex flex-col justify-between rounded-xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-6 shadow-2xs select-none"
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="flex size-11 items-center justify-center rounded-lg bg-[#E2E8F0] text-[#64748B]">
+                        <Icon className="size-5" />
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-[#94A3B8]">
+                          {tool.number}
+                        </span>
+                        <span className="rounded-full bg-amber-50 border border-amber-300 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800">
+                          Coming Soon
+                        </span>
+                      </div>
+                    </div>
+
+                    <h3 className="mt-5 text-base sm:text-lg font-bold font-merriweather text-[#334155]">
+                      {tool.title}
+                    </h3>
+
+                    <p className="mt-2.5 text-xs sm:text-sm text-[#64748B] leading-relaxed">
+                      {tool.description}
+                    </p>
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-[#E2E8F0] flex items-center justify-between">
+                    <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#94A3B8] cursor-not-allowed">
+                      <Clock className="size-3.5 text-amber-600" />
+                      <span>Coming Soon</span>
+                    </div>
+                    <span className="text-[11px] font-mono text-[#94A3B8]">
+                      Rollout in Progress
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={tool.id}

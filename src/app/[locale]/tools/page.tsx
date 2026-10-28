@@ -13,6 +13,7 @@ import {
   ArrowRight,
   ShieldCheck,
   BookOpen,
+  Clock,
 } from 'lucide-react';
 import { TOOLS_REGISTRY, TOOL_CATEGORIES } from '@/data/toolsRegistry';
 
@@ -92,6 +93,45 @@ export default function ToolsHubPage() {
           {filteredTools.map((tool) => {
             const IconComponent = (ICON_MAP as any)[tool.iconName] || Scale;
             const toolHref = `/${locale}${tool.route}`;
+            const isComingSoon = tool.status === 'coming_soon' || tool.id === 'mediation';
+
+            if (isComingSoon) {
+              return (
+                <div
+                  key={tool.id}
+                  className="group relative flex flex-col justify-between rounded-xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-5 select-none cursor-not-allowed opacity-90 shadow-2xs"
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex size-10 items-center justify-center rounded-lg bg-[#E2E8F0] text-[#64748B]">
+                        <IconComponent className="size-5" />
+                      </div>
+                      <span className="rounded-full bg-amber-50 border border-amber-300 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800">
+                        Coming Soon
+                      </span>
+                    </div>
+
+                    <h3 className="mt-4 text-sm font-semibold text-[#334155]">
+                      {tool.title}
+                    </h3>
+
+                    <p className="mt-1.5 text-xs text-[#64748B] leading-relaxed line-clamp-2">
+                      {tool.description}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-gray-200/80 flex items-center justify-between">
+                    <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#94A3B8]">
+                      <Clock className="size-3.5 text-amber-600" />
+                      <span>Coming Soon</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-gray-400">
+                      Rollout in Progress
+                    </span>
+                  </div>
+                </div>
+              );
+            }
 
             return (
               <Link

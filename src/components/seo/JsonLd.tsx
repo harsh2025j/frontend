@@ -99,7 +99,7 @@ export default function JsonLd({ locale = 'en' }: JsonLdProps) {
               itemOffered: {
                 '@type': 'Service',
                 name: 'Mediation & Out-of-Court Settlement Desk',
-                url: `${siteUrl}/${locale}/tools/mediation`,
+                url: `${siteUrl}/${locale}/tools/settlement`,
                 description:
                   'Structured settlement term sheets complying with Order XXIII Rule 3 CPC and the Mediation Act 2023.',
               },
