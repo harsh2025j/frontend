@@ -22,16 +22,26 @@ export const toolsService = {
     return res.data?.data || res.data;
   },
 
-  searchPrecedents: async (query: string, court?: string, year?: string): Promise<Precedent[]> => {
+  /**
+   * Returns the precedents together with `source`, which says whether the results
+   * came from the official precedent index or from the LLM fallback. The caller is
+   * expected to show that distinction — an AI-suggested citation must never be
+   * presented as a verified one.
+   */
+  searchPrecedents: async (
+    query: string,
+    court?: string,
+    year?: string,
+  ): Promise<{ precedents: Precedent[]; source: string }> => {
     const res = await apiClient.post(API_ENDPOINTS.TOOLS.RESEARCH, { query, court, year });
     const payload = res.data?.data || res.data;
     if (payload?.precedents && Array.isArray(payload.precedents)) {
-      return payload.precedents;
+      return { precedents: payload.precedents, source: payload.source || '' };
     }
     if (Array.isArray(payload)) {
-      return payload;
+      return { precedents: payload, source: '' };
     }
-    return [];
+    return { precedents: [], source: '' };
   },
 
   getJudgmentDetails: async (identifier: string | number): Promise<JudgmentDetails> => {

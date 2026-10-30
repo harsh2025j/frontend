@@ -65,6 +65,7 @@ export default function Footer() {
   ];
 
   const resourceLinks = [
+    { name: "Legal Tools", href: "/tools" },
     { name: "About Us", href: "/about" },
     { name: "Contact Us", href: "/contact" },
     { name: "Advertise With Us", href: "/advertise" },

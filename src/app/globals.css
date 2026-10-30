@@ -5,6 +5,14 @@
   --font-merriweather: Merriweather, sans-serif;
   --font-sans: Georgia, serif;
   --font-georgia: Georgia, serif;
+  /* UI chrome: buttons, labels, card copy. Resolved to Geist on <body> below —
+     --font-geist-sans is declared there, so referencing it from :root would
+     compute to an invalid value and silently fall back to the serif. */
+  --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body {
+  --font-ui: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 

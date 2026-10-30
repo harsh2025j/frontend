@@ -5,26 +5,32 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
-  Download,
-  FileText,
-  Gavel,
   BookOpen,
-  Scale,
-  RefreshCw,
-  ExternalLink,
-  Printer,
-  ShieldCheck,
+  Check,
   CheckCircle2,
   Copy,
-  Check,
+  Download,
+  ExternalLink,
+  FileText,
+  Gavel,
+  Printer,
+  RefreshCw,
+  Scale,
   Search,
-  Sparkles,
-  Building2,
-  Calendar,
-  Users,
-  Layers,
-  Award,
 } from 'lucide-react';
+import { toolButton, toolType } from '@/components/tools/toolsTheme';
+
+/** "2019-01-01" -> "1 January 2019"; anything unparseable is shown as-is. */
+function formatJudgmentDate(value: string) {
+  if (!value) return '';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
 import { toolsService } from '@/data/services/tools-service/toolsService';
 import { JudgmentDetails } from '@/data/services/tools-service/types';
 import JudgmentDetailSkeleton from './JudgmentDetailSkeleton';
@@ -248,13 +254,13 @@ Certified Precedent Analysis via LegalTech Law Research Engine
 
   if (error || !judgment || !summaryData) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <Scale className="mx-auto size-12 text-[#94A3B8]" />
-        <h2 className="mt-4 text-xl font-bold font-merriweather text-[#0B2242]">Judgment Not Found</h2>
-        <p className="mt-2 text-sm text-[#64748B]">
-          {error || 'Could not locate the requested supreme court precedent in the registry.'}
+      <div className="mx-auto max-w-md px-4 py-20 text-center sm:px-6">
+        <Scale className="mx-auto size-6 text-[#9CA3AF]" aria-hidden />
+        <h1 className={`${toolType.title} mt-3`}>Judgment not found</h1>
+        <p className={`${toolType.lead} mt-2`}>
+          {error || 'We could not locate this precedent in the registry.'}
         </p>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
           <button
             type="button"
             onClick={() => {
@@ -262,56 +268,49 @@ Certified Precedent Analysis via LegalTech Law Research Engine
               setLoading(true);
               window.location.reload();
             }}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#CAA438] px-5 py-2.5 text-xs font-bold text-[#0B2242] shadow-xs hover:bg-[#d6af42] transition-all cursor-pointer"
+            className={toolButton('solid')}
           >
-            <RefreshCw className="size-4" />
-            <span>Retry Retrieval</span>
+            <RefreshCw className="size-3.5" aria-hidden />
+            Try again
           </button>
-          <Link
-            href={`/${locale}/tools/research`}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#0B2242] px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#15345E] transition-all"
-          >
-            <ArrowLeft className="size-4" />
-            <span>Back to Precedents Research</span>
+          <Link href={`/${locale}/tools/research`} className={toolButton('outline')}>
+            <ArrowLeft className="size-3.5" aria-hidden />
+            Back to search
           </Link>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      {/* Top Header & Breadcrumb Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-xs font-bold text-[#64748B] hover:text-[#0B2242] transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="size-4" />
-          <span>Back to Precedents Research</span>
-        </button>
+  const tabClass = (active: boolean) =>
+    `inline-flex cursor-pointer items-center gap-1.5 border-b-2 px-1 pb-2.5 font-ui text-[13px] font-medium whitespace-nowrap transition-colors duration-150 ${
+      active
+        ? 'border-[#0B2242] text-[#0B2242]'
+        : 'border-transparent text-[#6B7280] hover:text-[#0B2242]'
+    }`;
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Quick Copy Summary Action */}
+  return (
+    <div className="mx-auto max-w-5xl px-4 pt-6 pb-16 sm:px-6 lg:px-8">
+      {/* actions — the tools layout already provides the Back control */}
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="no-print flex flex-wrap items-center gap-2 print:hidden">
           <button
             type="button"
             onClick={handleCopySummary}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-              copiedSummary
-                ? 'border-[#10B981] bg-[#ECFDF5] text-[#065F46]'
-                : 'border-[#CBD5E1] bg-white text-[#0B2242] hover:bg-[#F8FAFC]'
-            }`}
+            className={toolButton(
+              'outline',
+              copiedSummary ? 'h-9 border-[#A7D8C2] bg-[#F0FAF5] text-[#15694A]' : 'h-9',
+            )}
           >
             {copiedSummary ? (
               <>
-                <Check className="size-3.5 text-[#10B981]" />
-                <span>Copied to Brief!</span>
+                <Check className="size-3.5" aria-hidden />
+                Copied
               </>
             ) : (
               <>
-                <Copy className="size-3.5 text-[#64748B]" />
-                <span>Copy Summary</span>
+                <Copy className="size-3.5 text-[#6B7280]" aria-hidden />
+                Copy summary
               </>
             )}
           </button>
@@ -319,442 +318,349 @@ Certified Precedent Analysis via LegalTech Law Research Engine
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs font-semibold text-[#0B2242] hover:bg-[#F8FAFC] transition-colors"
+            className={toolButton('outline', 'h-9')}
           >
-            <Printer className="size-3.5 text-[#64748B]" />
-            <span>Print Report</span>
+            <Printer className="size-3.5 text-[#6B7280]" aria-hidden />
+            Print
           </button>
 
           <button
             type="button"
             onClick={handleDownloadPdf}
             disabled={downloading}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#0B2242] px-4 py-1.5 text-xs font-bold text-white hover:bg-[#15345E] transition-all shadow-xs disabled:opacity-75"
+            className={toolButton('solid', 'h-9')}
           >
             {downloading ? (
-              <RefreshCw className="size-3.5 animate-spin" />
+              <RefreshCw className="size-3.5 animate-spin" aria-hidden />
             ) : (
-              <Download className="size-3.5 text-[#CAA438]" />
+              <Download className="size-3.5" aria-hidden />
             )}
-            <span>Download PDF</span>
+            Download PDF
           </button>
         </div>
       </div>
 
-      {/* Main Case Identification Header */}
-      <div className="mt-6 rounded-2xl border border-[#CBD5E1] bg-white p-6 sm:p-8 shadow-xs">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-md bg-[#0B2242] px-3 py-1 font-bold text-white tracking-wide">
-              {summaryData.court}
-            </span>
-            <span className="rounded-md bg-[#EAEFF9] px-2.5 py-1 font-bold text-[#0B2242]">
-              {summaryData.caseType}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-[#64748B]">
-            <Calendar className="size-3.5" />
-            <span>{summaryData.judgmentDate}</span>
-          </div>
+      {/* case header */}
+      <header className="mt-6 border-b border-[#E5E7EB] pb-6">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-ui text-[12.5px] text-[#6B7280]">
+          <span className="font-medium text-[#0B2242]">{summaryData.court}</span>
+          {summaryData.caseType && (
+            <>
+              <span aria-hidden className="text-[#D1D5DB]">·</span>
+              <span>{summaryData.caseType}</span>
+            </>
+          )}
+          {summaryData.judgmentDate && (
+            <>
+              <span aria-hidden className="text-[#D1D5DB]">·</span>
+              <span>{formatJudgmentDate(summaryData.judgmentDate)}</span>
+            </>
+          )}
         </div>
 
-        <h1 className="mt-4 text-xl sm:text-2xl lg:text-3xl font-extrabold font-merriweather uppercase text-[#0B2242] leading-snug tracking-tight">
+        <h1 className="mt-2 font-merriweather text-[22px] leading-[1.25] font-bold tracking-[-0.01em] text-[#0B2242] sm:text-[28px]">
           {judgment.title}
         </h1>
 
-        {/* Citations Box */}
         {citationsText && (
-          <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] px-3.5 py-1.5 font-mono text-xs font-semibold text-[#0B2242]">
-            <BookOpen className="size-3.5 text-[#CAA438]" />
-            <span>{citationsText}</span>
-          </div>
+          <p className="mt-2 font-mono text-[12px] text-[#6B7280]">{citationsText}</p>
         )}
 
-        {/* Coram & Metadata Row */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[#F1F5F9] pt-4 text-xs">
-          <div className="flex items-start gap-2">
-            <Gavel className="size-4 text-[#CAA438] shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold text-[#0B2242] uppercase tracking-wider font-mono">
-                CORAM / BENCH:{' '}
-              </span>
-              <span className="text-[#334155] font-medium leading-relaxed">
-                {summaryData.bench}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-2">
-            <Users className="size-4 text-[#0B2242] shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold text-[#0B2242] uppercase tracking-wider font-mono">
-                PARTIES:{' '}
-              </span>
-              <span className="text-[#334155] font-medium leading-relaxed">
-                <span className="font-semibold text-[#0B2242]">{summaryData.petitioner}</span>
-                <span className="text-[#64748B] mx-1">v.</span>
-                <span className="font-semibold text-[#0B2242]">{summaryData.respondent}</span>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* PROMINENT EXECUTIVE CASE SUMMARY CARD */}
-      <section className="mt-8 rounded-2xl border-2 border-[#CBD5E1] bg-white shadow-sm overflow-hidden transition-all">
-        {/* Card Header Strip */}
-        <div className="bg-[#0B2242] text-white px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="rounded-lg bg-[#CAA438]/20 p-2 border border-[#CAA438]/40">
-              <Scale className="size-5 text-[#CAA438]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-bold font-merriweather tracking-wide">
-                  Executive Case Summary & Precedent Brief
-                </h2>
-                <span className="hidden sm:inline-flex items-center gap-1 rounded bg-[#CAA438] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#0B2242]">
-                  <Sparkles className="size-3" />
-                  Certified Analysis
-                </span>
-              </div>
-              <p className="text-xs text-[#94A3B8] font-sans">
-                Authoritative judicial ratio, statutory matrix, and key holding headnotes for legal counsel.
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleCopySummary}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all shadow-xs cursor-pointer ${
-              copiedSummary
-                ? 'bg-[#10B981] text-white'
-                : 'bg-[#CAA438] text-[#0B2242] hover:bg-[#d6af42]'
-            }`}
-          >
-            {copiedSummary ? (
-              <>
-                <Check className="size-3.5" />
-                <span>Copied to Clipboard!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="size-3.5" />
-                <span>Copy Summary for Brief</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Card Content Body */}
-        <div className="p-6 sm:p-8 space-y-6">
-          {/* Section 1: Core Ratio Decidendi & Legal Principle Callout */}
-          <div className="rounded-xl border-l-4 border-l-[#CAA438] border border-[#E2E8F0] bg-gradient-to-r from-[#FFFDF8] via-white to-[#F8FAFC] p-5 sm:p-6 shadow-xs">
-            <div className="flex items-center gap-2 font-mono text-xs font-extrabold uppercase tracking-wider text-[#B45309] mb-2.5">
-              <Award className="size-4 text-[#CAA438]" />
-              <span>Core Ratio Decidendi & Binding Legal Principle</span>
-            </div>
-            <p className="text-sm sm:text-base leading-relaxed text-[#1E293B] font-serif font-normal italic">
-              &ldquo;{summaryData.ratio}&rdquo;
-            </p>
-          </div>
-
-          {/* Section 2: Detailed Headnotes & Case Matrix */}
+        <dl className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <h3 className="text-xs font-bold uppercase font-mono tracking-wider text-[#0B2242] mb-3 flex items-center gap-2">
-              <FileText className="size-3.5 text-[#0B2242]" />
-              <span>Headnotes & Procedural Matrix</span>
-            </h3>
-            <div className="space-y-3">
+            <dt className="font-ui text-[11px] font-semibold tracking-[0.08em] text-[#9CA3AF] uppercase">
+              Coram
+            </dt>
+            <dd className="mt-1 font-ui text-[13px] leading-[1.6] text-[#4B5563]">
+              {summaryData.bench}
+            </dd>
+          </div>
+          <div>
+            <dt className="font-ui text-[11px] font-semibold tracking-[0.08em] text-[#9CA3AF] uppercase">
+              Parties
+            </dt>
+            <dd className="mt-1 font-ui text-[13px] leading-[1.6] text-[#4B5563]">
+              <span className="font-medium text-[#0B2242]">{summaryData.petitioner}</span>
+              <span className="mx-1 text-[#9CA3AF]">v.</span>
+              <span className="font-medium text-[#0B2242]">{summaryData.respondent}</span>
+            </dd>
+          </div>
+        </dl>
+      </header>
+
+      {/* ratio + headnotes */}
+      <section className="mt-8">
+        <h2 className="font-ui text-[15px] font-semibold text-[#0B2242]">Ratio decidendi</h2>
+        <blockquote className="mt-3 border-l-2 border-[#C9A227] pl-4 font-merriweather text-[15px] leading-[1.75] text-[#1F2937] sm:text-base">
+          {summaryData.ratio}
+        </blockquote>
+
+        {summaryData.headnotes.length > 0 && (
+          <div className="mt-8">
+            <h2 className="font-ui text-[15px] font-semibold text-[#0B2242]">Headnotes</h2>
+            <div className="mt-3 divide-y divide-[#E5E7EB] border-y border-[#E5E7EB]">
               {summaryData.headnotes.map((paragraph, idx) => (
-                <div
+                <p
                   key={idx}
-                  className="rounded-lg border border-[#F1F5F9] bg-[#F8FAFC] p-4 text-xs sm:text-sm text-[#334155] leading-relaxed"
+                  className="py-3.5 font-ui text-[13.5px] leading-[1.7] text-[#4B5563]"
                 >
-                  <p>{paragraph}</p>
-                </div>
+                  {paragraph}
+                </p>
               ))}
             </div>
           </div>
+        )}
 
-          {/* Section 3 & 4: Holdings and Statutory Provisions */}
-          {(summaryData.holdings.length > 0 || summaryData.provisions.length > 0) && (
-            <div className={`grid gap-6 pt-2 ${summaryData.holdings.length > 0 && summaryData.provisions.length > 0 ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
-              {/* Holdings & Findings */}
-              {summaryData.holdings.length > 0 && (
-                <div className="rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-xs">
-                  <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider text-[#0B2242] mb-3">
-                    <ShieldCheck className="size-4 text-[#10B981]" />
-                    <span>Key Judicial Holdings & Findings</span>
-                  </div>
-                  <ul className="space-y-2.5">
-                    {summaryData.holdings.map((h, idx) => (
-                      <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#334155]">
-                        <CheckCircle2 className="size-4 text-[#10B981] shrink-0 mt-0.5" />
-                        <span className="leading-relaxed">{h}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+        {(summaryData.holdings.length > 0 || summaryData.provisions.length > 0) && (
+          <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+            {summaryData.holdings.length > 0 && (
+              <div>
+                <h2 className="font-ui text-[15px] font-semibold text-[#0B2242]">Holdings</h2>
+                <ul className="mt-3 space-y-2.5">
+                  {summaryData.holdings.map((h, idx) => (
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2.5 font-ui text-[13.5px] leading-[1.65] text-[#4B5563]"
+                    >
+                      <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[#15694A]" aria-hidden />
+                      <span>{h}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-              {/* Statutory Provisions */}
-              {summaryData.provisions.length > 0 && (
-                <div className="rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-xs">
-                  <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider text-[#0B2242] mb-3">
-                    <BookOpen className="size-4 text-[#0B2242]" />
-                    <span>Statutory Provisions & Acts Cited</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {summaryData.provisions.map((prov, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#EAEFF9] border border-[#CBD5E1] px-3 py-1.5 font-mono text-xs font-semibold text-[#0B2242] hover:bg-[#dbe4f6] transition-colors"
-                      >
-                        <Scale className="size-3 text-[#0B2242]" />
-                        <span>{prov}</span>
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Court Metadata Footer */}
-                  <div className="mt-5 border-t border-[#F1F5F9] pt-3 flex flex-wrap items-center justify-between text-xs text-[#64748B]">
-                    <span className="flex items-center gap-1">
-                      <Building2 className="size-3.5 text-[#64748B]" />
-                      <span>Forum: {summaryData.court}</span>
+            {summaryData.provisions.length > 0 && (
+              <div>
+                <h2 className="font-ui text-[15px] font-semibold text-[#0B2242]">
+                  Provisions cited
+                </h2>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {summaryData.provisions.map((prov, idx) => (
+                    <span
+                      key={idx}
+                      className="rounded-md bg-[#F3F4F6] px-2.5 py-1 font-ui text-[12.5px] text-[#374151]"
+                    >
+                      {prov}
                     </span>
-                    <span className="font-mono">
-                      {judgment.total_paragraphs ? `${judgment.total_paragraphs} Judged Paragraphs` : 'Full Bench'}
-                    </span>
-                  </div>
+                  ))}
                 </div>
-              )}
-            </div>
-          )}
-        </div>
+                <p className={`${toolType.meta} mt-4`}>
+                  {judgment.total_paragraphs
+                    ? `${judgment.total_paragraphs} judged paragraphs`
+                    : 'Full bench'}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
-      {/* Tab Navigation Section */}
-      <div className="mt-10 flex flex-wrap items-center gap-2 border-b border-[#E2E8F0]">
+      {/* tabs */}
+      <div
+        role="tablist"
+        aria-label="Judgment sources"
+        className="scrollbar-hide mt-10 flex items-center gap-5 overflow-x-auto border-b border-[#E5E7EB]"
+      >
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'pdf'}
           onClick={() => setActiveTab('pdf')}
-          className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all cursor-pointer ${
-            activeTab === 'pdf'
-              ? 'border-[#0B2242] text-[#0B2242] bg-white'
-              : 'border-transparent text-[#64748B] hover:text-[#0B2242]'
-          }`}
+          className={tabClass(activeTab === 'pdf')}
         >
-          <FileText className="size-4" />
-          <span>Official Law Report (PDF)</span>
+          <FileText className="size-3.5" aria-hidden />
+          Law report
         </button>
-
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'ratio'}
           onClick={() => setActiveTab('ratio')}
-          className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all cursor-pointer ${
-            activeTab === 'ratio'
-              ? 'border-[#0B2242] text-[#0B2242] bg-white'
-              : 'border-transparent text-[#64748B] hover:text-[#0B2242]'
-          }`}
+          className={tabClass(activeTab === 'ratio')}
         >
-          <Gavel className="size-4" />
-          <span>Ratio & Detailed Headnotes</span>
+          <Gavel className="size-3.5" aria-hidden />
+          Ratio &amp; holdings
         </button>
-
         <button
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'paragraphs'}
           onClick={() => setActiveTab('paragraphs')}
-          className={`flex items-center gap-2 px-5 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all cursor-pointer ${
-            activeTab === 'paragraphs'
-              ? 'border-[#0B2242] text-[#0B2242] bg-white'
-              : 'border-transparent text-[#64748B] hover:text-[#0B2242]'
-          }`}
+          className={tabClass(activeTab === 'paragraphs')}
         >
-          <BookOpen className="size-4" />
-          <span>Judicial Paragraphs ({paragraphs.length})</span>
+          <BookOpen className="size-3.5" aria-hidden />
+          Paragraphs
+          <span className="font-mono text-[11px] text-[#9CA3AF]">{paragraphs.length}</span>
         </button>
       </div>
 
-      {/* Tab Contents */}
-      <div className="mt-6">
-        {/* Tab 1: PDF Viewer */}
+      <div className="mt-5">
+        {/* law report */}
         {activeTab === 'pdf' && (
-          <div className="rounded-2xl border border-[#CBD5E1] bg-white shadow-xs overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between px-6 py-3 bg-[#F8FAFC] border-b border-[#E2E8F0] text-xs text-[#64748B]">
-              <div className="flex items-center gap-2">
-                <FileText className="size-4 text-[#0B2242]" />
-                <span className="font-semibold text-[#0B2242]">Official Law Report Stream</span>
-                <span>• Supreme Court of India Certified Record</span>
-              </div>
-              <div className="flex items-center gap-3">
+          <div className="overflow-hidden rounded-lg border border-[#E5E7EB] bg-white">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E5E7EB] px-4 py-2.5">
+              <span className="font-ui text-[12.5px] text-[#6B7280]">
+                Official law report
+              </span>
+              <div className="flex items-center gap-4">
                 <a
                   href={pdfStreamUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="font-bold text-[#0B2242] hover:text-[#1D4ED8] flex items-center gap-1.5 transition-colors"
+                  className="inline-flex items-center gap-1.5 font-ui text-[12.5px] font-medium text-[#0B2242] transition-colors hover:text-[#1B3A63]"
                 >
-                  <span>Open in Full Tab</span>
-                  <ExternalLink className="size-3" />
+                  Open in new tab
+                  <ExternalLink className="size-3" aria-hidden />
                 </a>
                 <button
                   type="button"
                   onClick={handleDownloadPdf}
-                  className="font-bold text-[#0B2242] hover:text-[#1D4ED8] flex items-center gap-1 transition-colors"
+                  className="inline-flex cursor-pointer items-center gap-1.5 font-ui text-[12.5px] font-medium text-[#0B2242] transition-colors hover:text-[#1B3A63]"
                 >
-                  <Download className="size-3" />
-                  <span>Download</span>
+                  <Download className="size-3" aria-hidden />
+                  Download
                 </button>
               </div>
             </div>
             <iframe
               src={pdfStreamUrl}
-              className="w-full h-[800px] border-0"
-              title="Official Supreme Court Law Report"
+              className="h-[800px] w-full border-0"
+              title="Official law report"
             />
           </div>
         )}
 
-        {/* Tab 2: Ratio & Detailed Headnotes */}
+        {/* ratio & holdings */}
         {activeTab === 'ratio' && (
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-[#CBD5E1] bg-white p-6 sm:p-8 shadow-xs">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold uppercase font-mono tracking-wider text-[#0B2242]">
-                  Binding Ratio Decidendi
+          <div className="max-w-3xl">
+            <h3 className="font-ui text-[15px] font-semibold text-[#0B2242]">
+              Binding ratio
+            </h3>
+            <blockquote className="mt-3 border-l-2 border-[#C9A227] pl-4 font-merriweather text-[15px] leading-[1.75] text-[#1F2937]">
+              {summaryData.ratio}
+            </blockquote>
+            <p className={`${toolType.meta} mt-2`}>Binding under Article 141</p>
+
+            <h3 className="mt-8 font-ui text-[15px] font-semibold text-[#0B2242]">
+              Citation guidance
+            </h3>
+            <p className="mt-2 font-ui text-[13.5px] leading-[1.7] text-[#4B5563]">
+              When citing <span className="font-medium text-[#0B2242]">{judgment.title}</span> in
+              a petition or written submission, counsel generally rely on two lines of argument:
+            </p>
+            <dl className="mt-4 space-y-4">
+              <div>
+                <dt className="font-ui text-[13px] font-semibold text-[#0B2242]">
+                  Procedural standard
+                </dt>
+                <dd className="mt-1 font-ui text-[13.5px] leading-[1.7] text-[#4B5563]">
+                  Statutory bodies are constrained by statutory regulations, and procedural
+                  justice cannot be circumvented through administrative expediency.
+                </dd>
+              </div>
+              <div>
+                <dt className="font-ui text-[13px] font-semibold text-[#0B2242]">
+                  Substantive precedent
+                </dt>
+                <dd className="mt-1 font-ui text-[13.5px] leading-[1.7] text-[#4B5563]">
+                  Applicable before High Courts under Article 226 and civil courts where
+                  statutory interpretation and equity intersect.
+                </dd>
+              </div>
+            </dl>
+
+            {summaryData.holdings.length > 0 && (
+              <>
+                <h3 className="mt-8 font-ui text-[15px] font-semibold text-[#0B2242]">
+                  Judicial holdings
                 </h3>
-                <span className="rounded bg-[#EAEFF9] px-2.5 py-1 text-xs font-mono font-bold text-[#0B2242]">
-                  Art. 141 Binding
-                </span>
-              </div>
-              <p className="text-base leading-relaxed text-[#334155] border-l-4 border-[#CAA438] pl-5 py-2 bg-[#FFFDF5] rounded-r-lg font-serif">
-                {summaryData.ratio}
-              </p>
-            </div>
-
-            {/* Practice Notes for Advocates & Counsels */}
-            <div className="rounded-2xl border border-[#CBD5E1] bg-white p-6 sm:p-8 shadow-xs">
-              <h3 className="text-sm font-bold uppercase font-mono tracking-wider text-[#0B2242] mb-3 flex items-center gap-2">
-                <Layers className="size-4 text-[#CAA438]" />
-                <span>Advocate Citation & Pleadings Guidance</span>
-              </h3>
-              <p className="text-xs sm:text-sm text-[#475569] leading-relaxed mb-4">
-                When drafting Special Leave Petitions, Writ Petitions, or Written Submissions citing{' '}
-                <span className="font-semibold text-[#0B2242]">{judgment.title}</span>, counsels should emphasize the following operational points:
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 text-xs">
-                  <div className="font-bold text-[#0B2242] mb-1.5 font-mono uppercase">
-                    Procedural Standard
-                  </div>
-                  <p className="text-[#334155] leading-relaxed">
-                    Cite for the proposition that statutory bodies are constrained by statutory regulations and procedural justice cannot be circumvented through administrative expediency.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 text-xs">
-                  <div className="font-bold text-[#0B2242] mb-1.5 font-mono uppercase">
-                    Substantive Precedent
-                  </div>
-                  <p className="text-[#334155] leading-relaxed">
-                    Applicable before High Courts under Article 226 and Civil Courts where questions of statutory interpretation and equity intersect.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Full Judicial Holdings */}
-            <div className="rounded-2xl border border-[#CBD5E1] bg-white p-6 sm:p-8 shadow-xs">
-              <h3 className="text-sm font-bold uppercase font-mono tracking-wider text-[#0B2242] mb-4">
-                Judicial Holdings & Determinations
-              </h3>
-              <ul className="space-y-3 text-sm text-[#334155]">
-                {summaryData.holdings.map((h, idx) => (
-                  <li key={idx} className="flex items-start gap-3">
-                    <CheckCircle2 className="size-5 text-[#10B981] shrink-0 mt-0.5" />
-                    <span className="leading-relaxed">{h}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                <ul className="mt-3 space-y-2.5">
+                  {summaryData.holdings.map((h, idx) => (
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2.5 font-ui text-[13.5px] leading-[1.7] text-[#4B5563]"
+                    >
+                      <CheckCircle2
+                        className="mt-0.5 size-4 shrink-0 text-[#15694A]"
+                        aria-hidden
+                      />
+                      <span>{h}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
         )}
 
-        {/* Tab 3: Judicial Paragraphs */}
+        {/* paragraphs */}
         {activeTab === 'paragraphs' && (
-          <div className="space-y-4">
-            {/* Paragraph Search / Filter Bar */}
-            <div className="rounded-xl border border-[#CBD5E1] bg-white p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="relative w-full sm:w-96">
-                <Search className="absolute left-3 top-2.5 size-4 text-[#94A3B8]" />
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="relative w-full sm:w-72">
+                <Search
+                  className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#9CA3AF]"
+                  aria-hidden
+                />
                 <input
-                  type="text"
-                  placeholder="Filter paragraphs by text or paragraph number..."
+                  type="search"
                   value={paraSearchQuery}
                   onChange={(e) => setParaSearchQuery(e.target.value)}
-                  className="w-full rounded-lg border border-[#CBD5E1] pl-9 pr-3 py-2 text-xs focus:border-[#0B2242] focus:outline-none"
+                  aria-label="Filter paragraphs"
+                  placeholder="Filter by text or number"
+                  className="h-9 w-full rounded-md border border-[#E5E7EB] bg-white px-9 font-ui text-[13px] text-[#0B2242] placeholder:text-[#9CA3AF] focus:border-[#0B2242] focus:outline-hidden [&::-webkit-search-cancel-button]:hidden"
                 />
               </div>
-              <div className="text-xs font-mono text-[#64748B]">
-                Showing {filteredParagraphs.length} of {paragraphs.length} paragraphs
-              </div>
+              <span className={toolType.meta}>
+                {filteredParagraphs.length} of {paragraphs.length}
+              </span>
             </div>
 
             {filteredParagraphs.length === 0 ? (
-              <div className="rounded-2xl border border-[#CBD5E1] bg-white p-12 text-center">
-                <BookOpen className="mx-auto size-8 text-[#94A3B8]" />
-                <p className="mt-3 text-sm font-semibold text-[#0B2242]">No paragraphs matched your filter.</p>
+              <div className="mt-10 text-center">
+                <p className={toolType.body}>No paragraphs matched that filter.</p>
                 <button
                   type="button"
                   onClick={() => setParaSearchQuery('')}
-                  className="mt-2 text-xs font-bold text-[#1D4ED8] hover:underline cursor-pointer"
+                  className="mt-2 cursor-pointer font-ui text-[13px] font-medium text-[#0B2242] underline underline-offset-4 hover:text-[#1B3A63]"
                 >
                   Clear filter
                 </button>
               </div>
             ) : (
-              filteredParagraphs.map((p, idx) => {
-                const pNum = p.number || idx + 1;
-                const isCopied = copiedParaId === pNum;
-                return (
-                  <div
-                    key={idx}
-                    className="rounded-xl border border-[#CBD5E1] bg-white p-5 sm:p-6 shadow-xs hover:border-[#94A3B8] transition-all"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2 font-mono text-xs font-bold text-[#64748B]">
-                        <span className="rounded bg-[#F1F5F9] px-2 py-0.5 text-[#0B2242]">
-                          ¶ Paragraph {pNum}
-                        </span>
-                      </div>
+              <ul className="mt-4 divide-y divide-[#E5E7EB] border-y border-[#E5E7EB]">
+                {filteredParagraphs.map((p, idx) => {
+                  const pNum = p.number || idx + 1;
+                  const isCopied = copiedParaId === pNum;
+                  return (
+                    <li key={idx} className="group flex gap-4 py-4">
+                      <span className="w-10 shrink-0 pt-0.5 font-mono text-[12px] text-[#9CA3AF]">
+                        ¶{pNum}
+                      </span>
+                      <p className="flex-1 font-ui text-[13.5px] leading-[1.75] text-[#374151]">
+                        {p.text}
+                      </p>
                       <button
                         type="button"
                         onClick={() => handleCopyParagraph(pNum, p.text)}
-                        className={`inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-semibold transition-all cursor-pointer ${
+                        aria-label={`Copy paragraph ${pNum}`}
+                        className={`h-6 shrink-0 cursor-pointer rounded px-1.5 font-ui text-[12px] transition-colors duration-150 ${
                           isCopied
-                            ? 'bg-[#ECFDF5] text-[#065F46]'
-                            : 'text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0B2242]'
+                            ? 'text-[#15694A]'
+                            : 'text-[#9CA3AF] hover:text-[#0B2242] focus-visible:text-[#0B2242]'
                         }`}
                       >
                         {isCopied ? (
-                          <>
-                            <Check className="size-3 text-[#10B981]" />
-                            <span>Copied</span>
-                          </>
+                          <Check className="size-3.5" aria-hidden />
                         ) : (
-                          <>
-                            <Copy className="size-3" />
-                            <span>Copy ¶</span>
-                          </>
+                          <Copy className="size-3.5" aria-hidden />
                         )}
                       </button>
-                    </div>
-                    <p className="text-sm leading-relaxed text-[#334155] font-sans">
-                      {p.text}
-                    </p>
-                  </div>
-                );
-              })
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </div>
         )}

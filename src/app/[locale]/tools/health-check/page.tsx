@@ -13,14 +13,12 @@ import {
   Check,
   Upload,
   RefreshCw,
-  ShieldAlert,
   ShieldCheck,
   FileText,
   ChevronRight,
   Sparkles,
   Download,
   Trash2,
-  FileSpreadsheet,
   Layers,
   ArrowRight,
   SlidersHorizontal,
@@ -33,6 +31,7 @@ import { toolsService } from '@/data/services/tools-service/toolsService';
 import { HealthCheckReport, HealthCheckFinding } from '@/data/services/tools-service/types';
 
 
+import { toolButton, toolType } from '@/components/tools/toolsTheme';
 const AUDIT_STAGES = [
   {
     step: 1,
@@ -354,71 +353,50 @@ export default function DocumentHealthCheckPage() {
   });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="mx-auto max-w-7xl px-4 pt-6 pb-16 sm:px-6 lg:px-8">
       {/* Page Header */}
-      <div className="border-b border-[#E2E8F0] pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="flex size-7 items-center justify-center rounded bg-[#0B2242] text-white">
-              <FileCheck2 className="size-4 text-[#CAA438]" />
-            </span>
-            <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#0B2242]">
-              Legal Risk Intelligence · 3-Layer Diagnostic Studio
-            </span>
-          </div>
-          <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold font-merriweather text-[#0B2242]">
-            Legal Document Health Check & 3-Layer Risk Audit
-          </h1>
-          <p className="mt-1 text-xs sm:text-sm text-[#64748B] max-w-3xl">
-            Spot missing arbitration seats under the Hardy Exploration doctrine, uncapped indemnities, Section 27 void non-compete covenants, and stamp duty compliance traps across Indian legal contracts.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-2 text-xs text-[#0B2242] bg-[#EAEFF9] border border-[#CBD5E1] px-3.5 py-1.5 rounded-full font-medium">
-            <ShieldAlert className="size-4 text-amber-600" />
-            <span>Statutory Risk Scanner Active</span>
-          </div>
-        </div>
+      <div className="border-b border-[#E5E7EB] pb-5">
+        <h1 className={toolType.title}>Document health check</h1>
+        <p className={`${toolType.lead} mt-1 max-w-2xl`}>
+          A three-layer audit for missing arbitration seats, uncapped indemnities, void
+          non-compete covenants and stamp-duty traps.
+        </p>
       </div>
 
 
       {/* Main Grid: Input Form (5 cols) & Results/Progress (7 cols) */}
-      <div className="grid gap-8 lg:grid-cols-12">
+      <div className="mt-6 grid gap-6 lg:grid-cols-12">
         {/* Left Column: Mutually Exclusive Input Box (5 cols) */}
-        <div className="lg:col-span-5 rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-xs h-fit space-y-5">
+        <div className="h-fit space-y-4 rounded-lg border border-[#E5E7EB] bg-white p-5 lg:col-span-5">
           {/* Header with Mode Toggle Pills */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F1F5F9] pb-3.5">
-            <h2 className="text-sm font-bold uppercase font-mono tracking-wider text-[#0B2242] flex items-center gap-1.5">
-              <FileText className="size-4 text-[#CAA438]" />
-              <span>Document Under Review</span>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F3F4F6] pb-3">
+            <h2 className="font-ui text-[14px] font-semibold text-[#0B2242]">
+              Document under review
             </h2>
 
             {/* Mutually Exclusive Mode Switcher: Either Text OR File */}
-            <div className="inline-flex rounded-lg bg-[#F1F5F9] p-1 border border-[#CBD5E1]">
+            <div className="inline-flex rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-0.5">
               <button
                 type="button"
                 onClick={() => switchMode('text')}
-                className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`inline-flex cursor-pointer items-center gap-1.5 rounded px-2.5 py-1 font-ui text-[12.5px] font-medium transition-colors duration-150 ${
                   inputMode === 'text'
-                    ? 'bg-white text-[#0B2242] shadow-2xs font-extrabold'
-                    : 'text-[#64748B] hover:text-[#0B2242]'
+                    ? 'bg-white text-[#0B2242] shadow-2xs'
+                    : 'text-[#6B7280] hover:text-[#0B2242]'
                 }`}
               >
-                <FileText className="size-3.5" />
-                <span>Paste Text</span>
+                Paste text
               </button>
               <button
                 type="button"
                 onClick={() => switchMode('file')}
-                className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`inline-flex cursor-pointer items-center gap-1.5 rounded px-2.5 py-1 font-ui text-[12.5px] font-medium transition-colors duration-150 ${
                   inputMode === 'file'
-                    ? 'bg-white text-[#0B2242] shadow-2xs font-extrabold'
-                    : 'text-[#64748B] hover:text-[#0B2242]'
+                    ? 'bg-white text-[#0B2242] shadow-2xs'
+                    : 'text-[#6B7280] hover:text-[#0B2242]'
                 }`}
               >
-                <Upload className="size-3.5" />
-                <span>Upload File</span>
+                Upload file
               </button>
             </div>
           </div>
@@ -432,33 +410,29 @@ export default function DocumentHealthCheckPage() {
                 onChange={(e) => setInputText(e.target.value)}
                 disabled={loading}
                 placeholder="Paste contract, agreement, lease deed, non-compete clause, or court pleading here..."
-                className="w-full rounded-lg border border-[#CBD5E1] bg-white p-3.5 font-mono text-xs text-[#0B2242] focus:border-[#0B2242] focus:outline-hidden leading-relaxed disabled:opacity-60"
+                className="w-full rounded-md border border-[#E5E7EB] bg-white p-3 font-ui text-[13px] leading-[1.7] text-[#0B2242] transition-colors duration-150 placeholder:text-[#9CA3AF] focus:border-[#0B2242] focus:outline-hidden disabled:opacity-60"
               />
 
-              <div className="flex items-center justify-between text-xs text-[#64748B]">
-                <span className="font-mono">
+              <div className="flex items-center justify-between">
+                <span className={toolType.meta}>
                   {inputText.length} characters · {inputText.trim().split(/\s+/).filter(Boolean).length} words
                 </span>
                 <button
                   type="button"
                   onClick={() => setInputText('')}
-                  className="text-[11px] text-[#64748B] hover:text-rose-600 cursor-pointer"
+                  className="cursor-pointer font-ui text-[12.5px] text-[#9CA3AF] transition-colors hover:text-[#0B2242]"
                 >
-                  Clear text
+                  Clear
                 </button>
               </div>
 
               <button
                 onClick={handleAudit}
                 disabled={loading || !inputText.trim()}
-                className="w-full mt-2 rounded-lg bg-[#0B2242] px-5 py-3 text-xs sm:text-sm font-bold text-white hover:bg-[#15345E] transition-all flex items-center justify-center gap-2 shadow-xs disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                className={toolButton('solid', 'mt-1 h-11 w-full')}
               >
-                {loading ? (
-                  <RefreshCw className="size-4 animate-spin text-[#CAA438]" />
-                ) : (
-                  <FileCheck2 className="size-4 text-[#CAA438]" />
-                )}
-                <span>{loading ? 'Running 3-Layer Diagnostic Audit...' : 'Audit Document Health'}</span>
+                {loading && <RefreshCw className="size-4 animate-spin" aria-hidden />}
+                {loading ? 'Running audit…' : 'Audit document'}
               </button>
             </div>
           )}
@@ -470,7 +444,7 @@ export default function DocumentHealthCheckPage() {
                 /* Empty Upload Dropzone */
                 <label
                   htmlFor="health-check-file-input"
-                  className="flex flex-col items-center justify-center p-8 sm:p-12 border-2 border-dashed border-[#CBD5E1] rounded-xl hover:border-[#0B2242] hover:bg-[#F8FAFC] transition-all cursor-pointer text-center group bg-[#FBFDFF]"
+                  className="group flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-[#D1D5DB] bg-[#FAFBFC] p-8 text-center transition-colors duration-150 hover:border-[#0B2242] hover:bg-[#F9FAFB] sm:p-10"
                 >
                   <input
                     ref={fileInputRef}
@@ -480,39 +454,37 @@ export default function DocumentHealthCheckPage() {
                     className="hidden"
                     accept=".txt,.md,.doc,.docx,.pdf,image/png,image/jpeg"
                   />
-                  <div className="size-14 rounded-full bg-[#EAEFF9] flex items-center justify-center text-[#0B2242] mb-3 group-hover:scale-110 transition-transform">
-                    <Upload className="size-6 text-[#0B2242]" />
-                  </div>
-                  <p className="font-merriweather font-bold text-sm text-[#0B2242]">
-                    Choose a document or drag & drop here
+                  <Upload className="size-5 text-[#9CA3AF]" aria-hidden />
+                  <p className="mt-3 font-ui text-[14px] font-semibold text-[#0B2242]">
+                    Drop a document here
                   </p>
-                  <p className="text-xs text-[#64748B] mt-1.5 max-w-xs leading-relaxed">
-                    Upload your contract in PDF, DOCX, DOC, TXT, or scanned image format (Supports up to 100+ pages).
+                  <p className="mt-1 max-w-xs font-ui text-[12.5px] leading-[1.6] text-[#6B7280]">
+                    PDF, DOCX, DOC, TXT or a scan. Large agreements are fine.
                   </p>
-                  <span className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#0B2242] px-4 py-2 text-xs font-bold text-white shadow-2xs group-hover:bg-[#15345E] transition-colors">
-                    <FolderOpen className="size-3.5" />
-                    <span>Browse File from Device</span>
+                  <span className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-md border border-[#E5E7EB] bg-white px-3.5 font-ui text-[12.5px] font-medium text-[#0B2242] transition-colors duration-150 group-hover:border-[#0B2242]">
+                    <FolderOpen className="size-3.5" aria-hidden />
+                    Browse files
                   </span>
                 </label>
               ) : (
                 /* Uploaded File Inspection Card */
-                <div className="rounded-xl border border-amber-300 bg-amber-50/70 p-5 space-y-4 shadow-2xs">
+                <div className="space-y-4 rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="size-12 rounded-lg bg-[#0B2242] flex items-center justify-center text-white shrink-0">
-                        <FileCheck2 className="size-6 text-[#CAA438]" />
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-[#E5E7EB] bg-white text-[#0B2242]">
+                        <FileCheck2 className="size-5" aria-hidden />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-sm text-[#0B2242] truncate" title={selectedFile.name}>
+                        <p className="truncate font-ui text-[13.5px] font-semibold text-[#0B2242]" title={selectedFile.name}>
                           {selectedFile.name}
                         </p>
-                        <p className="text-xs text-[#64748B] font-mono mt-0.5">
+                        <p className={`${toolType.meta} mt-0.5`}>
                           {(selectedFile.size / 1024).toFixed(1)} KB ·{' '}
                           {selectedFile.name.split('.').pop()?.toUpperCase() || 'DOCUMENT'}
                         </p>
-                        <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded font-semibold mt-2 border border-emerald-200">
-                          <Check className="size-3 text-emerald-700" />
-                          <span>File Attached & Ready for Audit</span>
+                        <span className="mt-2 inline-flex items-center gap-1 font-ui text-[12px] text-[#15694A]">
+                          <Check className="size-3.5" aria-hidden />
+                          Ready to audit
                         </span>
                       </div>
                     </div>
@@ -527,10 +499,10 @@ export default function DocumentHealthCheckPage() {
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between border-t border-amber-200/80 pt-3 text-xs text-[#475569]">
-                    <span>Document will be audited directly without text pasting.</span>
-                    <label className="font-bold text-[#0B2242] hover:underline cursor-pointer">
-                      <span>Change File</span>
+                  <div className="flex items-center justify-between border-t border-[#E5E7EB] pt-3 font-ui text-[12.5px] text-[#6B7280]">
+                    <span>Audited directly — no pasting needed.</span>
+                    <label className="cursor-pointer font-medium text-[#0B2242] underline underline-offset-4 hover:text-[#1B3A63]">
+                      <span>Change</span>
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -546,19 +518,15 @@ export default function DocumentHealthCheckPage() {
               <button
                 onClick={handleAudit}
                 disabled={loading || !selectedFile}
-                className="w-full rounded-lg bg-[#0B2242] px-5 py-3 text-xs sm:text-sm font-bold text-white hover:bg-[#15345E] transition-all flex items-center justify-center gap-2 shadow-xs disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                className={toolButton('solid', 'h-11 w-full')}
               >
-                {loading ? (
-                  <RefreshCw className="size-4 animate-spin text-[#CAA438]" />
-                ) : (
-                  <FileCheck2 className="size-4 text-[#CAA438]" />
-                )}
-                <span>
+                {loading && <RefreshCw className="size-4 animate-spin" aria-hidden />}
+                <span className="truncate">
                   {loading
-                    ? 'Running 3-Layer Diagnostic Audit...'
+                    ? 'Running audit…'
                     : selectedFile
-                    ? `Audit Document (${selectedFile.name})`
-                    : 'Choose File to Audit'}
+                    ? 'Audit document'
+                    : 'Choose a file first'}
                 </span>
               </button>
             </div>
@@ -569,54 +537,40 @@ export default function DocumentHealthCheckPage() {
         <div className="lg:col-span-7">
           {loading ? (
             /* --- LIVE REAL-TIME AUDIT PROCESSING CONSOLE --- */
-            <div className="rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-xs space-y-6">
+            <div className="space-y-5 rounded-lg border border-[#E5E7EB] bg-white p-5">
               {/* Top Progress Header */}
-              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-lg bg-[#0B2242] flex items-center justify-center text-[#CAA438] shrink-0">
-                    <RefreshCw className="size-5 animate-spin text-[#CAA438]" />
-                  </div>
-                  <div>
-                    <h3 className="font-merriweather font-extrabold text-[#0B2242] text-base">
-                      Document Health Diagnostic in Progress
-                    </h3>
-                    <p className="text-xs text-[#64748B]">
-                      AI Counsel is actively inspecting clauses across all 3 statutory layers
-                    </p>
-                  </div>
+              <div className="flex items-start justify-between gap-4 border-b border-[#F3F4F6] pb-4">
+                <div>
+                  <h3 className="flex items-center gap-2 font-ui text-[15px] font-semibold text-[#0B2242]">
+                    <RefreshCw className="size-4 animate-spin text-[#6B7280]" aria-hidden />
+                    Audit in progress
+                  </h3>
+                  <p className={`${toolType.body} mt-1`}>
+                    Checking clauses across all three statutory layers.
+                  </p>
                 </div>
 
-                <div className="text-right">
-                  <span className="font-mono text-3xl font-black text-[#0B2242]">{progressPercent}%</span>
-                  <p className="text-[10px] uppercase font-mono tracking-wider text-[#64748B]">Scan Completed</p>
-                </div>
+                <span className="font-merriweather text-2xl font-bold text-[#0B2242] tabular-nums">
+                  {progressPercent}%
+                </span>
               </div>
 
               {/* Countdown & Disclaimer Box */}
-              <div className="rounded-lg bg-amber-50/80 border border-amber-200 p-4 space-y-2">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="font-mono font-bold text-amber-950 flex items-center gap-1.5">
-                    <Clock className="size-4 text-amber-700" />
-                    <span>
-                      {secondsRemaining > 0
-                        ? `Estimated Time Remaining: ~${secondsRemaining}s`
-                        : 'Finalizing Statutory Diagnostics & Score...'}
-                    </span>
-                  </span>
-                  <span className="text-[11px] font-mono text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded font-semibold border border-amber-200">
-                    Estimated Time: ~{estimatedSeconds}s Total
-                  </span>
-                </div>
-                <p className="text-[11px] text-amber-900 leading-relaxed font-sans">
-                  Note: This is an estimated processing time and may increase or decrease based on document length, statutory clause density, and server load.
-                </p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 font-ui text-[13px] text-[#4B5563]">
+                  <Clock className="size-3.5 text-[#9CA3AF]" aria-hidden />
+                  {secondsRemaining > 0
+                    ? `About ${secondsRemaining}s remaining`
+                    : 'Finalising score…'}
+                </span>
+                <span className={toolType.meta}>~{estimatedSeconds}s estimated</span>
               </div>
 
               {/* Live Animated Progress Bar */}
               <div className="space-y-1.5">
-                <div className="h-2.5 w-full bg-[#E2E8F0] rounded-full overflow-hidden">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#F3F4F6]">
                   <div
-                    className="h-full bg-gradient-to-r from-[#0B2242] via-[#1E40AF] to-[#CAA438] transition-all duration-300 ease-out rounded-full"
+                    className="h-full rounded-full bg-[#0B2242] transition-[width] duration-300 ease-out"
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
@@ -679,37 +633,37 @@ export default function DocumentHealthCheckPage() {
               </div>
 
               {/* Privacy Reassurance Banner */}
-              <div className="text-[11px] text-[#64748B] border-t border-[#F1F5F9] pt-3 flex items-center gap-2">
-                <ShieldCheck className="size-4 text-emerald-600 shrink-0" />
-                <span>Isolated Execution Sandbox: No legal agreements or client party details are stored or logged.</span>
+              <div className="flex items-center gap-2 border-t border-[#F3F4F6] pt-3">
+                <ShieldCheck className="size-3.5 shrink-0 text-[#15694A]" aria-hidden />
+                <span className={toolType.meta}>
+                  Nothing from this document is stored or logged.
+                </span>
               </div>
             </div>
           ) : report ? (
             /* --- DIAGNOSTIC REPORT RESULTS DASHBOARD --- */
             <div className="space-y-6">
               {/* Score & Risk Level Card */}
-              <div className="rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-xs space-y-5">
+              <div className="space-y-4 rounded-lg border border-[#E5E7EB] bg-white p-5">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <span className="font-mono text-xs uppercase tracking-wider text-[#64748B]">
-                      Diagnostic Health Score
-                    </span>
-                    <div className="flex items-baseline gap-2 mt-1">
-                      <h3 className="text-3xl sm:text-4xl font-extrabold font-merriweather text-[#0B2242]">
+                    <span className={toolType.meta}>Health score</span>
+                    <div className="mt-1 flex items-baseline gap-1.5">
+                      <h3 className="font-merriweather text-3xl font-bold text-[#0B2242] tabular-nums">
                         {report.healthScore}
                       </h3>
-                      <span className="text-sm font-mono text-[#64748B]">/ 100</span>
+                      <span className="font-ui text-[13px] text-[#9CA3AF]">/ 100</span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <span
-                      className={`rounded-full px-4 py-1.5 font-mono text-xs font-bold tracking-wider ${
+                      className={`rounded-md px-2.5 py-1 font-ui text-[12px] font-semibold ${
                         report.riskLevel === 'HIGH RISK'
-                          ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                          ? 'bg-[#FEF2F2] text-[#B42318]'
                           : report.riskLevel === 'MODERATE RISK'
-                          ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                          : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                          ? 'bg-[#FFF8EB] text-[#92610A]'
+                          : 'bg-[#F0FAF5] text-[#15694A]'
                       }`}
                     >
                       {report.riskLevel}
@@ -717,81 +671,72 @@ export default function DocumentHealthCheckPage() {
 
                     <button
                       onClick={exportReport}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] px-3 py-1.5 text-xs font-bold text-[#0B2242] hover:bg-white transition-all shadow-2xs cursor-pointer"
-                      title="Download complete audit memorandum as Markdown"
+                      className={toolButton('outline', 'h-9')}
+                      title="Download the audit as Markdown"
                     >
-                      <Download className="size-3.5" />
-                      <span>Export Report</span>
+                      <Download className="size-3.5" aria-hidden />
+                      Export
                     </button>
                   </div>
                 </div>
 
                 {report.documentSummary && (
-                  <p className="text-xs text-[#475569] leading-relaxed border-t border-[#F1F5F9] pt-3">
-                    <span className="font-bold text-[#0B2242]">Executive Assessment: </span>
+                  <p className="border-t border-[#F3F4F6] pt-3 font-ui text-[13.5px] leading-[1.7] text-[#4B5563]">
                     {report.documentSummary}
                   </p>
                 )}
 
                 {/* Document Metrics & Page Count Banner */}
                 {report.documentMetrics && (
-                  <div className="flex flex-wrap items-center gap-2 border-t border-[#F1F5F9] pt-3 text-[11px] font-mono text-[#475569]">
-                    <span className="inline-flex items-center gap-1 bg-[#F1F5F9] px-2.5 py-1 rounded border border-[#CBD5E1] font-semibold text-[#0B2242]">
-                      <FileSpreadsheet className="size-3 text-[#CAA438]" />
-                      <span>{report.documentMetrics.estimatedPages} Pages</span>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[#F3F4F6] pt-3 font-ui text-[12.5px] text-[#6B7280]">
+                    <span>{report.documentMetrics.estimatedPages} pages</span>
+                    <span aria-hidden className="text-[#D1D5DB]">·</span>
+                    <span>{report.documentMetrics.wordCount?.toLocaleString()} words</span>
+                    <span aria-hidden className="text-[#D1D5DB]">·</span>
+                    <span className="inline-flex items-center gap-1 text-[#15694A]">
+                      <CheckCircle className="size-3.5" aria-hidden />
+                      {report.documentMetrics.coverage || 'Fully audited'}
                     </span>
-                    <span className="inline-flex items-center gap-1 bg-[#F1F5F9] px-2.5 py-1 rounded border border-[#CBD5E1]">
-                      <span>{report.documentMetrics.wordCount?.toLocaleString()} Words</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded border border-emerald-200 font-semibold">
-                      <CheckCircle className="size-3 text-emerald-600" />
-                      <span>{report.documentMetrics.coverage || '100% Full Document Audited'}</span>
-                    </span>
-                    {report.documentMetrics.isLargeDoc && (
-                      <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-800 px-2.5 py-1 rounded border border-indigo-200 font-semibold">
-                        <span>Large-Scale Agreement Audit (1M Token Window)</span>
-                      </span>
-                    )}
                   </div>
                 )}
 
                 {/* 3-Layer Score Breakdown */}
                 {report.layerScores && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-[#F1F5F9] pt-4 font-mono text-xs">
-                    <div className="rounded-lg bg-[#F8FAFC] p-3 border border-[#E2E8F0]">
-                      <div className="flex items-center justify-between text-[11px] text-[#64748B] mb-1">
+                  <div className="grid grid-cols-1 gap-3 border-t border-[#F3F4F6] pt-4 sm:grid-cols-3">
+                    <div className="rounded-md border border-[#F3F4F6] bg-[#FAFBFC] p-3">
+                      <div className="mb-1.5 flex items-center justify-between font-ui text-[12px] text-[#6B7280]">
                         <span>Layer 1 (Statutory)</span>
-                        <span className="font-bold text-[#0B2242]">{report.layerScores.layer1Score}%</span>
+                        <span className="font-semibold text-[#0B2242] tabular-nums">{report.layerScores.layer1Score}%</span>
                       </div>
-                      <div className="h-1.5 w-full bg-[#E2E8F0] rounded-full overflow-hidden">
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
                         <div
-                          className="h-full bg-[#0B2242] rounded-full"
+                          className="h-full rounded-full bg-[#0B2242]"
                           style={{ width: `${Math.min(100, Math.max(5, report.layerScores.layer1Score))}%` }}
                         />
                       </div>
                     </div>
 
-                    <div className="rounded-lg bg-[#F8FAFC] p-3 border border-[#E2E8F0]">
-                      <div className="flex items-center justify-between text-[11px] text-[#64748B] mb-1">
+                    <div className="rounded-md border border-[#F3F4F6] bg-[#FAFBFC] p-3">
+                      <div className="mb-1.5 flex items-center justify-between font-ui text-[12px] text-[#6B7280]">
                         <span>Layer 2 (Commercial)</span>
-                        <span className="font-bold text-[#0B2242]">{report.layerScores.layer2Score}%</span>
+                        <span className="font-semibold text-[#0B2242] tabular-nums">{report.layerScores.layer2Score}%</span>
                       </div>
-                      <div className="h-1.5 w-full bg-[#E2E8F0] rounded-full overflow-hidden">
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
                         <div
-                          className="h-full bg-amber-600 rounded-full"
+                          className="h-full rounded-full bg-[#B98900]"
                           style={{ width: `${Math.min(100, Math.max(5, report.layerScores.layer2Score))}%` }}
                         />
                       </div>
                     </div>
 
-                    <div className="rounded-lg bg-[#F8FAFC] p-3 border border-[#E2E8F0]">
-                      <div className="flex items-center justify-between text-[11px] text-[#64748B] mb-1">
+                    <div className="rounded-md border border-[#F3F4F6] bg-[#FAFBFC] p-3">
+                      <div className="mb-1.5 flex items-center justify-between font-ui text-[12px] text-[#6B7280]">
                         <span>Layer 3 (Enforceability)</span>
-                        <span className="font-bold text-[#0B2242]">{report.layerScores.layer3Score}%</span>
+                        <span className="font-semibold text-[#0B2242] tabular-nums">{report.layerScores.layer3Score}%</span>
                       </div>
-                      <div className="h-1.5 w-full bg-[#E2E8F0] rounded-full overflow-hidden">
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
                         <div
-                          className="h-full bg-emerald-600 rounded-full"
+                          className="h-full rounded-full bg-[#15694A]"
                           style={{ width: `${Math.min(100, Math.max(5, report.layerScores.layer3Score))}%` }}
                         />
                       </div>
@@ -1146,25 +1091,31 @@ export default function DocumentHealthCheckPage() {
             </div>
           ) : (
             /* --- EMPTY AUDIT PROMPT STATE --- */
-            <div className="rounded-xl border border-dashed border-[#CBD5E1] bg-white p-12 text-center space-y-3">
-              <FileCheck2 className="mx-auto size-12 text-[#CBD5E1]" />
-              <h3 className="font-merriweather font-bold text-[#0B2242] text-lg">
-                No Document Audit Performed Yet
+            <div className="rounded-lg border border-dashed border-[#E5E7EB] bg-white px-6 py-14 text-center">
+              <FileCheck2 className="mx-auto size-6 text-[#9CA3AF]" aria-hidden />
+              <h3 className="mt-3 font-ui text-[15px] font-semibold text-[#0B2242]">
+                No audit run yet
               </h3>
-              <p className="text-xs text-[#64748B] max-w-md mx-auto leading-relaxed">
-                Choose one of the 4 practice archetypes, paste your agreement text, or switch to &ldquo;Upload File&rdquo; to attach a contract (PDF, DOCX, DOC, TXT, or scan), then click &ldquo;Audit Document Health&rdquo;.
+              <p className={`${toolType.body} mx-auto mt-1.5 max-w-sm`}>
+                Paste your agreement, or upload a contract, then run the audit.
               </p>
-              <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded bg-[#F1F5F9] px-2.5 py-1 text-[11px] font-mono text-[#0B2242] border border-[#CBD5E1]">
-                  Layer 1: Statutory Compliance
-                </span>
-                <span className="inline-flex items-center gap-1 rounded bg-[#F1F5F9] px-2.5 py-1 text-[11px] font-mono text-[#0B2242] border border-[#CBD5E1]">
-                  Layer 2: Commercial Gaps
-                </span>
-                <span className="inline-flex items-center gap-1 rounded bg-[#F1F5F9] px-2.5 py-1 text-[11px] font-mono text-[#0B2242] border border-[#CBD5E1]">
-                  Layer 3: Enforceability
-                </span>
-              </div>
+              <ol className="mx-auto mt-5 max-w-xs space-y-1.5 text-left">
+                {[
+                  'Statutory compliance',
+                  'Commercial gaps',
+                  'Enforceability',
+                ].map((layer, i) => (
+                  <li
+                    key={layer}
+                    className="flex items-center gap-2.5 font-ui text-[13px] text-[#4B5563]"
+                  >
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#F3F4F6] font-mono text-[11px] text-[#6B7280]">
+                      {i + 1}
+                    </span>
+                    {layer}
+                  </li>
+                ))}
+              </ol>
             </div>
           )}
         </div>

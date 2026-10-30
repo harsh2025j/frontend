@@ -1,13 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
   FileText,
   Search,
   ArrowRight,
-  ArrowLeft,
   Check,
   Copy,
   Download,
@@ -1794,29 +1792,10 @@ export default function LegalDocumentsPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-16">
-      {/* Top Header Bar */}
-      <div className="border-b border-[#E2E8F0] bg-white sticky top-0 z-30 shadow-xs">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/${locale}/tools`}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#64748B] hover:text-[#0B2242] transition-colors"
-            >
-              <ArrowLeft className="size-3.5" />
-              <span>All legal documents</span>
-            </Link>
-            <span className="text-gray-300">|</span>
-            <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#0B2242]">
-              LEGAL DOCUMENTS · AI
-            </span>
-          </div>
-
-
-        </div>
-      </div>
+      {/* The tools layout already provides the Back control. */}
 
       {/* Hero Headline */}
-      <div className="mx-auto max-w-7xl px-4 pt-8 pb-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 pt-6 pb-4 sm:px-6 lg:px-8">
         <h1 className="text-2xl sm:text-3xl font-extrabold font-merriweather text-[#0B2242]">
           {selectedTemplate && activeStep > 2 ? selectedTemplate.title : 'Draft from a proven template.'}
         </h1>
@@ -1873,63 +1852,75 @@ export default function LegalDocumentsPage() {
         {/* STEP 1: DOCUMENT TYPE (58 CATEGORIES) */}
         {activeStep === 1 && (
           <div>
-            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-base font-bold text-[#0B2242]">Filter categories, or search all templates</h2>
-                <p className="text-xs text-[#64748B]">Select the legal branch or category of deed you wish to execute</p>
+                <h2 className="font-ui text-[15px] font-semibold text-[#0B2242]">
+                  Choose a document type
+                </h2>
+                <p className="mt-1 font-ui text-[13px] leading-[1.6] text-[#6B7280]">
+                  Pick the legal branch, or search across all templates.
+                </p>
               </div>
 
-              <div className="relative w-full sm:w-80">
-                <Search className="absolute left-3 top-2.5 size-4 text-gray-400" />
+              <div className="relative w-full shrink-0 sm:w-64">
+                <Search
+                  className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#9CA3AF]"
+                  aria-hidden
+                />
                 <input
-                  type="text"
+                  type="search"
                   value={categorySearch}
                   onChange={(e) => setCategorySearch(e.target.value)}
-                  placeholder="Search all templates or categories..."
-                  className="w-full rounded-lg border border-[#CBD5E1] bg-white pl-9 pr-3.5 py-2 text-xs text-[#0B2242] focus:border-[#0B2242] focus:outline-hidden"
+                  aria-label="Search templates or categories"
+                  placeholder="Search templates"
+                  className="h-9 w-full rounded-md border border-[#E5E7EB] bg-white pr-3 pl-9 font-ui text-[13px] text-[#0B2242] transition-colors duration-150 placeholder:text-[#9CA3AF] focus:border-[#0B2242] focus:outline-hidden [&::-webkit-search-cancel-button]:hidden"
                 />
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 items-stretch">
               {filteredCategories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => handleSelectCategory(cat)}
-                  className="group flex flex-col justify-between text-left rounded-xl border border-[#CBD5E1] bg-white p-4.5 shadow-xs transition-all hover:border-[#0B2242] hover:shadow-md cursor-pointer"
+                  className="group flex cursor-pointer flex-col justify-between rounded-lg border border-[#E5E7EB] bg-white p-4 text-left transition-colors duration-150 hover:border-[#0B2242] focus-visible:border-[#0B2242] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#0B2242]/20"
                 >
                   <div>
-                    <h3 className="font-bold text-sm text-[#0B2242] group-hover:text-[#1D4ED8] transition-colors leading-snug">
+                    <h3 className="font-ui text-[14px] leading-snug font-semibold text-[#0B2242]">
                       {cat.name}
                     </h3>
-                    <div className="mt-2 flex items-center gap-2 text-xs text-[#64748B]">
-                      <span className="font-semibold text-[#0B2242]">{cat.templateCount} templates</span>
-                      {cat.subcategoriesCount && (
-                        <>
-                          <span>·</span>
-                          <span>{cat.subcategoriesCount} subcategories</span>
-                        </>
-                      )}
-                    </div>
+                    <p className="mt-1.5 font-ui text-[12.5px] text-[#6B7280]">
+                      {cat.templateCount} templates
+                      {cat.subcategoriesCount
+                        ? ` · ${cat.subcategoriesCount} subcategories`
+                        : ''}
+                    </p>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between text-[11px] font-semibold text-[#0B2242] group-hover:translate-x-1 transition-transform">
-                    <span>Explore templates</span>
-                    <ChevronRight className="size-3.5 text-gray-400 group-hover:text-[#0B2242]" />
-                  </div>
+                  {/* only the chevron moves — the row itself must not shift */}
+                  <span className="mt-4 inline-flex items-center gap-1 font-ui text-[12.5px] font-medium text-[#0B2242]">
+                    Explore templates
+                    <ChevronRight
+                      className="size-3.5 transition-transform duration-150 group-hover:translate-x-0.5 motion-reduce:transition-none"
+                      aria-hidden
+                    />
+                  </span>
                 </button>
               ))}
             </div>
 
             {filteredCategories.length === 0 && (
-              <div className="text-center py-12 bg-white rounded-xl border border-dashed border-[#CBD5E1] p-8">
-                <Search className="mx-auto size-8 text-gray-400 mb-2" />
-                <p className="text-sm font-semibold text-[#0B2242]">No matching legal categories found</p>
-                <p className="text-xs text-gray-500 mt-1">Try searching for other terms like &ldquo;Agreement&rdquo;, &ldquo;Arbitration&rdquo;, &ldquo;Notice&rdquo;, or &ldquo;Pleadings&rdquo;.</p>
+              <div className="py-16 text-center">
+                <p className="font-ui text-[13.5px] text-[#6B7280]">
+                  No categories match “{categorySearch}”.
+                </p>
+                <p className="mt-1 font-ui text-[12.5px] text-[#9CA3AF]">
+                  Try “Agreement”, “Arbitration”, “Notice” or “Pleadings”.
+                </p>
                 <button
                   type="button"
                   onClick={() => setCategorySearch('')}
-                  className="mt-3 px-3.5 py-1.5 text-xs font-bold text-[#0B2242] bg-[#EAEFF9] rounded-lg hover:bg-[#dbe4f6] transition-colors cursor-pointer"
+                  className="mt-3 cursor-pointer font-ui text-[13px] font-medium text-[#0B2242] underline underline-offset-4 transition-colors hover:text-[#1B3A63]"
                 >
                   Clear search
                 </button>
@@ -1970,7 +1961,11 @@ export default function LegalDocumentsPage() {
                     <button
                       key={tmpl.id}
                       onClick={() => setSelectedTemplate(tmpl)}
-                      className={`w-full flex items-start gap-3 p-4 text-left transition-colors cursor-pointer ${isSelected ? 'bg-[#EAEFF9] border-l-4 border-l-[#0B2242]' : 'hover:bg-gray-50'
+                      // the left border is always present, only its colour changes,
+                      // otherwise selecting a row shifts its contents by 4px
+                      className={`w-full cursor-pointer border-l-[3px] p-4 text-left flex items-start gap-3 transition-colors duration-150 ${isSelected
+                          ? 'border-l-[#0B2242] bg-[#EEF2F9]'
+                          : 'border-l-transparent hover:bg-[#F9FAFB]'
                         }`}
                     >
                       <FileText className={`size-4 mt-0.5 shrink-0 ${isSelected ? 'text-[#0B2242]' : 'text-gray-400'}`} />
