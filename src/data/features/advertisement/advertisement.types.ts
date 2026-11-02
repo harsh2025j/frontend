@@ -62,19 +62,20 @@ export const AD_SLOTS = [
   { id: "CATEGORY_SIDEBAR_1", name: "Category/Tag Sidebar", dimensions: "300x250", type: "SIDEBAR" },
 ];
 
+// ─── ADSENSE DISABLED ────────────────────────────────────────────────────────
+// Uncomment ALL lines inside this object once AdSense is approved.
+// Also re-enable the <Script> tag in src/app/[locale]/layout.tsx.
 export const GOOGLE_AD_MAPPINGS: Record<string, string> = {
-  // Map Slot IDs to Google AdSense Unit IDs
-  // ONLY put the 10-digit number here.
-  "HOME_BANNER_TOP_1": "7027269897",
-  "HOME_BANNER_TOP_2": "6915589251",
-  "HOME_SIDEBAR_1": "9322260748",
-  "HOME_SIDEBAR_2": "9613609639",
-  "HOME_FEED_1": "4249602311",
-  "HOME_POPUP": "4638620136",
-  "ARTICLE_BANNER_1": "9288311584",
-  "ARTICLE_SIDEBAR_1": "5349066575",
-  "ARTICLE_SIDEBAR_2": "2722903239",
-  "ARTICLE_FOOTER_1": "8729074235",
-  "CATEGORY_BANNER_1": "6452554826",
-  "CATEGORY_SIDEBAR_1": "8258300949",
+  // "HOME_BANNER_TOP_1": "7027269897",
+  // "HOME_BANNER_TOP_2": "6915589251",
+  // "HOME_SIDEBAR_1": "9322260748",
+  // "HOME_SIDEBAR_2": "9613609639",
+  // "HOME_FEED_1": "4249602311",
+  // "HOME_POPUP": "4638620136",
+  // "ARTICLE_BANNER_1": "9288311584",
+  // "ARTICLE_SIDEBAR_1": "5349066575",
+  // "ARTICLE_SIDEBAR_2": "2722903239",
+  // "ARTICLE_FOOTER_1": "8729074235",
+  // "CATEGORY_BANNER_1": "6452554826",
+  // "CATEGORY_SIDEBAR_1": "8258300949",
 };

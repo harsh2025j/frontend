@@ -177,14 +177,14 @@ export default async function RootLayout({
         <JsonLd locale={locale} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} antialiased`} suppressHydrationWarning>
-        {/* Google AdSense Script - Placed in body per Next.js requirements to avoid data-nscript head error */}
-        <Script
+        {/* ADSENSE DISABLED — re-enable once AdSense is approved (also uncomment GOOGLE_AD_MAPPINGS in advertisement.types.ts) */}
+        {/* <Script
           id="google-adsense"
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6354615575453705"
           crossOrigin="anonymous"
           strategy="afterInteractive"
-        />
+        /> */}
         {/* Google Analytics Script */}
         <Script
           id="google-analytics-src"

@@ -125,6 +125,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
     const [translatedData, setTranslatedData] = useState<{ title: string; content: string } | null>(null);
     const [authorPhoto, setAuthorPhoto] = useState<string | null>(null);
     const [authorUsername, setAuthorUsername] = useState<string | null>(null);
+    const [authorName, setAuthorName] = useState<string | null>(null);
     const [authorDesignation, setAuthorDesignation] = useState<string | null>((article as any).authorDesignation || (article as any).designation || null);
     const [advocatePhotos, setAdvocatePhotos] = useState<Record<string, string>>({});
     const [advocateUsernames, setAdvocateUsernames] = useState<Record<string, string>>({});
@@ -137,6 +138,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                     if (res.data.success) {
                         if (res.data.data.profilePicture) setAuthorPhoto(res.data.data.profilePicture);
                         if (res.data.data.username) setAuthorUsername(res.data.data.username);
+                        if (res.data.data.name) setAuthorName(res.data.data.name);
                         if (res.data.data.designation && res.data.data.designation !== "null" && res.data.data.designation !== "NULL") {
                             setAuthorDesignation(res.data.data.designation);
                         }
@@ -304,15 +306,15 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                             >
                                 <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-base sm:text-lg font-bold ring-2 ring-[#C9A227] shadow-xs shrink-0 overflow-hidden relative group-hover/author:ring-[#C9A227]/70 transition-all">
                                     {authorPhoto ? (
-                                        <Image src={authorPhoto} alt={article.authors || "Author"} fill sizes="60px" className="object-cover" quality={90} />
+                                        <Image src={authorPhoto} alt={authorName || article.authors || "Author"} fill sizes="60px" className="object-cover" quality={90} />
                                     ) : (
-                                        article.authors?.charAt(0).toUpperCase() || "A"
+                                        (authorName || article.authors)?.charAt(0).toUpperCase() || "A"
                                     )}
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                         <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-snug m-0 font-serif tracking-tight truncate group-hover/author:text-[#C9A227] transition-colors">
-                                            {article.authors || "Unknown Author"}
+                                            {authorName || article.authors || "Unknown Author"}
                                         </h3>
                                         <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[9px] uppercase font-bold tracking-wider rounded-full shrink-0">
                                             AUTHOR
@@ -336,15 +338,15 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                             <div className="flex items-center gap-2.5">
                                 <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-base sm:text-lg font-bold ring-2 ring-[#C9A227] shadow-xs shrink-0 overflow-hidden relative">
                                     {authorPhoto ? (
-                                        <Image src={authorPhoto} alt={article.authors || "Author"} fill sizes="60px" className="object-cover" quality={90} />
+                                        <Image src={authorPhoto} alt={authorName || article.authors || "Author"} fill sizes="60px" className="object-cover" quality={90} />
                                     ) : (
-                                        article.authors?.charAt(0).toUpperCase() || "A"
+                                        (authorName || article.authors)?.charAt(0).toUpperCase() || "A"
                                     )}
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                         <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-snug m-0 font-serif tracking-tight truncate">
-                                            {article.authors || "Unknown Author"}
+                                            {authorName || article.authors || "Unknown Author"}
                                         </h3>
                                         <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[9px] uppercase font-bold tracking-wider rounded-full shrink-0">
                                             AUTHOR
@@ -397,14 +399,14 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                             <Link href={`/profile/${authorUsername || article.authorId}`} className="flex items-center gap-3.5 group/author w-fit cursor-pointer">
                                 <div className="h-12 w-12 sm:h-13 sm:w-13 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-xl font-bold ring-2 ring-[#C9A227] shadow-sm shrink-0 overflow-hidden relative group-hover/author:ring-[#C9A227]/70 transition-all">
                                     {authorPhoto ? (
-                                        <Image src={authorPhoto} alt={article.authors || "Author"} fill sizes="80px" className="object-cover" quality={90} />
+                                        <Image src={authorPhoto} alt={authorName || article.authors || "Author"} fill sizes="80px" className="object-cover" quality={90} />
                                     ) : (
-                                        article.authors?.charAt(0).toUpperCase() || "A"
+                                        (authorName || article.authors)?.charAt(0).toUpperCase() || "A"
                                     )}
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2 mb-0.5">
-                                        <h3 className="font-bold text-gray-900 text-lg sm:text-xl font-serif leading-none m-0 group-hover/author:text-[#C9A227] transition-colors">{article.authors || "Unknown Author"}</h3>
+                                        <h3 className="font-bold text-gray-900 text-lg sm:text-xl font-serif leading-none m-0 group-hover/author:text-[#C9A227] transition-colors">{authorName || article.authors || "Unknown Author"}</h3>
                                         <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[10px] uppercase font-bold tracking-wider rounded-full">AUTHOR</span>
                                     </div>
                                     <p className="text-xs sm:text-sm text-gray-500 font-normal m-0 leading-snug">
@@ -416,14 +418,14 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                             <div className="flex items-center gap-3.5">
                                 <div className="h-12 w-12 sm:h-13 sm:w-13 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-xl font-bold ring-2 ring-[#C9A227] shadow-sm shrink-0 overflow-hidden relative">
                                     {authorPhoto ? (
-                                        <Image src={authorPhoto} alt={article.authors || "Author"} fill sizes="80px" className="object-cover" quality={90} />
+                                        <Image src={authorPhoto} alt={authorName || article.authors || "Author"} fill sizes="80px" className="object-cover" quality={90} />
                                     ) : (
-                                        article.authors?.charAt(0).toUpperCase() || "A"
+                                        (authorName || article.authors)?.charAt(0).toUpperCase() || "A"
                                     )}
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2 mb-0.5">
-                                        <h3 className="font-bold text-gray-900 text-lg sm:text-xl font-serif leading-none m-0">{article.authors || "Unknown Author"}</h3>
+                                        <h3 className="font-bold text-gray-900 text-lg sm:text-xl font-serif leading-none m-0">{authorName || article.authors || "Unknown Author"}</h3>
                                         <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[10px] uppercase font-bold tracking-wider rounded-full">AUTHOR</span>
                                     </div>
                                     <p className="text-xs sm:text-sm text-gray-500 font-normal m-0 leading-snug">
