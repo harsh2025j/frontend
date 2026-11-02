@@ -862,6 +862,14 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                         dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayContent) }}
                     />
 
+                    {/* Legal disclaimer — required for YMYL/AdSense compliance */}
+                    <div className="mt-8 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
+                        <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /></svg>
+                        <p className="text-xs text-amber-800 leading-relaxed">
+                            <span className="font-semibold">Disclaimer:</span> This article is for informational purposes only and does not constitute legal advice. The information provided here is general in nature and may not apply to your specific situation. For advice tailored to your circumstances, please consult a qualified advocate.
+                        </p>
+                    </div>
+
                     {!hasFullAccess && <PaywallOverlay isLoggedIn={mounted ? !!user : false} t={t} />}
                 </div>
 
