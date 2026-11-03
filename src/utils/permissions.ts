@@ -439,6 +439,7 @@ export const ROUTE_PROTECTION_MAP: Record<string, PermissionCheckFn> = {
 
     // 3. User & Access Control
     "/admin/users": canAccessManageUserPage,
+    "/admin/users/deactivations": canAccessManageUserPage,
     "/admin/teams": canAccessTeamsPage,
     "/admin/teams/edit": canAccessTeamsPage,
     "/admin/teams/edit/[id]": canAccessTeamsPage,

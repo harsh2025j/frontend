@@ -5,29 +5,33 @@ import { courseApi } from "@/data/services/academy-service/course.service";
 import apiClient from "@/data/services/apiConfig/apiClient";
 import { uploadToS3 } from "@/lib/uploadToS3";
 import CreatableSelect from 'react-select/creatable';
-import Cropper from 'react-easy-crop';
-import { getCroppedImg } from '@/lib/cropImage';
+import ImageCropperModal from "@/components/ui/ImageCropperModal";
+
+export interface UnsavedChangesHandler {
+  hasUnsavedChanges: () => boolean;
+  saveChanges: () => Promise<boolean>;
+  discardChanges: () => void;
+  getSectionTitle: () => string;
+}
 
 interface OverviewTabProps {
   course: any;
   setCourse: (course: any) => void;
   mockStats: any;
+  registerUnsavedHandler?: (handler: UnsavedChangesHandler | null) => void;
 }
 
-export default function OverviewTab({ course, setCourse, mockStats }: OverviewTabProps) {
+export default function OverviewTab({ course, setCourse, mockStats, registerUnsavedHandler }: OverviewTabProps) {
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [categories, setCategories] = useState<{ label: string, value: string }[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
-  // Cropper state
-  const [cropData, setCropData] = useState<{ src: string | null; pixelCrop: any }>({ src: null, pixelCrop: null });
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-
-  // Instructor Cropper state
-  const [instructorCropData, setInstructorCropData] = useState<{ index: number | null; src: string | null; pixelCrop: any }>({ index: null, src: null, pixelCrop: null });
+  // Modal Cropper states (Modal-based 16:9 for Thumbnail, 1:1 for Instructor)
+  const [thumbnailCropModal, setThumbnailCropModal] = useState<File | null>(null);
+  const [instructorCropModal, setInstructorCropModal] = useState<{ index: number; file: File } | null>(null);
+  const [uploadingInstructorIndex, setUploadingInstructorIndex] = useState<number | null>(null);
 
   React.useEffect(() => {
     const fetchCats = async () => {
@@ -104,91 +108,172 @@ export default function OverviewTab({ course, setCourse, mockStats }: OverviewTa
     return clean;
   };
 
-  const startEditing = (section: string) => {
+  const SECTION_NAMES: Record<string, string> = {
+    basic: "Basic Information",
+    media: "Course Media",
+    logistics: "Course Organization & Pricing",
+    rules: "Certificate Rules & Passing Criteria",
+    objectives: "Target Audience & Requirements",
+    features: "Course Inclusions & Features",
+    instructor: "Instructor & FAQs",
+  };
+
+  const populateFormAndArrays = (data: any) => {
     setForm({
-      title: course.title || "",
-      subtitle: course.subtitle || "",
-      description: course.description || "",
-      price: course.price || 0,
-      originalPrice: course.originalPrice || "",
-      language: course.language || "English",
-      level: course.level || "Beginner",
-      category: course.category || "",
-      duration: course.duration || "",
-      teachingHours: course.teachingHours || "",
-      timings: course.timings || "",
-      scheduleNote: course.scheduleNote || "",
-      hasCertificate: course.hasCertificate || false,
-      hasLifetimeAccess: course.hasLifetimeAccess || false,
-      startDate: course.startDate || "",
-      endDate: course.endDate || "",
-      thumbnailUrl: course.thumbnailUrl || "",
-      finalAssessmentUnlockPct: course.finalAssessmentUnlockPct !== undefined && course.finalAssessmentUnlockPct !== null
-        ? course.finalAssessmentUnlockPct
+      title: data.title || "",
+      subtitle: data.subtitle || "",
+      description: data.description || "",
+      price: data.price || 0,
+      originalPrice: data.originalPrice || "",
+      language: data.language || "English",
+      level: data.level || "Beginner",
+      category: data.category || "",
+      duration: data.duration || "",
+      teachingHours: data.teachingHours || "",
+      timings: data.timings || "",
+      scheduleNote: data.scheduleNote || "",
+      hasCertificate: data.hasCertificate || false,
+      hasLifetimeAccess: data.hasLifetimeAccess || false,
+      startDate: data.startDate || "",
+      endDate: data.endDate || "",
+      thumbnailUrl: data.thumbnailUrl || "",
+      finalAssessmentUnlockPct: data.finalAssessmentUnlockPct !== undefined && data.finalAssessmentUnlockPct !== null
+        ? data.finalAssessmentUnlockPct
         : 100,
       certificateRules: {
-        requireCourseComplete: course.certificateRules?.requireCourseComplete !== undefined
-          ? Boolean(course.certificateRules.requireCourseComplete)
+        requireCourseComplete: data.certificateRules?.requireCourseComplete !== undefined
+          ? Boolean(data.certificateRules.requireCourseComplete)
           : true,
-        minProgressPct: course.certificateRules?.minProgressPct !== undefined && course.certificateRules?.minProgressPct !== null
-          ? course.certificateRules.minProgressPct
+        minProgressPct: data.certificateRules?.minProgressPct !== undefined && data.certificateRules?.minProgressPct !== null
+          ? data.certificateRules.minProgressPct
           : 100,
-        requireFinalAssessmentPass: course.certificateRules?.requireFinalAssessmentPass !== undefined
-          ? Boolean(course.certificateRules.requireFinalAssessmentPass)
+        requireFinalAssessmentPass: data.certificateRules?.requireFinalAssessmentPass !== undefined
+          ? Boolean(data.certificateRules.requireFinalAssessmentPass)
           : true,
-        finalAssessmentId: course.certificateRules?.finalAssessmentId || (courseTests.length > 0 ? courseTests[0].id : ""),
-        minAssessmentScorePct: course.certificateRules?.minAssessmentScorePct !== undefined && course.certificateRules?.minAssessmentScorePct !== null
-          ? course.certificateRules.minAssessmentScorePct
+        finalAssessmentId: data.certificateRules?.finalAssessmentId || (courseTests.length > 0 ? courseTests[0].id : ""),
+        minAssessmentScorePct: data.certificateRules?.minAssessmentScorePct !== undefined && data.certificateRules?.minAssessmentScorePct !== null
+          ? data.certificateRules.minAssessmentScorePct
           : (courseTests.length > 0 ? (courseTests[0].passingPercentage || 50) : 50),
       },
     });
     setArrays({
-      requirements: course.requirements?.length ? course.requirements : [""],
-      whatYouWillLearn: course.whatYouWillLearn?.length ? course.whatYouWillLearn : [""],
-      features: course.features?.length ? course.features : [""],
-      targetAudience: course.targetAudience?.length ? course.targetAudience : [""],
-      inclusions: course.inclusions?.length ? course.inclusions : [""],
-      faqs: course.faqs?.length ? course.faqs : [{ q: "", a: "" }],
-      instructors: course.instructors?.length ? course.instructors : [{ name: "", bio: "", image: "" }]
+      requirements: data.requirements?.length ? data.requirements : [""],
+      whatYouWillLearn: data.whatYouWillLearn?.length ? data.whatYouWillLearn : [""],
+      features: data.features?.length ? data.features : [""],
+      targetAudience: data.targetAudience?.length ? data.targetAudience : [""],
+      inclusions: data.inclusions?.length ? data.inclusions : [""],
+      faqs: data.faqs?.length ? data.faqs : [{ q: "", a: "" }],
+      instructors: data.instructors?.length ? data.instructors : [{ name: "", bio: "", image: "" }]
     });
-    setEditingSection(section);
   };
 
-  const cancelEditing = () => setEditingSection(null);
+  const isSectionDirty = (): boolean => {
+    if (!editingSection) return false;
 
-  const handleSave = async () => {
+    if (editingSection === 'basic') {
+      return (
+        (form.title || '') !== (course.title || '') ||
+        (form.subtitle || '') !== (course.subtitle || '') ||
+        (form.description || '') !== (course.description || '')
+      );
+    }
+
+    if (editingSection === 'media') {
+      return (form.thumbnailUrl || '') !== (course.thumbnailUrl || '');
+    }
+
+    if (editingSection === 'logistics') {
+      return (
+        Number(form.price || 0) !== Number(course.price || 0) ||
+        String(form.originalPrice || '') !== String(course.originalPrice || '') ||
+        (form.category || '') !== (course.category || '') ||
+        (form.level || 'Beginner') !== (course.level || 'Beginner') ||
+        (form.language || 'English') !== (course.language || 'English') ||
+        (form.duration || '') !== (course.duration || '') ||
+        (form.teachingHours || '') !== (course.teachingHours || '') ||
+        (form.timings || '') !== (course.timings || '') ||
+        (form.scheduleNote || '') !== (course.scheduleNote || '') ||
+        Boolean(form.hasCertificate) !== Boolean(course.hasCertificate) ||
+        Boolean(form.hasLifetimeAccess) !== Boolean(course.hasLifetimeAccess) ||
+        (form.startDate || '') !== (course.startDate || '') ||
+        (form.endDate || '') !== (course.endDate || '')
+      );
+    }
+
+    if (editingSection === 'objectives') {
+      const origReq = JSON.stringify((course.requirements || []).filter((x: string) => x && x.trim()));
+      const currReq = JSON.stringify((arrays.requirements || []).filter((x: string) => x && x.trim()));
+      const origLearn = JSON.stringify((course.whatYouWillLearn || []).filter((x: string) => x && x.trim()));
+      const currLearn = JSON.stringify((arrays.whatYouWillLearn || []).filter((x: string) => x && x.trim()));
+      const origAud = JSON.stringify((course.targetAudience || []).filter((x: string) => x && x.trim()));
+      const currAud = JSON.stringify((arrays.targetAudience || []).filter((x: string) => x && x.trim()));
+      return origReq !== currReq || origLearn !== currLearn || origAud !== currAud;
+    }
+
+    if (editingSection === 'features') {
+      const origFeat = JSON.stringify((course.features || []).filter((x: string) => x && x.trim()));
+      const currFeat = JSON.stringify((arrays.features || []).filter((x: string) => x && x.trim()));
+      const origInc = JSON.stringify((course.inclusions || []).filter((x: string) => x && x.trim()));
+      const currInc = JSON.stringify((arrays.inclusions || []).filter((x: string) => x && x.trim()));
+      return origFeat !== currFeat || origInc !== currInc;
+    }
+
+    if (editingSection === 'rules') {
+      const origRules = JSON.stringify(course.certificateRules || {});
+      const currRules = JSON.stringify(form.certificateRules || {});
+      const origUnlock = course.finalAssessmentUnlockPct ?? 100;
+      const currUnlock = form.finalAssessmentUnlockPct ?? 100;
+      return origRules !== currRules || origUnlock !== currUnlock;
+    }
+
+    if (editingSection === 'instructor') {
+      const origFaqs = JSON.stringify((course.faqs || []).filter((f: any) => f.q?.trim() || f.a?.trim()));
+      const currFaqs = JSON.stringify((arrays.faqs || []).filter((f: any) => f.q?.trim() || f.a?.trim()));
+      const origInst = JSON.stringify((course.instructors || []).map((i: any) => ({ name: i.name?.trim() || '', bio: i.bio?.trim() || '', image: i.image || '' })));
+      const currInst = JSON.stringify((arrays.instructors || []).map((i: any) => ({ name: i.name?.trim() || '', bio: i.bio?.trim() || '', image: i.image || '' })));
+      return origFaqs !== currFaqs || origInst !== currInst;
+    }
+
+    return true;
+  };
+
+  const buildPayload = () => {
+    return {
+      ...form,
+      price: Number(form.price),
+      originalPrice: form.originalPrice ? Number(form.originalPrice) : null,
+      requirements: arrays.requirements.filter(r => r.trim() !== ""),
+      whatYouWillLearn: arrays.whatYouWillLearn.filter(w => w.trim() !== ""),
+      features: arrays.features.filter(f => f.trim() !== ""),
+      targetAudience: arrays.targetAudience.filter(t => t.trim() !== ""),
+      inclusions: arrays.inclusions.filter(i => i.trim() !== ""),
+      hasCertificate: Boolean(form.hasCertificate),
+      hasLifetimeAccess: Boolean(form.hasLifetimeAccess),
+      finalAssessmentUnlockPct: form.finalAssessmentUnlockPct !== undefined ? Number(form.finalAssessmentUnlockPct) : 100,
+      certificateRules: {
+        requireCourseComplete: form.certificateRules?.requireCourseComplete !== undefined
+          ? Boolean(form.certificateRules.requireCourseComplete)
+          : true,
+        minProgressPct: form.certificateRules?.minProgressPct !== undefined
+          ? Number(form.certificateRules.minProgressPct)
+          : 100,
+        requireFinalAssessmentPass: form.certificateRules?.requireFinalAssessmentPass !== undefined
+          ? Boolean(form.certificateRules.requireFinalAssessmentPass)
+          : true,
+        finalAssessmentId: form.certificateRules?.finalAssessmentId || null,
+        minAssessmentScorePct: form.certificateRules?.minAssessmentScorePct !== undefined
+          ? Number(form.certificateRules.minAssessmentScorePct)
+          : 50,
+      },
+      faqs: arrays.faqs.filter(f => f.q.trim() !== "" && f.a.trim() !== ""),
+      instructors: arrays.instructors.filter(i => i.name.trim() !== "" || (i.image && i.image.trim() !== "")),
+    };
+  };
+
+  const handleSaveInternal = async (closeSection = true): Promise<{ success: boolean; updatedCourse?: any }> => {
     try {
       setIsSaving(true);
-      const payload = {
-        ...form,
-        price: Number(form.price),
-        originalPrice: form.originalPrice ? Number(form.originalPrice) : null,
-        requirements: arrays.requirements.filter(r => r.trim() !== ""),
-        whatYouWillLearn: arrays.whatYouWillLearn.filter(w => w.trim() !== ""),
-        features: arrays.features.filter(f => f.trim() !== ""),
-        targetAudience: arrays.targetAudience.filter(t => t.trim() !== ""),
-        inclusions: arrays.inclusions.filter(i => i.trim() !== ""),
-        hasCertificate: Boolean(form.hasCertificate),
-        hasLifetimeAccess: Boolean(form.hasLifetimeAccess),
-        finalAssessmentUnlockPct: form.finalAssessmentUnlockPct !== undefined ? Number(form.finalAssessmentUnlockPct) : 100,
-        certificateRules: {
-          requireCourseComplete: form.certificateRules?.requireCourseComplete !== undefined
-            ? Boolean(form.certificateRules.requireCourseComplete)
-            : true,
-          minProgressPct: form.certificateRules?.minProgressPct !== undefined
-            ? Number(form.certificateRules.minProgressPct)
-            : 100,
-          requireFinalAssessmentPass: form.certificateRules?.requireFinalAssessmentPass !== undefined
-            ? Boolean(form.certificateRules.requireFinalAssessmentPass)
-            : true,
-          finalAssessmentId: form.certificateRules?.finalAssessmentId || null,
-          minAssessmentScorePct: form.certificateRules?.minAssessmentScorePct !== undefined
-            ? Number(form.certificateRules.minAssessmentScorePct)
-            : 50,
-        },
-        faqs: arrays.faqs.filter(f => f.q.trim() !== "" && f.a.trim() !== ""),
-        instructors: arrays.instructors.filter(i => i.name.trim() !== ""),
-      };
+      const payload = buildPayload();
       if (editingSection === 'rules' && form.certificateRules?.finalAssessmentId && form.certificateRules?.minAssessmentScorePct) {
         try {
           await apiClient.put(`/academy/assessments/${form.certificateRules.finalAssessmentId}`, {
@@ -200,14 +285,45 @@ export default function OverviewTab({ course, setCourse, mockStats }: OverviewTa
         }
       }
       await courseApi.updateCourse(course.id, payload);
-      setCourse({ ...course, ...payload });
-      toast.success("Section updated successfully!");
-      setEditingSection(null);
+      const updatedCourse = { ...course, ...payload };
+      setCourse(updatedCourse);
+      if (closeSection) {
+        setEditingSection(null);
+      }
+      return { success: true, updatedCourse };
     } catch (error) {
+      console.error("Failed to save section:", error);
       toast.error("Failed to update section");
+      return { success: false };
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSave = async () => {
+    const { success } = await handleSaveInternal(true);
+    if (success) {
+      toast.success("Section updated successfully!");
+    }
+  };
+
+  const cancelEditing = () => {
+    setEditingSection(null);
+    populateFormAndArrays(course);
+  };
+
+  const startEditing = async (section: string) => {
+    let currentCourseData = course;
+    if (editingSection && editingSection !== section) {
+      const { success, updatedCourse } = await handleSaveInternal(false);
+      if (!success) return;
+      toast.success(`Saved changes in ${SECTION_NAMES[editingSection] || 'previous section'}`);
+      if (updatedCourse) {
+        currentCourseData = updatedCourse;
+      }
+    }
+    populateFormAndArrays(currentCourseData);
+    setEditingSection(section);
   };
 
   const handleArrayChange = (field: keyof typeof arrays, index: number, value: string) => {
@@ -251,64 +367,115 @@ export default function OverviewTab({ course, setCourse, mockStats }: OverviewTa
     });
   };
 
-  const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Thumbnail file selection and modal crop completion with auto-save
+  const onThumbnailFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const reader = new FileReader();
-      reader.addEventListener('load', () => setCropData({ src: reader.result as string, pixelCrop: null }));
-      reader.readAsDataURL(e.target.files[0]);
+      setThumbnailCropModal(e.target.files[0]);
     }
-    // reset input value so selecting the same file works
     e.target.value = '';
   };
 
-  const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
-    setCropData(prev => ({ ...prev, pixelCrop: croppedAreaPixels }));
-  };
-
-  const handleCropSave = async () => {
-    if (!cropData.src || !cropData.pixelCrop) return;
+  const handleThumbnailCropComplete = async (croppedFile: File) => {
     try {
       setUploadingImage(true);
-      const croppedImageFile = await getCroppedImg(cropData.src, cropData.pixelCrop);
-      const url = await uploadToS3(croppedImageFile);
+      const url = await uploadToS3(croppedFile);
       setForm((prev: any) => ({ ...prev, thumbnailUrl: url }));
-      setCropData({ src: null, pixelCrop: null });
-      toast.success("Image cropped and uploaded!");
+
+      // Automatically persist to backend immediately so thumbnail is saved even without clicking "Save"
+      await courseApi.updateCourse(course.id, {
+        thumbnailUrl: url
+      });
+      setCourse((prev: any) => ({
+        ...prev,
+        thumbnailUrl: url
+      }));
+
+      setThumbnailCropModal(null);
+      toast.success("Course thumbnail updated and saved!");
     } catch (error) {
-      toast.error("Upload failed");
+      console.error("Thumbnail upload failed:", error);
+      toast.error("Failed to upload thumbnail");
     } finally {
       setUploadingImage(false);
     }
   };
 
+  // Instructor file selection and modal crop completion with auto-save
   const onInstructorFileSelect = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     if (e.target.files && e.target.files.length > 0) {
-      const reader = new FileReader();
-      reader.addEventListener('load', () => setInstructorCropData({ index, src: reader.result as string, pixelCrop: null }));
-      reader.readAsDataURL(e.target.files[0]);
+      const file = e.target.files[0];
+      setInstructorCropModal({ index, file });
     }
     e.target.value = '';
   };
 
-  const onInstructorCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
-    setInstructorCropData(prev => ({ ...prev, pixelCrop: croppedAreaPixels }));
-  };
-
-  const handleInstructorCropSave = async () => {
-    if (!instructorCropData.src || !instructorCropData.pixelCrop || instructorCropData.index === null) return;
+  const handleInstructorCropComplete = async (croppedFile: File) => {
+    if (!instructorCropModal) return;
+    const targetIndex = instructorCropModal.index;
     try {
-      setUploadingImage(true);
-      const croppedImageFile = await getCroppedImg(instructorCropData.src, instructorCropData.pixelCrop);
-      const url = await uploadToS3(croppedImageFile);
-      handleInstructorChange(instructorCropData.index, 'image', url);
-      setInstructorCropData({ index: null, src: null, pixelCrop: null });
-      toast.success("Instructor image uploaded!");
+      setUploadingInstructorIndex(targetIndex);
+      const url = await uploadToS3(croppedFile);
+
+      const updatedInstructors = arrays.instructors.map((inst, idx) =>
+        idx === targetIndex ? { ...inst, image: url } : inst
+      );
+      setArrays(prev => ({ ...prev, instructors: updatedInstructors }));
+
+      // Automatically persist to backend immediately so instructor photo is saved even without clicking "Save"
+      const instructorsToSave = updatedInstructors.filter(
+        i => (i.name && i.name.trim() !== "") || (i.image && i.image.trim() !== "")
+      );
+      await courseApi.updateCourse(course.id, {
+        instructors: instructorsToSave
+      });
+      setCourse((prev: any) => ({
+        ...prev,
+        instructors: updatedInstructors
+      }));
+
+      setInstructorCropModal(null);
+      toast.success("Instructor photo updated and saved!");
     } catch (error) {
-      toast.error("Upload failed");
+      console.error("Instructor image upload failed:", error);
+      toast.error("Failed to upload instructor photo");
     } finally {
-      setUploadingImage(false);
+      setUploadingInstructorIndex(null);
     }
   };
+
+  // Register unsaved changes handler with parent page for tab navigation interception
+  React.useEffect(() => {
+    if (registerUnsavedHandler) {
+      registerUnsavedHandler({
+        hasUnsavedChanges: () => isSectionDirty(),
+        saveChanges: async () => {
+          const { success } = await handleSaveInternal(true);
+          return success;
+        },
+        discardChanges: () => {
+          cancelEditing();
+        },
+        getSectionTitle: () => (editingSection ? (SECTION_NAMES[editingSection] || editingSection) : "Overview"),
+      });
+    }
+    return () => {
+      if (registerUnsavedHandler) {
+        registerUnsavedHandler(null);
+      }
+    };
+  }, [registerUnsavedHandler, editingSection, form, arrays, course]);
+
+  // Protect against accidental browser unload/refresh
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isSectionDirty()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [editingSection, form, arrays, course]);
 
   return (
     <div className="space-y-6">
@@ -417,46 +584,63 @@ export default function OverviewTab({ course, setCourse, mockStats }: OverviewTa
 
         {editingSection === 'media' ? (
           <div className="space-y-4">
-            {cropData.src ? (
-              <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-900 w-full max-w-2xl mx-auto flex flex-col relative h-[450px]">
-                <div className="flex-1 relative">
-                  <Cropper
-                    image={cropData.src}
-                    crop={crop}
-                    zoom={zoom}
-                    aspect={16 / 9}
-                    onCropChange={setCrop}
-                    onCropComplete={onCropComplete}
-                    onZoomChange={setZoom}
-                  />
-                </div>
-                <div className="bg-white p-4 border-t border-gray-200 flex justify-end gap-3 z-10 shrink-0">
-                  <button onClick={() => setCropData({ src: null, pixelCrop: null })} className="px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200">Cancel</button>
-                  <button onClick={handleCropSave} disabled={uploadingImage} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
-                    {uploadingImage ? <Loader2 className="animate-spin" size={16} /> : null} Save Crop
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center relative hover:bg-gray-50 transition aspect-video w-full max-w-lg mx-auto overflow-hidden bg-gray-50/50">
-                <input type="file" accept="image/*" onChange={onSelectFile} disabled={uploadingImage} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+            <div className="flex flex-col items-center gap-3">
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-2 flex flex-col items-center justify-center text-center relative aspect-video w-full max-w-lg mx-auto overflow-hidden bg-gray-50/50 group shadow-xs">
                 {uploadingImage ? (
-                  <Loader2 className="animate-spin text-blue-600" size={24} />
-                ) : form.thumbnailUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={form.thumbnailUrl} alt="Preview" className="w-full h-full object-cover rounded-lg absolute inset-0" />
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <UploadCloud className="text-blue-600 mb-2" size={24} />
-                    <p className="text-sm font-bold">Upload New Thumbnail</p>
-                    <p className="text-xs text-gray-500 mt-1">16:9 ratio recommended</p>
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                    <Loader2 className="animate-spin text-blue-600" size={32} />
+                    <span className="text-xs font-semibold text-gray-500">Uploading & saving thumbnail...</span>
                   </div>
+                ) : form.thumbnailUrl ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={form.thumbnailUrl} alt="Preview" className="w-full h-full object-cover rounded-lg" />
+                    <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white cursor-pointer z-10">
+                      <UploadCloud size={28} className="mb-1" />
+                      <span className="text-xs font-bold uppercase tracking-wider">Change Thumbnail</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={onThumbnailFileSelect}
+                        disabled={uploadingImage}
+                        className="hidden"
+                      />
+                    </label>
+                  </>
+                ) : (
+                  <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100/60 transition p-6">
+                    <UploadCloud className="text-blue-600 mb-2" size={32} />
+                    <p className="text-sm font-bold text-gray-800">Upload Course Thumbnail</p>
+                    <p className="text-xs text-gray-500 mt-1">16:9 ratio recommended (click to select and crop)</p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={onThumbnailFileSelect}
+                      disabled={uploadingImage}
+                      className="hidden"
+                    />
+                  </label>
                 )}
               </div>
-            )}
+
+              {form.thumbnailUrl && !uploadingImage && (
+                <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold cursor-pointer shadow-2xs hover:border-gray-300 transition-all">
+                  <UploadCloud size={14} className="text-blue-600" />
+                  <span>Change Thumbnail Image</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={onThumbnailFileSelect}
+                    disabled={uploadingImage}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+
             <div className="max-w-lg mx-auto">
               <label className="block text-xs font-bold text-gray-700 mb-1">Image URL</label>
-              <input type="text" value={form.thumbnailUrl} onChange={(e) => setForm({ ...form, thumbnailUrl: e.target.value })} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
+              <input type="text" value={form.thumbnailUrl || ''} onChange={(e) => setForm({ ...form, thumbnailUrl: e.target.value })} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
             </div>
           </div>
         ) : (
@@ -992,44 +1176,58 @@ export default function OverviewTab({ course, setCourse, mockStats }: OverviewTa
                     )}
 
                     <div className="flex flex-col md:flex-row gap-6">
-                      {/* Instructor Image Cropper / Preview */}
-                      <div className="shrink-0">
-                        {instructorCropData.src && instructorCropData.index === i ? (
-                          <div className="w-32 h-32 border border-gray-300 rounded-lg overflow-hidden bg-gray-900 flex flex-col relative z-20">
-                            <div className="flex-1 relative">
-                              <Cropper
-                                image={instructorCropData.src}
-                                crop={crop}
-                                zoom={zoom}
-                                aspect={1}
-                                onCropChange={setCrop}
-                                onCropComplete={onInstructorCropComplete}
-                                onZoomChange={setZoom}
+                      {/* Instructor Image Preview & Change Button */}
+                      <div className="shrink-0 flex flex-col items-center gap-2">
+                        <div className="w-28 h-28 sm:w-32 sm:h-32 border-2 border-dashed border-gray-300 rounded-xl overflow-hidden bg-white relative group shadow-xs">
+                          {uploadingInstructorIndex === i ? (
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-blue-600 gap-1.5">
+                              <Loader2 className="animate-spin" size={24} />
+                              <span className="text-[10px] font-semibold text-gray-500">Uploading...</span>
+                            </div>
+                          ) : inst.image ? (
+                            <>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={inst.image} alt={inst.name || "Instructor"} className="w-full h-full object-cover" />
+                              <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white cursor-pointer z-10">
+                                <UploadCloud size={20} className="mb-1" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider">Change Image</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => onInstructorFileSelect(e, i)}
+                                  disabled={uploadingInstructorIndex !== null}
+                                  className="hidden"
+                                />
+                              </label>
+                            </>
+                          ) : (
+                            <label className="w-full h-full flex flex-col items-center justify-center p-2 text-center cursor-pointer hover:bg-gray-50 transition">
+                              <UploadCloud className="text-gray-400 mb-1" size={20} />
+                              <p className="text-[10px] font-bold text-gray-500">Upload Image</p>
+                              <p className="text-[9px] text-gray-400 mt-0.5">1:1 Ratio</p>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => onInstructorFileSelect(e, i)}
+                                disabled={uploadingInstructorIndex !== null}
+                                className="hidden"
                               />
-                            </div>
-                            <div className="bg-white p-1 flex justify-center gap-1 z-10 shrink-0">
-                              <button onClick={() => setInstructorCropData({ index: null, src: null, pixelCrop: null })} className="px-2 py-1 bg-gray-100 rounded text-xs font-medium hover:bg-gray-200">Cancel</button>
-                              <button onClick={handleInstructorCropSave} disabled={uploadingImage} className="px-2 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 flex items-center gap-1">
-                                {uploadingImage ? <Loader2 className="animate-spin" size={12} /> : null} Save
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-xl overflow-hidden bg-white flex flex-col items-center justify-center relative hover:bg-gray-50 transition cursor-pointer">
-                            <input type="file" accept="image/*" onChange={(e) => onInstructorFileSelect(e, i)} disabled={uploadingImage} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                            {uploadingImage && inst.image === '' ? (
-                              <Loader2 className="animate-spin text-blue-600" size={24} />
-                            ) : inst.image ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={inst.image} alt="Instructor" className="w-full h-full object-cover absolute inset-0" />
-                            ) : (
-                              <div className="flex flex-col items-center p-2 text-center">
-                                <UploadCloud className="text-gray-400 mb-1" size={20} />
-                                <p className="text-[10px] font-bold text-gray-500">Upload Image</p>
-                                <p className="text-[9px] text-gray-400 mt-0.5">1:1 Ratio</p>
-                              </div>
-                            )}
-                          </div>
+                            </label>
+                          )}
+                        </div>
+
+                        {inst.image && uploadingInstructorIndex !== i && (
+                          <label className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium cursor-pointer shadow-2xs hover:border-gray-300 transition-all">
+                            <UploadCloud size={12} className="text-blue-600" />
+                            <span>Change Image</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => onInstructorFileSelect(e, i)}
+                              disabled={uploadingInstructorIndex !== null}
+                              className="hidden"
+                            />
+                          </label>
                         )}
                       </div>
 
@@ -1107,6 +1305,32 @@ export default function OverviewTab({ course, setCourse, mockStats }: OverviewTa
           </div>
         )}
       </div>
+
+      {/* Instructor Photo Crop Modal (1:1 ratio) */}
+      {instructorCropModal && (
+        <ImageCropperModal
+          imageFile={instructorCropModal.file}
+          onClose={() => setInstructorCropModal(null)}
+          onCrop={handleInstructorCropComplete}
+          aspect={1 / 1}
+          title="Adjust Instructor Photo"
+          description="Drag and zoom to center the instructor's portrait (1:1 ratio)"
+          loading={uploadingInstructorIndex !== null}
+        />
+      )}
+
+      {/* Course Thumbnail Crop Modal (16:9 ratio) */}
+      {thumbnailCropModal && (
+        <ImageCropperModal
+          imageFile={thumbnailCropModal}
+          onClose={() => setThumbnailCropModal(null)}
+          onCrop={handleThumbnailCropComplete}
+          aspect={16 / 9}
+          title="Adjust Course Thumbnail"
+          description="Drag and zoom to frame the course thumbnail (16:9 ratio)"
+          loading={uploadingImage}
+        />
+      )}
 
     </div>
   );

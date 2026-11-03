@@ -14,6 +14,8 @@ interface HomeLatestArticleCardProps {
   date?: string;
   author?: string;
   category?: string;
+  badgeBgClass?: string;
+  badgeTextClass?: string;
 }
 
 const HomeLatestArticleCard: React.FC<HomeLatestArticleCardProps> = ({
@@ -23,7 +25,9 @@ const HomeLatestArticleCard: React.FC<HomeLatestArticleCardProps> = ({
   slug = "",
   date,
   author = "Super admin",
-  category = "LATEST CASE"
+  category = "LATEST CASE",
+  badgeBgClass = "bg-[#0A2342]",
+  badgeTextClass = "text-white",
 }) => {
   const imageUrl = getSafeImageUrl(typeof img === "string" ? img : (img as StaticImageData)?.src || "");
   const newsLink = slug ? `/news/${slug}` : "#";
@@ -43,7 +47,7 @@ const HomeLatestArticleCard: React.FC<HomeLatestArticleCardProps> = ({
           />
         </Link>
         {/* Category Pill Tag */}
-        <span className="absolute top-2.5 left-2.5 bg-[#C9A227] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm z-10 pointer-events-none">
+        <span className={`absolute top-2.5 left-2.5 ${badgeBgClass} ${badgeTextClass} text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm z-10 pointer-events-none`}>
           {category}
         </span>
       </div>
@@ -58,7 +62,7 @@ const HomeLatestArticleCard: React.FC<HomeLatestArticleCardProps> = ({
           </Link>
 
           {/* Meta Details */}
-          <div className="flex items-center justify-between text-[11px] text-slate-400 mb-3 pt-1">
+          <div className="flex items-center justify-between text-[11px] text-slate-600 mb-3 pt-1">
             <div className="flex items-center gap-1.5 truncate pr-2">
               <User className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
               <span className="truncate">Author: {author || "Super admin"}</span>
@@ -76,7 +80,7 @@ const HomeLatestArticleCard: React.FC<HomeLatestArticleCardProps> = ({
         <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 mt-auto">
           <Link
             href={newsLink}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#C9A227] hover:bg-[#b08d1f] text-white rounded-lg text-xs font-semibold shadow-sm transition-all"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#C9A227] hover:bg-[#b08d1f] text-black rounded-lg text-xs font-semibold shadow-sm transition-all"
           >
             <span>{button1Text}</span>
             <ArrowRight className="w-3.5 h-3.5" />

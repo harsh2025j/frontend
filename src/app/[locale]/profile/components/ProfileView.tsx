@@ -153,6 +153,25 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
     return "User";
   };
 
+  // Helper to sanitize specialization strings (stripping zero-width, LRM, and invisible formatting chars)
+  const cleanSpec = (val: any) =>
+    typeof val === "string" ? val.replace(/[\u200B-\u200F\uFEFF\p{C}]/gu, "").trim() : "";
+
+  // Secondary label computation (only rendered if specialization or professional jurisdiction is present)
+  const validSpecializations = (
+    Array.isArray(profileUser?.specialization)
+      ? profileUser.specialization
+      : typeof profileUser?.specialization === "string"
+        ? [profileUser.specialization]
+        : []
+  )
+    .map(cleanSpec)
+    .filter((s: string) => s.length > 0);
+
+  const secondaryLabel = validSpecializations.length > 0
+    ? validSpecializations.join(" • ")
+    : (isProfessional ? "Jurisdiction Pending" : null);
+
   useDocTitle(profileUser ? `${profileUser.name}'s Profile` : "Profile");
 
   // Fetch Logic
@@ -274,7 +293,9 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
       // Final sanitization: convert specialization string back to a clean array
       let finalSpecialization = formData.specialization;
       if (typeof finalSpecialization === "string") {
-        finalSpecialization = finalSpecialization.split(",").map((s: string) => s.trim()).filter((s: string) => s !== "");
+        finalSpecialization = finalSpecialization.split(",").map(cleanSpec).filter((s: string) => s.length > 0);
+      } else if (Array.isArray(finalSpecialization)) {
+        finalSpecialization = finalSpecialization.map(cleanSpec).filter((s: string) => s.length > 0);
       }
 
       const sanitizedData = {
@@ -344,16 +365,24 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                 <div className="w-full h-full bg-zinc-50 flex items-center justify-center text-6xl text-gray-300 font-serif">{profileUser.name?.[0].toUpperCase()}</div>
               )}
               {isOwner && (
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                  title="Update Portrait"
+                  className="absolute bottom-2.5 right-2.5 z-20 flex items-center gap-1.5 px-3 py-1.5 bg-[#0A2342] hover:bg-[#122a4d] text-white rounded-full border-2 border-white shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer group/cam"
+                >
                   {saving || loggedInLoading ? (
-                    <Loader2 size={32} className="animate-spin" />
+                    <Loader2 size={13} className="animate-spin text-[#C9A227]" />
                   ) : (
-                    <Camera size={32} strokeWidth={1} className="mb-2" />
+                    <Camera size={13} className="text-[#C9A227] group-hover/cam:scale-110 transition-transform" />
                   )}
-                  <span className="text-[10px] font-bold uppercase tracking-widest">
-                    {saving || loggedInLoading ? "Uploading..." : "Update Portrait"}
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-white">
+                    {saving || loggedInLoading ? "Uploading..." : "Update"}
                   </span>
-                </div>
+                </button>
               )}
             </div>
             {profileIsAdvocate && (
@@ -364,15 +393,14 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
             )}
           </motion.div>
 
-          <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-6xl sm:text-8xl font-serif text-[#0A2342] mb-4">
+          <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-4xl sm:text-6xl font-serif text-[#0A2342] mb-4">
             {profileUser.name}
           </motion.h1>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs font-bold text-[#C9A227] tracking-[0.4em] uppercase mb-12">
             <span className="text-[#0A2342]">
-              {getRoleLabel()} | </span>
-            {Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0
-              ? profileUser.specialization.join(" • ")
-              : (isProfessional ? "Jurisdiction Pending" : "Community Registry")}
+              {getRoleLabel()}{secondaryLabel ? " | " : ""}
+            </span>
+            {secondaryLabel}
           </motion.p>
 
           {/* Professional Narrative / Bio */}
@@ -516,12 +544,12 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                         />
                         <TonalField label="Mobile Contact" value={profileUser.phone || "Not Set"} icon={Phone} />
                         {/* Only show Expertise Network for professionals or if data exists */}
-                        {(isProfessional || (Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0)) && (
+                        {(isProfessional || validSpecializations.length > 0) && (
                           <div className="space-y-2">
                             <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest block mb-4">Expertise Network</span>
                             <div className="flex flex-wrap gap-2">
-                              {Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0 ? (
-                                profileUser.specialization.map((s: string) => (
+                              {validSpecializations.length > 0 ? (
+                                validSpecializations.map((s: string) => (
                                   <span key={s} className="px-3 py-1.5 bg-[#C9A227]/10 text-[#C9A227] text-[8px] font-black uppercase rounded-xl border border-[#C9A227]/10 shadow-sm">
                                     {s}
                                   </span>
@@ -565,8 +593,8 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                     )}
 
                     {isOwner && (
-                      <div className="md:col-span-2">
-                        <button onClick={openEditModal} className="w-full py-8 bg-[#0A2342] text-white rounded-2xl shadow-lg text-[11px] font-bold tracking-widest uppercase flex items-center justify-center gap-4 hover:bg-[#153a66] transition-all">
+                      <div className="md:col-span-2 flex justify-center">
+                        <button onClick={openEditModal} className="md:w-[50%] w-full py-4 bg-[#0A2342] text-white rounded-2xl shadow-lg text-[11px] font-bold tracking-widest uppercase flex items-center justify-center gap-4 hover:bg-[#153a66] transition-all cursor-pointer">
                           Update Credentials <ChevronRight size={16} />
                         </button>
                       </div>
@@ -811,7 +839,8 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
             onCancel={() => setShowDeactivateConfirm(false)}
             onConfirm={() => {
               setShowDeactivateConfirm(false);
-              router.push("/auth/deactivate-account");
+              const currentUrl = pathname || (viewContext === "admin" ? `/admin/profile/${username}` : `/profile/${username}`);
+              router.push(`/auth/deactivate-account?from=${encodeURIComponent(currentUrl)}`);
             }}
           />
         )}

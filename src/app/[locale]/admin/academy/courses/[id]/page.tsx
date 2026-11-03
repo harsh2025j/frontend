@@ -6,12 +6,13 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft, Users, FileCheck, Calendar, Settings,
   BookOpen, Eye, BarChart3, Loader2, X, CheckCircle,
-  MonitorPlay, Infinity, FileCheck2, Star, MessageSquare
+  MonitorPlay, Infinity, FileCheck2, Star, MessageSquare,
+  AlertTriangle
 } from "lucide-react";
 import { VideoCourseLayout } from "@/app/[locale]/academy/courses/[slug]/page";
 import { courseApi } from "@/data/services/academy-service/course.service";
 import CurriculumBuilder from "./CurriculumBuilder";
-import OverviewTab from "./OverviewTab";
+import OverviewTab, { UnsavedChangesHandler } from "./OverviewTab";
 import AssignmentsTab from "./AssignmentsTab";
 import AcademyTestsPage from "@/app/[locale]/admin/academy/tests/page";
 import StudentsTab from "./StudentsTab";
@@ -41,6 +42,9 @@ export default function CourseUnifiedDashboard() {
   });
 
   const [activeTab, setActiveTab] = useState<string>("overview");
+
+  // Unsaved changes auto-save handler reference
+  const unsavedHandlerRef = React.useRef<UnsavedChangesHandler | null>(null);
 
   // Restore tab on mount from URL query or localStorage
   useEffect(() => {
@@ -74,6 +78,32 @@ export default function CourseUnifiedDashboard() {
       window.history.replaceState(null, "", `?${currentParams.toString()}`);
     }
   };
+
+  const handleTabClick = async (tabId: string) => {
+    if (tabId === activeTab) return;
+    if (activeTab === "overview" && unsavedHandlerRef.current?.hasUnsavedChanges()) {
+      try {
+        const success = await unsavedHandlerRef.current.saveChanges();
+        if (success) {
+          toast.success("Overview section automatically saved");
+        }
+      } catch (err) {
+        console.error("Auto-save on tab change failed:", err);
+      }
+    }
+    handleTabChange(tabId);
+  };
+
+  const handleBackClick = async (e: React.MouseEvent) => {
+    if (activeTab === "overview" && unsavedHandlerRef.current?.hasUnsavedChanges()) {
+      try {
+        await unsavedHandlerRef.current.saveChanges();
+      } catch (err) {
+        console.error("Auto-save on back failed:", err);
+      }
+    }
+  };
+
 
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -262,6 +292,7 @@ export default function CourseUnifiedDashboard() {
         <div className="flex items-center gap-4 min-w-0 flex-1 w-full md:w-auto">
           <Link 
             href="/admin/academy/courses" 
+            onClick={handleBackClick}
             className="p-2 hover:bg-gray-100 rounded-full transition text-gray-500 shrink-0"
             title="Back to Courses"
           >
@@ -312,7 +343,7 @@ export default function CourseUnifiedDashboard() {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
+              onClick={() => handleTabClick(tab.id)}
               className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === tab.id
                 ? 'border-blue-600 text-blue-600 bg-blue-50/30'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -328,7 +359,14 @@ export default function CourseUnifiedDashboard() {
 
           {/* 1. OVERVIEW TAB */}
           {activeTab === "overview" && (
-            <OverviewTab course={course} setCourse={setCourse} mockStats={stats} />
+            <OverviewTab
+              course={course}
+              setCourse={setCourse}
+              mockStats={stats}
+              registerUnsavedHandler={(handler) => {
+                unsavedHandlerRef.current = handler;
+              }}
+            />
           )}
 
           {/* 2. CURRICULUM TAB */}

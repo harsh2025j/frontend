@@ -45,6 +45,7 @@ import LiveCourtSection from "../ui/LiveCourtSection";
 import LatestInformationSection from "../ui/LatestInformationSection";
 import { formatDate } from "@/utils/dateUtils";
 import CategorySection from "./CategorySection";
+import JudiciaryToolsSection from "./JudiciaryToolsSection";
 // import AdsPopup from "../ads/AdsPopup";
 
 
@@ -432,9 +433,13 @@ export default function Stores() {
             </button>
           </div>
         </div>
+        <JudiciaryToolsSection />
+
 
         {/* Home Top Leaderboard Ad */}
         <LeaderboardAd />
+
+
 
         {/* High Courts Section */}
         <div className="bg-gradient-to-b from-white to-gray-50 w-full mb-8 md:mb-12 py-10 md:py-12">
@@ -611,6 +616,8 @@ export default function Stores() {
                   date={formatDate(data.createdAt)}
                   button1Text="Read Full Case"
                   category={data.category?.name || "LATEST CASE"}
+                  badgeBgClass="bg-[#0A2342]"
+                  badgeTextClass="text-white"
                 />
               ))
             )}

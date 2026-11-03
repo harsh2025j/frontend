@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Mail,
   Lock,
@@ -20,6 +21,10 @@ import { handleApiError } from "@/lib/utils/errorHandler";
 import type { DeactivationType } from "@/data/features/auth/auth.types";
 
 function AcademyDeactivateAccountContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromParam = searchParams.get("from") || searchParams.get("returnUrl");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -28,6 +33,24 @@ function AcademyDeactivateAccountContent() {
   const [confirmed, setConfirmed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState<{ type: DeactivationType; requestedAt: string } | null>(null);
+
+  const getBackLabel = () => {
+    if (!fromParam) return "Back to Settings";
+    if (fromParam.includes("settings")) return "Back to Settings";
+    if (fromParam.includes("dashboard")) return "Back to Dashboard";
+    if (fromParam.includes("profile")) return "Back to Profile";
+    return "Go Back";
+  };
+
+  const handleBack = () => {
+    if (fromParam) {
+      router.push(fromParam);
+    } else if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/academy/dashboard/settings");
+    }
+  };
 
   // Prefill the email of a signed-in student, so only the password is asked for.
   useEffect(() => {
@@ -165,15 +188,16 @@ function AcademyDeactivateAccountContent() {
         <section className="flex-1 flex flex-col items-center justify-start bg-white px-5 py-6 sm:py-8 md:px-10 min-h-screen lg:min-h-0 lg:h-full overflow-y-auto">
           <div className="w-full max-w-[420px] pb-8">
             <div className="mb-3">
-              <Link
-                href="/academy/dashboard/settings"
-                className="group inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#0B2242] hover:text-[#8A6100] transition-colors"
+              <button
+                type="button"
+                onClick={handleBack}
+                className="group inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#0B2242] hover:text-[#8A6100] transition-colors cursor-pointer"
               >
                 <div className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-[#8A6100]/10 flex items-center justify-center transition-colors">
                   <ArrowLeft size={15} className="text-[#0B2242] group-hover:text-[#8A6100] transition-transform group-hover:-translate-x-0.5" />
                 </div>
-                <span>Back to Settings</span>
-              </Link>
+                <span>{getBackLabel()}</span>
+              </button>
             </div>
 
             {submitted ? (
@@ -226,9 +250,6 @@ function AcademyDeactivateAccountContent() {
             ) : (
               <>
                 <div className="mb-3">
-                  <span className="inline-block px-2.5 py-0.5 rounded-md bg-red-50 text-red-700 border border-red-200 text-[11px] font-black uppercase tracking-wider mb-2">
-                    Account Closure
-                  </span>
                   <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0B2242] tracking-tight">
                     Deactivate Account
                   </h2>
@@ -382,20 +403,21 @@ function AcademyDeactivateAccountContent() {
                   <button
                     type="submit"
                     disabled={loading || !confirmed}
-                    className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 text-white text-xs font-black uppercase tracking-widest hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 text-white text-xs font-black uppercase tracking-widest hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
-                    {loading ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={15} />}
-                    {loading ? "Submitting..." : "Submit Request"}
+                    {loading && <Loader2 size={16} className="animate-spin" />}
+                    <span>{loading ? "Submitting..." : "Submit Request"}</span>
                   </button>
 
                   <p className="text-center text-[11px] text-slate-500">
                     Changed your mind?{" "}
-                    <Link
-                      href="/academy/dashboard/settings"
-                      className="font-bold text-[#8A6100] hover:underline"
+                    <button
+                      type="button"
+                      onClick={handleBack}
+                      className="font-bold text-[#8A6100] hover:underline cursor-pointer"
                     >
-                      Back to Settings
-                    </Link>
+                      {getBackLabel()}
+                    </button>
                   </p>
                 </form>
               </>

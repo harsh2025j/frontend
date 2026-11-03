@@ -333,7 +333,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                         <div className="flex items-center justify-between gap-2">
                             {(authorUsername || article.authorId) && article.authorId !== 'system-auto-bot' ? (
                                 <Link
-                                    href={`/profile/${authorUsername || article.authorId}`}
+                                    href={`/author/${authorUsername || article.authorId}`}
                                     className="flex items-center gap-2.5 group/author min-w-0 flex-1 cursor-pointer"
                                 >
                                     <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-base sm:text-lg font-bold ring-2 ring-[#C9A227] shadow-xs shrink-0 overflow-hidden relative group-hover/author:ring-[#C9A227]/70 transition-all">
@@ -348,7 +348,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                             <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-snug m-0 font-serif tracking-tight truncate group-hover/author:text-[#C9A227] transition-colors">
                                                 {authorName || article.authors || "Unknown Author"}
                                             </h3>
-                                            <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[9px] uppercase font-bold tracking-wider rounded-full shrink-0">
+                                            <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[9px] uppercase font-bold tracking-wider rounded-md shrink-0">
                                                 AUTHOR
                                             </span>
                                         </div>
@@ -380,7 +380,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                             <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-snug m-0 font-serif tracking-tight truncate">
                                                 {authorName || article.authors || "Unknown Author"}
                                             </h3>
-                                            <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[9px] uppercase font-bold tracking-wider rounded-full shrink-0">
+                                            <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[9px] uppercase font-bold tracking-wider rounded-md shrink-0">
                                                 AUTHOR
                                             </span>
                                         </div>
@@ -435,7 +435,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                         {/* Top Author Row */}
                         <div className="flex items-center justify-between gap-4">
                             {(authorUsername || article.authorId) && article.authorId !== 'system-auto-bot' ? (
-                                <Link href={`/profile/${authorUsername || article.authorId}`} className="flex items-center gap-3.5 group/author w-fit cursor-pointer">
+                                <Link href={`/author/${authorUsername || article.authorId}`} className="flex items-center gap-3.5 group/author w-fit cursor-pointer">
                                     <div className="h-12 w-12 sm:h-13 sm:w-13 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-xl font-bold ring-2 ring-[#C9A227] shadow-sm shrink-0 overflow-hidden relative group-hover/author:ring-[#C9A227]/70 transition-all">
                                         {authorPhoto ? (
                                             <Image src={authorPhoto} alt={authorName || article.authors || "Author"} fill sizes="80px" className="object-cover" quality={90} />
@@ -446,7 +446,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                     <div>
                                         <div className="flex items-center gap-2 mb-0.5">
                                             <h3 className="font-bold text-gray-900 text-lg sm:text-xl font-serif leading-none m-0 group-hover/author:text-[#C9A227] transition-colors">{authorName || article.authors || "Unknown Author"}</h3>
-                                            <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[10px] uppercase font-bold tracking-wider rounded-full">AUTHOR</span>
+                                            <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[10px] uppercase font-bold tracking-wider rounded-md">AUTHOR</span>
                                         </div>
                                         <p className="text-xs sm:text-sm text-gray-500 font-normal m-0 leading-snug">
                                             {authorSubtitle}
@@ -465,7 +465,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                     <div>
                                         <div className="flex items-center gap-2 mb-0.5">
                                             <h3 className="font-bold text-gray-900 text-lg sm:text-xl font-serif leading-none m-0">{authorName || article.authors || "Unknown Author"}</h3>
-                                            <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[10px] uppercase font-bold tracking-wider rounded-full">AUTHOR</span>
+                                            <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[10px] uppercase font-bold tracking-wider rounded-md">AUTHOR</span>
                                         </div>
                                         <p className="text-xs sm:text-sm text-gray-500 font-normal m-0 leading-snug">
                                             {authorSubtitle}
@@ -533,7 +533,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                         <Link
                                             key={tag.id}
                                             href={`/tags/${tag.slug}`}
-                                            className="px-3.5 py-1 bg-[#EDE8DF]/75 hover:bg-[#E2DACD] text-[#3E342B] text-xs rounded-full transition-colors truncate max-w-[200px] cursor-pointer"
+                                            className="px-3.5 py-1 bg-[#EDE8DF]/75 hover:bg-[#E2DACD] text-[#3E342B] text-xs rounded-md transition-colors truncate max-w-[200px] cursor-pointer"
                                         >
                                             {tag.name}
                                         </Link>
@@ -547,7 +547,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                             <button
                                 type="button"
                                 onClick={handleSummaryClick}
-                                className="px-4 py-2 bg-[#0B2242] hover:bg-[#13325B] text-white text-xs font-semibold rounded-full flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                                className="px-4 py-2 bg-[#0B2242] hover:bg-[#13325B] text-white text-xs font-semibold rounded-md flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                             >
                                 <span>AI Summary</span>
                                 <ChevronRight
@@ -606,14 +606,14 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                             <button
                                 onClick={() => handleShare("facebook")}
                                 aria-label="Share on Facebook"
-                                className="w-8.5 h-8.5 rounded-full bg-[#EDE8DF]/75 hover:bg-[#1877F2] text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
+                                className="w-8.5 h-8.5 rounded-md bg-[#EDE8DF]/75 hover:bg-[#1877F2] text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
                             >
                                 <Facebook size={15} />
                             </button>
                             <button
                                 onClick={() => handleShare("twitter")}
                                 aria-label="Share on X"
-                                className="w-8.5 h-8.5 rounded-full bg-[#EDE8DF]/75 hover:bg-black text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
+                                className="w-8.5 h-8.5 rounded-md bg-[#EDE8DF]/75 hover:bg-black text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
                             >
                                 <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
                                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -622,7 +622,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                             <button
                                 onClick={() => handleShare("whatsapp")}
                                 aria-label="Share on WhatsApp"
-                                className="w-8.5 h-8.5 rounded-full bg-[#EDE8DF]/75 hover:bg-[#25D366] text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
+                                className="w-8.5 h-8.5 rounded-md bg-[#EDE8DF]/75 hover:bg-[#25D366] text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
                             >
                                 <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
                                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
@@ -631,42 +631,42 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                             <button
                                 onClick={() => handleShare("linkedin")}
                                 aria-label="Share on LinkedIn"
-                                className="w-8.5 h-8.5 rounded-full bg-[#EDE8DF]/75 hover:bg-[#0A66C2] text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
+                                className="w-8.5 h-8.5 rounded-md bg-[#EDE8DF]/75 hover:bg-[#0A66C2] text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
                             >
                                 <Linkedin size={15} />
                             </button>
                             <button
                                 onClick={() => handleShare("telegram")}
                                 aria-label="Share on Telegram"
-                                className="w-8.5 h-8.5 rounded-full bg-[#EDE8DF]/75 hover:bg-[#0088CC] text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
+                                className="w-8.5 h-8.5 rounded-md bg-[#EDE8DF]/75 hover:bg-[#0088CC] text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
                             >
                                 <FaTelegramPlane size={15} />
                             </button>
                             <button
                                 onClick={() => handleShare("email")}
                                 aria-label="Share via Email"
-                                className="w-8.5 h-8.5 rounded-full bg-[#EDE8DF]/75 hover:bg-[#EA4335] text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
+                                className="w-8.5 h-8.5 rounded-md bg-[#EDE8DF]/75 hover:bg-[#EA4335] text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
                             >
                                 <Mail size={15} />
                             </button>
                             <button
                                 onClick={() => handleShare("copy")}
                                 aria-label="Copy Link"
-                                className={`w-8.5 h-8.5 rounded-full ${copied ? "bg-green-600 text-white" : "bg-[#EDE8DF]/75 hover:bg-[#0A2342] text-[#2C3E50] hover:text-white"} flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer`}
+                                className={`w-8.5 h-8.5 rounded-md ${copied ? "bg-green-600 text-white" : "bg-[#EDE8DF]/75 hover:bg-[#0A2342] text-[#2C3E50] hover:text-white"} flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer`}
                             >
                                 {copied ? <Check size={15} className="text-white" /> : <Link2 size={15} />}
                             </button>
                             <button
                                 onClick={() => handleShare("print")}
                                 aria-label="Print Article"
-                                className="w-8.5 h-8.5 rounded-full bg-[#EDE8DF]/75 hover:bg-[#0A2342] text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
+                                className="w-8.5 h-8.5 rounded-md bg-[#EDE8DF]/75 hover:bg-[#0A2342] text-[#2C3E50] hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
                             >
                                 <Printer size={15} />
                             </button>
                             {mounted && user && (
                                 <SavePostButton
                                     postId={article.id || (article as any)._id}
-                                    className="w-8.5 h-8.5 !p-0 rounded-full !bg-[#EDE8DF]/75 hover:!bg-[#0A2342] !text-[#2C3E50] hover:!text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs shrink-0 cursor-pointer"
+                                    className="w-8.5 h-8.5 !p-0 rounded-md !bg-[#EDE8DF]/75 hover:!bg-[#0A2342] !text-[#2C3E50] hover:!text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs shrink-0 cursor-pointer"
                                     iconSize={15}
                                 />
                             )}
@@ -685,7 +685,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                     <Link
                                         key={tag.id}
                                         href={`/tags/${tag.slug}`}
-                                        className="px-2.5 py-1 bg-[#EDE8DF]/75 text-[#3E342B] text-xs rounded-full cursor-pointer"
+                                        className="px-2.5 py-1 bg-[#EDE8DF]/75 text-[#3E342B] text-xs rounded-md cursor-pointer"
                                     >
                                         {tag.name}
                                     </Link>
@@ -697,7 +697,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                             <button
                                 type="button"
                                 onClick={handleSummaryClick}
-                                className="w-full py-2 px-4 bg-[#0B2242] text-white text-xs font-semibold rounded-full flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                                className="w-full py-2 px-4 bg-[#0B2242] text-white text-xs font-semibold rounded-md flex items-center justify-center gap-2 shadow-xs cursor-pointer"
                             >
                                 <span>AI Summary</span>
                                 <ChevronRight
@@ -914,7 +914,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                 <Paperclip className="w-4 h-4 text-[#C9A227] shrink-0" />
                                 Related Documents
                             </h3>
-                            <span className="text-[11px] font-medium text-[#6E7C87] bg-white border border-[#ECE7DE] px-2 py-0.5 rounded-full shrink-0">
+                            <span className="text-[11px] font-medium text-[#6E7C87] bg-white border border-[#ECE7DE] px-2 py-0.5 rounded-md shrink-0">
                                 {article.documents.length} {article.documents.length === 1 ? "file" : "files"}
                             </span>
                         </div>
@@ -973,13 +973,13 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
 
                 {/* Advocate info */}
                 {((article.advocates && article.advocates.length > 0) || article.advocateName) && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-8">
+                    <div className="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 md:mb-8">
                         {(article.advocates && article.advocates.length > 0 ? article.advocates : ([{ name: article.advocateName }] as Advocate[])).map((adv, idx) => {
                             if (!adv?.name && !article.advocateName) return null;
                             const profileId = adv.userId;
                             const targetPath = adv.userId ? (advocateUsernames[adv.userId] || adv.userId) : null;
                             return targetPath ? (
-                                <Link key={idx} href={`/profile/${targetPath}`} className="flex items-center gap-3 md:gap-4 p-2 sm:p-2 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/advocate">
+                                <Link key={idx} href={`/profile/${targetPath}`} className="flex items-center gap-4 sm:gap-5 p-4 sm:p-5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group/advocate">
                                     <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-2 ring-[#C9A227]/80 shadow-sm shrink-0 overflow-hidden relative group-hover/advocate:ring-[#C9A227]/70 transition-all">
                                         {adv?.userId && advocatePhotos[adv.userId] ? (
                                             <Image src={advocatePhotos[adv.userId]} alt={adv.name || "Advocate"} fill sizes="100px" className="object-cover" quality={90} />
@@ -987,16 +987,16 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                             (adv?.name || article.advocateName)?.charAt(0).toUpperCase() || "A"
                                         )}
                                     </div>
-                                    <div className="flex-1">
+                                    <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="font-bold text-gray-900 text-lg leading-none m-0 group-hover/advocate:text-[#C9A227] transition-colors">{adv.name}</h3>
-                                            <span className="px-2 py-0.5 bg-[#0A2342]/10 text-[#0A2342] text-[10px] uppercase font-bold tracking-wider rounded-md">Advocate</span>
+                                            <h3 className="font-bold text-gray-900 text-lg leading-none m-0 group-hover/advocate:text-[#C9A227] transition-colors truncate">{adv.name}</h3>
+                                            <span className="px-2 py-0.5 bg-[#0A2342]/10 text-[#0A2342] text-[10px] uppercase font-bold tracking-wider rounded-md shrink-0">Advocate</span>
                                         </div>
-                                        {adv?.email && <p className="text-sm text-gray-500">{adv.email}</p>}
+                                        {adv?.email && <p className="text-sm text-gray-500 truncate">{adv.email}</p>}
                                     </div>
                                 </Link>
                             ) : (
-                                <div key={idx} className="flex items-center gap-3 md:gap-4 p-2 sm:p-3 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
+                                <div key={idx} className="flex items-center gap-4 sm:gap-5 p-4 sm:p-5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
                                     <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative">
                                         {adv?.userId && advocatePhotos[adv.userId] ? (
                                             <Image src={advocatePhotos[adv.userId]} alt={adv.name || "Advocate"} fill sizes="100px" className="object-cover" quality={90} />
@@ -1004,12 +1004,12 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                             (adv?.name || article.advocateName)?.charAt(0).toUpperCase() || "A"
                                         )}
                                     </div>
-                                    <div className="flex-1">
+                                    <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="font-bold text-gray-900 text-lg leading-none m-0">{adv?.name || article.advocateName || "Unknown Advocate"}</h3>
-                                            <span className="px-2 py-0.5 bg-[#0A2342]/10 text-[#0A2342] text-[10px] uppercase font-bold tracking-wider rounded-md">Advocate</span>
+                                            <h3 className="font-bold text-gray-900 text-lg leading-none m-0 truncate">{adv?.name || article.advocateName || "Unknown Advocate"}</h3>
+                                            <span className="px-2 py-0.5 bg-[#0A2342]/10 text-[#0A2342] text-[10px] uppercase font-bold tracking-wider rounded-md shrink-0">Advocate</span>
                                         </div>
-                                        {adv?.email && <p className="text-sm text-gray-500">{adv.email}</p>}
+                                        {adv?.email && <p className="text-sm text-gray-500 truncate">{adv.email}</p>}
                                     </div>
                                 </div>
                             );
@@ -1259,7 +1259,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                 {showHideButton && (
                     <button
                         onClick={() => setIsSidebarOpen(false)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0A2342] text-white hover:bg-[#C9A227] hover:text-black rounded-full text-xs font-semibold shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer group"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0A2342] text-white hover:bg-[#C9A227] hover:text-black rounded-md text-xs font-semibold shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer group"
                         title="Hide Related Articles"
                     >
                         <span className="text-[11px] font-sans text-white group-hover:text-black transition-colors duration-200">Hide</span>
@@ -1367,7 +1367,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                                         <>
                                             <div className="relative flex items-center my-16">
                                                 <div className="flex-1 border-t-2 border-dashed border-[#0B2149]/20" />
-                                                <div className="mx-6 flex items-center gap-3 px-6 py-3 bg-[#0B2149] text-white rounded-full shadow-lg text-sm font-bold tracking-widest uppercase whitespace-nowrap">
+                                                <div className="mx-6 flex items-center gap-3 px-6 py-3 bg-[#0B2149] text-white rounded-md shadow-lg text-sm font-bold tracking-widest uppercase whitespace-nowrap">
                                                     <ChevronDown size={15} className="text-[#C9A227]" />
                                                     Next News
                                                     <ChevronDown size={15} className="text-[#C9A227]" />

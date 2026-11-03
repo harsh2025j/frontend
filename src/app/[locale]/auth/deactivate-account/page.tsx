@@ -4,9 +4,10 @@ import { Suspense, useEffect, useState } from "react";
 import Image from "next/image";
 import RouteFallback from "@/components/ui/RouteFallback";
 import logo from "../../../../../public/LightGray.png";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
-import { FaEye, FaEyeSlash, FaExclamationTriangle, FaClock, FaShieldAlt, FaEnvelope } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaExclamationTriangle, FaClock, FaShieldAlt, FaEnvelope, FaLock, FaArrowLeft } from "react-icons/fa";
 import { authApi } from "@/data/services/auth-service/auth-service";
 import { handleApiError } from "@/lib/utils/errorHandler";
 import { useDocTitle } from "@/hooks/useDocTitle";
@@ -14,6 +15,9 @@ import type { DeactivationType } from "@/data/features/auth/auth.types";
 
 function DeactivateAccountPageContent() {
   useDocTitle("Deactivate Account | Sajjad Husain Law Associates");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromParam = searchParams.get("from") || searchParams.get("returnUrl");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,6 +27,24 @@ function DeactivateAccountPageContent() {
   const [confirmed, setConfirmed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState<{ type: DeactivationType; requestedAt: string } | null>(null);
+
+  const getBackLabel = () => {
+    if (!fromParam) return "Back to Profile";
+    if (fromParam.includes("settings")) return "Back to Settings";
+    if (fromParam.includes("profile")) return "Back to Profile";
+    if (fromParam.includes("academy")) return "Back to Academy";
+    return "Go Back";
+  };
+
+  const handleBack = () => {
+    if (fromParam) {
+      router.push(fromParam);
+    } else if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/profile");
+    }
+  };
 
   // Prefill the email of a signed-in user, so the form only asks for the password.
   useEffect(() => {
@@ -138,10 +160,18 @@ function DeactivateAccountPageContent() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="max-w-md mx-auto w-full">
-              <div className="flex flex-col items-center gap-4 mb-8">
-                <div className="w-16 h-16 rounded-full border-2 border-red-500 flex items-center justify-center">
-                  <FaExclamationTriangle className="text-red-500" size={24} />
-                </div>
+              <div className="mb-4">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-600 hover:text-[#0A2342] transition-colors cursor-pointer"
+                >
+                  <FaArrowLeft size={12} />
+                  <span>{getBackLabel()}</span>
+                </button>
+              </div>
+
+              <div className="flex flex-col items-center gap-2 mb-8">
                 <h2 className="text-3xl font-bold text-center">Deactivate Account</h2>
                 <p className="text-center text-gray-600">
                   Request deactivation of your account or deletion of your data. Our team reviews
@@ -168,7 +198,7 @@ function DeactivateAccountPageContent() {
                 <div>
                   <label className="block text-sm font-medium mb-1">Password</label>
                   <div className="border rounded-md px-3 py-3 flex items-center gap-2">
-                    <span>🔒</span>
+                    <FaLock className="text-gray-400" size={14} />
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
@@ -267,9 +297,13 @@ function DeactivateAccountPageContent() {
 
                 <div className="text-center">
                   <span className="text-gray-600">Changed your mind? </span>
-                  <Link href="/profile" className="text-blue-600 hover:underline">
-                    Back to Profile
-                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="text-blue-600 hover:underline font-semibold cursor-pointer"
+                  >
+                    {getBackLabel()}
+                  </button>
                 </div>
               </div>
             </form>

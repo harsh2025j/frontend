@@ -1,5 +1,5 @@
 import apiClient from "@/data/services/apiConfig/apiClient";
-import { UserFilter, UserListResponse, UserVerificationResponse } from "../../features/users/users.types";
+import { UserFilter, UserListResponse, UserVerificationResponse, DeactivationStats } from "../../features/users/users.types";
 import { permission } from "process";
 
 export const usersApi = {
@@ -22,6 +22,10 @@ export const usersApi = {
             if (filters.practiceAreaId) params.append("practiceAreaId", filters.practiceAreaId);
             if (filters.clearanceLevel !== undefined && filters.clearanceLevel !== "")
                 params.append("clearanceLevel", String(filters.clearanceLevel));
+            if (filters.deactivationStatus)
+                params.append("deactivationStatus", filters.deactivationStatus);
+            if (filters.deactivationType)
+                params.append("deactivationType", filters.deactivationType);
             if (filters.page) params.append("page", String(filters.page));
             if (filters.limit) params.append("limit", String(filters.limit));
         }
@@ -95,6 +99,26 @@ export const usersApi = {
             return response.data;
         } catch (error: any) {
             console.error("usersApi updateUserAccessControl ERROR:", error);
+            throw error;
+        }
+    },
+
+    fetchDeactivationStats: async () => {
+        try {
+            const response = await apiClient.get<{ success: boolean; data: DeactivationStats }>("/users/deactivations/stats");
+            return response.data;
+        } catch (error: any) {
+            console.error("usersApi fetchDeactivationStats ERROR:", error);
+            throw error;
+        }
+    },
+
+    reviewDeactivationRequest: async (userId: string, data: { action: "approve" | "reject"; adminNote?: string }) => {
+        try {
+            const response = await apiClient.patch<{ success: boolean; data: any }>(`/users/${userId}/deactivation`, data);
+            return response.data;
+        } catch (error: any) {
+            console.error("usersApi reviewDeactivationRequest ERROR:", error);
             throw error;
         }
     },

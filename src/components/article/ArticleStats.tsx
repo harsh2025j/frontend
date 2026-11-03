@@ -159,7 +159,7 @@ export default function ArticleStats({
     return (
       <>
         {/* Views Pill */}
-        <div className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 rounded-full border border-gray-200/80 bg-white text-[11px] sm:text-xs font-medium text-gray-700 whitespace-nowrap ${className}`}>
+        <div className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 rounded-md border border-gray-200/80 bg-white text-[11px] sm:text-xs font-medium text-gray-700 whitespace-nowrap ${className}`}>
           <Eye className="w-3.5 h-3.5 text-[#C9A227] shrink-0" />
           <span>{initialViews}</span>
         </div>
@@ -171,7 +171,7 @@ export default function ArticleStats({
             e.stopPropagation();
             handleLike();
           }}
-          className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 rounded-full border border-gray-200/80 bg-white text-[11px] sm:text-xs font-medium transition-all group/like focus:outline-none cursor-pointer whitespace-nowrap ${
+          className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 rounded-md border border-gray-200/80 bg-white text-[11px] sm:text-xs font-medium transition-all group/like focus:outline-none cursor-pointer whitespace-nowrap ${
             hasLiked
               ? "text-[#e11d48] border-[#e11d48]/40 bg-rose-50/40"
               : "text-gray-700 hover:border-gray-300"
@@ -246,7 +246,7 @@ export default function ArticleStats({
             e.stopPropagation();
             handleLike();
           }}
-          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#D5C7B0] bg-white text-xs font-medium transition-all group/like focus:outline-none cursor-pointer shadow-xs hover:border-[#C9A227] shrink-0 ml-4 ${
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-[#D5C7B0] bg-white text-xs font-medium transition-all group/like focus:outline-none cursor-pointer shadow-xs hover:border-[#C9A227] shrink-0 ml-4 ${
             hasLiked
               ? "text-[#e11d48] border-[#e11d48]/40 bg-rose-50/40"
               : "text-gray-700 hover:text-gray-900"

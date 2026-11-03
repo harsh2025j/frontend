@@ -52,6 +52,19 @@ export interface User {
         email: string;
     } | null;
     hierarchyLevel?: number | null;
+
+    // Account deactivation / data-deletion request
+    deactivationStatus?: "none" | "pending" | "approved" | "rejected";
+    deactivationType?: "deactivate" | "delete" | null;
+    deactivationRequestedAt?: string | null;
+    deactivationReason?: string | null;
+    deactivationReviewedAt?: string | null;
+    deactivationReviewedBy?: {
+        _id: string;
+        name: string;
+        email: string;
+    } | string | null;
+    deactivationAdminNote?: string | null;
 }
 
 export interface UserFilter {
@@ -66,8 +79,19 @@ export interface UserFilter {
     officeId?: string;
     practiceAreaId?: string;
     clearanceLevel?: number | string;
+    deactivationStatus?: string;
+    deactivationType?: string;
     page?: number;
     limit?: number;
+}
+
+export interface DeactivationStats {
+    total: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+    deactivateCount: number;
+    deleteCount: number;
 }
 
 export interface UserListResponse {

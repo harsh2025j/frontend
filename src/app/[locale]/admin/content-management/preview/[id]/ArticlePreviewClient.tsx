@@ -301,7 +301,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                         {/* Top Author Row */}
                         {(authorUsername || article.authorId) && article.authorId !== 'system-auto-bot' ? (
                             <Link
-                                href={`/profile/${authorUsername || article.authorId}`}
+                                href={`/author/${authorUsername || article.authorId}`}
                                 className="flex items-center gap-2.5 group/author w-full cursor-pointer"
                             >
                                 <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-base sm:text-lg font-bold ring-2 ring-[#C9A227] shadow-xs shrink-0 overflow-hidden relative group-hover/author:ring-[#C9A227]/70 transition-all">
@@ -348,7 +348,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                         <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-snug m-0 font-serif tracking-tight truncate">
                                             {authorName || article.authors || "Unknown Author"}
                                         </h3>
-                                        <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[9px] uppercase font-bold tracking-wider rounded-full shrink-0">
+                                        <span className="px-2 py-0.5 bg-[#EDE8DF] text-[#7A6B5B] text-[9px] uppercase font-bold tracking-wider rounded-md shrink-0">
                                             AUTHOR
                                         </span>
                                     </div>
@@ -396,7 +396,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                     <div className="hidden md:block mb-6 p-4 sm:p-4.5 bg-[#FCFAF7] rounded-2xl border border-[#ECE7DE] shadow-xs">
                         {/* Top Author Row */}
                         {(authorUsername || article.authorId) && article.authorId !== 'system-auto-bot' ? (
-                            <Link href={`/profile/${authorUsername || article.authorId}`} className="flex items-center gap-3.5 group/author w-fit cursor-pointer">
+                            <Link href={`/author/${authorUsername || article.authorId}`} className="flex items-center gap-3.5 group/author w-fit cursor-pointer">
                                 <div className="h-12 w-12 sm:h-13 sm:w-13 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-xl font-bold ring-2 ring-[#C9A227] shadow-sm shrink-0 overflow-hidden relative group-hover/author:ring-[#C9A227]/70 transition-all">
                                     {authorPhoto ? (
                                         <Image src={authorPhoto} alt={authorName || article.authors || "Author"} fill sizes="80px" className="object-cover" quality={90} />
@@ -487,7 +487,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                     {[...article.tags].sort((a, b) => a.name.length - b.name.length).map((tag) => (
                                         <span
                                             key={tag.id}
-                                            className="px-3.5 py-1 bg-[#EDE8DF]/75 hover:bg-[#E2DACD] text-[#3E342B] text-xs rounded-full truncate max-w-[200px] cursor-pointer transition-colors"
+                                            className="px-3.5 py-1 bg-[#EDE8DF]/75 hover:bg-[#E2DACD] text-[#3E342B] text-xs rounded-md truncate max-w-[200px] cursor-pointer transition-colors"
                                         >
                                             {tag.name}
                                         </span>
@@ -501,7 +501,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                             <button
                                 type="button"
                                 onClick={handleSummaryClick}
-                                className="px-4 py-2 bg-[#0B2242] hover:bg-[#13325B] text-white text-xs font-semibold rounded-full flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                                className="px-4 py-2 bg-[#0B2242] hover:bg-[#13325B] text-white text-xs font-semibold rounded-md flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                             >
                                 <span>AI Summary</span>
                                 <ChevronRight
@@ -634,7 +634,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                 {[...article.tags].sort((a, b) => a.name.length - b.name.length).map((tag) => (
                                     <span
                                         key={tag.id}
-                                        className="px-2.5 py-1 bg-[#EDE8DF]/75 hover:bg-[#E2DACD] text-[#3E342B] text-xs rounded-full cursor-pointer transition-colors"
+                                        className="px-2.5 py-1 bg-[#EDE8DF]/75 hover:bg-[#E2DACD] text-[#3E342B] text-xs rounded-md cursor-pointer transition-colors"
                                     >
                                         {tag.name}
                                     </span>
@@ -646,7 +646,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                             <button
                                 type="button"
                                 onClick={handleSummaryClick}
-                                className="w-full py-2 px-4 bg-[#0B2242] text-white text-xs font-semibold rounded-full flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                                className="w-full py-2 px-4 bg-[#0B2242] text-white text-xs font-semibold rounded-md flex items-center justify-center gap-2 shadow-xs cursor-pointer"
                             >
                                 <span>AI Summary</span>
                                 <ChevronRight
@@ -807,7 +807,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                 <Paperclip className="w-4 h-4 text-[#C9A227] shrink-0" />
                                 Related Documents
                             </h3>
-                            <span className="text-[11px] font-medium text-[#6E7C87] bg-white border border-[#ECE7DE] px-2 py-0.5 rounded-full shrink-0">
+                            <span className="text-[11px] font-medium text-[#6E7C87] bg-white border border-[#ECE7DE] px-2 py-0.5 rounded-md shrink-0">
                                 {article.documents.length} {article.documents.length === 1 ? "file" : "files"}
                             </span>
                         </div>
@@ -826,7 +826,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                         className="group flex items-center gap-3 p-2.5 sm:p-3 bg-white border border-[#E8E2D8] hover:border-[#C9A227] rounded-xl hover:shadow-xs transition-all duration-200 cursor-pointer overflow-hidden"
                                     >
                                         {isImage ? (
-                                            <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-lg overflow-hidden shrink-0 border border-[#ECE7DE] bg-[#FAF7F2]">
+                                             <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-lg overflow-hidden shrink-0 border border-[#ECE7DE] bg-[#FAF7F2]">
                                                 <Image
                                                     src={getSafeImageUrl(doc.fileUrl)}
                                                     alt={doc.fileName || "Document"}
@@ -874,7 +874,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                 return (
                                     <div key={idx} className="relative">
                                         {isLatest ? (
-                                            <div className="absolute -left-[41px] top-1 w-4 h-4 z-10">
+                                             <div className="absolute -left-[41px] top-1 w-4 h-4 z-10">
                                                 <div className="absolute inset-0 rounded-full border-[3px] border-[#2A65A4] bg-[#2A65A4] ring-4 ring-white z-10" />
                                                 <div className="absolute -inset-1 rounded-full bg-[#2A65A4] animate-ping opacity-75 z-0" />
                                             </div>
@@ -895,11 +895,11 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
 
                 {/* Advocate info */}
                 {((article.advocates && article.advocates.length > 0) || article.advocateName) && (
-                    <div className="space-y-4 mb-8">
+                    <div className="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 md:mb-8">
                         {(article.advocates && article.advocates.length > 0 ? article.advocates : ([{ name: article.advocateName }] as Advocate[])).map((adv, idx) => {
                             if (!adv?.name && !article.advocateName) return null;
                             return (
-                                <div key={idx} className="flex items-center gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 cursor-default">
+                                <div key={idx} className="flex items-center gap-4 sm:gap-5 p-4 sm:p-5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100 cursor-default">
                                     <div className="h-14 w-14 rounded-full bg-[#0A2342] text-[#C9A227] flex items-center justify-center text-2xl font-bold ring-4 ring-[#C9A227]/20 shadow-sm shrink-0 overflow-hidden relative">
                                         {adv?.userId && advocatePhotos[adv.userId] ? (
                                             <Image src={advocatePhotos[adv.userId]} alt={adv.name || "Advocate"} fill sizes="100px" className="object-cover" quality={90} />
@@ -907,12 +907,12 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                             (adv?.name || article.advocateName)?.charAt(0).toUpperCase() || "A"
                                         )}
                                     </div>
-                                    <div className="flex-1">
+                                    <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="font-bold text-gray-900 text-lg leading-none m-0">{adv?.name || article.advocateName || "Unknown Advocate"}</h3>
-                                            <span className="px-2 py-0.5 bg-[#0A2342]/10 text-[#0A2342] text-[10px] uppercase font-bold tracking-wider rounded-md">Advocate</span>
+                                            <h3 className="font-bold text-gray-900 text-lg leading-none m-0 truncate">{adv?.name || article.advocateName || "Unknown Advocate"}</h3>
+                                            <span className="px-2 py-0.5 bg-[#0A2342]/10 text-[#0A2342] text-[10px] uppercase font-bold tracking-wider rounded-md shrink-0">Advocate</span>
                                         </div>
-                                        {adv?.email && <p className="text-sm text-gray-500">{adv.email}</p>}
+                                        {adv?.email && <p className="text-sm text-gray-500 truncate">{adv.email}</p>}
                                     </div>
                                 </div>
                             );

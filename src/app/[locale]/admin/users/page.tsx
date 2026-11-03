@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "@/i18n/routing";
-import { Search, Filter, RefreshCw, CheckCircle, XCircle, Shield, Building2, Scale } from "lucide-react";
+import { Link, useRouter } from "@/i18n/routing";
+import { Search, Filter, RefreshCw, CheckCircle, XCircle, Shield, Building2, Scale, Users, UserX } from "lucide-react";
 
 // Components & Hooks
 import Loader from "@/components/ui/Loader";
@@ -174,7 +174,6 @@ export function UserManagementPageContent() {
     return (
         <div className="min-h-screen bg-gray-50 p-6 md:p-8">
             <div className="max-w-7xl mx-auto">
-
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
@@ -506,6 +505,18 @@ export function UserManagementPageContent() {
                                                         <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
                                                         Inactive
                                                     </span>
+                                                )}
+                                                {tableUser.deactivationStatus === "pending" && (
+                                                    <div>
+                                                        <Link
+                                                            href="/admin/users/deactivations?status=pending"
+                                                            className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200 transition"
+                                                            title="Account deactivation requested"
+                                                        >
+                                                            <UserX size={11} />
+                                                            <span>Deactivation Pending</span>
+                                                        </Link>
+                                                    </div>
                                                 )}
                                             </td>
                                             <td className="py-4 px-6">

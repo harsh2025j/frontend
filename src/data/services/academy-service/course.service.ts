@@ -17,10 +17,12 @@ export interface CreateCourseDto {
   teachingHours?: string;
   startDate?: string;
   endDate?: string;
-  instructorId: string;
+  instructorId?: string;
   instructorName?: string;
   instructorBio?: string;
   instructorImage?: string;
+  instructors?: { name: string; bio: string; image: string }[];
+  thumbnailUrl?: string;
   targetAudience?: string[];
   features?: string[];
   faqs?: {q: string, a: string}[];
@@ -31,6 +33,9 @@ export interface CreateCourseDto {
   certificateRules?: {
     requireCourseComplete?: boolean;
     requireFinalAssessmentPass?: boolean;
+    minProgressPct?: number;
+    finalAssessmentId?: string | null;
+    minAssessmentScorePct?: number;
   };
 }
 

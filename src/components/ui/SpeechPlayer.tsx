@@ -170,7 +170,7 @@ export function ListenArticleButton({
         return (
             <button
                 onClick={handleClick}
-                className={`group w-full flex items-center justify-between px-4 py-2.5 sm:py-3 rounded-full border-[1.5px] transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs ${
+                className={`group w-full flex items-center justify-between px-4 py-2.5 sm:py-3 rounded-md border-[1.5px] transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs ${
                     isPlaying
                         ? "bg-[#0B2242] text-[#C9A227] border-[#0B2242]"
                         : "bg-white hover:bg-[#FAF7F2] border-[#C9A227] hover:border-[#9E7A1C] text-[#9E7A1C]"
@@ -209,7 +209,7 @@ export function ListenArticleButton({
     return (
         <button
             onClick={handleClick}
-            className={`group inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full border-[1.5px] transition-all duration-200 cursor-pointer shrink-0 shadow-2xs hover:shadow-xs ${
+            className={`group inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-md border-[1.5px] transition-all duration-200 cursor-pointer shrink-0 shadow-2xs hover:shadow-xs ${
                 isPlaying
                     ? "bg-[#0B2242] text-[#C9A227] border-[#0B2242]"
                     : "bg-white hover:bg-[#FAF7F2] border-[#C9A227] hover:border-[#9E7A1C] text-[#9E7A1C]"
