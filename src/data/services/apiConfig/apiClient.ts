@@ -246,7 +246,8 @@ apiClient.interceptors.response.use(
         !url.includes('/auth/reset-password') &&
         !url.includes('/auth/verify') &&
         !url.includes('/auth/resend-otp') &&
-        !url.includes('/auth/social-login');
+        !url.includes('/auth/social-login') &&
+        !url.includes('/auth/deactivate-account');
 
       if (isAuthFailure && shouldShowError('auth-error')) {
         if (typeof window !== "undefined") {

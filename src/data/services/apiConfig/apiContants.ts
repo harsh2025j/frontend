@@ -39,7 +39,9 @@ export const API_ENDPOINTS = {
     LOGOUT: "/auth/logout",
     RESEND_OTP: "/auth/resend-otp",
     SOCIAL_LOGIN: "/auth/social-login",
-    REFRESH: "/auth/refresh"
+    REFRESH: "/auth/refresh",
+    DEACTIVATE_ACCOUNT: "/auth/deactivate-account",
+    DEACTIVATE_ACCOUNT_STATUS: "/auth/deactivate-account/status"
   },
   PROFILE: {
     FETCH: "/profile",
