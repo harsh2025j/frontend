@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Camera, Shield, CreditCard, CheckCircle2,
   AlertCircle, Lock, Eye, EyeOff, Loader2, BookOpen, Award, Check, RefreshCw,
-  Printer, X, Copy, ExternalLink, Download, FileText
+  Printer, X, Copy, ExternalLink, Download, FileText, UserX, ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAppDispatch, useAppSelector } from '@/data/redux/hooks';
@@ -17,11 +18,13 @@ import { certificateApi } from '@/data/services/academy-service/certificate.serv
 import ImageCropperModal from '@/components/ui/ImageCropperModal';
 
 export default function SettingsPage() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector(state => state.auth);
   const { myEnrollments } = useAppSelector(state => state.enrollments);
 
   const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'billing'>('profile');
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
 
   // Profile Form State
   const [name, setName] = useState('');
@@ -570,6 +573,68 @@ export default function SettingsPage() {
                   </div>
                 </form>
               </>
+            )}
+
+            {/* Account closure — deactivation / data deletion request */}
+            <div className="pt-6 border-t border-slate-200">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#122340] mb-1">
+                Account &amp; Data
+              </h4>
+              <p className="text-[11px] text-[#122340]/50 leading-relaxed mb-3">
+                Request deactivation of your account or deletion of your data. Nothing is removed
+                immediately — our team reviews every request first.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowDeactivateConfirm(true)}
+                className="w-full flex items-center justify-between gap-3 p-3.5 rounded-xl border-2 border-red-200 bg-red-50/60 group hover:border-red-300 hover:bg-red-50 transition-all cursor-pointer text-left"
+              >
+                <span className="flex items-center gap-3">
+                  <UserX size={17} className="text-red-600 shrink-0" />
+                  <span className="text-xs font-bold text-red-700">
+                    Deactivate or Delete Account
+                  </span>
+                </span>
+                <ChevronRight
+                  size={16}
+                  className="text-red-300 group-hover:text-red-500 transition-colors shrink-0"
+                />
+              </button>
+            </div>
+
+            {/* Deactivation Confirmation Modal */}
+            {showDeactivateConfirm && (
+              <div className="fixed inset-0 z-[610] flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs">
+                <div className="absolute inset-0" onClick={() => setShowDeactivateConfirm(false)} />
+                <div className="relative z-10 bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full text-center border border-slate-200 shadow-2xl space-y-4">
+                  <div className="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto border border-red-200">
+                    <UserX size={32} />
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#122340]">Deactivate or Delete Account?</h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    Are you sure you want to proceed? You will be redirected to the verification page to confirm your credentials. Your account will enter a pending state and sign-in will be disabled until reviewed.
+                  </p>
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowDeactivateConfirm(false)}
+                      className="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDeactivateConfirm(false);
+                        router.push('/academy/auth/deactivate-account');
+                      }}
+                      className="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-md transition-colors cursor-pointer"
+                    >
+                      Proceed
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}

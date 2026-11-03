@@ -13,7 +13,7 @@ import {
   MessageSquare, ExternalLink, Clock, BookOpen, Plus,
   Shield, Globe, Bell, LogOut, ChevronRight, Check, ShieldCheck, Key, Languages, Phone,
   Gavel, Loader2,
-  BookmarkCheck, Lock
+  BookmarkCheck, Lock, UserX
 } from "lucide-react";
 
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
@@ -232,6 +232,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   };
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -727,7 +728,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
 
                     {/* D. Security & Auth */}
                     <BentoCard title="Security & Auth" subtitle="Access Control">
-                      <p className="text-[10px] text-gray-400 mb-6 font-serif italic">Reset password or sign out of your account.</p>
+                      <p className="text-[10px] text-gray-400 mb-6 font-serif italic">Reset password, sign out, or close your account.</p>
                       <div className="space-y-3">
                         <Link
                           href="/auth/forgot-password"
@@ -739,6 +740,17 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                           </div>
                           <ChevronRight size={16} className="text-gray-300 group-hover:text-[#C9A227] transition-colors" />
                         </Link>
+                        <button
+                          type="button"
+                          onClick={() => setShowDeactivateConfirm(true)}
+                          className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl group hover:border-red-200 transition-all cursor-pointer text-left"
+                        >
+                          <div className="flex items-center gap-4">
+                            <UserX size={18} className="text-red-500" />
+                            <span className="text-xs font-bold text-red-500">Deactivate or Delete Account</span>
+                          </div>
+                          <ChevronRight size={16} className="text-gray-300 group-hover:text-red-400 transition-colors" />
+                        </button>
                         <button onClick={() => setShowLogoutConfirm(true)} className="w-full flex items-center justify-between p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-all">
                           <div className="flex items-center gap-4">
                             <LogOut size={18} />
@@ -793,6 +805,15 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
         )}
         {showLogoutConfirm && (
           <LogoutOverlay onCancel={() => setShowLogoutConfirm(false)} onConfirm={handleLogout} />
+        )}
+        {showDeactivateConfirm && (
+          <DeactivateConfirmOverlay
+            onCancel={() => setShowDeactivateConfirm(false)}
+            onConfirm={() => {
+              setShowDeactivateConfirm(false);
+              router.push("/auth/deactivate-account");
+            }}
+          />
         )}
         {showAuthModal && (
           <AuthPromptModal onClose={() => setShowAuthModal(false)} />
@@ -1054,6 +1075,39 @@ function LogoutOverlay({ onCancel, onConfirm }: { onCancel: () => void; onConfir
           <button onClick={onCancel} disabled={isLoading} className="flex-1 py-4 text-[10px] font-black uppercase border border-gray-100 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed">Cancel</button>
           <button onClick={handleConfirm} disabled={isLoading} className="flex-1 flex items-center justify-center gap-2 py-4 bg-red-500 text-white rounded-2xl shadow-xl shadow-red-500/20 disabled:opacity-70 disabled:cursor-not-allowed">
             {isLoading ? <Loader2 size={16} className="animate-spin" /> : "Sign Out"}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function DeactivateConfirmOverlay({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[610] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
+      <div className="absolute inset-0 bg-transparent" onClick={onCancel} />
+      <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="relative z-10 bg-white rounded-3xl p-8 sm:p-10 max-w-md w-full text-center shadow-2xl border border-gray-100">
+        <div className="w-16 h-16 bg-red-50 text-red-600 rounded-3xl flex items-center justify-center mx-auto mb-5 border border-red-200">
+          <UserX size={32} />
+        </div>
+        <h3 className="text-2xl font-serif text-[#0A2342] mb-3">Close Account?</h3>
+        <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-6">
+          Are you sure you want to proceed? You will be redirected to the verification page where you will confirm your credentials. Once submitted, your account will enter a pending state and sign-in will be disabled.
+        </p>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 py-3.5 text-xs font-bold uppercase tracking-wider border border-gray-200 hover:bg-gray-50 rounded-2xl transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex-1 py-3.5 text-xs font-bold uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-lg shadow-red-600/20 transition-colors cursor-pointer"
+          >
+            Proceed
           </button>
         </div>
       </motion.div>

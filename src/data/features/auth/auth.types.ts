@@ -146,3 +146,25 @@ export interface AuthState {
   message: string | null;
   debugOtp?: string | null;
 }
+
+export type DeactivationType = "deactivate" | "delete";
+
+export interface DeactivationRequestResponse {
+  status: "pending";
+  type: DeactivationType;
+  requestedAt: string;
+  alreadyPending: boolean;
+  message: string;
+}
+
+export interface DeactivationStatusResponse {
+  status: "none" | "pending" | "approved" | "rejected";
+  type: DeactivationType | null;
+  requestedAt: string | null;
+}
+
+export interface ApiEnvelope<T> {
+  success: boolean;
+  message: string;
+  data?: T;
+}
