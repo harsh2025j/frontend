@@ -65,6 +65,7 @@ export default function Footer() {
   ];
 
   const resourceLinks = [
+    { name: "Legal Academy", href: "https://academy.sajjadhusainlawassociates.com" },
     { name: "Legal Tools", href: "/tools" },
     { name: "About Us", href: "/about" },
     { name: "Contact Us", href: "/contact" },
@@ -272,12 +273,23 @@ export default function Footer() {
               <ul className="space-y-2.5">
                 {resourceLinks.slice(0, 13).map((link, index) => (
                   <li key={index}>
-                    <Link
-                      href={link.href}
-                      className="text-blue-100 hover:text-white hover:translate-x-1 inline-block transition-all duration-300 text-sm group"
-                    >
-                      <span className="group-hover:underline underline-offset-4">{link.name}</span>
-                    </Link>
+                    {link.href.startsWith("http") ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-100 hover:text-white hover:translate-x-1 inline-block transition-all duration-300 text-sm group"
+                      >
+                        <span className="group-hover:underline underline-offset-4">{link.name}</span>
+                      </a>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-blue-100 hover:text-white hover:translate-x-1 inline-block transition-all duration-300 text-sm group"
+                      >
+                        <span className="group-hover:underline underline-offset-4">{link.name}</span>
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

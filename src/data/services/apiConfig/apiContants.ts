@@ -123,6 +123,8 @@ export const API_ENDPOINTS = {
     READ_ALL: "/notifications/read-all",
     MARK_READ: "/notifications/:id/read",
     DELETE: "/notifications/:id",
+    CONTACT_INQUIRY: "/notifications/contact-inquiry",
+    ADVERTISE_INQUIRY: "/notifications/advertise-inquiry",
   },
   REPORTS: {
     BASE: "/reports",

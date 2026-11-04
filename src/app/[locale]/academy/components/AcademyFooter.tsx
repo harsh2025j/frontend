@@ -118,6 +118,14 @@ export default function AcademyFooter() {
               </li>
               <li>
                 <Link
+                  href="/tools"
+                  className="text-white/75 hover:text-white transition-colors"
+                >
+                  Legal Tools
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/academy/certificates/verify"
                   className="text-white/75 hover:text-white transition-colors"
                 >
