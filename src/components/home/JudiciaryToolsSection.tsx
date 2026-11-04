@@ -18,9 +18,12 @@ export default function JudiciaryToolsSection() {
         {/* header */}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-xl">
-            <h2 className={toolType.title}>Legal tools</h2>
+            <span className="inline-block text-[11px] font-semibold text-[#C9A227] tracking-[0.2em] uppercase font-ui mb-1.5">
+              Court & Chamber Practice
+            </span>
+            <h2 className={toolType.title}>Legal Tools</h2>
             <p className={`${toolType.lead} mt-2`}>
-              Research, drafting, review and translation — built for Indian courts.
+              Precedent research, petition drafting, contract library, risk audit, and vernacular translation — tailored for Indian courts.
             </p>
           </div>
 
@@ -40,6 +43,8 @@ export default function JudiciaryToolsSection() {
               description={tool.description}
               actionLabel={tool.primaryAction}
               icon={toolIcon(tool.iconName)}
+              category={tool.category}
+              badge={tool.badge}
               comingSoon={tool.status === 'coming_soon'}
             />
           ))}

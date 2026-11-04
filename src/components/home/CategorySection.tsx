@@ -107,8 +107,8 @@ export default function CategorySection({ title, slug, layout, limit = 6, showVi
 
 const ArticleCard = ({ article, compact = false }: { article: any; compact?: boolean }) => (
   <Link href={`/news/${article.slug}`} className="group block h-full">
-    <div className="bg-white rounded-md overflow-hidden border border-gray-100 hover:shadow-md transition-all duration-300 h-full flex flex-col">
-      <div className="relative overflow-hidden aspect-video">
+    <div className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:border-[#C9A227] transition-all duration-200 h-full flex flex-col">
+      <div className="relative overflow-hidden aspect-video rounded-t-lg">
         <Image
           src={getSafeImageUrl(article.thumbnail)}
           alt={article.title}
@@ -189,7 +189,7 @@ export const GridSkeleton = ({ limit }: { limit: number }) => (
 const ListLayout = ({ articles }: { articles: any[] }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
     {articles.map((article) => (
-      <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-stretch md:items-start bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all overflow-hidden">
+      <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-stretch md:items-start bg-white rounded-lg border border-gray-200 hover:border-[#C9A227] transition-all duration-200 overflow-hidden">
         <div className="relative flex-shrink-0 w-28 min-h-[112px] md:w-40 md:min-h-0 md:h-auto md:aspect-video lg:w-48 bg-gray-50 overflow-hidden md:rounded-lg md:m-3 md:mr-0">
           <Image
             src={getSafeImageUrl(article.thumbnail)}
@@ -224,7 +224,7 @@ const ListLayout = ({ articles }: { articles: any[] }) => (
 export const ListLayoutSkeleton = ({ limit }: { limit: number }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
     {Array.from({ length: limit }).map((_, i) => (
-      <div key={i} className="flex gap-4 items-stretch md:items-start bg-white rounded-xl border border-gray-100 overflow-hidden animate-pulse">
+      <div key={i} className="flex gap-4 items-stretch md:items-start bg-white rounded-lg border border-gray-100 overflow-hidden animate-pulse">
         <div className="w-28 min-h-[112px] md:w-40 md:min-h-0 md:h-auto md:aspect-video lg:w-48 bg-gray-200 flex-shrink-0 md:rounded-lg md:m-3 md:mr-0" />
         <div className="flex-grow py-2 pr-3">
           <div className="h-4 sm:h-5 w-full bg-gray-200 rounded mb-1" />
@@ -251,7 +251,7 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
       {/* Main Featured Article */}
       <div className="lg:col-span-7">
-        <Link href={`/news/${featured.slug}`} className="group block relative aspect-video w-full rounded-2xl overflow-hidden shadow-lg">
+        <Link href={`/news/${featured.slug}`} className="group block relative aspect-video w-full rounded-lg overflow-hidden border border-gray-200">
           <Image
             src={getSafeImageUrl(featured.thumbnail)}
             alt={featured.title}
@@ -278,7 +278,7 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
       {/* Side List */}
       <div className="lg:col-span-5 flex flex-col gap-4">
         {others.map((article) => (
-          <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-center bg-white p-3 rounded-xl border border-gray-100 hover:shadow-md transition-all">
+          <Link key={article.id} href={`/news/${article.slug}`} className="group flex gap-4 items-center bg-white p-3 rounded-lg border border-gray-200 hover:border-[#C9A227] transition-all duration-200">
             <div className="relative flex-shrink-0 rounded-lg overflow-hidden w-20 h-20 md:w-32 md:h-auto md:aspect-video lg:w-36">
               <Image
                 src={getSafeImageUrl(article.thumbnail)}
@@ -312,7 +312,7 @@ const FeaturedLayout = ({ articles }: { articles: any[] }) => {
 export const FeaturedLayoutSkeleton = () => (
   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-pulse">
     <div className="lg:col-span-7">
-      <div className="aspect-video w-full rounded-2xl bg-gray-200 relative overflow-hidden">
+      <div className="aspect-video w-full rounded-lg bg-gray-200 relative overflow-hidden">
         <div className="absolute bottom-0 left-0 p-6 md:p-8 w-full">
            <div className="h-5 w-20 bg-gray-300 rounded-full mb-3" />
            <div className="h-7 w-full bg-gray-300 rounded mb-2" />

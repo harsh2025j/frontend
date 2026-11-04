@@ -23,7 +23,7 @@ export default function CategoryCard({
 }: CategoryCardProps) {
   return (
    <div className=" ">
-     <div className="flex flex-col w-full max-w-[300px] overflow-hidden bg-[#fffff] rounded-xl shadow-sm hover:shadow-md hover:scale-95 transform transition-all duration-300">
+     <div className="flex flex-col w-full max-w-[300px] overflow-hidden bg-white rounded-lg border border-gray-200 hover:border-[#C9A227] transition-all duration-200 group">
       <div className="relative w-full h-48 sm:h-56">
         <Image
           src={src}

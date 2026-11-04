@@ -89,7 +89,7 @@ export default function LiveCourtUpdates() {
           {cases.map((item, idx) => (
             <div
               key={idx}
-              className="bg-white rounded-2xl shadow-sm hover:shadow-md transition p-6 flex flex-col justify-between"
+              className="bg-white rounded-lg transition-colors p-6 flex flex-col justify-between border border-gray-200 hover:border-slate-400"
             >
               <div>
                 <div className="flex justify-between items-start">

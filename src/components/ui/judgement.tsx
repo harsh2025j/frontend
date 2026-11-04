@@ -18,10 +18,10 @@ interface JudgementProps {
 
 const Judgement: React.FC<JudgementProps> = ({ img, title, description, slug, author, date }) => {
   return (
-    <div className="bg-white rounded-xl overflow-hidden border-1 border-gray-300/10 hover:border-blue-300 transition-all duration-300 flex flex-col border border-gray-100 group">
+    <div className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:border-[#C9A227] transition-all duration-200 flex flex-col group">
       <Link href={`/news/${slug}`} className="flex flex-col h-full">
         {/* Optimized Image Container with Aspect-Video */}
-        <div className="relative w-full aspect-video flex-shrink-0 overflow-hidden bg-gray-100">
+        <div className="relative w-full aspect-video flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-lg">
           <Image
             src={getSafeImageUrl(typeof img === 'string' ? img : img.src)}
             alt={title || "Judgement Image"}
@@ -40,13 +40,13 @@ const Judgement: React.FC<JudgementProps> = ({ img, title, description, slug, au
         {/* Text Content Area */}
         <div className="flex flex-col p-4 flex-1">
           {title && (
-            <h3 className="text-sm font-bold text-gray-900 line-clamp-2 mb-2 group-hover:text-blue-700 transition-colors leading-tight">
+            <h3 className="font-heading font-semibold text-[15px] text-[#0B2242] line-clamp-2 mb-2 group-hover:text-[#C9A227] transition-colors leading-[1.3]">
               {title}
             </h3>
           )}
 
           <div
-            className="line-clamp-3 text-xs text-gray-600 font-merriweather mb-4 flex-1"
+            className="line-clamp-3 text-[13px] text-gray-600 font-body leading-relaxed mb-4 flex-1"
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(description) }}
           />
 

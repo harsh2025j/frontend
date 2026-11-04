@@ -26,9 +26,9 @@ const LatestNews: React.FC<LatestNewsProps> = ({
   author,
 }) => {
   return (
-    <div className="bg-white rounded-md overflow-hidden hover:border-blue-300 transition-all duration-300 flex flex-col border border-gray-200 p-0 h-full">
+    <div className="bg-white rounded-lg overflow-hidden hover:border-[#C9A227] transition-all duration-200 flex flex-col border border-gray-200 p-0 h-full group">
 
-      <div className="relative w-full aspect-video shrink-0">
+      <div className="relative w-full aspect-video shrink-0 overflow-hidden rounded-t-lg">
         <Link href={`/news/${slug}`} className="relative block w-full h-full">
           <Image
             src={getSafeImageUrl(typeof img === 'string' ? img : (img as StaticImageData)?.src || '')}
@@ -36,14 +36,14 @@ const LatestNews: React.FC<LatestNewsProps> = ({
             fill
             sizes="(max-width: 768px) 100vw, 500px"
             quality={90}
-            className="object-cover"
+            className="object-cover transition-transform duration-300 group-hover:scale-102"
           />
         </Link>
       </div>
 
       <div className="flex flex-col p-3 sm:p-4 flex-grow">
         <Link href={`/news/${slug}`}>
-          <h2 className="text-gray-900 font-merriweather font-semibold md:text-base text-[13px] leading-snug line-clamp-3 mb-2 hover:text-blue-600 transition-colors">
+          <h2 className="text-[#0B2242] font-heading font-semibold md:text-base text-[13px] leading-snug line-clamp-3 mb-2 group-hover:text-[#C9A227] transition-colors">
             {title}
           </h2>
         </Link>

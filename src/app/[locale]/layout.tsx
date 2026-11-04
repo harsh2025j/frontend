@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Merriweather, Unna } from "next/font/google";
+import { Lora, Source_Sans_3, Noto_Serif_Devanagari, Noto_Sans_Devanagari, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import ClientLayout from "@/components/layout/ClientWrapper";
 import ReduxProvider from "@/data/redux/providers/ReduxProvider";
@@ -18,30 +18,39 @@ import { API_BASE_URL, API_ENDPOINTS, IS_NGROK } from "@/data/services/apiConfig
 // import { Analytics } from "@vercel/analytics/next";
 // import { SpeedInsights } from "@vercel/speed-insights/next";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const lora = Lora({
+  variable: "--font-lora",
   subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  display: "swap",
+});
+
+const sourceSans3 = Source_Sans_3({
+  variable: "--font-source-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const notoSerifDevanagari = Noto_Serif_Devanagari({
+  variable: "--font-noto-serif-devanagari",
+  subsets: ["devanagari", "latin"],
+  weight: ["500", "600", "700"],
+  display: "swap",
+});
+
+const notoSansDevanagari = Noto_Sans_Devanagari({
+  variable: "--font-noto-sans-devanagari",
+  subsets: ["devanagari", "latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
-
-const merriweather = Merriweather({
-  weight: ['400', '700'],
-  subsets: ['latin'],
-  variable: '--font-merriweather',
-  display: 'swap',
-});
-
-// const unna = Unna({
-//   weight: ['400', '700'],
-//   style: ['normal', 'italic'],
-//   subsets: ['latin'],
-//   variable: '--font-unna',
-//   display: 'swap',
-// });
 
 const METADATA_BASE = new URL('https://www.sajjadhusainlawassociates.com'); // production
 // const METADATA_BASE = new URL('https://unimpeded-sprung-banter.ngrok-free.dev'); // dev (url)
@@ -176,7 +185,7 @@ export default async function RootLayout({
       <head>
         <JsonLd locale={locale} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} antialiased`} suppressHydrationWarning>
+      <body className={`${lora.variable} ${sourceSans3.variable} ${notoSerifDevanagari.variable} ${notoSansDevanagari.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         {/* ADSENSE DISABLED — re-enable once AdSense is approved (also uncomment GOOGLE_AD_MAPPINGS in advertisement.types.ts) */}
         {/* <Script
           id="google-adsense"

@@ -294,7 +294,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
             <div>
                 {/* Title */}
                 <div className="mb-6">
-                    <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight font-georgia first-letter:uppercase word-justify text-justify [text-align-last:left] [text-justify:inter-word] tracking-tight break-words">{displayTitle}</h2>
+                    <h1 className="text-2xl sm:text-3xl md:text-[34px] font-semibold text-[#0B2242] mb-4 sm:mb-6 leading-[1.2] sm:leading-[1.25] font-heading first-letter:uppercase word-justify text-justify [text-align-last:left] [text-justify:inter-word] tracking-[-0.01em] break-words">{displayTitle}</h1>
 
                     {/* Mobile Author & Metadata Card */}
                     <div className="block md:hidden mb-3.5 p-2.5 sm:p-3 bg-white rounded-2xl border border-gray-100 shadow-xs">
@@ -463,7 +463,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
 
                 {/* Thumbnail */}
                 {article.thumbnail && (
-                    <div className="relative w-full aspect-video mb-8 rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-gray-50">
+                    <div className="relative w-full aspect-video mb-8 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
                         <Image
                             src={getSafeImageUrl(article.thumbnail)}
                             alt={displayTitle}
@@ -525,7 +525,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                             <X size={18} />
                                         </button>
                                     </div>
-                                    <div className="text-sm text-black leading-relaxed max-h-[300px] overflow-y-auto font-georgia pr-3">
+                                    <div className="text-sm text-black leading-relaxed max-h-[300px] overflow-y-auto font-body pr-3">
                                         {isFetchingSummary ? (
                                             <div className="flex justify-center py-6"><Loader size="sm" text="Thinking..." /></div>
                                         ) : summary ? (
@@ -670,7 +670,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                             <X size={18} />
                                         </button>
                                     </div>
-                                    <div className="text-xs text-black leading-relaxed max-h-[250px] overflow-y-auto font-georgia pr-2">
+                                    <div className="text-xs text-black leading-relaxed max-h-[250px] overflow-y-auto font-body pr-2">
                                         {isFetchingSummary ? (
                                             <div className="flex justify-center py-4"><Loader size="sm" text="Thinking..." /></div>
                                         ) : summary ? (
@@ -867,7 +867,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                 {/* Developing Story Timeline */}
                 {hasFullAccess && article.updates && article.updates.length > 0 && (
                     <div className="mb-16 mt-12 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-                        <h3 className="text-xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-10 pb-4 border-b font-georgia">Developing Story Timeline</h3>
+                        <h3 className="text-xl sm:text-2xl font-semibold text-[#0B2242] mb-6 sm:mb-8 pb-3 border-b border-gray-100 font-heading">Developing Story Timeline</h3>
                         <div className="space-y-12 relative pl-8 border-l-[3px] border-[#2A65A4] ml-2">
                             {[...article.updates].map((update, idx) => {
                                 const isLatest = idx === article.updates!.length - 1;
@@ -884,7 +884,7 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                                         <div className="flex flex-col gap-2 timeline-update-content">
                                             <span className="text-gray-500 text-sm font-semibold tracking-wide uppercase">{formatDate(update.updateDate as string)}</span>
                                             {update.title && <h4 className="font-bold text-[18px] sm:text-[22px] text-[#0A2342] leading-snug">{update.title}</h4>}
-                                            <div className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1 font-georgia" dangerouslySetInnerHTML={{ __html: sanitizeHtml(update.content) }} />
+                                            <div className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1 font-body" dangerouslySetInnerHTML={{ __html: sanitizeHtml(update.content) }} />
                                         </div>
                                     </div>
                                 );
@@ -951,7 +951,7 @@ export default function ArticlePreviewClient({ article }: ArticlePreviewClientPr
     const locale = useLocale();
 
     return (
-        <div className="bg-white min-h-screen font-georgia border-t border-gray-100">
+        <div className="bg-white min-h-screen font-sans border-t border-gray-100">
             <div className="max-w-5xl mx-auto py-8 px-4">
                 <ArticleBodyPreview article={article} locale={locale} t={t} />
             </div>

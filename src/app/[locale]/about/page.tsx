@@ -18,7 +18,7 @@ const PLATFORM_TOOLS = [
   },
   {
     icon: FilePen,
-    title: "AI Legal Drafting Studio",
+    title: "Court Drafting Studio",
     href: "/tools/drafting",
     desc: "Court-ready writ petitions, SLPs, Section 482 applications and legal notices — drafted in 3 structured steps.",
   },
@@ -120,9 +120,9 @@ const WHY_US = [
       "Legal professionals, law students and researchers can publish their analysis and articles on this platform, building a diverse, authoritative repository of Indian law.",
   },
   {
-    title: "AI Tools Built for Indian Courts",
+    title: "Specialized Tools Built for Indian Courts",
     description:
-      "Our five judicial intelligence tools are purpose-built for Indian court rules — Supreme Court Rules 2013, High Court Rules, BNS 2023/BNSS 2023 — not generic legal AI.",
+      "Our judicial tools are purpose-built for Indian court rules — Supreme Court Rules 2013, High Court Rules, BNS 2023/BNSS 2023 — conforming directly to practice standards.",
   },
   {
     title: "Bilingual (EN + HI) Platform",
@@ -162,8 +162,8 @@ export default function AboutUs() {
             Sajjad Husain Law Associates
           </h1>
           <p className="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto">
-            India&apos;s premier legal technology platform — combining an active litigation practice
-            with AI-powered judicial tools, open legal publishing, a judgments repository and a
+            India&apos;s premier open legal platform — combining an active litigation practice
+            with specialized judicial tools, open legal publishing, a judgments repository and a
             professional legal academy.
           </p>
         </div>
@@ -188,7 +188,7 @@ export default function AboutUs() {
               At its core is an open publishing platform: legal professionals, law students, researchers
               and journalists can publish judgment analyses, legal articles and commentary. The platform
               hosts real-time Supreme Court and High Court news, 50,000+ searchable judgments, live case
-              status tools and five purpose-built AI judicial tools — all in both English and Hindi.
+              status tools and specialized judicial practice tools — all in both English and Hindi.
             </p>
             <p>
               The Legal Academy, operating on its dedicated subdomain, offers accredited diploma and
@@ -235,14 +235,14 @@ export default function AboutUs() {
           </div>
         </div>
 
-        {/* ── AI Judicial Tools ── */}
+        {/* ── Judicial Tools ── */}
         <div className="bg-white rounded-2xl border border-gray-100 p-8 md:p-10">
           <div className="flex items-center gap-3 mb-2">
-            <Cpu className="w-6 h-6 text-[#C9A227]" />
-            <h2 className="text-2xl font-bold text-[#0A2342]">AI Judiciary Tools Suite</h2>
+            <Scale className="w-6 h-6 text-[#C9A227]" />
+            <h2 className="text-2xl font-bold text-[#0A2342]">Judicial Tools & Practice Suite</h2>
           </div>
           <p className="text-gray-500 text-sm mb-8">
-            Five purpose-built judicial intelligence tools — free to use, built for Indian courts.
+            Specialized chamber tools for research, drafting, and risk audit — free to use, built for Indian courts.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {PLATFORM_TOOLS.map((tool) => (

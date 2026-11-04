@@ -1377,7 +1377,7 @@ export default function DraftingStudioPage() {
     return (
       <div className="mx-auto max-w-7xl px-4 py-24 text-center text-[#64748B]">
         <RefreshCw className="size-6 animate-spin mx-auto text-[#0B2242] mb-3" />
-        <span className="font-mono text-xs uppercase tracking-wider">Loading AI Court Drafting Studio...</span>
+        <span className="font-mono text-xs uppercase tracking-wider">Loading Court Drafting Studio...</span>
       </div>
     );
   }
@@ -2854,7 +2854,7 @@ export default function DraftingStudioPage() {
                     Parties &amp; Facts Matrix
                   </h2>
                   <p className="text-xs text-[#64748B] mt-0.5">
-                    Sections tagged with DRAFTED BY AI are synthesized using Indian judicial benchmarks.
+                    Sections are synthesized adhering to Indian judicial benchmarks.
                   </p>
                 </div>
 

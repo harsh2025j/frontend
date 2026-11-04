@@ -60,7 +60,7 @@ export default function ToolsHubPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search tools"
             aria-label="Search tools"
-            className="h-9 w-full rounded-md border border-[#E5E7EB] bg-white pr-8 pl-9 font-ui text-[13px] text-[#0B2242] transition-colors duration-150 placeholder:text-[#9CA3AF] focus:border-[#0B2242] focus:outline-hidden [&::-webkit-search-cancel-button]:hidden"
+            className="h-9 w-full rounded-md border border-[#E5E7EB] bg-white pr-8 pl-9 font-ui text-[13px] text-[#0B2242] transition-colors duration-150 placeholder:text-[#9CA3AF] hover:border-[#C9A227]/60 focus:border-[#C9A227] focus:outline-hidden [&::-webkit-search-cancel-button]:hidden"
           />
           {searchQuery && (
             <button
@@ -107,6 +107,8 @@ export default function ToolsHubPage() {
               description={tool.description}
               actionLabel={tool.primaryAction}
               icon={toolIcon(tool.iconName)}
+              category={tool.category}
+              badge={tool.badge}
               meta={tool.status === 'coming_soon' ? undefined : tool.benchmarkTime}
               comingSoon={tool.status === 'coming_soon'}
             />
@@ -118,7 +120,7 @@ export default function ToolsHubPage() {
           <button
             type="button"
             onClick={resetFilters}
-            className="mt-2 cursor-pointer font-ui text-[13px] font-medium text-[#0B2242] underline underline-offset-4 hover:text-[#1B3A63]"
+            className="mt-2 cursor-pointer font-ui text-[13px] font-medium text-[#0B2242] underline underline-offset-4 hover:text-[#C9A227] transition-colors"
           >
             Clear filters
           </button>

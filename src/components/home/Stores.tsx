@@ -335,7 +335,7 @@ export default function Stores() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
             <button
               onClick={() => router.push('/cases')}
-              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg shadow-md hover:border-[#C9A227] hover:shadow-xl transition-all group"
+              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg hover:border-[#C9A227] transition-colors group"
             >
               <div className="w-12 h-12 md:w-14 md:h-14 mb-3 bg-[#0A2342] rounded-full flex items-center justify-center group-hover:bg-[#C9A227] transition-colors">
                 <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -363,7 +363,7 @@ export default function Stores() {
 
             <button
               onClick={() => router.push('/reports')}
-              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg shadow-md hover:border-[#C9A227] hover:shadow-xl transition-all group"
+              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg hover:border-[#C9A227] transition-colors group"
             >
               <div className="w-12 h-12 md:w-14 md:h-14 mb-3 bg-[#0A2342] rounded-full flex items-center justify-center group-hover:bg-[#C9A227] transition-colors">
                 <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -377,7 +377,7 @@ export default function Stores() {
 
             <button
               onClick={() => router.push('/judgments')}
-              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg shadow-md hover:border-[#C9A227] hover:shadow-xl transition-all group"
+              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg hover:border-[#C9A227] transition-colors group"
             >
               <div className="w-12 h-12 md:w-14 md:h-14 mb-3 bg-[#0A2342] rounded-full flex items-center justify-center group-hover:bg-[#C9A227] transition-colors">
                 <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -391,7 +391,7 @@ export default function Stores() {
 
             <button
               onClick={() => router.push('/display-boards')}
-              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg shadow-md hover:border-[#C9A227] hover:shadow-xl transition-all group"
+              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg hover:border-[#C9A227] transition-colors group"
             >
               <div className="w-12 h-12 md:w-14 md:h-14 mb-3 bg-[#0A2342] rounded-full flex items-center justify-center group-hover:bg-[#C9A227] transition-colors">
                 <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -405,7 +405,7 @@ export default function Stores() {
 
             <button
               onClick={() => router.push('/judges')}
-              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg shadow-md hover:border-[#C9A227] hover:shadow-xl transition-all group"
+              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg hover:border-[#C9A227] transition-colors group"
             >
               <div className="w-12 h-12 md:w-14 md:h-14 mb-3 bg-[#0A2342] rounded-full flex items-center justify-center group-hover:bg-[#C9A227] transition-colors">
                 <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -420,7 +420,7 @@ export default function Stores() {
             {/* message/chat with advocate */}
             <button
               onClick={() => router.push('/messages')}
-              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg shadow-md hover:border-[#C9A227] hover:shadow-xl transition-all group"
+              className="flex flex-col items-center justify-center p-4 md:p-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-lg hover:border-[#C9A227] transition-colors group"
             >
               <div className="w-12 h-12 md:w-14 md:h-14 mb-3 bg-[#0A2342] rounded-full flex items-center justify-center group-hover:bg-[#C9A227] transition-colors">
                 <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -540,7 +540,7 @@ export default function Stores() {
         {/* Latest Articles / News Section */}
         <div className="w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto my-8 md:my-12">
           {/* Header Banner Card */}
-          <div className="relative bg-[#FAF5E2] rounded-2xl border border-[#EADBBD]/80 shadow-sm overflow-hidden mb-8 min-h-[220px] md:min-h-[260px] flex flex-col md:flex-row items-center">
+          <div className="relative bg-[#FAF5E2] rounded-lg border border-[#EADBBD]/80 overflow-hidden mb-8 min-h-[220px] md:min-h-[260px] flex flex-col md:flex-row items-center">
             {/* Right 50% image container with clean photo and code-based smooth blend */}
             <div
               className="absolute right-0 top-0 bottom-0 w-full md:w-1/2 pointer-events-none overflow-hidden select-none"

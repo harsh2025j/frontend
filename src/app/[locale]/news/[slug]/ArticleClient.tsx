@@ -324,7 +324,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
             <div>
                 {/* Title */}
                 <div className="mb-6">
-                    <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight font-georgia first-letter:uppercase word-justify text-justify [text-align-last:left] [text-justify:inter-word] tracking-tight break-words">{displayTitle}</h2>
+                    <h1 className="text-2xl sm:text-3xl md:text-[34px] font-semibold text-[#0B2242] mb-4 sm:mb-6 leading-[1.2] sm:leading-[1.25] font-heading first-letter:uppercase word-justify text-justify [text-align-last:left] [text-justify:inter-word] tracking-[-0.01em] break-words">{displayTitle}</h1>
 
                     {/* Mobile Author & Metadata Card */}
                     {/* Mobile Author & Metadata Card */}
@@ -508,7 +508,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
 
                 {/* Thumbnail */}
                 {article.thumbnail && (
-                    <div className="relative w-full aspect-video mb-8 rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-gray-50">
+                    <div className="relative w-full aspect-video mb-8 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
                         <Image
                             src={getSafeImageUrl(article.thumbnail)}
                             alt={displayTitle}
@@ -571,7 +571,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                             <X size={18} />
                                         </button>
                                     </div>
-                                    <div className="text-sm text-black leading-relaxed max-h-[300px] overflow-y-auto font-georgia pr-3">
+                                    <div className="text-sm text-black leading-relaxed max-h-[300px] overflow-y-auto font-body pr-3">
                                         {isFetchingSummary ? (
                                             <div className="flex justify-center py-6"><Loader size="sm" text="Thinking..." /></div>
                                         ) : summary ? (
@@ -721,7 +721,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                             <X size={18} />
                                         </button>
                                     </div>
-                                    <div className="text-xs text-black leading-relaxed max-h-[250px] overflow-y-auto font-georgia pr-2">
+                                    <div className="text-xs text-black leading-relaxed max-h-[250px] overflow-y-auto font-body pr-2">
                                         {isFetchingSummary ? (
                                             <div className="flex justify-center py-4"><Loader size="sm" text="Thinking..." /></div>
                                         ) : summary ? (
@@ -876,7 +876,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                 {/* Developing Story Timeline */}
                 {hasFullAccess && article.updates && article.updates.length > 0 && (
                     <div className="mb-12 mt-12 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-                        <h3 className="text-xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-10 pb-4 border-b font-georgia">Developing Story Timeline</h3>
+                        <h3 className="text-xl sm:text-2xl font-semibold text-[#0B2242] mb-6 sm:mb-8 pb-3 border-b border-gray-100 font-heading">Developing Story Timeline</h3>
                         <div className="space-y-12 relative pl-8 border-l-[3px] border-[#2A65A4] ml-2">
                             {[...article.updates].map((update, idx) => {
                                 const isLatest = idx === article.updates!.length - 1;
@@ -894,7 +894,7 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                                             <span className="text-gray-500 text-sm font-semibold tracking-wide uppercase">{formatDate(update.updateDate as string)}</span>
                                             {update.title && <h4 className="font-bold text-[18px] sm:text-[22px] text-[#0A2342] leading-snug">{update.title}</h4>}
                                             <div
-                                                className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1 font-georgia"
+                                                className="text-gray-700 text-[16px] leading-relaxed prose max-w-none mt-1 font-body"
                                                 suppressHydrationWarning
                                                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(update.content) }}
                                             />
@@ -1252,7 +1252,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
             <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                     <span className="w-1.5 h-5 bg-[#C9A227] rounded-full inline-block"></span>
-                    <h3 className="text-lg font-bold text-gray-900 font-georgia tracking-tight">
+                    <h3 className="text-lg font-semibold text-[#0B2242] font-heading tracking-tight">
                         {t("relatedArticles")}
                     </h3>
                 </div>
@@ -1291,7 +1291,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
                     displayRecommended.map((rec) => (
                         <Link key={rec.id} href={`/news/${rec.slug}`} className="block group">
                             <div className="flex gap-4">
-                                <div className="relative w-28 aspect-video flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                                <div className="relative w-28 aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                                     <Image src={getSafeImageUrl(rec.thumbnail)} alt={rec.title} fill sizes="200px" className="object-cover" quality={90} />
                                 </div>
                                 <div className="flex-1">
@@ -1319,7 +1319,7 @@ export default function ArticleClient({ initialArticle, slug }: ArticleClientPro
     }
 
     return (
-        <div className="bg-white min-h-screen font-georgia">
+        <div className="bg-white min-h-screen font-sans">
             <div className="max-w-7xl mx-auto py-8 px-4">
 
                 {/* Article Top Banner */}
