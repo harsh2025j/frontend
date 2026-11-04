@@ -122,6 +122,83 @@ function splitIntoSentences(text: string): string[] {
         .filter((s) => s.length > 0);
 }
 
+// Smart Browser Web Speech API Voice & Pitch Selector with Male/Female Optimization
+function getBrowserVoice(
+    voices: SpeechSynthesisVoice[],
+    gender: "female" | "male",
+    isHindi: boolean
+): { voice: SpeechSynthesisVoice | null; pitch: number } {
+    if (!voices || voices.length === 0) {
+        return { voice: null, pitch: gender === "female" ? 1.18 : 0.88 };
+    }
+
+    const langPrefix = isHindi ? "hi" : "en";
+    const isMale = gender === "male";
+
+    // Known male and female identifiers across Windows, macOS, iOS, Android, Linux (Chrome/Safari/Edge/Firefox)
+    const femaleKeywords = [
+        "female", "woman", "girl", "swara", "kalpana", "heera", "neerja", "aditi",
+        "veena", "priya", "samantha", "victoria", "karen", "zira", "catherine",
+        "serena", "stephanie", "moira", "fiona", "tessa", "alice", "hazel",
+        "susan", "yuna", "kyoko", "tingting", "sinji", "sangeeta", "ananya", "lekha"
+    ];
+
+    const maleKeywords = [
+        "male", "man", "boy", "madhur", "prabhat", "hemant", "ravi", "george",
+        "rishi", "daniel", "alex", "david", "mark", "james", "oliver", "tom",
+        "fred", "bruce", "ralph", "lee", "tarik", "kunal", "aarav"
+    ];
+
+    const targetKeywords = isMale ? maleKeywords : femaleKeywords;
+    const oppositeKeywords = isMale ? femaleKeywords : maleKeywords;
+
+    // Filter voices matching target language
+    const langMatchingVoices = voices.filter((v) => {
+        const vl = (v.lang || "").toLowerCase().replace("_", "-");
+        return vl.startsWith(langPrefix);
+    });
+
+    // 1. Highest priority: Language match with verified gender keyword and no conflicting keyword
+    for (const v of langMatchingVoices) {
+        const lowerName = `${v.name} ${v.voiceURI}`.toLowerCase();
+        const hasTarget = targetKeywords.some((kw) => lowerName.includes(kw));
+        const hasOpposite = oppositeKeywords.some((kw) => lowerName.includes(kw));
+        if (hasTarget && !hasOpposite) {
+            return { voice: v, pitch: isMale ? 0.94 : 1.06 };
+        }
+    }
+
+    // 2. Second priority: If English, look specifically for Indian English (en-IN)
+    if (!isHindi) {
+        const enInVoices = voices.filter((v) => (v.lang || "").toLowerCase().replace("_", "-").includes("en-in"));
+        if (enInVoices.length > 1) {
+            return isMale
+                ? { voice: enInVoices[0], pitch: 0.88 }
+                : { voice: enInVoices[1], pitch: 1.18 };
+        }
+        if (enInVoices.length === 1) {
+            return { voice: enInVoices[0], pitch: isMale ? 0.88 : 1.18 };
+        }
+    } else {
+        // If Hindi, and at least 1 Hindi voice is present
+        if (langMatchingVoices.length > 0) {
+            return { voice: langMatchingVoices[0], pitch: isMale ? 0.88 : 1.18 };
+        }
+    }
+
+    // 3. Third priority: Any voice matching language, with distinct pitch modulation
+    if (langMatchingVoices.length > 0) {
+        return { voice: langMatchingVoices[0], pitch: isMale ? 0.88 : 1.18 };
+    }
+
+    // 4. Fallback: Any available browser voice with distinct pitch modulation
+    const defaultVoice = voices.find((v) => v.default) || voices[0] || null;
+    return {
+        voice: defaultVoice,
+        pitch: isMale ? 0.88 : 1.18,
+    };
+}
+
 // ── Exported Trigger Button for the Author Card ──
 export function ListenArticleButton({
     article,
@@ -249,6 +326,7 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
     const [volume, setVolume] = useState(1);
     const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
     const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+    const [isBrowserFallbackActive, setIsBrowserFallbackActive] = useState(false);
 
     // Audio & sync references
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -260,6 +338,29 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
     const isPlayerActiveRef = useRef(false);
     const currentArticleRef = useRef<Article>(initialArticle);
     const cardRef = useRef<HTMLDivElement>(null);
+    const useBrowserTtsFallbackRef = useRef(false);
+    const browserVoicesRef = useRef<SpeechSynthesisVoice[]>([]);
+    const playChunkRef = useRef<(index: number) => void>(() => {});
+
+    // Initialize & keep browser speech voices updated
+    useEffect(() => {
+        if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+        const loadVoices = () => {
+            const v = window.speechSynthesis.getVoices();
+            if (v && v.length > 0) {
+                browserVoicesRef.current = v;
+            }
+        };
+
+        loadVoices();
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        return () => {
+            if ("speechSynthesis" in window) {
+                window.speechSynthesis.onvoiceschanged = null;
+            }
+        };
+    }, []);
 
     // Keep current article ref synced
     useEffect(() => {
@@ -435,10 +536,135 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         return `/api/tts?text=${encodeURIComponent(chunk.text)}&lang=${langParam}&gender=${genderParam}`;
     }, [isHindi]);
 
-    // 5. Play Chunk by Index
+    // 5. Browser Web Speech API Fallback Player (for Vercel or Serverless environments)
+    const playChunkWithWebSpeech = useCallback((index: number) => {
+        if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+            setIsLoadingAudio(false);
+            setIsPlaying(false);
+            isPlayingRef.current = false;
+            return;
+        }
+
+        if (chunksRef.current.length === 0 || index < 0 || index >= chunksRef.current.length) {
+            try { window.speechSynthesis.cancel(); } catch {}
+            setIsPlaying(false);
+            isPlayingRef.current = false;
+            setCurrentChunkIndex(0);
+            currentChunkIndexRef.current = 0;
+            highlightSentence(-1);
+            dispatchState(false, isPlayerActiveRef.current);
+            return;
+        }
+
+        // Cancel any pending speech synthesis
+        try { window.speechSynthesis.cancel(); } catch {}
+
+        const chunk = chunksRef.current[index];
+        setCurrentChunkIndex(index);
+        currentChunkIndexRef.current = index;
+        highlightSentence(chunk.sentenceIndex);
+        setIsLoadingAudio(false);
+
+        // Determine target gender: if "both", alternate per chunk; otherwise use selected mode
+        const targetGender: "female" | "male" =
+            voiceModeRef.current === "both" ? chunk.gender : voiceModeRef.current;
+
+        const voices = browserVoicesRef.current.length > 0
+            ? browserVoicesRef.current
+            : window.speechSynthesis.getVoices();
+        const { voice, pitch } = getBrowserVoice(voices, targetGender, isHindi);
+
+        const utterance = new SpeechSynthesisUtterance(chunk.text);
+        if (voice) {
+            utterance.voice = voice;
+            utterance.lang = voice.lang;
+        } else {
+            utterance.lang = isHindi ? "hi-IN" : "en-IN";
+        }
+
+        utterance.pitch = pitch;
+        utterance.rate = Math.max(0.75, Math.min(2.0, playbackSpeedRef.current));
+        utterance.volume = isMuted ? 0 : volume;
+
+        // Word-level real-time karaoke highlighting
+        utterance.onboundary = (e: SpeechSynthesisEvent) => {
+            if (e.name === "word") {
+                const charIndex = e.charIndex;
+                const words = chunk.words || [];
+                let charAccumulator = 0;
+                let activeWordIdx = 0;
+
+                for (let w = 0; w < words.length; w++) {
+                    const wLen = words[w].length;
+                    if (charIndex >= charAccumulator && charIndex <= charAccumulator + wLen) {
+                        activeWordIdx = w;
+                        break;
+                    }
+                    charAccumulator += wLen + 1;
+                }
+
+                const sentenceEl = document.querySelector(`[data-sentence-index="${chunk.sentenceIndex}"]`);
+                if (sentenceEl) {
+                    const wordSpans = sentenceEl.querySelectorAll(".tts-word");
+                    wordSpans.forEach((span, wIdx) => {
+                        if (wIdx === activeWordIdx) {
+                            span.classList.add("tts-word-active");
+                        } else {
+                            span.classList.remove("tts-word-active");
+                        }
+                    });
+                }
+            }
+        };
+
+        utterance.onstart = () => {
+            setIsLoadingAudio(false);
+            setIsPlaying(true);
+            isPlayingRef.current = true;
+            setIsPlayerActive(true);
+            isPlayerActiveRef.current = true;
+            dispatchState(true, true);
+        };
+
+        utterance.onend = () => {
+            if (isPlayingRef.current && currentChunkIndexRef.current === index) {
+                playChunkRef.current(index + 1);
+            }
+        };
+
+        utterance.onerror = (e) => {
+            if (e.error === "canceled" || e.error === "interrupted") {
+                return;
+            }
+            console.warn("[SpeechPlayer] Web Speech Utterance error:", e);
+            if (isPlayingRef.current && currentChunkIndexRef.current === index && index + 1 < chunksRef.current.length) {
+                setTimeout(() => playChunkRef.current(index + 1), 300);
+            }
+        };
+
+        // Resume if Chromium paused state is encountered
+        if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+        }
+
+        window.speechSynthesis.speak(utterance);
+    }, [isHindi, isMuted, volume, highlightSentence, dispatchState]);
+
+    // 6. Play Chunk by Index (Primary: Edge-TTS Neural API; Fallback: Web Speech API)
     const playChunk = useCallback((index: number) => {
+        // If fallback mode was previously engaged (e.g. on Vercel), route directly to Web Speech
+        if (useBrowserTtsFallbackRef.current) {
+            playChunkWithWebSpeech(index);
+            return;
+        }
+
         const audio = audioRef.current;
-        if (!audio) return;
+        if (!audio) {
+            useBrowserTtsFallbackRef.current = true;
+            setIsBrowserFallbackActive(true);
+            playChunkWithWebSpeech(index);
+            return;
+        }
 
         // Force silence any other audio elements or lingering speech on the page
         if (typeof document !== "undefined") {
@@ -510,13 +736,39 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
                     // Ignore normal AbortError when audio is stopped or track changed
                     return;
                 }
-                console.warn("[SpeechPlayer] Play error:", err);
-                setIsLoadingAudio(false);
-                if (isPlayingRef.current && currentChunkIndexRef.current === index && index + 1 < chunksRef.current.length) {
-                    setTimeout(() => playChunk(index + 1), 500);
-                }
+                console.warn("[SpeechPlayer] Primary audio failed (e.g. Vercel serverless environment). Activating Web Speech API fallback:", err);
+                useBrowserTtsFallbackRef.current = true;
+                setIsBrowserFallbackActive(true);
+                playChunkWithWebSpeech(index);
             });
-    }, [getAudioUrl, highlightSentence, isMuted, volume, dispatchState, prepareArticleChunks]);
+    }, [getAudioUrl, highlightSentence, isMuted, volume, dispatchState, prepareArticleChunks, playChunkWithWebSpeech]);
+
+    // Keep playChunkRef synced to avoid circular dependency
+    useEffect(() => {
+        playChunkRef.current = playChunk;
+    }, [playChunk]);
+
+    // Listen for audio element decoding/source error event and activate fallback
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const handleAudioError = (e: Event) => {
+            if (!isPlayingRef.current) return;
+            // Ignore normal aborts (code 1: MEDIA_ERR_ABORTED) caused by track transition or user action
+            if (audio.error && audio.error.code === 1) return;
+            if (!audio.currentSrc && !audio.src) return;
+            console.warn("[SpeechPlayer] Audio element error event detected, switching to Web Speech fallback:", e);
+            useBrowserTtsFallbackRef.current = true;
+            setIsBrowserFallbackActive(true);
+            playChunkWithWebSpeech(currentChunkIndexRef.current);
+        };
+
+        audio.addEventListener("error", handleAudioError);
+        return () => {
+            audio.removeEventListener("error", handleAudioError);
+        };
+    }, [playChunkWithWebSpeech]);
 
     // 6. Word-by-Word Pronunciation Highlighting via HTML5 Audio timeupdate
     useEffect(() => {
@@ -613,6 +865,9 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
 
     // 8. Close / Stop Player completely and reset to beginning
     const handleClosePlayer = useCallback(() => {
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+            try { window.speechSynthesis.cancel(); } catch {}
+        }
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
@@ -646,6 +901,9 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
 
     // 9. Start speech fresh from beginning (index 0)
     const handleStartSpeech = useCallback((incomingArticle?: Article) => {
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+            try { window.speechSynthesis.cancel(); } catch {}
+        }
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
@@ -659,6 +917,10 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         // Reset progress to 0 (beginning of article)
         setCurrentChunkIndex(0);
         currentChunkIndexRef.current = 0;
+
+        // Reset fallback flag on fresh start so primary engine always gets first priority
+        useBrowserTtsFallbackRef.current = false;
+        setIsBrowserFallbackActive(false);
 
         setIsPlayerActive(true);
         isPlayerActiveRef.current = true;
@@ -731,6 +993,10 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
             audioRef.current.playbackRate = rounded;
         }
 
+        if (useBrowserTtsFallbackRef.current && isPlayingRef.current) {
+            playChunkWithWebSpeech(currentChunkIndexRef.current);
+        }
+
         try {
             localStorage.setItem(STORAGE_SPEED_KEY, rounded.toString());
         } catch {
@@ -745,11 +1011,21 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         if (audioRef.current) {
             audioRef.current.volume = nextMuted ? 0 : volume;
         }
+        if (useBrowserTtsFallbackRef.current && isPlayingRef.current) {
+            if (nextMuted) {
+                try { window.speechSynthesis.cancel(); } catch {}
+            } else {
+                playChunkWithWebSpeech(currentChunkIndexRef.current);
+            }
+        }
     };
 
     // Cleanup on unmount
     useEffect(() => {
         return () => {
+            if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                try { window.speechSynthesis.cancel(); } catch {}
+            }
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
@@ -781,8 +1057,19 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
 
     // Display names
     const getActiveVoiceName = () => {
-        if (voiceMode === "both") return "Dual Co-Anchors (Swara & Madhur)";
-        return voiceMode === "female" ? "Swara (Bilingual Female)" : "Madhur (Bilingual Male)";
+        if (voiceMode === "both") {
+            return isBrowserFallbackActive
+                ? "Dual Co-Anchors (Browser Voices)"
+                : "Dual Co-Anchors (Swara & Madhur)";
+        }
+        if (voiceMode === "female") {
+            return isBrowserFallbackActive
+                ? "Female Voice (Browser Speech)"
+                : "Swara (Bilingual Female)";
+        }
+        return isBrowserFallbackActive
+            ? "Male Voice (Browser Speech)"
+            : "Madhur (Bilingual Male)";
     };
 
     return (
@@ -870,6 +1157,9 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
                             onClick={() => {
                                 if (isPlayingRef.current) {
                                     // Pause in place
+                                    if (useBrowserTtsFallbackRef.current && typeof window !== "undefined" && "speechSynthesis" in window) {
+                                        try { window.speechSynthesis.cancel(); } catch {}
+                                    }
                                     if (audioRef.current) audioRef.current.pause();
                                     setIsPlaying(false);
                                     isPlayingRef.current = false;
