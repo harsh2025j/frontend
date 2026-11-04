@@ -24,16 +24,16 @@ export default function NewsCard({
   const validSrc = getSafeImageUrl(src as string);
 
   return (
-    <div className="w-full rounded-[4px] bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition flex flex-col h-full">
+    <div className="w-full rounded-lg bg-white border border-gray-200 overflow-hidden hover:border-[#C9A227] transition-all duration-200 flex flex-col h-full group">
       {/* Image — 16:9 ratio */}
-      <div className="relative aspect-video w-full flex-shrink-0">
+      <div className="relative aspect-video w-full flex-shrink-0 overflow-hidden rounded-t-lg">
         <Image
           src={validSrc}
           fill
           alt={title}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
           quality={85}
-          className="object-cover"
+          className="object-cover transition-transform duration-300 group-hover:scale-102"
         />
       </div>
 
@@ -41,9 +41,9 @@ export default function NewsCard({
       <div className="p-4 flex flex-col gap-2 flex-1">
 
         {/* Court + Time */}
-        <div className="flex flex-wrap gap-2 items-center text-xs">
+        <div className="flex flex-wrap gap-2 items-center text-xs font-body">
           {court ? (
-            <span className="bg-gray-200 text-gray-900 px-3 py-1 rounded-full font-medium truncate max-w-[140px]">
+            <span className="bg-gray-100 text-[#0B2242] border border-gray-200 px-2.5 py-0.5 rounded-full font-medium truncate max-w-[140px]">
               {court}
             </span>
           ) : (
@@ -58,7 +58,7 @@ export default function NewsCard({
 
         {/* Title — max 2 lines, then ellipsis */}
         <p
-          className="text-sm font-semibold text-gray-900 leading-snug"
+          className="font-heading text-[15px] font-semibold text-[#0B2242] leading-[1.3] group-hover:text-[#C9A227] transition-colors"
           style={{
             display: "-webkit-box",
             WebkitLineClamp: 2,

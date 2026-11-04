@@ -27,6 +27,10 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: '/api-backend/:path*',
+        destination: 'https://api.sajjadhusainlawassociates.com/:path*',
+      },
+      {
         source: '/certificates/verify',
         destination: '/academy/certificates/verify',
       },

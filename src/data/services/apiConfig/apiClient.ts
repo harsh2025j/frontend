@@ -98,6 +98,11 @@ const processQueue = (error: any, token: string | null = null) => {
 
 apiClient.interceptors.request.use(
   async (config) => {
+    // On local subdomain (e.g. academy.localhost), route through Next.js proxy rewrite to eliminate CORS blocking
+    if (typeof window !== "undefined" && window.location.hostname.includes("academy.localhost")) {
+      config.baseURL = `${window.location.protocol}//${window.location.host}/api-backend`;
+    }
+
     if (store) {
       // store.dispatch(startLoading());
     }
@@ -221,7 +226,11 @@ apiClient.interceptors.response.use(
     }
 
     const apiError = handleApiError(error);
-    console.error(`API Error [${error.config?.method?.toUpperCase()}] ${error.config?.url}:`, apiError);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`[API Info] ${error.config?.method?.toUpperCase()} ${error.config?.url}:`, apiError?.message || apiError);
+    } else {
+      console.error(`API Error [${error.config?.method?.toUpperCase()}] ${error.config?.url}:`, apiError);
+    }
     const errorKey = `${apiError.statusCode || 'network'}-${error.config?.url || 'unknown'}`;
     // Silently handle server errors (500+) and network errors
     // if (apiError.statusCode && apiError.statusCode >= 500) {

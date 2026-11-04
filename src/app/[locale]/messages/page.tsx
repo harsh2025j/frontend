@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import ChatWorkspace from "@/components/chat/ChatWorkspace";
 import { Link } from "@/i18n/routing";
-import { Lock, User, PenSquare, ArrowRight, ShieldCheck } from "lucide-react";
+import { MessagesSquare, User, PenSquare, ArrowRight, ShieldCheck } from "lucide-react";
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
 
 export default function UserMessagesPage() {
@@ -21,8 +21,8 @@ export default function UserMessagesPage() {
       <div className="h-[calc(100dvh-64px)] sm:h-[calc(100dvh-80px)] lg:h-[calc(100dvh-124px)] bg-[#FAF8F5] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <span className="animate-spin rounded-full h-9 w-9 border-3 border-[#0B2242] border-t-[#C9A227]"></span>
-          <p className="text-slate-500 font-serif text-sm font-medium tracking-wide">
-            Verifying secure access...
+          <p className="text-slate-500 font-body text-sm font-medium tracking-wide">
+            Loading your messages...
           </p>
         </div>
       </div>
@@ -42,62 +42,65 @@ export default function UserMessagesPage() {
         </div>
 
         {/* Central Floating Card - Compact Proportions to Fit 100vh Perfectly */}
-        <div className="relative z-10 bg-white/95 backdrop-blur-xs rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl shadow-[#0B2242]/10 border border-[#E2E8F0]/80 max-w-[560px] w-full mx-auto text-center">
-          {/* Padlock Icon with Flanking Gold Accent Lines */}
-          <div className="flex items-center justify-center gap-3 sm:gap-5 mb-3.5 sm:mb-4">
+        <div className="relative z-10 bg-white/95 backdrop-blur-xs rounded-xl sm:rounded-2xl p-5 sm:p-8 md:p-9 border border-[#E2E8F0] max-w-[620px] w-full mx-auto text-center">
+          {/* Messages Icon with Flanking Gold Accent Lines */}
+          <div className="flex items-center justify-center gap-3 sm:gap-5 mb-3">
             <span className="h-px w-10 sm:w-14 bg-[#C9A227]/70" />
             <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full bg-[#FAF6EC] border border-[#C9A227]/40 flex items-center justify-center text-[#C9A227] shadow-xs shrink-0">
-              <Lock className="w-6 h-6 sm:w-7 sm:h-7 stroke-[1.75]" />
+              <MessagesSquare className="w-6 h-6 sm:w-7 sm:h-7 stroke-[1.75]" />
             </div>
             <span className="h-px w-10 sm:w-14 bg-[#C9A227]/70" />
           </div>
 
-          {/* Heading */}
-          <h1 className="font-serif text-2xl sm:text-3xl md:text-[34px] font-bold text-[#0B2242] tracking-tight mb-2 sm:mb-2.5">
-            Access Restricted
+          {/* Eyebrow Label */}
+          <span className="inline-block text-[11px] sm:text-xs font-semibold text-[#C9A227] tracking-[0.2em] uppercase font-ui mb-2">
+            MESSAGES
+          </span>
+
+          {/* Heading - One single line & responsive across all screen sizes */}
+          <h1 className="font-heading text-[clamp(16px,4vw,28px)] font-semibold text-[#0B2242] tracking-tight mb-2.5 sm:mb-3 leading-[1.3] whitespace-nowrap">
+            Your conversations, all in one place
           </h1>
 
           {/* Subtitle / Body Copy */}
-          <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-md mx-auto mb-5 sm:mb-6 font-normal">
-            To ensure client-attorney privilege and protect sensitive information, please authenticate your profile before accessing messages.
+          <p className="font-body text-slate-600 text-xs sm:text-sm leading-relaxed max-w-md sm:max-w-lg mx-auto mb-5 sm:mb-6 font-normal">
+            Sign in to view your messages with Sajjad Husain Law Associates. New here? Create a profile to get started.
           </p>
 
-          {/* Two Action Buttons - Exact Identical Height and Single Line */}
+          {/* Two Action Buttons - Single Line on desktop, responsive stack on mobile */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full mb-5 sm:mb-6">
-            {/* 1. Continue to Login */}
+            {/* 1. Sign in to messages */}
             <Link href="/auth/login?redirect=/messages" className="flex-1 w-full sm:w-1/2">
               <button
                 type="button"
-                className="w-full h-11 sm:h-12 inline-flex items-center justify-center gap-2 px-4 sm:px-5 rounded-xl bg-[#0B2242] hover:bg-[#15345E] text-white text-[11px] sm:text-xs font-bold tracking-wider uppercase whitespace-nowrap shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.99] cursor-pointer"
+                className="w-full h-11 sm:h-12 inline-flex items-center justify-center gap-2 px-4 sm:px-5 rounded-lg bg-[#0B2242] hover:bg-[#15345E] text-white font-ui text-[13px] sm:text-sm font-medium transition-all duration-200 active:scale-[0.99] cursor-pointer hover:border hover:border-[#C9A227] group"
               >
-                <User className="size-4 shrink-0 text-white/90" />
-                <span className="whitespace-nowrap">CONTINUE TO LOGIN</span>
-                <ArrowRight className="size-3.5 shrink-0 text-white/80" />
+                <User className="size-4 shrink-0 text-white/80 group-hover:text-white" />
+                <span className="whitespace-nowrap">Sign in to messages</span>
+                <ArrowRight className="size-3.5 shrink-0 text-white/80 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </Link>
 
-            {/* 2. Create New Profile */}
+            {/* 2. Create your account */}
             <Link href="/auth/signup?redirect=/messages" className="flex-1 w-full sm:w-1/2">
               <button
                 type="button"
-                className="w-full h-11 sm:h-12 inline-flex items-center justify-center gap-2 px-4 sm:px-5 rounded-xl bg-gradient-to-r from-[#C9A227] to-[#B38E1B] hover:from-[#B8921F] hover:to-[#A37F14] text-white text-[11px] sm:text-xs font-bold tracking-wider uppercase whitespace-nowrap shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.99] cursor-pointer"
+                className="w-full h-11 sm:h-12 inline-flex items-center justify-center gap-2 px-4 sm:px-5 rounded-lg bg-gradient-to-r from-[#C9A227] to-[#B38E1B] hover:from-[#B8921F] hover:to-[#A37F14] text-white font-ui text-[13px] sm:text-sm font-medium transition-all duration-200 active:scale-[0.99] cursor-pointer group"
               >
-                <PenSquare className="size-4 shrink-0 text-white/90" />
-                <span className="whitespace-nowrap">CREATE NEW PROFILE</span>
-                <ArrowRight className="size-3.5 shrink-0 text-white/80" />
+                <PenSquare className="size-4 shrink-0 text-white/80 group-hover:text-white" />
+                <span className="whitespace-nowrap">Create your account</span>
+                <ArrowRight className="size-3.5 shrink-0 text-white/80 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </Link>
           </div>
 
-          {/* Bottom Security / Confidence Footer */}
-          <div className="flex items-center justify-center gap-3 mb-1.5">
-            <span className="h-px w-8 sm:w-12 bg-[#C9A227]/50" />
+          {/* Bottom Security / Notice Footer */}
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-center gap-2 text-slate-500">
             <ShieldCheck className="size-3.5 sm:size-4 text-[#C9A227] shrink-0" />
-            <span className="h-px w-8 sm:w-12 bg-[#C9A227]/50" />
+            <p className="font-body text-[11px] sm:text-xs text-slate-500 font-medium">
+              Messages are available to registered users.
+            </p>
           </div>
-          <p className="text-[9px] sm:text-[10px] font-semibold text-slate-500 uppercase tracking-widest font-serif">
-            SECURE & CONFIDENTIAL MESSAGING ENVIRONMENT
-          </p>
         </div>
       </div>
     );

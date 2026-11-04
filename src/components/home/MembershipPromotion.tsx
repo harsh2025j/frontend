@@ -44,8 +44,8 @@ export default function MembershipPromotion() {
             )
         },
         {
-            title: "AI Legal Assistant",
-            description: "Access exclusive AI tools to summarize lengthy case files and research precedents in seconds.",
+            title: "Judicial Research Tools",
+            description: "Access specialized chamber tools to retrieve case files, ratios, and precedent citations in seconds.",
             icon: (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -56,7 +56,7 @@ export default function MembershipPromotion() {
 
     return (
         <div className="container mx-auto px-4 my-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="relative overflow-hidden bg-white rounded-3xl border border-[#0A2342]/10 shadow-2xl">
+            <div className="relative overflow-hidden bg-white rounded-lg border border-[#0A2342]/10 shadow-2xl">
                 {/* Decorative Elements */}
                 <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-[#C8A028]/5 rounded-full blur-3xl"></div>
                 <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-[#0A2342]/5 rounded-full blur-3xl"></div>
@@ -71,11 +71,11 @@ export default function MembershipPromotion() {
                             Become a <span className="text-[#C8A028]">Verified Advocate</span>
                         </h2>
                         <p className="text-gray-300 text-sm md:text-base leading-relaxed mb-8">
-                            Join our elite network of legal professionals. Create a verified profile to reach more clients, manage cases efficiently, and leverage cutting-edge AI tools.
+                            Join our elite network of legal professionals. Create a verified profile to reach more clients, manage cases efficiently, and leverage specialized judicial tools.
                         </p>
 
                         <Link href="/admin/membership" className="group">
-                            <button className="w-full bg-white text-[#0A2342] font-bold py-4 px-8 rounded-xl shadow-xl hover:bg-[#C8A028] hover:text-white transition-all duration-300 flex items-center justify-center gap-3 active:scale-95">
+                            <button className="w-full bg-white text-[#0A2342] font-bold py-4 px-8 rounded-lg shadow-xl hover:bg-[#C8A028] hover:text-white transition-all duration-300 flex items-center justify-center gap-3 active:scale-95">
                                 Start Your Membership
                                 <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -92,8 +92,8 @@ export default function MembershipPromotion() {
                     <div className="lg:w-3/5 p-8 md:p-12">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {benefits.map((benefit, idx) => (
-                                <div key={idx} className="group p-6 rounded-2xl border border-gray-50 hover:border-[#C8A028]/20 hover:bg-gray-50/50 transition-all duration-300">
-                                    <div className="w-12 h-12 bg-[#0A2342]/5 rounded-xl flex items-center justify-center text-[#0A2342] group-hover:bg-[#C8A028] group-hover:text-white transition-all duration-300 mb-4">
+                                <div key={idx} className="group p-6 rounded-lg border border-gray-50 hover:border-[#C8A028]/20 hover:bg-gray-50/50 transition-all duration-300">
+                                    <div className="w-12 h-12 bg-[#0A2342]/5 rounded-lg flex items-center justify-center text-[#0A2342] group-hover:bg-[#C8A028] group-hover:text-white transition-all duration-300 mb-4">
                                         {benefit.icon}
                                     </div>
                                     <h3 className="text-lg font-bold text-[#0A2342] mb-2 group-hover:text-[#C8A028] transition-colors">

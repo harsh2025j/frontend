@@ -21,12 +21,12 @@ export default function TopJudgesSection() {
     return (
         <div className="flex flex-col gap-3 md:gap-4 w-full lg:flex-1">
             <div className="flex justify-between items-center">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold font-merriweather text-[#0A2342]">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-semibold font-heading text-[#0B2242]">
                     Top Judges
                 </h1>
             </div>
 
-            <div className="flex flex-col p-4 sm:p-5 bg-white justify-evenly transition-all duration-300 rounded-lg shadow-md h-full gap-3">
+            <div className="flex flex-col p-4 sm:p-5 bg-white justify-evenly transition-colors rounded-lg border border-gray-200 h-full gap-3">
                 {hasJudges ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {judges.map((judge) => (

@@ -649,7 +649,7 @@ export default function TranslationPage() {
                       <span className="flex items-center gap-1.5 font-medium text-emerald-800">
                         <CheckCircle2 className="size-3.5 text-emerald-600" />
                         <span>
-                          Document ready for AI OCR & Translation
+                          Document ready for OCR & Translation
                           {pdfPageCount ? ` (${pdfPageCount} page${pdfPageCount > 1 ? 's' : ''} · Max ${MAX_PDF_PAGES})` : ''}
                         </span>
                       </span>

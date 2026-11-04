@@ -65,7 +65,7 @@ export default function ContentSlider({ name, FilteredData, slug }: ContentSlide
 
   return (
     <div className="p-4 md:p-6 bg-[#f6f6f7] flex items-center justify-center relative">
-      <div className="w-full container bg-white rounded-md  p-3 flex gap-4 relative group">
+      <div className="w-full container bg-white rounded-lg p-3 flex gap-4 relative group">
 
         {/* Left Label (Category Name) */}
         <Link href={`/category/${slug}`} className="bg-[#1b3550] rounded-lg w-12 md:w-20 p-2 flex items-center justify-center flex-shrink-0 transition-all duration-300">
@@ -108,9 +108,9 @@ export default function ContentSlider({ name, FilteredData, slug }: ContentSlide
           {FilteredData.map((item, i) => (
             <div
               key={i}
-              className="min-w-[260px] max-w-[260px] bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300"
+              className="min-w-[260px] max-w-[260px] bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-[#C9A227] transition-all duration-200 group/card"
             >
-              <div className="relative w-full aspect-video overflow-hidden bg-gray-200">
+              <div className="relative w-full aspect-video overflow-hidden bg-gray-200 rounded-t-lg">
                 <Link href={`/news/${item.slug}`} className="relative block w-full h-full">
                   <Image
                     src={item.img}
@@ -118,13 +118,13 @@ export default function ContentSlider({ name, FilteredData, slug }: ContentSlide
                     fill
                     sizes="300px"
                     quality={90}
-                    className="object-cover hover:scale-105 transition-transform duration-500"
+                    className="object-cover group-hover/card:scale-105 transition-transform duration-500"
                   />
                 </Link>
               </div>
               <Link href={`/news/${item.slug}`}>
                 <div className="p-3 h-[100px] flex flex-col items-center justify-center">
-                  <p className="text-center text-gray-800 font-medium text-sm line-clamp-2 leading-snug hover:text-blue-600 transition-colors">
+                  <p className="text-center text-gray-800 font-medium text-sm line-clamp-2 leading-snug group-hover/card:text-[#C9A227] transition-colors">
                     {item.title}
                   </p>
                   <p className="text-[10px] text-gray-500 mt-2">

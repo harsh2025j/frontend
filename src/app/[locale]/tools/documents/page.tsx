@@ -1811,7 +1811,7 @@ export default function LegalDocumentsPage() {
             { num: 1, label: 'Document Type' },
             { num: 2, label: 'Template' },
             { num: 3, label: 'Details' },
-            { num: 4, label: 'AI Chat' },
+            { num: 4, label: 'Clause Review' },
             { num: 5, label: 'Draft' },
           ].map((st) => {
             const isActive = activeStep === st.num;
@@ -2271,7 +2271,7 @@ export default function LegalDocumentsPage() {
                 <p className="text-xs text-[#64748B]">
                   {!situationText.trim() && uploadedFiles.length === 0
                     ? 'Describe the situation or add a document to continue.'
-                    : 'Facts entered. Proceed to AI refinement chat.'}
+                    : 'Facts entered. Proceed to clause review assistant.'}
                 </p>
 
                 <button
@@ -2279,7 +2279,7 @@ export default function LegalDocumentsPage() {
                   disabled={!situationText.trim() && uploadedFiles.length === 0}
                   className="rounded-lg bg-[#0B2242] px-6 py-3 text-xs sm:text-sm font-bold text-white hover:bg-[#15345E] transition-all flex items-center justify-center gap-2 shadow-xs disabled:opacity-40 cursor-pointer"
                 >
-                  <span>Continue to AI chat</span>
+                  <span>Continue to clause review</span>
                   <ArrowRight className="size-4" />
                 </button>
               </div>
@@ -2287,16 +2287,16 @@ export default function LegalDocumentsPage() {
           </div>
         )}
 
-        {/* STEP 4: AI CHAT & INTELLIGENCE INSPECTOR */}
+        {/* STEP 4: CLAUSE REVIEW & INTELLIGENCE INSPECTOR */}
         {activeStep === 4 && selectedTemplate && (
           <div className="grid gap-6 lg:grid-cols-12">
-            {/* Left Column: AI Conversational Chat (7 cols) */}
+            {/* Left Column: Conversational Assistant (7 cols) */}
             <div className="lg:col-span-7 flex flex-col rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-xs h-[640px]">
               <div className="border-b border-[#F1F5F9] pb-3 mb-4 flex items-center justify-between">
                 <div>
                   <h3 className="font-bold text-sm text-[#0B2242] flex items-center gap-1.5">
-                    <Sparkles className="size-4 text-[#CAA438]" />
-                    <span>AI Legal Assistant</span>
+                    <FileText className="size-4 text-[#CAA438]" />
+                    <span>Chamber Drafting Assistant</span>
                   </h3>
                   <p className="text-[11px] text-[#64748B]">Answering questions automatically updates the draft particulars</p>
                 </div>

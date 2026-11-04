@@ -26,11 +26,11 @@ export default function TopAdvocateSection() {
     return (
         <div className="flex flex-col gap-3 md:gap-4 w-full lg:max-w-[600px]">
             <div>
-                <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold font-merriweather text-[#0A2342]">
-                    Top Advocate
+                <h1 className="text-lg sm:text-xl md:text-2xl font-semibold font-heading text-[#0B2242]">
+                    Top Advocates
                 </h1>
             </div>
-            <div className="flex flex-col p-4 sm:p-5 bg-white justify-evenly transition-all duration-300 rounded-lg shadow-md h-full gap-3">
+            <div className="flex flex-col p-4 sm:p-5 bg-white justify-evenly transition-colors rounded-lg border border-gray-200 h-full gap-3">
                 {loading ? (
                     <div className="flex items-center justify-center py-8">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C9A227]"></div>
@@ -40,7 +40,7 @@ export default function TopAdvocateSection() {
                         {advocateData.slice(0, 3).map((advocate: Article) => (
                             <div
                                 key={advocate.id}
-                                className="flex items-center gap-4 bg-[#e5e5e5] p-5 rounded-xl w-full h-auto hover:bg-[#d5d5d5] transition-colors cursor-pointer"
+                                className="flex items-center gap-4 bg-[#e5e5e5] p-5 rounded-lg w-full h-auto hover:bg-[#d5d5d5] transition-colors cursor-pointer"
                             >
                                 <div className="w-14 h-14 relative rounded-full overflow-hidden flex-shrink-0 bg-gray-300">
                                     {advocate.thumbnail ? (

@@ -33,9 +33,9 @@ const HomeLatestArticleCard: React.FC<HomeLatestArticleCardProps> = ({
   const newsLink = slug ? `/news/${slug}` : "#";
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden border border-slate-200/90 shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-300 flex flex-col justify-between h-full group">
+    <div className="bg-white rounded-lg overflow-hidden border border-slate-200/90 hover:border-[#C9A227] transition-all duration-200 flex flex-col justify-between h-full group">
       {/* Thumbnail with Category Pill */}
-      <div className="relative w-full aspect-video shrink-0 overflow-hidden bg-slate-100">
+      <div className="relative w-full aspect-video shrink-0 overflow-hidden bg-slate-100 rounded-t-lg">
         <Link href={newsLink} className="relative block w-full h-full">
           <Image
             src={imageUrl}
@@ -47,7 +47,7 @@ const HomeLatestArticleCard: React.FC<HomeLatestArticleCardProps> = ({
           />
         </Link>
         {/* Category Pill Tag */}
-        <span className={`absolute top-2.5 left-2.5 ${badgeBgClass} ${badgeTextClass} text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm z-10 pointer-events-none`}>
+        <span className={`absolute top-2.5 left-2.5 ${badgeBgClass} ${badgeTextClass} text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider z-10 pointer-events-none`}>
           {category}
         </span>
       </div>
@@ -56,13 +56,13 @@ const HomeLatestArticleCard: React.FC<HomeLatestArticleCardProps> = ({
       <div className="flex flex-col p-4 flex-grow justify-between">
         <div>
           <Link href={newsLink}>
-            <h3 className="font-bold text-sm text-slate-900 leading-snug line-clamp-2 hover:text-[#0B2242] transition-colors mb-2">
+            <h3 className="font-heading font-semibold text-[15px] text-[#0B2242] leading-[1.3] line-clamp-2 hover:text-[#C9A227] transition-colors mb-2">
               {title}
             </h3>
           </Link>
 
           {/* Meta Details */}
-          <div className="flex items-center justify-between text-[11px] text-slate-600 mb-3 pt-1">
+          <div className="flex items-center justify-between font-body text-[11.5px] text-slate-600 mb-3 pt-1">
             <div className="flex items-center gap-1.5 truncate pr-2">
               <User className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
               <span className="truncate">Author: {author || "Super admin"}</span>

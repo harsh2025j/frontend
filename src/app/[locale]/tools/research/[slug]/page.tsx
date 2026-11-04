@@ -358,7 +358,7 @@ Certified Precedent Analysis via LegalTech Law Research Engine
           )}
         </div>
 
-        <h1 className="mt-2 font-merriweather text-[22px] leading-[1.25] font-bold tracking-[-0.01em] text-[#0B2242] sm:text-[28px]">
+        <h1 className="mt-2 font-heading text-[22px] leading-[1.25] font-semibold tracking-[-0.01em] text-[#0B2242] sm:text-[28px]">
           {judgment.title}
         </h1>
 
@@ -391,7 +391,7 @@ Certified Precedent Analysis via LegalTech Law Research Engine
       {/* ratio + headnotes */}
       <section className="mt-8">
         <h2 className="font-ui text-[15px] font-semibold text-[#0B2242]">Ratio decidendi</h2>
-        <blockquote className="mt-3 border-l-2 border-[#C9A227] pl-4 font-merriweather text-[15px] leading-[1.75] text-[#1F2937] sm:text-base">
+        <blockquote className="mt-3 border-l-2 border-[#C9A227] pl-4 font-heading italic text-[15.5px] leading-[1.75] text-[#1F2937] sm:text-base">
           {summaryData.ratio}
         </blockquote>
 
