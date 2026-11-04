@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --font-body: var(--font-source-sans), var(--font-noto-sans-devanagari), "Source Sans 3", "Noto Sans Devanagari", Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-heading: var(--font-lora), var(--font-noto-serif-devanagari), "Lora", "Noto Serif Devanagari", Georgia, "Times New Roman", serif;
+  --font-body: var(--font-source-sans), "Noto Sans Devanagari", "Source Sans 3", Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: var(--font-lora), "Noto Serif Devanagari", "Lora", Georgia, "Times New Roman", serif;
   --font-ui: var(--font-body);
 }
 

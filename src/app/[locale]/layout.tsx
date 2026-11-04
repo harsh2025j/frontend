@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Lora, Source_Sans_3, Noto_Serif_Devanagari, Noto_Sans_Devanagari, Geist_Mono } from "next/font/google";
+import { Lora, Source_Sans_3, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import ClientLayout from "@/components/layout/ClientWrapper";
 import ReduxProvider from "@/data/redux/providers/ReduxProvider";
@@ -28,20 +28,6 @@ const lora = Lora({
 const sourceSans3 = Source_Sans_3({
   variable: "--font-source-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const notoSerifDevanagari = Noto_Serif_Devanagari({
-  variable: "--font-noto-serif-devanagari",
-  subsets: ["devanagari", "latin"],
-  weight: ["500", "600", "700"],
-  display: "swap",
-});
-
-const notoSansDevanagari = Noto_Sans_Devanagari({
-  variable: "--font-noto-sans-devanagari",
-  subsets: ["devanagari", "latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
 });
@@ -183,9 +169,15 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@500;600;700&display=swap"
+          rel="stylesheet"
+        />
         <JsonLd locale={locale} />
       </head>
-      <body className={`${lora.variable} ${sourceSans3.variable} ${notoSerifDevanagari.variable} ${notoSansDevanagari.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
+      <body className={`${lora.variable} ${sourceSans3.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         {/* ADSENSE DISABLED — re-enable once AdSense is approved (also uncomment GOOGLE_AD_MAPPINGS in advertisement.types.ts) */}
         {/* <Script
           id="google-adsense"

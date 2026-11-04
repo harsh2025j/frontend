@@ -38,12 +38,16 @@ function getRateString(speed: string): string {
 function synthesizeWithEdgeTts(voice: string, rate: string, text: string): Promise<Buffer> {
     return new Promise((resolve, reject) => {
         // Find python in the dedicated virtual environment or system packages
-        const pythonCandidates = [
-            path.join(process.cwd(), ".venv-tts", "bin", "python3"),
+        const pythonCandidates: string[] = [
             "/home/keshav-pathak/Projects/LegalTech/frontend/.venv-tts/bin/python3",
-            path.join(process.cwd(), "frontend", ".venv-tts", "bin", "python3"),
             "/usr/bin/python3",
         ];
+        if (!process.env.VERCEL && typeof process !== "undefined" && process.cwd) {
+            pythonCandidates.unshift(
+                path.resolve(process.cwd(), ".venv-tts", "bin", "python3"),
+                path.resolve(process.cwd(), "frontend", ".venv-tts", "bin", "python3")
+            );
+        }
         const pythonPath = pythonCandidates.find((p) => fs.existsSync(p)) || "python3";
 
         const tempFile = path.join("/tmp", `edge_tts_${crypto.randomUUID()}.mp3`);
