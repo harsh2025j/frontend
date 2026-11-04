@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
+import { Link } from "@/i18n/routing";
 import {
   Mail,
   Phone,
@@ -8,19 +10,19 @@ import {
   Clock,
   Send,
   Building2,
-  ArrowRight,
   CheckCircle2,
   X,
   ExternalLink,
+  ShieldCheck,
 } from "lucide-react";
 import {
   FaFacebookF,
   FaInstagram,
+  FaXTwitter,
   FaWhatsapp,
-  FaTwitter,
   FaLinkedinIn,
   FaYoutube,
-} from "react-icons/fa";
+} from "react-icons/fa6";
 import { useDocTitle } from "@/hooks/useDocTitle";
 import toast from "react-hot-toast";
 import apiClient from "@/data/services/apiConfig/apiClient";
@@ -32,29 +34,40 @@ const WHATSAPP_URL =
 
 const SOCIAL_LINKS = [
   {
-    icon: FaLinkedinIn,
-    href: "https://www.linkedin.com/in/sajjad-husain-associates-law-31715675/",
-    label: "LinkedIn",
+    icon: FaFacebookF,
+    href: "https://www.facebook.com/advocatesajjadofficial",
+    label: "Facebook",
+    bg: "hover:bg-[#1877F2] hover:border-[#1877F2]",
   },
   {
-    icon: FaTwitter,
+    icon: FaXTwitter,
     href: "https://x.com/advocatesajjad",
     label: "X (Twitter)",
+    bg: "hover:bg-black hover:border-black",
+  },
+  {
+    icon: FaWhatsapp,
+    href: WHATSAPP_URL,
+    label: "WhatsApp",
+    bg: "hover:bg-[#25D366] hover:border-[#25D366]",
   },
   {
     icon: FaYoutube,
     href: "https://www.youtube.com/@SajjadHusainLawAssociates",
     label: "YouTube",
+    bg: "hover:bg-[#FF0000] hover:border-[#FF0000]",
   },
   {
-    icon: FaFacebookF,
-    href: "https://www.facebook.com/advocatesajjadofficial",
-    label: "Facebook",
+    icon: FaLinkedinIn,
+    href: "https://www.linkedin.com/in/sajjad-husain-associates-law-31715675/",
+    label: "LinkedIn",
+    bg: "hover:bg-[#0A66C2] hover:border-[#0A66C2]",
   },
   {
     icon: FaInstagram,
     href: "https://www.instagram.com/sajjad_husain_law_associates/?hl=en",
     label: "Instagram",
+    bg: "hover:bg-[#E4405F] hover:border-[#E4405F]",
   },
 ];
 
@@ -87,7 +100,7 @@ export default function ContactUs() {
       }
 
       setShowPopup(true);
-      toast.success("Message sent successfully to the chambers!");
+      toast.success("Message sent successfully to our chambers!");
     } catch (err: any) {
       console.error("Contact API delivery error:", err);
       const msg =
@@ -121,290 +134,379 @@ export default function ContactUs() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* ── Header in Website Blue (#0A2342) ── */}
-      <div className="relative bg-[#0A2342] text-white py-14 sm:py-16 px-4 overflow-hidden">
-        {/* Subtle Decorative Depth */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
-        </div>
-
-        <div className="container mx-auto max-w-4xl relative z-10 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-            Contact Us
-          </h1>
-          <p className="text-base sm:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            Reach out to our chambers for legal counsel, case inquiries, or platform assistance.
-          </p>
+    <div className="min-h-screen bg-[#FDFDFD] text-gray-900 font-sans pb-16">
+      {/* ── Breadcrumb Bar (LiveLaw Standard, Full-Width Same as Header) ── */}
+      <div className="border-b border-gray-200 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 font-semibold">
+            <Link
+              href="/"
+              className="hover:text-[#0A2342] hover:underline transition-colors"
+            >
+              Home
+            </Link>
+            <span className="text-gray-300 font-normal">/</span>
+            <span className="text-[#0A2342] font-bold" aria-current="page">
+              Contact Us
+            </span>
+          </nav>
         </div>
       </div>
 
-      <div className="container mx-auto max-w-5xl px-4 sm:px-6 py-12 sm:py-16 space-y-10">
-
-        {/* ── Main Layout: Reach Us On vs. Send Message ── */}
-        <div className="grid lg:grid-cols-12 gap-8 items-start">
-
-          {/* Left Column (5/12) - Reach Us On */}
-          <div className="lg:col-span-5 space-y-5">
-            <div>
-              <h2 className="text-xl font-bold text-[#0A2342] mb-1">Reach Us On</h2>
-              <p className="text-xs text-gray-500">Official contact registry and chamber details.</p>
+      {/* ── Brand Header (Full-Width, Extra Bold & Big Font) ── */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-3">
+              <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#C9A227] font-heading block">
+                Chamber Registry &bull; High Court Lucknow Bench
+              </span>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-[#0A2342] font-heading tracking-tight leading-none">
+                Contact Us
+              </h1>
+              <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-4xl leading-relaxed pt-1 font-normal">
+                Connect directly with the chambers of Sajjad Husain Law Associates for litigation representation, High Court and Supreme Court appellate counsel, legal consultations, or registry inquiries.
+              </p>
             </div>
 
-            {/* Email Card with Action */}
-            <div className="p-5 rounded-2xl bg-white border border-gray-200 space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-gray-500">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-[#0A2342]" />
-                  <span>Email</span>
-                </div>
-                <a
-                  href="mailto:sajjadhusainlawassociates@gmail.com?subject=Legal%20Inquiry%20-%20Sajjad%20Husain%20Law%20Associates"
-                  className="text-xs font-semibold text-[#0A2342] hover:underline normal-case"
-                >
-                  Compose Email ↗
-                </a>
-              </div>
-              <div>
-                <a
-                  href="mailto:sajjadhusainlawassociates@gmail.com"
-                  className="text-sm font-semibold text-[#0A2342] hover:underline break-all block"
-                >
-                  sajjadhusainlawassociates@gmail.com
-                </a>
-              </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 shrink-0">
+              <a
+                href="tel:+917080909786"
+                className="inline-flex items-center gap-2.5 text-xs sm:text-sm font-extrabold uppercase tracking-wider text-[#0A2342] bg-gray-50 hover:bg-[#0A2342] hover:text-white border border-gray-300 hover:border-[#0A2342] px-5 py-3 rounded-lg transition-all"
+              >
+                <Phone className="w-4 h-4" />
+                <span>+91 70809 09786</span>
+              </a>
+
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-700 px-5 py-3 rounded-lg transition-all shadow-sm"
+              >
+                <FaWhatsapp className="w-4 h-4" />
+                <span>WhatsApp Registry</span>
+              </a>
             </div>
+          </div>
+        </div>
+      </div>
 
-            {/* Phone & Hours Card with Direct Call / WhatsApp Actions */}
-            <div className="p-5 rounded-2xl bg-white border border-gray-200 space-y-3">
-              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-gray-500">
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-[#0A2342]" />
-                  <span>Phone &amp; WhatsApp</span>
-                </div>
-                <span className="text-xs font-medium text-gray-500 normal-case">Mon – Sat</span>
-              </div>
+      {/* ── Main Two-Column Editorial Split (Exact LiveLaw Standard, Full-Width) ── */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-12">
+        <div className="bg-white rounded-lg border border-gray-300 p-6 sm:p-10 md:p-12">
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-start">
 
+            {/* ════════ LEFT COLUMN: Reach us on (5 of 12) ════════ */}
+            <div className="lg:col-span-5 space-y-8 sm:space-y-10">
               <div>
-                <a
-                  href="tel:+917080909786"
-                  className="text-base font-bold text-[#0A2342] hover:underline block"
-                >
-                  +91 70809 09786
-                </a>
-                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                  <span>Assistance Hours: 10:00 AM – 6:00 PM IST</span>
+                <h2 className="text-3xl sm:text-4xl font-black text-[#0A2342] font-heading tracking-tight">
+                  Reach us on
+                </h2>
+                <div className="w-14 h-1 bg-[#C9A227] mt-3 mb-2" />
+                <p className="text-sm sm:text-base text-gray-600 font-normal">
+                  Official communication channels and chamber registry details.
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-2 pt-1">
-                <a
-                  href="tel:+917080909786"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0A2342] bg-gray-100 hover:bg-[#0A2342] hover:text-white px-3 py-1.5 rounded-lg transition-colors"
-                >
-                  <Phone className="w-3 h-3" />
-                  <span>Call Now</span>
-                </a>
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors"
-                >
-                  <FaWhatsapp className="w-3 h-3" />
-                  <span>Chat on WhatsApp</span>
-                </a>
-              </div>
-            </div>
-
-            {/* Chamber Address Card with Map Link */}
-            <div className="p-5 rounded-2xl bg-white border border-gray-200 space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-gray-500">
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-[#0A2342]" />
-                  <span>Chamber Address</span>
+              {/* 1. Email Item */}
+              <div className="flex items-start gap-4 sm:gap-5">
+                <div className="w-12 h-12 rounded-lg bg-[#0A2342] text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <Mail className="w-6 h-6 text-white" />
                 </div>
-                <a
-                  href={OFFICIAL_MAPS_LINK}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#0A2342] hover:underline font-semibold normal-case text-xs flex items-center gap-1"
-                >
-                  <span>Google Maps</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-              <p className="text-xs sm:text-sm text-gray-700 leading-relaxed font-medium">
-                Sajjad Husain Law Associates<br />
-                Advocates Chamber No. 515, Block-C<br />
-                High Court of Judicature at Allahabad<br />
-                Lucknow Bench, Gomti Nagar<br />
-                Lucknow, Uttar Pradesh – 226010
-              </p>
-            </div>
-
-            {/* Follow Us On */}
-            <div className="p-5 rounded-2xl bg-white border border-gray-200 space-y-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-500 block">
-                Follow Us On
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {SOCIAL_LINKS.map((item, idx) => {
-                  const Icon = item.icon;
-                  return (
+                <div className="space-y-1">
+                  <h6 className="text-sm sm:text-base font-black text-[#0A2342] uppercase tracking-wider">
+                    Email
+                  </h6>
+                  <p className="text-base sm:text-lg font-bold text-[#0A2342]">
                     <a
-                      key={idx}
-                      href={item.href}
+                      href="mailto:sajjadhusainlawassociates@gmail.com"
+                      className="hover:text-[#C9A227] hover:underline transition-colors break-all"
+                    >
+                      sajjadhusainlawassociates@gmail.com
+                    </a>
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">
+                    <a
+                      href="mailto:sajjad.husainlawassociates@gmail.com?subject=Chamber%20Inquiry"
+                      className="hover:text-[#C9A227] hover:underline transition-colors break-all"
+                    >
+                      sajjad.husainlawassociates@gmail.com
+                    </a>
+                  </p>
+                </div>
+              </div>
+
+              {/* 2. Number Item */}
+              <div className="flex items-start gap-4 sm:gap-5">
+                <div className="w-12 h-12 rounded-lg bg-[#0A2342] text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <Phone className="w-6 h-6 text-white" />
+                </div>
+                <div className="space-y-1">
+                  <h6 className="text-sm sm:text-base font-black text-[#0A2342] uppercase tracking-wider">
+                    Number
+                  </h6>
+                  <p className="text-lg sm:text-2xl font-black text-[#0A2342]">
+                    <a
+                      href="tel:+917080909786"
+                      className="hover:text-[#C9A227] hover:underline transition-colors"
+                    >
+                      +91 70809 09786
+                    </a>
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-600 flex items-center gap-1.5 pt-1 font-semibold">
+                    <Clock className="w-4 h-4 text-[#C9A227] shrink-0" />
+                    <span>Assistance Hours: 10:00 AM to 6:00 PM (Monday to Saturday)</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* 3. Address Item */}
+              <div className="flex items-start gap-4 sm:gap-5">
+                <div className="w-12 h-12 rounded-lg bg-[#0A2342] text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <Building2 className="w-6 h-6 text-white" />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <h6 className="text-sm sm:text-base font-black text-[#0A2342] uppercase tracking-wider">
+                      Chamber Address
+                    </h6>
+                    <a
+                      href={OFFICIAL_MAPS_LINK}
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label={item.label}
-                      className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 text-[#0A2342] hover:bg-[#0A2342] hover:text-white transition-all flex items-center justify-center"
+                      className="text-xs sm:text-sm font-bold text-[#C9A227] hover:underline flex items-center gap-1"
                     >
-                      <Icon className="w-4 h-4" />
+                      <span>Directions</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
                     </a>
-                  );
-                })}
+                  </div>
+                  <p className="text-sm sm:text-base text-gray-800 leading-relaxed font-normal">
+                    Advocates Chamber No. 515, Block-C, High Court of Judicature at Allahabad, Lucknow Bench, Lucknow &ndash; Ayodhya Road, Gomti Nagar, Lucknow, Uttar Pradesh &ndash; 226010, India
+                  </p>
+                </div>
               </div>
+
+              {/* 4. Follow us on (LiveLaw style) */}
+              <div className="pt-4 border-t border-gray-200">
+                <h4 className="text-sm sm:text-base font-black text-[#0A2342] uppercase tracking-wider mb-3">
+                  Follow us on
+                </h4>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {SOCIAL_LINKS.map((item, idx) => {
+                    const Icon = item.icon;
+                    return (
+                      <a
+                        key={idx}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={item.label}
+                        title={item.label}
+                        className={`w-10 h-10 rounded-lg bg-gray-50 border border-gray-300 text-[#0A2342] hover:text-white transition-all flex items-center justify-center ${item.bg}`}
+                      >
+                        <Icon className="w-4 h-4" />
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 5. Authentic Allahabad High Court Photographic Card (Clean & Realistic) */}
+              <div className="rounded-lg border border-gray-300 overflow-hidden bg-white">
+                <div className="relative h-48 sm:h-56 w-full bg-gray-100">
+                  <Image
+                    src="/high-courts/allahabad.jpg"
+                    alt="High Court of Judicature at Allahabad, Lucknow Bench"
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 500px"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="p-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-xs sm:text-sm">
+                  <div>
+                    <span className="font-extrabold text-[#0A2342] block">
+                      High Court of Judicature at Allahabad &bull; Lucknow Bench
+                    </span>
+                    <span className="text-gray-600 block text-xs">
+                      Advocates Chamber Complex, Block-C, Chamber 515
+                    </span>
+                  </div>
+                  <a
+                    href={OFFICIAL_MAPS_LINK}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold text-[#0A2342] hover:text-[#C9A227] hover:underline flex items-center gap-1 shrink-0"
+                  >
+                    <span>View Map</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+
             </div>
 
-          </div>
+            {/* ════════ RIGHT COLUMN: Contact Us Form (7 of 12) ════════ */}
+            <div className="lg:col-span-7 lg:border-l lg:border-gray-200 lg:pl-12">
+              <div>
+                <h2 className="text-3xl sm:text-4xl font-black text-[#0A2342] font-heading tracking-tight">
+                  Contact Us
+                </h2>
+                <div className="w-14 h-1 bg-[#C9A227] mt-3 mb-2" />
+                <p className="text-sm sm:text-base text-gray-600 font-normal mb-8">
+                  Submit your details below and our chamber registry will respond promptly.
+                </p>
+              </div>
 
-          {/* Right Column (7/12) - Actionable Send Message Form */}
-          <div className="lg:col-span-7">
-            <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 shadow-sm">
-              <h2 className="text-xl font-bold text-[#0A2342] mb-1">
-                Send a Message
-              </h2>
-              <p className="text-xs text-gray-500 mb-6">
-                Fill in the details below and our chamber registry will respond promptly.
-              </p>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      required
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="Your Name"
-                      className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:border-[#0A2342] focus:ring-1 focus:ring-[#0A2342] transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      required
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="+91 98765 43210"
-                      className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:border-[#0A2342] focus:ring-1 focus:ring-[#0A2342] transition-colors"
-                    />
-                  </div>
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label
+                    htmlFor="contact_name"
+                    className="block text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider mb-2"
+                  >
+                    Full Name <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="contact_name"
+                    name="name"
+                    required
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Enter Full Name"
+                    className="w-full h-12 sm:h-14 px-4 rounded-lg border border-gray-300 text-sm sm:text-base text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:border-[#0A2342] focus:ring-1 focus:ring-[#0A2342] transition-colors"
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Email Address *
+                  <label
+                    htmlFor="contact_email"
+                    className="block text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider mb-2"
+                  >
+                    Email Address <span className="text-red-600">*</span>
                   </label>
                   <input
                     type="email"
+                    id="contact_email"
                     name="email"
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="name@example.com"
-                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:border-[#0A2342] focus:ring-1 focus:ring-[#0A2342] transition-colors"
+                    placeholder="Enter Email Address"
+                    className="w-full h-12 sm:h-14 px-4 rounded-lg border border-gray-300 text-sm sm:text-base text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:border-[#0A2342] focus:ring-1 focus:ring-[#0A2342] transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Subject *
+                  <label
+                    htmlFor="contact_phone"
+                    className="block text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider mb-2"
+                  >
+                    Phone Number <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    id="contact_phone"
+                    name="phone"
+                    required
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="Enter Phone Number"
+                    className="w-full h-12 sm:h-14 px-4 rounded-lg border border-gray-300 text-sm sm:text-base text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:border-[#0A2342] focus:ring-1 focus:ring-[#0A2342] transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="contact_subject"
+                    className="block text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider mb-2"
+                  >
+                    Subject / Case Reference <span className="text-red-600">*</span>
                   </label>
                   <input
                     type="text"
+                    id="contact_subject"
                     name="subject"
                     required
                     value={formData.subject}
                     onChange={handleChange}
-                    placeholder="Brief subject of inquiry"
-                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:border-[#0A2342] focus:ring-1 focus:ring-[#0A2342] transition-colors"
+                    placeholder="Enter Subject (e.g. High Court Consultation, Writ Petition, Bail Application)"
+                    className="w-full h-12 sm:h-14 px-4 rounded-lg border border-gray-300 text-sm sm:text-base text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:border-[#0A2342] focus:ring-1 focus:ring-[#0A2342] transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Message *
+                  <label
+                    htmlFor="contact_message"
+                    className="block text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider mb-2"
+                  >
+                    Message / Matter Summary <span className="text-red-600">*</span>
                   </label>
                   <textarea
+                    id="contact_message"
                     name="message"
                     required
-                    rows={4}
+                    rows={5}
                     value={formData.message}
                     onChange={handleChange}
-                    placeholder="Describe your legal matter or procedural inquiry..."
-                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:border-[#0A2342] focus:ring-1 focus:ring-[#0A2342] transition-colors resize-none"
+                    placeholder="Describe your legal matter, court hearing reference, or procedural inquiry..."
+                    className="w-full p-4 rounded-lg border border-gray-300 text-sm sm:text-base text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:border-[#0A2342] focus:ring-1 focus:ring-[#0A2342] transition-colors resize-none leading-relaxed"
                   />
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-3">
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full sm:w-auto px-7 py-3 rounded-xl bg-[#0A2342] text-white font-semibold text-sm hover:bg-[#153a66] transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-70"
+                    className="w-full sm:w-[240px] h-12 sm:h-14 rounded-lg bg-[#0A2342] hover:bg-[#153a66] text-white font-black text-xs sm:text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2.5 disabled:opacity-70 shadow-sm cursor-pointer"
                   >
                     {isSubmitting ? (
-                      <span>Sending...</span>
+                      <span>Submitting...</span>
                     ) : (
                       <>
-                        <span>Send Message</span>
-                        <Send className="w-3.5 h-3.5" />
+                        <span>Submit</span>
+                        <Send className="w-4 h-4" />
                       </>
                     )}
                   </button>
                 </div>
+
+                <div className="pt-5 border-t border-gray-200 flex items-start gap-3 text-xs sm:text-sm text-gray-600">
+                  <ShieldCheck className="w-5 h-5 text-[#C9A227] shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    <span className="font-extrabold text-[#0A2342]">Legal Privilege:</span> All inquiries and matter details submitted to Sajjad Husain Law Associates are protected under advocate-client confidentiality.
+                  </p>
+                </div>
               </form>
             </div>
-          </div>
 
+          </div>
         </div>
 
-        {/* ── Official Google Maps Embed & Location ── */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-200 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        {/* ── Official Google Maps & Chamber Location (Full-Width, Same as Header) ── */}
+        <div className="mt-10 sm:mt-12 bg-white rounded-lg p-6 sm:p-10 border border-gray-300 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 className="text-base font-bold text-[#0A2342] flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#0A2342]" />
-                <span>Chamber Location — High Court Lucknow</span>
+              <h2 className="text-xl sm:text-2xl font-black text-[#0A2342] font-heading flex items-center gap-2.5">
+                <MapPin className="w-6 h-6 text-[#C9A227]" />
+                <span>Chamber Location &mdash; High Court of Judicature at Allahabad (Lucknow Bench)</span>
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Chamber No. 515, Block-C, High Court of Judicature at Allahabad, Lucknow Bench.
+              <p className="text-xs sm:text-sm text-gray-600 mt-1 font-medium">
+                Advocates Chamber No. 515, Block-C, High Court Campus, Lucknow &ndash; Ayodhya Road, Gomti Nagar, Lucknow, UP &ndash; 226010
               </p>
             </div>
             <a
               href={OFFICIAL_MAPS_LINK}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0A2342] bg-gray-50 hover:bg-[#0A2342] hover:text-white border border-gray-200 px-3.5 py-2 rounded-xl transition-all w-fit"
+              className="inline-flex items-center gap-2 text-xs sm:text-sm font-extrabold uppercase tracking-wider text-[#0A2342] bg-gray-50 hover:bg-[#0A2342] hover:text-white border border-gray-300 px-5 py-3 rounded-lg transition-all w-fit shrink-0"
             >
               <span>Get Directions on Google Maps</span>
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="w-4 h-4" />
             </a>
           </div>
 
-          <div className="rounded-xl overflow-hidden border border-gray-200 h-64 sm:h-72 w-full">
+          <div className="rounded-lg overflow-hidden border border-gray-300 h-80 sm:h-[420px] w-full">
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3559.324!2d81.0089797!3d26.8718658!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x399be3a2f9d90d95%3A0xa458c348ad78cb08!2sSajjad%20Husain%20Law%20Associates%20(High%20Court%20Lucknow)!5e0!3m2!1sen!2sin!4v1"
               width="100%"
@@ -417,50 +519,48 @@ export default function ContactUs() {
             />
           </div>
         </div>
-
       </div>
 
-      {/* ── Confirmation Modal with Direct Next Actions ── */}
+      {/* ── Confirmation Modal ── */}
       {showPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 text-center border border-gray-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 sm:p-8 text-center border border-gray-300">
             <div className="flex justify-end mb-1">
               <button
                 onClick={handleReset}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
                 aria-label="Close"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="mx-auto w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mb-3">
-              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+            <div className="mx-auto w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mb-4 border border-emerald-200">
+              <CheckCircle2 className="w-7 h-7 text-emerald-600" />
             </div>
 
-            <h3 className="text-lg font-bold text-[#0A2342] mb-1">
-              Message Submitted
+            <h3 className="text-xl font-black text-[#0A2342] font-heading mb-2">
+              Inquiry Submitted
             </h3>
 
-            <p className="text-xs text-gray-600 mb-6 leading-relaxed">
-              Thank you for contacting Sajjad Husain Law Associates. Our chamber registry will review your details
-              and reach out within one business day.
+            <p className="text-sm text-gray-600 mb-6 leading-relaxed font-normal">
+              Thank you for contacting Sajjad Husain Law Associates. Your inquiry has been forwarded to our chamber registry and counsel will review it promptly.
             </p>
 
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               <a
                 href={WHATSAPP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors text-xs flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold uppercase tracking-wider rounded-lg transition-colors text-xs sm:text-sm flex items-center justify-center gap-2"
               >
-                <FaWhatsapp className="w-3.5 h-3.5" />
-                <span>Follow up instantly on WhatsApp</span>
+                <FaWhatsapp className="w-4 h-4" />
+                <span>Follow up on WhatsApp</span>
               </a>
 
               <button
                 onClick={handleReset}
-                className="w-full py-2.5 bg-[#0A2342] text-white hover:bg-[#153a66] font-semibold rounded-xl text-xs transition-colors"
+                className="w-full py-3 bg-[#0A2342] text-white hover:bg-[#153a66] font-extrabold uppercase tracking-wider rounded-lg text-xs sm:text-sm transition-colors cursor-pointer"
               >
                 Done
               </button>

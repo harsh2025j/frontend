@@ -245,10 +245,8 @@ function JudgesPageContent() {
                 {/* Left hero content */}
                 <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 md:py-12">
                     <div className="flex items-center gap-4 sm:gap-5">
-                        <div className="w-12 h-12 rounded-xl border border-[#C9A227] flex items-center justify-center text-[#C9A227] flex-shrink-0 bg-white/5">
-                            <Scale className="w-6 h-6 text-[#C9A227]" strokeWidth={2} />
-                        </div>
-                        <div className="h-10 w-[1.5px] bg-[#C9A227]/60 hidden sm:block" />
+                     
+                  
                         <div>
                             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-serif tracking-tight text-white">
                                 Judiciary Portal

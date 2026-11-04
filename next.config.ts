@@ -31,6 +31,30 @@ const nextConfig: NextConfig = {
         destination: 'https://api.sajjadhusainlawassociates.com/:path*',
       },
       {
+        source: '/contact-us',
+        destination: '/contact',
+      },
+      {
+        source: '/:locale/contact-us',
+        destination: '/:locale/contact',
+      },
+      {
+        source: '/who-we-are',
+        destination: '/about',
+      },
+      {
+        source: '/:locale/who-we-are',
+        destination: '/:locale/about',
+      },
+      {
+        source: '/about-us',
+        destination: '/about',
+      },
+      {
+        source: '/:locale/about-us',
+        destination: '/:locale/about',
+      },
+      {
         source: '/certificates/verify',
         destination: '/academy/certificates/verify',
       },
