@@ -308,6 +308,9 @@ export function ListenArticleButton({
     );
 }
 
+// 1ms silent WAV data URI to synchronously prime/unlock HTML5 Audio on user click
+const SILENT_AUDIO_PRIME = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+
 // ── Main Singleton SpeechPlayer Controller ──
 export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
     const [currentArticle, setCurrentArticle] = useState<Article>(initialArticle);
@@ -957,6 +960,16 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
+            // Synchronously prime / unlock audio in the user gesture call stack
+            try {
+                audioRef.current.src = SILENT_AUDIO_PRIME;
+                const primePromise = audioRef.current.play();
+                if (primePromise !== undefined) {
+                    primePromise.catch(() => {});
+                }
+            } catch {
+                // Ignore prime errors
+            }
         }
         if (typeof window !== "undefined" && "speechSynthesis" in window) {
             try {
@@ -984,10 +997,8 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         setIsPlaying(true);
         isPlayingRef.current = true;
 
-        setTimeout(() => {
-            prepareArticleChunks(articleToPlay, true);
-            playChunk(0);
-        }, 50);
+        prepareArticleChunks(articleToPlay, true);
+        playChunk(0);
     }, [highlightSentence, prepareArticleChunks, playChunk]);
 
     // 10. Event listeners from Author Card button
@@ -1121,7 +1132,7 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
     return (
         <>
             {/* Single HTML5 Audio stream */}
-            <audio ref={audioRef} preload="auto" />
+            <audio ref={audioRef} preload="auto" playsInline />
 
             {/* ── 1. Floating Circular Widget (Bottom-Right, Minimized Mode) ── */}
             {isPlayerActive && !isExpanded && (

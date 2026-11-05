@@ -33,15 +33,29 @@ function getRateString(speed: string): string {
 }
 
 /**
+ * Safely escape characters that break Microsoft Edge TTS SSML/XML parser.
+ * Raw '&', '<', '>' in text crash the remote WebSocket parser with:
+ * "Stream closed before the synthesis completed (no turn.end received)".
+ */
+function escapeSsml(text: string): string {
+    return text
+        .replace(/\u00A0/g, " ")
+        .replace(/&(?!(amp|lt|gt|quot|apos);)/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
+/**
  * Pure Node.js Microsoft Edge Neural Speech Synthesizer.
  * Runs natively in Node.js on local dev & Vercel serverless functions without Python.
  */
 function synthesizeWithEdgeTts(voice: string, rate: string, text: string): Promise<Buffer> {
+    const sanitized = escapeSsml(text);
     return new Promise(async (resolve, reject) => {
         try {
             const tts = new MsEdgeTTS();
             await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
-            const { audioStream } = tts.toStream(text, { rate });
+            const { audioStream } = tts.toStream(sanitized, { rate });
             const chunks: Buffer[] = [];
 
             const timer = setTimeout(() => {
