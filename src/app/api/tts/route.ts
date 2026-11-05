@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { execFile } from "child_process";
-import fs from "fs";
-import path from "path";
-import crypto from "crypto";
+import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 
 // In-memory cache for audio chunks
 const audioCache = new Map<string, { buffer: Buffer; timestamp: number }>();
@@ -35,45 +32,39 @@ function getRateString(speed: string): string {
     return percent >= 0 ? `+${percent}%` : `${percent}%`;
 }
 
+/**
+ * Pure Node.js Microsoft Edge Neural Speech Synthesizer.
+ * Runs natively in Node.js on local dev & Vercel serverless functions without Python.
+ */
 function synthesizeWithEdgeTts(voice: string, rate: string, text: string): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-        // Find python in the dedicated virtual environment or system packages
-        const pythonCandidates: string[] = [
-            "/home/keshav-pathak/Projects/LegalTech/frontend/.venv-tts/bin/python3",
-            "/usr/bin/python3",
-        ];
-        if (!process.env.VERCEL && typeof process !== "undefined" && process.cwd) {
-            pythonCandidates.unshift(
-                path.resolve(process.cwd(), ".venv-tts", "bin", "python3"),
-                path.resolve(process.cwd(), "frontend", ".venv-tts", "bin", "python3")
-            );
-        }
-        const pythonPath = pythonCandidates.find((p) => fs.existsSync(p)) || "python3";
+    return new Promise(async (resolve, reject) => {
+        try {
+            const tts = new MsEdgeTTS();
+            await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+            const { audioStream } = tts.toStream(text, { rate });
+            const chunks: Buffer[] = [];
 
-        const tempFile = path.join("/tmp", `edge_tts_${crypto.randomUUID()}.mp3`);
+            const timer = setTimeout(() => {
+                audioStream.destroy(new Error("MsEdgeTTS stream timeout"));
+            }, 12000);
 
-        // Executing python directly with -m edge_tts avoids shebang and path mismatches
-        execFile(
-            pythonPath,
-            ["-m", "edge_tts", "--voice", voice, "--rate", rate, "--text", text, "--write-media", tempFile],
-            { timeout: 15000 },
-            (err, stdout, stderr) => {
-                if (err) {
-                    console.error("[TTS API] execFile error:", err, "stderr:", stderr);
-                    if (fs.existsSync(tempFile)) {
-                        try { fs.unlinkSync(tempFile); } catch {}
-                    }
-                    return reject(err);
-                }
-                try {
-                    const buf = fs.readFileSync(tempFile);
-                    try { fs.unlinkSync(tempFile); } catch {}
+            audioStream.on("data", (chunk: Buffer) => chunks.push(chunk));
+            audioStream.on("end", () => {
+                clearTimeout(timer);
+                const buf = Buffer.concat(chunks);
+                if (buf.length > 0) {
                     resolve(buf);
-                } catch (readErr) {
-                    reject(readErr);
+                } else {
+                    reject(new Error("Empty audio buffer received from MsEdgeTTS"));
                 }
-            }
-        );
+            });
+            audioStream.on("error", (err: unknown) => {
+                clearTimeout(timer);
+                reject(err instanceof Error ? err : new Error(String(err)));
+            });
+        } catch (err) {
+            reject(err instanceof Error ? err : new Error(String(err)));
+        }
     });
 }
 
@@ -125,41 +116,20 @@ export async function GET(req: NextRequest) {
             },
         });
     } catch (edgeError) {
-        console.warn("[TTS API] Edge-TTS error, falling back:", edgeError);
-
-        // Fallback to Google Translate TTS
-        try {
-            const encodedText = encodeURIComponent(trimmedText);
-            const targetLang = lang.toLowerCase().startsWith("hi") ? "hi-IN" : "en-IN";
-            const fallbackUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${targetLang}&client=tw-ob&ttsspeed=${speed}`;
-
-            const response = await fetch(fallbackUrl, {
+        console.warn("[TTS API] Edge-TTS error, signaling client for Web Speech fallback:", edgeError);
+        return new NextResponse(
+            JSON.stringify({
+                error: "Edge-TTS synthesis unavailable",
+                fallback: "client-webspeech",
+                details: edgeError instanceof Error ? edgeError.message : String(edgeError),
+            }),
+            {
+                status: 503,
                 headers: {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-                    "Referer": "https://translate.google.com/",
+                    "Content-Type": "application/json",
+                    "X-TTS-Fallback": "client-webspeech",
                 },
-            });
-
-            if (!response.ok) {
-                return new NextResponse("TTS generation failed", { status: 500 });
             }
-
-            const arrayBuf = await response.arrayBuffer();
-            const nodeBuf = Buffer.from(arrayBuf);
-            audioCache.set(cacheKey, { buffer: nodeBuf, timestamp: Date.now() });
-
-            return new NextResponse(new Uint8Array(nodeBuf), {
-                status: 200,
-                headers: {
-                    "Content-Type": "audio/mpeg",
-                    "Cache-Control": "public, max-age=86400, s-maxage=86400",
-                    "X-TTS-Engine": "Google-Fallback",
-                    "X-Cache": "MISS",
-                },
-            });
-        } catch (fallbackError) {
-            console.error("[TTS API] All TTS engines failed:", fallbackError);
-            return new NextResponse("Failed to generate speech", { status: 500 });
-        }
+        );
     }
 }

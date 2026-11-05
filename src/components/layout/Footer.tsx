@@ -3,10 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "@/i18n/routing";
 import Image from "next/image";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/data/redux/store";
-import { fetchCategories } from "@/data/features/category/categoryThunks";
-import { Category } from "@/data/features/category/category.types";
 
 import logo from "../../../public/logo-gold.png";
 import google from "../../../public/playbutton.jpeg";
@@ -31,17 +27,19 @@ import {
 } from "react-icons/fa6";
 
 export default function Footer() {
-  const dispatch = useDispatch<AppDispatch>();
-  const { categories } = useSelector((state: RootState) => state.category);
-
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [academyBaseUrl, setAcademyBaseUrl] = useState("https://academy.sajjadhusainlawassociates.com");
 
   useEffect(() => {
-    if (!categories || categories.length === 0) {
-      dispatch(fetchCategories());
+    if (typeof window !== "undefined") {
+      const host = window.location.host;
+      if (host.includes("localhost") || host.includes("127.0.0.1")) {
+        const port = window.location.port ? `:${window.location.port}` : "";
+        setAcademyBaseUrl(`${window.location.protocol}//academy.localhost${port}`);
+      }
     }
-  }, [dispatch, categories]);
+  }, []);
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,77 +97,82 @@ export default function Footer() {
     },
   ];
 
-  // 1. Courts & Judgments (LiveLaw Model)
+  // 1. Courts & Cases (Real platform routes & live categories)
   const courtLinks = [
-    { name: "Supreme Court of India", href: "/supreme-court" },
-    { name: "High Courts Registry (25 Courts)", href: "/high-court" },
+    { name: "Supreme Court of India", href: "/category/supreme-court" },
+    { name: "High Courts Registry (25 Courts)", href: "/category/high-court" },
     { name: "Landmark Judgments & Orders", href: "/judgments" },
     { name: "Cause Lists & Case Tracker", href: "/cases" },
     { name: "Live Court Display Boards", href: "/display-boards" },
-    { name: "Top Legal Stories & News", href: "/top-stories" },
     { name: "Judicial Bench Directory", href: "/judges" },
-    { name: "Hindi Legal News (हिंदी)", href: "/hi/top-stories" },
+    { name: "Court & Case Reports", href: "/reports" },
+    { name: "Hindi Legal News (हिंदी)", href: "/category/hindi-news" },
   ];
 
-  // 2. Legislation & Knowledge (LiveLaw Bare Acts Model)
+  // 2. Legislation & Law Library (Real categories & articles, no broken tax)
   const legislationLinks = [
     { name: "Bare Acts & Central Statutes", href: "/legal-documents" },
-    { name: "Know The Law (Legal Guides)", href: "/know-the-law" },
-    { name: "Corporate, Tax & GST Laws", href: "/tax" },
-    { name: "Environmental & NGT Orders", href: "/environment" },
-    { name: "International Law & Treaties", href: "/international" },
-    { name: "Legal Document Templates", href: "/tools/documents" },
-    { name: "Legal Drafting Assistant", href: "/tools/drafting" },
-    { name: "Legal Research Portal", href: "/tools/research" },
+    { name: "Constitutional Law", href: "/category/constitutional-law" },
+    { name: "Criminal Law Updates", href: "/category/criminal-law" },
+    { name: "Property & Real Estate Law", href: "/category/property-law" },
+    { name: "Family & Personal Law", href: "/category/family-law" },
+    { name: "Business & Corporate Law", href: "/category/business-article" },
+    { name: "Finance & Banking Law", href: "/category/finance-articles" },
+    { name: "Crime & Investigation", href: "/category/crime-news" },
   ];
 
-  // 3. Opportunities & Student Hub (Lawctopus Model)
-  const studentLinks = [
-    { name: "Legal Internships & Clerks", href: "/internships" },
-    { name: "Call for Papers & Journals", href: "/call-for-papers" },
-    { name: "Moot Court Competitions", href: "/competitions" },
-    { name: "Law School Admissions & CLAT", href: "/law-schools" },
-    { name: "Legal Fellowships & Grants", href: "/scholarships" },
-    { name: "Sajjad Husain Legal Academy", href: "/academy" },
-    { name: "Online Certificate Courses", href: "/academy/courses" },
-    { name: "Verify Student Certificate", href: "/academy/verify-certificate" },
-  ];
-
-  // 4. Chambers, Tools & Firm
-  const chamberLinks = [
+  // 3. Legal AI Tools Suite (Real interactive tools)
+  const toolLinks = [
     { name: "Legal Tools Directory", href: "/tools" },
+    { name: "AI Legal Drafting Assistant", href: "/tools/drafting" },
+    { name: "Precedent Research Portal", href: "/tools/research" },
+    { name: "Legal Document Templates", href: "/tools/documents" },
+    { name: "Document Health & Risk Check", href: "/tools/health-check" },
+    { name: "Vernacular Legal Translation", href: "/tools/translation" },
     { name: "Dispute Settlement Portal", href: "/tools/settlement" },
-    { name: "Document Health Check", href: "/tools/health-check" },
-    { name: "Schedule Consultation", href: "/book-appointment" },
-    { name: "About Chambers & Founder", href: "/about" },
-    { name: "Editorial & Fact-Check Policy", href: "/editorial-policy" },
-    { name: "Chamber Careers & Hiring", href: "/careers" },
-    { name: "Advertise & Media Kit", href: "/advertise" },
+    { name: "Chat With Advocates", href: "/messages" },
   ];
 
-  // Fallback legal categories if Redux is loading
-  const fallbackCategories = [
-    { name: "Constitution Bench", slug: "constitution-bench" },
-    { name: "Bail Jurisprudence", slug: "bail-jurisprudence" },
-    { name: "Criminal Law", slug: "criminal-law" },
-    { name: "Arbitration & ADR", slug: "arbitration" },
-    { name: "Insolvency (IBC)", slug: "ibc" },
-    { name: "Cyber Law", slug: "cyber-law" },
-    { name: "Taxation & GST", slug: "taxation" },
-    { name: "Intellectual Property", slug: "ipr" },
-    { name: "Environmental Law", slug: "environmental-law" },
-    { name: "Service & Labour Laws", slug: "service-laws" },
+  // 4. Academy & Platform Services (Academy links hosted on subdomain & open in new tab)
+  const academyLinks = [
+    { name: "Sajjad Husain Legal Academy", href: `${academyBaseUrl}/`, isExternal: true },
+    { name: "Online Certificate Courses", href: `${academyBaseUrl}/courses`, isExternal: true },
+    { name: "Verify Student Certificate", href: `${academyBaseUrl}/verify-certificate`, isExternal: true },
+    { name: "Student Campus & Enrollment", href: `${academyBaseUrl}/auth/signup`, isExternal: true },
+    { name: "Schedule Consultation", href: "/book-appointment", isExternal: false },
+    { name: "Membership & Subscription", href: "/subscription", isExternal: false },
+    { name: "About Us & Founder", href: "/about", isExternal: false },
+    { name: "Careers & Opportunities", href: "/careers", isExternal: false },
   ];
 
-  const popularCategories =
-    categories && categories.length > 0
-      ? categories.slice(0, 10)
-      : fallbackCategories;
+  const renderFooterLink = (link: { name: string; href: string; isExternal?: boolean }, idx: number) => (
+    <li key={idx} className="py-1">
+      {link.isExternal ? (
+        <a
+          href={link.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[14px] leading-snug text-slate-200 hover:text-[#C9A227] transition-colors flex items-start gap-1.5 group"
+        >
+          <ChevronRight className="w-3.5 h-3.5 text-[#C9A227]/70 group-hover:text-[#C9A227] group-hover:translate-x-0.5 transition-all shrink-0 mt-0.5" />
+          <span>{link.name}</span>
+        </a>
+      ) : (
+        <Link
+          href={link.href}
+          className="text-[14px] leading-snug text-slate-200 hover:text-[#C9A227] transition-colors flex items-start gap-1.5 group"
+        >
+          <ChevronRight className="w-3.5 h-3.5 text-[#C9A227]/70 group-hover:text-[#C9A227] group-hover:translate-x-0.5 transition-all shrink-0 mt-0.5" />
+          <span>{link.name}</span>
+        </Link>
+      )}
+    </li>
+  );
 
   return (
     <footer className="bg-[#07172C] text-white border-t-4 border-[#C9A227] font-body selection:bg-[#C9A227] selection:text-[#07172C]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
-        
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
+
         {/* =========================================================================
             NEWSLETTER SUBSCRIPTION (LiveLaw Style: font-size 18px / 14px)
             ========================================================================= */}
@@ -221,8 +224,8 @@ export default function Footer() {
             MAIN 5-COLUMN DIRECTORY GRID (LiveLaw Typography: 16px headings, 14px links)
             ========================================================================= */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-8 lg:gap-8 pb-12 border-b border-white/10">
-          
-          {/* Column 1: Chambers Masthead & Contact */}
+
+          {/* Column 1: Platform Masthead & Contact */}
           <div className="sm:col-span-2 md:col-span-12 lg:col-span-4 flex flex-col justify-between pr-0 lg:pr-4">
             <div>
               {/* Brand Header */}
@@ -247,7 +250,7 @@ export default function Footer() {
                 </div>
               </Link>
 
-              {/* Chamber Mission */}
+              {/* Platform Mission */}
               <p className="text-slate-300 text-[13px] sm:text-[14px] leading-relaxed mb-6 font-normal">
                 India&apos;s premier legal technology and court reporting platform. Delivering authentic Supreme Court and High Court judgments, case intelligence, legal education, and professional drafting tools with editorial integrity.
               </p>
@@ -257,8 +260,8 @@ export default function Footer() {
                 <div className="flex items-start gap-2.5">
                   <MapPin className="w-4 h-4 text-[#C9A227] shrink-0 mt-0.5" />
                   <address className="not-italic leading-relaxed text-slate-300">
-                    Chamber No. 515, Block-C, High Court Advocates Chamber,<br />
-                    Lucknow – Ayodhya Road, Gomti Nagar, Lucknow, UP – 226010
+                    Lucknow – Ayodhya Road, Gomti Nagar,<br />
+                    Lucknow, Uttar Pradesh – 226010, India
                   </address>
                 </div>
 
@@ -288,7 +291,7 @@ export default function Footer() {
             <div className="space-y-4 pt-2">
               <div>
                 <span className="text-[12px] font-semibold text-slate-300 uppercase tracking-wider block mb-2.5">
-                  Connect With Chambers
+                  Connect With Us
                 </span>
                 <div className="flex flex-wrap items-center gap-2">
                   {socialLinks.map((social, idx) => {
@@ -354,107 +357,40 @@ export default function Footer() {
               Courts & Law
             </h3>
             <ul className="space-y-1">
-              {courtLinks.map((link, idx) => (
-                <li key={idx} className="leading-[2]">
-                  <Link
-                    href={link.href}
-                    className="text-[14px] text-slate-200 hover:text-[#C9A227] transition-colors flex items-center gap-1.5 group"
-                  >
-                    <ChevronRight className="w-3.5 h-3.5 text-[#C9A227]/70 group-hover:text-[#C9A227] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    <span>{link.name}</span>
-                  </Link>
-                </li>
-              ))}
+              {courtLinks.map(renderFooterLink)}
             </ul>
           </div>
 
           {/* Column 3: Legislation & Knowledge (LiveLaw: Heading 16px, Links 14px, line-height 2) */}
           <div className="sm:col-span-1 md:col-span-3 lg:col-span-2">
             <h3 className="text-[15px] sm:text-[16px] font-semibold text-white tracking-wide mb-3 pb-2 border-b-2 border-[#C9A227]">
-              Legislation
+              Legislation & News
             </h3>
             <ul className="space-y-1">
-              {legislationLinks.map((link, idx) => (
-                <li key={idx} className="leading-[2]">
-                  <Link
-                    href={link.href}
-                    className="text-[14px] text-slate-200 hover:text-[#C9A227] transition-colors flex items-center gap-1.5 group"
-                  >
-                    <ChevronRight className="w-3.5 h-3.5 text-[#C9A227]/70 group-hover:text-[#C9A227] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    <span>{link.name}</span>
-                  </Link>
-                </li>
-              ))}
+              {legislationLinks.map(renderFooterLink)}
             </ul>
           </div>
 
-          {/* Column 4: Opportunities & Student Hub (LiveLaw: Heading 16px, Links 14px, line-height 2) */}
+          {/* Column 4: Legal AI Tools */}
           <div className="sm:col-span-1 md:col-span-3 lg:col-span-2">
             <h3 className="text-[15px] sm:text-[16px] font-semibold text-white tracking-wide mb-3 pb-2 border-b-2 border-[#C9A227]">
-              Opportunities
+              Legal AI Tools
             </h3>
             <ul className="space-y-1">
-              {studentLinks.map((link, idx) => (
-                <li key={idx} className="leading-[2]">
-                  <Link
-                    href={link.href}
-                    className="text-[14px] text-slate-200 hover:text-[#C9A227] transition-colors flex items-center gap-1.5 group"
-                  >
-                    <ChevronRight className="w-3.5 h-3.5 text-[#C9A227]/70 group-hover:text-[#C9A227] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    <span>{link.name}</span>
-                  </Link>
-                </li>
-              ))}
+              {toolLinks.map(renderFooterLink)}
             </ul>
           </div>
 
-          {/* Column 5: Legal Tools & Firm (LiveLaw: Heading 16px, Links 14px, line-height 2) */}
+          {/* Column 5: Academy & Platform Services */}
           <div className="sm:col-span-1 md:col-span-3 lg:col-span-2">
             <h3 className="text-[15px] sm:text-[16px] font-semibold text-white tracking-wide mb-3 pb-2 border-b-2 border-[#C9A227]">
-              Tools & Firm
+              Academy & Services
             </h3>
             <ul className="space-y-1">
-              {chamberLinks.map((link, idx) => (
-                <li key={idx} className="leading-[2]">
-                  <Link
-                    href={link.href}
-                    className="text-[14px] text-slate-200 hover:text-[#C9A227] transition-colors flex items-center gap-1.5 group"
-                  >
-                    <ChevronRight className="w-3.5 h-3.5 text-[#C9A227]/70 group-hover:text-[#C9A227] group-hover:translate-x-0.5 transition-all shrink-0" />
-                    <span>{link.name}</span>
-                  </Link>
-                </li>
-              ))}
+              {academyLinks.map(renderFooterLink)}
             </ul>
           </div>
 
-        </div>
-
-        {/* =========================================================================
-            TRENDING TOPICS STRIP (LiveLaw Style: 13px tag pills)
-            ========================================================================= */}
-        <div className="py-6 border-b border-white/10 flex flex-wrap items-center gap-2.5 sm:gap-3 text-[13px]">
-          <span className="text-[#C9A227] font-semibold uppercase tracking-wider text-[12px] shrink-0">
-            Trending Topics:
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
-            {popularCategories.map((cat: Category | { name: string; slug: string }, idx: number) => (
-              <Link
-                key={"id" in cat ? cat.id : idx}
-                href={`/category/${cat.slug}`}
-                className="px-2.5 py-1 rounded-md bg-white/5 hover:bg-[#C9A227]/20 border border-white/10 hover:border-[#C9A227] text-slate-200 hover:text-white transition-all text-[13px] font-medium"
-              >
-                {cat.name}
-              </Link>
-            ))}
-            <Link
-              href="/top-stories"
-              className="text-[#C9A227] hover:underline underline-offset-4 text-[13px] font-semibold ml-1 flex items-center gap-1"
-            >
-              <span>Explore all</span>
-              <ChevronRight className="w-3 h-3" />
-            </Link>
-          </div>
         </div>
 
         {/* =========================================================================
@@ -495,6 +431,10 @@ export default function Footer() {
             <span className="text-slate-600">·</span>
             <Link href="/editorial-policy" className="hover:text-[#C9A227] transition-colors">
               Editorial Policy
+            </Link>
+            <span className="text-slate-600">·</span>
+            <Link href="/advertise" className="hover:text-[#C9A227] transition-colors">
+              Advertise With Us
             </Link>
             <span className="text-slate-600">·</span>
             <Link href="/contact" className="hover:text-[#C9A227] transition-colors">

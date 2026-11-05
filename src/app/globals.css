@@ -327,11 +327,11 @@ textarea,
   color: #24292f;
   line-height: 1.72;
   font-size: 1.0625rem; /* ~17px (within 16-18px guideline) */
-  max-width: 72ch; /* optimal 65-75 characters per line */
   overflow-wrap: break-word;
   word-wrap: break-word;
   word-break: break-word;
-  width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 .article-content h1,

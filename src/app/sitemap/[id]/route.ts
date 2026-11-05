@@ -28,18 +28,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       '',
       '/about',
       '/contact',
-      '/supreme-court',
-      '/high-court',
       '/judgments',
       '/cases',
       '/judges',
-      '/top-stories',
-      '/know-the-law',
+      '/tools',
+      '/tools/drafting',
+      '/tools/research',
+      '/tools/documents',
+      '/tools/health-check',
+      '/tools/translation',
+      '/tools/settlement',
+      '/book-appointment',
+      '/messages',
+      '/display-boards',
+      '/legal-documents',
+      '/reports',
+      '/subscription',
+      '/advertise',
+      '/careers',
       '/privacy-policy',
       '/terms',
       '/cookie-policy',
       '/disclaimer',
-      '/editorial-policy'
+      '/editorial-policy',
     ];
 
     const locales = ['en', 'hi'];
@@ -54,7 +65,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
     for (const url of staticUrls) {
       const isHome = url === SITE_URL || url === `${SITE_URL}/en` || url === `${SITE_URL}/hi`;
-      xml += `\n  <url>\n    <loc>${url}</loc>\n    <changefreq>${isHome ? 'daily' : 'weekly'}</changefreq>\n    <priority>${isHome ? '1.0' : '0.8'}</priority>\n  </url>`;
+      const isLegalToolOrKeyService =
+        url.includes('/tools') ||
+        url.includes('/judgments') ||
+        url.includes('/cases') ||
+        url.includes('/book-appointment') ||
+        url.includes('/messages') ||
+        url.includes('/display-boards') ||
+        url.includes('/legal-documents') ||
+        url.includes('/reports');
+
+      const priority = isHome ? '1.0' : isLegalToolOrKeyService ? '0.9' : '0.8';
+      const freq = isHome || isLegalToolOrKeyService ? 'daily' : 'weekly';
+
+      xml += `\n  <url>\n    <loc>${url}</loc>\n    <changefreq>${freq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
     }
     xml += '\n</urlset>';
     return new NextResponse(xml, {

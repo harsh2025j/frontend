@@ -55,7 +55,7 @@ export default function MembershipPromotion() {
     ];
 
     return (
-        <div className="container mx-auto px-4 my-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 my-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="relative overflow-hidden bg-white rounded-lg border border-[#0A2342]/10 shadow-2xl">
                 {/* Decorative Elements */}
                 <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-[#C8A028]/5 rounded-full blur-3xl"></div>

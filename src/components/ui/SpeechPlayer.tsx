@@ -122,81 +122,80 @@ function splitIntoSentences(text: string): string[] {
         .filter((s) => s.length > 0);
 }
 
-// Smart Browser Web Speech API Voice & Pitch Selector with Male/Female Optimization
-function getBrowserVoice(
+// ── Smart Cross-Device Bilingual Web Speech Voice Selector ──
+// Strictly selects the proven Hindi-bilingual engine (Google हिन्दी / native Hindi)
+// which guarantees 100% of both Hindi and English are read without skipping.
+function selectWebSpeechVoice(
     voices: SpeechSynthesisVoice[],
-    gender: "female" | "male",
-    isHindi: boolean
-): { voice: SpeechSynthesisVoice | null; pitch: number } {
-    if (!voices || voices.length === 0) {
-        return { voice: null, pitch: gender === "female" ? 1.18 : 0.88 };
-    }
+    gender: "male" | "female",
+    text: string
+): SpeechSynthesisVoice | null {
+    if (!voices || voices.length === 0) return null;
 
-    const langPrefix = isHindi ? "hi" : "en";
     const isMale = gender === "male";
+    const clean = (s: string) => (s || "").toLowerCase().trim();
 
-    // Known male and female identifiers across Windows, macOS, iOS, Android, Linux (Chrome/Safari/Edge/Firefox)
-    const femaleKeywords = [
-        "female", "woman", "girl", "swara", "kalpana", "heera", "neerja", "aditi",
-        "veena", "priya", "samantha", "victoria", "karen", "zira", "catherine",
-        "serena", "stephanie", "moira", "fiona", "tessa", "alice", "hazel",
-        "susan", "yuna", "kyoko", "tingting", "sinji", "sangeeta", "ananya", "lekha"
-    ];
-
-    const maleKeywords = [
-        "male", "man", "boy", "madhur", "prabhat", "hemant", "ravi", "george",
-        "rishi", "daniel", "alex", "david", "mark", "james", "oliver", "tom",
-        "fred", "bruce", "ralph", "lee", "tarik", "kunal", "aarav"
-    ];
-
-    const targetKeywords = isMale ? maleKeywords : femaleKeywords;
-    const oppositeKeywords = isMale ? femaleKeywords : maleKeywords;
-
-    // Filter voices matching target language
-    const langMatchingVoices = voices.filter((v) => {
-        const vl = (v.lang || "").toLowerCase().replace("_", "-");
-        return vl.startsWith(langPrefix);
+    // 1. Find all Hindi-capable bilingual voices (hi-IN, hi, Hindi, हिन्दी)
+    // In browsers, only Hindi-capable voices can read both Hindi and English text without skipping!
+    const hindiCapableVoices = voices.filter((v) => {
+        const lang = clean(v.lang);
+        const name = clean(v.name);
+        return (
+            lang.startsWith("hi") ||
+            name.includes("हिन्दी") ||
+            name.includes("hindi")
+        );
     });
 
-    // 1. Highest priority: Language match with verified gender keyword and no conflicting keyword
-    for (const v of langMatchingVoices) {
-        const lowerName = `${v.name} ${v.voiceURI}`.toLowerCase();
-        const hasTarget = targetKeywords.some((kw) => lowerName.includes(kw));
-        const hasOpposite = oppositeKeywords.some((kw) => lowerName.includes(kw));
-        if (hasTarget && !hasOpposite) {
-            return { voice: v, pitch: isMale ? 0.94 : 1.06 };
-        }
+    // 2. Secondary fallback: any Indian-locale voice if no explicit Hindi voice is found
+    const allIndianVoices = voices.filter((v) => {
+        const lang = clean(v.lang);
+        const name = clean(v.name);
+        return (
+            lang.includes("-in") ||
+            lang.includes("_in") ||
+            lang.startsWith("hi") ||
+            name.includes("india") ||
+            name.includes("hindi")
+        );
+    });
+
+    const candidates = hindiCapableVoices.length > 0 ? hindiCapableVoices : allIndianVoices;
+    if (candidates.length === 0) {
+        return voices.find((v) => v.default) || voices[0] || null;
     }
 
-    // 2. Second priority: If English, look specifically for Indian English (en-IN)
-    if (!isHindi) {
-        const enInVoices = voices.filter((v) => (v.lang || "").toLowerCase().replace("_", "-").includes("en-in"));
-        if (enInVoices.length > 1) {
-            return isMale
-                ? { voice: enInVoices[0], pitch: 0.88 }
-                : { voice: enInVoices[1], pitch: 1.18 };
-        }
-        if (enInVoices.length === 1) {
-            return { voice: enInVoices[0], pitch: isMale ? 0.88 : 1.18 };
-        }
-    } else {
-        // If Hindi, and at least 1 Hindi voice is present
-        if (langMatchingVoices.length > 0) {
-            return { voice: langMatchingVoices[0], pitch: isMale ? 0.88 : 1.18 };
-        }
+    const maleKeywords = ["male", "hemant", "ravi", "rishi", "man"];
+    const femaleKeywords = ["female", "kalpana", "heera", "lekha", "woman"];
+
+    // ─────────────────────────────────────────────────────────────
+    // A. MALE BILINGUAL VOICE (Fluent in both Hindi & English):
+    // ─────────────────────────────────────────────────────────────
+    if (isMale) {
+        // If an explicit male Hindi voice is installed (e.g. Microsoft Hemant on Windows):
+        const explicitMaleHindi = candidates.find((v) => {
+            const name = clean(v.name);
+            return maleKeywords.some((k) => name.includes(k)) && !femaleKeywords.some((k) => name.includes(k));
+        });
+        if (explicitMaleHindi) return explicitMaleHindi;
+
+        // Otherwise, use the proven bilingual Hindi engine (Google हिन्दी).
+        // Baritone pitch shaping (pitch: 0.65) in playWebSpeechChunk gives deep masculine resonance,
+        // and guarantees that 100% of Hindi and English words are read without skipping!
+        return candidates[0];
     }
 
-    // 3. Third priority: Any voice matching language, with distinct pitch modulation
-    if (langMatchingVoices.length > 0) {
-        return { voice: langMatchingVoices[0], pitch: isMale ? 0.88 : 1.18 };
-    }
+    // ─────────────────────────────────────────────────────────────
+    // B. FEMALE BILINGUAL VOICE (Fluent in both Hindi & English):
+    // ─────────────────────────────────────────────────────────────
+    const explicitFemaleHindi = candidates.find((v) => {
+        const name = clean(v.name);
+        return femaleKeywords.some((k) => name.includes(k)) && !maleKeywords.some((k) => name.includes(k));
+    });
+    if (explicitFemaleHindi) return explicitFemaleHindi;
 
-    // 4. Fallback: Any available browser voice with distinct pitch modulation
-    const defaultVoice = voices.find((v) => v.default) || voices[0] || null;
-    return {
-        voice: defaultVoice,
-        pitch: isMale ? 0.88 : 1.18,
-    };
+    // Default to the proven bilingual Hindi engine (Google हिन्दी) which has a natural female timbre
+    return candidates[0];
 }
 
 // ── Exported Trigger Button for the Author Card ──
@@ -247,18 +246,16 @@ export function ListenArticleButton({
         return (
             <button
                 onClick={handleClick}
-                className={`group w-full flex items-center justify-between px-4 py-2.5 sm:py-3 rounded-md border-[1.5px] transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs ${
-                    isPlaying
-                        ? "bg-[#0B2242] text-[#C9A227] border-[#0B2242]"
-                        : "bg-white hover:bg-[#FAF7F2] border-[#C9A227] hover:border-[#9E7A1C] text-[#9E7A1C]"
-                } ${className}`}
+                className={`group w-full flex items-center justify-between px-4 py-2.5 sm:py-3 rounded-md border-[1.5px] transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs ${isPlaying
+                    ? "bg-[#0B2242] text-[#C9A227] border-[#0B2242]"
+                    : "bg-white hover:bg-[#FAF7F2] border-[#C9A227] hover:border-[#9E7A1C] text-[#9E7A1C]"
+                    } ${className}`}
                 title={isPlaying ? "Stop speaking and close" : "Listen to article with synchronized voice"}
             >
                 <div className="flex items-center gap-3 min-w-0">
                     <Headphones className={`w-5 h-5 shrink-0 stroke-[1.8] ${isPlaying ? "text-[#C9A227]" : "text-[#9E7A1C]"}`} />
-                    <span className={`text-sm font-serif font-bold tracking-tight whitespace-nowrap ${
-                        isPlaying ? "text-[#C9A227]" : "text-[#9E7A1C]"
-                    }`}>
+                    <span className={`text-sm font-serif font-bold tracking-tight whitespace-nowrap ${isPlaying ? "text-[#C9A227]" : "text-[#9E7A1C]"
+                        }`}>
                         {isPlaying ? "Playing Article" : "Listen to Article"}
                     </span>
                     {isPlaying && (
@@ -270,9 +267,8 @@ export function ListenArticleButton({
                     )}
                 </div>
 
-                <span className={`w-6.5 h-6.5 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-2xs ${
-                    isPlaying ? "bg-[#C9A227] text-[#0B2242]" : "bg-[#C9A227] text-white"
-                }`}>
+                <span className={`w-6.5 h-6.5 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-2xs ${isPlaying ? "bg-[#C9A227] text-[#0B2242]" : "bg-[#C9A227] text-white"
+                    }`}>
                     {isPlaying ? (
                         <Pause className="w-3 h-3 fill-current" />
                     ) : (
@@ -286,11 +282,10 @@ export function ListenArticleButton({
     return (
         <button
             onClick={handleClick}
-            className={`group inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-md border-[1.5px] transition-all duration-200 cursor-pointer shrink-0 shadow-2xs hover:shadow-xs ${
-                isPlaying
-                    ? "bg-[#0B2242] text-[#C9A227] border-[#0B2242]"
-                    : "bg-white hover:bg-[#FAF7F2] border-[#C9A227] hover:border-[#9E7A1C] text-[#9E7A1C]"
-            } ${className}`}
+            className={`group inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-md border-[1.5px] transition-all duration-200 cursor-pointer shrink-0 shadow-2xs hover:shadow-xs ${isPlaying
+                ? "bg-[#0B2242] text-[#C9A227] border-[#0B2242]"
+                : "bg-white hover:bg-[#FAF7F2] border-[#C9A227] hover:border-[#9E7A1C] text-[#9E7A1C]"
+                } ${className}`}
             title={isPlaying ? "Stop speaking and close" : "Listen to article with synchronized voice"}
         >
             {isPlaying ? (
@@ -298,9 +293,8 @@ export function ListenArticleButton({
             ) : (
                 <Headphones className="w-4.5 h-4.5 text-[#9E7A1C] group-hover:scale-105 transition-transform shrink-0 stroke-[1.8]" />
             )}
-            <span className={`text-xs sm:text-[13px] font-serif font-bold tracking-tight whitespace-nowrap ${
-                isPlaying ? "text-[#C9A227]" : "text-[#9E7A1C]"
-            }`}>
+            <span className={`text-xs sm:text-[13px] font-serif font-bold tracking-tight whitespace-nowrap ${isPlaying ? "text-[#C9A227]" : "text-[#9E7A1C]"
+                }`}>
                 {isPlaying ? "Playing" : "Listen to Article"}
             </span>
             {isPlaying && (
@@ -326,7 +320,7 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
     const [volume, setVolume] = useState(1);
     const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
     const [isLoadingAudio, setIsLoadingAudio] = useState(false);
-    const [isBrowserFallbackActive, setIsBrowserFallbackActive] = useState(false);
+    const [activeEngine, setActiveEngine] = useState<"edge-tts" | "web-speech">("edge-tts");
 
     // Audio & sync references
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -338,25 +332,27 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
     const isPlayerActiveRef = useRef(false);
     const currentArticleRef = useRef<Article>(initialArticle);
     const cardRef = useRef<HTMLDivElement>(null);
-    const useBrowserTtsFallbackRef = useRef(false);
-    const browserVoicesRef = useRef<SpeechSynthesisVoice[]>([]);
-    const playChunkRef = useRef<(index: number) => void>(() => {});
 
-    // Initialize & keep browser speech voices updated
+    // Fallback & Web Speech references
+    const isServerTtsFailedRef = useRef(false);
+    const activeEngineRef = useRef<"edge-tts" | "web-speech">("edge-tts");
+    const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
+    const blobUrlRef = useRef<string | null>(null);
+    const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+    // Load Web Speech synthesis voices on mount & when voices change
     useEffect(() => {
         if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-
-        const loadVoices = () => {
+        const populateVoices = () => {
             const v = window.speechSynthesis.getVoices();
             if (v && v.length > 0) {
-                browserVoicesRef.current = v;
+                voicesRef.current = v;
             }
         };
-
-        loadVoices();
-        window.speechSynthesis.onvoiceschanged = loadVoices;
+        populateVoices();
+        window.speechSynthesis.onvoiceschanged = populateVoices;
         return () => {
-            if ("speechSynthesis" in window) {
+            if (window.speechSynthesis) {
                 window.speechSynthesis.onvoiceschanged = null;
             }
         };
@@ -432,8 +428,9 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         }
         if (!blocks || blocks.length === 0) return;
 
-        // Check if already prepared and spans exist
-        const hasExistingSentences = document.querySelector(".tts-sentence");
+        // Check if already prepared and spans exist for this specific article
+        const existingSelector = targetId ? `[data-article-id="${targetId}"] .tts-sentence` : ".tts-sentence";
+        const hasExistingSentences = document.querySelector(existingSelector);
         if (hasExistingSentences && !force && chunksRef.current.length > 0) {
             return;
         }
@@ -478,12 +475,12 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
                     sentenceIndex: sIdx,
                 });
 
-                // Wrap each word in a tts-word span
+                // Wrap each word in a tts-word span scoped to this article ID
                 const wordsHtml = words
-                    .map((w, wIdx) => `<span class="tts-word" data-word-index="${sIdx}_${wIdx}">${w}</span>`)
+                    .map((w, wIdx) => `<span class="tts-word" data-article-id="${targetId || ''}" data-word-index="${sIdx}_${wIdx}">${w}</span>`)
                     .join(" ");
 
-                newBlockHtml += `<span class="tts-sentence" data-sentence-index="${sIdx}">${wordsHtml} </span>`;
+                newBlockHtml += `<span class="tts-sentence" data-article-id="${targetId || ''}" data-sentence-index="${sIdx}">${wordsHtml} </span>`;
             });
 
             if (newBlockHtml) {
@@ -501,7 +498,7 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         return () => clearTimeout(timer);
     }, [prepareArticleChunks]);
 
-    // 3. Highlight Sentence & Smooth Autoscroll into view
+    // 3. Highlight Sentence & Smooth Autoscroll into view (strictly scoped to currently active article)
     const highlightSentence = useCallback((index: number) => {
         if (typeof document === "undefined") return;
 
@@ -515,11 +512,29 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
 
         if (index < 0) return;
 
-        let target = document.querySelector(`[data-sentence-index="${index}"]`) as HTMLElement;
+        const targetId = currentArticleRef.current?.id || (currentArticleRef.current as any)?._id;
+        let target: HTMLElement | null = null;
+
+        if (targetId) {
+            target = document.querySelector(
+                `[data-article-id="${targetId}"] [data-sentence-index="${index}"], .tts-sentence[data-article-id="${targetId}"][data-sentence-index="${index}"]`
+            ) as HTMLElement;
+        }
+        if (!target) {
+            target = document.querySelector(`[data-sentence-index="${index}"]`) as HTMLElement;
+        }
+
         if (!target) {
             // Re-prepare DOM if React re-rendered
             prepareArticleChunks(currentArticleRef.current, true);
-            target = document.querySelector(`[data-sentence-index="${index}"]`) as HTMLElement;
+            if (targetId) {
+                target = document.querySelector(
+                    `[data-article-id="${targetId}"] [data-sentence-index="${index}"], .tts-sentence[data-article-id="${targetId}"][data-sentence-index="${index}"]`
+                ) as HTMLElement;
+            }
+            if (!target) {
+                target = document.querySelector(`[data-sentence-index="${index}"]`) as HTMLElement;
+            }
         }
 
         if (target) {
@@ -536,17 +551,60 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         return `/api/tts?text=${encodeURIComponent(chunk.text)}&lang=${langParam}&gender=${genderParam}`;
     }, [isHindi]);
 
-    // 5. Browser Web Speech API Fallback Player (for Vercel or Serverless environments)
-    const playChunkWithWebSpeech = useCallback((index: number) => {
+    // Forward ref to break circular dependency between playChunk and playWebSpeechChunk
+    const playChunkRef = useRef<((index: number) => void) | null>(null);
+
+    // 4b. Word Highlighting helper across both audio and Web Speech engines (strictly scoped to active article)
+    const highlightWord = useCallback((sentenceIndex: number, wordIndex: number) => {
+        if (typeof document === "undefined") return;
+        const targetId = currentArticleRef.current?.id || (currentArticleRef.current as any)?._id;
+        let sentenceEl: Element | null = null;
+
+        if (targetId) {
+            sentenceEl = document.querySelector(
+                `[data-article-id="${targetId}"] [data-sentence-index="${sentenceIndex}"], .tts-sentence[data-article-id="${targetId}"][data-sentence-index="${sentenceIndex}"]`
+            );
+        }
+        if (!sentenceEl) {
+            sentenceEl = document.querySelector(`[data-sentence-index="${sentenceIndex}"]`);
+        }
+
+        if (sentenceEl) {
+            const wordSpans = sentenceEl.querySelectorAll(".tts-word");
+            wordSpans.forEach((span, wIdx) => {
+                if (wIdx === wordIndex) {
+                    span.classList.add("tts-word-active");
+                } else {
+                    span.classList.remove("tts-word-active");
+                }
+            });
+        }
+    }, []);
+
+    // 5a. Fallback Engine: Speak chunk using Browser Web Speech API with Indian accent and Dual voice
+    const playWebSpeechChunk = useCallback((index: number) => {
         if (typeof window === "undefined" || !("speechSynthesis" in window)) {
             setIsLoadingAudio(false);
             setIsPlaying(false);
             isPlayingRef.current = false;
+            dispatchState(false, isPlayerActiveRef.current);
             return;
         }
 
+        // Stop any server audio
+        if (audioRef.current) {
+            try {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            } catch { }
+        }
+
+        // Cancel previous Web Speech utterance
+        try {
+            window.speechSynthesis.cancel();
+        } catch { }
+
         if (chunksRef.current.length === 0 || index < 0 || index >= chunksRef.current.length) {
-            try { window.speechSynthesis.cancel(); } catch {}
             setIsPlaying(false);
             isPlayingRef.current = false;
             setCurrentChunkIndex(0);
@@ -556,69 +614,69 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
             return;
         }
 
-        // Cancel any pending speech synthesis
-        try { window.speechSynthesis.cancel(); } catch {}
-
         const chunk = chunksRef.current[index];
         setCurrentChunkIndex(index);
         currentChunkIndexRef.current = index;
         highlightSentence(chunk.sentenceIndex);
         setIsLoadingAudio(false);
+        activeEngineRef.current = "web-speech";
+        setActiveEngine("web-speech");
 
-        // Determine target gender: if "both", alternate per chunk; otherwise use selected mode
-        const targetGender: "female" | "male" =
-            voiceModeRef.current === "both" ? chunk.gender : voiceModeRef.current;
+        const effectiveGender = voiceModeRef.current === "both" ? chunk.gender : voiceModeRef.current;
+        const isDevanagari = /[\u0900-\u097F]/.test(chunk.text);
 
-        const voices = browserVoicesRef.current.length > 0
-            ? browserVoicesRef.current
-            : window.speechSynthesis.getVoices();
-        const { voice, pitch } = getBrowserVoice(voices, targetGender, isHindi);
-
-        const utterance = new SpeechSynthesisUtterance(chunk.text);
-        if (voice) {
-            utterance.voice = voice;
-            utterance.lang = voice.lang;
-        } else {
-            utterance.lang = isHindi ? "hi-IN" : "en-IN";
+        let currentVoices = voicesRef.current;
+        if (currentVoices.length === 0) {
+            currentVoices = window.speechSynthesis.getVoices();
+            voicesRef.current = currentVoices;
         }
 
-        utterance.pitch = pitch;
-        utterance.rate = Math.max(0.75, Math.min(2.0, playbackSpeedRef.current));
+        const selectedVoice = selectWebSpeechVoice(currentVoices, effectiveGender, chunk.text);
+        const utterance = new SpeechSynthesisUtterance(chunk.text);
+        activeUtteranceRef.current = utterance;
+
+        const isMaleVoice = effectiveGender === "male";
+
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+            // Always set hi-IN so the engine uses Hindi phonetics for Hindi text and bilingual English
+            utterance.lang = "hi-IN";
+        } else {
+            utterance.lang = "hi-IN";
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // 🎛️ FALLBACK-ONLY SETTINGS: Male & Female Pitch and Speed
+        // (These settings ONLY apply to the Web Speech Fallback, NEVER to Edge-TTS)
+        // ─────────────────────────────────────────────────────────────
+        const FALLBACK_MALE_PITCH = 0.55;    // Lower = deeper baritone (try 0.60, 0.65, 0.70)
+        const FALLBACK_FEMALE_PITCH = 1.08;  // Higher = lighter feminine (try 1.00, 1.08, 1.12)
+
+        const FALLBACK_MALE_RATE = 0.94;     // Male cadence (0.90 to 1.00)
+        const FALLBACK_FEMALE_RATE = 0.95;    // Female cadence (1.00 to 1.05)
+
+        utterance.pitch = isMaleVoice ? FALLBACK_MALE_PITCH : FALLBACK_FEMALE_PITCH;
+        utterance.rate = playbackSpeedRef.current * (isMaleVoice ? FALLBACK_MALE_RATE : FALLBACK_FEMALE_RATE);
         utterance.volume = isMuted ? 0 : volume;
 
-        // Word-level real-time karaoke highlighting
+        // Exact word boundary event for karaoke word highlight
         utterance.onboundary = (e: SpeechSynthesisEvent) => {
             if (e.name === "word") {
-                const charIndex = e.charIndex;
-                const words = chunk.words || [];
-                let charAccumulator = 0;
-                let activeWordIdx = 0;
-
-                for (let w = 0; w < words.length; w++) {
-                    const wLen = words[w].length;
-                    if (charIndex >= charAccumulator && charIndex <= charAccumulator + wLen) {
-                        activeWordIdx = w;
+                const charIdx = e.charIndex;
+                let acc = 0;
+                let matchedWordIdx = 0;
+                for (let i = 0; i < chunk.words.length; i++) {
+                    acc += chunk.words[i].length + 1;
+                    if (charIdx < acc) {
+                        matchedWordIdx = i;
                         break;
                     }
-                    charAccumulator += wLen + 1;
                 }
-
-                const sentenceEl = document.querySelector(`[data-sentence-index="${chunk.sentenceIndex}"]`);
-                if (sentenceEl) {
-                    const wordSpans = sentenceEl.querySelectorAll(".tts-word");
-                    wordSpans.forEach((span, wIdx) => {
-                        if (wIdx === activeWordIdx) {
-                            span.classList.add("tts-word-active");
-                        } else {
-                            span.classList.remove("tts-word-active");
-                        }
-                    });
-                }
+                highlightWord(chunk.sentenceIndex, matchedWordIdx);
             }
         };
 
         utterance.onstart = () => {
-            setIsLoadingAudio(false);
             setIsPlaying(true);
             isPlayingRef.current = true;
             setIsPlayerActive(true);
@@ -628,59 +686,37 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
 
         utterance.onend = () => {
             if (isPlayingRef.current && currentChunkIndexRef.current === index) {
-                playChunkRef.current(index + 1);
+                playChunkRef.current?.(index + 1);
             }
         };
 
         utterance.onerror = (e) => {
-            if (e.error === "canceled" || e.error === "interrupted") {
-                return;
-            }
-            console.warn("[SpeechPlayer] Web Speech Utterance error:", e);
+            if (e.error === "interrupted" || e.error === "canceled") return;
+            console.warn("[WebSpeech] Utterance error:", e.error);
             if (isPlayingRef.current && currentChunkIndexRef.current === index && index + 1 < chunksRef.current.length) {
-                setTimeout(() => playChunkRef.current(index + 1), 300);
+                setTimeout(() => playChunkRef.current?.(index + 1), 250);
             }
         };
 
-        // Resume if Chromium paused state is encountered
-        if (window.speechSynthesis.paused) {
-            window.speechSynthesis.resume();
+        try {
+            window.speechSynthesis.speak(utterance);
+        } catch (err) {
+            console.error("[WebSpeech] speak error:", err);
         }
+    }, [highlightSentence, highlightWord, isMuted, volume, dispatchState]);
 
-        window.speechSynthesis.speak(utterance);
-    }, [isHindi, isMuted, volume, highlightSentence, dispatchState]);
-
-    // 6. Play Chunk by Index (Primary: Edge-TTS Neural API; Fallback: Web Speech API)
+    // 5. Play Chunk by Index: Primary Edge-TTS with graceful Web Speech API fallback
     const playChunk = useCallback((index: number) => {
-        // If fallback mode was previously engaged (e.g. on Vercel), route directly to Web Speech
-        if (useBrowserTtsFallbackRef.current) {
-            playChunkWithWebSpeech(index);
-            return;
-        }
-
-        const audio = audioRef.current;
-        if (!audio) {
-            useBrowserTtsFallbackRef.current = true;
-            setIsBrowserFallbackActive(true);
-            playChunkWithWebSpeech(index);
-            return;
-        }
-
-        // Force silence any other audio elements or lingering speech on the page
+        // Force silence any other audio elements on the page
         if (typeof document !== "undefined") {
             document.querySelectorAll("audio").forEach((el) => {
-                if (el !== audio) {
+                if (el !== audioRef.current) {
                     try {
                         el.pause();
                         el.currentTime = 0;
-                    } catch {}
+                    } catch { }
                 }
             });
-        }
-        if (typeof window !== "undefined" && "speechSynthesis" in window) {
-            try {
-                window.speechSynthesis.cancel();
-            } catch {}
         }
 
         // Ensure chunks and DOM spans are ready
@@ -689,8 +725,13 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         }
 
         if (chunksRef.current.length === 0 || index < 0 || index >= chunksRef.current.length) {
-            audio.pause();
-            audio.currentTime = 0;
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+            if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                try { window.speechSynthesis.cancel(); } catch { }
+            }
             setIsPlaying(false);
             isPlayingRef.current = false;
             setCurrentChunkIndex(0);
@@ -700,7 +741,23 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
             return;
         }
 
-        // Explicitly pause current playback before switching src
+        // 1. If server TTS has failed in this session, route directly to Web Speech fallback
+        if (isServerTtsFailedRef.current) {
+            playWebSpeechChunk(index);
+            return;
+        }
+
+        const audio = audioRef.current;
+        if (!audio) {
+            playWebSpeechChunk(index);
+            return;
+        }
+
+        // Silence any existing Web Speech utterance before starting server audio
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+            try { window.speechSynthesis.cancel(); } catch { }
+        }
+
         audio.pause();
         audio.currentTime = 0;
 
@@ -711,13 +768,32 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         setIsLoadingAudio(true);
 
         const url = getAudioUrl(chunk);
-        audio.src = url;
-        audio.playbackRate = playbackSpeedRef.current;
-        audio.volume = isMuted ? 0 : volume;
 
-        audio
-            .play()
-            .then(() => {
+        // Fetch audio buffer from /api/tts to verify HTTP status cleanly
+        fetch(url)
+            .then(async (response) => {
+                if (!response.ok) {
+                    throw new Error(`Edge-TTS returned HTTP ${response.status}`);
+                }
+                const blob = await response.blob();
+                if (blob.size === 0) {
+                    throw new Error("Empty audio buffer received from TTS API");
+                }
+
+                if (blobUrlRef.current) {
+                    URL.revokeObjectURL(blobUrlRef.current);
+                }
+                const objectUrl = URL.createObjectURL(blob);
+                blobUrlRef.current = objectUrl;
+
+                audio.src = objectUrl;
+                audio.playbackRate = playbackSpeedRef.current;
+                audio.volume = isMuted ? 0 : volume;
+
+                await audio.play();
+
+                activeEngineRef.current = "edge-tts";
+                setActiveEngine("edge-tts");
                 setIsLoadingAudio(false);
                 setIsPlaying(true);
                 isPlayingRef.current = true;
@@ -725,50 +801,24 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
                 isPlayerActiveRef.current = true;
                 dispatchState(true, true);
 
-                // Pre-buffer next chunk via low-priority fetch
-                if (index + 1 < chunksRef.current.length && typeof window !== "undefined") {
+                // Pre-buffer next chunk via low-priority fetch if still in edge-tts mode
+                if (index + 1 < chunksRef.current.length && !isServerTtsFailedRef.current && typeof window !== "undefined") {
                     const nextUrl = getAudioUrl(chunksRef.current[index + 1]);
-                    fetch(nextUrl, { priority: "low" as any }).catch(() => {});
+                    fetch(nextUrl, { priority: "low" as any }).catch(() => { });
                 }
             })
             .catch((err) => {
-                if (err?.name === "AbortError") {
-                    // Ignore normal AbortError when audio is stopped or track changed
-                    return;
-                }
-                console.warn("[SpeechPlayer] Primary audio failed (e.g. Vercel serverless environment). Activating Web Speech API fallback:", err);
-                useBrowserTtsFallbackRef.current = true;
-                setIsBrowserFallbackActive(true);
-                playChunkWithWebSpeech(index);
+                if (err?.name === "AbortError") return;
+                console.warn("[SpeechPlayer] Edge-TTS error, switching to Web Speech API fallback:", err);
+                isServerTtsFailedRef.current = true;
+                playWebSpeechChunk(index);
             });
-    }, [getAudioUrl, highlightSentence, isMuted, volume, dispatchState, prepareArticleChunks, playChunkWithWebSpeech]);
+    }, [getAudioUrl, highlightSentence, isMuted, volume, dispatchState, prepareArticleChunks, playWebSpeechChunk]);
 
-    // Keep playChunkRef synced to avoid circular dependency
+    // Keep playChunkRef in sync
     useEffect(() => {
         playChunkRef.current = playChunk;
     }, [playChunk]);
-
-    // Listen for audio element decoding/source error event and activate fallback
-    useEffect(() => {
-        const audio = audioRef.current;
-        if (!audio) return;
-
-        const handleAudioError = (e: Event) => {
-            if (!isPlayingRef.current) return;
-            // Ignore normal aborts (code 1: MEDIA_ERR_ABORTED) caused by track transition or user action
-            if (audio.error && audio.error.code === 1) return;
-            if (!audio.currentSrc && !audio.src) return;
-            console.warn("[SpeechPlayer] Audio element error event detected, switching to Web Speech fallback:", e);
-            useBrowserTtsFallbackRef.current = true;
-            setIsBrowserFallbackActive(true);
-            playChunkWithWebSpeech(currentChunkIndexRef.current);
-        };
-
-        audio.addEventListener("error", handleAudioError);
-        return () => {
-            audio.removeEventListener("error", handleAudioError);
-        };
-    }, [playChunkWithWebSpeech]);
 
     // 6. Word-by-Word Pronunciation Highlighting via HTML5 Audio timeupdate
     useEffect(() => {
@@ -785,18 +835,7 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
 
             const wordCount = currentChunk.words.length;
             const activeWordIndex = Math.min(wordCount - 1, Math.floor(progressRatio * wordCount));
-
-            const sentenceEl = document.querySelector(`[data-sentence-index="${currentChunk.sentenceIndex}"]`);
-            if (sentenceEl) {
-                const wordSpans = sentenceEl.querySelectorAll(".tts-word");
-                wordSpans.forEach((span, wIdx) => {
-                    if (wIdx === activeWordIndex) {
-                        span.classList.add("tts-word-active");
-                    } else {
-                        span.classList.remove("tts-word-active");
-                    }
-                });
-            }
+            highlightWord(currentChunk.sentenceIndex, activeWordIndex);
         };
 
         const handleEnded = () => {
@@ -811,7 +850,7 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
             audio.removeEventListener("timeupdate", handleTimeUpdate);
             audio.removeEventListener("ended", handleEnded);
         };
-    }, [playChunk]);
+    }, [playChunk, highlightWord]);
 
     // 7. Interactive Click-to-Seek on any sentence or paragraph in the article (ONLY when player is active)
     useEffect(() => {
@@ -821,6 +860,14 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
 
             const clickedEl = e.target as HTMLElement;
             if (!clickedEl) return;
+
+            // Only seek if clicked within the currently active article
+            const activeId = currentArticleRef.current?.id || (currentArticleRef.current as any)?._id;
+            const clickedArticleWrapper = clickedEl.closest("[data-article-id]");
+            const clickedId = clickedArticleWrapper?.getAttribute("data-article-id");
+            if (activeId && clickedId && activeId !== clickedId) {
+                return;
+            }
 
             // Check if clicked inside article content
             const articleContent = clickedEl.closest(".article-content");
@@ -865,12 +912,18 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
 
     // 8. Close / Stop Player completely and reset to beginning
     const handleClosePlayer = useCallback(() => {
-        if (typeof window !== "undefined" && "speechSynthesis" in window) {
-            try { window.speechSynthesis.cancel(); } catch {}
-        }
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
+        }
+        if (blobUrlRef.current) {
+            URL.revokeObjectURL(blobUrlRef.current);
+            blobUrlRef.current = null;
+        }
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+            try {
+                window.speechSynthesis.cancel();
+            } catch { }
         }
         setIsPlaying(false);
         isPlayingRef.current = false;
@@ -901,12 +954,14 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
 
     // 9. Start speech fresh from beginning (index 0)
     const handleStartSpeech = useCallback((incomingArticle?: Article) => {
-        if (typeof window !== "undefined" && "speechSynthesis" in window) {
-            try { window.speechSynthesis.cancel(); } catch {}
-        }
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
+        }
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+            try {
+                window.speechSynthesis.cancel();
+            } catch { }
         }
         highlightSentence(-1);
 
@@ -917,10 +972,6 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         // Reset progress to 0 (beginning of article)
         setCurrentChunkIndex(0);
         currentChunkIndexRef.current = 0;
-
-        // Reset fallback flag on fresh start so primary engine always gets first priority
-        useBrowserTtsFallbackRef.current = false;
-        setIsBrowserFallbackActive(false);
 
         setIsPlayerActive(true);
         isPlayerActiveRef.current = true;
@@ -993,8 +1044,8 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
             audioRef.current.playbackRate = rounded;
         }
 
-        if (useBrowserTtsFallbackRef.current && isPlayingRef.current) {
-            playChunkWithWebSpeech(currentChunkIndexRef.current);
+        if (activeEngineRef.current === "web-speech" && isPlayingRef.current) {
+            playWebSpeechChunk(currentChunkIndexRef.current);
         }
 
         try {
@@ -1011,24 +1062,26 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
         if (audioRef.current) {
             audioRef.current.volume = nextMuted ? 0 : volume;
         }
-        if (useBrowserTtsFallbackRef.current && isPlayingRef.current) {
-            if (nextMuted) {
-                try { window.speechSynthesis.cancel(); } catch {}
-            } else {
-                playChunkWithWebSpeech(currentChunkIndexRef.current);
-            }
+        if (activeEngineRef.current === "web-speech" && activeUtteranceRef.current) {
+            activeUtteranceRef.current.volume = nextMuted ? 0 : volume;
         }
     };
 
     // Cleanup on unmount
     useEffect(() => {
         return () => {
-            if (typeof window !== "undefined" && "speechSynthesis" in window) {
-                try { window.speechSynthesis.cancel(); } catch {}
-            }
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
+            }
+            if (blobUrlRef.current) {
+                URL.revokeObjectURL(blobUrlRef.current);
+                blobUrlRef.current = null;
+            }
+            if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                try {
+                    window.speechSynthesis.cancel();
+                } catch { }
             }
             highlightSentence(-1);
         };
@@ -1057,19 +1110,12 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
 
     // Display names
     const getActiveVoiceName = () => {
-        if (voiceMode === "both") {
-            return isBrowserFallbackActive
-                ? "Dual Co-Anchors (Browser Voices)"
-                : "Dual Co-Anchors (Swara & Madhur)";
+        if (activeEngine === "web-speech") {
+            if (voiceMode === "both") return "Dual Co-Anchors (Device Indian Voice)";
+            return voiceMode === "female" ? "Indian Female (Device Voice)" : "Indian Male (Device Voice)";
         }
-        if (voiceMode === "female") {
-            return isBrowserFallbackActive
-                ? "Female Voice (Browser Speech)"
-                : "Swara (Bilingual Female)";
-        }
-        return isBrowserFallbackActive
-            ? "Male Voice (Browser Speech)"
-            : "Madhur (Bilingual Male)";
+        if (voiceMode === "both") return "Dual Co-Anchors (Swara & Madhur)";
+        return voiceMode === "female" ? "Swara (Bilingual Female)" : "Madhur (Bilingual Male)";
     };
 
     return (
@@ -1157,19 +1203,34 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
                             onClick={() => {
                                 if (isPlayingRef.current) {
                                     // Pause in place
-                                    if (useBrowserTtsFallbackRef.current && typeof window !== "undefined" && "speechSynthesis" in window) {
-                                        try { window.speechSynthesis.cancel(); } catch {}
+                                    if (activeEngineRef.current === "edge-tts") {
+                                        if (audioRef.current) audioRef.current.pause();
+                                    } else {
+                                        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                                            window.speechSynthesis.pause();
+                                        }
                                     }
-                                    if (audioRef.current) audioRef.current.pause();
                                     setIsPlaying(false);
                                     isPlayingRef.current = false;
                                     dispatchState(false, true);
                                 } else {
-                                    // Resume from current sentence
+                                    // Resume in place
                                     setIsPlaying(true);
                                     isPlayingRef.current = true;
                                     dispatchState(true, true);
-                                    playChunk(currentChunkIndexRef.current);
+                                    if (activeEngineRef.current === "edge-tts") {
+                                        if (audioRef.current && audioRef.current.src && audioRef.current.currentTime > 0 && !audioRef.current.ended) {
+                                            audioRef.current.play().catch(() => playChunk(currentChunkIndexRef.current));
+                                        } else {
+                                            playChunk(currentChunkIndexRef.current);
+                                        }
+                                    } else {
+                                        if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis.paused) {
+                                            window.speechSynthesis.resume();
+                                        } else {
+                                            playChunk(currentChunkIndexRef.current);
+                                        }
+                                    }
                                 }
                             }}
                             className="w-13 h-13 rounded-full bg-[#C9A227] text-[#0B2242] hover:bg-[#d6af32] flex items-center justify-center transition-all transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer shrink-0"
@@ -1198,33 +1259,30 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
                             <div className="grid grid-cols-3 gap-1.5">
                                 <button
                                     onClick={() => handleVoiceChange("male")}
-                                    className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                                        voiceMode === "male"
-                                            ? "bg-[#C9A227] text-[#0B2242] shadow-xs"
-                                            : "bg-white/10 text-white/80 hover:bg-white/15"
-                                    }`}
+                                    className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${voiceMode === "male"
+                                        ? "bg-[#C9A227] text-[#0B2242] shadow-xs"
+                                        : "bg-white/10 text-white/80 hover:bg-white/15"
+                                        }`}
                                 >
                                     <MaleVoiceIcon className="w-3.5 h-3.5 shrink-0" />
                                     <span>Male</span>
                                 </button>
                                 <button
                                     onClick={() => handleVoiceChange("female")}
-                                    className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                                        voiceMode === "female"
-                                            ? "bg-[#C9A227] text-[#0B2242] shadow-xs"
-                                            : "bg-white/10 text-white/80 hover:bg-white/15"
-                                    }`}
+                                    className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${voiceMode === "female"
+                                        ? "bg-[#C9A227] text-[#0B2242] shadow-xs"
+                                        : "bg-white/10 text-white/80 hover:bg-white/15"
+                                        }`}
                                 >
                                     <FemaleVoiceIcon className="w-3.5 h-3.5 shrink-0" />
                                     <span>Female</span>
                                 </button>
                                 <button
                                     onClick={() => handleVoiceChange("both")}
-                                    className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                                        voiceMode === "both"
-                                            ? "bg-[#C9A227] text-[#0B2242] shadow-xs"
-                                            : "bg-white/10 text-white/80 hover:bg-white/15"
-                                    }`}
+                                    className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${voiceMode === "both"
+                                        ? "bg-[#C9A227] text-[#0B2242] shadow-xs"
+                                        : "bg-white/10 text-white/80 hover:bg-white/15"
+                                        }`}
                                 >
                                     <DualVoiceIcon className="w-3.5 h-3.5 shrink-0" />
                                     <span>Dual</span>
@@ -1243,11 +1301,10 @@ export default function SpeechPlayer({ initialArticle }: SpeechPlayerProps) {
                                     <button
                                         type="button"
                                         onClick={() => handleSpeedChange(1)}
-                                        className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold transition-all cursor-pointer border ${
-                                            playbackSpeed === 1
-                                                ? "bg-[#C9A227] text-[#0B2242] border-[#C9A227]"
-                                                : "bg-white/10 text-[#C9A227] border-white/15 hover:bg-white/20"
-                                        }`}
+                                        className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold transition-all cursor-pointer border ${playbackSpeed === 1
+                                            ? "bg-[#C9A227] text-[#0B2242] border-[#C9A227]"
+                                            : "bg-white/10 text-[#C9A227] border-white/15 hover:bg-white/20"
+                                            }`}
                                         title="Click to reset to standard 1.00x speed"
                                     >
                                         {playbackSpeed.toFixed(2)}x

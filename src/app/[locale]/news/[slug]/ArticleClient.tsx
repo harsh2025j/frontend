@@ -818,8 +818,13 @@ function ArticleBody({ article, locale, t, isPriority = false }: { article: Arti
                 )}
 
                 {/* Article Content */}
-                <div className="article-content relative">
+                <div className="article-content relative w-full max-w-full">
                     <style>{`
+                        /* Ensure full container width matching thumbnail and timeline */
+                        .article-content {
+                            max-width: 100% !important;
+                            width: 100% !important;
+                        }
                         /* Remove default quill editor padding to match original layout */
                         .article-content img {
                             max-width: 100% !important;

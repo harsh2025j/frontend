@@ -755,8 +755,13 @@ function ArticleBodyPreview({ article, locale, t }: { article: Article; locale: 
                 )}
 
                 {/* Article Content */}
-                <div className="article-content relative mt-6">
+                <div className="article-content relative mt-6 w-full max-w-full">
                     <style>{`
+                        /* Ensure full container width matching thumbnail and timeline */
+                        .article-content {
+                            max-width: 100% !important;
+                            width: 100% !important;
+                        }
                         .article-content img {
                             max-width: 100% !important;
                             height: auto !important;

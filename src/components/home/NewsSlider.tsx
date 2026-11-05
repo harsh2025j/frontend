@@ -156,8 +156,8 @@ export default function NewsSlider() {
       </div>
 
       {/* ─── MAIN CONTENT CONTAINER ─── */}
-      <div className="container relative z-10 mx-auto h-full px-2 md:px-3 flex items-center py-6 md:py-10 lg:py-0">
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-20 items-center">
+      <div className="container relative z-10 mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center py-6 md:py-10 lg:py-0">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-20 items-center">
 
           {/* IMAGE BLOCK */}
           <div className="order-1 lg:order-1 relative flex justify-center lg:justify-start transition-all duration-700">

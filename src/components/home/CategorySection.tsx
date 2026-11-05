@@ -46,7 +46,7 @@ export default function CategorySection({ title, slug, layout, limit = 6, showVi
   if (loading) {
     return (
       <section className="py-8 border-b border-gray-100 last:border-0">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 relative pl-4">
               <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#C9A227] rounded-full"></span>
@@ -66,7 +66,7 @@ export default function CategorySection({ title, slug, layout, limit = 6, showVi
 
   return (
     <section className="py-8 border-b border-gray-100 last:border-0">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 relative pl-4">

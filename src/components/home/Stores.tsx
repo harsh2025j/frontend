@@ -330,7 +330,7 @@ export default function Stores() {
 
 
         {/* Quick Access Section - Overlapping Cards */}
-        <div className="container mx-auto px-4 -mt-16 md:-mt-20 mb-8 md:mb-10 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-16 md:-mt-20 mb-8 md:mb-10 relative z-10">
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
             <button
@@ -443,7 +443,7 @@ export default function Stores() {
 
         {/* High Courts Section */}
         <div className="bg-gradient-to-b from-white to-gray-50 w-full mb-8 md:mb-12 py-10 md:py-12">
-          <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-10">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
 
             {/* Section Title */}
             <div className="text-center mb-10">
@@ -538,7 +538,7 @@ export default function Stores() {
         </div> */}
 
         {/* Latest Articles / News Section */}
-        <div className="w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto my-8 md:my-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 my-8 md:my-12">
           {/* Header Banner Card */}
           <div className="relative bg-[#FAF5E2] rounded-lg border border-[#EADBBD]/80 overflow-hidden mb-8 min-h-[220px] md:min-h-[260px] flex flex-col md:flex-row items-center">
             {/* Right 50% image container with clean photo and code-based smooth blend */}
@@ -627,7 +627,8 @@ export default function Stores() {
         {/* In-Feed Ad after Latest News */}
         <InFeedAd />
 
-        <div className="w-full px-4">
+        {/* Judgments */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center my-6 md:my-10">
             <div className="flex-1 h-px bg-gray-400"></div>
             <h2 className="px-3 sm:px-4 text-base sm:text-lg md:text-xl font-merriweather font-semibold text-black text-center whitespace-nowrap">
@@ -636,25 +637,23 @@ export default function Stores() {
             <div className="flex-1 h-px bg-gray-400"></div>
           </div>
           {/* Judgments Grid */}
-          <div className="flex justify-center px-4 mb-10">
-            <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {loading ? (
-                <ArticleSkeleton count={6} type="judgement" noWrapper={true} />
-              ) : (
-                displayJudgments.map((data: any) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-10">
+            {loading ? (
+              <ArticleSkeleton count={6} type="judgement" noWrapper={true} />
+            ) : (
+              displayJudgments.map((data: any) => (
 
-                  <Judgement
-                    key={data.id}
-                    img={data.thumbnail}
-                    title={data.title}
-                    description={data.content}
-                    date={formatDate(data.createdAt)}
-                    author={data.authors || data.advocateName}
-                    slug={data.slug}
-                  />
-                ))
-              )}
-            </div>
+                <Judgement
+                  key={data.id}
+                  img={data.thumbnail}
+                  title={data.title}
+                  description={data.content}
+                  date={formatDate(data.createdAt)}
+                  author={data.authors || data.advocateName}
+                  slug={data.slug}
+                />
+              ))
+            )}
           </div>
         </div>
 
@@ -667,7 +666,7 @@ export default function Stores() {
           </Link>
         </div>
         {/* Bare Acts */}
-        <div className="w-full px-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center mt-6 md:mt-10 mb-4 md:mb-5">
             <div className="flex-1 h-px bg-gray-400"></div>
             <h2 className="px-3 sm:px-4 text-base sm:text-lg md:text-xl font-merriweather font-semibold text-black text-center whitespace-nowrap">
@@ -676,25 +675,23 @@ export default function Stores() {
             <div className="flex-1 h-px bg-gray-400"></div>
           </div>
 
-          <div className="flex justify-center mb-6 md:mb-10">
-            <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {isBareActsLoading ? (
-                <ArticleSkeleton count={8} type="latest" noWrapper={true} />
-              ) : (
-                displayBareActs.map((data: any) => (
-                  <LatestNews
-                    key={data.id}
-                    img={data.thumbnail}
-                    title={data.title}
-                    slug={data.slug}
-                    author={data.authors || data.advocateName}
-                    date={formatDate(data.createdAt)}
-                    button1Text="Read Full Case"
-                    button2Text="AI Summary"
-                  />
-                ))
-              )}
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 md:mb-10">
+            {isBareActsLoading ? (
+              <ArticleSkeleton count={8} type="latest" noWrapper={true} />
+            ) : (
+              displayBareActs.map((data: any) => (
+                <LatestNews
+                  key={data.id}
+                  img={data.thumbnail}
+                  title={data.title}
+                  slug={data.slug}
+                  author={data.authors || data.advocateName}
+                  date={formatDate(data.createdAt)}
+                  button1Text="Read Full Case"
+                  button2Text="AI Summary"
+                />
+              ))
+            )}
           </div>
         </div>
         <div className="flex justify-center mb-6 md:mb-10">
@@ -723,7 +720,7 @@ export default function Stores() {
         />
 
         {/* Hindi News */}
-        <div className="w-full px-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center mt-6 md:mt-10 mb-4 md:mb-5">
             <div className="flex-1 h-px bg-gray-400"></div>
             <h2 className="px-3 sm:px-4 text-base sm:text-lg md:text-xl font-merriweather font-semibold text-black">
@@ -732,26 +729,24 @@ export default function Stores() {
             <div className="flex-1 h-px bg-gray-400"></div>
           </div>
 
-          <div className="flex justify-center">
-            <div className="container flex flex-col">
-              {isHindiLoading ? (
-                <ArticleSkeleton count={3} type="hindi" noWrapper={true} />
-              ) : (
-                displayHindiNews.map((data: any) => (
+          <div className="flex flex-col">
+            {isHindiLoading ? (
+              <ArticleSkeleton count={3} type="hindi" noWrapper={true} />
+            ) : (
+              displayHindiNews.map((data: any) => (
 
 
 
-                  <HindiNews
-                    key={data.id}
-                    img={data.thumbnail}
-                    title={data.title}
-                    description={data.content}
-                    slug={data.slug}
-                    author={data.authors || data.advocateName}
-                  />
-                ))
-              )}
-            </div>
+                <HindiNews
+                  key={data.id}
+                  img={data.thumbnail}
+                  title={data.title}
+                  description={data.content}
+                  slug={data.slug}
+                  author={data.authors || data.advocateName}
+                />
+              ))
+            )}
           </div>
         </div>
 
@@ -765,7 +760,7 @@ export default function Stores() {
         </div>
 
         {/* Articles */}
-        <div className="px-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center mt-6 md:mt-10 mb-4 md:mb-5">
             <div className="flex-1 h-px bg-gray-400"></div>
             <h2 className="px-3 sm:px-4 text-base sm:text-lg md:text-xl font-merriweather font-semibold text-black">

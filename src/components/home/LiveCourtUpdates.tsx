@@ -56,7 +56,7 @@ export default function LiveCourtUpdates() {
 
   return (
     <section className="w-full py-12 bg-[#f6f6f7]">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <h2 className="text-3xl font-bold text-gray-900">
