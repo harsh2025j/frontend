@@ -18,7 +18,7 @@ class AppColors {
   static const Color goldSurface = Color(0xFFF9F5EC);
 
   // Background & Surface
-  static const Color scaffoldBg = Color(0xFFF8FAFC);
+  static const Color scaffoldBg = Color(0xFFFFFFFF);
   static const Color surfaceWhite = Color(0xFFFFFFFF);
   static const Color surfaceMuted = Color(0xFFF1F5F9);
   static const Color borderLight = Color(0xFFE2E8F0);

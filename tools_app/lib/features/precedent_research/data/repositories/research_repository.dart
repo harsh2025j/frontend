@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
+import '../models/judgment_details_model.dart';
 import '../models/precedent_model.dart';
 
 class ResearchRepository {
@@ -49,21 +50,25 @@ class ResearchRepository {
     }
   }
 
-  Future<Precedent?> getJudgmentDetails(String id) async {
+  Future<JudgmentDetailsModel?> getJudgmentDetails(String identifier) async {
     try {
-      final endpoint = ApiEndpoints.judgmentDetails.replaceFirst(':id', id);
+      final endpoint = ApiEndpoints.judgmentDetails.replaceFirst(':id', Uri.encodeComponent(identifier));
       final response = await apiClient.dio.get(endpoint);
       final data = response.data;
       if (data is Map<String, dynamic>) {
         final payload = data['data']?['judgment'] ?? data['data'] ?? data['judgment'];
         if (payload is Map<String, dynamic>) {
-          return Precedent.fromJson(payload);
+          return JudgmentDetailsModel.fromJson(payload);
         }
       }
       return null;
     } catch (_) {
       return null;
     }
+  }
+
+  String getJudgmentPdfUrl(String identifier) {
+    return '${ApiEndpoints.baseUrl}tools/judgment/${Uri.encodeComponent(identifier)}/pdf';
   }
 }
 

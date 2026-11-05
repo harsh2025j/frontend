@@ -1,5 +1,6 @@
-package com.sajjadhusain.tools.tools_app
+package com.sajjadLaw.aitools
 
 import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity : FlutterActivity()
+

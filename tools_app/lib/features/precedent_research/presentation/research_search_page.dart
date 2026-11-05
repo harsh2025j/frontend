@@ -6,7 +6,9 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/compact_app_bar.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../data/models/precedent_model.dart';
+import '../data/repositories/research_repository.dart';
 import 'bloc/research_bloc.dart';
+import 'judgment_detail_page.dart';
 
 class ResearchSearchPage extends StatefulWidget {
   const ResearchSearchPage({super.key});
@@ -18,12 +20,29 @@ class ResearchSearchPage extends StatefulWidget {
 class _ResearchSearchPageState extends State<ResearchSearchPage> {
   final TextEditingController _queryController = TextEditingController();
   String _selectedCourt = '';
+  String _selectedYear = '';
 
   static const List<String> exampleQueries = [
     'Basic structure doctrine',
     'Anticipatory bail PMLA',
     'Section 11 Arbitration Act',
     'Article 21 Right to Privacy',
+  ];
+
+  static const List<String> availableYears = [
+    'All Years',
+    '2026',
+    '2025',
+    '2024',
+    '2023',
+    '2022',
+    '2021',
+    '2020',
+    '2019',
+    '2018',
+    '2017',
+    '2016',
+    '2015',
   ];
 
   @override
@@ -38,6 +57,7 @@ class _ResearchSearchPageState extends State<ResearchSearchPage> {
           SearchPrecedentsEvent(
             query: query.trim(),
             court: _selectedCourt.isEmpty ? null : _selectedCourt,
+            year: (_selectedYear.isEmpty || _selectedYear == 'All Years') ? null : _selectedYear,
           ),
         );
   }
@@ -96,18 +116,53 @@ class _ResearchSearchPageState extends State<ResearchSearchPage> {
 
                 const SizedBox(height: 10),
 
-                // Court Filter Chips
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildFilterChip('All Courts', ''),
-                      const SizedBox(width: 6),
-                      _buildFilterChip('Supreme Court', 'Supreme Court of India'),
-                      const SizedBox(width: 6),
-                      _buildFilterChip('High Courts', 'High Court'),
-                    ],
-                  ),
+                // Court & Year Filter Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildFilterChip('All Courts', ''),
+                            const SizedBox(width: 6),
+                            _buildFilterChip('Supreme Court', 'Supreme Court of India'),
+                            const SizedBox(width: 6),
+                            _buildFilterChip('High Courts', 'High Court'),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Year Dropdown Filter
+                    Container(
+                      height: 28,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.borderLight),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedYear.isEmpty ? 'All Years' : _selectedYear,
+                          icon: const Icon(Icons.arrow_drop_down, size: 16, color: AppColors.textSecondary),
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                          items: availableYears.map((y) {
+                            return DropdownMenuItem(value: y, child: Text(y));
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() => _selectedYear = val);
+                              if (_queryController.text.isNotEmpty) {
+                                _executeSearch(_queryController.text);
+                              }
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -407,6 +462,25 @@ class _ResearchSearchPageState extends State<ResearchSearchPage> {
                     const SnackBar(
                       content: Text('Citation copied to clipboard'),
                       duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+              AppButton(
+                text: 'View Judgment',
+                size: AppButtonSize.small,
+                variant: AppButtonVariant.primary,
+                icon: Icons.menu_book_rounded,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => JudgmentDetailPage(
+                        judgmentId: item.id,
+                        initialTitle: item.title,
+                        repository: context.read<ResearchRepository>(),
+                      ),
                     ),
                   );
                 },

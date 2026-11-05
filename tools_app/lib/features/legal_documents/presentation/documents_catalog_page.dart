@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/compact_app_bar.dart';
-import '../../../../core/widgets/status_badge.dart';
 import '../data/models/legal_template_model.dart';
 import '../data/repositories/documents_repository.dart';
+import 'document_interview_draft_page.dart';
+import 'saved_documents_history_page.dart';
 
 class DocumentsCatalogPage extends StatefulWidget {
   final DocumentsRepository repository;
@@ -65,154 +63,38 @@ class _DocumentsCatalogPageState extends State<DocumentsCatalogPage> {
   }
 
   void _openDraftingSheet(LegalTemplate template) {
-    final situationController = TextEditingController();
-    bool isGenerating = false;
-    String? generatedDraft;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surfaceWhite,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DocumentInterviewDraftPage(
+          template: template,
+          repository: widget.repository,
+        ),
       ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 16,
-                right: 16,
-                top: 16,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          template.title,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 18),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  StatusBadge(label: template.categoryName ?? 'Legal Deed', variant: BadgeVariant.gold),
-
-                  const SizedBox(height: 12),
-
-                  if (generatedDraft == null) ...[
-                    const Text(
-                      'Briefly describe parties & matter details:',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 6),
-                    AppTextField(
-                      controller: situationController,
-                      hintText: 'e.g. Agreement between ABC Ltd and John Doe for 12 months consulting at ₹50,000/mo...',
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 14),
-                    AppButton(
-                      text: 'Generate Structured Deed',
-                      isFullWidth: true,
-                      size: AppButtonSize.medium,
-                      isLoading: isGenerating,
-                      onPressed: isGenerating
-                          ? null
-                          : () async {
-                              setSheetState(() => isGenerating = true);
-                              final res = await widget.repository.generateTemplateDraft(
-                                templateTitle: template.title,
-                                category: template.categoryName ?? 'General',
-                                situation: situationController.text.trim(),
-                              );
-                              setSheetState(() {
-                                isGenerating = false;
-                                generatedDraft = res;
-                              });
-                            },
-                    ),
-                  ] else ...[
-                    Container(
-                      height: 220,
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.scaffoldBg,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: AppColors.borderLight),
-                      ),
-                      child: SingleChildScrollView(
-                        child: SelectableText(
-                          generatedDraft!,
-                          style: const TextStyle(fontSize: 11.5, fontFamily: 'Courier', height: 1.4),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AppButton(
-                            text: 'Copy Text',
-                            variant: AppButtonVariant.outline,
-                            size: AppButtonSize.small,
-                            icon: Icons.copy_rounded,
-                            onPressed: () {
-                              Clipboard.setData(ClipboardData(text: generatedDraft!));
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Deed copied to clipboard')),
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: AppButton(
-                            text: 'Share',
-                            size: AppButtonSize.small,
-                            icon: Icons.share_rounded,
-                            onPressed: () {
-                              SharePlus.instance.share(
-                                ShareParams(
-                                  text: generatedDraft!,
-                                  subject: template.title,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-
-                  const SizedBox(height: 16),
-                ],
-              ),
-            );
-          },
-        );
-      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CompactAppBar(
+      appBar: CompactAppBar(
         title: 'Contracts & Legal Deeds Library',
         subtitle: '2,176+ Indian Templates Across 58 Categories',
         showBackButton: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bookmark_border_rounded, size: 20),
+            tooltip: 'Saved Deeds',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SavedDocumentsHistoryPage(repository: widget.repository),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [

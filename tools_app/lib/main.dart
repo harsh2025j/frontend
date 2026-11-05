@@ -8,7 +8,7 @@ import 'features/court_drafting/data/repositories/drafting_repository.dart';
 import 'features/court_drafting/presentation/bloc/drafting_bloc.dart';
 import 'features/precedent_research/data/repositories/research_repository.dart';
 import 'features/precedent_research/presentation/bloc/research_bloc.dart';
-import 'features/shell/main_shell.dart';
+import 'features/splash/presentation/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,10 +58,10 @@ class ToolsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Legal AI Tools',
+      title: 'sajjadlaw ai tools',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: MainShell(apiClient: apiClient),
+      home: SplashScreen(apiClient: apiClient),
     );
   }
 }

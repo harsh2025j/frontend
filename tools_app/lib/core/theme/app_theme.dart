@@ -12,7 +12,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       primaryColor: AppColors.primaryNavy,
-      scaffoldBackgroundColor: AppColors.scaffoldBg,
+      scaffoldBackgroundColor: AppColors.surfaceWhite,
       fontFamily: interFont,
 
       // Color Scheme

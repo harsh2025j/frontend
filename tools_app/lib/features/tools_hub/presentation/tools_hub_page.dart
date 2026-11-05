@@ -8,6 +8,7 @@ import '../../document_health_check/presentation/health_check_page.dart';
 import '../../legal_documents/data/repositories/documents_repository.dart';
 import '../../legal_documents/presentation/documents_catalog_page.dart';
 import '../../precedent_research/presentation/research_search_page.dart';
+import '../../dispute_settlement/data/repositories/settlement_repository.dart';
 import '../../dispute_settlement/presentation/settlement_desk_page.dart';
 import '../../vernacular_translation/data/repositories/translation_repository.dart';
 import '../../vernacular_translation/presentation/translation_page.dart';
@@ -61,7 +62,9 @@ class _ToolsHubPageState extends State<ToolsHubPage> {
         );
         break;
       case 'mediation':
-        targetPage = const SettlementDeskPage();
+        targetPage = SettlementDeskPage(
+          repository: SettlementRepository(apiClient: widget.apiClient),
+        );
         break;
       default:
         targetPage = const ResearchSearchPage();

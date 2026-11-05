@@ -52,16 +52,27 @@ class DraftingRepository {
     try {
       final response = await apiClient.dio.get(ApiEndpoints.draftHistory);
       final dynamic raw = response.data;
-      final List<dynamic> items = raw is Map ? (raw['data'] ?? raw['drafts'] ?? []) : (raw is List ? raw : []);
+      final List<dynamic> items = raw is Map ? (raw['data']?['history'] ?? raw['data'] ?? raw['drafts'] ?? []) : (raw is List ? raw : []);
       return items.map<Map<String, String>>((e) {
         return {
+          'id': (e['id'] ?? e['_id'] ?? '').toString(),
           'title': (e['title'] ?? 'Untitled Draft').toString(),
           'date': (e['createdAt'] ?? e['date'] ?? '').toString(),
-          'content': (e['content'] ?? '').toString(),
+          'content': (e['content'] ?? e['fullDraft'] ?? '').toString(),
         };
       }).toList();
     } catch (_) {
       return [];
+    }
+  }
+
+  Future<bool> deleteDraft(String id) async {
+    try {
+      final endpoint = ApiEndpoints.draftDelete.replaceFirst(':id', Uri.encodeComponent(id));
+      await apiClient.dio.delete(endpoint);
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 }

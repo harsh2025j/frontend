@@ -5,9 +5,12 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/compact_app_bar.dart';
+import '../data/repositories/settlement_repository.dart';
 
 class SettlementDeskPage extends StatefulWidget {
-  const SettlementDeskPage({super.key});
+  final SettlementRepository repository;
+
+  const SettlementDeskPage({super.key, required this.repository});
 
   @override
   State<SettlementDeskPage> createState() => _SettlementDeskPageState();
@@ -33,7 +36,7 @@ class _SettlementDeskPageState extends State<SettlementDeskPage> {
     super.dispose();
   }
 
-  void _generateSettlement() {
+  Future<void> _generateSettlement() async {
     if (_claimantController.text.trim().isEmpty || _respondentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter Claimant and Respondent names.')),
@@ -43,55 +46,26 @@ class _SettlementDeskPageState extends State<SettlementDeskPage> {
 
     setState(() => _isGenerating = true);
 
-    Future.delayed(const Duration(milliseconds: 600), () {
-      final claimant = _claimantController.text.trim();
-      final respondent = _respondentController.text.trim();
-      final amount = _amountController.text.trim().isEmpty ? '₹ [● Agreed Consideration]' : _amountController.text.trim();
-      final dispute = _disputeSummaryController.text.trim();
-      final paymentTerms = _paymentTermsController.text.trim();
+    final claimant = _claimantController.text.trim();
+    final respondent = _respondentController.text.trim();
+    final amount = _amountController.text.trim().isEmpty ? '₹ [● Agreed Consideration]' : _amountController.text.trim();
+    final dispute = _disputeSummaryController.text.trim();
+    final paymentTerms = _paymentTermsController.text.trim();
 
-      final sheet = '''
-MEDIATION SETTLEMENT AGREEMENT & COMPROMISE TERM SHEET
-(Under the Mediation Act, 2023 & Order XXIII Rule 3 of the Code of Civil Procedure, 1908)
+    final sheet = await widget.repository.generateSettlementSheet(
+      claimant: claimant,
+      respondent: respondent,
+      amount: amount,
+      disputeSummary: dispute,
+      paymentTerms: paymentTerms,
+    );
 
-THIS SETTLEMENT AGREEMENT is entered into on this [● Date] day of [● Month], 2026,
-
-BETWEEN:
-$claimant (hereinafter referred to as the "FIRST PARTY / CLAIMANT")
-AND:
-$respondent (hereinafter referred to as the "SECOND PARTY / RESPONDENT")
-
-PREAMBLE & DISPUTE BACKGROUND:
-WHEREAS the parties had disputes concerning: "${dispute.isNotEmpty ? dispute : 'Outstanding commercial claims, pending litigation, and contested liabilities'}".
-WHEREAS the parties, with the intervention of appointed counsels/mediator, have voluntarily resolved all differences amicably on the following binding terms:
-
-1. FULL & FINAL MONETARY CONSIDERATION:
-   The Second Party covenants and agrees to pay a total sum of $amount to the First Party in full and final settlement of all claims, counterclaims, and interest.
-   Payment schedule agreed: ${paymentTerms.isNotEmpty ? paymentTerms : '50% within 15 days upon execution, remainder within 45 days via RTGS/NEFT'}.
-
-2. WITHDRAWAL OF PENDING PROCEEDINGS:
-   Upon receipt of the initial tranche, both parties shall file joint compromise applications under Order XXIII Rule 3 CPC for withdrawal/disposal of all pending suits, FIRs, and Section 138 NI Act complaints.
-
-3. MUTUAL RELEASE & NON-DISPARAGEMENT:
-   Each party irrevocably releases and discharges the other from all liabilities, obligations, and claims. Neither party shall publish derogatory remarks against each other in public or on digital platforms.
-
-4. BINDING EFFECT & COURT RECORD:
-   This Settlement Agreement constitutes a decree-executable instrument under Section 27 of the Mediation Act, 2023 and shall be placed before the Court for recording a compromise decree.
-
-IN WITNESS WHEREOF the parties have set their hands:
-
-________________________                      ________________________
-FIRST PARTY / CLAIMANT                        SECOND PARTY / RESPONDENT
-Advocate for First Party:                     Advocate for Second Party:
-''';
-
-      if (mounted) {
-        setState(() {
-          _isGenerating = false;
-          _generatedTermSheet = sheet;
-        });
-      }
-    });
+    if (mounted) {
+      setState(() {
+        _isGenerating = false;
+        _generatedTermSheet = sheet;
+      });
+    }
   }
 
   @override
