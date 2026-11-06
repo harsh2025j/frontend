@@ -9,11 +9,11 @@ import {
   Lock,
   CheckCircle2,
   ShieldCheck,
-  KeyRound,
   Eye,
   EyeOff,
   ArrowLeft,
   Loader2,
+  Quote,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/data/redux/hooks";
 import { forgotPassword, resetPassword, verifyOtp } from "@/data/features/auth/authThunks";
@@ -29,7 +29,7 @@ function AcademyForgotPasswordContent() {
   const dispatch = useAppDispatch();
 
   // Auth State
-  const { loading, error, message, user } = useAppSelector((s) => s.auth);
+  const { loading, error, message } = useAppSelector((s) => s.auth);
   const { handleReSendOtp, loading: resendLoading } = useResendOtp();
   const [verifyLoading, setVerifyLoading] = useState(false);
 
@@ -62,7 +62,7 @@ function AcademyForgotPasswordContent() {
   // Handle Reset Success Redirection
   useEffect(() => {
     if (message === MESSAGES.RESET_SUCCESS) {
-      router.push("/auth/login");
+      router.push("/academy/auth/login");
       dispatch(resetAuthState());
     }
   }, [message, router, dispatch]);
@@ -88,7 +88,7 @@ function AcademyForgotPasswordContent() {
       await dispatch(forgotPassword({ email })).unwrap();
       localStorage.setItem("email", email);
       setStep("verify");
-    } catch { }
+    } catch {}
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
@@ -101,8 +101,7 @@ function AcademyForgotPasswordContent() {
     try {
       await dispatch(verifyOtp({ email, otp })).unwrap();
       setStep("reset");
-    } catch {
-    } finally {
+    } catch {} finally {
       setVerifyLoading(false);
     }
   };
@@ -133,880 +132,428 @@ function AcademyForgotPasswordContent() {
           email,
           otp,
           newPassword,
-          conformPassword: confirmPassword, // mapping to expected API prop
+          conformPassword: confirmPassword,
         })
       ).unwrap();
-    } catch { }
+    } catch {}
   };
 
   const stepMeta: Record<Step, { eyebrow: string; heading: string; sub: string }> = {
     forgot: {
-      eyebrow: "Request Code",
+      eyebrow: "PASSWORD RESET",
       heading: "Forgot Password?",
-      sub: "Enter your registered student email address to receive a verification code.",
+      sub: "Enter your registered student email address to receive a 6-digit verification code.",
     },
     verify: {
-      eyebrow: "Verify Identity",
+      eyebrow: "VERIFY IDENTITY",
       heading: "Check Your Email",
       sub: `We've sent a 6-digit verification code to ${email || "your email"}.`,
     },
     reset: {
-      eyebrow: "New Password",
+      eyebrow: "NEW CREDENTIALS",
       heading: "Set New Password",
-      sub: "Your new password must be different from previously used passwords.",
+      sub: "Choose a strong password that is different from previously used passwords.",
     },
   };
 
   return (
-    <main className="min-h-[100dvh] w-full bg-[#f7f8fa] font-sans lg:h-[100dvh] lg:overflow-hidden">
-      <div className="flex min-h-[100dvh] w-full flex-col lg:h-full lg:flex-row">
+    <main className="w-full min-h-screen lg:h-screen lg:overflow-hidden bg-[#08172D] font-sans">
+      <div className="flex w-full min-h-screen lg:h-full flex-col lg:flex-row bg-white">
 
         {/* =====================================================
-            LEFT - ACADEMY BRANDING
+            LEFT - ACADEMY BRANDING (FIXED, NO SCROLL, IMMOVABLE)
         ====================================================== */}
-        <section
-          className="
-            relative
-            hidden
-            lg:flex
-            lg:h-full
-            lg:w-[42%]
-            xl:w-[44%]
-            shrink-0
-            overflow-hidden
-            bg-[#0d1b34]
-            text-white
-          "
-        >
-          {/* Subtle decorative elements */}
-          <div
-            className="
-              pointer-events-none
-              absolute
-              -top-32
-              -right-32
-              h-[420px]
-              w-[420px]
-              rounded-full
-              border-[70px]
-              border-white/[0.025]
-            "
-          />
+        <section className="relative hidden lg:flex lg:w-[45%] xl:w-[46%] shrink-0 flex-col justify-between bg-[#08172D] text-white p-6 lg:p-8 xl:p-10 overflow-hidden border-r border-[#122340]/20 lg:h-full select-none">
+          
+          {/* Subtle architectural ambient accent */}
+          <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#C9A227]/5 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-[#122340]/60 blur-3xl" />
 
-          <div
-            className="
-              pointer-events-none
-              absolute
-              -bottom-40
-              -left-40
-              h-[500px]
-              w-[500px]
-              rounded-full
-              border-[80px]
-              border-[#c9a227]/[0.04]
-            "
-          />
-
-          {/* Gold vertical accent */}
-          {/* <div className="absolute left-0 top-0 h-full w-[4px] bg-[#c9a227]" /> */}
-
-          <div className="relative z-10 flex min-h-full w-full flex-col px-10 py-8 lg:px-[3vw] lg:py-[3vh] xl:px-16 xl:py-[4vh]">
-
-            {/* Logo */}
-            <Link
-              href="/"
-              className="group inline-flex w-fit shrink-0 items-center gap-3"
-            >
-              <div
-                className="
-                  flex
-                  h-11
-                  w-11
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-xl
-                  border
-                  border-white/15
-                  bg-white/[0.06]
-                  shadow-lg
-                  transition
-                  group-hover:border-[#c9a227]/50
-                "
-              >
-                <span className="text-sm font-black tracking-tight text-[#c9a227]">
-                  SA
-                </span>
-              </div>
-
-              <div>
-                <p className="text-[15px] font-bold tracking-tight text-white">
-                  Sajjad Husain
-                </p>
-
-                <p className="text-[11px] font-medium tracking-[0.16em] text-white/45 uppercase">
-                  Legal Academy
-                </p>
-              </div>
-            </Link>
-
-            {/* Main branding content */}
-            <div className="flex flex-1 flex-col justify-center lg:py-[2vh]">
-              <div className="max-w-[560px]">
-
-                <div className="mb-4 flex items-center gap-3 lg:mb-[2vh]">
-                  {/* <div className="h-px w-10 bg-[#c9a227]" /> */}
-
-                  <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#c9a227]">
-                    Account Security
-                  </span>
-                </div>
-
-                <h1
-                  className="
-                    text-4xl
-                    font-extrabold
-                    leading-[1.08]
-                    tracking-[-0.035em]
-                    text-white
-                    lg:text-[clamp(2rem,5vh,3.75rem)]
-                  "
-                >
-                  Locked out?
-                  <br />
-
-                  <span className="text-[#c9a227]">
-                    Let&apos;s fix that.
-                  </span>
-                </h1>
-
-                <p
-                  className="
-                    mt-5
-                    max-w-[440px]
-                    text-[15px]
-                    leading-7
-                    text-white/55
-                    lg:mt-[2vh]
-                    lg:text-[clamp(13px,1.8vh,16px)]
-                    lg:leading-[1.6]
-                  "
-                >
-                  A verified email and one code are all it takes to get back
-                  into your dashboard — no support ticket required.
-                </p>
-
-                {/* Recovery steps */}
-                <div className="mt-8 space-y-5 border-t border-white/10 pt-6 lg:mt-[3.5vh] lg:space-y-[2vh] lg:pt-[2.5vh]">
-                  {[
-                    {
-                      active: step === "forgot",
-                      done: step === "verify" || step === "reset",
-                      title: "Request a code",
-                      desc: "Enter the email address on your student account.",
-                    },
-                    {
-                      active: step === "verify",
-                      done: step === "reset",
-                      title: "Verify it's you",
-                      desc: "Enter the 6-digit code we send to your inbox.",
-                    },
-                    {
-                      active: step === "reset",
-                      done: false,
-                      title: "Set a new password",
-                      desc: "Choose a new password and you're back in.",
-                    },
-                  ].map((item, i) => (
-                    <div key={item.title} className="flex gap-4">
-                      <span
-                        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-extrabold ${
-                          item.done
-                            ? "bg-[#c9a227] text-[#0d1b34]"
-                            : item.active
-                            ? "border border-[#c9a227] text-[#c9a227]"
-                            : "border border-white/20 text-white/30"
-                        }`}
-                      >
-                        {item.done ? (
-                          <CheckCircle2 size={13} strokeWidth={3} />
-                        ) : (
-                          i + 1
-                        )}
-                      </span>
-
-                      <div>
-                        <p
-                          className={`text-[13px] font-semibold ${
-                            item.active || item.done
-                              ? "text-white/90"
-                              : "text-white/50"
-                          }`}
-                        >
-                          {item.title}
-                        </p>
-
-                        <p className="mt-0.5 text-[12.5px] leading-snug text-white/40">
-                          {item.desc}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-              </div>
+          {/* Top Logo */}
+          <Link href="/academy" className="relative z-10 group inline-flex items-center gap-3.5 w-fit shrink-0">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/5 shadow-md transition-transform group-hover:scale-105">
+              <span className="text-base font-black tracking-tight text-[#C9A227]">
+                SH
+              </span>
             </div>
+            <div>
+              <p className="text-[17px] font-bold tracking-tight text-white leading-tight">
+                Sajjad Husain
+              </p>
+              <p className="text-[11px] font-semibold tracking-[0.18em] text-[#C9A227] uppercase leading-tight mt-0.5">
+                LEGAL ACADEMY
+              </p>
+            </div>
+          </Link>
 
-            {/* Footer */}
-            <div className="flex shrink-0 items-end justify-between gap-6 border-t border-white/10 pt-5 lg:pt-[2vh]">
-              <div className="flex items-center gap-2.5">
-                <ShieldCheck size={14} className="shrink-0 text-[#c9a227]" />
+          {/* Center Content */}
+          <div className="relative z-10 my-auto py-2 xl:py-4 max-w-lg">
+            <h1 className="font-serif text-2xl sm:text-3xl xl:text-[38px] font-bold text-white leading-[1.15] tracking-tight">
+              Account
+              <br />
+              <span className="text-[#C9A227]">Recovery Portal.</span>
+            </h1>
 
-                <div>
-                  <p className="text-[12px] font-medium leading-snug text-white/40">
-                    Every reset request is encrypted end-to-end.
-                  </p>
+            <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-gray-300 font-normal max-w-md">
+              Securely reset your password and regain immediate access to your courses, practical assignments, and live courtroom sessions.
+            </p>
 
-                  {/* <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.18em] text-white/25">
-                    © {new Date().getFullYear()} Sajjad Husain Law Associates
-                  </p> */}
+            {/* Recovery Step Indicators */}
+            <div className="mt-5 pt-4 border-t border-white/15 space-y-2.5">
+              {[
+                {
+                  step: "01",
+                  active: step === "forgot",
+                  done: step === "verify" || step === "reset",
+                  title: "Request a code",
+                  desc: "Enter your registered student email address.",
+                },
+                {
+                  step: "02",
+                  active: step === "verify",
+                  done: step === "reset",
+                  title: "Verify your identity",
+                  desc: "Enter the 6-digit code we send to your email.",
+                },
+                {
+                  step: "03",
+                  active: step === "reset",
+                  done: false,
+                  title: "Set a new password",
+                  desc: "Create a secure password and get back into your portal.",
+                },
+              ].map((item) => (
+                <div
+                  key={item.step}
+                  className={`relative flex items-start gap-3.5 p-3 rounded-xl transition-all ${
+                    item.active
+                      ? "bg-white/[0.09] border border-white/20 shadow-inner"
+                      : "border border-transparent"
+                  }`}
+                >
+                  <span
+                    className={`shrink-0 flex h-8 w-8 items-center justify-center rounded-full text-xs font-mono font-black mt-0.5 transition-all ${
+                      item.done
+                        ? "bg-[#C9A227] text-[#08172D] shadow-md shadow-[#C9A227]/40 ring-2 ring-[#C9A227]/50"
+                        : item.active
+                        ? "bg-[#C9A227] text-[#08172D] shadow-lg shadow-[#C9A227]/60 ring-4 ring-white/30 text-sm"
+                        : "border-2 border-white/50 bg-[#122340] text-white font-bold"
+                    }`}
+                  >
+                    {item.done ? <CheckCircle2 size={17} strokeWidth={3} /> : item.step}
+                  </span>
+                  <div>
+                    <p
+                      className={`text-[15px] font-bold leading-tight ${
+                        item.active || item.done ? "text-white" : "text-white/90"
+                      }`}
+                    >
+                      {item.title}
+                    </p>
+                    <p
+                      className={`mt-1 text-xs leading-relaxed font-normal ${
+                        item.active ? "text-slate-200" : "text-slate-300"
+                      }`}
+                    >
+                      {item.desc}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ))}
+            </div>
+          </div>
 
-              {/* <div className="hidden shrink-0 xl:block h-px w-16 self-end bg-white/10" /> */}
+          {/* Bottom Quote */}
+          <div className="relative z-10 pt-3 xl:pt-4 border-t border-white/10 shrink-0">
+            <div className="flex items-start gap-2.5">
+              <Quote size={15} className="text-[#C9A227] fill-[#C9A227] shrink-0 mt-0.5" />
+              <p className="text-xs sm:text-[12px] italic leading-relaxed text-gray-300 font-light">
+                Every recovery request is protected with student-level security encryption.
+              </p>
             </div>
           </div>
         </section>
 
         {/* =====================================================
-            RIGHT - RECOVERY FLOW
+            RIGHT - RECOVERY FORM (SCROLLABLE, INDEPENDENT SCROLL)
         ====================================================== */}
-        <section
-          className="
-            flex
-            min-h-[100dvh]
-            flex-1
-            bg-white
-            lg:h-full
-            lg:min-h-0
-            lg:overflow-y-auto
-          "
-        >
-          <div className="flex w-full items-center justify-center px-5 py-10 sm:px-8 md:px-10 md:py-12 lg:px-12 lg:py-[2.5vh] xl:px-20">
+        <section className="flex-1 flex flex-col items-center justify-start bg-white px-5 py-6 sm:py-8 md:px-10 min-h-screen lg:min-h-0 lg:h-full overflow-y-auto">
+          <div className="w-full max-w-[420px] pb-8">
 
-            <div className="w-full max-w-[460px]">
-
-              {/* Back */}
+            {/* High-Visibility Back to Home Button */}
+            <div className="mb-3">
               <Link
-                href="/"
-                className="
-                  group
-                  mb-8
-                  inline-flex
-                  items-center
-                  gap-2
-                  text-[13px]
-                  font-semibold
-                  text-[#122340]/65
-                  transition
-                  hover:text-[#122340]
-                  lg:mb-[2.5vh]
-                "
+                href="/academy"
+                className="group inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#0B2242] hover:text-[#8A6100] transition-colors"
               >
-                <ArrowLeft
-                  size={16}
-                  className="transition-transform group-hover:-translate-x-1"
-                />
-
-                Back to Home
+                <div className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-[#8A6100]/10 flex items-center justify-center transition-colors">
+                  <ArrowLeft size={15} className="text-[#0B2242] group-hover:text-[#8A6100] transition-transform group-hover:-translate-x-0.5" />
+                </div>
+                <span>Back to Home</span>
               </Link>
+            </div>
 
-              {/* Mobile logo */}
-              <div className="mb-4 lg:hidden">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="
-                      flex
-                      h-10
-                      w-10
-                      items-center
-                      justify-center
-                      rounded-xl
-                      bg-[#122340]
-                    "
+            {/* Header (No mobile logo badge per design rule) */}
+            <div className="mb-3">
+              <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#FDF6E2] text-[#8A6100] border border-[#E8CD82] text-[11px] font-black uppercase tracking-wider mb-2">
+                {stepMeta[step].eyebrow}
+              </span>
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0B2242] tracking-tight">
+                {stepMeta[step].heading}
+              </h2>
+              <p className="mt-0.5 text-xs sm:text-sm text-slate-600 leading-normal font-normal">
+                {step === "verify" ? (
+                  <>
+                    We&apos;ve sent a 6-digit verification code to{" "}
+                    <span className="font-semibold text-[#0B2242]">{email}</span>.
+                  </>
+                ) : (
+                  stepMeta[step].sub
+                )}
+              </p>
+            </div>
+
+            {/* STEP 1: REQUEST OTP */}
+            {step === "forgot" && (
+              <form onSubmit={handleSendOtp} className="space-y-3">
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-[11px] font-extrabold uppercase tracking-wider text-[#0B2242] mb-1"
                   >
-                    <span className="text-xs font-black text-[#c9a227]">
-                      SA
-                    </span>
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-bold text-[#122340]">
-                      Sajjad Husain
-                    </p>
-
-                    <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-[#122340]/40">
-                      Legal Academy
-                    </p>
+                    EMAIL ADDRESS
+                  </label>
+                  <div className="relative group">
+                    <Mail
+                      size={17}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#8A6100] transition-colors pointer-events-none"
+                    />
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={loading}
+                      autoComplete="email"
+                      placeholder="student@example.com"
+                      className="w-full h-10.5 pl-10 pr-3.5 rounded-xl border-2 border-slate-300 bg-slate-50/50 text-sm font-semibold text-[#0B2242] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#B8860B] focus:bg-white focus:ring-4 focus:ring-[#B8860B]/15 transition-all shadow-2xs hover:border-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
                   </div>
                 </div>
-              </div>
 
-              {/* Icon badge for verify / reset steps */}
-              {step !== "forgot" && (
-                <div
-                  className="
-                    mb-6
-                    flex
-                    h-10
-                    w-10
-                    items-center
-                    justify-center
-                    rounded-md
-                    border
-                    border-[#122340]/10
-                    bg-[#122340]/5
-                    lg:mb-[2vh]
-                  "
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-10.5 bg-[#0B2242] hover:bg-[#07172C] text-white rounded-xl text-sm font-extrabold tracking-wide transition-all shadow-md hover:shadow-lg cursor-pointer flex items-center justify-center gap-2 mt-1 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {step === "verify" ? (
-                    <Mail size={15} className="text-[#c9a227]" />
-                  ) : (
-                    <KeyRound size={20} className="text-[#c9a227]" />
-                  )}
-                </div>
-              )}
-
-              {/* Heading */}
-              <div className="mb-8 lg:mb-[2.5vh]">
-                <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a227]">
-                  {stepMeta[step].eyebrow}
-                </p>
-
-                <h2
-                  className="
-                    text-3xl
-                    font-extrabold
-                    tracking-[-0.025em]
-                    text-[#122340]
-                    sm:text-4xl
-                    lg:text-[clamp(1.5rem,3.8vh,2.25rem)]
-                  "
-                >
-                  {stepMeta[step].heading}
-                </h2>
-
-                <p className="mt-3 text-sm leading-6 text-[#122340]/70 lg:mt-[1vh]">
-                  {step === "verify" ? (
+                  {loading ? (
                     <>
-                      We&apos;ve sent a 6-digit verification code to{" "}
-                      <span className="font-semibold text-[#122340]">
-                        {email}
-                      </span>
-                      .
+                      <Loader2 size={17} className="animate-spin" />
+                      <span>Sending code...</span>
                     </>
                   ) : (
-                    stepMeta[step].sub
+                    "Send Verification Code"
                   )}
-                </p>
-              </div>
+                </button>
 
-              {/* STEP 1: REQUEST OTP */}
-              {step === "forgot" && (
-                <>
-                  <form
-                    onSubmit={handleSendOtp}
-                    className="space-y-4 lg:space-y-[1.8vh]"
+                <div className="mt-3 text-center">
+                  <Link
+                    href="/academy/auth/login"
+                    className="text-xs sm:text-[13px] font-extrabold text-[#0B2242] underline decoration-[#B8860B] decoration-2 underline-offset-4 hover:text-[#8A6100] transition-colors"
                   >
-                    <div>
-                      <label
-                        htmlFor="email"
-                        className="
-                          mb-2
-                          block
-                          text-[11px]
-                          font-bold
-                          uppercase
-                          tracking-[0.12em]
-                          text-[#122340]
-                          lg:mb-[0.7vh]
-                        "
-                      >
-                        Email Address
-                      </label>
+                    Back to Login
+                  </Link>
+                </div>
+              </form>
+            )}
 
-                      <div className="group relative">
-                        <Mail
-                          size={18}
-                          className="
-                            pointer-events-none
-                            absolute
-                            left-4
-                            top-1/2
-                            -translate-y-1/2
-                            text-[#122340]/30
-                            transition
-                            group-focus-within:text-[#c9a227]
-                          "
-                        />
+            {/* STEP 2: VERIFY OTP */}
+            {step === "verify" && (
+              <form onSubmit={handleVerifyOtp} className="space-y-4">
+                <div className="flex justify-between gap-2 sm:gap-3">
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <input
+                      key={i}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={otp[i] || ""}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "").slice(0, 1);
+                        const chars = otp.split("");
+                        chars[i] = value;
+                        setOtp(chars.join(""));
+                        if (value && i < 5) {
+                          const nextInput = document.querySelector<HTMLInputElement>(
+                            `input[data-index="${i + 1}"]`
+                          );
+                          nextInput?.focus();
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Backspace" && !otp[i] && i > 0) {
+                          const prevInput = document.querySelector<HTMLInputElement>(
+                            `input[data-index="${i - 1}"]`
+                          );
+                          prevInput?.focus();
+                        }
+                      }}
+                      data-index={i}
+                      className="h-11 w-11 sm:h-12 sm:w-12 rounded-xl border-2 border-slate-300 bg-slate-50/50 text-center text-lg font-bold text-[#0B2242] outline-none transition-all focus:border-[#B8860B] focus:bg-white focus:ring-4 focus:ring-[#B8860B]/20 shadow-2xs hover:border-slate-400"
+                    />
+                  ))}
+                </div>
 
-                        <input
-                          id="email"
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
-                          disabled={loading}
-                          autoComplete="email"
-                          placeholder="student@example.com"
-                          className="
-                            h-[52px]
-                            w-full
-                            rounded-xl
-                            border
-                            border-[#122340]/10
-                            bg-[#f8f9fb]
-                            pl-11
-                            pr-4
-                            text-sm
-                            font-medium
-                            text-[#122340]
-                            outline-none
-                            transition
-                            placeholder:text-[#122340]/30
-                            focus:border-[#c9a227]/60
-                            focus:bg-white
-                            focus:ring-4
-                            focus:ring-[#c9a227]/10
-                            disabled:cursor-not-allowed
-                            disabled:opacity-60
-                            lg:h-[clamp(44px,6vh,54px)]
-                          "
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="
-                        mt-2
-                        flex
-                        h-[52px]
-                        w-full
-                        items-center
-                        justify-center
-                        gap-2
-                        rounded-xl
-                        bg-[#122340]
-                        text-sm
-                        font-bold
-                        text-white
-                        
-                        transition-all
-                        
-                        hover:bg-[#0e1d36]
-                        
-                        active:translate-y-0
-                        disabled:cursor-not-allowed
-                        disabled:opacity-60
-                        disabled:hover:translate-y-0
-                        lg:h-[clamp(44px,6vh,54px)]
-                      "
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 size={19} className="animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        "Request OTP"
-                      )}
-                    </button>
-                  </form>
-
-                  <div className="mt-8 text-center lg:mt-[2.5vh]">
-                    <Link
-                      href="/auth/login"
-                      className="
-                        text-sm
-                        font-bold
-                        text-[#122340]
-                        underline
-                        decoration-[#c9a227]/40
-                        underline-offset-4
-                        transition
-                        hover:text-[#c9a227]
-                        hover:decoration-[#c9a227]
-                      "
-                    >
-                      Back to Login
-                    </Link>
-                  </div>
-                </>
-              )}
-
-              {/* STEP 2: VERIFY OTP */}
-              {step === "verify" && (
-                <form
-                  onSubmit={handleVerifyOtp}
-                  className="space-y-6 lg:space-y-[2.5vh]"
-                >
-                  <div className="flex justify-between gap-2 sm:gap-3">
-                    {[0, 1, 2, 3, 4, 5].map((i) => (
-                      <input
-                        key={i}
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={1}
-                        value={otp[i] || ""}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "").slice(0, 1);
-                          const chars = otp.split("");
-                          chars[i] = value;
-                          setOtp(chars.join(""));
-                          if (value && i < 5) {
-                            const nextInput = document.querySelector<HTMLInputElement>(
-                              `input[data-index="${i + 1}"]`
-                            );
-                            nextInput?.focus();
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Backspace" && !otp[i] && i > 0) {
-                            const prevInput = document.querySelector<HTMLInputElement>(
-                              `input[data-index="${i - 1}"]`
-                            );
-                            prevInput?.focus();
-                          }
-                        }}
-                        data-index={i}
-                        className="
-                          h-12
-                          w-10
-                          rounded-xl
-                          border
-                          border-[#122340]/10
-                          bg-[#f8f9fb]
-                          text-center
-                          text-xl
-                          font-bold
-                          text-[#122340]
-                          outline-none
-                          transition
-                          focus:border-[#c9a227]/60
-                          focus:bg-white
-                          focus:ring-4
-                          focus:ring-[#c9a227]/10
-                          sm:h-14
-                          sm:w-12
-                        "
-                      />
-                    ))}
-                  </div>
-
-                  <div className="flex flex-col items-center gap-4">
-                    <button
-                      type="submit"
-                      disabled={verifyLoading || resendLoading || otp.length < 6}
-                      className="
-                        flex
-                        h-[52px]
-                        w-full
-                        items-center
-                        justify-center
-                        gap-2
-                        rounded-xl
-                        bg-[#122340]
-                        text-sm
-                        font-bold
-                        text-white
-                        
-                        transition-all
-                        
-                        hover:bg-[#0e1d36]
-                        disabled:cursor-not-allowed
-                        disabled:opacity-50
-                        disabled:hover:translate-y-0
-                        lg:h-[clamp(44px,6vh,54px)]
-                      "
-                    >
-                      {verifyLoading ? (
-                        <>
-                          <Loader2 size={19} className="animate-spin" />
-                          Verifying...
-                        </>
-                      ) : (
-                        "Verify Code"
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleResendWithTimer}
-                      disabled={resendLoading || verifyLoading || countdown > 0}
-                      className="
-                        text-sm
-                        font-semibold
-                        text-[#122340]/90
-                        transition
-                        
-                        disabled:cursor-not-allowed
-                        disabled:opacity-60
-                      "
-                    >
-                      {resendLoading
-                        ? "Sending..."
-                        : countdown > 0
-                        ? `Resend code in 0:${countdown.toString().padStart(2, "0")}`
-                        : (
-                            <>
-                              Didn't receive code?{" "}
-                              <span className="text-[#c9a227] hover:underline">Resend</span>
-                            </>
-                          )}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {/* STEP 3: RESET PASSWORD */}
-              {step === "reset" && (
-                <form
-                  onSubmit={handleReset}
-                  className="space-y-4 lg:space-y-[1.8vh]"
-                >
-                  <div>
-                    <label
-                      htmlFor="newPassword"
-                      className="
-                        mb-2
-                        block
-                        text-[11px]
-                        font-bold
-                        uppercase
-                        tracking-[0.12em]
-                        text-[#122340]
-                        lg:mb-[0.7vh]
-                      "
-                    >
-                      New Password
-                    </label>
-
-                    <div className="group relative">
-                      <Lock
-                        size={18}
-                        className="
-                          pointer-events-none
-                          absolute
-                          left-4
-                          top-1/2
-                          -translate-y-1/2
-                          text-[#122340]/30
-                          transition
-                          group-focus-within:text-[#c9a227]
-                        "
-                      />
-
-                      <input
-                        id="newPassword"
-                        type={showNewPassword ? "text" : "password"}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        required
-                        disabled={loading}
-                        autoComplete="new-password"
-                        placeholder="Enter new password"
-                        className="
-                          h-[52px]
-                          w-full
-                          rounded-xl
-                          border
-                          border-[#122340]/10
-                          bg-[#f8f9fb]
-                          pl-11
-                          pr-12
-                          text-sm
-                          font-medium
-                          text-[#122340]
-                          outline-none
-                          transition
-                          placeholder:text-[#122340]/30
-                          focus:border-[#c9a227]/60
-                          focus:bg-white
-                          focus:ring-4
-                          focus:ring-[#c9a227]/10
-                          disabled:cursor-not-allowed
-                          disabled:opacity-60
-                          lg:h-[clamp(44px,6vh,54px)]
-                        "
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() => setShowNewPassword((prev) => !prev)}
-                        aria-label={showNewPassword ? "Hide password" : "Show password"}
-                        className="
-                          absolute
-                          right-4
-                          top-1/2
-                          -translate-y-1/2
-                          text-[#122340]/35
-                          transition
-                          hover:text-[#122340]
-                        "
-                      >
-                        {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="confirmPassword"
-                      className="
-                        mb-2
-                        block
-                        text-[11px]
-                        font-bold
-                        uppercase
-                        tracking-[0.12em]
-                        text-[#122340]
-                        lg:mb-[0.7vh]
-                      "
-                    >
-                      Confirm Password
-                    </label>
-
-                    <div className="group relative">
-                      <Lock
-                        size={18}
-                        className="
-                          pointer-events-none
-                          absolute
-                          left-4
-                          top-1/2
-                          -translate-y-1/2
-                          text-[#122340]/30
-                          transition
-                          group-focus-within:text-[#c9a227]
-                        "
-                      />
-
-                      <input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        disabled={loading}
-                        autoComplete="new-password"
-                        placeholder="Re-enter new password"
-                        className="
-                          h-[52px]
-                          w-full
-                          rounded-xl
-                          border
-                          border-[#122340]/10
-                          bg-[#f8f9fb]
-                          pl-11
-                          pr-12
-                          text-sm
-                          font-medium
-                          text-[#122340]
-                          outline-none
-                          transition
-                          placeholder:text-[#122340]/30
-                          focus:border-[#c9a227]/60
-                          focus:bg-white
-                          focus:ring-4
-                          focus:ring-[#c9a227]/10
-                          disabled:cursor-not-allowed
-                          disabled:opacity-60
-                          lg:h-[clamp(44px,6vh,54px)]
-                        "
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword((prev) => !prev)}
-                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                        className="
-                          absolute
-                          right-4
-                          top-1/2
-                          -translate-y-1/2
-                          text-[#122340]/35
-                          transition
-                          hover:text-[#122340]
-                        "
-                      >
-                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-
+                <div className="flex flex-col items-center gap-3">
                   <button
                     type="submit"
-                    disabled={loading}
-                    className="
-                      mt-2
-                      flex
-                      h-[52px]
-                      w-full
-                      items-center
-                      justify-center
-                      gap-2
-                      rounded-xl
-                      bg-[#122340]
-                      text-sm
-                      font-bold
-                      text-white
-                      
-                      transition-all
-                     
-                      hover:bg-[#0e1d36]
-                      
-                      active:translate-y-0
-                      disabled:cursor-not-allowed
-                      disabled:opacity-60
-                      disabled:hover:translate-y-0
-                      lg:h-[clamp(44px,6vh,54px)]
-                    "
+                    disabled={verifyLoading || resendLoading || otp.length < 6}
+                    className="w-full h-10.5 bg-[#0B2242] hover:bg-[#07172C] text-white rounded-xl text-sm font-extrabold tracking-wide transition-all shadow-md hover:shadow-lg cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {loading ? (
+                    {verifyLoading ? (
                       <>
-                        <Loader2 size={19} className="animate-spin" />
-                        Resetting...
+                        <Loader2 size={17} className="animate-spin" />
+                        <span>Verifying code...</span>
                       </>
                     ) : (
-                      <>
-                        Reset Password
-                        {/* <CheckCircle2 size={18} className="text-[#c9a227]" /> */}
-                      </>
+                      "Verify Code"
                     )}
                   </button>
-                </form>
-              )}
 
-              {/* Small footer */}
-              <p className="mt-8 text-center text-[10px] font-medium text-[#122340]/55 lg:mt-[2vh]">
-                Secure access to Sajjad Husain Legal Academy
-              </p>
+                  <button
+                    type="button"
+                    onClick={handleResendWithTimer}
+                    disabled={resendLoading || verifyLoading || countdown > 0}
+                    className="text-xs font-bold text-slate-600 transition-colors hover:text-[#8A6100] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {resendLoading
+                      ? "Sending..."
+                      : countdown > 0
+                      ? `Resend code in 0:${countdown.toString().padStart(2, "0")}`
+                      : (
+                        <>
+                          Didn&apos;t receive code?{" "}
+                          <span className="text-[#8A6100] font-bold underline decoration-[#B8860B] decoration-2 hover:text-[#6D4C00]">Resend</span>
+                        </>
+                      )}
+                  </button>
 
+                  <button
+                    type="button"
+                    onClick={() => setStep("forgot")}
+                    className="text-xs font-semibold text-slate-500 hover:text-[#0B2242] transition-colors"
+                  >
+                    Change email address
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* STEP 3: RESET PASSWORD */}
+            {step === "reset" && (
+              <form onSubmit={handleReset} className="space-y-3">
+                <div>
+                  <label
+                    htmlFor="newPassword"
+                    className="block text-[11px] font-extrabold uppercase tracking-wider text-[#0B2242] mb-1"
+                  >
+                    NEW PASSWORD
+                  </label>
+                  <div className="relative group">
+                    <Lock
+                      size={17}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#8A6100] transition-colors pointer-events-none"
+                    />
+                    <input
+                      id="newPassword"
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                      autoComplete="new-password"
+                      placeholder="Enter new password"
+                      className="w-full h-10.5 pl-10 pr-11 rounded-xl border-2 border-slate-300 bg-slate-50/50 text-sm font-semibold text-[#0B2242] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#B8860B] focus:bg-white focus:ring-4 focus:ring-[#B8860B]/15 transition-all shadow-2xs hover:border-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((prev) => !prev)}
+                      aria-label={showNewPassword ? "Hide password" : "Show password"}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#0B2242] transition-colors cursor-pointer"
+                    >
+                      {showNewPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-[11px] font-extrabold uppercase tracking-wider text-[#0B2242] mb-1"
+                  >
+                    CONFIRM PASSWORD
+                  </label>
+                  <div className="relative group">
+                    <Lock
+                      size={17}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#8A6100] transition-colors pointer-events-none"
+                    />
+                    <input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                      autoComplete="new-password"
+                      placeholder="Re-enter new password"
+                      className="w-full h-10.5 pl-10 pr-11 rounded-xl border-2 border-slate-300 bg-slate-50/50 text-sm font-semibold text-[#0B2242] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#B8860B] focus:bg-white focus:ring-4 focus:ring-[#B8860B]/15 transition-all shadow-2xs hover:border-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#0B2242] transition-colors cursor-pointer"
+                    >
+                      {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-10.5 bg-[#0B2242] hover:bg-[#07172C] text-white rounded-xl text-sm font-extrabold tracking-wide transition-all shadow-md hover:shadow-lg cursor-pointer flex items-center justify-center gap-2 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 size={17} className="animate-spin" />
+                      <span>Resetting password...</span>
+                    </>
+                  ) : (
+                    "Reset Password"
+                  )}
+                </button>
+              </form>
+            )}
+
+            {/* Security Footnote */}
+            <div className="mt-4 flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600">
+              <ShieldCheck size={14} className="text-[#A67C00]" />
+              <span>Secure access to Sajjad Husain Legal Academy</span>
             </div>
+
           </div>
         </section>
       </div>
     </main>
   );
 }
-// Reads the query string via useSearchParams, which opts the component out of
-// static rendering unless it sits inside a Suspense boundary. Without this the
-// whole route falls back to per-request rendering and can never be CDN-cached.
+
 export default function AcademyForgotPassword(props: any) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<main className="min-h-screen w-full bg-white" />}>
       <AcademyForgotPasswordContent {...props} />
     </Suspense>
   );

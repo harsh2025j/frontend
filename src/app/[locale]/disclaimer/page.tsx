@@ -242,9 +242,8 @@ export default function Disclaimer() {
                                     <div className="flex flex-col">
                                         <span className="text-xs text-gray-400 uppercase tracking-wider mb-1">Office</span>
                                         <span className="text-sm font-medium leading-relaxed">
-                                            Block-C, High Court, Advocates Chamber.515,<br />
-                                            Lucknow - Ayodhya Rd, Gomti Nagar,<br />
-                                            Lucknow 226010
+                                            Lucknow – Ayodhya Road, Gomti Nagar,<br />
+                                            Lucknow, Uttar Pradesh – 226010, India
                                         </span>
                                     </div>
                                 </div>

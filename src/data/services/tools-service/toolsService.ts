@@ -22,16 +22,26 @@ export const toolsService = {
     return res.data?.data || res.data;
   },
 
-  searchPrecedents: async (query: string, court?: string, year?: string): Promise<Precedent[]> => {
+  /**
+   * Returns the precedents together with `source`, which says whether the results
+   * came from the official precedent index or from the LLM fallback. The caller is
+   * expected to show that distinction — an AI-suggested citation must never be
+   * presented as a verified one.
+   */
+  searchPrecedents: async (
+    query: string,
+    court?: string,
+    year?: string,
+  ): Promise<{ precedents: Precedent[]; source: string }> => {
     const res = await apiClient.post(API_ENDPOINTS.TOOLS.RESEARCH, { query, court, year });
     const payload = res.data?.data || res.data;
     if (payload?.precedents && Array.isArray(payload.precedents)) {
-      return payload.precedents;
+      return { precedents: payload.precedents, source: payload.source || '' };
     }
     if (Array.isArray(payload)) {
-      return payload;
+      return { precedents: payload, source: '' };
     }
-    return [];
+    return { precedents: [], source: '' };
   },
 
   getJudgmentDetails: async (identifier: string | number): Promise<JudgmentDetails> => {
@@ -107,6 +117,7 @@ export const toolsService = {
 
     const res = await apiClient.post(API_ENDPOINTS.TOOLS.HEALTH_CHECK, formData, {
       headers: { "Content-Type": "multipart/form-data" },
+      timeout: 120000,
     });
     const data = res.data?.data || res.data;
     return data?.report || data;
@@ -126,6 +137,7 @@ export const toolsService = {
 
     const res = await apiClient.post(API_ENDPOINTS.TOOLS.TRANSLATION, formData, {
       headers: { "Content-Type": "multipart/form-data" },
+      timeout: 120000,
     });
     const data = res.data?.data || res.data;
     return data?.result || data;
@@ -156,10 +168,11 @@ export const toolsService = {
 
   generateLegalDocumentDraft: async (payload: {
     template: string;
+    templateId?: string;
     category: string;
     situation: string;
     extractedData: Record<string, string>;
-  }): Promise<{ content: string }> => {
+  }): Promise<{ content: string; source?: string }> => {
     const res = await apiClient.post(API_ENDPOINTS.TOOLS.DOCUMENTS_GENERATE, payload);
     const data = res.data?.data || res.data;
     return data;
@@ -192,6 +205,38 @@ export const toolsService = {
     } catch {
       return false;
     }
+  },
+
+  getTemplateCategories: async () => {
+    try {
+      const res = await apiClient.get(API_ENDPOINTS.TOOLS.TEMPLATES_CATEGORIES);
+      return res.data?.data?.categories || res.data?.categories || [];
+    } catch {
+      return [];
+    }
+  },
+
+  getTemplates: async (params?: { category?: string; subcategory?: string; q?: string; page?: number; limit?: number }) => {
+    try {
+      const res = await apiClient.get(API_ENDPOINTS.TOOLS.TEMPLATES, { params });
+      return res.data?.data || res.data;
+    } catch {
+      return { success: false, templates: [] };
+    }
+  },
+
+  getTemplateById: async (id: string) => {
+    try {
+      const endpoint = API_ENDPOINTS.TOOLS.TEMPLATE_BY_ID.replace(":id", encodeURIComponent(id));
+      const res = await apiClient.get(endpoint);
+      return res.data?.data?.template || res.data?.template || null;
+    } catch {
+      return null;
+    }
+  },
+
+  getTemplatePdfUrl: (id: string): string => {
+    return `${API_BASE_URL.replace(/\/$/, '')}/tools/documents/templates/${encodeURIComponent(id)}/pdf`;
   },
 };
 

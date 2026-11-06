@@ -1,51 +1,46 @@
-'use client';
-
 import React from 'react';
-import { useRouter, usePathname, useParams } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import type { Metadata } from 'next';
+import ToolsShell from '@/components/tools/ToolsShell';
+
+export const metadata: Metadata = {
+  title: 'Judiciary AI Tools Suite — Indian Law & Court Intelligence | Sajjad Husain Law Associates',
+  description:
+    'Institutional-grade legal AI suite for Indian courts: Precedents Research over 50,000+ judgments, Court Pleadings Drafter, Order XXIII Rule 3 CPC Mediation Term Sheets, 3-Layer Contract Risk Audit, and 22-Language Vernacular OCR Translation.',
+  keywords: [
+    'Legal AI India',
+    'Judiciary AI Tools',
+    'Supreme Court Precedent Research',
+    'AI Legal Drafting India',
+    'Order XXIII Rule 3 CPC Mediation',
+    'Contract Risk Audit Tool',
+    'Legal Vernacular Translation',
+    'Sajjad Husain Law Associates Tools',
+    'Court Pleadings Drafter',
+  ],
+  alternates: {
+    canonical: 'https://www.sajjadhusainlawassociates.com/en/tools',
+    languages: {
+      en: 'https://www.sajjadhusainlawassociates.com/en/tools',
+      hi: 'https://www.sajjadhusainlawassociates.com/hi/tools',
+    },
+  },
+  openGraph: {
+    title: 'Judiciary AI Tools Suite — Indian Court Intelligence | Sajjad Husain Law Associates',
+    description:
+      'Domain-specific judicial intelligence tools built for Indian courts: Precedent Research, Court Pleadings Drafter, Mediation Term Sheets, Contract Risk Audit, and Vernacular Translation.',
+    url: 'https://www.sajjadhusainlawassociates.com/en/tools',
+    siteName: 'Sajjad Husain Law Associates',
+    locale: 'en_IN',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Judiciary AI Tools Suite — Sajjad Husain Law Associates',
+    description:
+      'AI legal intelligence tools for Indian courts: Precedents Research, Court Drafting, Mediation, Contract Audit, and Vernacular Translation.',
+  },
+};
 
 export default function ToolsLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useParams();
-  const locale = (params?.locale as string) || 'en';
-
-  const handleBack = () => {
-    // If browser has history, use router.back() to return to previous page where user came from
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      router.back();
-    } else {
-      // Graceful dynamic fallback if opened directly without prior history
-      const isHub = pathname === `/${locale}/tools` || pathname === `/tools`;
-      router.push(isHub ? `/${locale}` : `/${locale}/tools`);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Top Left Navigation Bar with dynamic Back button aligned with base content */}
-      <div className="border-b border-[#E2E8F0]/70 bg-white/80 backdrop-blur-xs">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={handleBack}
-            className="group inline-flex items-center gap-2 rounded-lg border border-[#CBD5E1] bg-white px-3.5 py-1.5 text-xs font-bold text-[#0B2242] shadow-2xs hover:bg-[#F1F5F9] hover:border-[#0B2242] transition-all cursor-pointer"
-            title="Go back to previous page"
-          >
-            <ArrowLeft className="size-4 text-[#64748B] group-hover:text-[#0B2242] group-hover:-translate-x-1 transition-transform" />
-            <span>Back</span>
-          </button>
-
-          <div className="flex items-center gap-2 text-xs font-mono text-[#64748B]">
-            <span className="hidden sm:inline">Sajjad Husain Law Associates</span>
-            <span className="hidden sm:inline text-[#CBD5E1]">·</span>
-            <span className="font-semibold text-[#0B2242]">Judiciary Workspace</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Base Content */}
-      <main>{children}</main>
-    </div>
-  );
+  return <ToolsShell>{children}</ToolsShell>;
 }

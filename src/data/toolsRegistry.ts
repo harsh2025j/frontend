@@ -6,7 +6,7 @@ export interface ToolItem {
   tagline: string;
   description: string;
   category: 'Legal Research' | 'Drafting & Pleadings' | 'Alternative Dispute Resolution' | 'Document Review' | 'Judicial Translation' | 'Court Analytics';
-  iconName: 'Search' | 'FileText' | 'Gavel' | 'FileCheck2' | 'Languages' | 'Scale' | 'BookOpen' | 'ShieldAlert' | 'Briefcase';
+  iconName: 'Search' | 'FileText' | 'Gavel' | 'FileCheck2' | 'Languages' | 'Scale' | 'BookOpen' | 'ShieldAlert' | 'ShieldCheck' | 'Briefcase';
   badge: string;
   badgeVariant?: 'primary' | 'gold' | 'emerald' | 'amber';
   status: 'active' | 'beta' | 'coming_soon';
@@ -26,8 +26,8 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     tagline: '50k+ Supreme Court & High Court Judgments, Ratio Decidendi & Direct Law Reports',
     description: 'Instant citation and judicial ratio retrieval with authentic neutral citations, coram composition, and live Supreme Court official law report reader.',
     category: 'Legal Research',
-    iconName: 'Search',
-    badge: 'Supreme Court SCR Index',
+    iconName: 'BookOpen',
+    badge: '50k+ SCR Precedents',
     badgeVariant: 'primary',
     status: 'active',
     features: [
@@ -44,13 +44,13 @@ export const TOOLS_REGISTRY: ToolItem[] = [
   {
     id: 'drafting',
     slug: 'drafting',
-    title: 'AI Legal Drafting Studio for Indian Courts',
-    shortTitle: 'Legal Drafting',
-    tagline: 'Disciplined 3-Step Drafting for Petitions, Appeals, Notices & Pleadings',
+    title: 'Court Pleadings & Petitions Drafter',
+    shortTitle: 'Court Pleadings',
+    tagline: 'Disciplined Drafting for Petitions, Appeals, Bail & Pleadings',
     description: 'Convert matter facts, statutory grounds, and prayers into a court-ready first draft for Article 226/32 Writ Petitions, SLPs, and Commercial Suits.',
     category: 'Drafting & Pleadings',
-    iconName: 'FileText',
-    badge: 'High Court & SC Formats',
+    iconName: 'Scale',
+    badge: 'Court Filing Formats',
     badgeVariant: 'gold',
     status: 'active',
     features: [
@@ -59,7 +59,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
       'Substantiated grounds linking facts directly to binding judicial ratios',
       'Conforming prayer clauses, interim stay applications & verification deeds'
     ],
-    primaryAction: 'Launch Drafting Studio',
+    primaryAction: 'Draft Court Pleading',
     route: '/tools/drafting',
     benchmarkTime: '10–15 mins',
     statBadge: '99% Structural Accuracy'
@@ -73,39 +73,39 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     description: 'Structure commercial disputes, unpaid claims, and contested liabilities into a balanced, judicially enforceable 5-part settlement term sheet.',
     category: 'Alternative Dispute Resolution',
     iconName: 'Gavel',
-    badge: 'Order XXIII R3 CPC',
-    badgeVariant: 'emerald',
-    status: 'active',
+    badge: 'Mediation Act 2023',
+    badgeVariant: 'gold',
+    status: 'coming_soon',
     features: [
       '5-part enforceable settlement agreement complying with the Mediation Act 2023',
       'Structured payment tranches, grace periods, and commercial default interest',
       'Comprehensive mutual releases, non-disparagement, and court withdrawal terms',
       'Order XXIII Rule 3 CPC compromise decree template with advocate verification'
     ],
-    primaryAction: 'Build Term Sheet',
-    route: '/tools/mediation',
-    benchmarkTime: '5 minutes',
-    statBadge: 'Statutory Enforceability'
+    primaryAction: 'Coming Soon',
+    route: '/tools/settlement',
+    benchmarkTime: 'In Development',
+    statBadge: 'Coming Soon'
   },
   {
     id: 'documents',
     slug: 'documents',
-    title: 'Legal Documents Studio from Proven Templates',
-    shortTitle: 'Legal Documents',
+    title: 'Legal Contracts & Deeds Library',
+    shortTitle: 'Contracts & Deeds',
     tagline: 'Draft from 2,176+ Proven Indian Legal Templates Across 58 Categories',
-    description: 'Pick the kind of document, choose a template, provide your situation — the draft follows the template structure and wording with your details in place and [● label] blanks.',
+    description: 'Browse 2,176+ proven Indian legal drafts, deeds, and commercial agreements with statutory clause guides and advocate-reviewed wording.',
     category: 'Drafting & Pleadings',
     iconName: 'FileText',
-    badge: '2,176 Templates · 58 Categories',
+    badge: '2,176 Templates',
     badgeVariant: 'gold',
     status: 'active',
     features: [
       'Comprehensive library of 2,176+ templates across 58 Indian legal categories',
-      'Conversational AI refinement chat extracting parties, property, and dispute details',
+      'Interactive clause assistant extracting parties, property, and dispute details',
       'Live Intelligence Inspector with "What I have" and "Still needed" guidance',
       'High Court & standard legal document editor with interactive [● label] blanks'
     ],
-    primaryAction: 'Draft from Template',
+    primaryAction: 'Browse Templates',
     route: '/tools/documents',
     benchmarkTime: '< 2 minutes',
     statBadge: '2,176 Templates'
@@ -118,7 +118,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     tagline: 'Automated Diagnostic Audit for Contracts, Agreements & Pleadings',
     description: 'A 3-layer diagnostic audit spotting missing arbitration seats, uncapped indemnities, unilateral terminations, and statutory compliance traps.',
     category: 'Document Review',
-    iconName: 'FileCheck2',
+    iconName: 'ShieldAlert',
     badge: '3-Layer Risk Audit',
     badgeVariant: 'amber',
     status: 'active',
@@ -142,7 +142,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     description: 'Translate vernacular court orders, police FIRs, revenue records, and sale deeds into structured judicial English while preserving citations and sections.',
     category: 'Judicial Translation',
     iconName: 'Languages',
-    badge: '22 Eighth Schedule Languages',
+    badge: '22 Official Languages',
     badgeVariant: 'primary',
     status: 'active',
     features: [

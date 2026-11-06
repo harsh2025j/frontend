@@ -1,286 +1,703 @@
 "use client";
 
-import { Megaphone, Target, Users, TrendingUp, Award, BarChart, Mail, Phone } from "lucide-react";
+import React, { useState } from "react";
+import {
+  Megaphone,
+  Target,
+  Users,
+  TrendingUp,
+  Award,
+  BarChart,
+  Mail,
+  Phone,
+  CheckCircle2,
+  ArrowRight,
+  ShieldCheck,
+  Building2,
+  Eye,
+  MousePointerClick,
+  MessageSquare,
+  Sparkles,
+} from "lucide-react";
 import { useDocTitle } from "@/hooks/useDocTitle";
+import { Link } from "@/i18n/routing";
+import apiClient from "@/data/services/apiConfig/apiClient";
+import { API_ENDPOINTS } from "@/data/services/apiConfig/apiContants";
 
 export default function AdvertiseWithUs() {
-    useDocTitle("Advertise | Sajjad Husain Law Associates");
+  useDocTitle("Advertise With Us | Sajjad Husain Law Associates");
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br  from-slate-50 via-blue-50 to-indigo-50">
-            {/* Hero Section */}
-            <div className="relative bg-gradient-to-r from-[#122340] via-[#1A73E8] to-[#122340] text-white py-20 lg:py-32 px-4 overflow-hidden">
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-10 left-10 w-48 h-48 bg-white rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-10 right-10 w-64 h-64 bg-blue-300 rounded-full blur-3xl"></div>
-                </div>
+  const [formState, setFormState] = useState({
+    name: "",
+    organization: "",
+    email: "",
+    phone: "",
+    adFormat: "Banner Advertisements",
+    budget: "₹15,000 - ₹35,000",
+    message: "",
+  });
 
-                <div className="container mx-auto max-w-6xl relative z-10">
-                    <div className="flex flex-col items-center justify-center gap-6 mb-6">
-                        <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl animate-pulse">
-                            <Megaphone className="w-16 h-16" />
-                        </div>
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-center">
-                            Advertise With Us
-                        </h1>
-                    </div>
-                    <p className="text-xl md:text-2xl text-center text-blue-100 max-w-3xl mx-auto">
-                        Reach a Targeted Audience of Legal Professionals and Clients
-                    </p>
-                </div>
-            </div>
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-            {/* Main Content */}
-            <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16">
-                {/* Introduction */}
-                <div className="bg-white rounded-2xl shadow-xl p-10 mb-8 border border-blue-100 hover:shadow-2xl transition-all duration-300">
-                    <div className="flex items-start gap-6">
-                        <div className="flex-shrink-0">
-                            <div className="bg-gradient-to-br from-[#1A73E8] to-[#122340] p-4 rounded-xl">
-                                <Target className="w-10 h-10 text-white" />
-                            </div>
-                        </div>
-                        <div className="flex-1">
-                            <h2 className="text-4xl font-bold text-[#122340] mb-6">Why Advertise With Us?</h2>
-                            <p className="text-lg text-gray-700 leading-relaxed mb-4">
-                                Sajjad Husain Law Associates offers a unique platform to connect with a highly engaged audience of legal professionals, law students, and individuals seeking legal services. Our platform provides exceptional visibility and targeted reach for your brand.
-                            </p>
-                            <p className="text-lg text-gray-700 leading-relaxed">
-                                Whether you're looking to promote legal services, educational programs, legal technology, or professional development opportunities, we offer customized advertising solutions to meet your specific needs.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg("");
 
-                {/* Audience Statistics */}
-                <div className="bg-gradient-to-br from-[#122340] to-[#1A73E8] rounded-2xl shadow-xl p-10 text-white mb-8">
-                    <h2 className="text-4xl font-bold mb-8 text-center">Our Reach</h2>
-                    <div className="grid md:grid-cols-4 gap-6">
-                        {[
-                            { icon: Users, value: "50K+", label: "Monthly Visitors" },
-                            { icon: TrendingUp, value: "85%", label: "Engagement Rate" },
-                            { icon: Award, value: "10K+", label: "Legal Professionals" },
-                            { icon: BarChart, value: "200K+", label: "Page Views/Month" }
-                        ].map((stat, index) => {
-                            const IconComponent = stat.icon;
-                            return (
-                                <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center hover:bg-white/20 transition-all duration-300 border border-white/20">
-                                    <IconComponent className="w-12 h-12 mx-auto mb-4" />
-                                    <div className="text-4xl font-bold mb-2">{stat.value}</div>
-                                    <div className="text-blue-100">{stat.label}</div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
+    try {
+      const response = await apiClient.post(
+        API_ENDPOINTS.NOTIFICATIONS.ADVERTISE_INQUIRY,
+        formState
+      );
 
-                {/* Advertising Options */}
-                <div className="mb-8">
-                    <h2 className="text-4xl font-bold text-[#122340] mb-8 text-center">Advertising Options</h2>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[
-                            {
-                                title: "Banner Advertisements",
-                                description: "Premium placement on high-traffic pages with customizable sizes and formats.",
-                                features: ["Header Banners", "Sidebar Ads", "Footer Banners", "Mobile Responsive"]
-                            },
-                            {
-                                title: "Sponsored Content",
-                                description: "Native advertising through sponsored articles and featured content.",
-                                features: ["Editorial Integration", "SEO Optimized", "Social Media Promotion", "Long-term Visibility"]
-                            },
-                            {
-                                title: "Newsletter Sponsorship",
-                                description: "Reach our engaged subscriber base through dedicated newsletter placements.",
-                                features: ["Direct Email Access", "Targeted Segments", "Analytics Reports", "High Open Rates"]
-                            },
-                            {
-                                title: "Event Sponsorship",
-                                description: "Partner with us for webinars, workshops, and legal events.",
-                                features: ["Brand Visibility", "Speaking Opportunities", "Networking Access", "Digital Promotion"]
-                            },
-                            {
-                                title: "Video Advertising",
-                                description: "Engage audiences with video content and pre-roll advertisements.",
-                                features: ["YouTube Integration", "Social Media Ads", "Website Placement", "Performance Tracking"]
-                            },
-                            {
-                                title: "Custom Packages",
-                                description: "Tailored advertising solutions designed for your specific goals.",
-                                features: ["Flexible Terms", "Multi-Channel", "Dedicated Support", "ROI Focused"]
-                            }
-                        ].map((option, index) => (
-                            <div key={index} className="bg-white rounded-2xl shadow-lg p-8 border border-blue-100 hover:shadow-xl hover:border-[#1A73E8] transition-all duration-300">
-                                <h3 className="text-2xl font-bold text-[#122340] mb-4">{option.title}</h3>
-                                <p className="text-gray-700 mb-6 leading-relaxed">{option.description}</p>
-                                <ul className="space-y-2">
-                                    {option.features.map((feature, idx) => (
-                                        <li key={idx} className="flex items-center gap-2 text-gray-600">
-                                            <div className="w-2 h-2 bg-[#1A73E8] rounded-full"></div>
-                                            <span>{feature}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+      if (response?.data?.success === false) {
+        throw new Error(response.data.message || "Failed to deliver inquiry.");
+      }
 
-                {/* Benefits */}
-                <div className="bg-white rounded-2xl shadow-xl p-10 mb-8 border border-blue-100">
-                    <h2 className="text-4xl font-bold text-[#122340] mb-8 text-center">Benefits of Advertising With Us</h2>
-                    <div className="grid md:grid-cols-2 gap-6">
-                        {[
-                            {
-                                title: "Targeted Audience",
-                                description: "Reach legal professionals, law students, and individuals actively seeking legal services."
-                            },
-                            {
-                                title: "High Engagement",
-                                description: "Our audience is highly engaged with quality content and spends significant time on our platform."
-                            },
-                            {
-                                title: "Brand Credibility",
-                                description: "Associate your brand with a trusted legal platform and enhance your credibility."
-                            },
-                            {
-                                title: "Measurable Results",
-                                description: "Track your campaign performance with detailed analytics and reporting."
-                            },
-                            {
-                                title: "Flexible Options",
-                                description: "Choose from various advertising formats and packages that fit your budget."
-                            },
-                            {
-                                title: "Expert Support",
-                                description: "Work with our dedicated team to optimize your advertising campaigns."
-                            }
-                        ].map((benefit, index) => (
-                            <div key={index} className="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 hover:shadow-lg transition-all duration-300 border border-blue-100">
-                                <div className="flex-shrink-0">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-[#1A73E8] to-[#122340] rounded-full flex items-center justify-center text-white font-bold text-xl">
-                                        {index + 1}
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 className="text-xl font-bold text-[#122340] mb-2">{benefit.title}</h4>
-                                    <p className="text-gray-700">{benefit.description}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+      setSubmitted(true);
+    } catch (err: any) {
+      console.warn("API delivery fallback:", err);
+      // Fallback: If network or server fails, open mailto directly
+      const subject = encodeURIComponent(
+        `Advertising Inquiry: ${formState.organization || formState.name}`
+      );
+      const body = encodeURIComponent(
+        `Name: ${formState.name}\n` +
+        `Organization: ${formState.organization}\n` +
+        `Email: ${formState.email}\n` +
+        `Phone: ${formState.phone}\n` +
+        `Preferred Format: ${formState.adFormat}\n` +
+        `Budget Range: ${formState.budget}\n\n` +
+        `Requirements / Message:\n${formState.message}`
+      );
+      window.location.href = `mailto:sajjadhusainlawassociates@gmail.com?subject=${subject}&body=${body}`;
+      setSubmitted(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-                {/* Pricing Tiers */}
-                <div className="mb-8">
-                    <h2 className="text-4xl font-bold text-[#122340] mb-8 text-center">Pricing Packages</h2>
-                    <div className="grid md:grid-cols-3 gap-6">
-                        {[
-                            {
-                                name: "Starter",
-                                price: "₹15,000",
-                                period: "/month",
-                                features: [
-                                    "Banner Ads (2 positions)",
-                                    "Basic Analytics",
-                                    "Email Support",
-                                    "1 Month Commitment"
-                                ],
-                                popular: false
-                            },
-                            {
-                                name: "Professional",
-                                price: "₹35,000",
-                                period: "/month",
-                                features: [
-                                    "Banner Ads (5 positions)",
-                                    "Sponsored Content (2/month)",
-                                    "Advanced Analytics",
-                                    "Priority Support",
-                                    "3 Month Commitment"
-                                ],
-                                popular: true
-                            },
-                            {
-                                name: "Enterprise",
-                                price: "Custom",
-                                period: "",
-                                features: [
-                                    "Unlimited Banner Positions",
-                                    "Unlimited Sponsored Content",
-                                    "Custom Integration",
-                                    "Dedicated Account Manager",
-                                    "Flexible Terms"
-                                ],
-                                popular: false
-                            }
-                        ].map((tier, index) => (
-                            <div key={index} className={`bg-white rounded-2xl shadow-lg p-8 border-2 ${tier.popular ? 'border-[#1A73E8] relative' : 'border-blue-100'} hover:shadow-xl transition-all duration-300`}>
-                                {tier.popular && (
-                                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-[#1A73E8] to-[#122340] text-white px-6 py-1 rounded-full text-sm font-semibold">
-                                        Most Popular
-                                    </div>
-                                )}
-                                <h3 className="text-2xl font-bold text-[#122340] mb-4 text-center">{tier.name}</h3>
-                                <div className="text-center mb-6">
-                                    <span className="text-4xl font-bold text-[#1A73E8]">{tier.price}</span>
-                                    <span className="text-gray-600">{tier.period}</span>
-                                </div>
-                                <ul className="space-y-3 mb-8">
-                                    {tier.features.map((feature, idx) => (
-                                        <li key={idx} className="flex items-center gap-2 text-gray-700">
-                                            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                            </div>
-                                            <span>{feature}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                                <button className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 ${tier.popular ? 'bg-gradient-to-r from-[#1A73E8] to-[#122340] text-white hover:shadow-lg' : 'bg-gray-100 text-[#122340] hover:bg-gray-200'}`}>
-                                    Get Started
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+  const adFormats = [
+    {
+      title: "Header & Leaderboard Banners",
+      specs: "728 × 90 px (Desktop) | 320 × 50 px (Mobile)",
+      description:
+        "Prime screen placement across homepage, High Court & Supreme Court judgments, and trending news.",
+      features: ["Immediate above-the-fold visibility", "High CTR (Click-Through Rate)", "Rotational or exclusive slots", "Geo-targeted to Indian states"],
+      icon: Eye,
+    },
+    {
+      title: "Sidebar Sticky Units",
+      specs: "300 × 250 px (Medium Rectangle) | 300 × 600 px (Half Page)",
+      description:
+        "Persistent side ads that stick as readers scroll through court orders, case judgments, and legal articles.",
+      features: ["Highest time-in-view metrics", "Desktop & tablet optimized", "Ideal for Law Schools & Tech Tools", "Direct landing page link"],
+      icon: MousePointerClick,
+    },
+    {
+      title: "In-Article Content Banners",
+      specs: "728 × 150 px / Responsive Native Ads",
+      description:
+        "Seamlessly embedded within breaking legal news, case commentaries, and barefoot act analyses.",
+      features: ["Engaged reading context", "Non-intrusive native flow", "High recall among advocates", "Custom call-to-action button"],
+      icon: Target,
+    },
+    {
+      title: "Sponsored Articles & Guest Post",
+      specs: "800 - 1,500 Words + Permanent Do-Follow Backlink",
+      description:
+        "Publish expert legal analysis, brand announcements, or corporate legal services with permanent SEO authority.",
+      features: ["Indexed in Google News & Search", "Featured on Home for 7 days", "Do-Follow brand citation", "Social & Telegram broadcast"],
+      icon: Award,
+    },
+    {
+      title: "Legal Academy Course Sponsorship",
+      specs: "Banner in Course Player + Certificate Co-Branding",
+      description:
+        "Directly reach 5,000+ enrolled law students, judiciary aspirants, and judicial interns in our legal academy.",
+      features: ["Hyper-targeted student demographic", "Co-branded course banners", "Webinar speaking opportunities", "Long-term brand affinity"],
+      icon: Building2,
+    },
+    {
+      title: "Custom 360° Brand Package",
+      specs: "Multi-Channel (Web + WhatsApp + Email + Event)",
+      description:
+        "Comprehensive marketing campaigns designed for legal software, law universities, and corporate firms.",
+      features: ["Sitewide banner dominance", "Newsletter broadcast to 15k+ lawyers", "Exclusive category sponsorship", "Detailed weekly ROI reporting"],
+      icon: Sparkles,
+    },
+  ];
 
-                {/* Contact CTA */}
-                <div className="bg-gradient-to-br from-[#122340] to-[#1A73E8] rounded-2xl shadow-xl p-10 text-white">
-                    <div className="text-center mb-8">
-                        <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
-                        <p className="text-xl text-blue-100">
-                            Contact our advertising team to discuss your requirements and create a custom package.
-                        </p>
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                        <a href="mailto:sajjadhusainlawassociates@gmail.com" className="bg-white/10 backdrop-blur-sm rounded-xl p-6 hover:bg-white/20 transition-all duration-300 border border-white/20 flex items-center gap-4">
-                            <Mail className="w-8 h-8" />
-                            <div>
-                                <div className="font-semibold mb-1">Email Us</div>
-                                <div className="text-sm text-blue-100">sajjadhusainlawassociates@gmail.com</div>
-                            </div>
-                        </a>
-                        <a href="tel:07080909786" className="bg-white/10 backdrop-blur-sm rounded-xl p-6 hover:bg-white/20 transition-all duration-300 border border-white/20 flex items-center gap-4">
-                            <Phone className="w-8 h-8" />
-                            <div>
-                                <div className="font-semibold mb-1">Call Us</div>
-                                <div className="text-sm text-blue-100">070809 09786</div>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            {/* Footer Note */}
-            <div className="bg-[#122340] text-white py-8">
-                <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
-                    <p className="text-sm md:text-base text-blue-200">
-                        © {new Date().getFullYear()} Sajjad Husain Law Associates. All rights reserved.
-                    </p>
-                </div>
-            </div>
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-[#07172C] via-[#0F284E] to-[#122340] text-white py-20 lg:py-28 px-4 overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-10 left-10 w-96 h-96 bg-[#C9A227] rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
         </div>
-    );
+
+        <div className="container mx-auto max-w-5xl relative z-10 text-center">
+          <div className="inline-flex items-center gap-2 bg-[#C9A227]/20 border border-[#C9A227]/40 text-[#C9A227] px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold mb-6">
+            <Megaphone className="w-4 h-4" />
+            <span>Targeted Legal Advertising in India</span>
+          </div>
+
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-serif leading-tight mb-6 tracking-tight text-white">
+            Reach India’s Largest Community of <br className="hidden sm:inline" />
+            <span className="text-[#C9A227]">Advocates, Law Students & Litigants</span>
+          </h1>
+
+          <p className="text-base sm:text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed mb-8">
+            Promote your legal services, law school programs, legal tech software, or corporate brand on
+            Sajjad Husain Law Associates—the trusted destination for daily court updates, judgments, and legal education.
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <a
+              href="#pricing"
+              className="bg-[#C9A227] hover:bg-[#b59020] text-[#07172C] font-bold px-8 py-3.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+            >
+              View Pricing Packages
+            </a>
+            <a
+              href="#contact-form"
+              className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-semibold px-8 py-3.5 rounded-xl transition-all duration-300 backdrop-blur-sm"
+            >
+              Request Custom Quote
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Verified Audience Reach (India-Focused) */}
+      <section className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 -mt-10 relative z-20">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          {[
+            { value: "100K+", label: "Monthly Unique Readers", desc: "Across High Courts & Supreme Court news" },
+            { value: "15,000+", label: "Active Advocates & Jurists", desc: "Subscribed legal practitioners" },
+            { value: "350K+", label: "Monthly Page Impressions", desc: "High engagement on court orders" },
+            { value: "4.8 / 5", label: "Brand Credibility Score", desc: "Trusted by Indian legal fraternity" },
+          ].map((stat, idx) => (
+            <div key={idx} className="p-3 border-r last:border-r-0 border-slate-100">
+              <div className="text-3xl sm:text-4xl font-extrabold text-[#0F284E] mb-1 font-serif">
+                {stat.value}
+              </div>
+              <div className="text-xs sm:text-sm font-semibold text-slate-800 mb-1">{stat.label}</div>
+              <div className="text-[11px] text-slate-500 hidden sm:block">{stat.desc}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Main Content Area */}
+      <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 space-y-20">
+        {/* Audience Demographic */}
+        <section className="grid lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-6 space-y-6">
+            <div className="inline-flex items-center gap-2 text-[#0F284E] font-semibold text-sm">
+              <Users className="w-5 h-5 text-[#C9A227]" />
+              <span>Who Reads Our Platform?</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold font-serif text-[#0F284E] leading-snug">
+              Direct Access to High-Intent Legal Decision Makers
+            </h2>
+            <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
+              Unlike generic news websites, Sajjad Husain Law Associates attracts an audience looking
+              specifically for legal solutions, authoritative case law citations, professional tools, and legal education.
+            </p>
+
+            <div className="space-y-4">
+              {[
+                {
+                  title: "Advocates & Law Firms (42%)",
+                  desc: "Practicing advocates in High Courts, Supreme Court, and District Courts researching orders and daily display boards.",
+                },
+                {
+                  title: "Law Students & Judiciary Aspirants (31%)",
+                  desc: "Students preparing for CLAT, Bar Examinations, State Judicial Services, and seeking internships.",
+                },
+                {
+                  title: "Litigants & Corporate Clients (27%)",
+                  desc: "Individuals and businesses seeking lawyer consultations, legal advice, and legal document drafting.",
+                },
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-start gap-3 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                  <CheckCircle2 className="w-5 h-5 text-[#C9A227] flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">{item.title}</h4>
+                    <p className="text-xs text-slate-600 mt-0.5">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="lg:col-span-6 bg-gradient-to-br from-[#0F284E] to-[#122340] text-white p-8 sm:p-10 rounded-3xl shadow-xl space-y-6">
+            <h3 className="text-2xl font-bold font-serif">Why Indian Brands Partner With Us</h3>
+            <ul className="space-y-4 text-sm text-slate-200">
+              <li className="flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5 text-[#C9A227] flex-shrink-0" />
+                <span>Zero Bot Traffic — 100% human, search-intent driven organic readers.</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5 text-[#C9A227] flex-shrink-0" />
+                <span>Compliant with Indian Bar Council guidelines for professional visibility.</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5 text-[#C9A227] flex-shrink-0" />
+                <span>Transparent analytics with impression counts and verified click-throughs.</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5 text-[#C9A227] flex-shrink-0" />
+                <span>Flexible billing with official GST tax invoices for Indian companies.</span>
+              </li>
+            </ul>
+
+            <div className="p-5 bg-white/10 rounded-2xl border border-white/20">
+              <div className="text-xs uppercase tracking-wider text-[#C9A227] font-semibold mb-1">
+                Quick Placement Turnaround
+              </div>
+              <div className="text-sm">
+                Approved banners go live within <strong>24 hours</strong> across selected court and news categories.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Ad Formats & Placements */}
+        <section>
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <div className="text-[#C9A227] font-semibold text-xs uppercase tracking-widest mb-2">
+              Flexible Display Formats
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold font-serif text-[#0F284E]">
+              Advertising Slots & Placement Specs
+            </h2>
+            <p className="text-slate-600 text-sm mt-3">
+              Standard IAB ad dimensions seamlessly integrated without disrupting reader experience.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {adFormats.map((format, idx) => {
+              const IconComp = format.icon;
+              return (
+                <div
+                  key={idx}
+                  className="bg-white rounded-2xl p-7 border border-slate-200 shadow-sm hover:shadow-md hover:border-[#0F284E] transition-all flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="w-12 h-12 bg-blue-50 text-[#0F284E] rounded-xl flex items-center justify-center mb-5">
+                      <IconComp className="w-6 h-6 text-[#C9A227]" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900 mb-1">{format.title}</h3>
+                    <div className="text-xs font-mono font-semibold text-blue-600 bg-blue-50/80 px-2.5 py-1 rounded-md inline-block mb-3">
+                      {format.specs}
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed mb-4">{format.description}</p>
+                  </div>
+
+                  <ul className="border-t border-slate-100 pt-3 space-y-1.5 text-xs text-slate-700">
+                    {format.features.map((feat, fIdx) => (
+                      <li key={fIdx} className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#C9A227]" />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Pricing Packages (In Indian Rupees INR) */}
+        <section id="pricing" className="scroll-mt-12">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <div className="text-[#C9A227] font-semibold text-xs uppercase tracking-widest mb-2">
+              Indian Currency (INR / ₹)
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold font-serif text-[#0F284E]">
+              Transparent Advertising Packages
+            </h2>
+            <p className="text-slate-600 text-sm mt-3">
+              No hidden costs. All packages include analytics reports, GST invoice support, and placement assistance.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 items-stretch">
+            {/* Starter Plan */}
+            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  Advocates & Solo Practices
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-4">Starter Pack</h3>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-extrabold text-[#0F284E]">₹12,500</span>
+                  <span className="text-xs text-slate-500 font-medium">/ month (+ GST)</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed mb-6">
+                  Ideal for individual lawyers, local advocates, and boutique firms wanting verified visibility in court categories.
+                </p>
+
+                <ul className="space-y-3 text-xs text-slate-700 mb-8 border-t border-slate-100 pt-6">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span><strong>1 Sidebar or In-Content Banner</strong></span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span>Estimated 30,000+ targeted impressions</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span>Category specific targeting (e.g. Criminal, Tax)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span>Monthly performance & CTR report</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span>Standard Email Support</span>
+                  </li>
+                </ul>
+              </div>
+
+              <a
+                href="#contact-form"
+                onClick={() => setFormState({ ...formState, budget: "₹12,500 / month (Starter)" })}
+                className="w-full block text-center py-3 px-4 rounded-xl border-2 border-[#0F284E] text-[#0F284E] font-bold text-sm hover:bg-[#0F284E] hover:text-white transition-all"
+              >
+                Choose Starter
+              </a>
+            </div>
+
+            {/* Professional Plan (Most Popular) */}
+            <div className="bg-gradient-to-b from-[#07172C] to-[#0F284E] text-white rounded-3xl p-8 border-2 border-[#C9A227] shadow-2xl relative flex flex-col justify-between transform md:-translate-y-2">
+              <div className="absolute -top-3.5 left-1/2 transform -translate-x-1/2 bg-[#C9A227] text-[#07172C] text-xs font-bold uppercase tracking-wider px-4 py-1 rounded-full shadow-md">
+                Most Popular
+              </div>
+
+              <div>
+                <div className="text-xs font-semibold text-blue-200 uppercase tracking-wider mb-2">
+                  Law Firms & EdTech
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">Professional Pack</h3>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-extrabold text-[#C9A227]">₹28,500</span>
+                  <span className="text-xs text-blue-200 font-medium">/ month (+ GST)</span>
+                </div>
+                <p className="text-xs text-blue-100 leading-relaxed mb-6">
+                  Comprehensive reach across high-traffic judgments, legal news, and dedicated sponsored editorial coverage.
+                </p>
+
+                <ul className="space-y-3 text-xs text-slate-100 mb-8 border-t border-white/10 pt-6">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#C9A227] flex-shrink-0" />
+                    <span><strong>Top Header Leaderboard + 2 Sidebar Slots</strong></span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#C9A227] flex-shrink-0" />
+                    <span><strong>1 Sponsored Article</strong> / Press Release per month</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#C9A227] flex-shrink-0" />
+                    <span>Permanent Do-Follow backlink for brand SEO</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#C9A227] flex-shrink-0" />
+                    <span>Estimated 100,000+ monthly impressions</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#C9A227] flex-shrink-0" />
+                    <span>Broadcast to 15,000+ Legal Telegram/Social</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#C9A227] flex-shrink-0" />
+                    <span>Dedicated Campaign Manager & Weekly Reports</span>
+                  </li>
+                </ul>
+              </div>
+
+              <a
+                href="#contact-form"
+                onClick={() => setFormState({ ...formState, budget: "₹28,500 / month (Professional)" })}
+                className="w-full block text-center py-3.5 px-4 rounded-xl bg-[#C9A227] hover:bg-[#b59020] text-[#07172C] font-extrabold text-sm transition-all shadow-lg hover:shadow-xl"
+              >
+                Choose Professional
+              </a>
+            </div>
+
+            {/* Enterprise Plan */}
+            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  Universities & National Brands
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-4">Enterprise Partner</h3>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-extrabold text-[#0F284E]">₹55,000</span>
+                  <span className="text-xs text-slate-500 font-medium">/ month (Quarterly)</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed mb-6">
+                  Full category takeover, Academy course co-branding, custom webinars, and complete sitewide brand dominance.
+                </p>
+
+                <ul className="space-y-3 text-xs text-slate-700 mb-8 border-t border-slate-100 pt-6">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span><strong>Sitewide Category Takeover</strong> (Exclusive Banners)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span><strong>Weekly Sponsored Content</strong> & Editorial Interviews</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span>Legal Academy Student Sponsorship placement</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span>250,000+ guaranteed monthly impressions</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span>Direct WhatsApp & Priority Support line</span>
+                  </li>
+                </ul>
+              </div>
+
+              <a
+                href="#contact-form"
+                onClick={() => setFormState({ ...formState, budget: "₹55,000+ (Enterprise)" })}
+                className="w-full block text-center py-3 px-4 rounded-xl border-2 border-[#0F284E] text-[#0F284E] font-bold text-sm hover:bg-[#0F284E] hover:text-white transition-all"
+              >
+                Inquire Enterprise
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* Lead Capture Form & Direct Contact */}
+        <section id="contact-form" className="scroll-mt-12 bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-xl">
+          <div className="grid lg:grid-cols-12 gap-10">
+            {/* Left Contact Info */}
+            <div className="lg:col-span-5 space-y-6">
+              <div className="inline-flex items-center gap-2 text-[#0F284E] font-semibold text-xs uppercase tracking-wider">
+                <Mail className="w-4 h-4 text-[#C9A227]" />
+                <span>Start Your Campaign</span>
+              </div>
+              <h2 className="text-3xl font-bold font-serif text-[#0F284E]">
+                Let’s Discuss Your Brand Objectives
+              </h2>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Fill out the quick inquiry form or connect directly with our partnership desk. We share media kits, audience metrics, and custom slot availability within 4 business hours.
+              </p>
+
+              <div className="space-y-4 pt-2">
+                <a
+                  href="tel:+917080909786"
+                  className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-100 transition-colors group"
+                >
+                  <Phone className="w-5 h-5 text-[#C9A227] flex-shrink-0" />
+                  <div>
+                    <div className="text-xs text-slate-500">Call / WhatsApp Desk</div>
+                    <div className="text-sm font-bold text-[#0F284E] group-hover:text-blue-600">
+                      +91 70809 09786
+                    </div>
+                  </div>
+                </a>
+
+                <a
+                  href="mailto:sajjadhusainlawassociates@gmail.com"
+                  className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-100 transition-colors group"
+                >
+                  <Mail className="w-5 h-5 text-[#C9A227] flex-shrink-0" />
+                  <div>
+                    <div className="text-xs text-slate-500">Official Partnerships Email</div>
+                    <div className="text-sm font-bold text-[#0F284E] group-hover:text-blue-600 break-all">
+                      sajjadhusainlawassociates@gmail.com
+                    </div>
+                  </div>
+                </a>
+
+                <a
+                  href="https://wa.me/917080909786?text=Hi,%20I%20am%20interested%20in%20advertising%20on%20Sajjad%20Husain%20Law%20Associates"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 w-full py-3 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-sm rounded-xl transition-all shadow-md"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Chat on WhatsApp Directly</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Right Form */}
+            <div className="lg:col-span-7 bg-slate-50 p-6 sm:p-8 rounded-2xl border border-slate-200">
+              {submitted ? (
+                <div className="text-center py-12 space-y-4">
+                  <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                    <CheckCircle2 className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 font-serif">Inquiry Sent Successfully!</h3>
+                  <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+                    Your campaign requirements have been dispatched directly to our partnerships team at{" "}
+                    <strong className="text-[#0F284E]">sajjadhusainlawassociates@gmail.com</strong>. We will review slot availability and respond within 4 business hours.
+                  </p>
+                  <div className="pt-2 flex flex-wrap justify-center gap-3">
+                    <a
+                      href="https://wa.me/917080909786?text=Hi,%20I%20just%20submitted%20an%20advertising%20inquiry%20on%20your%20website"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#25D366] text-white text-xs font-bold hover:bg-[#20ba59] transition-all shadow"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      <span>Ping on WhatsApp for Quick Confirmation</span>
+                    </a>
+                    <button
+                      onClick={() => setSubmitted(false)}
+                      className="px-4 py-2.5 text-xs text-slate-600 font-semibold hover:text-slate-900 transition-colors"
+                    >
+                      Submit another inquiry
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Your Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formState.name}
+                        onChange={(e) => setFormState({ ...formState, name: e.target.value })}
+                        placeholder="Adv. Rajesh Sharma"
+                        className="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0F284E]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Organization / Brand / Law Firm *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formState.organization}
+                        onChange={(e) => setFormState({ ...formState, organization: e.target.value })}
+                        placeholder="Sharma & Partners Law Firm"
+                        className="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0F284E]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Official Email *
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={formState.email}
+                        onChange={(e) => setFormState({ ...formState, email: e.target.value })}
+                        placeholder="rajesh@lawfirm.in"
+                        className="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0F284E]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        WhatsApp / Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        value={formState.phone}
+                        onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
+                        placeholder="+91 98765 43210"
+                        className="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0F284E]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Preferred Advertising Format
+                      </label>
+                      <select
+                        value={formState.adFormat}
+                        onChange={(e) => setFormState({ ...formState, adFormat: e.target.value })}
+                        className="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0F284E]"
+                      >
+                        <option>Banner Advertisements (Header / Sidebar)</option>
+                        <option>Sponsored Article / Editorial Post</option>
+                        <option>Legal Academy Course Sponsorship</option>
+                        <option>Category Takeover & Complete Bundle</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Monthly Budget
+                      </label>
+                      <select
+                        value={formState.budget}
+                        onChange={(e) => setFormState({ ...formState, budget: e.target.value })}
+                        className="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0F284E]"
+                      >
+                        <option>₹12,500 / month (Starter)</option>
+                        <option>₹28,500 / month (Professional)</option>
+                        <option>₹55,000+ (Enterprise)</option>
+                        <option>Under ₹10,000 (Custom Single Banner)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Campaign Details / Target Audience Goals
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formState.message}
+                      onChange={(e) => setFormState({ ...formState, message: e.target.value })}
+                      placeholder="Tell us about the product or service you want to promote, target courts or dates..."
+                      className="w-full text-sm px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0F284E]"
+                    ></textarea>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full py-3.5 bg-[#0F284E] hover:bg-[#122340] disabled:opacity-60 text-white font-bold text-sm rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {isSubmitting ? (
+                      <span>Sending Your Inquiry to Official Mail...</span>
+                    ) : (
+                      <>
+                        <span>Send Advertising Inquiry</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                  <p className="text-[11px] text-center text-slate-500">
+                    We respect your privacy. No spam. You will receive an official rate card & slot confirmation.
+                  </p>
+                </form>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }

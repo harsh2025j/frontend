@@ -378,19 +378,21 @@ export default function DashboardOverview() {
         {/* Welcome */}
         <div className="sa-tile sa-col-lg-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
           <div className="min-w-0">
-            <p className="sa-runhead">Overview</p>
-            <h1 className="font-serif text-[1.75rem] leading-[1.1] tracking-[-0.015em] text-[color:var(--sa-ink)] sm:text-[2rem]">
+            <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#FDF6E2] text-[#8A6100] border border-[#E8CD82] text-[11px] font-black uppercase tracking-wider mb-2.5">
+              DASHBOARD OVERVIEW
+            </span>
+            <h1 className="font-serif text-[1.75rem] font-bold leading-[1.1] tracking-[-0.015em] text-[#08172D] sm:text-[2rem]">
               {firstName ? `Welcome back, ${firstName}` : 'Welcome back'}
             </h1>
-            <p className="mt-2 max-w-prose text-[13.5px] leading-relaxed text-[color:var(--sa-ink-3)]">
+            <p className="mt-2 max-w-prose text-[13.5px] font-medium leading-relaxed text-slate-600">
               {hasCourses
-                ? "Here's your learning at a glance: progress, results and what's up next."
-                : 'Enrol in a course and your progress will be tracked here.'}
+                ? "Here is your learning at a glance: progress, virtual classes, and next milestones."
+                : 'Enrol in a course and your real-time progress will be tracked here.'}
             </p>
           </div>
           {summary.lastActiveAt && (
-            <span className="sa-pill shrink-0 self-start sm:self-auto">
-              <Clock size={12} className="text-[color:var(--sa-gold-2)]" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-300 text-slate-800 font-bold text-xs shrink-0 self-start sm:self-auto shadow-2xs">
+              <Clock size={13} className="text-[#B8860B]" />
               Last active {relativeDay(summary.lastActiveAt).toLowerCase()}
             </span>
           )}
@@ -399,36 +401,36 @@ export default function DashboardOverview() {
         {/* Streak */}
         <div className="sa-tile sa-tile-dark sa-col-lg-4 flex flex-col justify-between">
           <div className="flex items-center justify-between gap-3">
-            <span className="sa-label">Current streak</span>
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-[rgba(217,178,84,0.18)] text-[color:var(--sa-gold-1)]">
-              <Flame size={16} fill="currentColor" strokeWidth={0} />
+            <span className="text-[11px] font-black uppercase tracking-wider text-amber-200">Current streak</span>
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-500/20 text-[#F59E0B] border border-amber-500/30">
+              <Flame size={17} fill="currentColor" strokeWidth={0} />
             </span>
           </div>
           <div>
-            <p className="sa-value sa-value-xl mt-3 inline-flex items-baseline gap-1.5">
+            <p className="font-serif font-black text-3xl sm:text-4xl text-white mt-2 inline-flex items-baseline gap-1.5 tabular-nums">
               {perf?.streak?.currentDays ?? 0}
-              <span className="text-[0.42em] font-normal text-[rgba(243,238,222,0.56)]">
+              <span className="text-[0.42em] font-normal text-amber-100/70">
                 {(perf?.streak?.currentDays ?? 0) === 1 ? 'day' : 'days'}
               </span>
             </p>
-            <div className="mt-3 flex items-center gap-1">
+            <div className="mt-3 flex items-center gap-1.5">
               {Array.from({ length: 7 }).map((_, i) => (
                 <span
                   key={i}
-                  className="h-1.5 flex-1 rounded-full"
+                  className="h-2 flex-1 rounded-full transition-all"
                   style={{
                     background:
                       i < (perf?.streak?.activeDaysLast7 ?? 0)
-                        ? 'var(--sa-gold-1)'
-                        : 'rgba(255,255,255,0.12)',
+                        ? '#F59E0B'
+                        : 'rgba(255,255,255,0.18)',
                   }}
                 />
               ))}
             </div>
-            <p className="sa-sub mt-2.5 text-[11.5px]">
-              {perf?.streak?.activeDaysLast7 ?? 0} / 7 days this week
+            <p className="mt-2.5 text-xs font-semibold text-amber-100">
+              {perf?.streak?.activeDaysLast7 ?? 0} of 7 days this week
               {perf?.streak?.longestDays
-                ? ` · best ${perf.streak.longestDays}d`
+                ? ` · best ${perf.streak.longestDays}d streak`
                 : ''}
             </p>
           </div>
@@ -437,16 +439,18 @@ export default function DashboardOverview() {
 
       {/* ═════════════ Live now ═════════════ */}
       {currentlyLiveSession && (
-        <div className="sa-tile sa-tile-pad-sm flex flex-col gap-3 border-l-[3px] border-[color:var(--sa-live)] sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+        <div className="rounded-2xl border-2 border-red-500 bg-red-50/90 p-4 sm:p-5 shadow-lg shadow-red-500/10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
           <div className="min-w-0">
-            <p className="mb-1.5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--sa-clay-2)]">
-              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[color:var(--sa-live)]" />
-              Live now
+            <p className="mb-1.5 inline-flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-600 text-white font-black text-[11px] uppercase tracking-wider animate-pulse shadow-xs">
+                <span className="inline-block h-2 w-2 rounded-full bg-white" />
+                Live Now
+              </span>
             </p>
-            <h2 className="font-serif text-[1.0625rem] font-bold leading-snug tracking-[-0.005em] text-[color:var(--sa-ink)]">
+            <h2 className="font-serif text-[1.125rem] font-bold leading-snug tracking-tight text-[#08172D]">
               {currentlyLiveSession.title}
             </h2>
-            <p className="mt-0.5 text-[12.5px] text-[color:var(--sa-ink-3)]">
+            <p className="mt-0.5 text-xs font-semibold text-slate-700">
               {currentlyLiveSession.course?.title || 'Your enrolled course'}
             </p>
           </div>
@@ -458,8 +462,9 @@ export default function DashboardOverview() {
             }
             className="shrink-0"
           >
-            <button className="sa-btn sa-btn-live">
-              Join classroom <ExternalLink size={14} />
+            <button className="bg-red-600 hover:bg-red-700 text-white font-black px-5 py-2.5 rounded-xl text-xs sm:text-sm shadow-md inline-flex items-center gap-2 cursor-pointer transition-colors">
+              <span>Join Classroom</span>
+              <ExternalLink size={14} />
             </button>
           </Link>
         </div>
@@ -468,13 +473,17 @@ export default function DashboardOverview() {
       {/* ═════════════ 2. Headline KPIs ═════════════ */}
       <div className="sa-bento">
         {/* Enrolled */}
-        <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
+        <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="sa-label">Enrolled</span>
-            <BookOpen size={14} className="text-[color:var(--sa-ink-4)]" />
+            <span className="font-black text-xs uppercase tracking-wider text-slate-800">Enrolled</span>
+            <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center">
+              <BookOpen size={16} strokeWidth={2.2} />
+            </div>
           </div>
-          <p className="sa-value sa-value-lg mt-2.5">{summary.coursesEnrolled}</p>
-          <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">
+          <p className="font-serif font-black text-3xl sm:text-4xl text-[#08172D] mt-2 tabular-nums">
+            {summary.coursesEnrolled}
+          </p>
+          <p className="text-xs font-bold text-slate-600 mt-1">
             {summary.coursesEnrolled > 0
               ? `${summary.coursesInProgress} in progress`
               : 'No courses yet'}
@@ -482,13 +491,17 @@ export default function DashboardOverview() {
         </div>
 
         {/* Completed */}
-        <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
+        <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="sa-label">Completed</span>
-            <CheckCircle2 size={14} className="text-[color:var(--sa-ink-4)]" />
+            <span className="font-black text-xs uppercase tracking-wider text-slate-800">Completed</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center">
+              <CheckCircle2 size={16} strokeWidth={2.2} />
+            </div>
           </div>
-          <p className="sa-value sa-value-lg mt-2.5">{summary.coursesCompleted}</p>
-          <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">
+          <p className="font-serif font-black text-3xl sm:text-4xl text-[#08172D] mt-2 tabular-nums">
+            {summary.coursesCompleted}
+          </p>
+          <p className="text-xs font-bold text-slate-600 mt-1">
             {summary.coursesEnrolled > 0
               ? `of ${summary.coursesEnrolled} ${
                   summary.coursesEnrolled === 1 ? 'course' : 'courses'
@@ -498,27 +511,24 @@ export default function DashboardOverview() {
         </div>
 
         {/* Average progress with ring */}
-        <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
+        <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="sa-label">Avg. progress</span>
+            <span className="font-black text-xs uppercase tracking-wider text-slate-800">Avg. progress</span>
+            <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center">
+              <Timer size={16} strokeWidth={2.2} />
+            </div>
           </div>
-          <div className="mt-2.5 sm:mt-3 flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-3 sm:gap-4">
-            <div className="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20">
-              <ProgressRing pct={summary.averageProgressPct} size={64} stroke={7} />
+          <div className="mt-2.5 flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-3">
+            <div className="relative shrink-0 w-14 h-14 sm:w-16 sm:h-16">
+              <ProgressRing pct={summary.averageProgressPct} size={56} stroke={6} />
               <div className="pointer-events-none absolute inset-0 grid place-items-center">
-                <span
-                  className="font-serif font-bold tabular-nums leading-none text-[color:var(--sa-ink)] text-sm sm:text-base"
-                  style={{ letterSpacing: '-0.02em' }}
-                >
-                  {summary.averageProgressPct}
-                  <span className="ml-[1px] text-[0.6rem] font-semibold align-top text-[color:var(--sa-ink-4)]">
-                    %
-                  </span>
+                <span className="font-serif font-black tabular-nums leading-none text-[#08172D] text-sm sm:text-base">
+                  {summary.averageProgressPct}%
                 </span>
               </div>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="sa-sub leading-snug text-xs sm:text-[12.5px]">
+              <p className="text-xs font-bold text-slate-700 leading-snug">
                 {summary.coursesEnrolled > 0
                   ? `Across ${summary.coursesEnrolled} ${
                       summary.coursesEnrolled === 1 ? 'course' : 'courses'
@@ -526,7 +536,7 @@ export default function DashboardOverview() {
                   : 'Across every course'}
               </p>
               {summary.itemsTotal > 0 && (
-                <p className="mt-1 text-[11px] sm:text-[11.5px] tabular-nums text-[color:var(--sa-ink-4)]">
+                <p className="mt-1 text-[11px] font-bold text-slate-600">
                   {summary.itemsCompleted}/{summary.itemsTotal} lessons
                 </p>
               )}
@@ -537,19 +547,21 @@ export default function DashboardOverview() {
         {/* Certificates */}
         <Link
           href="/dashboard/certificates"
-          className="sa-tile sa-tile-accent sa-tile-hover sa-col-xs-6 sa-col-sm-3 sa-col-lg-3 group block"
+          className="sa-tile !border-2 !border-[#E8CD82] bg-gradient-to-br from-[#FEFBF2] to-[#FAF3DE] hover:!border-[#8A6100] shadow-sm hover:shadow-xl transition-all block sa-col-xs-6 sa-col-sm-3 sa-col-lg-3 group flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="sa-label">Certificates</span>
-            <Award size={14} className="text-[color:var(--sa-gold-2)]" />
+            <span className="font-black text-xs uppercase tracking-wider text-[#8A6100]">Certificates</span>
+            <div className="w-8 h-8 rounded-lg bg-[#FAF0D4] border border-[#E8CD82] text-[#8A6100] flex items-center justify-center">
+              <Award size={16} strokeWidth={2.2} />
+            </div>
           </div>
-          <p className="sa-value sa-value-lg mt-2.5">
+          <p className="font-serif font-black text-3xl sm:text-4xl text-[#7A5A00] mt-2 tabular-nums">
             {summary.certificatesEarned}
           </p>
-          <p className="sa-sub mt-1.5 inline-flex items-center gap-1 text-[color:var(--sa-gold-3)] text-xs sm:text-[12.5px]">
+          <p className="text-xs font-bold text-[#8A6100] mt-1 inline-flex items-center gap-1 group-hover:underline">
             View credentials
             <ArrowRight
-              size={11}
+              size={12}
               className="transition-transform group-hover:translate-x-0.5"
             />
           </p>
@@ -559,18 +571,20 @@ export default function DashboardOverview() {
       {/* ═════════════ 3. Performance ═════════════ */}
       {perf ? (
         <div className="sa-bento">
-          <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
+          <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3 flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="sa-label">Time studied</span>
-              <Timer size={14} className="text-[color:var(--sa-ink-4)]" />
+              <span className="font-black text-xs uppercase tracking-wider text-slate-800">Time studied</span>
+              <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center">
+                <Timer size={16} strokeWidth={2.2} />
+              </div>
             </div>
-            <p className="sa-value sa-value-md mt-2.5">
+            <p className="font-serif font-black text-2xl sm:text-3xl text-[#08172D] mt-2 tabular-nums">
               {formatStudyTime(summary.learningMinutes)}
             </p>
             {summary.learningMinutesTotal > 0 ? (
               <>
-                <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">
-                  of {formatStudyTime(summary.learningMinutesTotal)}
+                <p className="text-xs font-bold text-slate-600 mt-1">
+                  of {formatStudyTime(summary.learningMinutesTotal)} goal
                 </p>
                 <div className="sa-bar sa-bar-slim mt-3">
                   <span
@@ -587,47 +601,51 @@ export default function DashboardOverview() {
                 </div>
               </>
             ) : (
-              <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">Based on completed lessons</p>
+              <p className="text-xs font-bold text-slate-600 mt-1">Based on completed lessons</p>
             )}
           </div>
 
-          <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
+          <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3 flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="sa-label">Lessons</span>
-              <BookOpen size={14} className="text-[color:var(--sa-ink-4)]" />
+              <span className="font-black text-xs uppercase tracking-wider text-slate-800">Lessons</span>
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center">
+                <BookOpen size={16} strokeWidth={2.2} />
+              </div>
             </div>
-            <p className="sa-value sa-value-md mt-2.5">
+            <p className="font-serif font-black text-2xl sm:text-3xl text-[#08172D] mt-2 tabular-nums">
               {summary.itemsCompleted}
               {summary.itemsTotal > 0 && (
-                <span className="text-[0.5em] font-normal text-[color:var(--sa-ink-4)]">
+                <span className="text-base font-bold text-slate-500">
                   {' '}
                   / {summary.itemsTotal}
                 </span>
               )}
             </p>
-            <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">Across all enrolled courses</p>
+            <p className="text-xs font-bold text-slate-600 mt-1">Across all enrolled courses</p>
           </div>
 
-          <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
+          <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3 flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="sa-label">Assessments</span>
-              <GraduationCap size={14} className="text-[color:var(--sa-ink-4)]" />
+              <span className="font-black text-xs uppercase tracking-wider text-slate-800">Assessments</span>
+              <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center">
+                <GraduationCap size={16} strokeWidth={2.2} />
+              </div>
             </div>
-            <p className="sa-value sa-value-md mt-2.5">
+            <p className="font-serif font-black text-2xl sm:text-3xl text-[#08172D] mt-2 tabular-nums">
               {perf.assessments.averageScorePct !== null ? (
                 <>
                   {perf.assessments.averageScorePct}
-                  <span className="text-[0.5em] font-normal text-[color:var(--sa-gold-2)]">
+                  <span className="text-lg font-bold text-[#B8860B]">
                     %
                   </span>
                 </>
               ) : (
-                <span className="text-[0.6em] font-normal text-[color:var(--sa-ink-4)]">
+                <span className="text-sm font-bold text-slate-400">
                   Not yet
                 </span>
               )}
             </p>
-            <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">
+            <p className="text-xs font-bold text-slate-600 mt-1">
               {perf.assessments.completedAttempts > 0
                 ? `${perf.assessments.completedAttempts} ${
                     perf.assessments.completedAttempts === 1 ? 'attempt' : 'attempts'
@@ -640,27 +658,29 @@ export default function DashboardOverview() {
             </p>
           </div>
 
-          <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3">
+          <div className="sa-tile sa-col-xs-6 sa-col-sm-3 sa-col-lg-3 flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="sa-label">Assignments</span>
-              <ClipboardList size={14} className="text-[color:var(--sa-ink-4)]" />
+              <span className="font-black text-xs uppercase tracking-wider text-slate-800">Assignments</span>
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 flex items-center justify-center">
+                <ClipboardList size={16} strokeWidth={2.2} />
+              </div>
             </div>
-            <p className="sa-value sa-value-md mt-2.5">
+            <p className="font-serif font-black text-2xl sm:text-3xl text-[#08172D] mt-2 tabular-nums">
               {perf.assignments.submitted > 0 ? (
                 <>
                   {perf.assignments.verified}
-                  <span className="text-[0.5em] font-normal text-[color:var(--sa-ink-4)]">
+                  <span className="text-base font-bold text-slate-500">
                     {' '}
                     / {perf.assignments.submitted}
                   </span>
                 </>
               ) : (
-                <span className="text-[0.6em] font-normal text-[color:var(--sa-ink-4)]">
+                <span className="text-sm font-bold text-slate-400">
                   Not yet
                 </span>
               )}
             </p>
-            <p className="sa-sub mt-1.5 text-xs sm:text-[12.5px]">
+            <p className="text-xs font-bold text-slate-600 mt-1">
               {perf.assignments.submitted > 0
                 ? `Accepted${
                     perf.assignments.awaitingReview > 0
@@ -672,12 +692,12 @@ export default function DashboardOverview() {
           </div>
         </div>
       ) : (
-        <div className="sa-tile flex items-start gap-3 border-l-[3px] border-[color:var(--sa-amber)]">
+        <div className="sa-tile flex items-start gap-3 border-l-4 border-amber-500 bg-amber-50/70 p-4 rounded-xl">
           <AlertCircle
-            size={16}
-            className="mt-0.5 shrink-0 text-[color:var(--sa-amber)]"
+            size={18}
+            className="mt-0.5 shrink-0 text-amber-600"
           />
-          <p className="text-[13px] leading-relaxed text-[color:var(--sa-ink-2)]">
+          <p className="text-xs sm:text-[13px] font-semibold leading-relaxed text-amber-900">
             Detailed performance figures are temporarily unavailable. Your course
             progress below is still accurate.
           </p>
@@ -687,13 +707,13 @@ export default function DashboardOverview() {
       {/* ═════════════ 4. Resume + Score trend ═════════════ */}
       <div className="sa-bento">
         {resumeCourse ? (
-          <article className="sa-tile sa-tile-hover sa-col-lg-8 overflow-hidden !p-0">
+          <article className="sa-tile sa-tile-hover sa-col-lg-8 overflow-hidden !p-0 border-2 border-slate-300/90 hover:border-[#B7913A] shadow-md transition-all">
             <div className="flex flex-col gap-0 md:flex-row">
               <Link
                 href={`/dashboard/learn/${resumeCourse.slug || ''}`}
-                className="group relative block w-full shrink-0 overflow-hidden bg-[color:var(--sa-cream-2)] md:w-72 lg:w-80"
+                className="group relative block w-full shrink-0 overflow-hidden bg-slate-100 md:w-72 lg:w-80"
               >
-                <div className="relative aspect-video md:aspect-auto md:h-full md:min-h-[220px]">
+                <div className="relative aspect-video md:aspect-auto md:h-full md:min-h-[230px]">
                   {resumeCourse.thumbnailUrl ? (
                     <img
                       src={resumeCourse.thumbnailUrl}
@@ -701,19 +721,19 @@ export default function DashboardOverview() {
                       className="absolute inset-0 h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="grid h-full w-full place-items-center text-[color:var(--sa-ink-5)]">
-                      <BookOpen size={28} strokeWidth={1.5} />
+                    <div className="grid h-full w-full place-items-center text-slate-300">
+                      <BookOpen size={36} strokeWidth={1.5} />
                     </div>
                   )}
                   <div
                     aria-hidden="true"
-                    className="absolute inset-0 bg-gradient-to-t from-[rgba(11,18,32,0.72)] via-transparent to-transparent"
+                    className="absolute inset-0 bg-gradient-to-t from-[#08172D]/85 via-transparent to-transparent"
                   />
-                  <span className="absolute bottom-3 left-3 flex items-center gap-2 text-white">
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-[color:var(--sa-gold)] text-[#1F1703] shadow-lg transition-transform group-hover:scale-105">
-                      <Play size={13} fill="currentColor" className="ml-0.5" />
+                  <span className="absolute bottom-3 left-3 flex items-center gap-2.5 text-white">
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-[#B8860B] text-white shadow-xl">
+                      <Play size={15} fill="currentColor" className="ml-0.5" />
                     </span>
-                    <span className="text-[12.5px] font-semibold">
+                    <span className="text-xs font-black uppercase tracking-wider bg-[#08172D]/90 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/20">
                       {resumeDone ? 'Review' : 'Resume'}
                     </span>
                   </span>
@@ -722,26 +742,34 @@ export default function DashboardOverview() {
 
               <div className="flex min-w-0 flex-1 flex-col gap-4 p-5 sm:p-6">
                 <div>
-                  <p className="sa-runhead !mb-1.5">Continue learning</p>
-                  <h3 className="font-serif text-[1.125rem] font-bold leading-snug tracking-[-0.005em] text-[color:var(--sa-ink)] sm:text-[1.25rem]">
-                    {resumeCourse.title}
-                  </h3>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#FDF6E2] text-[#8A6100] border border-[#E8CD82] text-[11px] font-black uppercase tracking-wider mb-2">
+                    CONTINUE LEARNING
+                  </span>
+                  <Link href={`/dashboard/learn/${resumeCourse.slug || ''}`}>
+                    <h3 className="font-serif text-[1.2rem] sm:text-[1.35rem] font-bold leading-snug tracking-tight text-[#08172D] hover:text-[#8A6100] transition-colors line-clamp-2">
+                      {resumeCourse.title}
+                    </h3>
+                  </Link>
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2">
                     {resumeCourse.category && (
-                      <span className="sa-pill">{resumeCourse.category}</span>
+                      <span className="inline-block px-2.5 py-0.5 rounded-md bg-slate-100 text-[#08172D] border border-slate-300 text-xs font-bold">
+                        {resumeCourse.category}
+                      </span>
                     )}
                     {resumeCourse.level && (
-                      <span className="sa-pill">{resumeCourse.level}</span>
+                      <span className="inline-block px-2.5 py-0.5 rounded-md bg-slate-100 text-[#08172D] border border-slate-300 text-xs font-bold">
+                        {resumeCourse.level}
+                      </span>
                     )}
                   </div>
                 </div>
 
                 <div className="mt-auto">
                   <div className="mb-2 flex items-baseline justify-between">
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--sa-ink-3)]">
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-800">
                       Progress
                     </span>
-                    <span className="font-serif text-[15px] font-bold tabular-nums text-[color:var(--sa-ink)]">
+                    <span className="font-serif text-base sm:text-lg font-black tabular-nums text-[#08172D]">
                       {resumeCourse.progressPct}%
                     </span>
                   </div>
@@ -750,9 +778,9 @@ export default function DashboardOverview() {
                   </div>
 
                   {resumeCourse.itemsTotal > 0 && (
-                    <p className="mt-2 text-[12px] text-[color:var(--sa-ink-3)]">
+                    <p className="mt-2 text-xs font-bold text-slate-700">
                       {resumeCourse.itemsCompleted} of {resumeCourse.itemsTotal}{' '}
-                      lessons
+                      lessons completed
                       {resumeCourse.bestAssessmentScorePct !== null &&
                         ` · best assessment ${resumeCourse.bestAssessmentScorePct}%`}
                     </p>
@@ -760,10 +788,10 @@ export default function DashboardOverview() {
 
                   <Link
                     href={`/dashboard/learn/${resumeCourse.slug || ''}`}
-                    className="mt-4 inline-flex"
+                    className="mt-4 inline-flex w-full sm:w-auto"
                   >
-                    <button className="sa-btn sa-btn-primary">
-                      {resumeDone ? 'Review course' : 'Resume course'}
+                    <button className="bg-[#08172D] hover:bg-[#040C18] text-white font-bold py-3 px-6 rounded-xl text-xs sm:text-sm shadow-md hover:shadow-lg transition-all inline-flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto">
+                      <span>{resumeDone ? 'Review Course' : 'Resume Course'}</span>
                       <ArrowRight size={15} />
                     </button>
                   </Link>
@@ -772,18 +800,21 @@ export default function DashboardOverview() {
             </div>
           </article>
         ) : (
-          <div className="sa-tile sa-col-lg-8 text-center">
-            <p className="sa-runhead">Get started</p>
-            <h3 className="mt-1 font-serif text-[1.25rem] font-bold text-[color:var(--sa-ink)]">
-              You have not enrolled yet
+          <div className="sa-tile sa-col-lg-8 text-center p-8 sm:p-12">
+            <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#FDF6E2] text-[#8A6100] border border-[#E8CD82] text-[11px] font-black uppercase tracking-wider mb-2">
+              GET STARTED
+            </span>
+            <h3 className="mt-2 font-serif text-xl sm:text-2xl font-bold text-[#08172D]">
+              You have not enrolled in any course yet
             </h3>
-            <p className="sa-sub mx-auto mt-2 max-w-md">
-              Enrol in your first programme and your lessons, results and certificate
-              all appear on this page once you do.
+            <p className="text-xs sm:text-sm font-medium text-slate-600 mx-auto mt-2 max-w-md leading-relaxed">
+              Enrol in your first programme and your lessons, virtual classes, results and certificate
+              will appear right here.
             </p>
-            <Link href="/courses" className="mt-4 inline-flex">
-              <button className="sa-btn sa-btn-gold">
-                Browse courses <ArrowRight size={15} />
+            <Link href="/courses" className="mt-5 inline-flex">
+              <button className="bg-[#08172D] hover:bg-[#040C18] text-white font-bold py-3 px-6 rounded-xl text-xs sm:text-sm shadow-md transition-all inline-flex items-center gap-2 cursor-pointer">
+                <span>Browse Catalogue</span>
+                <ArrowRight size={15} />
               </button>
             </Link>
           </div>
@@ -892,18 +923,18 @@ export default function DashboardOverview() {
                 All courses <ArrowRight size={12} />
               </Link>
             </div>
-            <ul className="divide-y divide-[color:rgba(11,18,32,0.07)]">
+            <ul className="divide-y divide-slate-200">
               {otherCourses.slice(0, 5).map((c) => (
                 <li key={c.enrollmentId}>
                   <Link
                     href={`/dashboard/learn/${c.slug || ''}`}
-                    className="group flex flex-col gap-3 py-3.5 transition-colors hover:bg-[rgba(217,178,84,0.04)] sm:flex-row sm:items-center sm:gap-5 sm:rounded-xl sm:px-3 sm:-mx-3"
+                    className="group flex flex-col gap-3 py-3.5 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:gap-5 sm:rounded-xl sm:px-3 sm:-mx-3"
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13.5px] font-semibold text-[color:var(--sa-ink)]">
+                      <span className="block truncate text-[14px] font-bold text-[#08172D] group-hover:text-[#8A6100] transition-colors">
                         {c.title}
                       </span>
-                      <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-[color:var(--sa-ink-3)]">
+                      <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-semibold text-slate-600">
                         {c.itemsTotal > 0 && (
                           <span>
                             {c.itemsCompleted}/{c.itemsTotal} lessons
@@ -916,8 +947,8 @@ export default function DashboardOverview() {
                           <span>· best {c.bestAssessmentScorePct}%</span>
                         )}
                         {c.certificateId && (
-                          <span className="sa-pill sa-pill-gold">
-                            <Award size={10} /> Certified
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FAF0D4] border border-[#E8CD82] text-[#8A6100] text-[11px] font-black">
+                            <Award size={11} /> Certified
                           </span>
                         )}
                       </span>
@@ -930,12 +961,12 @@ export default function DashboardOverview() {
                       >
                         <span style={{ width: `${c.progressPct}%` }} />
                       </span>
-                      <span className="w-9 text-right text-[12px] font-semibold tabular-nums text-[color:var(--sa-ink)]">
+                      <span className="w-10 text-right text-xs font-black tabular-nums text-[#08172D]">
                         {c.progressPct}%
                       </span>
                       <ArrowRight
-                        size={14}
-                        className="shrink-0 text-[color:var(--sa-ink-4)] transition-transform group-hover:translate-x-0.5"
+                        size={15}
+                        className="shrink-0 text-slate-400 group-hover:text-[#08172D] transition-transform group-hover:translate-x-0.5"
                       />
                     </span>
                   </Link>
@@ -952,24 +983,24 @@ export default function DashboardOverview() {
           }`}
         >
           <div className="mb-4 flex items-baseline justify-between gap-3">
-            <h2 className="font-serif text-[1.0625rem] font-bold tracking-[-0.005em] text-[color:var(--sa-ink)]">
+            <h2 className="font-serif text-[1.125rem] font-bold tracking-tight text-[#08172D]">
               Upcoming classes
             </h2>
             <Link
               href="/dashboard/live-sessions"
-              className="inline-flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-[color:var(--sa-blue)] hover:text-[color:var(--sa-blue-2)]"
+              className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-[#08172D] hover:text-[#8A6100]"
             >
-              All <ArrowRight size={12} />
+              All classes <ArrowRight size={12} />
             </Link>
           </div>
           {upcomingSessions.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[rgba(11,18,32,0.08)] bg-[color:var(--sa-cream)] p-6 text-center">
-              <p className="text-[13px] font-semibold text-[color:var(--sa-ink-2)]">
+            <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
+              <p className="text-sm font-bold text-slate-800">
                 Nothing scheduled
               </p>
-              <p className="sa-sub mt-1 !text-[12px]">
+              <p className="mt-1 text-xs font-semibold text-slate-500 leading-relaxed">
                 {hasCourses
-                  ? 'A session will appear once your instructor schedules one.'
+                  ? 'A virtual session will appear here once your instructor schedules one.'
                   : 'Live classes appear once you enrol in a course.'}
               </p>
             </div>
@@ -988,28 +1019,28 @@ export default function DashboardOverview() {
                   <li key={session.id}>
                     <Link
                       href={targetHref}
-                      className="flex gap-3 rounded-xl p-2 -mx-2 transition-colors hover:bg-[color:var(--sa-cream)]"
+                      className="group flex gap-3 rounded-xl p-2.5 -mx-2 transition-all hover:bg-slate-50 border border-transparent hover:border-slate-200"
                     >
-                      <span className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-[color:var(--sa-cream)] text-center">
-                        <span className="text-[9.5px] font-bold uppercase tracking-[0.1em] text-[color:var(--sa-gold-2)]">
+                      <span className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-[#08172D] text-center shadow-xs">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-[#F59E0B]">
                           {valid
                             ? d!
                                 .toLocaleString('en-US', { month: 'short' })
                                 .toUpperCase()
                             : 'TBD'}
                         </span>
-                        <span className="font-serif text-[1.125rem] font-bold leading-none text-[color:var(--sa-ink)]">
+                        <span className="font-serif text-lg font-black leading-none text-white">
                           {valid ? d!.getDate() : '--'}
                         </span>
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="line-clamp-2 block text-[13px] font-semibold leading-snug text-[color:var(--sa-ink)]">
+                        <span className="line-clamp-2 block text-xs sm:text-[13px] font-bold leading-snug text-[#08172D] group-hover:text-[#8A6100] transition-colors">
                           {session.title}
                         </span>
-                        <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[11.5px] text-[color:var(--sa-ink-3)]">
-                          <Clock size={11} className="text-[color:var(--sa-gold-2)]" />
+                        <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs font-bold text-slate-600">
+                          <Clock size={12} className="text-[#B8860B]" />
                           {formatTime12HourIST(session.liveData?.scheduledTime)}
-                          <span className="text-[color:var(--sa-ink-4)]">
+                          <span className="text-slate-500 font-semibold">
                             · {session.liveData?.durationMinutes || 60} min
                           </span>
                         </span>

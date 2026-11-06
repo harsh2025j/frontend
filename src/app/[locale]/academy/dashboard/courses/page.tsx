@@ -41,12 +41,14 @@ export default function MyCoursesPage() {
       {/* ─── Header ─── */}
       <div className="sa-tile flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <p className="sa-runhead">My courses</p>
-          <h1 className="font-serif text-[1.625rem] font-bold leading-tight tracking-[-0.015em] text-[color:var(--sa-ink)] sm:text-[1.875rem]">
-            Your learning library
+          <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#FDF6E2] text-[#8A6100] border border-[#E8CD82] text-[11px] font-black uppercase tracking-wider mb-2">
+            MY COURSES
+          </span>
+          <h1 className="font-serif text-[1.625rem] font-bold leading-tight tracking-[-0.015em] text-[#08172D] sm:text-[1.875rem]">
+            Enrolled Learning Library
           </h1>
-          <p className="mt-1.5 text-[13px] text-[color:var(--sa-ink-3)]">
-            Everything you&apos;re enrolled in, with progress tracked across lessons.
+          <p className="mt-1.5 text-xs sm:text-sm font-medium text-slate-600">
+            Everything you are enrolled in, with real-time syllabus tracking across all lessons.
           </p>
         </div>
 
@@ -65,13 +67,13 @@ export default function MyCoursesPage() {
               key={i}
               className="sa-tile sa-col-sm-6 sa-col-lg-4 !p-0 overflow-hidden"
             >
-              <div className="aspect-video w-full animate-pulse bg-[color:var(--sa-cream-2)]" />
+              <div className="aspect-video w-full animate-pulse bg-slate-200" />
               <div className="space-y-3 p-5">
-                <div className="h-4 w-24 animate-pulse rounded bg-[color:var(--sa-cream-2)]" />
-                <div className="h-5 w-full animate-pulse rounded bg-[color:var(--sa-cream-2)]" />
-                <div className="h-5 w-2/3 animate-pulse rounded bg-[color:var(--sa-cream-2)]" />
-                <div className="h-2 w-full animate-pulse rounded-full bg-[color:var(--sa-cream-2)]" />
-                <div className="h-10 w-full animate-pulse rounded-xl bg-[color:var(--sa-cream-2)]" />
+                <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+                <div className="h-5 w-full animate-pulse rounded bg-slate-200" />
+                <div className="h-5 w-2/3 animate-pulse rounded bg-slate-200" />
+                <div className="h-2 w-full animate-pulse rounded-full bg-slate-200" />
+                <div className="h-10 w-full animate-pulse rounded-xl bg-slate-200" />
               </div>
             </div>
           ))}
@@ -93,11 +95,11 @@ export default function MyCoursesPage() {
             return (
               <article
                 key={course.slug}
-                className="sa-tile sa-tile-hover sa-col-sm-6 sa-col-lg-4 group !p-0 overflow-hidden flex flex-col"
+                className="sa-col-sm-6 sa-col-lg-4 group !p-0 overflow-hidden flex flex-col rounded-2xl border-2 border-slate-200/90 hover:border-[#B7913A] bg-white shadow-sm hover:shadow-xl transition-all duration-300"
               >
                 <Link
                   href={`/dashboard/learn/${course.slug}`}
-                  className="relative block aspect-video w-full overflow-hidden bg-[color:var(--sa-cream-2)]"
+                  className="relative block aspect-video w-full overflow-hidden bg-slate-100"
                 >
                   <img
                     src={
@@ -105,32 +107,32 @@ export default function MyCoursesPage() {
                       'https://images.unsplash.com/photo-1505664177922-9283892047d6?q=80&w=600&auto=format&fit=crop'
                     }
                     alt=""
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    className="h-full w-full object-cover"
                   />
                   <div
                     aria-hidden="true"
-                    className="absolute inset-0 bg-gradient-to-t from-[rgba(11,18,32,0.68)] via-[rgba(11,18,32,0.08)] to-transparent"
+                    className="absolute inset-0 bg-gradient-to-t from-[#08172D]/80 via-transparent to-transparent"
                   />
 
-                  {/* Status badge: solid, high contrast, reads on any thumbnail */}
+                  {/* Status badge: solid, high contrast */}
                   {done ? (
-                    <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-[color:var(--sa-sage-2)] px-2.5 py-[5px] text-[11px] font-semibold text-white shadow-sm">
-                      <CheckCircle2 size={12} strokeWidth={2.5} />
+                    <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1 text-xs font-black text-white shadow-md">
+                      <CheckCircle2 size={13} strokeWidth={2.5} />
                       Completed
                     </span>
                   ) : (
-                    <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-[5px] text-[11px] font-semibold text-[color:var(--sa-ink)] shadow-sm">
+                    <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-[#08172D]/95 backdrop-blur-md px-3 py-1 text-xs font-black text-white border border-white/20 shadow-md">
                       <span
                         aria-hidden="true"
-                        className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--sa-gold)]"
+                        className="inline-block h-2 w-2 rounded-full bg-[#F59E0B]"
                       />
                       In progress · {progress}%
                     </span>
                   )}
 
-                  {/* Hover play affordance */}
+                  {/* Play affordance */}
                   <span
-                    className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-[color:var(--sa-gold)] text-[#1F1703] shadow-[0_6px_18px_-4px_rgba(183,145,58,0.6)] ring-2 ring-white/80 transition-transform duration-200 group-hover:scale-110"
+                    className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-[#B8860B] text-white shadow-xl"
                     aria-hidden="true"
                   >
                     {done ? (
@@ -141,32 +143,32 @@ export default function MyCoursesPage() {
                   </span>
                 </Link>
 
-                <div className="flex flex-1 flex-col gap-4 p-5">
+                <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
                   <div className="min-w-0">
                     <Link href={`/dashboard/learn/${course.slug}`}>
-                      <h3 className="line-clamp-2 font-serif text-[1.0625rem] font-bold leading-snug tracking-[-0.005em] text-[color:var(--sa-ink)] transition-colors hover:text-[color:var(--sa-navy-2)]">
+                      <h3 className="line-clamp-2 font-serif text-[1.125rem] sm:text-[1.2rem] font-bold leading-snug tracking-tight text-[#08172D] group-hover:text-[#8A6100] transition-colors">
                         {course.title}
                       </h3>
                     </Link>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-[color:var(--sa-ink-4)]">
+                    <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-slate-700">
                       <span className="inline-flex items-center gap-1">
-                        <Clock size={11} /> Since {since}
+                        <Clock size={12} className="text-[#B8860B]" /> Since {since}
                       </span>
                       {done && (
-                        <span className="inline-flex items-center gap-1 text-[color:var(--sa-gold-3)]">
-                          <Award size={11} /> Credential earned
+                        <span className="inline-flex items-center gap-1 text-[#8A6100]">
+                          <Award size={12} /> Credential earned
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="mt-auto space-y-3">
+                  <div className="mt-auto space-y-3 pt-2">
                     <div>
                       <div className="mb-1.5 flex items-baseline justify-between">
-                        <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[color:var(--sa-ink-3)]">
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-800">
                           Progress
                         </span>
-                        <span className="font-serif text-[14px] font-bold tabular-nums text-[color:var(--sa-ink)]">
+                        <span className="font-serif text-base font-black tabular-nums text-[#08172D]">
                           {progress}%
                         </span>
                       </div>
@@ -176,14 +178,14 @@ export default function MyCoursesPage() {
                     </div>
 
                     <Link href={`/dashboard/learn/${course.slug}`}>
-                      <button className="sa-btn sa-btn-primary sa-btn-block">
+                      <button className="w-full bg-[#08172D] hover:bg-[#040C18] text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer">
                         {done ? (
                           <>
-                            <BookOpen size={14} /> Review course
+                            <BookOpen size={14} /> Review Course
                           </>
                         ) : (
                           <>
-                            <PlayCircle size={14} /> Resume course
+                            <PlayCircle size={15} /> Resume Course
                           </>
                         )}
                         <ArrowRight size={14} />
@@ -212,12 +214,12 @@ function FilterTabs({
   counts: Record<Filter, number>;
 }) {
   const options: { key: Filter; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'in_progress', label: 'In progress' },
+    { key: 'all', label: 'All Courses' },
+    { key: 'in_progress', label: 'In Progress' },
     { key: 'completed', label: 'Completed' },
   ];
   return (
-    <div className="inline-flex max-w-full shrink-0 overflow-x-auto rounded-full border border-[rgba(11,18,32,0.08)] bg-[color:var(--sa-cream)] p-1 scrollbar-none">
+    <div className="inline-flex max-w-full shrink-0 overflow-x-auto rounded-2xl border-2 border-slate-200 bg-white p-1.5 shadow-2xs scrollbar-none gap-1">
       {options.map((o) => {
         const active = filter === o.key;
         return (
@@ -225,18 +227,18 @@ function FilterTabs({
             key={o.key}
             type="button"
             onClick={() => onChange(o.key)}
-            className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-[12.5px] font-semibold transition-colors cursor-pointer ${
+            className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-3.5 sm:px-4 py-2 text-xs sm:text-[13px] font-bold transition-all cursor-pointer ${
               active
-                ? 'bg-white text-[color:var(--sa-ink)] shadow-sm'
-                : 'text-[color:var(--sa-ink-3)] hover:text-[color:var(--sa-ink)]'
+                ? 'bg-[#08172D] text-white shadow-sm'
+                : 'text-slate-700 hover:text-[#08172D] hover:bg-slate-100'
             }`}
           >
-            {o.label}
+            <span>{o.label}</span>
             <span
-              className={`rounded-full px-1.5 text-[10.5px] tabular-nums ${
+              className={`rounded-full px-2 py-0.5 text-[11px] font-black tabular-nums ${
                 active
-                  ? 'bg-[color:var(--sa-cream-2)] text-[color:var(--sa-ink-2)]'
-                  : 'text-[color:var(--sa-ink-4)]'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-slate-100 text-slate-700'
               }`}
             >
               {counts[o.key]}
@@ -252,25 +254,26 @@ function FilterTabs({
 
 function EmptyState({ filter }: { filter: Filter }) {
   return (
-    <div className="sa-tile sa-tile-pad-lg text-center">
-      <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[color:var(--sa-gold-soft)] text-[color:var(--sa-gold-2)]">
-        <BookOpen size={22} />
+    <div className="sa-tile text-center p-8 sm:p-14 border-2 border-slate-200">
+      <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#FAF0D4] border border-[#E8CD82] text-[#8A6100]">
+        <BookOpen size={26} strokeWidth={2} />
       </span>
-      <h3 className="mt-4 font-serif text-[1.25rem] font-bold text-[color:var(--sa-ink)]">
+      <h3 className="mt-4 font-serif text-xl sm:text-2xl font-bold text-[#08172D]">
         {filter === 'completed'
           ? 'No completed courses yet'
           : filter === 'in_progress'
-          ? 'No courses in progress'
-          : 'No active enrolments'}
+          ? 'No courses currently in progress'
+          : 'No active enrolments found'}
       </h3>
-      <p className="sa-sub mx-auto mt-2 max-w-md">
+      <p className="mt-2 text-xs sm:text-sm font-medium text-slate-600 max-w-md mx-auto leading-relaxed">
         {filter === 'completed'
-          ? 'Keep learning to complete your enrolled courses and unlock credentials.'
-          : 'Explore the academy to start learning today.'}
+          ? 'Keep studying your active courses to complete lessons, pass assessments, and unlock accredited certificates.'
+          : 'Explore our catalog of practical law programmes, litigation masterclasses, and drafting workshops.'}
       </p>
-      <Link href="/courses" className="mt-5 inline-flex">
-        <button className="sa-btn sa-btn-gold">
-          Browse courses <ArrowRight size={15} />
+      <Link href="/courses" className="mt-6 inline-flex">
+        <button className="bg-[#08172D] hover:bg-[#040C18] text-white font-bold py-3 px-6 rounded-xl text-xs sm:text-sm shadow-md transition-all inline-flex items-center gap-2 cursor-pointer">
+          <span>Browse All Courses</span>
+          <ArrowRight size={15} />
         </button>
       </Link>
     </div>

@@ -109,6 +109,19 @@ export interface SavedDraftItem {
   pinnedCitations?: Array<{ title: string; citation: string; ratio?: string }>;
 }
 
+export interface PaymentTranche {
+  tranche: string;
+  amount: string;
+  dueDate: string;
+  paymentMode?: string;
+}
+
+export interface PendingLitigation {
+  courtName?: string;
+  caseNumber?: string;
+  caseType?: string;
+}
+
 export interface SettlementRequest {
   disputeType: string;
   partyA: string;
@@ -117,6 +130,15 @@ export interface SettlementRequest {
   settlementAmount: string;
   disputeSummary: string;
   liabilityAllocation?: string;
+  paymentTranches?: PaymentTranche[];
+  pendingLitigation?: PendingLitigation;
+}
+
+export interface SettlementSection {
+  index: string;
+  heading: string;
+  badge?: string;
+  content: string;
 }
 
 export interface SettlementResponse {
@@ -125,26 +147,57 @@ export interface SettlementResponse {
   parties: { partyA: string; partyB: string };
   claimValue: string;
   agreedSettlementValue: string;
-  sections: { index: string; heading: string; content: string }[];
+  pendingLitigation?: PendingLitigation;
+  sections: SettlementSection[];
+  courtApplication?: string;
+  executionBlock?: string;
+  defaultMechanism?: string;
 }
 
 export interface HealthCheckFinding {
   id: string;
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  layer?: string;
   category: string;
+  clauseReference?: string;
+  flaggedSnippet?: string;
   issue: string;
   implication: string;
   recommendation: string;
+  correctedClause?: string;
+}
+
+export interface StatutoryCheckItem {
+  statute: string;
+  compliance: 'COMPLIANT' | 'NON_COMPLIANT' | 'ATTENTION_NEEDED';
+  notes: string;
+}
+
+export interface DocumentMetrics {
+  estimatedPages?: number;
+  wordCount?: number;
+  characterCount?: number;
+  coverage?: string;
+  isLargeDoc?: boolean;
 }
 
 export interface HealthCheckReport {
   documentTitle: string;
+  documentSummary?: string;
   healthScore: number;
   riskLevel: 'HIGH RISK' | 'MODERATE RISK' | 'HEALTHY';
+  layerScores?: {
+    layer1Score: number;
+    layer2Score: number;
+    layer3Score: number;
+  };
   totalFindings: number;
   findingsBreakdown: { high: number; medium: number; low: number };
   findings: HealthCheckFinding[];
+  statutoryChecklist?: StatutoryCheckItem[];
   revisionChecklist: string[];
+  extractedText?: string;
+  documentMetrics?: DocumentMetrics;
 }
 
 export interface TranslationResponse {
@@ -170,6 +223,7 @@ export interface LegalDocTemplate {
   id: string;
   title: string;
   category: string;
+  subcategory?: string;
   pageCount: number;
   description?: string;
 }

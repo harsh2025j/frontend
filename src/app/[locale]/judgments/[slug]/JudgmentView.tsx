@@ -128,7 +128,7 @@ export default function JudgmentView({ judgmentId: propId, isModal = false }: { 
 
             {judgment.pdfUrl ? (
                 <div className="max-w-7xl mx-auto mt-8 px-4 h-[92vh]">
-                    <div className="bg-white rounded-2xl shadow-xl border border-gray-200 flex flex-col h-full overflow-hidden">
+                    <div className="bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col h-full overflow-hidden">
                         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 bg-gray-50 flex-shrink-0">
                             <h3 className="font-sans font-bold text-sm uppercase tracking-widest text-[#0A2342] flex items-center gap-2">
                                 <FileText size={18} /> Official Judgment PDF
@@ -319,7 +319,7 @@ export default function JudgmentView({ judgmentId: propId, isModal = false }: { 
                         </h2>
                     </div>
 
-                    <div className="judgment-body text-xl md:text-xl lg:text-xl leading-[2] text-gray-900 marker:text-black font-merriweather">
+                    <div className="judgment-body text-base md:text-[17px] leading-[1.75] text-gray-900 marker:text-black font-body">
                         {judgment.fullText ? (
                             <div className="article-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(judgment.fullText) }} />
                         ) : (
@@ -347,7 +347,7 @@ export default function JudgmentView({ judgmentId: propId, isModal = false }: { 
                     </div>
                 </div>
 
-                <div className="print-hidden max-w-5xl mx-auto mt-8 mb-20 px-10 md:px-20 py-12 bg-white rounded-3xl border border-gray-200 shadow-xl ">
+                <div className="print-hidden max-w-5xl mx-auto mt-8 mb-20 px-10 md:px-20 py-12 bg-white rounded-lg border border-gray-200 shadow-xl ">
                     <div className="flex items-center gap-3 mb-10">
                         <div className="p-2 bg-amber-50 rounded-lg">
                             <Info size={24} className="text-[#C9A227]" />

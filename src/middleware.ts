@@ -49,6 +49,25 @@ export default function middleware(request: NextRequest) {
       return NextResponse.redirect(cleanUrl, 307);
     }
 
+    // Normalize /course or /course/ to /courses on academy subdomain
+    if (pathname === '/course' || pathname === '/course/' || pathname === '/en/course' || pathname === '/hi/course') {
+      const cleanUrl = new URL(`/courses${url.search}`, request.url);
+      return NextResponse.redirect(cleanUrl, 307);
+    }
+
+    // Normalize /dashboard/live-classes or /live-classes to /dashboard/live-sessions
+    if (
+      pathname === '/dashboard/live-classes' ||
+      pathname === '/dashboard/live-classes/' ||
+      pathname === '/en/dashboard/live-classes' ||
+      pathname === '/hi/dashboard/live-classes' ||
+      pathname === '/live-classes' ||
+      pathname === '/live-classes/'
+    ) {
+      const cleanUrl = new URL(`/dashboard/live-sessions${url.search}`, request.url);
+      return NextResponse.redirect(cleanUrl, 307);
+    }
+
     // Check if the path already has a locale (e.g., /en/ or /hi/)
     const hasLocale = /^\/(en|hi)(\/|$)/.test(pathname);
 
@@ -97,7 +116,13 @@ export default function middleware(request: NextRequest) {
 
     if (match) {
       const remainingPath = match[1] || '/';
-      const normalizedPath = remainingPath.startsWith('/') ? remainingPath : `/${remainingPath}`;
+      let normalizedPath = remainingPath.startsWith('/') ? remainingPath : `/${remainingPath}`;
+      if (normalizedPath === '/course' || normalizedPath === '/course/') {
+        normalizedPath = '/courses';
+      }
+      if (normalizedPath === '/dashboard/live-classes' || normalizedPath === '/dashboard/live-classes/' || normalizedPath === '/live-classes' || normalizedPath === '/live-classes/') {
+        normalizedPath = '/dashboard/live-sessions';
+      }
       const targetHost = getAcademyHost(host);
       const proto = getProtocol(request, host);
       const destination = `${proto}://${targetHost}${normalizedPath}${url.search}`;

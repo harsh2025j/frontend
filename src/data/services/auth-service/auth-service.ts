@@ -15,6 +15,9 @@ import {
   VerifyOtpResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
+  DeactivationRequestResponse,
+  DeactivationStatusResponse,
+  ApiEnvelope,
 } from "@/data/features/auth/auth.types";
 import apiClient from "../apiConfig/apiClient";
 import { API_BASE_URL, API_ENDPOINTS } from "../apiConfig/apiContants";
@@ -113,6 +116,27 @@ export const authApi = {
   upgradeToStudent: async () => {
     const response = await apiClient.post(
       API_ENDPOINTS.PROFILE.UPGRADE_STUDENT
+    );
+    return response;
+  },
+
+  requestAccountDeactivation: async (data: {
+    email: string;
+    password: string;
+    confirm: boolean;
+    type?: "deactivate" | "delete";
+    reason?: string;
+  }) => {
+    const response = await apiClient.post<ApiEnvelope<DeactivationRequestResponse>>(
+      API_ENDPOINTS.AUTH.DEACTIVATE_ACCOUNT,
+      data
+    );
+    return response;
+  },
+
+  getAccountDeactivationStatus: async () => {
+    const response = await apiClient.get<ApiEnvelope<DeactivationStatusResponse>>(
+      API_ENDPOINTS.AUTH.DEACTIVATE_ACCOUNT_STATUS
     );
     return response;
   },

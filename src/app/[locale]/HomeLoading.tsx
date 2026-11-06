@@ -60,8 +60,8 @@ export default function HomeLoading() {
           are white-on-navy so the band reads as the finished hero rather than
           a grey box that repaints dark a moment later. */}
       <section className="relative w-full min-h-[700px] md:min-h-[570px] lg:h-[570px] bg-[#0A2342] overflow-hidden">
-        <div className="container relative z-10 mx-auto h-full px-2 md:px-3 flex items-center py-6 md:py-10 lg:py-0">
-          <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-20 items-center animate-pulse">
+        <div className="container relative z-10 mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center py-6 md:py-10 lg:py-0">
+          <div className="w-full grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-20 items-center animate-pulse">
 
             {/* Article image */}
             <div className="relative flex justify-center lg:justify-start">

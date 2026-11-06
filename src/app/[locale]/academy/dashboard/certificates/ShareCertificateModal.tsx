@@ -400,7 +400,7 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
                 onClick={() => openPopup(linkedInPostUrl)}
                 className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-2xl border border-gray-200 hover:border-[#0A66C2] hover:bg-[#0A66C2]/5 transition-all text-center group cursor-pointer"
               >
-                <div className="w-11 h-11 rounded-xl bg-[#0A66C2] text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                <div className="w-11 h-11 rounded-xl bg-[#0A66C2] text-white flex items-center justify-center shadow-md">
                   <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                     <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.45a1.64 1.64 0 1 0 0 3.28 1.64 1.64 0 0 0 0-3.28Z" />
                   </svg>
@@ -416,7 +416,7 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
                 onClick={() => openPopup(whatsAppUrl)}
                 className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-2xl border border-gray-200 hover:border-[#25D366] hover:bg-[#25D366]/5 transition-all text-center group cursor-pointer"
               >
-                <div className="w-11 h-11 rounded-xl bg-[#25D366] text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                <div className="w-11 h-11 rounded-xl bg-[#25D366] text-white flex items-center justify-center shadow-md">
                   <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                     <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.5.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.44-.06-.12-.56-1.35-.77-1.85-.2-.49-.41-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.12.17 1.78 2.71 4.3 3.8 2.53 1.09 2.53.73 2.99.69.45-.05 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.06-.1-.23-.17-.48-.29Z" />
                   </svg>
@@ -432,7 +432,7 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
                 onClick={() => openPopup(twitterUrl)}
                 className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-2xl border border-gray-200 hover:border-black hover:bg-black/5 transition-all text-center group cursor-pointer"
               >
-                <div className="w-11 h-11 rounded-xl bg-black text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                <div className="w-11 h-11 rounded-xl bg-black text-white flex items-center justify-center shadow-md">
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                   </svg>
@@ -448,7 +448,7 @@ export function ShareCertificateModal({ cert, isOpen, onClose }: ShareCertificat
                 href={emailUrl}
                 className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-2xl border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all text-center group cursor-pointer"
               >
-                <div className="w-11 h-11 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                <div className="w-11 h-11 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md">
                   <Mail size={20} />
                 </div>
                 <div>

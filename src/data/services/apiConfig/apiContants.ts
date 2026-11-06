@@ -20,6 +20,10 @@ export const API_ENDPOINTS = {
     JUDGMENT_DOWNLOAD: "/tools/judgment/:id/download",
     JUDGMENT_PARAGRAPHS: "/tools/judgment/:id/paragraphs",
     JUDGMENT_PDF: "/tools/judgment/:id/pdf",
+    TEMPLATES_CATEGORIES: "/tools/documents/templates/categories",
+    TEMPLATES: "/tools/documents/templates",
+    TEMPLATE_BY_ID: "/tools/documents/templates/:id",
+    TEMPLATE_PDF: "/tools/documents/templates/:id/pdf",
   },
   SEARCH: {
     JUDGES: "/search/judges",
@@ -35,7 +39,9 @@ export const API_ENDPOINTS = {
     LOGOUT: "/auth/logout",
     RESEND_OTP: "/auth/resend-otp",
     SOCIAL_LOGIN: "/auth/social-login",
-    REFRESH: "/auth/refresh"
+    REFRESH: "/auth/refresh",
+    DEACTIVATE_ACCOUNT: "/auth/deactivate-account",
+    DEACTIVATE_ACCOUNT_STATUS: "/auth/deactivate-account/status"
   },
   PROFILE: {
     FETCH: "/profile",
@@ -117,6 +123,8 @@ export const API_ENDPOINTS = {
     READ_ALL: "/notifications/read-all",
     MARK_READ: "/notifications/:id/read",
     DELETE: "/notifications/:id",
+    CONTACT_INQUIRY: "/notifications/contact-inquiry",
+    ADVERTISE_INQUIRY: "/notifications/advertise-inquiry",
   },
   REPORTS: {
     BASE: "/reports",

@@ -23,14 +23,35 @@ export default function JsonLd({ locale = 'en' }: JsonLdProps) {
         publisher: {
           '@id': `${siteUrl}/#organization`,
         },
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: {
-            '@type': 'EntryPoint',
-            urlTemplate: `${siteUrl}/${locale}/search?q={search_term_string}`,
+        potentialAction: [
+          {
+            '@type': 'SearchAction',
+            name: 'Platform Legal Search',
+            target: {
+              '@type': 'EntryPoint',
+              urlTemplate: `${siteUrl}/${locale}/search?q={search_term_string}`,
+            },
+            'query-input': 'required name=search_term_string',
           },
-          'query-input': 'required name=search_term_string',
-        },
+          {
+            '@type': 'SearchAction',
+            name: 'Supreme Court & High Court Judgments Search',
+            target: {
+              '@type': 'EntryPoint',
+              urlTemplate: `${siteUrl}/${locale}/judgments?q={search_term_string}`,
+            },
+            'query-input': 'required name=search_term_string',
+          },
+          {
+            '@type': 'SearchAction',
+            name: 'Court Case Status & CNR Tracker',
+            target: {
+              '@type': 'EntryPoint',
+              urlTemplate: `${siteUrl}/${locale}/cases?q={search_term_string}`,
+            },
+            'query-input': 'required name=search_term_string',
+          },
+        ],
       },
       {
         '@type': 'LegalService',
@@ -41,13 +62,13 @@ export default function JsonLd({ locale = 'en' }: JsonLdProps) {
         logo: `${siteUrl}/logo.png`,
         image: `${siteUrl}/logo.png`,
         description:
-          'Premier Indian law firm offering High Court and Supreme Court litigation, constitutional writ practice, commercial arbitration, mediation under Mediation Act 2023, and judicial intelligence tools.',
+          'Premier Indian law firm and judicial technology platform offering High Court and Supreme Court litigation, constitutional writ practice, commercial arbitration, judicial intelligence tools, and accredited legal education.',
         telephone: '+917080909786',
         email: 'sajjadhusainlawassociates@gmail.com',
         priceRange: '₹₹₹',
         address: {
           '@type': 'PostalAddress',
-          streetAddress: 'Chamber 515, Block-C, High Court, Lucknow - Ayodhya Rd, Gomti Nagar',
+          streetAddress: 'Lucknow – Ayodhya Road, Gomti Nagar',
           addressLocality: 'Lucknow',
           addressRegion: 'Uttar Pradesh',
           postalCode: '226010',
@@ -72,56 +93,148 @@ export default function JsonLd({ locale = 'en' }: JsonLdProps) {
         ],
         hasOfferCatalog: {
           '@type': 'OfferCatalog',
-          name: 'Judiciary AI Tools & Legal Services',
+          name: 'Judiciary AI Tools, Litigation Services & Legal Education',
           itemListElement: [
             {
               '@type': 'Offer',
               itemOffered: {
-                '@type': 'Service',
-                name: 'Supreme Court & High Court Precedents Research',
+                '@type': 'SoftwareApplication',
+                name: 'Supreme Court & High Court Precedents Research Portal',
                 url: `${siteUrl}/${locale}/tools/research`,
+                applicationCategory: 'LegalApplication',
+                operatingSystem: 'Web Browser',
                 description:
-                  'Instant citation and judicial ratio retrieval across 50,000+ authentic Supreme Court and High Court judgments.',
+                  'Instant judicial citation, ratio decidendi, and precedent retrieval across 50,000+ authentic Supreme Court and High Court judgments with neutral citations and official SCR reader.',
               },
             },
             {
               '@type': 'Offer',
               itemOffered: {
-                '@type': 'Service',
+                '@type': 'SoftwareApplication',
                 name: 'AI Legal Drafting Studio for Indian Courts',
                 url: `${siteUrl}/${locale}/tools/drafting`,
+                applicationCategory: 'LegalApplication',
+                operatingSystem: 'Web Browser',
                 description:
-                  'Court-ready drafting for Article 226/32 Writs, Special Leave Petitions, and commercial suits.',
+                  'Court-ready drafting engine for Article 226/32 Writs, Special Leave Petitions (SLPs), Commercial Suits, Interim Applications, and Legal Notices conforming to Supreme Court and High Court Rules.',
               },
             },
             {
               '@type': 'Offer',
               itemOffered: {
-                '@type': 'Service',
+                '@type': 'SoftwareApplication',
                 name: 'Mediation & Out-of-Court Settlement Desk',
-                url: `${siteUrl}/${locale}/tools/mediation`,
+                url: `${siteUrl}/${locale}/tools/settlement`,
+                applicationCategory: 'LegalApplication',
+                operatingSystem: 'Web Browser',
                 description:
-                  'Structured settlement term sheets complying with Order XXIII Rule 3 CPC and the Mediation Act 2023.',
+                  'Enforceable 5-part settlement term sheet generator conforming to Order XXIII Rule 3 CPC and the Mediation Act 2023 with payment tranches, grace periods, and mutual releases.',
               },
             },
             {
               '@type': 'Offer',
               itemOffered: {
-                '@type': 'Service',
-                name: 'Legal Document Health Check & 3-Layer Risk Audit',
+                '@type': 'SoftwareApplication',
+                name: 'Legal Document Health Check & 3-Layer Contract Risk Audit',
+                url: `${siteUrl}/${locale}/tools/health-check`,
+                applicationCategory: 'LegalApplication',
+                operatingSystem: 'Web Browser',
+                description:
+                  '100-point diagnostic contract audit spotting missing arbitration seats under the Hardy doctrine, uncapped indemnities, stamp duty non-compliance, and statutory traps.',
+              },
+            },
+            {
+              '@type': 'Offer',
+              itemOffered: {
+                '@type': 'SoftwareApplication',
+                name: 'Legal Document Templates & Automated Agreements',
                 url: `${siteUrl}/${locale}/tools/documents`,
+                applicationCategory: 'LegalApplication',
+                operatingSystem: 'Web Browser',
                 description:
-                  'Diagnostic risk audit spotting missing arbitration seats, uncapped indemnities, and statutory compliance traps.',
+                  'Comprehensive library of vetted Indian legal agreements, affidavits, plaints, power of attorney, lease deeds, and notices updated for the Bharatiya Nyaya Sanhita 2023.',
               },
             },
             {
               '@type': 'Offer',
               itemOffered: {
-                '@type': 'Service',
+                '@type': 'SoftwareApplication',
                 name: 'Legal Vernacular Translation & Document OCR',
                 url: `${siteUrl}/${locale}/tools/translation`,
+                applicationCategory: 'LegalApplication',
+                operatingSystem: 'Web Browser',
                 description:
-                  'Certified translation across 22 Eighth Schedule Indian languages to English with BNS 2023 mapping.',
+                  'Certified legal translation and OCR across 22 Eighth Schedule Indian languages to judicial English with automatic mapping of IPC/CrPC to BNS/BNSS 2023.',
+              },
+            },
+            {
+              '@type': 'Offer',
+              itemOffered: {
+                '@type': 'Service',
+                name: 'Schedule Advocate Consultation & Case Advisory',
+                url: `${siteUrl}/${locale}/book-appointment`,
+                description:
+                  'Direct consultation booking with senior advocates and litigation specialists for High Court, Supreme Court, corporate, and civil advisory.',
+              },
+            },
+            {
+              '@type': 'Offer',
+              itemOffered: {
+                '@type': 'Service',
+                name: 'Confidential Client-Advocate Messaging & Case Inquiries',
+                url: `${siteUrl}/${locale}/messages`,
+                description:
+                  'Real-time secure communication portal with advocates for matter status inquiries, case brief sharing, and legal consultations.',
+              },
+            },
+            {
+              '@type': 'Offer',
+              itemOffered: {
+                '@type': 'Service',
+                name: 'Supreme Court & High Court Judgments Repository',
+                url: `${siteUrl}/${locale}/judgments`,
+                description:
+                  'Comprehensive searchable repository of Indian landmark judgments, case summaries, neutral citations, and coram jurisprudence.',
+              },
+            },
+            {
+              '@type': 'Offer',
+              itemOffered: {
+                '@type': 'Service',
+                name: 'Live Case Status & Cause List Tracker',
+                url: `${siteUrl}/${locale}/cases`,
+                description:
+                  'Real-time case tracking portal across Indian High Courts and district courts with CNR search, daily orders, and cause list alerts.',
+              },
+            },
+            {
+              '@type': 'Offer',
+              itemOffered: {
+                '@type': 'Service',
+                name: 'Live Courtroom Display Boards',
+                url: `${siteUrl}/${locale}/display-boards`,
+                description:
+                  'Live court item tracking boards displaying active courtroom proceedings and item numbers for advocates and litigants.',
+              },
+            },
+            {
+              '@type': 'Offer',
+              itemOffered: {
+                '@type': 'Service',
+                name: 'Bare Acts & Central Statutes Library',
+                url: `${siteUrl}/${locale}/legal-documents`,
+                description:
+                  'Comprehensive digital repository of Central Acts, Indian statutory codes, Bharatiya Nyaya Sanhita (BNS), BNSS, and Bharatiya Sakshya Adhiniyam.',
+              },
+            },
+            {
+              '@type': 'Offer',
+              itemOffered: {
+                '@type': 'Service',
+                name: 'Judicial Reports & Case Intelligence Analytics',
+                url: `${siteUrl}/${locale}/reports`,
+                description:
+                  'Analytical case summaries, cause list analytics, and court reporting intelligence for law firms and corporate legal teams.',
               },
             },
           ],
@@ -139,7 +252,7 @@ export default function JsonLd({ locale = 'en' }: JsonLdProps) {
         },
         address: {
           '@type': 'PostalAddress',
-          streetAddress: 'Chamber 515, Block-C, High Court, Lucknow - Ayodhya Rd, Gomti Nagar',
+          streetAddress: 'Lucknow – Ayodhya Road, Gomti Nagar',
           addressLocality: 'Lucknow',
           addressRegion: 'Uttar Pradesh',
           postalCode: '226010',
@@ -149,6 +262,48 @@ export default function JsonLd({ locale = 'en' }: JsonLdProps) {
           '@type': 'EducationalOccupationalCredential',
           name: 'Verified Legal Academy Credential',
           url: `${academyUrl}/verify-certificate`,
+        },
+        hasOfferCatalog: {
+          '@type': 'OfferCatalog',
+          name: 'Legal Education & Certification Courses',
+          itemListElement: [
+            {
+              '@type': 'Offer',
+              itemOffered: {
+                '@type': 'Course',
+                name: 'Practical Litigation & Courtroom Procedure Certification',
+                url: `${academyUrl}/courses`,
+                description:
+                  'Comprehensive training on court filings, drafting of plaints and petitions, cross-examination techniques, and case management.',
+                provider: {
+                  '@id': `${academyUrl}/#academy`,
+                },
+              },
+            },
+            {
+              '@type': 'Offer',
+              itemOffered: {
+                '@type': 'Course',
+                name: 'Judicial Precedents & Legal Research Masterclass',
+                url: `${academyUrl}/courses`,
+                description:
+                  'In-depth mastery of Supreme Court and High Court research methods, ratio extraction, and statutory cross-mapping.',
+                provider: {
+                  '@id': `${academyUrl}/#academy`,
+                },
+              },
+            },
+            {
+              '@type': 'Offer',
+              itemOffered: {
+                '@type': 'Service',
+                name: 'Legal Academy Admissions & Student Enrollment',
+                url: `${academyUrl}/join`,
+                description:
+                  'Direct admissions desk for law students, advocates, and judicial aspirants enrolling in legal certification programs.',
+              },
+            },
+          ],
         },
       },
     ],

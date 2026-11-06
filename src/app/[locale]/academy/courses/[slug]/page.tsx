@@ -7,7 +7,8 @@ import {
   Users, CheckCircle2, Heart,
   PlayCircle, Award, FileText,
   ChevronDown, MonitorPlay, Loader2,
-  Tag, AlertCircle, Infinity, Minus, Plus
+  Tag, AlertCircle, Infinity, Minus, Plus,
+  Search, BookOpen, GraduationCap, ArrowRight, HelpCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/data/redux/hooks';
@@ -236,13 +237,15 @@ export function VideoCourseLayout({ course }: { course: any }) {
   return (
     <div className="w-full">
       {/* ── BREADCRUMB ── */}
-      <button
-        onClick={() => router.back()}
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[color:var(--sa-ink-3)] hover:text-[color:var(--sa-gold)] mb-6 transition-colors group cursor-pointer"
-      >
-        <ArrowLeft size={15} className="group-hover:-translate-x-1 transition-transform" />
-        Back to Courses
-      </button>
+      <div className="mb-6">
+        <Link
+          href="/academy/courses"
+          className="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border-2 border-slate-300 text-xs sm:text-sm font-bold text-[#08172D] hover:border-[#8A6100] hover:text-[#8A6100] shadow-2xs transition-all cursor-pointer"
+        >
+          <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
+          <span>Back to All Courses</span>
+        </Link>
+      </div>
 
       {/* ── TWO-COLUMN EDITORIAL CASE BRIEF GRID ── */}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_380px] gap-8 xl:gap-12 items-start mb-16 w-full">
@@ -253,9 +256,9 @@ export function VideoCourseLayout({ course }: { course: any }) {
           {/* Top Fold / Case Header */}
           <div className="min-w-0 w-full overflow-hidden">
             {(course.category || (course.tags && course.tags.length > 0)) && (
-              <p className="ac-eyebrow mb-2">
+              <span className="inline-block px-3 py-1 rounded-full bg-[#FDF6E2] text-[#8A6100] border border-[#E8CD82] text-xs font-black uppercase tracking-wider mb-3">
                 {course.category || course.tags[0]}
-              </p>
+              </span>
             )}
 
             <h1 className="ac-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[color:var(--sa-ink)] leading-tight tracking-tight mb-4 min-w-0 break-words [overflow-wrap:anywhere]">
@@ -594,7 +597,7 @@ export function VideoCourseLayout({ course }: { course: any }) {
             {/* Price Row */}
             <div className="mb-4 min-w-0">
               <div className="flex items-baseline flex-wrap gap-2.5">
-                <span className="ac-display text-3xl sm:text-4xl font-bold text-[color:var(--sa-gold)]">
+                <span className="font-serif text-3xl sm:text-4xl font-black text-[#08172D] tracking-tight">
                   {appliedCoupon
                     ? (appliedCoupon.isFree ? "FREE" : `₹${appliedCoupon.finalAmount}`)
                     : (course.price || "Free")}
@@ -801,33 +804,33 @@ export function VideoCourseLayout({ course }: { course: any }) {
               <Link
                 key={rc.slug}
                 href={`/academy/courses/${rc.slug}`}
-                className="group flex flex-col bg-[color:var(--sa-paper)] border border-[color:var(--sa-line)] rounded-xl overflow-hidden hover:border-[color:var(--sa-gold)] transition-all duration-300"
+                className="group flex flex-col bg-white border-2 border-slate-200/90 rounded-2xl overflow-hidden hover:border-[#B8860B] shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="relative aspect-video w-full overflow-hidden bg-[color:var(--sa-cream-2)]">
+                <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
                   {rc.thumbnailUrl ? (
                     <img
                       src={rc.thumbnailUrl}
                       alt={rc.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[color:var(--sa-gold)]">
+                    <div className="w-full h-full flex items-center justify-center text-[#8A6100]">
                       <PlayCircle size={32} />
                     </div>
                   )}
                 </div>
                 <div className="p-4 flex flex-col flex-1 min-w-0">
-                  <span className="text-[10px] font-bold text-[color:var(--sa-gold)] uppercase tracking-wider mb-1 truncate">
+                  <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#FDF6E2] text-[#8A6100] border border-[#E8CD82] text-[10px] font-black uppercase tracking-wider mb-2 w-fit">
                     {rc.category || "Course"}
                   </span>
-                  <h4 className="ac-display font-bold text-base text-[color:var(--sa-ink)] group-hover:text-[color:var(--sa-gold-2)] transition-colors mb-2 line-clamp-2">
+                  <h4 className="font-serif font-bold text-base text-[#08172D] group-hover:text-[#8A6100] transition-colors mb-2 line-clamp-2">
                     {rc.title}
                   </h4>
-                  <div className="mt-auto pt-3 border-t border-[color:var(--sa-line)] flex items-center justify-between">
-                    <span className="font-bold text-sm text-[color:var(--sa-gold)]">
+                  <div className="mt-auto pt-3 border-t-2 border-slate-100 flex items-center justify-between">
+                    <span className="font-black text-base text-[#08172D]">
                       {rc.price ? `₹${rc.price}` : "Free"}
                     </span>
-                    <span className="text-xs text-[color:var(--sa-ink-3)] font-medium group-hover:text-[color:var(--sa-ink)] transition-colors">
+                    <span className="text-xs text-[#08172D] font-black group-hover:text-[#8A6100] group-hover:translate-x-0.5 transition-all">
                       View Course &rarr;
                     </span>
                   </div>
@@ -858,6 +861,245 @@ function CourseSkeletonLayout() {
           <div className="h-32 bg-gray-200 rounded-2xl w-full" />
         </div>
         <div className="h-96 bg-gray-200 rounded-2xl" />
+      </div>
+    </div>
+  );
+}
+
+// ── Impressive Course Not Found Component ───────────────────────
+
+function CourseNotFoundView({ slug, error, courses }: { slug: string; error: string | null; courses: any[] }) {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/academy/courses?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push("/academy/courses");
+    }
+  };
+
+  const publishedCourses = courses?.filter((c: any) => c.status === "published" && c.slug) || [];
+  const featuredCourses = publishedCourses.slice(0, 3);
+
+  const popularCategories = [
+    { name: "Criminal Law", count: "Courtroom Defense & IPC" },
+    { name: "Civil Litigation", count: "Drafting, CPC & Evidence" },
+    { name: "Corporate Practice", count: "Contracts & Compliance" },
+    { name: "Constitutional Law", count: "Writs & High Court PIL" },
+  ];
+
+  return (
+    <div className="ac-student bg-[#FAF7EE] min-h-screen font-sans pt-8 sm:pt-12 pb-24 w-full overflow-x-hidden">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+
+        {/* Top Breadcrumb Navigation */}
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
+          <Link
+            href="/academy/courses"
+            className="inline-flex items-center gap-2 text-sm font-bold text-[#0B2242] hover:text-[#C9A227] transition-colors group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 group-hover:border-[#C9A227] flex items-center justify-center transition-colors shadow-2xs">
+              <ArrowLeft size={16} className="text-[#0B2242] group-hover:text-[#C9A227] transition-transform group-hover:-translate-x-0.5" />
+            </div>
+            <span>Back to All Courses</span>
+          </Link>
+
+          <Link
+            href="/academy"
+            className="text-xs font-bold text-[#0B2242]/70 hover:text-[#C9A227] transition-colors uppercase tracking-wider"
+          >
+            Academy Home
+          </Link>
+        </div>
+
+        {/* Impressive Hero Not Found Card */}
+        <div className="relative bg-white rounded-3xl border-2 border-[#122340]/10 shadow-[0_12px_40px_-8px_rgba(11,34,66,0.08)] p-7 sm:p-12 lg:p-14 text-center overflow-hidden">
+          
+          {/* Subtle Ambient Glow */}
+          <div className="pointer-events-none absolute -top-24 -right-24 h-80 w-80 rounded-full bg-[#C9A227]/5 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-[#08172D]/5 blur-3xl" />
+
+          {/* Prestigious Academy Badge Icon */}
+          <div className="relative z-10 mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#08172D] border-2 border-[#C9A227]/40 shadow-md">
+            <GraduationCap size={38} className="text-[#C9A227]" />
+          </div>
+
+          {/* Eyebrow */}
+          <p className="relative z-10 text-xs font-extrabold uppercase tracking-[0.22em] text-[#C9A227] mb-2">
+            SAJJAD HUSAIN LEGAL ACADEMY
+          </p>
+
+          {/* Headline */}
+          <h1 className="relative z-10 font-serif text-3xl sm:text-4xl lg:text-[44px] font-bold text-[#08172D] tracking-tight mb-3">
+            Course Not Found
+          </h1>
+
+          {/* Contextual Description */}
+          <p className="relative z-10 text-sm sm:text-base text-slate-600 max-w-xl mx-auto leading-relaxed mb-6 font-normal">
+            We could not find an active curriculum with identifier{" "}
+            <span className="font-mono font-bold text-[#08172D] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md text-xs sm:text-sm">
+              {slug}
+            </span>
+            . It may have concluded, been reorganized into a new module track, or the URL address might be incorrect.
+          </p>
+
+          {/* Integrated Search Input */}
+          <form onSubmit={handleSearch} className="relative z-10 max-w-md mx-auto mb-7">
+            <div className="relative group">
+              <Search
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#C9A227] transition-colors pointer-events-none"
+              />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by topic, instructor, or subject..."
+                className="w-full h-12 pl-11 pr-24 rounded-xl border-2 border-slate-300 bg-slate-50/70 text-sm font-semibold text-[#08172D] placeholder:text-slate-400 focus:outline-none focus:border-[#C9A227] focus:bg-white focus:ring-4 focus:ring-[#C9A227]/15 transition-all shadow-2xs hover:border-slate-400"
+              />
+              <button
+                type="submit"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 px-4 rounded-lg bg-[#08172D] hover:bg-[#C9A227] text-white hover:text-[#08172D] text-xs font-bold transition-all shadow-xs cursor-pointer"
+              >
+                Search
+              </button>
+            </div>
+          </form>
+
+          {/* Primary Action Buttons */}
+          <div className="relative z-10 flex flex-wrap items-center justify-center gap-3.5">
+            <Link
+              href="/academy/courses"
+              className="inline-flex items-center gap-2.5 h-11 px-6 rounded-xl bg-[#08172D] hover:bg-[#07172C] text-white text-sm font-extrabold shadow-md hover:shadow-lg transition-all"
+            >
+              <BookOpen size={17} className="text-[#C9A227]" />
+              <span>Browse All Courses</span>
+            </Link>
+
+            <Link
+              href="/academy"
+              className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border-2 border-slate-300 bg-white hover:border-[#C9A227] hover:bg-slate-50 text-[#08172D] text-sm font-bold shadow-2xs transition-all"
+            >
+              <span>Academy Home</span>
+            </Link>
+          </div>
+
+          {/* Quick Subject Categories */}
+          <div className="relative z-10 mt-8 pt-7 border-t border-slate-100">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">
+              OR EXPLORE BY SPECIALIZATION
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {popularCategories.map((cat) => (
+                <Link
+                  key={cat.name}
+                  href={`/academy/courses?category=${encodeURIComponent(cat.name)}`}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#08172D] bg-slate-100 hover:bg-[#C9A227]/15 hover:text-[#C9A227] border border-slate-200 hover:border-[#C9A227]/40 transition-colors"
+                >
+                  <Tag size={12} className="text-[#C9A227]" />
+                  <span>{cat.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Featured Courses Section (Dynamic) */}
+        {featuredCourses.length > 0 && (
+          <div className="mt-14">
+            <div className="flex items-end justify-between mb-6">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-[#C9A227] mb-1">
+                  CURRENT ENROLLMENTS
+                </p>
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#08172D] tracking-tight">
+                  Featured Academy Programs
+                </h2>
+              </div>
+              <Link
+                href="/academy/courses"
+                className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#08172D] hover:text-[#C9A227] transition-colors"
+              >
+                <span>View All Courses</span>
+                <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredCourses.map((c: any) => (
+                <Link
+                  key={c.slug}
+                  href={`/academy/courses/${c.slug}`}
+                  className="group flex flex-col bg-white border-2 border-slate-200/80 rounded-2xl overflow-hidden hover:border-[#C9A227] hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
+                    {c.thumbnailUrl ? (
+                      <img
+                        src={c.thumbnailUrl}
+                        alt={c.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-[#08172D] text-[#C9A227]">
+                        <GraduationCap size={36} />
+                      </div>
+                    )}
+                    {c.category && (
+                      <span className="absolute top-2.5 left-2.5 bg-[#08172D]/90 backdrop-blur-xs text-[#C9A227] text-[10px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider border border-[#C9A227]/30 shadow-xs">
+                        {c.category}
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-5 flex flex-col flex-1">
+                    <h3 className="font-serif font-bold text-base text-[#08172D] group-hover:text-[#C9A227] transition-colors line-clamp-2 leading-snug mb-2">
+                      {c.title}
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium mb-3">
+                      {c.instructors?.[0]?.name || "Sajjad Husain Legal Academy"}
+                    </p>
+                    <div className="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <span className="font-serif font-bold text-base text-[#08172D]">
+                        {c.price ? `₹${c.price}` : "Free"}
+                      </span>
+                      <span className="text-xs font-bold text-[#C9A227] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        <span>View Syllabus</span>
+                        <ArrowRight size={13} />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Academic Advisory Support Card */}
+        <div className="mt-12 bg-white rounded-2xl border-2 border-slate-200/80 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-xs">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-[#08172D] text-[#C9A227] flex items-center justify-center shrink-0 shadow-xs">
+              <HelpCircle size={24} />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-[#08172D]">
+                Looking for a specific course or batch?
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-xl leading-relaxed">
+                Our admissions counselors can assist with archived curriculums, batch schedules, courtroom internships, and enrollment queries.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/contact"
+            className="shrink-0 h-10 px-5 rounded-xl border-2 border-[#08172D] bg-[#08172D] text-white hover:bg-[#C9A227] hover:border-[#C9A227] hover:text-[#08172D] text-xs font-extrabold tracking-wide transition-all shadow-xs inline-flex items-center gap-2"
+          >
+            <span>Contact Academic Office</span>
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+
       </div>
     </div>
   );
@@ -905,19 +1147,7 @@ function CourseDetailContent({ params }: { params: Promise<{ slug: string }> }) 
   }
 
   if (error || !currentCourse) {
-    return (
-      <div className="ac-student bg-[color:var(--sa-cream)] min-h-screen font-sans pt-32 pb-20 text-center w-full overflow-x-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <h2 className="ac-display text-2xl font-bold text-[color:var(--sa-ink)] mb-2">Course not found</h2>
-          <p className="text-[color:var(--sa-ink-3)] mb-6">{error || "The course you are looking for does not exist."}</p>
-          <Link href="/academy/courses">
-            <button className="ac-btn ac-btn-primary px-6 py-2.5 rounded hover:bg-[#b39022] transition-colors cursor-pointer">
-              Browse All Courses
-            </button>
-          </Link>
-        </div>
-      </div>
-    );
+    return <CourseNotFoundView slug={slug} error={error} courses={courses} />;
   }
 
   // Map backend Course entity to the VideoCourseLayout format

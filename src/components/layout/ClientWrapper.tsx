@@ -114,14 +114,22 @@ export default function ClientLayout({
     isAcademyRoute ||
     isAcademySubdomain ||
     (typeof window !== 'undefined' && window.location.hostname.startsWith('academy.')) ||
-    pathname.startsWith("/auth") ||
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/server-error") ||
-    pathname.startsWith("/academy") ||
-    pathname.startsWith("/courses") ||
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/certificates") ||
-    pathname.startsWith("/join") ||
+    pathname === "/auth" ||
+    pathname.startsWith("/auth/") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/") ||
+    pathname === "/server-error" ||
+    pathname.startsWith("/server-error/") ||
+    pathname === "/academy" ||
+    pathname.startsWith("/academy/") ||
+    pathname === "/courses" ||
+    pathname.startsWith("/courses/") ||
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname === "/certificates" ||
+    pathname.startsWith("/certificates/") ||
+    pathname === "/join" ||
+    pathname.startsWith("/join/") ||
     pathname.startsWith("/verify-certificate");
 
   if (isHiddenLayout) {

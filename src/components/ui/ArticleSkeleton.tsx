@@ -19,7 +19,7 @@ const ContentSliderCardSkeleton: React.FC = () => (
 );
 
 const LatestNewsSkeleton: React.FC = () => (
-  <div className="bg-white rounded-md overflow-hidden animate-pulse flex flex-col border border-gray-200 p-0 h-full">
+  <div className="bg-white rounded-lg overflow-hidden animate-pulse flex flex-col border border-gray-200 p-0 h-full">
     <div className="w-full aspect-video bg-gray-300 shrink-0"></div>
     <div className="flex flex-col p-3 sm:p-4 flex-grow">
       <div className="h-4 sm:h-5 bg-gray-300 w-full mb-2 rounded"></div>
@@ -38,7 +38,7 @@ const LatestNewsSkeleton: React.FC = () => (
 );
 
 const JudgementSkeleton: React.FC = () => (
-  <div className="bg-white rounded-xl overflow-hidden animate-pulse flex flex-col border border-gray-100 h-full">
+  <div className="bg-white rounded-lg overflow-hidden animate-pulse flex flex-col border border-gray-100 h-full">
     <div className="bg-gray-300 w-full aspect-video flex-shrink-0"></div>
     <div className="flex flex-col p-4 flex-1">
       <div className="h-4 bg-gray-300 w-full mb-3 rounded"></div>

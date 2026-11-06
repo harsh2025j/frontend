@@ -1350,7 +1350,7 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
                                 href={activeItem.fileUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="bg-white hover:bg-slate-50 text-[#122340] border border-[#122340]/15 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-bold text-[11px] sm:text-xs hover:-translate-y-0.5 transition-all flex items-center gap-1 shadow-2xs cursor-pointer shrink-0 active:scale-95"
+                                className="bg-white hover:bg-slate-50 text-[#122340] border border-[#122340]/15 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-bold text-[11px] sm:text-xs transition-all flex items-center gap-1 shadow-2xs cursor-pointer shrink-0 active:scale-95"
                                 title="Open in new browser tab"
                               >
                                 <ExternalLink size={12} className="text-red-600" />
@@ -1361,7 +1361,7 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
                                 href={googleDocsExternalUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-bold text-[11px] sm:text-xs hover:-translate-y-0.5 transition-all flex items-center gap-1 shadow-2xs cursor-pointer shrink-0 active:scale-95"
+                                className="bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-bold text-[11px] sm:text-xs transition-all flex items-center gap-1 shadow-2xs cursor-pointer shrink-0 active:scale-95"
                                 title="Open in Google Docs"
                               >
                                 <ExternalLink size={12} className="text-blue-600" />
@@ -1651,7 +1651,7 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
                           if (certBtn) certBtn.click();
                           else window.location.href = '/dashboard/certificates';
                         }}
-                        className="bg-[#C9A227] text-[#0a1628] px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-xl font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 cursor-pointer"
+                        className="bg-[#C9A227] text-[#0a1628] px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-xl font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer"
                       >
                         <Download size={16} /> Download Certificate
                       </button>
@@ -1709,7 +1709,7 @@ function CoursePlayerPageContent({ params }: { params: Promise<{ slug: string }>
                 <button
                   type="button"
                   onClick={() => handleSelectItem(nextItem)}
-                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-[#122340] to-[#0a1628] hover:from-[#1a325c] hover:to-[#122340] transition cursor-pointer shadow-md hover:-translate-y-0.5 active:scale-95 ml-auto"
+                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-[#122340] to-[#0a1628] hover:from-[#1a325c] hover:to-[#122340] transition cursor-pointer shadow-md active:scale-95 ml-auto"
                   title={`Next: ${nextItem.title}`}
                 >
                   <span className="hidden xs:inline text-white/70 font-semibold">Next:</span>

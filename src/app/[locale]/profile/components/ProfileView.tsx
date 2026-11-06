@@ -13,7 +13,7 @@ import {
   MessageSquare, ExternalLink, Clock, BookOpen, Plus,
   Shield, Globe, Bell, LogOut, ChevronRight, Check, ShieldCheck, Key, Languages, Phone,
   Gavel, Loader2,
-  BookmarkCheck, Lock
+  BookmarkCheck, Lock, UserX
 } from "lucide-react";
 
 import { useProfileActions } from "@/data/features/profile/useProfileActions";
@@ -153,6 +153,25 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
     return "User";
   };
 
+  // Helper to sanitize specialization strings (stripping zero-width, LRM, and invisible formatting chars)
+  const cleanSpec = (val: any) =>
+    typeof val === "string" ? val.replace(/[\u200B-\u200F\uFEFF\p{C}]/gu, "").trim() : "";
+
+  // Secondary label computation (only rendered if specialization or professional jurisdiction is present)
+  const validSpecializations = (
+    Array.isArray(profileUser?.specialization)
+      ? profileUser.specialization
+      : typeof profileUser?.specialization === "string"
+        ? [profileUser.specialization]
+        : []
+  )
+    .map(cleanSpec)
+    .filter((s: string) => s.length > 0);
+
+  const secondaryLabel = validSpecializations.length > 0
+    ? validSpecializations.join(" • ")
+    : (isProfessional ? "Jurisdiction Pending" : null);
+
   useDocTitle(profileUser ? `${profileUser.name}'s Profile` : "Profile");
 
   // Fetch Logic
@@ -232,6 +251,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
   };
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -273,7 +293,9 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
       // Final sanitization: convert specialization string back to a clean array
       let finalSpecialization = formData.specialization;
       if (typeof finalSpecialization === "string") {
-        finalSpecialization = finalSpecialization.split(",").map((s: string) => s.trim()).filter((s: string) => s !== "");
+        finalSpecialization = finalSpecialization.split(",").map(cleanSpec).filter((s: string) => s.length > 0);
+      } else if (Array.isArray(finalSpecialization)) {
+        finalSpecialization = finalSpecialization.map(cleanSpec).filter((s: string) => s.length > 0);
       }
 
       const sanitizedData = {
@@ -343,16 +365,24 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                 <div className="w-full h-full bg-zinc-50 flex items-center justify-center text-6xl text-gray-300 font-serif">{profileUser.name?.[0].toUpperCase()}</div>
               )}
               {isOwner && (
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                  title="Update Portrait"
+                  className="absolute bottom-2.5 right-2.5 z-20 flex items-center gap-1.5 px-3 py-1.5 bg-[#0A2342] hover:bg-[#122a4d] text-white rounded-full border-2 border-white shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer group/cam"
+                >
                   {saving || loggedInLoading ? (
-                    <Loader2 size={32} className="animate-spin" />
+                    <Loader2 size={13} className="animate-spin text-[#C9A227]" />
                   ) : (
-                    <Camera size={32} strokeWidth={1} className="mb-2" />
+                    <Camera size={13} className="text-[#C9A227] group-hover/cam:scale-110 transition-transform" />
                   )}
-                  <span className="text-[10px] font-bold uppercase tracking-widest">
-                    {saving || loggedInLoading ? "Uploading..." : "Update Portrait"}
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-white">
+                    {saving || loggedInLoading ? "Uploading..." : "Update"}
                   </span>
-                </div>
+                </button>
               )}
             </div>
             {profileIsAdvocate && (
@@ -363,15 +393,14 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
             )}
           </motion.div>
 
-          <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-6xl sm:text-8xl font-serif text-[#0A2342] mb-4">
+          <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-4xl sm:text-6xl font-serif text-[#0A2342] mb-4">
             {profileUser.name}
           </motion.h1>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs font-bold text-[#C9A227] tracking-[0.4em] uppercase mb-12">
             <span className="text-[#0A2342]">
-              {getRoleLabel()} | </span>
-            {Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0
-              ? profileUser.specialization.join(" • ")
-              : (isProfessional ? "Jurisdiction Pending" : "Community Registry")}
+              {getRoleLabel()}{secondaryLabel ? " | " : ""}
+            </span>
+            {secondaryLabel}
           </motion.p>
 
           {/* Professional Narrative / Bio */}
@@ -515,12 +544,12 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                         />
                         <TonalField label="Mobile Contact" value={profileUser.phone || "Not Set"} icon={Phone} />
                         {/* Only show Expertise Network for professionals or if data exists */}
-                        {(isProfessional || (Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0)) && (
+                        {(isProfessional || validSpecializations.length > 0) && (
                           <div className="space-y-2">
                             <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest block mb-4">Expertise Network</span>
                             <div className="flex flex-wrap gap-2">
-                              {Array.isArray(profileUser.specialization) && profileUser.specialization.length > 0 ? (
-                                profileUser.specialization.map((s: string) => (
+                              {validSpecializations.length > 0 ? (
+                                validSpecializations.map((s: string) => (
                                   <span key={s} className="px-3 py-1.5 bg-[#C9A227]/10 text-[#C9A227] text-[8px] font-black uppercase rounded-xl border border-[#C9A227]/10 shadow-sm">
                                     {s}
                                   </span>
@@ -564,8 +593,8 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                     )}
 
                     {isOwner && (
-                      <div className="md:col-span-2">
-                        <button onClick={openEditModal} className="w-full py-8 bg-[#0A2342] text-white rounded-2xl shadow-lg text-[11px] font-bold tracking-widest uppercase flex items-center justify-center gap-4 hover:bg-[#153a66] transition-all">
+                      <div className="md:col-span-2 flex justify-center">
+                        <button onClick={openEditModal} className="md:w-[50%] w-full py-4 bg-[#0A2342] text-white rounded-2xl shadow-lg text-[11px] font-bold tracking-widest uppercase flex items-center justify-center gap-4 hover:bg-[#153a66] transition-all cursor-pointer">
                           Update Credentials <ChevronRight size={16} />
                         </button>
                       </div>
@@ -727,7 +756,7 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
 
                     {/* D. Security & Auth */}
                     <BentoCard title="Security & Auth" subtitle="Access Control">
-                      <p className="text-[10px] text-gray-400 mb-6 font-serif italic">Reset password or sign out of your account.</p>
+                      <p className="text-[10px] text-gray-400 mb-6 font-serif italic">Reset password, sign out, or close your account.</p>
                       <div className="space-y-3">
                         <Link
                           href="/auth/forgot-password"
@@ -739,6 +768,17 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
                           </div>
                           <ChevronRight size={16} className="text-gray-300 group-hover:text-[#C9A227] transition-colors" />
                         </Link>
+                        <button
+                          type="button"
+                          onClick={() => setShowDeactivateConfirm(true)}
+                          className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl group hover:border-red-200 transition-all cursor-pointer text-left"
+                        >
+                          <div className="flex items-center gap-4">
+                            <UserX size={18} className="text-red-500" />
+                            <span className="text-xs font-bold text-red-500">Deactivate or Delete Account</span>
+                          </div>
+                          <ChevronRight size={16} className="text-gray-300 group-hover:text-red-400 transition-colors" />
+                        </button>
                         <button onClick={() => setShowLogoutConfirm(true)} className="w-full flex items-center justify-between p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-all">
                           <div className="flex items-center gap-4">
                             <LogOut size={18} />
@@ -793,6 +833,16 @@ export default function ProfileView({ viewContext }: ProfileViewProps) {
         )}
         {showLogoutConfirm && (
           <LogoutOverlay onCancel={() => setShowLogoutConfirm(false)} onConfirm={handleLogout} />
+        )}
+        {showDeactivateConfirm && (
+          <DeactivateConfirmOverlay
+            onCancel={() => setShowDeactivateConfirm(false)}
+            onConfirm={() => {
+              setShowDeactivateConfirm(false);
+              const currentUrl = pathname || (viewContext === "admin" ? `/admin/profile/${username}` : `/profile/${username}`);
+              router.push(`/auth/deactivate-account?from=${encodeURIComponent(currentUrl)}`);
+            }}
+          />
         )}
         {showAuthModal && (
           <AuthPromptModal onClose={() => setShowAuthModal(false)} />
@@ -1054,6 +1104,39 @@ function LogoutOverlay({ onCancel, onConfirm }: { onCancel: () => void; onConfir
           <button onClick={onCancel} disabled={isLoading} className="flex-1 py-4 text-[10px] font-black uppercase border border-gray-100 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed">Cancel</button>
           <button onClick={handleConfirm} disabled={isLoading} className="flex-1 flex items-center justify-center gap-2 py-4 bg-red-500 text-white rounded-2xl shadow-xl shadow-red-500/20 disabled:opacity-70 disabled:cursor-not-allowed">
             {isLoading ? <Loader2 size={16} className="animate-spin" /> : "Sign Out"}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function DeactivateConfirmOverlay({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[610] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
+      <div className="absolute inset-0 bg-transparent" onClick={onCancel} />
+      <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="relative z-10 bg-white rounded-3xl p-8 sm:p-10 max-w-md w-full text-center shadow-2xl border border-gray-100">
+        <div className="w-16 h-16 bg-red-50 text-red-600 rounded-3xl flex items-center justify-center mx-auto mb-5 border border-red-200">
+          <UserX size={32} />
+        </div>
+        <h3 className="text-2xl font-serif text-[#0A2342] mb-3">Close Account?</h3>
+        <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-6">
+          Are you sure you want to proceed? You will be redirected to the verification page where you will confirm your credentials. Once submitted, your account will enter a pending state and sign-in will be disabled.
+        </p>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 py-3.5 text-xs font-bold uppercase tracking-wider border border-gray-200 hover:bg-gray-50 rounded-2xl transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex-1 py-3.5 text-xs font-bold uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-lg shadow-red-600/20 transition-colors cursor-pointer"
+          >
+            Proceed
           </button>
         </div>
       </motion.div>

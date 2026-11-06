@@ -13,6 +13,10 @@ import toast from "react-hot-toast";
 import { requestFcmToken } from "@/lib/fcmUtils";
 import { rolesApi } from "@/data/services/roles-service/roles-service";
 
+/** Only ever redirect to an in-app path — never to an absolute URL. */
+const safeRedirect = (value: string | null) =>
+  value && value.startsWith("/") && !value.startsWith("//") ? value : null;
+
 const selectAuthLoading = (state: RootState) => state.auth.loading;
 const selectAuthError = (state: RootState) => state.auth.error;
 const selectAuthUser = (state: RootState) => state.auth.user;
@@ -45,6 +49,8 @@ export const useRegisterActions = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { loading, error, message, debugOtp, token } = useAuth();
+  const searchParams = useSearchParams();
+  const redirect = safeRedirect(searchParams.get("redirect"));
 
   const [formData, setFormData] = useState<RegisterRequest>({
     name: "",
@@ -117,18 +123,20 @@ export const useRegisterActions = () => {
         toast.success(`${MESSAGES.REGISTER_SUCCESS} (OTP: ${debugOtp})`);
       }
       localStorage.setItem("email", formData.email)
-      router.push("/auth/verify");
+      router.push(
+        redirect ? `/auth/verify?redirect=${encodeURIComponent(redirect)}` : "/auth/verify"
+      );
       dispatch(resetAuthState());
     }
-  }, [message, debugOtp]);
+  }, [message, debugOtp, redirect]);
 
   // Redirect if token exists (e.g. from Google Login)
   useEffect(() => {
     if (localStorage.getItem("token")) {
-      router.push("/");
+      router.push(redirect || "/");
       dispatch(resetAuthState());
     }
-  }, [token]);
+  }, [token, redirect]);
 
   return {
     formData,
@@ -154,7 +162,7 @@ export const useLoginActions = () => {
   const [isLocalLoading, setIsLocalLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect");
+  const redirect = safeRedirect(searchParams.get("redirect"));
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -239,6 +247,8 @@ export const useLoginActions = () => {
 export const useVerifyActions = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const verifyRedirect = safeRedirect(searchParams.get("redirect"));
 
   // Use local loading state to avoid conflicts with Resend OTP
   const { error, message } = useAppSelector((state) => state.auth);
@@ -286,10 +296,10 @@ export const useVerifyActions = () => {
 
   useEffect(() => {
     if (message === MESSAGES.VERIFY_SUCCESS) {
-      router.push("/");
+      router.push(verifyRedirect || "/");
       dispatch(resetAuthState());
     }
-  }, [message]);
+  }, [message, verifyRedirect]);
 
   return {
     formData,

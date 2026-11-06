@@ -42,17 +42,19 @@ export default function CertificatesPage() {
       {/* ─── Header ─── */}
       <div className="sa-tile flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <p className="sa-runhead">Credentials</p>
-          <h1 className="font-serif text-[1.625rem] font-bold leading-tight tracking-[-0.015em] text-[color:var(--sa-ink)] sm:text-[1.875rem]">
-            My certificates
+          <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#FDF6E2] text-[#8A6100] border border-[#E8CD82] text-[11px] font-black uppercase tracking-wider mb-2">
+            CREDENTIALS
+          </span>
+          <h1 className="font-serif text-[1.625rem] font-bold leading-tight tracking-[-0.015em] text-[#08172D] sm:text-[1.875rem]">
+            My Certificates &amp; Credentials
           </h1>
-          <p className="mt-1.5 text-[13px] text-[color:var(--sa-ink-3)]">
-            Verified completion certificates for your resume and LinkedIn.
+          <p className="mt-1.5 text-xs sm:text-sm font-medium text-slate-600">
+            Digitally verified completion certificates and credentials for your professional legal portfolio.
           </p>
         </div>
         {items.length > 0 && (
-          <div className="shrink-0 rounded-full border border-[rgba(11,18,32,0.08)] bg-[color:var(--sa-cream)] px-4 py-2 text-[12px] font-semibold text-[color:var(--sa-ink-2)]">
-            <span className="font-serif text-[18px] font-bold text-[color:var(--sa-ink)]">
+          <div className="shrink-0 rounded-full border-2 border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-800 shadow-2xs">
+            <span className="font-serif text-lg font-black text-[#08172D]">
               {items.length}
             </span>{' '}
             issued
@@ -163,15 +165,15 @@ function CertificateCard({
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      toast('Starting PDF download...', { icon: '📥' });
+      toast.success('Starting PDF download...');
     } finally {
       setDownloading(false);
     }
   };
 
   return (
-    <article className="sa-tile sa-tile-hover sa-col-sm-6 sa-col-lg-6 !p-0 overflow-hidden">
-      <div className="relative h-52 sm:h-64 overflow-hidden bg-gradient-to-br from-[color:var(--sa-navy-ink)] to-[color:var(--sa-navy-2)]">
+    <article className="sa-col-sm-6 sa-col-lg-6 !p-0 overflow-hidden flex flex-col rounded-2xl border-2 border-slate-200/90 hover:border-[#B7913A] bg-white shadow-sm hover:shadow-xl transition-all duration-300">
+      <div className="relative h-52 sm:h-64 overflow-hidden bg-gradient-to-br from-[#08172D] to-[#14233C]">
         <img
           src={cert.imageUrl || `/academy/certificates/image/${cert.certificateId}`}
           alt={cert.courseName}
@@ -180,27 +182,27 @@ function CertificateCard({
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-[rgba(11,18,32,0.3)] to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-[#08172D]/40 to-transparent"
         />
         <span
           aria-hidden="true"
           className="absolute bottom-0 left-0 right-0 h-[3px]"
           style={{
             background:
-              'linear-gradient(90deg, var(--sa-gold-3), var(--sa-gold-1) 48%, var(--sa-gold-3))',
+              'linear-gradient(90deg, #8A6100, #F59E0B 48%, #8A6100)',
           }}
         />
       </div>
 
-      <div className="p-4 sm:p-6">
-        <h3 className="line-clamp-1 font-serif text-[1.0625rem] font-bold tracking-[-0.005em] text-[color:var(--sa-ink)]">
+      <div className="p-5 sm:p-6 flex flex-col flex-grow">
+        <h3 className="line-clamp-2 font-serif text-[1.125rem] sm:text-[1.2rem] font-bold tracking-tight text-[#08172D]">
           {cert.courseName}
         </h3>
 
-        <div className="mt-3.5 sm:mt-4 flex flex-col xs:flex-row xs:items-start justify-between gap-2 xs:gap-4 rounded-xl border border-[rgba(11,18,32,0.06)] bg-[color:var(--sa-cream)] px-3.5 sm:px-4 py-2.5 sm:py-3">
+        <div className="mt-4 flex flex-col xs:flex-row xs:items-start justify-between gap-2 xs:gap-4 rounded-xl border-2 border-slate-200 bg-slate-50 p-3.5 sm:p-4">
           <div>
-            <p className="sa-label !text-[10px]">Issue date</p>
-            <p className="mt-0.5 sm:mt-1 font-serif text-[13px] font-bold text-[color:var(--sa-ink)]">
+            <p className="font-black text-[10px] uppercase tracking-wider text-slate-800">Issue date</p>
+            <p className="mt-1 font-serif text-[13px] font-bold text-[#08172D]">
               {new Date(cert.issueDate).toLocaleDateString(undefined, {
                 day: '2-digit',
                 month: 'short',
@@ -209,22 +211,22 @@ function CertificateCard({
             </p>
           </div>
           <div className="text-left xs:text-right">
-            <p className="sa-label !text-[10px]">Credential ID</p>
-            <p className="mt-0.5 sm:mt-1 inline-flex items-center gap-1.5 font-mono text-[12.5px] font-bold text-[color:var(--sa-ink)]">
+            <p className="font-black text-[10px] uppercase tracking-wider text-slate-800">Credential ID</p>
+            <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-[12.5px] font-bold text-[#08172D]">
               <ShieldCheck
-                size={13}
-                className="text-[color:var(--sa-sage-2)]"
+                size={14}
+                className="text-emerald-600"
               />
               {cert.certificateId}
             </p>
           </div>
         </div>
 
-        <div className="mt-4 sm:mt-5 flex flex-wrap gap-2">
+        <div className="mt-auto pt-5 flex flex-wrap gap-2">
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="sa-btn sa-btn-primary flex-1 min-w-[140px] disabled:opacity-70 cursor-pointer"
+            className="bg-[#08172D] hover:bg-[#040C18] text-white font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm shadow-sm hover:shadow-md transition-all flex-1 min-w-[140px] disabled:opacity-70 cursor-pointer inline-flex items-center justify-center gap-2"
           >
             {downloading ? (
               <>
@@ -242,7 +244,7 @@ function CertificateCard({
                 navigator.clipboard.writeText(verifyUrl);
                 toast.success('Verify URL copied');
               }}
-              className="sa-btn sa-btn-ghost w-11 sm:w-12 shrink-0 !px-0 cursor-pointer"
+              className="border-2 border-slate-300 bg-white hover:bg-slate-50 text-slate-700 w-11 sm:w-12 shrink-0 rounded-xl flex items-center justify-center cursor-pointer transition-colors"
               title="Copy verify URL"
               aria-label="Copy verify URL"
             >
@@ -250,7 +252,7 @@ function CertificateCard({
             </button>
             <button
               onClick={onShare}
-              className="sa-btn sa-btn-ghost shrink-0 !border-[color:var(--sa-gold-line)] !bg-[color:var(--sa-gold-soft)] !text-[color:var(--sa-gold-3)] cursor-pointer"
+              className="border-2 border-[#E8CD82] bg-[#FAF0D4] hover:bg-[#F5E6BF] text-[#8A6100] font-bold px-3 py-2 rounded-xl text-xs sm:text-sm cursor-pointer transition-colors inline-flex items-center gap-1.5"
               title="Share certificate"
             >
               <Share2 size={14} /> Share

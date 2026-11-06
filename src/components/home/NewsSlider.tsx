@@ -156,14 +156,14 @@ export default function NewsSlider() {
       </div>
 
       {/* ─── MAIN CONTENT CONTAINER ─── */}
-      <div className="container relative z-10 mx-auto h-full px-2 md:px-3 flex items-center py-6 md:py-10 lg:py-0">
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-20 items-center">
+      <div className="container relative z-10 mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center py-6 md:py-10 lg:py-0">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-20 items-center">
 
           {/* IMAGE BLOCK */}
           <div className="order-1 lg:order-1 relative flex justify-center lg:justify-start transition-all duration-700">
             <motion.div
               style={{ rotateX, rotateY, backfaceVisibility: "hidden" }}
-              className="relative w-full mx-[-20px] max-w-[100vw] md:max-w-[90vw] lg:min-h-[400px] aspect-[16/9] rounded-[15px] md:rounded-[20px] lg:rounded-[20px] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.5)] border border-white/10 group/card isolation-isolate transform-gpu [mask-image:linear-gradient(white,white)]"
+              className="relative w-full mx-[-20px] max-w-[100vw] md:max-w-[90vw] lg:min-h-[400px] aspect-[16/9] rounded-lg overflow-hidden border border-white/20 group/card isolation-isolate transform-gpu [mask-image:linear-gradient(white,white)]"
             >
               <AnimatePresence mode="wait" custom={direction}>
                 <motion.div
@@ -223,7 +223,7 @@ export default function NewsSlider() {
               >
                 {/* 1. Category Indicator */}
                 <div className="flex items-center justify-center lg:justify-start gap-4 mb-4 lg:mb-6">
-                  <span className="text-[#C9A227] font-black tracking-[0.25em] text-[10px] lg:text-xs uppercase drop-shadow-sm">
+                  <span className="text-[#C9A227] font-black tracking-[0.25em] text-[12px] lg:text-[14px] uppercase drop-shadow-sm">
                     {slides[current].category}
                   </span>
                   <div className="hidden lg:block flex-1 h-[1px] bg-white/10" />
@@ -231,7 +231,7 @@ export default function NewsSlider() {
 
                 {/* 2. Heading Reservoir */}
                 <div className="min-h-0 lg:min-h-[170px] flex items-start mb-4 lg:mb-3">
-                  <h1 className="text-2xl md:text-4xl lg:text-[45px] font-black text-white leading-[1.3] md:leading-[1.25] tracking-tight line-clamp-3 first-letter:uppercase">
+                  <h1 className="text-2xl md:text-4xl lg:text-[42px] font-heading font-semibold text-white leading-[1.2] md:leading-[1.22] tracking-tight line-clamp-3 first-letter:uppercase">
                     {slides[current].title}
                   </h1>
                 </div>
@@ -239,7 +239,7 @@ export default function NewsSlider() {
                 {/* 3. Description Reservoir */}
                 <div className="min-h-0 lg:min-h-[80px] mb-2 lg:mb-6">
                   {slides[current].description && (
-                    <p className="text-gray-400 text-sm md:text-lg leading-relaxed font-medium max-w-xl mx-auto lg:mx-0 line-clamp-3 first-letter:uppercase">
+                    <p className="text-gray-300 font-body text-sm md:text-base leading-relaxed max-w-xl mx-auto lg:mx-0 line-clamp-3 first-letter:uppercase">
                       {slides[current].description}
                     </p>
                   )}
@@ -251,7 +251,7 @@ export default function NewsSlider() {
                     href={slides[current].link}
                     className="group/btn inline-flex items-center gap-3 bg-[#C9A227] hover:bg-[#b39022] text-[#0A2342] px-8 lg:px-10 py-3.5 lg:py-4 rounded-full font-bold text-[10px] lg:text-xs tracking-widest transition-all duration-300 shadow-md hover:shadow-lg active:scale-95"
                   >
-                    <span className="!text-white">READ FULL ARTICLE</span>
+                    <span className="!text-black text-[12px] sm:text-[14px]">READ FULL ARTICLE</span>
                     {/* <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" /> */}
                   </Link>
 

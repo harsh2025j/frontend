@@ -8,7 +8,6 @@ import { isAdmin as checkIsAdmin } from "@/utils/permissions";
 import CategorySection from "@/components/home/CategorySection";
 import NewsSlider from "@/components/home/NewsSlider";
 import Stores from "@/components/home/Stores";
-import JudiciaryToolsSection from "@/components/home/JudiciaryToolsSection";
 import { AdBanner, AdSidebar, useAdvertisement, useSlotVisibility } from "@/components/ads/StandardAds";
 import { useDocTitle } from "@/hooks/useDocTitle";
 
@@ -43,15 +42,15 @@ export default function HomeClient() {
       <div className="bg-gray-50 min-h-screen">
         {/* Hero Section - NewsSlider */}
         <NewsSlider />
+        
 
         {/* Stores Section */}
         <Stores />
 
-        {/* Judiciary AI Tools Suite Showcase */}
-        <JudiciaryToolsSection />
-
+        
+        
         {/* Top Banner Ads */}
-        <div className="container mx-auto px-4 py-8 space-y-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
           {/* <AdBanner slotId="HOME_BANNER_TOP_1" /> */}
           <AdBanner slotId="HOME_BANNER_TOP_2" />
         </div>
@@ -113,7 +112,7 @@ export default function HomeClient() {
         />
 
         {/* Main Content Grid with Sidebar */}
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content Column */}
             <div className={`space-y-12 ${showSidebar ? 'lg:col-span-2' : 'lg:col-span-3'}`}>

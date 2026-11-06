@@ -136,6 +136,7 @@ export default async function ArticlePage({ params }: Props) {
         notFound();
     }
 
+
     const articleImage = article.thumbnail
         ? (article.thumbnail.startsWith("http")
             ? article.thumbnail

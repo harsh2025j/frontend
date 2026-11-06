@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Merriweather, Unna } from "next/font/google";
+import { Lora, Source_Sans_3, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import ClientLayout from "@/components/layout/ClientWrapper";
 import ReduxProvider from "@/data/redux/providers/ReduxProvider";
@@ -18,30 +18,25 @@ import { API_BASE_URL, API_ENDPOINTS, IS_NGROK } from "@/data/services/apiConfig
 // import { Analytics } from "@vercel/analytics/next";
 // import { SpeedInsights } from "@vercel/speed-insights/next";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const lora = Lora({
+  variable: "--font-lora",
   subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  display: "swap",
+});
+
+const sourceSans3 = Source_Sans_3({
+  variable: "--font-source-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
-
-const merriweather = Merriweather({
-  weight: ['400', '700'],
-  subsets: ['latin'],
-  variable: '--font-merriweather',
-  display: 'swap',
-});
-
-// const unna = Unna({
-//   weight: ['400', '700'],
-//   style: ['normal', 'italic'],
-//   subsets: ['latin'],
-//   variable: '--font-unna',
-//   display: 'swap',
-// });
 
 const METADATA_BASE = new URL('https://www.sajjadhusainlawassociates.com'); // production
 // const METADATA_BASE = new URL('https://unimpeded-sprung-banter.ngrok-free.dev'); // dev (url)
@@ -174,17 +169,23 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@500;600;700&display=swap"
+          rel="stylesheet"
+        />
         <JsonLd locale={locale} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} antialiased`} suppressHydrationWarning>
-        {/* Google AdSense Script - Placed in body per Next.js requirements to avoid data-nscript head error */}
-        <Script
+      <body className={`${lora.variable} ${sourceSans3.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
+        {/* ADSENSE DISABLED — re-enable once AdSense is approved (also uncomment GOOGLE_AD_MAPPINGS in advertisement.types.ts) */}
+        {/* <Script
           id="google-adsense"
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6354615575453705"
           crossOrigin="anonymous"
           strategy="afterInteractive"
-        />
+        /> */}
         {/* Google Analytics Script */}
         <Script
           id="google-analytics-src"

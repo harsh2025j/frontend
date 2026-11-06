@@ -148,7 +148,7 @@ export default function CaseView({ caseId: propId, caseSlug, isModal = false }: 
                 
                 {/* CONDITIONAL CONTENT BASED ON TABS */}
                 {activeTab === "report" && (
-                    <div className="document-container bg-white shadow-2xl shadow-slate-200 border border-gray-100 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden print:rounded-none animate-in fade-in zoom-in-95 duration-500">
+                    <div className="document-container bg-white shadow-2xl shadow-slate-200 border border-gray-100 rounded-lg overflow-hidden print:rounded-none animate-in fade-in zoom-in-95 duration-500">
                         <div className="bg-[#0A2342] p-10 text-white relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32"></div>
                             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -157,8 +157,8 @@ export default function CaseView({ caseId: propId, caseSlug, isModal = false }: 
                                         <Scale size={16} />
                                         <span className="text-[10px] uppercase tracking-[0.3em] font-black">Official Case Record</span>
                                     </div>
-                                    <h1 className="text-2xl md:text-3xl font-serif font-black leading-tight mb-2">{caseData.court || "In the Honorable Court"}</h1>
-                                    <p className="text-amber-400 font-serif italic text-lg opacity-90">{caseData.title || "Subject Pending Registration"}</p>
+                                    <h1 className="text-2xl md:text-3xl font-heading font-semibold leading-tight mb-2 tracking-tight">{caseData.court || "In the Honorable Court"}</h1>
+                                    <p className="text-amber-300 font-heading italic text-lg opacity-95">{caseData.title || "Subject Pending Registration"}</p>
                                 </div>
                                 <div className="flex flex-col items-end gap-2 shrink-0">
                                     <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20 bg-white/10 ${caseData.status === "closed" ? "text-red-300" : "text-green-300"}`}>
@@ -193,7 +193,7 @@ export default function CaseView({ caseId: propId, caseSlug, isModal = false }: 
                                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                                     Parties & Representation
                                 </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-gray-100 border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-gray-100 border border-gray-100 rounded-lg overflow-hidden shadow-sm">
                                     <div className="bg-white p-8">
                                         <div className="flex items-center gap-2 mb-6">
                                             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-black">P</div>
@@ -265,7 +265,7 @@ export default function CaseView({ caseId: propId, caseSlug, isModal = false }: 
                                         <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                                         Brief of the Matter
                                     </h3>
-                                    <div className="bg-slate-50/50 p-8 rounded-2xl border border-gray-100 font-serif text-gray-700 leading-relaxed text-sm whitespace-pre-wrap">
+                                    <div className="bg-slate-50/50 p-8 rounded-2xl border border-gray-100 font-body text-gray-700 leading-relaxed text-[15px] whitespace-pre-wrap">
                                         {caseData.description}
                                     </div>
                                 </div>
@@ -283,13 +283,13 @@ export default function CaseView({ caseId: propId, caseSlug, isModal = false }: 
                 )}
 
                 {activeTab === "timeline" && (
-                    <div className="bg-white p-10 md:p-14 rounded-[2rem] shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-8 duration-500">
+                    <div className="bg-white p-10 md:p-14 rounded-lg shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div className="flex items-center gap-3 mb-10 pb-6 border-b border-slate-100">
                             <div className="p-3 rounded-2xl bg-amber-50 text-amber-600">
                                 <History size={24} />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-serif text-[#0A2342]">Interactive Case Timeline</h2>
+                                <h2 className="text-2xl font-heading font-semibold text-[#0B2242]">Interactive Case Timeline</h2>
                                 <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Chronological Progression</p>
                             </div>
                         </div>

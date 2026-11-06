@@ -1,10 +1,43 @@
 @import "tailwindcss";
 
+:root {
+  --font-body: var(--font-source-sans), "Noto Sans Devanagari", "Source Sans 3", Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: var(--font-lora), "Noto Serif Devanagari", "Lora", Georgia, "Times New Roman", serif;
+  --font-ui: var(--font-body);
+}
 
 @theme {
-  --font-merriweather: Merriweather, sans-serif;
-  --font-sans: Georgia, serif;
-  --font-georgia: Georgia, serif;
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-heading);
+  --font-lora: var(--font-heading);
+  --font-source-sans: var(--font-body);
+  --font-merriweather: var(--font-heading);
+  --font-georgia: var(--font-heading);
+  --font-ui: var(--font-body);
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+  color: #1e293b;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6,
+.article-title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+nav, button, input, textarea, select, label {
+  font-family: var(--font-body);
 }
 
 
@@ -139,9 +172,7 @@
   background: #9ca3af;
 }
 
-body {
-  font-family: var(--font-poppins);
-}
+
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -292,16 +323,15 @@ textarea,
 
 /* Custom Article Content Styling */
 .article-content {
-  font-family: Georgia, sans-serif;
-  color: #333;
-  line-height: 1.6;
-  font-size: 1.125rem;
+  font-family: var(--font-body);
+  color: #24292f;
+  line-height: 1.72;
+  font-size: 1.0625rem; /* ~17px (within 16-18px guideline) */
   overflow-wrap: break-word;
   word-wrap: break-word;
-  /* For older browsers */
   word-break: break-word;
-  /* For Safari */
-  width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 .article-content h1,
@@ -310,47 +340,49 @@ textarea,
 .article-content h4,
 .article-content h5,
 .article-content h6 {
-  color: var(--color-primary);
-  /* blue-700 */
-  font-weight: 700;
-  margin-top: 2rem;
+  font-family: var(--font-heading);
+  color: #0b2242;
+  font-weight: 600;
+  margin-top: 2.25rem;
   margin-bottom: 1rem;
-  line-height: 1.3;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 .article-content h1 {
-  font-size: 2.25rem;
+  font-size: 2.125rem;
 }
 
 .article-content h2 {
-  font-size: 1.875rem;
-  border-bottom: 2px solid #e5e7eb;
+  font-size: 1.625rem;
+  border-bottom: 1px solid #e5e7eb;
   padding-bottom: 0.5rem;
 }
 
 .article-content h3 {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
 }
 
 .article-content h4 {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
 }
 
 .article-content p {
   margin-bottom: 1.5rem;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: #2d3748;
 }
 
 .article-content a {
-  color: #2563eb;
-  /* blue-600 */
+  color: #1e3a8a;
   text-decoration: underline;
   text-underline-offset: 4px;
   word-break: break-all;
 }
 
 .article-content a:hover {
-  color: #1e40af;
-  /* blue-800 */
+  color: #c9a227;
 }
 
 .article-content ul,
@@ -369,18 +401,20 @@ textarea,
 
 .article-content li {
   margin-bottom: 0.5rem;
+  line-height: 1.7;
 }
 
 .article-content blockquote {
-  border-left: 4px solid #3b82f6;
-  /* blue-500 */
-  padding-left: 1rem;
+  font-family: var(--font-heading);
+  border-left: 3px solid #c9a227;
+  padding: 1rem 1.25rem;
   font-style: italic;
-  color: #555;
-  margin-bottom: 1.5rem;
-  background-color: #f9fafb;
-  padding: 1rem;
-  border-radius: 0 0.5rem 0.5rem 0;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: #374151;
+  margin: 1.75rem 0;
+  background-color: #fafaf9;
+  border-radius: 0 0.375rem 0.375rem 0;
 }
 
 .article-content img {
@@ -473,6 +507,10 @@ textarea,
 
 /* Professional Printing Styles */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 0mm !important; /* Zero margin suppresses browser default header (URL, title, date) and footer */
+  }
 
   /* Aggressively hide non-essential elements */
   header,
@@ -482,6 +520,9 @@ textarea,
   [role="banner"],
   [role="navigation"],
   .no-print,
+  .no-print-bar,
+  .no-print-area,
+  .print\:hidden,
   button,
   .share-buttons,
   .lg\:col-span-4,
@@ -940,4 +981,105 @@ input::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+/* ── Neural Voice Narration Karaoke Highlighting (Zero Layout Shift) ── */
+.tts-sentence {
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 4px;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline;
+}
+
+body.tts-active .tts-sentence {
+  cursor: pointer;
+}
+
+body.tts-active .tts-sentence:hover {
+  background-color: rgba(201, 162, 39, 0.12);
+}
+
+.tts-sentence.tts-sentence-active {
+  background-color: #FEF9ED !important;
+  color: inherit !important;
+  box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.4);
+  border-radius: 4px;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.tts-word {
+  display: inline;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-weight: inherit !important;
+  border-radius: 3px;
+  transition: background-color 0.08s ease, color 0.08s ease;
+}
+
+.tts-word.tts-word-active {
+  background-color: #C9A227 !important;
+  color: #0B2242 !important;
+  font-weight: inherit !important; /* Zero bolding to eliminate glyph expansion */
+  padding: 0 !important;            /* Zero horizontal padding to eliminate layout shift */
+  margin: 0 !important;             /* Zero margin to eliminate layout shift */
+  border-radius: 3px;
+  box-shadow: 0 0 0 1.5px #C9A227;  /* Clean outline without occupying document space */
+}
+
+/* ── Neural Voice Speech Speed Slider (Sleek Compact Size) ── */
+.tts-speed-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.tts-speed-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #C9A227;
+  border: 1.5px solid #0B2242;
+  box-shadow: 0 0 5px rgba(201, 162, 39, 0.7);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.tts-speed-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  box-shadow: 0 0 8px rgba(201, 162, 39, 1);
+}
+
+.tts-speed-slider::-webkit-slider-thumb:active {
+  transform: scale(1.35);
+}
+
+.tts-speed-slider::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #C9A227;
+  border: 1.5px solid #0B2242;
+  box-shadow: 0 0 5px rgba(201, 162, 39, 0.7);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.tts-speed-slider::-moz-range-thumb:hover {
+  transform: scale(1.25);
+  box-shadow: 0 0 8px rgba(201, 162, 39, 1);
+}
+
+.tts-speed-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.15);
 }

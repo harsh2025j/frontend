@@ -38,14 +38,27 @@ export default function AcademyNavbar() {
   return (
     <>
       <header className="w-full border-b border-[#122340]/10 bg-[#F7F3EA] z-[100] sticky top-0 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <Image src="/logo-gold.png" alt="Sajjad Husain Logo" width={40} height={40} className="object-contain" priority />
-            <div className="flex flex-col hidden lg:flex">
-              <span className="text-[#122340] font-serif font-bold text-base leading-none tracking-wider uppercase">Sajjad Husain</span>
-              <span className="text-[#C9A227] font-serif italic text-xs leading-none mt-1">Legal Academy</span>
+          <Link href="/" className="flex items-center gap-3 sm:gap-3.5 group shrink-0">
+            <div className="relative w-11 h-11 sm:w-13 sm:h-13 md:w-14 md:h-14 flex items-center justify-center transition-transform duration-200 ">
+              <Image
+                src="/logo-gold.png"
+                alt="Sajjad Husain Logo"
+                width={56}
+                height={56}
+                className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(201,162,39,0.25)]"
+                priority
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[#08172D] font-serif font-extrabold text-base sm:text-lg md:text-xl lg:text-[22px] leading-tight tracking-wide uppercase group-hover:text-[#C9A227] transition-colors">
+                Sajjad Husain
+              </span>
+              <span className="text-[#C9A227] font-serif italic text-xs sm:text-sm font-bold leading-tight mt-0.5 tracking-normal">
+                Legal Academy
+              </span>
             </div>
           </Link>
 
@@ -55,29 +68,29 @@ export default function AcademyNavbar() {
           </div>
 
           {/* Desktop Right Side */}
-          <div className="hidden md:flex items-center gap-6 h-full">
+          <div className="hidden md:flex items-center gap-6 lg:gap-7 h-full">
             {/* 1. Courses Navigation */}
             <Link
               href="/courses"
-              className="flex items-center gap-1.5 h-full hover:text-[#C9A227] whitespace-nowrap transition-colors text-[#122340]/80 font-medium text-sm"
+              className="flex items-center gap-2 h-full hover:text-[#C9A227] whitespace-nowrap transition-colors text-[#08172D] font-semibold text-[15px]"
             >
-              <BookOpen size={18} />
+              <BookOpen size={20} className="text-[#08172D]/80 group-hover:text-[#C9A227]" />
               <span>Courses</span>
             </Link>
 
             {/* 2. Wishlist Button */}
             <button
               onClick={openWishlist}
-              className="group relative flex items-center gap-1.5 h-full hover:text-[#C9A227] whitespace-nowrap transition-colors text-[#122340]/80 font-medium text-sm py-2"
+              className="group relative flex items-center gap-2 h-full hover:text-[#C9A227] whitespace-nowrap transition-colors text-[#08172D] font-semibold text-[15px] py-2 cursor-pointer"
               aria-label="View Wishlist"
             >
-              <div className="relative flex items-center justify-center mr-1">
+              <div className="relative flex items-center justify-center mr-0.5">
                 <Heart
-                  size={18}
-                  className="transition-colors group-hover:text-[#C9A227]"
+                  size={20}
+                  className="transition-colors text-[#08172D]/80 group-hover:text-[#C9A227]"
                 />
                 {wishlist.length > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-[#122340] text-white text-[9px] font-bold h-4 min-w-4 px-1 rounded-full flex items-center justify-center shadow-xs border border-white">
+                  <span className="absolute -top-2.5 -right-2.5 bg-[#08172D] text-white text-[10px] font-extrabold h-4.5 min-w-4.5 px-1 rounded-full flex items-center justify-center shadow-xs border-2 border-white">
                     {wishlist.length}
                   </span>
                 )}
@@ -92,28 +105,28 @@ export default function AcademyNavbar() {
 
             <div className="flex items-center gap-4 relative">
             {user ? (
-              <div className="relative group cursor-pointer flex items-center gap-2">
+              <div className="relative group cursor-pointer flex items-center gap-2.5">
                 {user.profilePicture ? (
-                  <img src={user.profilePicture} alt="Profile" className="w-9 h-9 rounded-full object-cover border border-[#122340]/10" />
+                  <img src={user.profilePicture} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-[#C9A227]/40 shadow-xs" />
                 ) : (
-                  <div className="w-9 h-9 rounded-full bg-[#C9A227] text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#C9A227] to-[#B38F1E] text-white flex items-center justify-center font-bold text-sm shadow-sm">
                     {user.name?.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="text-sm font-semibold text-[#122340]">{user.name}</span>
-                <ChevronDown size={14} className="text-[#122340]/50 group-hover:text-[#122340] transition-colors" />
+                <span className="text-sm font-bold text-[#08172D]">{user.name}</span>
+                <ChevronDown size={15} className="text-[#08172D]/60 group-hover:text-[#08172D] transition-colors" />
 
                 {/* Dropdown Menu */}
-                <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right translate-y-2 group-hover:translate-y-0">
-                  <div className="p-4 border-b border-gray-100">
+                <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right translate-y-2 group-hover:translate-y-0 z-50">
+                  <div className="p-4 border-b border-gray-100 bg-[#FAF8F5]/60">
                     <p className="text-sm font-bold text-gray-800 leading-tight">{user.name}</p>
                     <p className="text-xs text-gray-500 mt-1 truncate">{user.email}</p>
                   </div>
                   <div className="p-2 space-y-1">
-                    <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-[#C9A227] hover:bg-gray-50 rounded-lg transition-colors">
+                    <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2 text-sm font-semibold text-gray-700 hover:text-[#C9A227] hover:bg-gray-50 rounded-lg transition-colors">
                       <LayoutDashboard size={16} /> Dashboard
                     </Link>
-                    <button onClick={() => setShowLogoutModal(true)} className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left">
+                    <button onClick={() => setShowLogoutModal(true)} className="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
                       <LogOut size={16} /> Logout
                     </button>
                   </div>
@@ -123,13 +136,13 @@ export default function AcademyNavbar() {
               <>
                 <Link
                   href="/auth/login"
-                  className="text-[#122340]/80 hover:text-[#C9A227] text-sm font-medium transition-colors"
+                  className="text-[#08172D] hover:text-[#C9A227] text-sm font-bold tracking-wider transition-colors px-2 py-1"
                 >
                   LOGIN
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="rounded-full bg-[#C9A227] text-white px-5 py-2 hover:bg-[#b39022] text-sm font-bold transition-colors shadow-sm"
+                  className="rounded-full bg-gradient-to-r from-[#C9A227] to-[#B38F1E] hover:from-[#B88E18] hover:to-[#9E7A1C] text-white px-6 py-2.5 hover:brightness-105 text-sm font-extrabold tracking-wider transition-all shadow-[0_4px_14px_rgba(201,162,39,0.35)] hover:-translate-y-0.5"
                 >
                   START LEARNING
                 </Link>
@@ -138,6 +151,7 @@ export default function AcademyNavbar() {
             </div>
           </div>
 
+          {/* Mobile Right Icons */}
           <div className="md:hidden flex items-center gap-2">
             <button
               onClick={() => {
@@ -178,14 +192,14 @@ export default function AcademyNavbar() {
 
         {/* Mobile Search Overlay */}
         {isSearchOpen && (
-          <div className="md:hidden w-full bg-[#F7F3EA] border-t border-gray-200/60 p-4 absolute top-16 left-0 z-40 shadow-md animate-in slide-in-from-top-2 duration-200">
+          <div className="md:hidden w-full bg-[#F7F3EA] border-t border-gray-200/60 p-4 absolute top-20 left-0 z-40 shadow-md animate-in slide-in-from-top-2 duration-200">
             <AcademySearch onSelectCourse={() => setIsSearchOpen(false)} />
           </div>
         )}
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden bg-[#F7F3EA] border-t border-gray-200/60 w-full h-[calc(100vh-64px)] overflow-y-auto shadow-lg absolute top-16 left-0 z-40 flex flex-col">
+          <div className="md:hidden bg-[#F7F3EA] border-t border-gray-200/60 w-full h-[calc(100vh-80px)] overflow-y-auto shadow-lg absolute top-20 left-0 z-40 flex flex-col">
             <div className="flex-1 py-4">
               <Link href="/" className="block px-6 py-4 text-[15px] font-medium text-gray-800 border-b border-black/5" onClick={() => setIsMenuOpen(false)}>
                 Home

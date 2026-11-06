@@ -158,7 +158,7 @@ export function BaseAd({
 
   const Content = () => (
     <div
-      className={`relative bg-gray-50 border border-gray-200 flex flex-col items-center justify-center overflow-hidden rounded-sm transition-all duration-300 hover:border-blue-300 group mx-auto ${className}`}
+      className={`relative bg-gray-50 border border-gray-200 flex flex-col items-center justify-center overflow-hidden rounded-sm transition-all duration-300 hover:border-[#C9A227] group mx-auto ${className}`}
       style={containerStyle}
       id={id}
     >

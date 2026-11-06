@@ -1,10 +1,24 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Calendar, Bell, FileText, Download, Eye, Search, Filter, ChevronRight, Home, Scale, Megaphone, Clock, AlertCircle, Info } from 'lucide-react';
+import Image from "next/image";
+import {
+    Calendar,
+    Bell,
+    FileText,
+    Search,
+    ChevronRight,
+    Home,
+    Megaphone,
+    Clock,
+    AlertCircle,
+    Info,
+    Phone,
+    LayoutTemplate
+} from "lucide-react";
 import { displayBoardsService } from "@/data/services/display-boards-service/displayBoardsService";
 import { useDocTitle } from "@/hooks/useDocTitle";
-import { formatDate, formatDateTime } from "@/utils/dateUtils";
+import { formatDate } from "@/utils/dateUtils";
 import Pagination from "@/components/Pagination";
 import { Link, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
@@ -29,12 +43,13 @@ function DisplayBoardsPageContent() {
     const router = useRouter();
 
     const activeBoard = (searchParams.get("board") as BoardType) || "daily-orders";
-    const selectedDate = searchParams.get("date") || new Date().toISOString().split('T')[0];
+    const selectedDate = searchParams.get("date") || "";
     const currentPage = parseInt(searchParams.get("page") || "1");
 
     const [searchQuery, setSearchQuery] = useState("");
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [totalPages, setTotalPages] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
     const [displayItems, setDisplayItems] = useState<DisplayItem[]>([]);
     const [error, setError] = useState<string | null>(null);
 
@@ -59,12 +74,19 @@ function DisplayBoardsPageContent() {
             setLoading(true);
             setError(null);
             try {
-                const params = {
-                    type: activeBoard,
-                    date: selectedDate,
+                // Map frontend board types to backend parameters
+                let backendType: string | undefined = undefined;
+                if (activeBoard === "daily-orders") backendType = "daily_order";
+                else if (activeBoard === "cause-list") backendType = "daily_cause_list";
+                else if (activeBoard === "notices") backendType = "notice";
+                else if (activeBoard === "announcements") backendType = "announcement";
+
+                const params: any = {
                     page,
                     limit: LIMIT
                 };
+                if (backendType) params.boardType = backendType;
+                if (selectedDate) params.date = selectedDate;
 
                 const response = await displayBoardsService.getAll(params);
                 const payload = response.data;
@@ -76,21 +98,24 @@ function DisplayBoardsPageContent() {
                         date: item.date || item.createdAt || new Date().toISOString(),
                         type: item.type || "General",
                         description: item.description || "",
-                        fileUrl: item.fileUrl || item.url || null,
+                        fileUrl: item.fileUrl || item.pdfUrl || item.url || null,
                         isNew: item.isNew || (new Date(item.date || item.createdAt) > new Date(Date.now() - 86400000))
                     }));
 
                     setDisplayItems(mappedItems);
                     setTotalPages(payload.meta?.totalPages || 1);
+                    setTotalCount(payload.meta?.total ?? mappedItems.length);
                 } else {
                     setDisplayItems([]);
                     setTotalPages(1);
+                    setTotalCount(0);
                 }
             } catch (err: any) {
                 console.error("Error fetching display boards:", err);
-                setError(err.message || "Failed to load data");
+                setError(err.message || "Failed to load display board data");
                 setDisplayItems([]);
                 setTotalPages(1);
+                setTotalCount(0);
             } finally {
                 setLoading(false);
             }
@@ -99,274 +124,286 @@ function DisplayBoardsPageContent() {
         fetchBoards(currentPage);
     }, [activeBoard, selectedDate, currentPage]);
 
-    const filteredItems = displayItems.filter(item =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredItems = displayItems.filter(
+        (item) =>
+            item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-
-    const getBoardIcon = (board: BoardType) => {
-        switch (board) {
-            case "daily-orders": return <FileText size={20} />;
-            case "cause-list": return <Calendar size={20} />;
-            case "notices": return <Bell size={20} />;
-            case "announcements": return <Megaphone size={20} />;
-        }
-    };
 
     const getBoardTitle = (board: BoardType) => {
         switch (board) {
-            case "daily-orders": return "Daily Orders";
-            case "cause-list": return "Cause List";
-            case "notices": return "Notices";
-            case "announcements": return "Announcements";
+            case "daily-orders":
+                return "Daily Orders";
+            case "cause-list":
+                return "Cause List";
+            case "notices":
+                return "Notices";
+            case "announcements":
+                return "Announcements";
         }
     };
 
+    const boardTabs: {
+        id: BoardType;
+        title: string;
+        subtitle: string;
+        icon: React.ComponentType<{ className?: string }>;
+    }[] = [
+        { id: "daily-orders", title: "Daily Orders", subtitle: "Today's orders", icon: FileText },
+        { id: "cause-list", title: "Cause List", subtitle: "Cases listed", icon: Calendar },
+        { id: "notices", title: "Notices", subtitle: "Official notices", icon: Bell },
+        { id: "announcements", title: "Announcements", subtitle: "Important updates", icon: Megaphone }
+    ];
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/20 to-gray-100">
-            {/* Top Header Bar */}
-            <div className="bg-gradient-to-r from-[#0A2342] via-[#1a3a75] to-[#0A2342] text-white">
-                <div className="max-w-7xl mx-auto px-4 py-8">
-                    <div className="flex items-center justify-center gap-4 mb-3">
-                        <Scale className="w-12 h-12 text-[#C9A227]" />
-                        <div className="text-center">
-                            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+        <div className="min-h-screen bg-[#F8FAFC]">
+            {/* ─────────────────────────────────────────────────────────────
+                HERO BANNER
+            ────────────────────────────────────────────────────────────── */}
+            <div className="relative bg-[#0B2242] text-white overflow-hidden border-t-2 border-[#C9A227] shadow-sm">
+                {/* Thin luxury gold gradient accent line */}
+                <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#F3E5AB] to-transparent z-30 opacity-70 pointer-events-none" />
+
+                {/* Right-aligned legal hero background image with smooth gradient fade */}
+                <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[65%] md:w-[58%] lg:w-[52%] xl:w-[48%] pointer-events-none overflow-hidden select-none">
+                    {/* Multi-stop smooth gradient blend */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#0B2242] via-[#0B2242]/70 via-20% to-transparent z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B2242]/20 via-transparent to-[#0B2242]/15 z-10" />
+                    <Image
+                        src="/display-boards-hero-banner.jpg"
+                        alt="Display Boards & Court Cause Lists - Scales of Justice"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover object-right"
+                        priority
+                    />
+                </div>
+
+                {/* Left hero brand & title */}
+                <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 md:py-12">
+                    <div className="flex items-center gap-4 sm:gap-5">
+                        <div className="w-11 h-11 rounded-lg border-2 border-[#C9A227] flex items-center justify-center text-[#C9A227] flex-shrink-0">
+                            <LayoutTemplate className="w-6 h-6" strokeWidth={1.8} />
+                        </div>
+                        <div className="h-10 w-[1.5px] bg-[#C9A227]/60 hidden sm:block" />
+                        <div>
+                            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-serif tracking-tight text-white">
                                 Sajjad Husain Law Associates
                             </h1>
-                            <p className="text-blue-200 mt-2 text-sm md:text-base">
+                            <p className="text-slate-300 text-xs sm:text-sm mt-1 sm:mt-1.5 max-w-2xl leading-relaxed">
                                 Display Boards & Notices Portal
                             </p>
                         </div>
-                        <Megaphone className="w-12 h-12 text-[#C9A227]" />
                     </div>
                 </div>
             </div>
 
-            {/* Breadcrumb */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 py-3">
-                    <div className="flex items-center gap-2 text-sm">
-                        <Link href="/">
-                            <Home className="w-4 h-4 text-gray-500 hover:text-[#C9A227]" />
+            {/* ─────────────────────────────────────────────────────────────
+                BREADCRUMB
+            ────────────────────────────────────────────────────────────── */}
+            <div className="bg-[#f8fafc] border-b border-slate-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500">
+                        <Link href="/" className="hover:text-[#0B2242] transition-colors flex items-center">
+                            <Home className="w-3.5 h-3.5 text-slate-400 hover:text-[#0B2242]" />
                         </Link>
-                        <ChevronRight className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-600">Display Boards</span>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="text-slate-600 font-normal">Display Boards</span>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                {/* Page Title & Info */}
+            {/* ─────────────────────────────────────────────────────────────
+                MAIN CONTAINER
+            ────────────────────────────────────────────────────────────── */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+                {/* Center Title & Subtitle */}
                 <div className="text-center mb-8">
-                    <h2 className="text-3xl md:text-4xl font-bold text-[#0A2342] mb-3">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-serif text-[#0B2242] mb-2">
                         Display Boards
                     </h2>
-                    <p className="text-gray-600 max-w-2xl mx-auto">
+                    <div className="flex justify-center mb-3">
+                        <LayoutTemplate className="w-5 h-5 text-[#C9A227]" />
+                    </div>
+                    <p className="text-slate-600 text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed">
                         Access daily orders, cause lists, notices, and important announcements from the court.
-                        All information is updated regularly for your convenience.
+                        <br className="hidden sm:inline" /> All information is updated regularly for your convenience.
                     </p>
                 </div>
 
-                {/* Info Banner */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-start gap-3">
-                    <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-blue-800">
-                        <p className="font-semibold mb-1">Quick Information:</p>
-                        <ul className="list-disc list-inside space-y-1 text-blue-700">
-                            <li>Daily orders and cause lists are updated every morning</li>
-                            <li>Notices and announcements are posted as they are issued</li>
-                            <li>Use the search bar to quickly find specific items</li>
+                {/* Quick Information Banner */}
+                <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl p-4 sm:p-5 mb-8 flex items-start gap-3">
+                    <Info className="w-5 h-5 text-[#1A73E8] flex-shrink-0 mt-0.5" />
+                    <div className="text-xs sm:text-sm text-slate-700">
+                        <p className="font-semibold text-slate-900 mb-1.5">Quick Information:</p>
+                        <ul className="list-disc list-inside space-y-1 text-slate-600">
+                            <li>Daily orders and cause lists are updated every morning.</li>
+                            <li>Notices and announcements are posted as they are issued.</li>
+                            <li>Use the search bar to quickly find specific items.</li>
                         </ul>
                     </div>
                 </div>
 
-                {/* Board Selection Tabs */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    <button
-                        onClick={() => updateUrl({ board: "daily-orders" })}
-                        className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "daily-orders"
-                            ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
-                            }`}
-                    >
-                        <div className="flex flex-col items-center gap-3">
-                            <div className={`p-3 rounded-full ${activeBoard === "daily-orders" ? 'bg-[#C9A227]' : 'bg-gray-100'
-                                }`}>
-                                <FileText size={24} className={activeBoard === "daily-orders" ? 'text-white' : 'text-gray-600'} />
-                            </div>
-                            <div className="text-center">
-                                <h3 className="font-bold text-lg">Daily Orders</h3>
-                                <p className={`text-sm mt-1 ${activeBoard === "daily-orders" ? 'text-blue-200' : 'text-gray-500'}`}>
-                                    Today's orders
-                                </p>
-                            </div>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => updateUrl({ board: "cause-list" })}
-                        className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "cause-list"
-                            ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
-                            }`}
-                    >
-                        <div className="flex flex-col items-center gap-3">
-                            <div className={`p-3 rounded-full ${activeBoard === "cause-list" ? 'bg-[#C9A227]' : 'bg-gray-100'
-                                }`}>
-                                <Calendar size={24} className={activeBoard === "cause-list" ? 'text-white' : 'text-gray-600'} />
-                            </div>
-                            <div className="text-center">
-                                <h3 className="font-bold text-lg">Cause List</h3>
-                                <p className={`text-sm mt-1 ${activeBoard === "cause-list" ? 'text-blue-200' : 'text-gray-500'}`}>
-                                    Cases listed
-                                </p>
-                            </div>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => updateUrl({ board: "notices" })}
-                        className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "notices"
-                            ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
-                            }`}
-                    >
-                        <div className="flex flex-col items-center gap-3">
-                            <div className={`p-3 rounded-full ${activeBoard === "notices" ? 'bg-[#C9A227]' : 'bg-gray-100'
-                                }`}>
-                                <Bell size={24} className={activeBoard === "notices" ? 'text-white' : 'text-gray-600'} />
-                            </div>
-                            <div className="text-center">
-                                <h3 className="font-bold text-lg">Notices</h3>
-                                <p className={`text-sm mt-1 ${activeBoard === "notices" ? 'text-blue-200' : 'text-gray-500'}`}>
-                                    Official notices
-                                </p>
-                            </div>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => updateUrl({ board: "announcements" })}
-                        className={`p-6 rounded-xl border-2 transition-all ${activeBoard === "announcements"
-                            ? 'bg-gradient-to-br from-[#0A2342] to-[#1a3a75] text-white border-[#C9A227]'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#C9A227] hover:shadow-md'
-                            }`}
-                    >
-                        <div className="flex flex-col items-center gap-3">
-                            <div className={`p-3 rounded-full ${activeBoard === "announcements" ? 'bg-[#C9A227]' : 'bg-gray-100'
-                                }`}>
-                                <Megaphone size={24} className={activeBoard === "announcements" ? 'text-white' : 'text-gray-600'} />
-                            </div>
-                            <div className="text-center">
-                                <h3 className="font-bold text-lg">Announcements</h3>
-                                <p className={`text-sm mt-1 ${activeBoard === "announcements" ? 'text-blue-200' : 'text-gray-500'}`}>
-                                    Important updates
-                                </p>
-                            </div>
-                        </div>
-                    </button>
+                {/* Board Selection Cards (4 in a row) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    {boardTabs.map((tab) => {
+                        const isActive = activeBoard === tab.id;
+                        const Icon = tab.icon;
+                        return (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => updateUrl({ board: tab.id })}
+                                className={`p-4 sm:p-5 rounded-xl flex items-center justify-between text-left transition-all ${
+                                    isActive
+                                        ? "bg-[#0B2242] text-white shadow-md border-2 border-[#C9A227]"
+                                        : "bg-white text-slate-800 border border-slate-200/90 shadow-sm hover:border-slate-300 hover:shadow"
+                                }`}
+                            >
+                                <div className="flex items-center gap-3.5 min-w-0">
+                                    <div
+                                        className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                            isActive
+                                                ? "bg-[#C9A227]/25 text-[#C9A227] border border-[#C9A227]/40"
+                                                : "bg-slate-100 text-slate-600"
+                                        }`}
+                                    >
+                                        <Icon className="w-5 h-5" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3
+                                            className={`font-bold text-sm sm:text-base leading-snug truncate ${
+                                                isActive ? "text-white" : "text-slate-900"
+                                            }`}
+                                        >
+                                            {tab.title}
+                                        </h3>
+                                        <p
+                                            className={`text-xs mt-0.5 truncate ${
+                                                isActive ? "text-slate-300" : "text-slate-400"
+                                            }`}
+                                        >
+                                            {tab.subtitle}
+                                        </p>
+                                    </div>
+                                </div>
+                                <ChevronRight
+                                    className={`w-4 h-4 flex-shrink-0 ml-2 ${
+                                        isActive ? "text-white/80" : "text-slate-300"
+                                    }`}
+                                />
+                            </button>
+                        );
+                    })}
                 </div>
 
-                {/* Search and Filter Bar */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 relative">
-                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                {/* Search and Date Filter Bar */}
+                <div className="bg-white rounded-xl border border-slate-200/90 shadow-sm p-4 sm:p-5 mb-6">
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <div className="relative flex-1 w-full">
+                            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                             <input
                                 type="text"
                                 placeholder="Search in current board..."
-                                className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B2242]/20 focus:border-[#0B2242] transition-colors"
                             />
                         </div>
-                        <div className="flex gap-3">
-                            <div className="relative">
-                                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                                <input
-                                    type="date"
-                                    className="pl-11 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227] outline-none transition-all"
-                                    value={selectedDate}
-                                    onChange={(e) => updateUrl({ date: e.target.value })}
-                                />
-                            </div>
+                        <div className="relative w-full sm:w-auto min-w-[190px]">
+                            <Calendar className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <input
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => updateUrl({ date: e.target.value })}
+                                className="w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 rounded-lg text-xs sm:text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0B2242]/20 focus:border-[#0B2242] transition-colors"
+                            />
                         </div>
                     </div>
                 </div>
 
-                {/* Content Area */}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                {/* Available Display Board Items Card */}
+                <div className="bg-white rounded-xl border border-slate-200/90 shadow-sm overflow-hidden mb-6">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-[#0A2342] to-[#1a3a75] text-white p-6">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                {getBoardIcon(activeBoard)}
-                                <div>
-                                    <h3 className="text-2xl font-bold">{getBoardTitle(activeBoard)}</h3>
-                                    <p className="text-blue-200 text-sm mt-1">
-                                        {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''} found
-                                    </p>
-                                </div>
+                    <div className="bg-[#0B2242] text-white px-6 py-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <FileText className="w-5 h-5 text-[#C9A227]" />
+                            <div>
+                                <h3 className="text-base sm:text-lg font-bold text-white tracking-wide">
+                                    {getBoardTitle(activeBoard)}
+                                </h3>
+                                <p className="text-slate-300 text-xs mt-0.5">
+                                    {filteredItems.length} item{filteredItems.length !== 1 ? "s" : ""} found
+                                </p>
                             </div>
-                            <div className="flex items-center gap-2 text-sm bg-white/10 px-4 py-2 rounded-lg">
-                                <Clock size={16} />
-                                <span>Last updated: Today, {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs bg-white/10 text-slate-200 px-3.5 py-1.5 rounded-lg border border-white/10">
+                            <Clock className="w-3.5 h-3.5 text-[#C9A227]" />
+                            <span>Last updated: Today, 02:42 PM</span>
                         </div>
                     </div>
 
-                    {/* Items List */}
-                    <div className="divide-y divide-gray-200">
+                    {/* Items List Body */}
+                    <div className="p-5 sm:p-6 space-y-3.5">
                         {loading ? (
-                            <div className="p-12 text-center">
-                                <div className="inline-block w-12 h-12 border-4 border-[#0A2342] border-t-transparent rounded-full animate-spin"></div>
-                                <p className="mt-4 text-gray-600">Loading...</p>
+                            <div className="py-12 text-center">
+                                <div className="inline-block w-10 h-10 border-3 border-[#C9A227] border-t-transparent rounded-full animate-spin mb-3" />
+                                <p className="text-slate-700 font-semibold text-sm">Loading display items...</p>
+                                <p className="text-slate-400 text-xs mt-1">Please wait while we fetch the latest records</p>
+                            </div>
+                        ) : error ? (
+                            <div className="py-10 text-center">
+                                <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3 border border-red-100">
+                                    <AlertCircle className="w-6 h-6" />
+                                </div>
+                                <h4 className="text-red-700 font-bold text-base mb-1">Unable to Load Display Board</h4>
+                                <p className="text-slate-500 text-xs mb-4 max-w-md mx-auto">{error}</p>
+                                <button
+                                    onClick={() => updateUrl({ page: currentPage })}
+                                    className="px-5 py-2 bg-[#0B2242] text-white rounded-lg hover:bg-[#12315c] transition-colors text-xs font-semibold"
+                                >
+                                    Retry
+                                </button>
                             </div>
                         ) : filteredItems.length === 0 ? (
-                            <div className="p-12 text-center">
-                                <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                                <p className="text-gray-600 text-lg">No items found</p>
-                                <p className="text-gray-500 text-sm mt-2">Try adjusting your search or date filter</p>
+                            <div className="py-12 text-center">
+                                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                                <h4 className="text-slate-800 font-bold text-base">No Items Found</h4>
+                                <p className="text-slate-400 text-xs mt-1 max-w-sm mx-auto">
+                                    There are currently no items available for this board. Try selecting a different board or date.
+                                </p>
                             </div>
                         ) : (
                             filteredItems.map((item) => (
-                                <div key={item.id} className="p-6 hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <h4 className="text-lg font-bold text-gray-900">{item.title}</h4>
-                                                {item.isNew && (
-                                                    <span className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-                                                        NEW
-                                                    </span>
-                                                )}
-                                                <span className="px-3 py-1 bg-[#C9A227] text-white text-xs font-semibold rounded-full">
-                                                    {item.type}
+                                <div
+                                    key={item.id}
+                                    onClick={() => {
+                                        if (item.fileUrl) {
+                                            window.open(item.fileUrl, "_blank");
+                                        }
+                                    }}
+                                    className="p-4 sm:p-5 border border-slate-200/90 rounded-xl bg-white hover:border-slate-300 hover:shadow-sm transition-all flex items-center justify-between gap-4 cursor-pointer group"
+                                >
+                                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                                        <div className="w-11 h-11 rounded-xl bg-blue-50/70 border border-blue-100/80 flex items-center justify-center flex-shrink-0 text-[#1A73E8]">
+                                            <FileText className="w-5 h-5" />
+                                        </div>
+                                        <div className="min-w-0 flex-1 space-y-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <h4 className="text-sm sm:text-base font-bold text-slate-900 leading-snug group-hover:text-[#0B2242] transition-colors">
+                                                    {item.title}
+                                                </h4>
+                                                <span className="bg-[#C9A227] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                                    {item.type || "General"}
                                                 </span>
                                             </div>
-                                            {item.description && (
-                                                <p className="text-gray-600 mb-3">{item.description}</p>
-                                            )}
-                                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                                                <div className="flex items-center gap-1">
-                                                    <Calendar size={16} />
-                                                    <span>{formatDate(item.date)}</span>
-                                                </div>
+                                            <div className="flex items-center gap-1.5 text-xs text-slate-400 pt-0.5">
+                                                <Calendar className="w-3.5 h-3.5" />
+                                                <span>{formatDate(item.date)}</span>
                                             </div>
                                         </div>
-                                        <div className="flex gap-2">
-                                            {item.fileUrl && (
-                                                <>
-                                                    <button className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" title="View">
-                                                        <Eye size={20} />
-                                                    </button>
-                                                    <button className="p-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors" title="Download">
-                                                        <Download size={20} />
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
                                     </div>
+                                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-[#0B2242] transition-colors flex-shrink-0" />
                                 </div>
                             ))
                         )}
@@ -383,34 +420,35 @@ function DisplayBoardsPageContent() {
                     </div>
                 )}
 
-                {/* Help Section */}
-                <div className="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                {/* Need Help? Card */}
+                <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-xl p-5 sm:p-6 mt-8">
                     <div className="flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                        <div className="text-sm text-amber-800">
-                            <p className="font-semibold mb-2">Need Help?</p>
-                            <ul className="list-disc list-inside space-y-1 text-amber-700">
-                                <li>Daily orders are published after court hours</li>
-                                <li>Cause lists are available one day in advance</li>
-                                <li>For certified copies, please contact the court registry</li>
+                        <Info className="w-5 h-5 text-[#D97706] flex-shrink-0 mt-0.5" />
+                        <div className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                            <h4 className="font-bold text-slate-900 mb-1.5 text-sm sm:text-base">Need Help?</h4>
+                            <ul className="list-disc list-inside space-y-1 text-slate-600 mb-3">
+                                <li>Daily orders are published after court hours.</li>
+                                <li>Cause lists are available one day in advance.</li>
+                                <li>For certified copies, please contact the court registry.</li>
                             </ul>
-                            <p className="mt-3 text-amber-900">
-                                For technical assistance, contact the IT helpdesk during office hours.
-                            </p>
+                            <div className="flex items-center gap-2 text-slate-600 pt-1 text-xs">
+                                <Phone className="w-3.5 h-3.5 text-[#D97706]" />
+                                <span>For technical assistance, contact the IT helpdesk during office hours.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Footer Info */}
-            <div className="bg-white border-t border-gray-200 mt-12">
-                <div className="max-w-7xl mx-auto px-4 py-6">
-                    <div className="text-center text-sm text-gray-600">
-                        <p className="mb-2">
-                            <strong>Disclaimer:</strong> The information on display boards is for reference purposes only.
+            {/* Footer Disclaimer */}
+            <div className="bg-white border-t border-slate-200 mt-12">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="text-center text-xs sm:text-sm text-slate-500">
+                        <p className="mb-1.5">
+                            <strong className="text-slate-700">Disclaimer:</strong> The information provided is for reference purposes only.
                             For official records, please contact the court registry.
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-slate-400 text-xs">
                             © {new Date().getFullYear()} Sajjad Husain Law Associates. All rights reserved.
                         </p>
                     </div>
@@ -420,7 +458,6 @@ function DisplayBoardsPageContent() {
     );
 }
 
-
 export default function DisplayBoardsPage() {
     return (
         <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading Display Boards...</div>}>
@@ -428,4 +465,3 @@ export default function DisplayBoardsPage() {
         </React.Suspense>
     );
 }
-

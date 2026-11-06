@@ -37,7 +37,8 @@ import {
   PlaySquare,
   Award,
   BookOpen,
-  FileQuestion
+  FileQuestion,
+  UserX
 } from "lucide-react";
 import { appointmentsService } from "@/data/services/appointments-service/appointmentsService";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
@@ -233,6 +234,12 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
           name: "Users",
           icon: <Users size={18} />,
           href: "/admin/users",
+          show: showManageUsers
+        },
+        {
+          name: "Deactivation Requests",
+          icon: <UserX size={18} />,
+          href: "/admin/users/deactivations",
           show: showManageUsers
         },
         {
@@ -468,11 +475,15 @@ const AdminSidebarContent = ({ isOpen, onClose, onOpen }: { isOpen: boolean; onC
 
     // Priority 3: Prefix matching with exclusion for overlapping siblings
     if (pathname.startsWith(`${href}/`)) {
-      // Prevent /admin/appointments from highlighting when on /admin/appointments/history etc.
+      // Prevent /admin/appointments from highlighting when on /admin/appointments/confirmed etc.
       if (href === "/admin/appointments" && (
         pathname.includes("/admin/appointments/confirmed") ||
         pathname.includes("/admin/appointments/history")
       )) {
+        return false;
+      }
+      // Prevent /admin/users from highlighting when on /admin/users/deactivations
+      if (href === "/admin/users" && pathname.startsWith("/admin/users/deactivations")) {
         return false;
       }
       return true;
