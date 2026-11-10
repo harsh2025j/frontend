@@ -125,6 +125,8 @@ export const API_ENDPOINTS = {
     DELETE: "/notifications/:id",
     CONTACT_INQUIRY: "/notifications/contact-inquiry",
     ADVERTISE_INQUIRY: "/notifications/advertise-inquiry",
+    NEWSLETTER_SUBSCRIBE: "/notifications/newsletter/subscribe",
+    NEWSLETTER_UNSUBSCRIBE: "/notifications/newsletter/unsubscribe",
   },
   REPORTS: {
     BASE: "/reports",

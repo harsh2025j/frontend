@@ -82,10 +82,10 @@ function ReportsPageContent() {
                     activeType === "case-statistics"
                         ? "case_statistics"
                         : activeType === "judgment-analysis"
-                        ? "judgment_analysis"
-                        : activeType === "custom"
-                        ? "custom"
-                        : undefined;
+                            ? "judgment_analysis"
+                            : activeType === "custom"
+                                ? "custom"
+                                : undefined;
 
                 const params = {
                     page,
@@ -289,11 +289,10 @@ function ReportsPageContent() {
                                     key={tab.id}
                                     type="button"
                                     onClick={() => updateUrl({ type: tab.id })}
-                                    className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
-                                        isActive
+                                    className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${isActive
                                             ? "bg-[#0B2242] text-white shadow-sm"
                                             : "bg-slate-100/90 text-slate-700 hover:bg-slate-200/70 border border-slate-200/60"
-                                    }`}
+                                        }`}
                                 >
                                     {tab.label}
                                 </button>
@@ -443,7 +442,7 @@ function ReportsPageContent() {
             {/* ─────────────────────────────────────────────────────────────
                 FOOTER DISCLAIMER
             ────────────────────────────────────────────────────────────── */}
-            <div className="bg-white border-t border-slate-200 mt-12">
+            {/* <div className="bg-white border-t border-slate-200 mt-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="text-center text-xs sm:text-sm text-slate-500">
                         <p className="mb-1.5">
@@ -455,7 +454,7 @@ function ReportsPageContent() {
                         </p>
                     </div>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }

@@ -259,11 +259,10 @@ export default function CasesPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleSearchTypeChange("caseNumber")}
-                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${
-                                            searchType === "caseNumber"
+                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${searchType === "caseNumber"
                                                 ? "bg-slate-100/80 border-[#C9A227] text-[#0B2242] font-semibold"
                                                 : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                        }`}
+                                            }`}
                                     >
                                         <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 ${searchType === "caseNumber" ? "text-[#C9A227]" : "text-slate-400"}`} />
                                         <span>Search by Case Number</span>
@@ -272,11 +271,10 @@ export default function CasesPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleSearchTypeChange("filingNumber")}
-                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${
-                                            searchType === "filingNumber"
+                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${searchType === "filingNumber"
                                                 ? "bg-slate-100/80 border-[#C9A227] text-[#0B2242] font-semibold"
                                                 : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                        }`}
+                                            }`}
                                     >
                                         <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 ${searchType === "filingNumber" ? "text-[#C9A227]" : "text-slate-400"}`} />
                                         <span>Filing/Diary Number</span>
@@ -285,11 +283,10 @@ export default function CasesPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleSearchTypeChange("partyName")}
-                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${
-                                            searchType === "partyName"
+                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${searchType === "partyName"
                                                 ? "bg-slate-100/80 border-[#C9A227] text-[#0B2242] font-semibold"
                                                 : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                        }`}
+                                            }`}
                                     >
                                         <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 ${searchType === "partyName" ? "text-[#C9A227]" : "text-slate-400"}`} />
                                         <span>Search by Party Name</span>
@@ -298,11 +295,10 @@ export default function CasesPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleSearchTypeChange("crimeNumber")}
-                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${
-                                            searchType === "crimeNumber"
+                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${searchType === "crimeNumber"
                                                 ? "bg-slate-100/80 border-[#C9A227] text-[#0B2242] font-semibold"
                                                 : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                        }`}
+                                            }`}
                                     >
                                         <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 ${searchType === "crimeNumber" ? "text-[#C9A227]" : "text-slate-400"}`} />
                                         <span>Search by Crime Number</span>
@@ -311,11 +307,10 @@ export default function CasesPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleSearchTypeChange("advocateName")}
-                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${
-                                            searchType === "advocateName"
+                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${searchType === "advocateName"
                                                 ? "bg-slate-100/80 border-[#C9A227] text-[#0B2242] font-semibold"
                                                 : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                        }`}
+                                            }`}
                                     >
                                         <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 ${searchType === "advocateName" ? "text-[#C9A227]" : "text-slate-400"}`} />
                                         <span>Search by Advocate Name</span>
@@ -324,11 +319,10 @@ export default function CasesPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleSearchTypeChange("pendingCases")}
-                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${
-                                            searchType === "pendingCases"
+                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${searchType === "pendingCases"
                                                 ? "bg-slate-100/80 border-[#C9A227] text-[#0B2242] font-semibold"
                                                 : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                        }`}
+                                            }`}
                                     >
                                         <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 ${searchType === "pendingCases" ? "text-[#C9A227]" : "text-slate-400"}`} />
                                         <span>Pending Cases (MPs/MLAs)</span>
@@ -347,11 +341,10 @@ export default function CasesPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleSearchTypeChange("advocateRoll")}
-                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${
-                                            searchType === "advocateRoll"
+                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${searchType === "advocateRoll"
                                                 ? "bg-slate-100/80 border-[#C9A227] text-[#0B2242] font-semibold"
                                                 : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                        }`}
+                                            }`}
                                     >
                                         <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 ${searchType === "advocateRoll" ? "text-[#C9A227]" : "text-slate-400"}`} />
                                         <span>Advocate&apos;s Cases - Roll No</span>
@@ -360,11 +353,10 @@ export default function CasesPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleSearchTypeChange("casesListedToday")}
-                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${
-                                            searchType === "casesListedToday"
+                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${searchType === "casesListedToday"
                                                 ? "bg-slate-100/80 border-[#C9A227] text-[#0B2242] font-semibold"
                                                 : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                        }`}
+                                            }`}
                                     >
                                         <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 ${searchType === "casesListedToday" ? "text-[#C9A227]" : "text-slate-400"}`} />
                                         <span>Cases Listed Today</span>
@@ -383,11 +375,10 @@ export default function CasesPage() {
                                     <button
                                         type="button"
                                         onClick={() => handleSearchTypeChange("proceedingsStayed")}
-                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${
-                                            searchType === "proceedingsStayed"
+                                        className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm transition-all flex items-center gap-2 border-l-4 ${searchType === "proceedingsStayed"
                                                 ? "bg-slate-100/80 border-[#C9A227] text-[#0B2242] font-semibold"
                                                 : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                        }`}
+                                            }`}
                                     >
                                         <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 ${searchType === "proceedingsStayed" ? "text-[#C9A227]" : "text-slate-400"}`} />
                                         <span>Proceedings Stayed</span>
@@ -859,7 +850,7 @@ export default function CasesPage() {
             {/* ─────────────────────────────────────────────────────────────
                 FOOTER
             ────────────────────────────────────────────────────────────── */}
-            <div className="bg-white border-t border-slate-200 mt-12">
+            {/* <div className="bg-white border-t border-slate-200 mt-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="text-center text-xs sm:text-sm text-slate-500">
                         <p className="mb-1.5">
@@ -871,7 +862,7 @@ export default function CasesPage() {
                         </p>
                     </div>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }

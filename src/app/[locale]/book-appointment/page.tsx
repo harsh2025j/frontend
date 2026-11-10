@@ -317,9 +317,9 @@ function BookingForm() {
     }
 
     return (
-        <div className="min-h-screen bg-white font-sans selection:bg-[#C9A227] selection:text-white">
+        <div className="min-h-screen bg-white font-sans selection:bg-[#C9A227] selection:text-white mt-8">
             {/* Premium Hero Section */}
-            <div className="relative bg-[#0A2342] text-white py-6 lg:py-10 px-4 overflow-hidden">
+            {/* <div className="relative bg-[#0A2342] text-white py-6 lg:py-10 px-4 overflow-hidden">
                 <div className="absolute inset-0">
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#C9A227]/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
                     <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2"></div>
@@ -327,7 +327,6 @@ function BookingForm() {
 
                 <div className="container mx-auto max-w-6xl relative z-10 text-center">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-8">
-                        {/* <span className="w-2 h-2 rounded-full bg-[#C9A227] animate-pulse"></span> */}
                         <span className="text-xs font-medium tracking-widest uppercase text-gray-300">Individual & Specific Booking</span>
                     </div>
 
@@ -339,7 +338,7 @@ function BookingForm() {
                         Expert legal guidance tailored to your needs. Book a personalized consultation with your preferred advocate.
                     </p>
                 </div>
-            </div>
+            </div> */}
 
             {/* Main Content */}
             <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-20 -mt-20 relative z-20">
@@ -622,10 +621,10 @@ function BookingForm() {
                                                                         }
                                                                     }}
                                                                     className={`py-3 px-4 rounded-xl text-center text-xs font-bold transition-all duration-300 relative group overflow-hidden ${s.isBooked
-                                                                            ? 'bg-red-50 border border-red-150 text-red-500 opacity-60 cursor-not-allowed'
-                                                                            : isSelected
-                                                                                ? 'bg-emerald-500 text-white border-2 border-emerald-500 shadow-md shadow-emerald-500/20'
-                                                                                : 'bg-emerald-50 border border-emerald-100 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-200'
+                                                                        ? 'bg-red-50 border border-red-150 text-red-500 opacity-60 cursor-not-allowed'
+                                                                        : isSelected
+                                                                            ? 'bg-emerald-500 text-white border-2 border-emerald-500 shadow-md shadow-emerald-500/20'
+                                                                            : 'bg-emerald-50 border border-emerald-100 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-200'
                                                                         }`}
                                                                 >
                                                                     <span>{s.slot}</span>

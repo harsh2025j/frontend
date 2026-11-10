@@ -149,11 +149,11 @@ function DisplayBoardsPageContent() {
         subtitle: string;
         icon: React.ComponentType<{ className?: string }>;
     }[] = [
-        { id: "daily-orders", title: "Daily Orders", subtitle: "Today's orders", icon: FileText },
-        { id: "cause-list", title: "Cause List", subtitle: "Cases listed", icon: Calendar },
-        { id: "notices", title: "Notices", subtitle: "Official notices", icon: Bell },
-        { id: "announcements", title: "Announcements", subtitle: "Important updates", icon: Megaphone }
-    ];
+            { id: "daily-orders", title: "Daily Orders", subtitle: "Today's orders", icon: FileText },
+            { id: "cause-list", title: "Cause List", subtitle: "Cases listed", icon: Calendar },
+            { id: "notices", title: "Notices", subtitle: "Official notices", icon: Bell },
+            { id: "announcements", title: "Announcements", subtitle: "Important updates", icon: Megaphone }
+        ];
 
     return (
         <div className="min-h-screen bg-[#F8FAFC]">
@@ -254,43 +254,38 @@ function DisplayBoardsPageContent() {
                                 key={tab.id}
                                 type="button"
                                 onClick={() => updateUrl({ board: tab.id })}
-                                className={`p-4 sm:p-5 rounded-xl flex items-center justify-between text-left transition-all ${
-                                    isActive
+                                className={`p-4 sm:p-5 rounded-xl flex items-center justify-between text-left transition-all ${isActive
                                         ? "bg-[#0B2242] text-white shadow-md border-2 border-[#C9A227]"
                                         : "bg-white text-slate-800 border border-slate-200/90 shadow-sm hover:border-slate-300 hover:shadow"
-                                }`}
+                                    }`}
                             >
                                 <div className="flex items-center gap-3.5 min-w-0">
                                     <div
-                                        className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                                            isActive
+                                        className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${isActive
                                                 ? "bg-[#C9A227]/25 text-[#C9A227] border border-[#C9A227]/40"
                                                 : "bg-slate-100 text-slate-600"
-                                        }`}
+                                            }`}
                                     >
                                         <Icon className="w-5 h-5" />
                                     </div>
                                     <div className="min-w-0">
                                         <h3
-                                            className={`font-bold text-sm sm:text-base leading-snug truncate ${
-                                                isActive ? "text-white" : "text-slate-900"
-                                            }`}
+                                            className={`font-bold text-sm sm:text-base leading-snug truncate ${isActive ? "text-white" : "text-slate-900"
+                                                }`}
                                         >
                                             {tab.title}
                                         </h3>
                                         <p
-                                            className={`text-xs mt-0.5 truncate ${
-                                                isActive ? "text-slate-300" : "text-slate-400"
-                                            }`}
+                                            className={`text-xs mt-0.5 truncate ${isActive ? "text-slate-300" : "text-slate-400"
+                                                }`}
                                         >
                                             {tab.subtitle}
                                         </p>
                                     </div>
                                 </div>
                                 <ChevronRight
-                                    className={`w-4 h-4 flex-shrink-0 ml-2 ${
-                                        isActive ? "text-white/80" : "text-slate-300"
-                                    }`}
+                                    className={`w-4 h-4 flex-shrink-0 ml-2 ${isActive ? "text-white/80" : "text-slate-300"
+                                        }`}
                                 />
                             </button>
                         );
@@ -441,7 +436,7 @@ function DisplayBoardsPageContent() {
             </div>
 
             {/* Footer Disclaimer */}
-            <div className="bg-white border-t border-slate-200 mt-12">
+            {/* <div className="bg-white border-t border-slate-200 mt-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="text-center text-xs sm:text-sm text-slate-500">
                         <p className="mb-1.5">
@@ -453,7 +448,7 @@ function DisplayBoardsPageContent() {
                         </p>
                     </div>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }

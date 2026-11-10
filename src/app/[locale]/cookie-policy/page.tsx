@@ -96,7 +96,7 @@ export default function CookiePolicy() {
     return (
         <div className="min-h-screen bg-white">
             {/* Hero Section */}
-            <div className="relative bg-[#0A2342] text-white py-16 px-4 overflow-hidden">
+            <div className="relative bg-[#0A2342] text-white py-8 px-4 overflow-hidden">
                 {/* Decorative Elements */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9A227] rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
@@ -135,7 +135,7 @@ export default function CookiePolicy() {
                             <h2 className="text-2xl font-bold text-[#0A2342] mb-4">Transparency & Privacy</h2>
                             <div className="space-y-4 text-gray-600 leading-relaxed">
                                 <p>
-                                    At Sajjad Husain Law Associates, we believe in being transparent about how we collect and use data related to you. 
+                                    At Sajjad Husain Law Associates, we believe in being transparent about how we collect and use data related to you.
                                 </p>
                                 <p>
                                     This Cookie Policy explains how we use cookies and similar technologies. Where required by applicable law, we will request your consent before placing non-essential cookies on your device.

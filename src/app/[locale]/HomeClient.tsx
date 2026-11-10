@@ -2,6 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { RootState } from "@/data/redux/store";
 import { isAdmin as checkIsAdmin } from "@/utils/permissions";
@@ -14,6 +16,16 @@ import { useDocTitle } from "@/hooks/useDocTitle";
 export default function HomeClient() {
   useDocTitle("Sajjad Husain Law Associates");
   const t = useTranslations('Home');
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const unsub = searchParams.get("unsubscribed");
+    if (unsub === "true") {
+      toast.success("You have been successfully unsubscribed from newsletter updates.", { id: "unsub-toast" });
+    } else if (unsub === "invalid") {
+      toast.error("Invalid or expired unsubscribe link.", { id: "unsub-toast" });
+    }
+  }, [searchParams]);
 
   // Ad Sidebar Visibility Logic
   const { currentSubscription } = useSelector((state: RootState) => state.subscription);

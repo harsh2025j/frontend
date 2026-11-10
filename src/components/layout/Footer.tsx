@@ -14,7 +14,11 @@ import {
   Mail,
   Scale,
   ChevronRight,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
+import toast from "react-hot-toast";
+import { notificationService } from "@/data/services/notification-service/notification.service";
 
 import {
   FaFacebookF,
@@ -29,6 +33,8 @@ import {
 export default function Footer() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [subscriptionMessage, setSubscriptionMessage] = useState("");
   const [academyBaseUrl, setAcademyBaseUrl] = useState("https://academy.sajjadhusainlawassociates.com");
 
   useEffect(() => {
@@ -41,11 +47,37 @@ export default function Footer() {
     }
   }, []);
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newsletterEmail.trim()) {
-      setIsSubscribed(true);
-      setNewsletterEmail("");
+    const email = newsletterEmail.trim();
+    if (!email) return;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    try {
+      setIsSubscribing(true);
+      const res: any = await notificationService.subscribeNewsletter(email);
+      const data = res?.data || res;
+      if (data?.success) {
+        setIsSubscribed(true);
+        setSubscriptionMessage(data.message || "Thank you for subscribing! Your first legal digest has been dispatched.");
+        toast.success(data.message || "Subscribed successfully! Check your inbox.");
+        setNewsletterEmail("");
+      } else {
+        toast.error(data?.message || "Failed to subscribe. Please try again.");
+      }
+    } catch (error: any) {
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Subscription service temporarily unavailable. Please try again later.";
+      toast.error(errorMsg);
+    } finally {
+      setIsSubscribing(false);
     }
   };
 
@@ -189,8 +221,9 @@ export default function Footer() {
 
             <div className="w-full lg:w-auto shrink-0">
               {isSubscribed ? (
-                <div className="px-5 py-3 rounded-lg bg-emerald-900/40 border border-emerald-500/50 text-emerald-300 text-[14px] font-medium">
-                  Thank you for subscribing to daily legal updates!
+                <div className="flex items-center gap-2.5 px-5 py-3 rounded-lg bg-emerald-900/40 border border-emerald-500/50 text-emerald-300 text-[14px] font-medium animate-fadeIn">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <span>{subscriptionMessage || "Thank you for subscribing to daily legal updates!"}</span>
                 </div>
               ) : (
                 <form
@@ -202,14 +235,23 @@ export default function Footer() {
                     value={newsletterEmail}
                     onChange={(e) => setNewsletterEmail(e.target.value)}
                     required
+                    disabled={isSubscribing}
                     placeholder="Enter your email address..."
-                    className="w-full px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 text-white placeholder-slate-400 text-[14px] focus:outline-none focus:border-[#C9A227] transition-colors"
+                    className="w-full px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 text-white placeholder-slate-400 text-[14px] focus:outline-none focus:border-[#C9A227] transition-colors disabled:opacity-50"
                   />
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-lg bg-[#C9A227] hover:bg-[#B89220] active:bg-[#A6821C] text-[#07172C] font-semibold text-[14px] transition-colors cursor-pointer whitespace-nowrap"
+                    disabled={isSubscribing}
+                    className="px-6 py-2.5 rounded-lg bg-[#C9A227] hover:bg-[#B89220] active:bg-[#A6821C] text-[#07172C] font-semibold text-[14px] transition-colors cursor-pointer whitespace-nowrap flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed"
                   >
-                    Subscribe
+                    {isSubscribing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Subscribing...</span>
+                      </>
+                    ) : (
+                      "Subscribe"
+                    )}
                   </button>
                 </form>
               )}

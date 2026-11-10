@@ -34,4 +34,12 @@ export const notificationService = {
         const url = API_ENDPOINTS.NOTIFICATIONS.DELETE.replace(":id", id);
         return apiClient.delete(url);
     },
+
+    subscribeNewsletter: async (email: string, frequency: string = 'weekly') => {
+        return apiClient.post(API_ENDPOINTS.NOTIFICATIONS.NEWSLETTER_SUBSCRIBE, { email, frequency });
+    },
+
+    unsubscribeNewsletter: async (token: string) => {
+        return apiClient.post(API_ENDPOINTS.NOTIFICATIONS.NEWSLETTER_UNSUBSCRIBE, { token });
+    },
 };

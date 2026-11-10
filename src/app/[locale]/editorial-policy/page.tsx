@@ -84,7 +84,7 @@ export default function EditorialPolicy() {
     return (
         <div className="min-h-screen bg-white">
             {/* Hero Section */}
-            <div className="relative bg-[#0A2342] text-white py-16  px-4 overflow-hidden">
+            <div className="relative bg-[#0A2342] text-white py-8  px-4 overflow-hidden">
                 {/* Decorative Elements */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9A227] rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>

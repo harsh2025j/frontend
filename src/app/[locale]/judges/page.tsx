@@ -245,8 +245,8 @@ function JudgesPageContent() {
                 {/* Left hero content */}
                 <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 md:py-12">
                     <div className="flex items-center gap-4 sm:gap-5">
-                     
-                  
+
+
                         <div>
                             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-serif tracking-tight text-white">
                                 Judiciary Portal
@@ -429,14 +429,14 @@ function JudgesPageContent() {
                                 type="button"
                                 onClick={() => handleCategoryChange(tab.id as JudgeCategory)}
                                 className={`p-4 sm:p-5 rounded-xl flex flex-col items-center justify-center gap-2.5 text-center transition-all ${isActive
-                                        ? "bg-[#0B2242] text-white shadow-md border-b-4 border-[#C9A227]"
-                                        : "bg-white text-slate-700 border border-slate-200/90 shadow-sm hover:border-slate-300 hover:shadow"
+                                    ? "bg-[#0B2242] text-white shadow-md border-b-4 border-[#C9A227]"
+                                    : "bg-white text-slate-700 border border-slate-200/90 shadow-sm hover:border-slate-300 hover:shadow"
                                     }`}
                             >
                                 <div
                                     className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-transform ${isActive
-                                            ? "bg-[#C9A227] text-white"
-                                            : "bg-slate-100 text-slate-600 group-hover:bg-slate-200"
+                                        ? "bg-[#C9A227] text-white"
+                                        : "bg-slate-100 text-slate-600 group-hover:bg-slate-200"
                                         }`}
                                 >
                                     <Icon className="w-5 h-5" />
@@ -606,7 +606,7 @@ function JudgesPageContent() {
             </div>
 
             {/* Footer Disclaimer */}
-            <div className="bg-white border-t border-slate-200 mt-12">
+            {/* <div className="bg-white border-t border-slate-200 mt-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="text-center text-xs sm:text-sm text-slate-500">
                         <p className="mb-1.5">
@@ -618,7 +618,7 @@ function JudgesPageContent() {
                         </p>
                     </div>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }

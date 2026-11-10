@@ -64,7 +64,7 @@ export default function ContentSlider({ name, FilteredData, slug }: ContentSlide
   }, [FilteredData]);
 
   return (
-    <div className="p-4 md:p-6 bg-[#f6f6f7] flex items-center justify-center relative">
+    <div className="py-4 md:py-6 bg-[#f6f6f7] flex items-center justify-center relative">
       <div className="w-full container bg-white rounded-lg p-3 flex gap-4 relative group">
 
         {/* Left Label (Category Name) */}

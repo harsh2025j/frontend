@@ -152,9 +152,9 @@ export default function TermsAndConditions() {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="min-h-screen bg-white">
             {/* Hero Section */}
-            <div className="relative bg-gradient-to-r from-[#122340] via-[#1A73E8] to-[#122340] text-white py-20 lg:py-24 px-4 overflow-hidden">
+            <div className="relative bg-[#0A2342] text-white py-8 px-4 overflow-hidden">
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-10 left-10 w-48 h-48 bg-white rounded-full blur-3xl"></div>
                     <div className="absolute bottom-10 right-10 w-64 h-64 bg-blue-300 rounded-full blur-3xl"></div>
@@ -162,9 +162,9 @@ export default function TermsAndConditions() {
 
                 <div className="container mx-auto max-w-6xl relative z-10">
                     <div className="flex flex-col items-center justify-center gap-6 mb-6">
-                        <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl animate-pulse">
+                        {/* <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl animate-pulse">
                             <FileText className="w-16 h-16" />
-                        </div>
+                        </div> */}
                         <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-center">
                             Terms & Conditions
                         </h1>
@@ -284,13 +284,13 @@ export default function TermsAndConditions() {
             </div>
 
             {/* Footer Note */}
-            <div className="bg-[#122340] text-white py-8">
+            {/* <div className="bg-[#122340] text-white py-8">
                 <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
                     <p className="text-sm md:text-base text-blue-200">
                         © {new Date().getFullYear()} Sajjad Husain Law Associates. All rights reserved.
                     </p>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }

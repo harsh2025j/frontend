@@ -256,16 +256,14 @@ export default function JudgmentsPage() {
                                                 resetForm();
                                                 scrollToForm();
                                             }}
-                                            className={`w-full px-4 py-3.5 text-left text-xs sm:text-sm flex items-center gap-3 transition-colors ${
-                                                isActive
+                                            className={`w-full px-4 py-3.5 text-left text-xs sm:text-sm flex items-center gap-3 transition-colors ${isActive
                                                     ? "bg-[#FFFDF5] text-slate-900 font-semibold border-l-4 border-[#C9A227]"
                                                     : "bg-white text-slate-600 hover:bg-slate-50 border-l-4 border-transparent"
-                                            }`}
+                                                }`}
                                         >
                                             <Icon
-                                                className={`w-4 h-4 flex-shrink-0 ${
-                                                    isActive ? "text-[#C9A227]" : "text-slate-400"
-                                                }`}
+                                                className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-[#C9A227]" : "text-slate-400"
+                                                    }`}
                                             />
                                             <span>{tab.label}</span>
                                         </button>
@@ -541,7 +539,7 @@ export default function JudgmentsPage() {
             </div>
 
             {/* Footer Disclaimer */}
-            <div className="bg-white border-t border-slate-200 mt-12">
+            {/* <div className="bg-white border-t border-slate-200 mt-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="text-center text-xs sm:text-sm text-slate-500">
                         <p className="mb-1.5">
@@ -553,7 +551,7 @@ export default function JudgmentsPage() {
                         </p>
                     </div>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }
