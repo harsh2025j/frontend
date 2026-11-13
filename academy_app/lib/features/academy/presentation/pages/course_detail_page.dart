@@ -220,16 +220,18 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             color: AppColors.surfaceWhite,
             child: TabBar(
               controller: _tabController,
-              isScrollable: false,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 14),
               labelColor: AppColors.primaryNavy,
               unselectedLabelColor: AppColors.textMuted,
-              labelStyle: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
-              unselectedLabelStyle: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w500),
+              labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+              unselectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
               indicatorColor: AppColors.primaryNavy,
               indicatorWeight: 2,
               tabs: const [
-                Tab(text: 'Curriculum'),
                 Tab(text: 'Overview'),
+                Tab(text: 'Curriculum'),
                 Tab(text: 'Q&A'),
                 Tab(text: 'Assignments'),
                 Tab(text: 'Reviews'),
@@ -243,8 +245,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildCurriculumTab(),
                 _buildOverviewTab(),
+                _buildCurriculumTab(),
                 _buildQATab(),
                 _buildAssignmentsTab(),
                 _buildReviewsTab(),
